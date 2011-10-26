@@ -1,13 +1,216 @@
 {% extends "base.html" %}
 {% load filters %}
-{% block pageTitle %}<h1>Marketplace</h1>{% endblock pageTitle %}
-{% block navLinks %}
-<li><a href="{% url publisher_index %}">Dashboard</a></li>
-<li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-<li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
-<li><a href="{% url reports_index %}">Reports</a></li>
-{% endblock navLinks %}
 
+{% block pageTitle %}
+  <h1>Marketplace</h1>
+{% endblock pageTitle %}
+
+{% block navLinks %}
+  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
+  <li><a href="{% url reports_index %}">Reports</a></li>
+{% endblock navLinks %}
 
 {% block messageCenter %} {% endblock messageCenter %}
 {% block dateButtons %} {% endblock dateButtons %}
+
+{% block content %}
+
+  <div class="alert-message block-message clearfix">
+    <a href="#" class="close"> x </a>
+    We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
+    Flip the On/Off switch to get started,
+    or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
+    <br />
+    <!-- <div class="lightswitch"> -->
+    <!--   <div class="switch on"></div> -->
+    <!-- </div> -->
+    <a class="btn start icon right" href="{% url mpx_info %}">Get Started</a>
+  </div>
+
+
+  <ul class="tabs">
+    <li class="active"> <a href="#performance"> App Performance </a> </li>
+    <li> <a href="#controls"> Creative Performance </a> </li>
+    <li> <a href="#settings"> Settings </a> </li>
+  </ul>
+
+
+  <div class="active tab-section" id="performance">
+
+    <div class="rollup fig3">
+      <div class="data-figure">
+        <div class="figure">
+          {{ top_level_mpx_stats.impressions|withsep }}
+        </div>
+        <div class="label">
+          Impressions
+        </div>
+      </div>
+      <div class="data-figure">
+        <div class="figure">
+          {{ top_level_mpx_stats.clicks|withsep }}
+        </div>
+        <div class="label">
+          Clicks
+        </div>
+      </div>
+      <div class="data-figure">
+        <div class="figure">
+          {{ top_level_mpx_stats.revenue|withsep }}
+        </div>
+        <div class="label">
+          Revenue
+        </div>
+      </div>
+    </div>
+
+
+    <table class="zebra-striped simpletable" id="marketplace_stats">
+
+      <thead>
+        <th>App</th>
+        <th width="70">Revenue</th>
+        <th width="70">eCPM</th>
+        {# <th>Attempts</th> #}
+        <th width="100">Impressions</th>
+        {# <th>Fill Rate</th> #}
+        <th width="70">Clicks</th>
+        <th width="70">CTR</th>
+        <th width="100">Price Floor</th>
+      </thead>
+
+      <tbody> </tbody>
+
+    </table>
+
+  </div>
+
+
+  <div class="tab-section" id="controls">
+    <div class="clearfix alert-message block-message info">
+      <div class="close">x</div>
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enimad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    </div>
+
+    {% for dsp in dsps %}
+      <h2> <a href="{{ dsp.url }}"> {{ dsp.name }} </a> </h2>
+      <div class="well">
+        <table class="zebra-striped sortable simpletable">
+          <thead>
+            <th> Creative </th>
+            <th> Impressions </th>
+            <th> Clicks </th>
+            <th> CTR </th>
+            <th> eCPM </th>
+            <th> Revenue </th>
+          </thead>
+          <tbody>
+            {% for creative in dsp.creatives %}
+              <tr>
+                <td> <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe> </td>
+                <td> {{ creative.stats.imp }} </td>
+                <td> {{ creative.stats.clk }} </td>
+                <td> {{ creative.stats.ctr|percentage }} </td>
+                <td> {{ creative.stats.ecpm|currency }} </td>
+                <td> {{ creative.stats.pub_rev }} </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <td> Totals </td>
+            <td> {{ dsp.stats.imp }} </td>
+            <td> {{ dsp.stats.clk }} </td>
+            <td> {{ dsp.stats.ctr|percentage }} </td>
+            <td> {{ dsp.stats.ecpm|currency }} </td>
+            <td> {{ dsp.stats.pub_rev }} </td>
+          </tfoot>
+        </table>
+      </div>
+    {% endfor %}
+
+  </div>
+
+  <div class="clearfix tab-section" id="settings">
+
+    <h2> Marketplace Settings </h2>
+    <div class="well">
+      <label for="blind"> Make my marketplace requests blind </label>
+      <input name="blind" type="checkbox" disabled="disabled" />
+      <br />
+      <label for="default_price_floor"> Set the default price floor for targeted adunits </label>
+      <input name="default_price_floor" type="checkbox" disabled="disabled" />
+    </div>
+
+    <h2>Blocklist</h2>
+    <div class="well">
+      <div class="clearfix" style="width: 560px;">
+        <div id="current_blocklist" class="right">
+          <h3> Currently Blocked </h3>
+          {% for url in blocklist %}
+            {{url}}
+            <a href="{% url remove_blocklist_handler url %}">Remove</a>
+            <br />
+          {% empty %}
+            There are no blocked advertisers
+          {% endfor %}
+        </div>
+
+
+        <form action="{% url add_blocklist_handler %}" method="POST" id="addblocklist" class="validate left">
+          <h3> Add blocked advertiser domains </h3>
+          <textarea rows="10" cols="20" placeholder="Add blocked blocked advertiser domains here. You can add as many as you want at a time." name="blocklist"></textarea>
+          <br />
+          <a href="#" class="btn" id="blocklist-submit"> Add </a>
+        </form>
+
+      </div>
+
+
+    </div>
+
+    <div class="right button-group">
+      <div class="big disabled btn"> Discard Changes </div>
+      <div id="settings-submit" class="big primary btn"> Save All Settings </div>
+    </div>
+  </div>
+
+{% endblock content %}
+
+
+{% block extraScripts %}
+  <script type="text/html" id="app-template">
+    {% include "partials/app.html" %}
+  </script>
+  <script type="text/html" id="adunit-template">
+    {% include "partials/adunit.html" %}
+  </script>
+  <script type="text/html">
+    {% include "partials/inventory.html" %}
+  </script>
+  <script type="text/javascript" src="/js/underscore.min.js"></script>
+  <script type="text/javascript" src="/js/json2.js"></script>
+  <script type="text/javascript" src="/js/backbone.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.tipsy.js"></script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+        var app_keys = {{ app_keys|safe }};
+        Marketplace.fetchAllApps(app_keys);
+
+        $('#settings-submit').click(function(e) {
+            e.preventDefault();
+            $('#addblocklist').submit();
+        });
+
+        $('#blocklist-submit').click(function(e) {
+            e.preventDefault();
+            $('#addblocklist').submit();
+        });
+
+
+
+    });
+  </script>
+{% endblock extraScripts %}

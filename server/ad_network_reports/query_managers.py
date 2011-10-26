@@ -2,7 +2,7 @@ import logging
 import sys
 import urllib
 
-EC2 = True
+EC2 = False
 
 if EC2:
     sys.path.append('/home/ubuntu/mopub/server')
@@ -21,8 +21,8 @@ from google.appengine.ext import db
 from account.models import NetworkConfig
 from common.utils import date_magic
 from common.utils.query_managers import CachedQueryManager
-from ad_network_reports.models import AdNetworkLoginInfo, AdNetworkAppMapper, \
-        AdNetworkScrapeStats
+from ad_network_reports.models import AdNetworkLoginCredentials, \
+        AdNetworkAppMapper, AdNetworkScrapeStats
 from publisher.models import App
 
 class Stats(object):
@@ -33,11 +33,11 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         self.account = account
 
     def get_ad_network_mappers(self):
-        """Inner join AdNetworkLoginInfo with AdNetworkAppMapper.
+        """Inner join AdNetworkLoginCredentials with AdNetworkAppMapper.
 
         Return a generator of the AdNetworkAppMappers with this account.
         """
-        for credential in AdNetworkLoginInfo.all().filter('account =',
+        for credential in AdNetworkLoginCredentials.all().filter('account =',
                 self.account):
             for mapper in AdNetworkAppMapper.all().filter('ad_network_login =',
                     credential):
@@ -111,18 +111,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         return query
 
     def get_ad_network_app_mapper(self, ad_network_app_mapper_key = None,
-            publisher_id = None, login_info = None):
+            publisher_id = None, login_credentials = None):
         """Keyword arguments: either an ad_network_app_mapper_key or a
-        publisher_id and login_info.
+        publisher_id and login_credentials.
 
         Return the corresponding AdNetworkAppMapper.
         """
         if ad_network_app_mapper_key:
             return db.get(ad_network_app_mapper_key)
-        elif publisher_id and login_info:
+        elif publisher_id and login_credentials:
             query = AdNetworkAppMapper.all()
             query.filter('publisher_id =', publisher_id)
-            query.filter('ad_network_login =', login_info)
+            query.filter('ad_network_login =', login_credentials)
             return query.get()
         return None
 
@@ -141,43 +141,43 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 # example return (App, NetworkConfig.admob_pub_id)
                 yield (app, pub_id)
 
-    def create_login_info_and_mappers(self, ad_network_name, username, password,
-            client_key, send_email):
+    def create_login_credentials_and_mappers(self, ad_network_name, username,
+            password, client_key, send_email):
         """Check login credentials by making a request to tornado on EC2. If
-        they're valid create AdNetworkLoginInfo and AdNetworkAppMapper entities
-        and store them in the db.
+        they're valid create AdNetworkLoginCredentials and AdNetworkAppMapper
+        entities and store them in the db.
 
         Return None if the login credentials are correct otherwise return an
         error message.
         """
-        login_info = AdNetworkLoginInfo(account=self.account,
+        login_credentials = AdNetworkLoginCredentials(account=self.account,
                                         ad_network_name=ad_network_name,
                                         username=username,
                                         password=password,
-                                        client_key=client_key)
-
-        login_info.put()
+                                        client_key=client_key,
+                                        email=send_email)
+        login_credentials.put()
 
         apps_with_publisher_ids = self.get_apps_with_publisher_ids(
                 ad_network_name)
         # Create all the different AdNetworkAppMappers for all the
         # applications on the ad network for the user and add them to the db
-        db.put([AdNetworkAppMapper(ad_network_name = ad_network_name,
-            publisher_id = publisher_id, ad_network_login = login_info,
-            application = app, send_email = send_email) for app,
-            publisher_id in apps_with_publisher_ids])
+        db.put([AdNetworkAppMapper(ad_network_name=ad_network_name,
+            publisher_id=publisher_id, ad_network_login=login_credentials,
+            application=app) for app, publisher_id in
+            apps_with_publisher_ids])
 
-    def find_app_for_stats(self, publisher_id, login_info):
+    def find_app_for_stats(self, publisher_id, login_credentials):
         """Attempt to link the publisher id with an App stored in MoPub's db.
 
         Check if the publisher id is in MoPub. If it is create an
-        AdNetworkAppMapper and update the AdNetworkLoginInfo.
+        AdNetworkAppMapper and update the AdNetworkLoginCredentials.
 
         Return the mapper or None.
         """
         # Sanity check
         if publisher_id:
-            ad_network_name = login_info.ad_network_name
+            ad_network_name = login_credentials.ad_network_name
             for app in App.all().filter('account =',
                     self.account).filter('network_config !=', None):
                 # Is the app in Mopub?
@@ -185,7 +185,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                         == publisher_id:
                     mapper = AdNetworkAppMapper(ad_network_name=ad_network_name,
                                                 publisher_id=publisher_id,
-                                                ad_network_login=login_info,
+                                                ad_network_login=login_credentials,
                                                 application=app)
                     mapper.put()
                     return mapper
@@ -223,8 +223,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 #                    None)]
 
 def get_all_login_credentials():
-    """Return all AdNetworkLoginInfo entities ordered by account."""
-    return AdNetworkLoginInfo.all().order('account')
+    """Return all AdNetworkLoginCredentials entities ordered by account."""
+    return AdNetworkLoginCredentials.all().order('account')
 
 def create_manager(account_key, my_account):
     if account_key:

@@ -10,16 +10,18 @@
 	           	   // Upon success update the database
 			   if (valid) {
 				if (account_key) {
-        			    $.post("/ad_network_reports/manage/" + account_key + "/add/",
-					    $("#loginCredentials").serialize());
-        		            window.location = "/ad_network_reports/manage/" + account_key;
+					$.post("/ad_network_reports/manage/" + account_key + "/add/",
+						$("#loginCredentials").serialize(), function() {
+							window.location = "/ad_network_reports/manage/" + account_key;
+						});
 				} else {
-        			    $.post("/ad_network_reports/add/",
-					    $("#loginCredentials").serialize());
-        		            window.location = "/ad_network_reports/";
+					$.post("/ad_network_reports/add/",
+						$("#loginCredentials").serialize(), function() {
+							window.location = "/campaigns/";
+						});
 				}
 			   } else {
-			   	$("#error").html("Invalid login information.")
+				$("#error").html("Invalid login information.")
 			   }
 		   }
 	   });

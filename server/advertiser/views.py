@@ -19,7 +19,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
-
+from common.utils.marketplace_helpers import MarketplaceStatsFetcher
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
 from advertiser.models import *
@@ -67,10 +67,6 @@ class AdGroupIndexHandler(RequestHandler):
         for campaign in campaigns:
             campaigns_dict[campaign.key()] = campaign
 
-        # if they have a marketplace campaign and they havent accepted the marketplace
-        # tos, we need to pop up an error.
-        has_marketplace_campaign = any([campaign.marketplace() for campaign in campaigns])
-
 
         if campaigns:
             adgroups = AdGroupQueryManager().get_adgroups(account=self.account)
@@ -79,7 +75,10 @@ class AdGroupIndexHandler(RequestHandler):
 
         # Roll up and attach various stats to adgroups
         for adgroup in adgroups:
-            adgroup.campaign = campaigns_dict[adgroup._campaign]
+            try:
+                adgroup.campaign = campaigns_dict[adgroup._campaign]
+            except KeyError:
+                pass
 
 
         # memoize
@@ -91,7 +90,6 @@ class AdGroupIndexHandler(RequestHandler):
         stats_model = StatsModelQueryManager(self.account, offline=self.offline)
         stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
 
-        logging.warn(stats)
 
         key = "||"
         stats_dict = {}
@@ -128,13 +126,30 @@ class AdGroupIndexHandler(RequestHandler):
 
         # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
         sorted_campaign_groups = _sort_campaigns(adgroups)
-        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns = sorted_campaign_groups
+        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
 
         guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
 
 
         help_text = None
 
+        # Ad Network Reports
+        from ad_network_reports.query_managers import AdNetworkReportQueryManager
+        from datetime import date, timedelta
+        manager = AdNetworkReportQueryManager(self.account)
+        mappers = list(manager.get_ad_network_mappers())
+
+        keys = [s.key() for s in mappers]
+        # Get aggregate stats for all the different ad network mappers for the
+        # account between the selected date range
+        aggregates = [manager.get_ad_network_aggregates(n, date.today() -
+            timedelta(days = 8), date.today() - timedelta(days = 1)) for n in
+            mappers]
+        aggregate_stats = zip(keys, mappers, aggregates)
+
+        # Sort alphabetically by application name then by ad network name
+        aggregate_stats = sorted(aggregate_stats, key = lambda s:
+                s[1].application.name + s[1].ad_network_name)
 
         return render_to_response(self.request,
                                  'advertiser/adgroups.html',
@@ -150,13 +165,12 @@ class AdGroupIndexHandler(RequestHandler):
                                    'guarantee_levels': guarantee_levels,
                                    'guarantee_num': len(guaranteed_campaigns),
                                    'marketplace': marketplace_campaigns,
-                                   'backfill_marketplace': backfill_marketplace_campaigns,
                                    'promo': promo_campaigns,
                                    'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,
                                    'account': self.account,
                                    'helptext':help_text,
-                                   'has_marketplace_campaign': has_marketplace_campaign})
+                                   'aggregate_stats' : aggregate_stats})
 
 ####### Helpers for campaign page #######
 
@@ -198,10 +212,14 @@ def _sort_campaigns(adgroups):
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
-    backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adgroups)
-    backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
 
-    return [promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns, backfill_marketplace_campaigns]
+    return [
+        promo_campaigns,
+        guaranteed_campaigns,
+        marketplace_campaigns,
+        network_campaigns,
+        backfill_promo_campaigns,
+    ]
 
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
@@ -1167,9 +1185,47 @@ def mpx_info(request, *args, **kwargs):
 
 class MarketplaceIndexHandler(RequestHandler):
     def get(self):
+
+        # Marketplace settings are kept as a single campaign.
+        # Only one should exist per account.
+        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+
+
+        # To bootstrap the Backbone.js models in the page, create a list of
+        # JSON'ed apps. Apps are the highest level model on the page.
+        app_keys = simplejson.dumps([str(app_key) for app_key in AppQueryManager.get_app_keys(self.account)])
+
+        # Set up a MarketplaceStatsFetcher with this account only
+        stats_fetcher = MarketplaceStatsFetcher(account_keys=[self.account.key()])
+
+        # Get the top level marketplace stats for the account
+        top_level_mpx_stats = stats_fetcher.get_account_stats(self.account.key())
+
+        # Get all of the dsp stats
+        today = datetime.date.today()
+        two_weeks_ago = datetime.timedelta(0,0,0,0,0,0,2)
+        dsps = stats_fetcher.get_all_dsp_stats(today, two_weeks_ago)
+
+        # Set up the blocklist
+        blocklist = []
+        network_config = self.account.network_config
+        if network_config:
+            blocklist = network_config.blocklist
+
+        for dsp in dsps:
+            creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], today, two_weeks_ago)
+            dsp.update({'creatives': creatives})
+
+
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
-                                  {})
+                                  {
+                                      'marketplace': marketplace_campaign,
+                                      'app_keys': app_keys,
+                                      'dsps': dsps,
+                                      'top_level_mpx_stats': top_level_mpx_stats,
+                                      'blocklist': blocklist
+                                  })
 
     def post(self):
         pass
@@ -1178,3 +1234,38 @@ class MarketplaceIndexHandler(RequestHandler):
 @login_required
 def marketplace_index(request, *args, **kwargs):
     return MarketplaceIndexHandler()(request, *args, **kwargs)
+
+
+
+
+
+
+class AddBlocklistHandler(RequestHandler):
+    def post(self):
+        add_blocklist_string = self.request.POST.get('blocklist')
+        add_blocklist = add_blocklist_string.replace(',',' ').split()
+
+        if add_blocklist:
+            network_config = self.account.network_config
+            network_config.blocklist.extend(add_blocklist)
+            network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
+            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+
+        return HttpResponseRedirect(reverse('marketplace_index'))
+
+@login_required
+def add_blocklist_handler(request,*args,**kwargs):
+    return AddBlocklistHandler()(request,*args,**kwargs)
+
+class RemoveBlocklistHandler(RequestHandler):
+    def get(self, url=None):
+        network_config = self.account.network_config
+        if network_config.blocklist.count(url):
+            network_config.blocklist.remove(url)
+            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+
+        return HttpResponseRedirect(reverse('marketplace_index'))
+
+@login_required
+def remove_blocklist_handler(request,*args,**kwargs):
+    return RemoveBlocklistHandler()(request,*args,**kwargs)

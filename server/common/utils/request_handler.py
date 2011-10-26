@@ -96,6 +96,21 @@ class RequestHandler(object):
                         kwargs[arg] = self.params.get(arg)
                 return self.post(*args,**kwargs)
 
+            elif request.method == "PUT":
+                f_args = getargspec(self.put)[0]
+                for arg in f_args:
+                    if not kwargs.has_key(arg) and self.params.has_key(arg):
+                        kwargs[arg] = self.params.get(arg)
+                return self.put(*args, **kwargs)
+
+            elif request.method == "DELETE":
+                f_args = getargspec(self.delete)[0]
+                for arg in f_args:
+                    if not kwargs.has_key(arg) and self.params.has_key(arg):
+                        kwargs[arg] = self.params.get(arg)
+                return self.delete(*args, **kwargs)
+
+
         # Execute our newly decorated view
         return mp_view(request, *args, **kwargs)
 

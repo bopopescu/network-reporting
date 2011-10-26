@@ -154,3 +154,29 @@ table.campaignData-main, table.reportData-table {
     margin: 0 auto;
     padding-left: 100px
 }
+
+/* Marketplace Tab */
+
+ul.adunits {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+        margin: 3px 0px;
+        padding: 0;
+        width: 100%;
+    }
+
+}
+
+.app-icon {
+    display: block;
+    float: left;
+    width: 50px;
+}
+
+.app-detail {
+    float: left;
+    margin: 0px 5px;
+}

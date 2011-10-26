@@ -4,7 +4,7 @@ import logging
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
         create_manager
-from common.ragendja.template import render_to_response
+from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from datetime import timedelta, date
 from django.contrib.auth.decorators import login_required
@@ -107,6 +107,7 @@ class AddLoginInfoHandler(RequestHandler):
 #
 #        officejerk_app = App(account = self.account, name = "Office Jerk", network_config = officejerk_network_config)
 #        officejerk_app.put()
+
         if account_key:
             account = Account.get(account)
         else:
@@ -115,7 +116,7 @@ class AddLoginInfoHandler(RequestHandler):
         forms = []
         for name in AD_NETWORK_NAMES:
             try:
-                instance = AdNetworkLoginInfo.get_by_network(account, name)
+                instance = AdNetworkLoginCredentials.get_by_network(account, name)
                 form = LoginInfoForm(instance=instance, prefix=name)
             except Exception, error:
                 instance = None
@@ -124,7 +125,7 @@ class AddLoginInfoHandler(RequestHandler):
             forms.append(form)
 
         return render_to_response(self.request,
-                                  'ad_network_reports/add_login_info.html',
+                                  'ad_network_reports/add_login_credentials.html',
                                   {
                                       'account_key' : account_key,
                                       'ad_network_names' : AD_NETWORK_NAMES,
@@ -133,12 +134,11 @@ class AddLoginInfoHandler(RequestHandler):
                                   })
 
     def post(self, account_key=None):
-        """Create AdNetworkLoginInfo and AdNetworkAppMappers for all apps that
+        """Create AdNetworkLoginCredentials and AdNetworkAppMappers for all apps that
         have pub ids for this network and account.
 
         Return a redirect to the ad nework report index.
         """
-
         initial = {}
         for network in AD_NETWORK_NAMES:
             initial[network + '-ad_network_name'] = network
@@ -152,15 +152,20 @@ class AddLoginInfoHandler(RequestHandler):
         form = LoginInfoForm(postcopy, prefix=ad_network)
 
         if form.is_valid():
+            logging.warning(form.cleaned_data)
             manager = create_manager(account_key, self.account)
-            manager.create_login_info_and_mappers(ad_network,
-                    form.cleaned_data['username'],
-                    form.cleaned_data['password'],
-                    form.cleaned_data['client_key'],
-                    wants_email)
+            manager.create_login_credentials_and_mappers(ad_network_name=
+                    ad_network,
+                    username=form.cleaned_data['username'],
+                    password=form.cleaned_data['password'],
+                    client_key=form.cleaned_data['client_key'],
+                    send_email=wants_email)
 
         logging.warn(form.errors)
 
+        # Send an OK, 200, response
+        return TextResponse("")
+
 @login_required
-def add_login_info(request, *args, **kwargs):
+def add_login_credentials(request, *args, **kwargs):
     return AddLoginInfoHandler()(request, *args, **kwargs)

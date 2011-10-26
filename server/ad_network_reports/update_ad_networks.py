@@ -47,7 +47,9 @@ def auth_func():
     return 'olp@mopub.com', 'N47935'
 
 def send_stats_mail(account, manager, test_date, valid_stats_list):
-    """Send email with stats data for the test date organized in a table."""
+    """Send email with scrape stats data for the test date organized in a
+    table.
+    """
     emails = False
     if account and account.user:
         emails = account.user.email()
@@ -121,7 +123,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 def update_ad_networks(start_date = None, end_date = None):
     """Update ad network stats.
 
-    Iterate through all AdNetworkLoginInfo. Login to the ad networks saving
+    Iterate through all AdNetworkLoginCredentials. Login to the ad networks saving
     the data for the date range in the db.
 
     Run daily as a cron job in EC2. Email account if account wants email upon
@@ -141,7 +143,6 @@ def update_ad_networks(start_date = None, end_date = None):
 
         previous_account_key = None
         valid_stats_list = []
-        email_account = False
         # log in to ad networks and update stats for each user 
         for login_credentials in get_all_login_credentials():
             account_key = login_credentials.account.key()
@@ -150,10 +151,9 @@ def update_ad_networks(start_date = None, end_date = None):
             # want email and the information is relevant (ie. yesterdays stats)
             if (account_key != previous_account_key and
                     previous_account_key):
-                if email_account:
+                if login_credentials.email:
                     send_stats_mail(db.get(previous_account_key), manager, test_date, valid_stats_list)
                 valid_stats_list = []
-                email_account = False
 
             stats_list = []
             manager = AdNetworkReportQueryManager(login_credentials.account)
@@ -201,7 +201,7 @@ def update_ad_networks(start_date = None, end_date = None):
                 # login_credentials and stats.
                 ad_network_app_mapper = manager.get_ad_network_app_mapper(
                         publisher_id=publisher_id,
-                        login_info=login_credentials)
+                        login_credentials=login_credentials)
 
                 if not ad_network_app_mapper:
                     # Check if the app has been added to MoPub prior to last
@@ -250,13 +250,12 @@ def update_ad_networks(start_date = None, end_date = None):
                 if test_date == yesterday:
                     valid_stats_list.append((ad_network_app_mapper.application.
                         name, ad_network_app_mapper.ad_network_name, stats))
-                    if ad_network_app_mapper.send_email:
-                        email_account = True
             previous_account_key = account_key
 
         aggregate.put()
-        if email_account:
-            send_stats_mail(login_credentials.account, manager, test_date, valid_stats_list)
+        if login_credentials.email:
+            send_stats_mail(login_credentials.account, manager, test_date,
+                    valid_stats_list)
 
 if __name__ == "__main__":
     setup_remote_api()

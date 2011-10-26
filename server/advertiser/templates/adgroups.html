@@ -14,48 +14,47 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-    {% ifequal account.status 'step4' %}
-      <!-- MixPanel Tracking -->
-      <script type="text/javascript">
-        mpq.push(["track", "Sign up: Campaign dashboard"]);
-      </script>
-      <div class="stepProgress">
-        <span class="stepProgress-step">Step 1: Add app</span>
-        <span class="ui-icon ui-icon-arrow-1-e"></span>
-        <span class="stepProgress-step">Step 2: Integrate</span>
-        <span class="ui-icon ui-icon-arrow-1-e"></span>
-        <span class="stepProgress-step stepProgress-active">Step 3: Add campaigns</span>
-      </div>
-    {% else %}
-      <span class="titlebar-right">
-        <a class="btn test icon" id="advertisers-testAdServer" href="#">Test Campaigns</a>
-      </span>
-    {% endifequal %}
+  {% ifequal account.status 'step4' %}
+    <!-- MixPanel Tracking -->
+    <script type="text/javascript">
+      mpq.push(["track", "Sign up: Campaign dashboard"]);
+    </script>
+    <div class="stepProgress">
+      <span class="stepProgress-step">Step 1: Add app</span>
+      <span class="ui-icon ui-icon-arrow-1-e"></span>
+      <span class="stepProgress-step">Step 2: Integrate</span>
+      <span class="ui-icon ui-icon-arrow-1-e"></span>
+      <span class="stepProgress-step stepProgress-active">Step 3: Add campaigns</span>
+    </div>
+  {% else %}
+    <span class="titlebar-right">
+      <a class="btn test icon" id="advertisers-testAdServer" href="#">Test Campaigns</a>
+    </span>
+  {% endifequal %}
 {% endblock titleBarRight %}
 
 
 {% block messageCenter %}{% endblock messageCenter %}
 {% block dateButtons %}
 
-          {% ifnotequal account.status 'step4' %}
-      <div id="titlebar-center">
-            <span class="buttonset" id="dashboard-dateOptions">
-              <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-7">7 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
-              <label for="dashboard-dateOptions-option-14">14 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-30">30 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
-              <label for="dashboard-dateOptions-option-custom">Custom ...</label>
-            </span>
-            <div id="dashboard-dateOptions-custom-modal">
-              <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
-              <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
-            </div>
+  {% ifnotequal account.status 'step4' %}
+    <div id="titlebar-center">
+      <span class="buttonset" id="dashboard-dateOptions">
+        <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
+        <label for="dashboard-dateOptions-option-7">7 days</label>
+        <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
+        <label for="dashboard-dateOptions-option-14">14 days</label>
+        <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
+        <label for="dashboard-dateOptions-option-30">30 days</label>
+        <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
+        <label for="dashboard-dateOptions-option-custom">Custom ...</label>
+      </span>
+      <div id="dashboard-dateOptions-custom-modal">
+        <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
+        <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
       </div>
-    {% endifnotequal %}
-
+    </div>
+  {% endifnotequal %}
 {% endblock dateButtons %}
 
 {% block content %}
@@ -76,7 +75,6 @@
       <ul>
         <li>A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.</li>
         <li><strong>Promotional</strong> campaigns are for house ads like an upsell.</li>
-        <li><strong>Marketplace</strong> campaigns use MoPub's <a href="{% url mpx_info %}">new real-time bidding technology</a> to fill your ad requests.</li>
         <li>A <strong>Network</strong> ad is an ad served from an ad network like AdMob.</li>
         <ul>
     </div>
@@ -95,59 +93,46 @@
   {% endif %}
 
 
-    {#{% if not has_marketplace_campaign and not account.stats == 'step4' %}#}
-    <div class="alert-message block-message clearfix">
-      <a href="#" class="close"> x </a>
-      We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
-      Add a new <a href="{% url advertiser_campaign_create %}#marketplace">marketplace campaign</a> to get started,
-      or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
-      <br />
-      <a class="btn start icon right" href="{% url mpx_info %}">Get Started</a>
+  {# Page-level tab control #}
+  <ul class="tabs">
+    <li class="active"> <a href="#performance">  Performance </a> </li>
+    <li> <a href="#guaranteed">  Guaranteed </a> </li>
+    <li> <a href="#promotional">  Promotional </a> </li>
+    {# <li> <a href="#marketplace">  Marketplace </a> </li> #}
+    <li> <a id="network_tab" href=".network">  Ad Networks </a> </li>
+  </ul>
 
-    </div>
-    {#  {% endif %} #}
-
-
-    {# Page-level tab control #}
-    <ul class="tabs">
-      <li class="active"> <a href="#performance">  Performance </a> </li>
-      <li> <a href="#guaranteed">  Guaranteed </a> </li>
-      <li> <a href="#promotional">  Promotional </a> </li>
-      <li> <a href="#marketplace">  Marketplace </a> </li>
-      <li> <a href="#network">  Ad Networks </a> </li>
-    </ul>
-
-    {# Controls for showing campaigns by All/Running/Paused/Scheduled #}
-    {# These need to be restyled with our new styles to remove JQueryUI #}
+  {# Controls for showing campaigns by All/Running/Paused/Scheduled #}
+  {# These need to be restyled with our new styles to remove JQueryUI #}
 
 
-    <div id="campaigns-control-panel">
-      <div class="center-button-bank">
+  <div id="campaigns-control-panel">
+    <div class="center-button-bank">
 
-        <span class="buttonset-start-disabled" id="campaigns-filterOptions">
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/>
-          <label for="campaigns-filterOptions-option-all">
-            All
-          </label>
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/>
-          <label for="campaigns-filterOptions-option-Running">
-            Running
-          </label>
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" />
-          <label for="campaigns-filterOptions-option-Paused">
-            Paused
-          </label>
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" />
-          <label for="campaigns-filterOptions-option-Scheduled">
-            Scheduled
-          </label>
-        </span>
-        <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions">
-          <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
-          {% for app in apps %}
-            <option value="campaign-targeting-{{app.key}}">{{app.name}}</option>
-          {% endfor %}
-        </select>
+      <span class="buttonset-start-disabled" id="campaigns-filterOptions">
+        <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/>
+        <label for="campaigns-filterOptions-option-all">
+          All
+        </label>
+        <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/>
+        <label for="campaigns-filterOptions-option-Running">
+          Running
+        </label>
+        <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" />
+        <label for="campaigns-filterOptions-option-Paused">
+          Paused
+        </label>
+        <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" />
+        <label for="campaigns-filterOptions-option-Scheduled">
+          Scheduled
+        </label>
+      </span>
+      <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions">
+        <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
+        {% for app in apps %}
+          <option value="campaign-targeting-{{app.key}}">{{app.name}}</option>
+        {% endfor %}
+      </select>
 
       </div>
     </div>
@@ -212,19 +197,105 @@
 
             <div class="chart stats-chart" id="dashboard-stats-chart"></div>
 
-    </div>
-    <div class="clear"></div>
+          </div>
+          <div class="clear"></div>
+        </section>
+
+        <div class="clearfix">
+          <div class="pie chart" id="impressions-pie-chart"></div>
+          <div class="pie chart" id="clicks-pie-chart"></div>
+          <div class="pie chart" id="revenue-pie-chart"></div>
+        </div>
 
 
+        <h2> Guaranteed Campaign Totals </h2>
+        <div id='gtee-rollups' class="campaignData-rollup">
+          <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+            <thead>
+              <tr>
+                <th width=25%>Impressions</th>
+                <th width=25%>Clicks</th>
+                <th width=25%>CTR</th>
+                <th width=25%>Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id='gtee-total-imp'>--</td>
+                <td id='gtee-total-clk'>--</td>
+                <td id='gtee-total-ctr'>--</td>
+                <td id='gtee-total-rev'>--</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-  </section>
+        <h2> Promotional Campaign Totals </h2>
+        <div id='promo-rollups' class="campaignData-rollup">
+          <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+            <thead>
+              <tr>
+                <th width=25%>Impressions</th>
+                <th width=25%>Clicks</th>
+                <th width=25%>CTR</th>
+                <th width=25%>Conversions</th>
+              </tr>
+            </thead>
+              <tbody>
+                <tr>
+                  <td id='promo-total-imp'>--</td>
+                  <td id='promo-total-clk'>--</td>
+                  <td id='promo-total-ctr'>--</td>
+                  <td id='promo-total-conv'>--</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-      <div class="clearfix">
-      <div class="pie chart" id="impressions-pie-chart"></div>
-      <div class="pie chart" id="clicks-pie-chart"></div>
-      <div class="pie chart" id="revenue-pie-chart"></div>
-    </div>
+          <h2> Backfill Promotional Campaign Totals </h2>
+          <div id='bfill-rollups' class="campaignData-rollup">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Conversions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='bfill-total-imp'>--</td>
+                              <td id='bfill-total-clk'>--</td>
+                              <td id='bfill-total-ctr'>--</td>
+                              <td id='bfill-total-conv'>--</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
 
+              <h2> Network Campaign Totals </h2>
+          <div id='network-rollups' class="campaignData-rollup">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                      <thead>
+                          <tr>
+                              <th width=25%>Impressions</th>
+                              <th width=25%>Clicks</th>
+                              <th width=25%>CTR</th>
+                              <th width=25%>Fill Rate (Attempts)</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td id='network-total-imp'>--</td>
+                              <td id='network-total-clk'>--</td>
+                              <td id='network-total-ctr'>--</td>
+                              <td id='network-total-fill'>--</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
 </div>
 
 <section id="dashboard-campaigns">
@@ -239,14 +310,21 @@
   </div>
 
   <div class="tab-section" id="guaranteed">
-    <a class="right btn add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
-    <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
-    <input type="hidden" name="action" id="action"/>
-    <h2>Guaranteed {% if not guarantee_num %}<span class="muted">(None)</span>{% endif %}
-    <img id="gtee-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
-    </h2>
 
-    {% if guarantee_num %}<div id='gtee-rollups' class="campaignData-rollup">
+    <a class="right btn add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
+
+    <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
+      <input type="hidden" name="action" id="action"/>
+      {% if not guarantee_num %}
+        <h2> No Guaranteed Campaigns </h2>
+      {% else %}
+        <h2> Guaranteed Performance ({{start_date|format_date_compact}} to {{end_date|format_date_compact}}) </h2>
+
+      {% endif %}
+      <img id="gtee-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
+
+    {% if guarantee_num %}
+      <div id='gtee-rollups' class="campaignData-rollup">
       <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
         <thead>
           <tr>
@@ -269,11 +347,11 @@
 
     {% for level in guarantee_levels %}
       {% if level.display %}
-        <table class="dataTable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
+        <table class="zebra-striped simpletable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
           <thead>
             <tr>
               <th class="campaignData-icon"></th>
-              <th class="dataTable-name">{{level.name}} Priority</th>
+              <th class="dataTable-name"> Campaign Name </th>
               <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
               <th class="dataTable-data numeric">Status</th>
               <th class="dataTable-data numeric">Impressions</th>
@@ -287,28 +365,46 @@
             {% for adgroup in level.adgroups %}
 
               <tr class="campaignData gtee_row campaign-status-all campaign-targeting-all incomplete {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}" id="{{adgroup.key}}">
-                <th class="campaignData-icon">
+                <td class="campaignData-icon">
                   <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                   {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                   {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                   {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                </th>
-                <th class="dataTable-name">
+                </td>
+                <td class="dataTable-name">
                   <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
+
                   <span class="muted">
                     {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                      {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
-                      {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                      {{adgroup.campaign.start_date|format_date_compact}} - {{adgroup.campaign.end_date|format_date_compact}}.
+                    {% endif %}
+
+                    {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                       Starts {{adgroup.campaign.start_date|format_date_compact}}.
-                      {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                    {% endif %}
+
+                    {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
                       Ends {{adgroup.campaign.start_date|format_date_compact}}.
-                      {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                    {% endif %}
+
+                    {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                       All dates.
                     {% endif %}
-                    {% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
-                    {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
+
+                    {% ifequal adgroup.campaign.budget_type 'daily' %}
+                      {% if adgroup.campaign.budget %}
+                        {{adgroup.campaign.budget|currency}} daily budget.
+                      {% else %}
+                        Unlimited budget.
+                      {% endif %}
+                    {% endifequal %}
+
+                    {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
+                      {{adgroup.campaign.full_budget|currency}} campaign budget.
+                    {% endifequal %}
                   </span>
-                </th>
+
+                </td>
 
                 {% if adgroup.cpc %}
                   <td class="dataTable-data numeric dataTable-ecpm">
@@ -364,7 +460,7 @@
               </tbody>
             </table>
           </div>
-          <table class="dataTable campaignData-main">
+          <table class="zebra-striped simpletable campaignData-main">
             <thead>
               <tr>
                 <th class="campaignData-icon"></th>
@@ -383,48 +479,56 @@
                 <tr class="campaignData promo_row campaign-status-all campaign-targeting-all incomplete
                            {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     id="{{adgroup.key}}">
-                  <th class="campaignData-icon">
+                  <td class="campaignData-icon">
                     <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                     {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                     {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                     {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                  </th>
-                  <th class="dataTable-name">
-                  <a <a href=""></a>="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
-                  <span class="muted">
-                    {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                      {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
-                      {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                      Starts {{adgroup.campaign.start_date|format_date_compact}}.
-                      {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                      Ends {{adgroup.campaign.start_date|format_date_compact}}.
-                      {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                      All dates.
+                  </td>
+                  <td class="dataTable-name">
+                    <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
+                    <br/>
+                    <span class="muted">
+                      {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                        {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
+                      {% endif %}
+                      {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                        Starts {{adgroup.campaign.start_date|format_date_compact}}.
+                      {% endif %}
+                      {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                        Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                      {% endif %}
+                      {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                        All dates.
+                      {% endif %}
+                      {% if adgroup.campaign.budget %}
+                        {{adgroup.campaign.budget|currency}} daily budget.
+                      {% else %}
+                        Unlimited budget.
+                      {% endif %}
+                    </span>
+                  </td>
+                  <td class="dataTable-data numeric dataTable-ecpm ecpm">
+                    {% if adgroup.bid_strategy == 'cpm' %}
+                      --
                     {% endif %}
-                    {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
-                  </span>
-                </th>
-                <td class="dataTable-data numeric dataTable-ecpm ecpm">
-                  {% if adgroup.bid_strategy == 'cpm' %}
-                    --
-                  {% endif %}
-                  {% if adgroup.bid_strategy == 'cpc' %}
-                    <div class="dataTable-campaign-ecpm ecpm">--</div>
-                  {% endif %}
-                </td>
-                <td class="dataTable-data numeric status">--</td>
-                <td class="dataTable-data numeric promo-imp imp">--</td>
-                <td class="dataTable-data numeric promo-clk clk">--</td>
-                <td class="dataTable-data numeric promo-ctr ctr">--</td>
-                <td class="dataTable-data numeric promo-conv conv">--</td>
-                <td class="dataTable-data numeric promo-cpa cpa">--</td>
-              </tr>
-            {% endfor %}
-          </tbody>
+                    {% if adgroup.bid_strategy == 'cpc' %}
+                      <div class="dataTable-campaign-ecpm ecpm">--</div>
+                    {% endif %}
+                  </td>
+                  <td class="dataTable-data numeric status">--</td>
+                  <td class="dataTable-data numeric promo-imp imp">--</td>
+                  <td class="dataTable-data numeric promo-clk clk">--</td>
+                  <td class="dataTable-data numeric promo-ctr ctr">--</td>
+                  <td class="dataTable-data numeric promo-conv conv">--</td>
+                  <td class="dataTable-data numeric promo-cpa cpa">--</td>
+                </tr>
+              {% endfor %}
+            </tbody>
           </table>
         {% endif %}
 
-                      <h2>Backfill Promotional {% if not backfill_promo %}<span class="muted">(None)</span>{% endif %}
+        <h2>Backfill Promotional {% if not backfill_promo %}<span class="muted">(None)</span>{% endif %}
                   <img id="bfill-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
               </h2>
               {% if backfill_promo %}<div id='bfill-rollups' class="campaignData-rollup">
@@ -447,7 +551,7 @@
                       </tbody>
                   </table>
               </div>
-              <table class="dataTable campaignData-main">
+              <table class="zebra-striped simpletable campaignData-main">
                 <thead>
                   <tr>
                     <th class="campaignData-icon"></th>
@@ -466,13 +570,13 @@
                   <tr class="campaignData bfill_row campaign-status-all campaign-targeting-all incomplete
                     {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     id="{{adgroup.key}}">
-                    <th class="campaignData-icon">
+                    <td class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9></img>{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                    </th>
-                    <th class="dataTable-name">
+                    </td>
+                    <td class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
                         <span class="muted">
                             {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
@@ -486,7 +590,7 @@
                             {% endif %}
                             {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
                         </span>
-                    </th>
+                    </td>
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
                         <div class="dataTable-campaign-ecpm ecpm">--</div>
@@ -509,7 +613,8 @@
         </div>
 
 
-            <div class="tab-section" id="marketplace">
+        {% comment %}
+        <div class="tab-section" id="marketplace">
               <a class="right btn add icon" href="{% url advertiser_campaign_create %}#marketplace">Add a campaign</a>
               <h2>Marketplace {% if not marketplace %}<span class="muted">(None)</span> <a href="{% url mpx_info %}"> Learn more </a>{% endif %}
                   <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
@@ -555,17 +660,17 @@
                   <tr class="campaignData marketplace_row campaign-status-all campaign-targeting-all incomplete
                     {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     id="{{adgroup.key}}">
-                    <th class="campaignData-icon">
+                    <td class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                    </th>
-                    <th class="dataTable-name">
+                    </td>
+                    <td class="dataTable-name">
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
 
                       <span class="muted">MoPub Marketplace Beta</span>
-                    </th>
+                    </td>
                     <td class="dataTable-data numeric marketplace-rev rev">--</td>
                     <td class="dataTable-data numeric marketplace-ecpm ecpm">--</td>
                     <td class="dataTable-data numeric marketplace-req req">--</td>
@@ -587,9 +692,10 @@
               {% endif %}
 
               </div>
+              {% endcomment %}
 
-              <div class="tab-section" id="network">
-                <a class="right btn add icon" href="{% url advertiser_campaign_create %}#network">Add a campaign</a>
+              <div class="tab-section network">
+                <a class="right btn add icon" href="{% url advertiser_campaign_create %}.network">Add a campaign</a>
                 <h2>Network Campaigns
                   <img id="network-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
                 </h2>
@@ -613,7 +719,7 @@
                       </tbody>
                   </table>
               </div>
-              <table class="dataTable campaignData-main">
+              <table class="zebra-striped simpletable campaignData-main">
                 <thead>
                   <tr>
                     <th class="campaignData-icon"></th>
@@ -634,17 +740,17 @@
 
                    id="{{adgroup.key}}">
 
-                    <th class="campaignData-icon">
+                    <td class="campaignData-icon">
                       <input type="checkbox" name="id" value="{{adgroup.key}}"/>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                    </th>
-                    <th class="dataTable-name">
+                    </td>
+                    <td class="dataTable-name">
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
 
                       <span class="muted">{{adgroup.network_type}}</span>
-                    </th>
+                    </td>
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">
                         <div class="dataTable-campaign-ecpm ecpm">--</div>
@@ -663,19 +769,15 @@
                 </tbody>
               </table>
 
-              <div>Add ad network scrape stats here</div>
+
 
               {% else %}
 
                 <div class="alert-message block-message info">
-                  Ad Networks are awesome dogg. Get started using them now!
-
-                  Put ad network quick adding here.
+                  Ad network campaigns can be set up to serve ads from any of the big ad networks. Click 'Add a campaign' to get started using ad networks.
                 </div>
 
             {% endif %}
-
-
 
               {% if backfill_marketplace %}
               <h2>Backfill Marketplace {% if not backfill_marketplace %}<span class="muted">(None)</span>{% endif %}
@@ -738,6 +840,47 @@
             <div id="archive-link" >
             <a class="linkIcon" href="{% url advertiser_archive %}"> View Archived Campaigns <span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
             </div>
+
+            <div class="tab-section network">
+							<h2 style="margin-top:20px;">Ad Network Revenue Reports</h2>
+						{% if aggregate_stats and network %}
+              <table class="zebra-striped simpletable campaignData-main">
+								<thead>
+									<th class="dataTable-name"> App </th>
+									<th class="dataTable-name"> Ad Network </th>
+									<th class="dataTable-data numeric"> Revenue </th>
+									<th class="dataTable-data numeric"> Attempts </th>
+									<th class="dataTable-data numeric"> Impressions </th>
+									<th class="dataTable-data numeric"> Fill Rate</th>
+									<th class="dataTable-data numeric"> Clicks </th>
+									<th class="dataTable-data numeric"> CTR </th>
+								</thead>
+								<tbody>
+									{% for key, mapper, stats in aggregate_stats %}
+										<tr>
+											<td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
+											<td class="dataTable-name">{{mapper.ad_network_name}}</td>
+											<td class="dataTable-data numeric">{{stats.revenue}}</td>
+											<td class="dataTable-data numeric">{{stats.attempts}}</td>
+											<td class="dataTable-data numeric">{{stats.impressions}}</td>
+											<td class="dataTable-data numeric">{{stats.fill_rate}}</td>
+											<td class="dataTable-data numeric">{{stats.clicks}}</td>
+											<td class="dataTable-data numeric">{{stats.ctr}}</td>
+										</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+
+							<a class="right btn" href='/ad_network_reports/add'>Add more network credentials</a>
+						{% else %}
+						  {% if network %}
+                <div class="alert-message block-message info">
+                  Ad network revenue reporting can be set up to see statistics from any of the big ad networks. Click 'Set up network reporting' to get started using ad network reports.
+                </div>
+							  <a class="right btn" href='/ad_network_reports/add'>Set up network reporting</a>
+						  {% endif %}
+						{% endif %}
+					</div>
           </section>
 
           {# Help Content #}
@@ -770,6 +913,11 @@
 {% endblock content %}
 
 {% block extraScripts %}
+<script type="text/javascript">
+	$(function() {
+			$("#dashboard-dateOptions").remove();
+	});
+</script>
 <script>
     var mopub = mopub || {};
     $(function() {
@@ -784,7 +932,7 @@
             $(".form-submit-left").hide();
         }).click();
 
-        $.each(["#marketplace", "#promotional","#guaranteed", "#network"], function(iter, item) {
+        $.each(["#marketplace", "#promotional","#guaranteed", ".network"], function(iter, item) {
             $("a[href='" + item + "']").parent().click(function () {
                 $("#campaigns-control-panel").show();
                 $(".form-submit-left").show();
@@ -807,27 +955,27 @@
             $("#terms").dialog('open');
         });
 
-        var data = [
-        ["Guaranteed", 9456003],
-        ["Marketplace", 2349999],
-        ["Ad Networks", 234000],
-        ]
+        <!-- var data = [ -->
+        <!-- ["Guaranteed", 9456003], -->
+        <!-- ["Marketplace", 2349999], -->
+        <!-- ["Ad Networks", 234000], -->
+        <!-- ] -->
 
-        var data2 = [
-        ["Guaranteed", 456420],
-        ["Marketplace", 134944],
-        ["Ad Networks", 234001],
-        ]
+        <!-- var data2 = [ -->
+        <!-- ["Guaranteed", 456420], -->
+        <!-- ["Marketplace", 134944], -->
+        <!-- ["Ad Networks", 234001], -->
+        <!-- ] -->
 
-        var data3 = [
-        ["Guaranteed", 9456],
-        ["Marketplace", 2349],
-        ["Ad Networks", 2340],
-        ]
+        <!-- var data3 = [ -->
+        <!-- ["Guaranteed", 9456], -->
+        <!-- ["Marketplace", 2349], -->
+        <!-- ["Ad Networks", 2340], -->
+        <!-- ] -->
 
-        mopub.Chart.setupPieChart("impressions-pie-chart", "Total Impressions", data);
-        mopub.Chart.setupPieChart("clicks-pie-chart", "Total Clicks", data2);
-        mopub.Chart.setupPieChart("revenue-pie-chart", "Total Revenue", data3);
+        <!-- mopub.Chart.setupPieChart("impressions-pie-chart", "Total Impressions", data); -->
+        <!-- mopub.Chart.setupPieChart("clicks-pie-chart", "Total Clicks", data2); -->
+        <!-- mopub.Chart.setupPieChart("revenue-pie-chart", "Total Revenue", data3); -->
 
     });
 </script>

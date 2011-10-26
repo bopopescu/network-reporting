@@ -1625,6 +1625,15 @@ table .headerSortUp.purple,
 table .headerSortDown.purple {
   background-color: #f5f5fa; }
 
+.dataTables_length {
+  float: left; }
+
+.dataTables_filter {
+  float: right; }
+
+.paginate_button {
+  display: inline-block; }
+
 /*
  * ## Colors
  */

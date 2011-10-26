@@ -12,6 +12,7 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
@@ -20,6 +21,8 @@ from django.core.urlresolvers import reverse
 import datetime
 import logging
 from django.conf import settings
+
+import urllib2
 
 class AppService(RequestHandler):
     """
@@ -201,7 +204,36 @@ class CreativeService(RequestHandler):
     """
     def get(self, creative_key=None):
 
-        return JSONResponse({'error':'No parameters provided'})
+        if settings.DEBUG:
+            mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+        else:
+            mpxstats = MarketplaceStatsFetcher(self.account.key())
+
+        end_date = datetime.datetime.today()
+        start_date = end_date - datetime.timedelta(14)
+
+        # url = "http://mpx.mopub.com/stats/creatives?pub_id=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw&dsp_id=4e8d03fb71729f4a1d000000"
+        # response = urllib2.urlopen(url).read()
+        # data = simplejson.loads(response)
+
+        creative_data = mpxstats.get_all_creatives(start_date, end_date)
+
+        creatives = []
+        for creative in creative_data:
+            creatives.append([
+                creative["creative"]["url"],
+                creative["creative"]["ad_dmn"],
+                currency(creative["stats"]["pub_rev"]),
+                currency(creative['stats']['ecpm']),
+                creative["stats"]["imp"],
+                #creative["stats"]["clk"],
+                #percentage_rounded(creative['stats']['ctr']),
+            ])
+
+        return JSONResponse({
+            'aaData': creatives
+        })
+
 
     def post(self):
         pass

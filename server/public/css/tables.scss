@@ -228,3 +228,20 @@ table {
         background-color: lighten($purple, 40%);
     }
 }
+
+
+
+
+.dataTables_length {
+    float: left;
+
+}
+
+.dataTables_filter {
+    float: right;
+
+}
+
+.paginate_button {
+     display: inline-block;
+}

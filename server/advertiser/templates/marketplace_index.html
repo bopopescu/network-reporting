@@ -66,6 +66,16 @@
           Impressions
         </div>
       </div>
+
+      <div class="data-figure">
+        <div class="figure">
+          {{ top_level_mpx_stats.ecpm }}
+        </div>
+        <div class="label">
+          Average eCPM
+        </div>
+      </div>
+      {% comment %}
       <div class="data-figure">
         <div class="figure">
           {{ top_level_mpx_stats.clicks|withsep }}
@@ -74,6 +84,7 @@
           Clicks
         </div>
       </div>
+      {% endcomment %}
       <div class="data-figure">
         <div class="figure">
           {{ top_level_mpx_stats.revenue|withsep }}
@@ -108,6 +119,7 @@
 
   <div class="tab-section" id="controls">
 
+    {% comment %}
     <div class="rollup fig3">
       <div class="data-figure">
         <div class="figure">
@@ -134,17 +146,17 @@
         </div>
       </div>
     </div>
+    {% endcomment %}
 
-
-    <table class="{#zebra-striped sortable simpletable#}dataTable" id="creatives">
+    <table class="{#zebra-striped sortable simpletable#}" id="creatives" width="100%">
       <thead>
         <th> Creative </th>
         <th> Advertiser </th>
         <th> Revenue </th>
         <th> eCPM </th>
         <th> Impressions </th>
-        <th> Clicks </th>
-        <th> CTR </th>
+        {#<th> Clicks </th>#}
+        {#<th> CTR </th>#}
       </thead>
       <tbody>
         {% comment %}
@@ -199,17 +211,19 @@
           Turn the Marketplace on or off for your account.
         </div>
       </div>
+
+        {% comment %}>
       <br/>
       <form action="{% url marketplace_settings_change %}" method="POST" id="marketplace_settings_change">
         <input name="blind" type="checkbox" original-title="Coming Soon"/>
         <label for="blind"> Make my marketplace requests blind </label>
-        {% comment %}
+
         <br />
         <input name="default_price_floor_activate" type="checkbox" />
         <input name="default_price_floor" type="text" />
         <label for="default_price_floor"> Set the default price floor for targeted adunits </label>
-        {% endcomment %}
       </form>
+        {% endcomment %}
     </div>
 
     <h2>Blocklist</h2>
@@ -239,10 +253,12 @@
 
     </div>
 
+    {% comment %}
     <div class="right button-group">
       <div class="big disabled btn"> Discard Changes </div>
       <div id="settings-submit" class="big primary btn"> Save All Settings </div>
     </div>
+    {% endcomment %}
   </div>
 
 {% endblock content %}
@@ -272,35 +288,33 @@
   <script type="text/javascript">
     $(document).ready(function() {
 
+      // Marketplace.fetchAllApps(app_keys);
 
-    Marketplace.fetchAllApps(app_keys);
-
-
-
-    table = $("#creatives").dataTable({
-      "bProcessing": true,
-      "aoColumns":[
-        {"sWidth": "320px"},
-        {"sWidth": "80px"},
-        {"sWidth": "80px"},
-        {"sWidth": "80px"},
-        {"sWidth": "80px"},
-        {"sWidth": "80px"},
-        {"sWidth": "80px"},
+      table = $("#creatives").dataTable({
+        "bProcessing": true,
+        "bJQueryUI": true,
+        "sPaginationType": "full_numbers",
+        "aoColumns":[
+          {"sWidth": "320px"},
+          {"sWidth": "120px"},
+          {"sWidth": "120px"},
+          {"sWidth": "120px"},
+          {"sWidth": "120px"}
+          //{"sWidth": "80px"},
+          //{"sWidth": "80px"},
         ],
         "sAjaxSource": "/api/creatives/",
         "fnRowCallback": function(nRow, aData, iDisplayIndex) {
-
           $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
-
-
           return nRow;
-          }
+        }
       });
-  });
 
-        $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
+      $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
 
     });
   </script>
 {% endblock extraScripts %}
+{% block extraCss %}
+<link rel="stylesheet" href="/css/dt_jui.css?v=7"></link>
+{% endblock extraCss %}

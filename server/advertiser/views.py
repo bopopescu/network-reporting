@@ -1208,6 +1208,7 @@ class MarketplaceIndexHandler(RequestHandler):
         # Get the top level marketplace stats for the account
         top_level_mpx_stats = stats_fetcher.get_account_stats(start_date, end_date)
 
+        logging.warn(top_level_mpx_stats)
 
         # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
 
@@ -1243,16 +1244,13 @@ class MarketplaceIndexHandler(RequestHandler):
 
         dsps =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
 
-        logging.warn("\n\n\n\n\n\n\n\n\n\n\n")
-        logging.warn(dsps)
-
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
                                       'app_keys': app_keys,
                                       'dsp_keys': dsps,
-                                      # 'top_level_mpx_stats': top_level_mpx_stats,
+                                      'top_level_mpx_stats': top_level_mpx_stats,
                                       'blocklist': blocklist,
                                       'creative_totals': creative_totals,
                                       'date_range': self.date_range
@@ -1305,10 +1303,8 @@ class MarketplaceOnOffHandler(RequestHandler):
             activate = self.request.POST.get('activate', 'on')
             mpx = CampaignQueryManager.get_marketplace(self.account)
             if activate == 'on':
-                logging.warn("ACTIVATING")
                 mpx.active = True
             elif activate == 'off':
-                logging.warn("DEACTIVATING")
                 mpx.active = False
 
             CampaignQueryManager.put(mpx)

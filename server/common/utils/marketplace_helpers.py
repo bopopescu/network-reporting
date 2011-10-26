@@ -4,7 +4,7 @@ from urllib2 import urlopen
 import datetime
 
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
-
+from common.constants import MPX_DSP_IDS
 import logging
 
 try:
@@ -124,6 +124,7 @@ class MarketplaceStatsFetcher(object):
         return {}
 
     def get_creatives_for_dsp(self, dsp_key, start, end):
+
         url = "%s%spub_id=%s&dsp_id=%s&start=%s&end=%s" % (self._base_url,
                                                            self._creative,
                                                            self.pub_id,
@@ -140,6 +141,27 @@ class MarketplaceStatsFetcher(object):
 
         return creatives
 
+    def get_all_creatives(self, start, end):
+        all_creatives = []
+        for dsp_key in MPX_DSP_IDS:
+            url = "%s%spub_id=%s&dsp_id=%s&start=%s&end=%s" % (self._base_url,
+                                                               self._creative,
+                                                               self.pub_id,
+                                                               dsp_key,
+                                                               start.strftime("%m-%d-%Y"),
+                                                               end.strftime("%m-%d-%Y"))
+            creative_stats = _fetch_and_decode(url)
+            if dsp_key in creative_stats:
+
+                creatives = [creative for creative in creative_stats[dsp_key].values()]
+                for creative in creatives:
+                    creative['stats'].update(ctr = ctr(creative['stats']['clk'], creative['stats']['imp']))
+                    creative['stats'].update(ecpm = ecpm(creative['stats']['pub_rev'], creative['stats']['imp']))
+
+                all_creatives.extend(creatives)
+        return all_creatives
+
+
 
     def get_top_creatives(self, dsp_key=None, limit=None):
         if limit == None:
@@ -150,7 +172,6 @@ class MarketplaceStatsFetcher(object):
 def _fetch_and_decode(url):
     try:
         response = urlopen(url).read()
-        logging.warn(response)
         response_dict = json.loads(response)
     except Exception, ex:
         raise MPStatsAPIException(ex)

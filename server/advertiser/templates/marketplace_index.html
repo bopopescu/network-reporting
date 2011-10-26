@@ -150,7 +150,7 @@
         {% for dsp in dsps %}
           {% for creative in dsp.creatives %}
             <tr>
-              <td> <img src="/images/loading2.gif" /> {# <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe> #}  </td>
+              <td> {#<img src="/images/loading2.gif" />#} <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe>   </td>
               <td>
                 {% if creative.creative.advertiser_blocked %}
                   {{ creative.creative.ad_dmn }}

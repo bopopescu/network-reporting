@@ -86,6 +86,34 @@
         }
     });
 
+    /*
+     * ## Creative
+     */
+    var Creative = Backbone.Model.extend({
+        defaults: {
+            revenue: 0,
+            ecpm: 0,
+            impressions: 0,
+            clicks: 0,
+            ctr: 0,
+            creative_url: "#",
+            ad_domain: '#',
+            domain_blocked: false
+        },
+        url: function() {
+            return '/api/creative/' + this.id;
+        }
+    });
+
+    /*
+     * ## CreativeCollection
+     */
+    var CreativeCollection = Backbone.Collection.extend({
+        model: Creative,
+        url: function () {
+            return '/api/creatives/' + this.dsp_key;
+        }
+    });
 
     /*
      * ## AppView
@@ -110,6 +138,13 @@
             return this;
         }
     });
+
+
+    /*
+     * ## CreativeView
+     */
+
+
 
     /*
      * Utility methods for AppView that control the showing/hiding
@@ -252,6 +287,29 @@
             return app_id;
         },
 
+        fetchCreatives: function(dsp_keys) {
+            _.each(dsp_keys, function(dsp_key) {
+
+                var creative_collection = new CreativeCollection();
+                creative_collection.dsp_key = dsp_key;
+
+                creative_collection.bind('reset', function(creatives) {
+                    _.each(creatives.models, function (creative) {
+                        var creative_view = new CreativeView({model: creative, el: "table#creatives"});
+                        creative_view.render();
+                    });
+
+                });
+
+                creative_collection.fetch({
+                    success: function(){
+                        $('table#creatives').trigger('update');
+                    }
+                });
+            });
+
+        },
+
         /*
          * Sends the AJAX request to turn ON the marketplace.
          * This shouldn't just return true, it should return true
@@ -295,6 +353,38 @@
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
     window.Marketplace = Marketplace;
+
+
+
+    $.fn.pagination = function(options) {
+        var defaults = {
+            page_length: 10,
+            current_page: 0
+        };
+
+        var table = $(this);
+
+        table.find('tbody tr').show()
+            .lt(currentPage * numPerPage)
+            .hide()
+            .end()
+            .gt((currentPage + 1) * numPerPage - 1)
+            .hide()
+            .end();
+
+        var numRows = table.find('tbody tr').length;
+        var numPages = Math.ceil(numRows / numPerPage);
+
+        var pager = $('<div class="pager"></div>');
+
+        for (var page = 0; page < numPages; page++) {
+            $('<span class="page-number">' + (page + 1) + '</span>')
+                .appendTo(pager).addClass('clickable');
+        }
+
+        // Add the pager after the table
+        pager.after(table);
+    };
 
 
     /*

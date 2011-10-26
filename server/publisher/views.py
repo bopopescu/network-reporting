@@ -260,7 +260,10 @@ class AppCreateHandler(RequestHandler):
             status = "success"
             if self.account.status == "new":
                 self.account.status = "step4"  # skip to step 4 (add campaigns), but show step 2 (integrate)
-                AccountQueryManager.put_accounts(self.account)
+                # create a network f
+                # TODO (Tiago): add the itunes info here for iOS apps for iAd syncing
+                network_config = NetworkConfig()
+                AccountQueryManager.update_config_and_put(account, network_config)
 
                 # create the marketplace account for the first time
                 mpx = CampaignQueryManager.get_marketplace(self.account)

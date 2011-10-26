@@ -1,5 +1,7 @@
 import logging, os, re, datetime, hashlib
 
+from django.conf import settings
+
 from urllib import urlencode
 from copy import deepcopy
 
@@ -1185,7 +1187,10 @@ class MarketplaceIndexHandler(RequestHandler):
         app_keys = simplejson.dumps([str(app_key) for app_key in AppQueryManager.get_app_keys(self.account)])
 
         # Set up a MarketplaceStatsFetcher with this account only
-        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+        if settings.DEBUG:
+            stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+        else:
+            stats_fetcher = MarketplaceStatsFetcher(self.account.key())
 
         # Form the date range
         if self.start_date: # this is tarded. the start date is really the end of the date range.
@@ -1232,7 +1237,7 @@ class MarketplaceIndexHandler(RequestHandler):
         for dsp in dsps:
             creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], start_date, end_date)
             for creative in creatives:
-                creative['creative']['advertiser_blocked'] = creative['creative']['advertiser'] in blocklist
+                creative['creative']['advertiser_blocked'] = creative['creative']['ad_dmn'] in blocklist
             dsp.update({'creatives': creatives})
 
 

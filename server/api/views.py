@@ -19,15 +19,18 @@ from django.core.urlresolvers import reverse
 
 import datetime
 import logging
-
+from django.conf import settings
 
 class AppService(RequestHandler):
     """
     API Service for delivering serialized App data
     """
     def get(self, app_key=None):
-#        try:
-            mpxstats = MarketplaceStatsFetcher(self.account.key())
+        try:
+            if settings.DEBUG:
+                mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+            else:
+                mpxstats = MarketplaceStatsFetcher(self.account.key())
             # If an app key is provided, return the single app
             if app_key:
                 apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
@@ -44,13 +47,16 @@ class AppService(RequestHandler):
 
             # get stats for each app
             for app in apps:
-                app.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
+                if settings.DEBUG:
+                    app.update(mpxstats.get_app_stats("agltb3B1Yi1pbmNyDAsSA0FwcBiLo_8DDA", start_date, end_date))
+                else:
+                    endapp.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
 
             return JSONResponse(apps)
 
-        # except Exception, e:
-        #     logging.warn(e)
-        #     return JSONResponse({'error': str(e)})
+        except Exception, e:
+            logging.warn(e)
+            return JSONResponse({'error': str(e)})
 
 
     def post(self):
@@ -75,21 +81,28 @@ class AdUnitService(RequestHandler):
     API Service for delivering serialized AdUnit data
     """
     def get(self, app_key = None, adunit_key = None):
- #       try:
+        try:
 
-        # TODO: Use actual dates here.
+            if settings.DEBUG:
+                mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+            else:
+                mpxstats = MarketplaceStatsFetcher(self.account.key())
+
+            # TODO: Use actual dates here.
             end_date = datetime.datetime.today()
             start_date = end_date - datetime.timedelta(14)
             if app_key:
 
                 app = AppQueryManager.get_app_by_key(app_key)
                 adunits = AdUnitQueryManager.get_adunits(app=app)
-                mpxstats = MarketplaceStatsFetcher(self.account.key())
 
                 response = [adunit.toJSON() for adunit in adunits]
 
                 for au in response:
-                    adunit_stats = mpxstats.get_adunit_stats(au['id'], start_date, end_date)
+                    if settings.DEBUG:
+                        adunit_stats = mpxstats.get_adunit_stats("agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw", start_date, end_date)
+                    else:
+                        adunit_stats = mpxstats.get_adunit_stats(au['id'], start_date, end_date)
                     adunit_stats.update({'app_id':app_key})
                     au.update(adunit_stats)
 
@@ -104,9 +117,9 @@ class AdUnitService(RequestHandler):
                 return JSONResponse(response)
             else:
                 return JSONResponse({'error':'No parameters provided'})
-#        except Exception, e:
-#            logging.warn(e)
-#            return JSONResponse({'error': str(e)})
+        except Exception, e:
+            logging.warn(e)
+            return JSONResponse({'error': str(e)})
 
     def post(self):
         pass

@@ -157,7 +157,10 @@
             $('.price_floor_change', renderedContent)
                 .change(function() {
                     current_model.set({'price_floor': $(this).val()});
-                    current_model.save();
+                    // Save when they click the save button in the price floor cell
+                    $(".save.btn", $(this).parent()).click(function() {
+                        current_model.save();
+                    });
                 });
             var app_row = $('tr#app-' + this.model.get('app_id'), this.el);
             app_row.after(renderedContent);
@@ -199,12 +202,35 @@
         fetchAdunitsForApp: function (app_key) {
             var adunits = new AdUnitCollection();
             adunits.app_id = app_key;
+
+            // Once the adunits have been fetched from the server,
+            // render them as well as the app's price floor range
             adunits.bind('reset', function(adunits_collection) {
+
+                // Get the max and min price floors from the adunits so
+                // we can use them for the app's price floor range
+                var high = _.max(adunits_collection.models, function(adunit){
+                    return adunit.get("price_floor");
+                }).get("price_floor");
+
+                var low = _.min(adunits_collection.models, function(adunit){
+                    return adunit.get("price_floor");
+                }).get("price_floor");
+
+                // Set the app's price floor to the range of the adunits
+                if (high == low) {
+                    $(".app-row#app-" + app_key + " .price_floor").text("All $" + high);
+                } else {
+                    $(".app-row#app-" + app_key + " .price_floor").text("$" + low + " - " + "$" + high);
+                }
+
+                // Create the views and render each adunit row
                 _.each(adunits_collection.models, function(adunit) {
                     var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
                     adunitView.render();
                 });
             });
+
             adunits.fetch();
         },
 
@@ -226,6 +252,11 @@
             return app_id;
         },
 
+        /*
+         * Sends the AJAX request to turn ON the marketplace.
+         * This shouldn't just return true, it should return true
+         * only when no errors are returned from the server. Fix this.
+         */
         turnOn: function() {
             $.ajax({
                 type: 'post',
@@ -237,6 +268,11 @@
             return true;
         },
 
+        /*
+         * Sends the AJAX request to turn OFF the marketplace.
+         * This shouldn't just return true, it should return true
+         * only when no errors are returned from the server. Fix this.
+         */
         turnOff: function() {
             $.ajax({
                 type: 'post',
@@ -324,6 +360,7 @@
         $('#settings-submit').click(function(e) {
             e.preventDefault();
             $('#addblocklist').submit();
+            $('').submit();
         });
 
         $('#blocklist-submit').click(function(e) {

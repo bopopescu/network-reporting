@@ -131,7 +131,8 @@ class MarketplaceStatsFetcher(object):
                                                            start.strftime("%m-%d-%Y"),
                                                            end.strftime("%m-%d-%Y"))
         creative_stats = _fetch_and_decode(url)
-
+        if not dsp_key in creative_stats:
+            return {}
         creatives = [creative for creative in creative_stats[dsp_key].values()]
         for creative in creatives:
             creative['stats'].update(ctr = ctr(creative['stats']['clk'], creative['stats']['imp']))

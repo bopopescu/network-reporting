@@ -150,14 +150,17 @@
         {% for dsp in dsps %}
           {% for creative in dsp.creatives %}
             <tr>
-              <td> <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe> </td>
+              <td> <img src="/images/loading2.gif" /> {# <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe> #}  </td>
               <td>
-                {{ creative.creative.advertiser }}
                 {% if creative.creative.advertiser_blocked %}
+                  {{ creative.creative.ad_dmn }}
                   (Blocked)
+                {% else %} {% if creative.creative.ad_dmn %}
+                {{ creative.creative.ad_dmn }}
+                  <a href="#" id={{ creative.creative.ad_dmn }} class="block"> Block </a>
                 {% else %}
-                  <a href="#" id={{ creative.creative.advertiser }} class="block"> Block </a>
-                {% endif %}
+                  --
+                {% endif %}{% endif %}
               </td>
               <td style="text-align:right;"> {{ creative.stats.pub_rev|currency }} </td>
               <td style="text-align:right;"> {{ creative.stats.ecpm|currency }} </td>

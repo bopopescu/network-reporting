@@ -84,7 +84,7 @@ if (typeof window.console == "undefined") {
         $('.tabs').tabs();
 
         // Where is this used?
-        $(".tree").treeview();
+        // $(".tree").treeview();
 
         // Override default jQuery UI dialog options
         $.extend($.ui.dialog.prototype.options, {

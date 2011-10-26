@@ -33,8 +33,7 @@ def has_budget(budget, cost, today=None):
         return False
     logging.warning("Start slice: %s  end slice: %s   curr slice: %s" % (budget.start_slice, budget.end_slice, budget.curr_slice))
 
-    # I maintain that this is slightly fucked
-    if not budget.is_active_for_timeslice(budget.curr_slice):
+    if not budget.is_active:
         trace_logging.warning('Budget is not active for slice: %s' % budget.curr_slice)
         logging.warning("Not active")
         return False
@@ -89,7 +88,6 @@ def percent_delivered(budget):
     total_budget = budget.total_budget
     if total_budget:
         t_spent = total_spent(budget)
-        logging.warning("Total budget: %s\nTotal Spent: %s" % (total_budget, t_spent))
         # includes the memcache spending
         return total_spent(budget) / (total_budget * 1.0)
     else:
@@ -112,8 +110,7 @@ def apply_expense(budget, cost, curr_slice=None):
     """ Subtract $$$ from the budget, add to total spent
     This will get cleaned up later """
 
-    # I feel like this is redundant....
-    if budget and budget.is_active_for_timeslice(budget.curr_slice):
+    if budget and budget.is_active:
 
         ts_key = _make_budget_ts_key(budget)
         spent_key = _make_budget_spent_key(budget)

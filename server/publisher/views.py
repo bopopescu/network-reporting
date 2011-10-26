@@ -386,7 +386,7 @@ class ShowAppHandler(RequestHandler):
         for ag in app.adgroups:
             ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,advertiser=ag,days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
+            ag.percent_delivered = budget_service.percent_delivered(ag.campaign.budget_obj)
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], app.adgroups)
         promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -561,7 +561,7 @@ class AdUnitShowHandler(RequestHandler):
         for ag in adunit.adgroups:
             ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
+            ag.percent_delivered = budget_service.percent_delivered(ag.campaign.budget_obj)
 
         # to allow the adunit to be edited
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)

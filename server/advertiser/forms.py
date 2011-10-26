@@ -20,7 +20,7 @@ from google.appengine.ext import db
 from google.appengine.api import images, files
 from publisher.models import Site as AdUnit
 
-from budget.budget_service import update_budget
+from budget.query_managers import BudgetQueryManager
 import logging
 import re
 import urlparse
@@ -127,8 +127,6 @@ class CampaignForm(mpforms.MPModelForm):
             else:
                 obj.full_budget = None
         if commit:
-            obj.put()
-            update_budget(obj, save_campaign = False)
             obj.put()
         return obj
 

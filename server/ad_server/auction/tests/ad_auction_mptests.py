@@ -18,13 +18,13 @@ from advertiser.models import ( Campaign,
 from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
-                                          
+
 from server.ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
 from server.ad_server.handlers import adhandler
-from server.ad_server.handlers.adhandler import AdHandler                                     
+from server.ad_server.handlers.adhandler import AdHandler
 
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
@@ -33,31 +33,29 @@ import unittest
 from nose.tools import eq_
 from nose.tools import with_setup
 from budget import budget_service
-from google.appengine.api import memcache
-from budget import models as budgetmodels
-from budget.models import (BudgetSlicer,
+from budget.models import (Budget,
                            BudgetSliceLog,
-                           BudgetDailyLog,
-                           )               
-                                             
+                           )
+from google.appengine.api import memcache
+
 from ad_server.auction.client_context import ClientContext
-                                        
-from server.ad_server.auction import ad_auction     
+
+from server.ad_server.auction import ad_auction
 from google.appengine.ext import testbed
 ################# End to End #################
-                                                            
-from ad_server.auction.battles import (Battle, 
-                                       GteeBattle, 
+
+from ad_server.auction.battles import (Battle,
+                                       GteeBattle,
                                        GteeHighBattle,
-                                       GteeLowBattle 
+                                       GteeLowBattle
                                       )
 
 class TestAdAuction(unittest.TestCase):
 
 
     def setUp(self):
-        
-    
+
+
         # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()
         # Then activate the testbed, which prepares the service stubs for use.
@@ -67,10 +65,6 @@ class TestAdAuction(unittest.TestCase):
         self.testbed.init_memcache_stub()
 
 
-        # We simplify the budgetmanger for testing purposes
-        budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
-        budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
-
         # Set up default models
         self.account = Account()
         self.account.put()
@@ -78,8 +72,8 @@ class TestAdAuction(unittest.TestCase):
         self.app = App(account=self.account, name="Test App")
         self.app.put()
 
-        self.adunit = AdUnit(account=self.account, 
-                                     app_key=self.app, 
+        self.adunit = AdUnit(account=self.account,
+                                     app_key=self.app,
                                      name="Test AdUnit",
                                      format=u'320x50')
         self.adunit.put()
@@ -91,9 +85,9 @@ class TestAdAuction(unittest.TestCase):
                                     campaign_type="gtee")
         self.expensive_c.put()
 
-        self.expensive_adgroup = AdGroup(account=self.account, 
+        self.expensive_adgroup = AdGroup(account=self.account,
                                           name="expensive",
-                                          campaign=self.expensive_c, 
+                                          campaign=self.expensive_c,
                                           site_keys=[self.adunit.key()],
                                           bid_strategy="cpm",
                                           bid=100000.0) # 100 per click
@@ -103,7 +97,7 @@ class TestAdAuction(unittest.TestCase):
 
         self.expensive_creative = Creative(account=self.account,
                                 ad_group=self.expensive_adgroup,
-                                tracking_url="test-tracking-url", 
+                                tracking_url="test-tracking-url",
                                 cpc=.03,
                                 ad_type="clear")
         self.expensive_creative.put()
@@ -115,9 +109,9 @@ class TestAdAuction(unittest.TestCase):
                                 campaign_type="gtee")
         self.cheap_c.put()
 
-        self.cheap_adgroup = AdGroup(account=self.account, 
+        self.cheap_adgroup = AdGroup(account=self.account,
                               name="cheap",
-                              campaign=self.cheap_c, 
+                              campaign=self.cheap_c,
                               site_keys=[self.adunit.key()],
                               bid_strategy="cpm",
                               bid=10000.0)
@@ -126,67 +120,67 @@ class TestAdAuction(unittest.TestCase):
 
         self.cheap_creative = Creative(account=self.account,
                                 ad_group=self.cheap_adgroup,
-                                tracking_url="test-tracking-url", 
+                                tracking_url="test-tracking-url",
                                 cpc=.03,
                                 ad_type="clear")
         self.cheap_creative.put()
-                                                         
+
         adunit_id = str(self.adunit.key())
 
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)
-   
+
     def tearDown(self):
-        self.testbed.deactivate()                                           
+        self.testbed.deactivate()
 
     def mptest_basic(self):
         client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
                                        country_code=None,
                                        excluded_adgroup_keys=[],
-                                       raw_udid="FakeUDID", 
+                                       raw_udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
                                        now=datetime.datetime.now(),
-                                       user_agent='FakeAndroidOS',           
-                                       experimental=False)   
-                                       
+                                       user_agent='FakeAndroidOS',
+                                       experimental=False)
+
         # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
-    
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)
+
         eq_obj(creative, self.expensive_creative)
-        
+
     def mptest_basic_country_code(self):
         client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
                                        country_code="US",
                                        excluded_adgroup_keys=[],
-                                       raw_udid="FakeUDID", 
-                                       ll=None,
-                                       request_id=None,
-                                       now=datetime.datetime.now(),
-                                       user_agent='FakeAndroidOS',        
-                                       experimental=False)
-        # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
-
-        eq_obj(creative, self.expensive_creative)
-        
-    def mptest_basic_exclusion(self):
-        client_context = ClientContext(adunit=self.adunit,
-                                       keywords=None,
-                                       country_code=None,
-                                       excluded_adgroup_keys=[],
-                                       raw_udid="FakeUDID", 
+                                       raw_udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
                                        now=datetime.datetime.now(),
                                        user_agent='FakeAndroidOS',
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)
 
         eq_obj(creative, self.expensive_creative)
-        
+
+    def mptest_basic_exclusion(self):
+        client_context = ClientContext(adunit=self.adunit,
+                                       keywords=None,
+                                       country_code=None,
+                                       excluded_adgroup_keys=[],
+                                       raw_udid="FakeUDID",
+                                       ll=None,
+                                       request_id=None,
+                                       now=datetime.datetime.now(),
+                                       user_agent='FakeAndroidOS',
+                                       experimental=False)
+        # Unpack results
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)
+
+        eq_obj(creative, self.expensive_creative)
+
         expensive_ag_key = str(self.expensive_adgroup.key())
         assert expensive_ag_key in on_fail_exclude_adgroups
 
@@ -196,20 +190,20 @@ class TestAdAuction(unittest.TestCase):
                                        keywords=None,
                                        country_code=None,
                                        excluded_adgroup_keys=[expensive_ag_key],
-                                       raw_udid="FakeUDID", 
+                                       raw_udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
                                        now=datetime.datetime.now(),
                                        user_agent='FakeAndroidOS',
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)
 
         eq_obj(creative, self.cheap_creative)
 
         expensive_ag_key = str(self.expensive_adgroup.key())
         cheap_ag_key = str(self.cheap_adgroup.key())
-        
+
         assert expensive_ag_key in on_fail_exclude_adgroups
         assert cheap_ag_key in on_fail_exclude_adgroups
 
@@ -220,16 +214,16 @@ class TestAdAuction(unittest.TestCase):
                                        keywords=None,
                                        country_code=None,
                                        excluded_adgroup_keys=[],
-                                       raw_udid="FakeUDID", 
+                                       raw_udid="FakeUDID",
                                        ll=None,
                                        request_id=None,
                                        now=datetime.datetime.now(),
                                        user_agent='FakeAndroidOS',
                                        experimental=False)
         # Unpack results
-        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)                    
-                                       
+        creative, on_fail_exclude_adgroups = ad_auction.run(client_context, self.adunit_context)
+
         eq_obj(creative, self.expensive_creative)
-                                                 
+
 def eq_obj(obj1, obj2):
     eq_(obj1.key(), obj2.key())

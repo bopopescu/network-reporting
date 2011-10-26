@@ -70,6 +70,10 @@ class Campaign(db.Model):
     start_date = db.DateProperty()
     end_date = db.DateProperty()
 
+    # New start and end date properties
+    start_datetime = db.DateProperty()
+    end_datetime = db.DateProperty()
+
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
 
@@ -78,9 +82,6 @@ class Campaign(db.Model):
     t = db.DateTimeProperty(auto_now_add=True)
 
     budget_obj = db.ReferenceProperty(Budget, collection_name = 'campaign')
-#    @property
-#    def budget_obj(self):
-#        return self._budget_obj.get()
 
     @property
     def owner_key(self):

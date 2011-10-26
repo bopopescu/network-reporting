@@ -12,7 +12,7 @@ SUCCESSFUL_DELIV_PER = .95
 
 class Budget(db.Model):
 
-    start_datetime = db.DateTimeProperty(required=True)
+    start_datetime = db.DateTimeProperty(required=False)#True)
     end_datetime = db.DateTimeProperty(required=False)
     active = db.BooleanProperty()
     #campaign = db.ReferenceProperty(Campaign, collection_name = '_budget_obj')
@@ -96,7 +96,6 @@ class Budget(db.Model):
             return self.static_slice_budget * self.total_slices
         else:
             return None
-        pass
 
     @property
     def start_slice(self):

@@ -7,6 +7,7 @@ from budget.helpers import (build_budget_update_string,
                             parse_budget_update_string,
                             get_datetime_from_slice,
                             get_slice_from_datetime,
+                            get_slice_budget_from_daily,
                             )
 
 ZERO_BUDGET = 0.0
@@ -14,9 +15,65 @@ ZERO_BUDGET = 0.0
 class BudgetQueryManager(QueryManager):
 
     Model = Budget
+    @classmethod
+    def update_or_create_budget_for_campaign(cls, camp):
+        logging.warning("\n\nCAMPAIGN IS: %s\n\n" % camp)
+        # Update budget
+        if camp.budget_obj:
+            update_dict = {}
+            if not camp.start_datetime == camp.budget_obj.start_datetime:
+                update_dict['start_datetime'] = camp.start_datetime
+            if not camp.end_datetime == camp.budget_obj.end_datetime:
+                update_dict['end_datetime'] = camp.end_datetime
+            if not camp.budget_strategy == camp.budget_obj.delivery_type:
+                update_dict['delivery_type'] = camp.budget_strategy
+            if not camp.active == camp.budget_obj.active:
+                update_dict['active'] = camp.active
+
+            if camp.budget:
+                slice_budget = get_slice_budget_from_daily(camp.budget)
+                # Only update the update dict if new values
+                if not slice_budget == camp.budget_obj.static_slice_budget:
+                    update_dict['static_total_budget'] = None
+                    update_dict['static_slice_budget'] = slice_budget
+            elif camp.full_budget:
+                if not camp.full_budget == camp.budget_obj.static_total_budget:
+                    update_dict['static_total_budget'] = camp.full_budget
+                    update_dict['static_slice_budget'] = None
+            else:
+                return False
+                # This is more appropriate
+                raise WTFError
+
+            if update_dict:
+                cls.prep_update_budget(camp.budget_obj, **update_dict)
+            return camp.budget_obj
+        # Create budget
+        elif camp.budget:
+            budget = Budget(start_datetime = camp.start_datetime,
+                            end_datetime = camp.end_datetime,
+                            active = camp.active,
+                            delivery_type = camp.budget_strategy,
+                            static_slice_budget = get_slice_budget_from_daily(camp.budget),
+                            )
+            budget.put()
+            return budget
+        elif camp.full_budget:
+            budget = Budget(start_datetime = camp.start_datetime,
+                            end_datetime = camp.end_datetime,
+                            active = camp.active,
+                            delivery_type = camp.budget_strategy,
+                            static_total_budget =camp.full_budget,
+                            )
+            budget.put()
+            return budget
+        # No budget
+        else:
+            return None
+
 
     @classmethod
-    def prep_update_budget(self, budget, 
+    def prep_update_budget(cls, budget, 
                            start_datetime = None,
                            end_datetime = False,
                            active = None,

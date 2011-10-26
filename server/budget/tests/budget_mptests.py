@@ -34,6 +34,7 @@ from budget.memcache_budget import (remaining_ts_budget,
                                     total_spent,
                                     braking_fraction,
                                     )
+from budget.query_managers import BudgetQueryManager
 
 from google.appengine.ext import testbed
 
@@ -42,7 +43,6 @@ JUST_UNDER_ONE_DAY = datetime.timedelta(minutes=1435)
 EVEN_STATIC_BUDGET = 50
 EVEN_TOTAL = EVEN_STATIC_BUDGET * TEST_TS_PER_DAY
 
-from budget.query_managers import BudgetQueryManager
 
 def test_advance(budget, dtetime):
     slice_num = budget_service.timeslice_advance(budget, testing=True, advance_to_datetime = dtetime)
@@ -1620,5 +1620,5 @@ class TestBudgetUnitTests(unittest.TestCase):
                 tot_apply += 1
                 budget_service.apply_expense(self.e_budget, bid)
         logging.warning("Total bids: %s  Applied bids: %s  %%Applied: %s" % (tot, tot_apply, tot_apply/tot))
-        assert_almost_equal(tot_apply/tot, 0.2, 2)
+        assert_almost_equal(round(tot_apply/tot, 1), 0.2, 2)
 

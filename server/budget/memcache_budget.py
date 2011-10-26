@@ -61,12 +61,12 @@ def braking_fraction(budget):
 def _from_memcache_int(value):
     """ Removes the 10^5 mult factor """
     value = float(value)
-    value = value/10 ** 5
+    value = value/(10 ** 5)
     return value
 
 def _to_memcache_int(value):
     """multiplies by 10^5 and converts to an int"""
-    return int(value * 10 ** 5)
+    return int(value * (10 ** 5))
 
 def _make_budget_ts_key(budget):
     return 'ts_budget:%s' % str(budget.key())

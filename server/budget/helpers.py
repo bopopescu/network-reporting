@@ -43,6 +43,12 @@ def get_datetime_from_slice(slice_num, testing = False):
         utc_ts = slice_num * SEC_PER_TS
     return datetime.fromtimestamp(utc_ts)
 
+def get_slice_budget_from_daily(daily_budget, testing = False):
+    if testing:
+        return float(daily_budget)/TEST_TS_PER_DAY
+    else:
+        return float(daily_budget)/TS_PER_DAY
+
 
 def build_budget_update_string(start=None, 
                                end = None, 
@@ -53,7 +59,10 @@ def build_budget_update_string(start=None,
     if static_total is not None and static_slice is not None:
         # Should probs raise an error, I'm lazy
         return False
-    start = start.strftime(BUDGET_DTE_FMT)
+    try:
+        start = start.strftime(BUDGET_DTE_FMT)
+    except:
+        start = None
     try:
         end = end.strftime(BUDGET_DTE_FMT)
     except:
@@ -70,11 +79,16 @@ def parse_budget_update_string(update_str):
     """ Takes an update_budget string and turns it into a list of
     meaningful values """
     start, end, active, delivery, static_total, static_slice = map(nonity, update_str.split(':'))
-
     if start is not None:
         start = datetime.strptime(start, BUDGET_DTE_FMT)
     if end is not None:
         end = datetime.strptime(end, BUDGET_DTE_FMT)
+
+    if active == 'True':
+        active = True
+    else:
+        active = False
+
     if static_total:
         static_total = float(static_total)
     if static_slice:

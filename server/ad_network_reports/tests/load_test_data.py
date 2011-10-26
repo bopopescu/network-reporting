@@ -23,7 +23,7 @@ if REAL_TEST_DATA:
     officejerk_jumptap_login_credentials = AdNetworkLoginCredentials(account = officejerk_account, ad_network_name = 'jumptap', username = 'vrubba',
                                             password = 'fluik123!')
     officejerk_jumptap_login_credentials.put()
-    entities.append(AdNetworkAppMapper(application = officejerk_app, ad_network_name = 'jumptap', publisher_id = 'office_jerk_test', ad_network_login = officejerk_jumptap_login_credentials, send_email = True))
+    entities.append(AdNetworkAppMapper(application = officejerk_app, ad_network_name = 'jumptap', publisher_id = 'office_jerk_test', ad_network_login = officejerk_jumptap_login_credentials))
 
     # InMobi login info
     # inmobi_login_credentials = AdNetworkLoginCredentials(account = account, ad_network_name = 'inmobi', username = 'info@fluik.com',
@@ -45,13 +45,13 @@ if REAL_TEST_DATA:
     chess_iad_login_credentials = AdNetworkLoginCredentials(account = chess_account, ad_network_name = 'iad', username = 'chesscom',
                                            password = 'Faisal1Chess')
     chess_iad_login_credentials.put()
-    entities.append(AdNetworkAppMapper(application = chess_app, ad_network_name = 'iad', publisher_id = '329218549', ad_network_login = chess_iad_login_credentials, send_email = True))
+    entities.append(AdNetworkAppMapper(application = chess_app, ad_network_name = 'iad', publisher_id = '329218549', ad_network_login = chess_iad_login_credentials))
 
     # JumpTap login info
     chess_jumptap_login_credentials = AdNetworkLoginCredentials(account = chess_account, ad_network_name = 'jumptap', username = 'chesscom',
                                             password = 'Y7u8i9o0')
     chess_jumptap_login_credentials.put()
-    entities.append(AdNetworkAppMapper(application = chess_app, ad_network_name = 'jumptap', publisher_id = 'jumptap_chess_com_test', ad_network_login = chess_jumptap_login_credentials, send_email = True))
+    entities.append(AdNetworkAppMapper(application = chess_app, ad_network_name = 'jumptap', publisher_id = 'jumptap_chess_com_test', ad_network_login = chess_jumptap_login_credentials))
 
     # InMobi login info
     # inmobi_login_credentials = AdNetworkLoginCredentials(account = account, ad_network_name = 'inmobi', username = 'chesscom@gmail.com',
@@ -72,7 +72,7 @@ if REAL_TEST_DATA:
     zaphrox_jumptap_login_credentials = AdNetworkLoginCredentials(account = zaphrox_account, ad_network_name = 'jumptap', username = 'zaphrox',
                                             password = 'JR.7x89re0')
     zaphrox_jumptap_login_credentials.put()
-    entities.append(AdNetworkAppMapper(application = zaphrox_app, ad_network_name = 'jumptap', publisher_id = 'flashlight_zaphrox_test', ad_network_login = zaphrox_jumptap_login_credentials, send_email = True))
+    entities.append(AdNetworkAppMapper(application = zaphrox_app, ad_network_name = 'jumptap', publisher_id = 'flashlight_zaphrox_test', ad_network_login = zaphrox_jumptap_login_credentials))
 
     # InMobi login info
     # NOT WORKING
@@ -103,19 +103,19 @@ if REAL_TEST_DATA:
     bet_iad_login_credentials = AdNetworkLoginCredentials(account = bet_account, ad_network_name = 'iad', username = 'betnetworks',
                                            password = 'betjames')
     bet_iad_login_credentials.put()
-    entities.append(AdNetworkAppMapper(application = bet_iad_app, ad_network_name = 'iad', publisher_id = '418612824', ad_network_login = bet_iad_login_credentials, send_email = True))
+    entities.append(AdNetworkAppMapper(application = bet_iad_app, ad_network_name = 'iad', publisher_id = '418612824', ad_network_login = bet_iad_login_credentials))
 
     # AdMob login info
     bet_admob_login_credentials = AdNetworkLoginCredentials(account = bet_account, ad_network_name = 'admob', username = 'betmobilemail@gmail.com',
                                           password = 'knwyt4f5v94b61qz', client_key = 'k9417383a8224757c05fbe9aa1ef8e4c')
     bet_admob_login_credentials.put()
-    entities.append(AdNetworkAppMapper(application = bet_app, ad_network_name = 'admob', publisher_id = 'a14e1c8bcb5cec6', ad_network_login = bet_admob_login_credentials, send_email = True))
+    entities.append(AdNetworkAppMapper(application = bet_app, ad_network_name = 'admob', publisher_id = 'a14e1c8bcb5cec6', ad_network_login = bet_admob_login_credentials))
 
     # JumpTap login info
     bet_jumptap_login_credentials = AdNetworkLoginCredentials(account = bet_account, ad_network_name = 'jumptap', username = 'betnetwork',
                                             password = 'BETjames')
     bet_jumptap_login_credentials.put()
-    entities.append(AdNetworkAppMapper(application = bet_app, ad_network_name = 'jumptap', publisher_id = 'jumptap_bet_test', ad_network_login = bet_jumptap_login_credentials, send_email = True))
+    entities.append(AdNetworkAppMapper(application = bet_app, ad_network_name = 'jumptap', publisher_id = 'jumptap_bet_test', ad_network_login = bet_jumptap_login_credentials))
 
     """ Com2us """
     # com2us_account = Account(key_name = 'com2us_test_account', title = 'Com2us')
@@ -137,7 +137,7 @@ if REAL_TEST_DATA:
     # MobFox login info
     # need the publisher id
     
-    # entities.append(AdNetworkAppMapper(application = com2us_app, ad_network_name = 'jumptap', publisher_id = 'com2us_test', ad_network_login = inmobi_login_credentials, send_email = True))
+    # entities.append(AdNetworkAppMapper(application = com2us_app, ad_network_name = 'jumptap', publisher_id = 'com2us_test', ad_network_login = inmobi_login_credentials))
 
 else:
     TEST_JUMPTAP_PUB_ID = 'pa_zaphrox_zaphrox_drd_app'
@@ -211,7 +211,7 @@ else:
         admob_login_credentials))
     entities.append(AdNetworkAppMapper(application=app, ad_network_name=
         'jumptap', publisher_id=TEST_JUMPTAP_PUB_ID, ad_network_login=
-        jumptap_login_credentials, send_email=True))
+        jumptap_login_credentials))
 #    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
 #        'iad', publisher_id=TEST_IAD_PUB_ID, ad_network_login=
 #        iad_login_credentials))

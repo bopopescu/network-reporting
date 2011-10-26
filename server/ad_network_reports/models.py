@@ -21,6 +21,8 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     # Special white list for jumptap
     adunit_publisher_ids = db.StringListProperty()
 
+    email = db.BooleanProperty(default = False)
+
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
@@ -40,7 +42,6 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
     application = db.ReferenceProperty(App, collection_name =
             'ad_network_app_mappers')
 
-    send_email = db.BooleanProperty(default = False)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):

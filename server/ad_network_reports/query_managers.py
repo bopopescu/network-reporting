@@ -141,11 +141,11 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 # example return (App, NetworkConfig.admob_pub_id)
                 yield (app, pub_id)
 
-    def create_login_credentials_and_mappers(self, ad_network_name, username, password,
-            client_key, send_email):
+    def create_login_credentials_and_mappers(self, ad_network_name, username,
+            password, client_key, send_email):
         """Check login credentials by making a request to tornado on EC2. If
-        they're valid create AdNetworkLoginCredentials and AdNetworkAppMapper entities
-        and store them in the db.
+        they're valid create AdNetworkLoginCredentials and AdNetworkAppMapper
+        entities and store them in the db.
 
         Return None if the login credentials are correct otherwise return an
         error message.
@@ -154,17 +154,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                         ad_network_name=ad_network_name,
                                         username=username,
                                         password=password,
-                                        client_key=client_key)
+                                        client_key=client_key,
+                                        email=send_email)
         login_credentials.put()
 
         apps_with_publisher_ids = self.get_apps_with_publisher_ids(
                 ad_network_name)
         # Create all the different AdNetworkAppMappers for all the
         # applications on the ad network for the user and add them to the db
-        db.put([AdNetworkAppMapper(ad_network_name = ad_network_name,
-            publisher_id = publisher_id, ad_network_login = login_credentials,
-            application = app, send_email = send_email) for app,
-            publisher_id in apps_with_publisher_ids])
+        db.put([AdNetworkAppMapper(ad_network_name=ad_network_name,
+            publisher_id=publisher_id, ad_network_login=login_credentials,
+            application=app) for app, publisher_id in
+            apps_with_publisher_ids])
 
     def find_app_for_stats(self, publisher_id, login_credentials):
         """Attempt to link the publisher id with an App stored in MoPub's db.

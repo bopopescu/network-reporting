@@ -154,7 +154,8 @@ class AddLoginInfoHandler(RequestHandler):
         if form.is_valid():
             logging.warning(form.cleaned_data)
             manager = create_manager(account_key, self.account)
-            manager.create_login_credentials_and_mappers(ad_network_name=ad_network,
+            manager.create_login_credentials_and_mappers(ad_network_name=
+                    ad_network,
                     username=form.cleaned_data['username'],
                     password=form.cleaned_data['password'],
                     client_key=form.cleaned_data['client_key'],

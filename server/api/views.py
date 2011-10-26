@@ -200,6 +200,7 @@ class CreativeService(RequestHandler):
     API Service for delivering serialized Creative data
     """
     def get(self, creative_key=None):
+
         return JSONResponse({'error':'No parameters provided'})
 
     def post(self):

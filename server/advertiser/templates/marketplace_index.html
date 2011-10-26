@@ -136,7 +136,7 @@
     </div>
 
 
-    <table class="zebra-striped sortable simpletable">
+    <table class="{#zebra-striped sortable simpletable#}dataTable" id="creatives">
       <thead>
         <th> Creative </th>
         <th> Advertiser </th>
@@ -147,6 +147,7 @@
         <th> CTR </th>
       </thead>
       <tbody>
+        {% comment %}
         {% for dsp in dsps %}
           {% for creative in dsp.creatives %}
             <tr>
@@ -180,6 +181,7 @@
         <td> {{ creative_totals.clk }} </td>
         <td> {{ creative_totals.ctr|percentage }} </td>
       </tfoot>
+      {% endcomment %}
     </table>
 
   </div>
@@ -262,12 +264,40 @@
   <script type="text/javascript" src="/js/backbone.min.js"></script>
   <script type="text/javascript" src="/js/jquery.tipsy.js"></script>
   <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
+  <script type="text/javascript" src="/js/jquery.datatables.min.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+
+</script>
   <script type="text/javascript">
     $(document).ready(function() {
-        var app_keys = {{ app_keys|safe }};
-        var dsp_keys = {{ dsp_keys|safe }};
-        Marketplace.fetchAllApps(app_keys);
-        Marketplace.fetchAllCreatives(dsp_keys);
+
+
+    Marketplace.fetchAllApps(app_keys);
+
+
+
+    table = $("#creatives").dataTable({
+      "bProcessing": true,
+      "aoColumns":[
+        {"sWidth": "320px"},
+        {"sWidth": "80px"},
+        {"sWidth": "80px"},
+        {"sWidth": "80px"},
+        {"sWidth": "80px"},
+        {"sWidth": "80px"},
+        {"sWidth": "80px"},
+        ],
+        "sAjaxSource": "/api/creatives/",
+        "fnRowCallback": function(nRow, aData, iDisplayIndex) {
+
+          $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
+
+
+          return nRow;
+          }
+      });
+  });
 
         $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
 

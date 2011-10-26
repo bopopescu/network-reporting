@@ -129,7 +129,6 @@ class AdUnitService(RequestHandler):
 
     def put(self, app_key = None, adunit_key = None):
 
-
         put_data = simplejson.loads(self.request.raw_post_data)
         try:
             new_price_floor = put_data['price_floor']
@@ -223,7 +222,7 @@ class CreativeService(RequestHandler):
             creatives.append([
                 creative["creative"]["url"],
                 creative["creative"]["ad_dmn"],
-                currency(creative["stats"]["pub_rev"]),
+                creative["stats"]["pub_rev"],
                 currency(creative['stats']['ecpm']),
                 creative["stats"]["imp"],
                 #creative["stats"]["clk"],

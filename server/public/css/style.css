@@ -1499,11 +1499,11 @@ table.simpletable {
     padding: 10px 10px 9px;
     text-align: left; }
   table.simpletable th {
+    vertical-align: middle;
     font-size: 10px;
     font-weight: 300;
     text-transform: uppercase;
     color: #555;
-    vertical-align: bottom;
     padding: 0 0 8px 0; }
   table.simpletable td {
     vertical-align: top; }
@@ -1529,6 +1529,10 @@ table.simpletable {
     background: white;
     border-top: 2px solid #ccc;
     font-size: 16px; }
+  table.simpletable tr.even td {
+    background-color: #fff; }
+  table.simpletable tr.odd td {
+    background-color: #f7f7f7; }
 
 .adunit-row.name {
   padding-left: 50px; }
@@ -1621,6 +1625,14 @@ table .headerSortDown.purple {
 
 .paginate_button {
   display: inline-block; }
+
+tr.adunit-row td:not(.icon) {
+  border-top: 1px dotted #ddd; }
+
+img.app-icon {
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
 
 /*
  * ## Colors
@@ -3097,8 +3109,7 @@ ul.adunits {
 
 .app-icon {
   display: block;
-  float: left;
-  width: 50px; }
+  float: left; }
 
 .app-detail {
   float: left;

@@ -120,7 +120,7 @@
   <div class="active tab-section" id="performance">
 
 
-    <table class="zebra-striped simpletable" id="marketplace_stats" width="100%">
+    <table class="simpletable" id="marketplace_stats" width="100%">
 
       <thead>
         <tr class="cmpaignData" style="border:none;">
@@ -131,23 +131,25 @@
           {# <th>Attempts</th> #}
           <th width="90" style="text-align: right";>Impressions</th>
           {# <th>Fill Rate</th> #}
-          <th width="70" style="text-align: right";>Clicks</th>
-          <th width="70" style="text-align: right";>CTR</th>
+          {# <th width="70" style="text-align: right";>Clicks</th> #}
+          {# <th width="70" style="text-align: right";>CTR</th> #}
+          <th width="70"> Targeting </th>
           <th width="130" style="text-align: right";>Price Floor</th>
         </tr>
       </thead>
 
       <tbody>
         {% for app in apps %}
-        <tr class="app-row" id="app-{{ app.key }}" style="border:none;">
+        <tr class="app-row {% cycle 'odd' 'even' %}" id="app-{{ app.key }}" style="border:none;">
           <td class="icon">
             <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" />
           </td>
           <td class="name">
-            <a href="{% url publisher_app_show app.key %}" style="display:inline-block; max-width:175px;">{{ app.name }}</a>
-            <span class="muted unbold"> ( {{ app.app_type_text }}) </span>
+            <a href="{% url publisher_app_show app.key %}" style="display:inline-block; max-width:250px;">{{ app.name }}</a>
+            <span class="muted unbold"> ({{ app.app_type_text }}) </span>
+            <img id="{{ app.key }}-img" src="/images/icons-custom/spinner-12.gif"></img>
             <br />
-            <a href="#{{ app.key }}" class="adunits" id="{{app.key}}"> Show Adunits </a>
+            <a href="#{{ app.key }}" class="adunits" id="{{app.key}}"> Show AdUnits </a>
           </td>
           <td class="revenue" style="text-align: right;">
             --
@@ -158,14 +160,18 @@
           <td class="impressions" style="text-align: right;">
             --
           </td>
+
+          {% comment %}
           <td class="clicks" style="text-align: right;">
             --
           </td>
           <td class="ctr" style="text-align: right;">
             --
           </td>
-          <td class="price_floor" width="130" style="text-align: right">
-            --
+          {% endcomment %}
+          <td> </td>
+          <td class="price_floor" width="130" style="text-align: center">
+          <a href="#{{ app.key }}" class="edit_price_floor" id="{{app.key}}"> Edit Price Floor</a>
           </td>
         </tr>
       {% endfor %}
@@ -310,10 +316,6 @@
   <script type="text/javascript" src="/js/jquery.tipsy.js"></script>
   <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
   <script type="text/javascript" src="/js/jquery.datatables.min.js"></script>
-<script type="text/javascript">
-  $(document).ready(function() {
-
-</script>
   <script type="text/javascript">
     $(document).ready(function() {
       var app_keys = {{ app_keys|safe }};
@@ -339,6 +341,7 @@
                 //{"sWidth": "80px"},
             ],
             "bAutoWidth":false,
+            "aaSorting": [[2,'desc']],
             "sAjaxSource": "/api/creatives/",
             "fnRowCallback": function(nRow, aData, iDisplayIndex) {
                 $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
@@ -348,8 +351,10 @@
                     $("td:eq(1)", nRow).text(aData[1] + " (Blocked)");
                 } else if (domain !== null) {
                     $("td:eq(1)", nRow).html(domain);
+                } else {
+                    $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
                 }
-                $("td:eq(2)", nRow).addClass("numeric");
+                $("td:eq(2)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[2]));
                 $("td:eq(3)", nRow).addClass("numeric");
                 $("td:eq(4)", nRow).addClass("numeric");
                 return nRow;

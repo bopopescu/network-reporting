@@ -108,6 +108,14 @@ table.simpletable {
         border-top: 2px solid #ccc;
         font-size: 16px;
     }
+
+    tr.even td {
+        background-color: #fff;
+    }
+
+    tr.odd td {
+        background-color: #f7f7f7;
+    }
 }
 
 .adunit-row.name {
@@ -252,4 +260,12 @@ table {
 
 .paginate_button {
      display: inline-block;
+}
+
+tr.adunit-row td:not(.icon){
+    border-top: 1px dotted #ddd;
+}
+
+img.app-icon {
+    @include border-radius(6px);
 }

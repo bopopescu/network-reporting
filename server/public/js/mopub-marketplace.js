@@ -132,14 +132,19 @@
         },
 
         renderInline: function () {
-            console.log(this.model.id);
             var app_row = $("tr.app-row#app-" + this.model.id, this.el);
             $(".revenue", app_row).text(this.model.get("revenue"));
             $(".ecpm", app_row).text(this.model.get("ecpm"));
             $(".impressions", app_row).text(this.model.get("impressions"));
-            $(".clicks", app_row).text(this.model.get("clicks"));
-            $(".ctr", app_row).text(this.model.get("ctr"));
-            $('a.adunits', app_row).click(showAdUnits);
+            // $(".clicks", app_row).text(this.model.get("clicks"));
+            // $(".ctr", app_row).text(this.model.get("ctr"));
+
+            var adunit_show_link = $('a.adunits', app_row);
+            adunit_show_link.click(showAdUnits);
+            $('a.edit_price_floor', app_row).click(function(e) {
+                e.preventDefault();
+                adunit_show_link.click();
+            });
             return this;
         },
         render: function () {
@@ -220,12 +225,17 @@
                 .change(function() {
                     current_model.set({'price_floor': $(this).val()});
                     // Save when they click the save button in the price floor cell
-                    $(".save.btn", $(this).parent()).click(function() {
+                    $(".button", $(this).parent()).click(function() {
                         current_model.save();
                     });
                 });
+
             var app_row = $('tr#app-' + this.model.get('app_id'), this.el);
+            var zebra = app_row.hasClass("even") ? "even" : "odd";
+            renderedContent.addClass(zebra);
+
             app_row.after(renderedContent);
+
             return this;
         }
     });
@@ -265,6 +275,7 @@
                 app.fetch({
                     success: function(){
                         $('table').trigger('update');
+                        $("#" + app_key + "-img").hide();
                     }
                 });
             });
@@ -293,10 +304,12 @@
                 }).get("price_floor");
 
                 // Set the app's price floor to the range of the adunits
+                // Keep the "Edit Price Floor" button
+                var btn = $("<a href='#" + app_key + "' class='edit_price_floor' id='" + app_key +"'> Edit Price Floor</a>");
                 if (high == low) {
-                    $(".app-row#app-" + app_key + " .price_floor").text("All $" + high);
+                    $(".app-row#app-" + app_key + " .price_floor").html("All $" + high);
                 } else {
-                    $(".app-row#app-" + app_key + " .price_floor").text("$" + low + " - " + "$" + high);
+                    $(".app-row#app-" + app_key + " .price_floor").html("$" + low + " - " + "$" + high);
                 }
 
                 // Create the views and render each adunit row
@@ -505,6 +518,11 @@
             $('#addblocklist').submit();
         });
 
+        $("input.targeting-box").click(function() {
+            var targeting = $(this).attr('name');
+            var activation = $(this).is(":checked") ? "On" : "Off";
+            $("label[for='"+ targeting +"']").text(activation);
+        });
 
     });
 

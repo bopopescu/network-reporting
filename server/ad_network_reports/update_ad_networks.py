@@ -48,6 +48,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
     """Send email with scrape stats data for the test date organized in a
     table.
     """
+    emails = False
     if account and account.user:
         emails = account.user.email()
     elif account.all_mpusers:
@@ -121,7 +122,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 def update_ad_networks(start_date = None, end_date = None):
     """Update ad network stats.
 
-    Iterate through all AdNetworkLoginInfo. Login to the ad networks saving
+    Iterate through all AdNetworkLoginCredentials. Login to the ad networks saving
     the data for the date range in the db.
 
     Run daily as a cron job in EC2. Email account if account wants email upon
@@ -176,6 +177,7 @@ def update_ad_networks(start_date = None, end_date = None):
                         (login_credentials.ad_network_name,
                             login_credentials.account.key(),
                             login_credentials.ad_network_name))
+                exc_traceback = sys.exc_info()[2]
                 mail.send_mail(sender='olp@mopub.com',
                                # login_credentials.account.user.email
                                to='tiago@mopub.com',
@@ -198,7 +200,7 @@ def update_ad_networks(start_date = None, end_date = None):
                 # login_credentials and stats.
                 ad_network_app_mapper = manager.get_ad_network_app_mapper(
                         publisher_id=publisher_id,
-                        login_info=login_credentials)
+                        login_credentials=login_credentials)
 
                 if not ad_network_app_mapper:
                     # Check if the app has been added to MoPub prior to last

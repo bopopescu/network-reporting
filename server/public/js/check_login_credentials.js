@@ -11,12 +11,14 @@
 			   if (valid) {
 				if (account_key) {
 					$.post("/ad_network_reports/manage/" + account_key + "/add/",
-						$("#loginCredentials").serialize());
-					window.location = "/ad_network_reports/manage/" + account_key;
+						$("#loginCredentials").serialize(), function() {
+							window.location = "/ad_network_reports/manage/" + account_key;
+						});
 				} else {
 					$.post("/ad_network_reports/add/",
-						$("#loginCredentials").serialize());
-					window.location = "/ad_network_reports/";
+						$("#loginCredentials").serialize(), function() {
+							window.location = "/campaigns/";
+						});
 				}
 			   } else {
 				$("#error").html("Invalid login information.")

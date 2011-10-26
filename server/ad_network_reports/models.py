@@ -6,7 +6,7 @@ InstallAppengineHelperForDjango()
 from account.models import Account
 from publisher.models import App
 
-class AdNetworkLoginInfo(db.Model): #(account,ad_network_name)
+class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     account = db.ReferenceProperty(Account, required = True,
             collection_name='login_credentials')
     ad_network_name = db.StringProperty(required = True)
@@ -25,7 +25,7 @@ class AdNetworkLoginInfo(db.Model): #(account,ad_network_name)
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
                     kwargs['ad_network_name']))
-        super(AdNetworkLoginInfo, self).__init__(*args, **kwargs)
+        super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
     @classmethod
     def get_by_network(self, account, network):
@@ -35,7 +35,7 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
     ad_network_name = db.StringProperty(required = True)
     publisher_id = db.StringProperty(required = True)
 
-    ad_network_login = db.ReferenceProperty(AdNetworkLoginInfo,
+    ad_network_login = db.ReferenceProperty(AdNetworkLoginCredentials,
             collection_name='ad_network_app_mappers')
     application = db.ReferenceProperty(App, collection_name =
             'ad_network_app_mappers')
@@ -69,3 +69,16 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
+class AdNetworkAggregate(db.Model): #(date)
+    date = db.DateProperty(required=True)
+
+    found = db.IntegerProperty(default=0)
+    updated = db.IntegerProperty(default=0)
+    mapped = db.IntegerProperty(default=0)
+    failed = db.IntegerProperty(default=0)
+
+    def __init__(self, *args, **kwargs):
+        if not kwargs.get('key', None):
+            kwargs['key_name'] = ('k:%s' % kwargs['date'].
+                    strftime('%Y-%m-%d'))
+        super(AdNetworkAggregate, self).__init__(*args, **kwargs)

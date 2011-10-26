@@ -57,7 +57,7 @@ class MarketplaceStatsFetcher(object):
         stats_dict = {}
         for id, stats in response_dict.iteritems():
             counts = {"revenue": currency(stats['pub_rev']),
-                      "impressions": stats['imp'],
+                      "impressions": int(stats['imp']),
                       "clicks": stats['clk'],
                       "ecpm": currency(ecpm(stats['pub_rev'], stats['imp'])),
                       "ctr": percentage(ctr(stats['clk'], stats['imp']))}

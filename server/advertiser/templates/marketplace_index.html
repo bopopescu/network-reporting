@@ -48,15 +48,8 @@
   </div>
   {% endif %}
 
-  <ul class="tabs">
-    <li class="active"> <a href="#performance"> App Performance </a> </li>
-    <li> <a href="#controls"> Creative Performance </a> </li>
-    <li> <a href="#settings"> Settings </a> </li>
-  </ul>
 
-
-  <div class="active tab-section" id="performance">
-
+  {% comment %}
     <div class="rollup fig3">
       <div class="data-figure">
         <div class="figure">
@@ -75,7 +68,6 @@
           Average eCPM
         </div>
       </div>
-      {% comment %}
       <div class="data-figure">
         <div class="figure">
           {{ top_level_mpx_stats.clicks|withsep }}
@@ -84,7 +76,7 @@
           Clicks
         </div>
       </div>
-      {% endcomment %}
+
       <div class="data-figure">
         <div class="figure">
           {{ top_level_mpx_stats.revenue|withsep }}
@@ -94,6 +86,38 @@
         </div>
       </div>
     </div>
+    {% endcomment %}
+
+
+    <div class="campaignData-rollup">
+      <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+        <thead>
+          <tr style="border:none;">
+            <th width=33%>Impressions</th>
+            <th width=34%>eCPM</th>
+            <th width=33%>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border:none;">
+            <td> {{ top_level_mpx_stats.impressions|withsep }} </td>
+            <td> {{ top_level_mpx_stats.ecpm }} </td>
+            <td> {{ top_level_mpx_stats.revenue|withsep }} </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+
+  <ul class="tabs">
+    <li class="active"> <a href="#performance"> App Performance </a> </li>
+    <li> <a href="#controls"> Creative Performance </a> </li>
+    <li> <a href="#settings"> Settings </a> </li>
+  </ul>
+
+
+  <div class="active tab-section" id="performance">
 
 
     <table class="zebra-striped simpletable" id="marketplace_stats">
@@ -148,7 +172,7 @@
     </div>
     {% endcomment %}
 
-    <table class="{#zebra-striped sortable simpletable#}" id="creatives" width="100%">
+    <table class="{#zebra-striped sortable simpletable#}" id="report-table" width="100%">
       <thead>
         <th> Creative </th>
         <th> Advertiser </th>
@@ -271,9 +295,7 @@
   <script type="text/html" id="adunit-template">
     {% include "partials/adunit.html" %}
   </script>
-  <script type="text/html">
-    {% include "partials/creative-row.html" %}
-  </script>
+
   <script src="/js/mopub-advertiser.js?v=80"></script>
   <script type="text/javascript" src="/js/underscore.min.js"></script>
   <script type="text/javascript" src="/js/json2.js"></script>
@@ -287,25 +309,30 @@
 </script>
   <script type="text/javascript">
     $(document).ready(function() {
+      var app_keys = {{ app_keys|safe }};
+      Marketplace.fetchAllApps(app_keys);
 
-      // Marketplace.fetchAllApps(app_keys);
-
-      table = $("#creatives").dataTable({
+      table = $("#report-table").dataTable({
         "bProcessing": true,
         "bJQueryUI": true,
         "sPaginationType": "full_numbers",
         "aoColumns":[
-          {"sWidth": "320px"},
+          {"sWidth": "360px"},
+          {"sWidth": "180px"},
           {"sWidth": "120px"},
-          {"sWidth": "120px"},
-          {"sWidth": "120px"},
-          {"sWidth": "120px"}
+          {"sWidth": "80px"},
+          {"sWidth": "80px"}
           //{"sWidth": "80px"},
           //{"sWidth": "80px"},
         ],
+        "bAutoWidth":false,
         "sAjaxSource": "/api/creatives/",
         "fnRowCallback": function(nRow, aData, iDisplayIndex) {
           $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
+//          $("td:eq(1)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
+          $("td:eq(2)", nRow).addClass("numeric");
+          $("td:eq(3)", nRow).addClass("numeric");
+          $("td:eq(4)", nRow).addClass("numeric");
           return nRow;
         }
       });
@@ -315,6 +342,6 @@
     });
   </script>
 {% endblock extraScripts %}
-{% block extraCss %}
+{% block extraCSS %}
 <link rel="stylesheet" href="/css/dt_jui.css?v=7"></link>
-{% endblock extraCss %}
+{% endblock extraCSS %}

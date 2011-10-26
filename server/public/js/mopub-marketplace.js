@@ -107,9 +107,9 @@
 
     /*
      * ## CreativeCollection
-     * 
+     *
      * This is kind of jankity. Right now creatives are 'collected' by DSP,
-     * and its the best way 
+     * and its the best way
      */
     var CreativeCollection = Backbone.Collection.extend({
         model: Creative,
@@ -136,7 +136,7 @@
 
             // When we render an appview, we also attach a handler to fetch
             // and render it's adunits when a link is clicked.
-            $('a.adunits', renderedContent).click(showAdUnits).click();
+            $('a.adunits', renderedContent).click(showAdUnits);
             $('tbody', this.el).append(renderedContent);
             return this;
         }

@@ -250,6 +250,7 @@ class AppCreateHandler(RequestHandler):
             # create appropriate marketplace creative for this adunit / adgroup (same key_name)
             mpx_creative = mpx_adgroup.default_creative(key_name=mpx_adgroup.key().name())
             mpx_creative.adgroup = mpx_adgroup
+            mpx_creative.account = self.account
             CreativeQueryManager.put(mpx_creative)
 
             # Check if this is the first ad unit for this account

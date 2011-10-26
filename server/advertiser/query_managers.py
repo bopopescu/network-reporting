@@ -264,7 +264,7 @@ class AdGroupQueryManager(QueryManager):
             adgroup = AdGroup.get_by_key_name(ag_key_name)
             return adgroup
 
-        adgroup = AdGroup(key_name=ag_key_name)
+        adgroup = AdGroup(key_name=ag_key_name, name='Marketplace')
         # set up the rest of the properties
         adgroup.bid_strategy = 'cpm'
         adgroup.account = db.Key(account_key)

@@ -71,6 +71,7 @@ class NetworkConfig(db.Model):
     rev_share = db.FloatProperty(default=.80)
     price_floor = db.FloatProperty(default=.25) # dollars CPM
     blocklist = db.StringListProperty(indexed=False)
+    blind = db.BooleanProperty(default=False)
 
 class MarketPlaceConfig(db.Model):
     """ All marketplace related configurations """

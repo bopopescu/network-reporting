@@ -111,6 +111,8 @@ def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context, countr
                     height = adunit_height,
                     paid = 0,
                     country = country,
+                    blind = 1 if app.account.network_config.blind else 0,
+                    blocked_advs = app.account.network_config.blocklist,
                     )
         none_keys = []
         for k,v in ret.iteritems():

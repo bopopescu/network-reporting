@@ -231,8 +231,16 @@ class MarketplaceBattle(Battle):
         """ Fan out to the marketplace and see if there is a bid """
         mk_args = self.client_context.make_marketplace_dict(self.adunit_context)
 
+        # override pricefloor at the adgroup level
+        if creative.adgroup.mktplace_price_floor:
+            mk_args['price_floor'] = creative.adgroup.mktplace_price_floor
+
         trace_logging.info("\nSending to MPX: %s\n" % mk_args)
-        mpx_url = 'http://mpx.mopub.com/req?' + urllib.urlencode(mk_args)
+
+        mpx_url = 'http://mpx.mopub.com/req?' + self._dict_url_params(mk_args)
+
+        trace_logging.info('URL: %s' % mpx_url)
+
         xhtml = None
         charge_price = None
         # set the creative as having done w/e   
@@ -256,6 +264,22 @@ class MarketplaceBattle(Battle):
         except urlfetch.DownloadError, e:
             # There was no valid bid
             return False
+
+    def _dict_url_params(self, params):
+        """
+        re-write of urllib.urlencode to take lists
+        """
+        query_string = ''
+        for key, value in params.iteritems():
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            new_string = '&'.join(['%s=%s' % (urllib.quote(str(key)),urllib.quote(str(elem))) for elem in value])
+            # don't ad & at the end
+            if query_string:
+                query_string += '&' + new_string
+            else:
+                query_string = new_string
+        return query_string
 
     def _process_marketplace_response(self, content, creative):  
         """ NOTE: pub_rev is CPM this means that the pub is paid pub_rev / 1000  

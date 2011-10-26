@@ -107,6 +107,9 @@
 
     /*
      * ## CreativeCollection
+     * 
+     * This is kind of jankity. Right now creatives are 'collected' by DSP,
+     * and its the best way 
      */
     var CreativeCollection = Backbone.Collection.extend({
         model: Creative,

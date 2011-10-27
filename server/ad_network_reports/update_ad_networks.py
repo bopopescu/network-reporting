@@ -79,8 +79,8 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                       #to='report-monitoring@mopub.com',
-                       to='tiago@mopub.com',
+                       to='report-monitoring@mopub.com',
+                       cc='tiago@mopub.com',
                        subject=("Ad Network Revenue Reporting for %s" %
                            test_date.strftime("%m/%d/%y")),
                        body=("Learn more at http://mopub-experimental.appspot.com/"
@@ -154,6 +154,7 @@ def update_ad_networks(start_date = None, end_date = None):
                 if login_credentials.email:
                     send_stats_mail(db.get(previous_account_key), manager, test_date, valid_stats_list)
                 valid_stats_list = []
+            previous_account_key = account_key
 
             stats_list = []
             manager = AdNetworkReportQueryManager(login_credentials.account)
@@ -250,7 +251,6 @@ def update_ad_networks(start_date = None, end_date = None):
                 if test_date == yesterday:
                     valid_stats_list.append((ad_network_app_mapper.application.
                         name, ad_network_app_mapper.ad_network_name, stats))
-            previous_account_key = account_key
 
         aggregate.put()
         if login_credentials.email:

@@ -40,8 +40,10 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
             logging.warning(login_credentials.__dict__)
 
             try:
+                logging.warning("Creating the scraper object")
                 scraper = AD_NETWORKS[login_credentials.ad_network_name]. \
                         constructor(login_credentials)
+                logging.warning("Testing the login info")
                 scraper.test_login_info()
                 logging.warning("Returning true")
                 self.write(callback + '(true)')

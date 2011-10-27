@@ -133,8 +133,8 @@
           {# <th>Fill Rate</th> #}
           {# <th width="70" style="text-align: right";>Clicks</th> #}
           {# <th width="70" style="text-align: right";>CTR</th> #}
-          <th width="70"> Targeting </th>
           <th width="130" style="text-align: right";>Price Floor</th>
+          <th width="70"> Targeted </th>
         </tr>
       </thead>
 
@@ -169,10 +169,10 @@
             --
           </td>
           {% endcomment %}
-          <td> </td>
-          <td class="price_floor" width="130" style="text-align: center">
-          <a href="#{{ app.key }}" class="edit_price_floor" id="{{app.key}}"> Edit Price Floor</a>
+          <td class="price_floor" width="130" style="text-align: right">
+            <a href="#{{ app.key }}" class="edit_price_floor" id="{{app.key}}"> Edit Price Floor</a>
           </td>
+          <td> </td>
         </tr>
       {% endfor %}
       </tbody>

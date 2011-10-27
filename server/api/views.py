@@ -114,8 +114,15 @@ class AdUnitService(RequestHandler):
                                                                           get_from_db=True)
                     try:
                         au.update(price_floor = adgroup.mktplace_price_floor)
-                    except AttributeError:
+                    except AttributeError, e:
+                        logging.warn(e)
                         au.update(price_floor = "0.25")
+
+                    try:
+                        au.update(active = adgroup.active)
+                    except AttributeError, e:
+                        logging.warn(e)
+                        au.update(active = False)
 
                 return JSONResponse(response)
             else:
@@ -130,13 +137,16 @@ class AdUnitService(RequestHandler):
     def put(self, app_key = None, adunit_key = None):
 
         put_data = simplejson.loads(self.request.raw_post_data)
+
         try:
             new_price_floor = put_data['price_floor']
+            activity = put_data['active']
 
             account_key = self.account.key()
             adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
 
             adgroup.mktplace_price_floor = float(new_price_floor)
+            adgroup.active = activity
             AdGroupQueryManager.put(adgroup)
 
         except KeyError, e:

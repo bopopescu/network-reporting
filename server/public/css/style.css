@@ -267,6 +267,11 @@ button {
 .invisible {
   visibility: hidden; }
 
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
+
 /*
  * Push floating elements into their containing box
  */
@@ -1122,6 +1127,11 @@ td.numeric, th.numeric, .numeric TD {
 .invisible {
   visibility: hidden; }
 
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
+
 /*
  * Push floating elements into their containing box
  */
@@ -1419,6 +1429,11 @@ input.price_floor_change {
 .invisible {
   visibility: hidden; }
 
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
+
 /*
  * Push floating elements into their containing box
  */
@@ -1669,6 +1684,11 @@ img.app-icon {
 
 .invisible {
   visibility: hidden; }
+
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
 
 /*
  * Push floating elements into their containing box

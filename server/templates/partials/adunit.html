@@ -21,14 +21,17 @@
     <%= ctr %>
   </td>
   {% endcomment %}
-  <td class="targeting">
-    <input name="targeting-{{ app.key }}" class="targeting-box" type="checkbox" {% if app.active %}checked="checked"{% endif %} > </input>
-    <label for="targeting-{{ app.key }}" class="targeting-{% if app.active %}on{% endif %}">
-      {% if app.active %} On {% else %} Off {% endif %}
-    </label>
-  </td>
-  <td class="price_floor">
+  <td class="price_floor"  style="text-align: right">
+    <a href="#" class="save"> Save </a>
     <input id="<%= id %>" class="price_floor_change" type="text" value="<%= price_floor %>"/>
-    <a href="#"> Save </a>
+  </td>
+  <td class="targeting">
+    <% if (active) { %>
+      <input name="targeting-<%= app_id %>" class="targeting-box" type="checkbox" checked="checked"></input>
+      <label for="targeting-<%= app_id %>" class="targeting-on"> On </label>
+    <% } else { %>
+      <input name="targeting-<%= app_id %>" class="targeting-box" type="checkbox"></input>
+      <label for="targeting-<%= app_id %>" class="targeting-off"> Off </label>
+    <% } %>
   </td>
 </tr>

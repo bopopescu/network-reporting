@@ -10,6 +10,7 @@
     var AdUnit = Backbone.Model.extend({
         // If we don't set defaults, the templates will explode
         defaults : {
+            active: true,
             attempts: 0,
             clicks: 0,
             ctr: 0,
@@ -220,16 +221,31 @@
             var current_model = this.model;
             var renderedContent = $(this.template(this.model.toJSON()));
 
-            // Ad the event handler to submit price floor changes over ajax.
+            // Add the event handler to submit price floor changes over ajax.
             $('.price_floor_change', renderedContent)
                 .change(function() {
                     current_model.set({'price_floor': $(this).val()});
                     // Save when they click the save button in the price floor cell
-                    $(".button", $(this).parent()).click(function() {
-                        current_model.save();
-                    });
+                    $(".save", $(this).parent())
+                        .click(function() {
+                            current_model.save();
+                        })
+                        .addClass('disabled')
+                        .text('Saving...');
+
                 });
 
+            // Add the event handler to submit targeting changes over ajax.
+            $("input.targeting-box", renderedContent).click(function() {
+                var targeting = $(this).attr('name');
+                var activation = $(this).is(":checked") ? "On" : "Off";
+                $("label[for='"+ targeting +"']", renderedContent).text(activation);
+
+                current_model.set({'active': $(this).is(":checked")});
+                current_model.save();
+            });
+
+            // Add the right background color based on where the app is in the table
             var app_row = $('tr#app-' + this.model.get('app_id'), this.el);
             var zebra = app_row.hasClass("even") ? "even" : "odd";
             renderedContent.addClass(zebra);
@@ -516,12 +532,6 @@
         $('#blocklist-submit').click(function(e) {
             e.preventDefault();
             $('#addblocklist').submit();
-        });
-
-        $("input.targeting-box").click(function() {
-            var targeting = $(this).attr('name');
-            var activation = $(this).is(":checked") ? "On" : "Off";
-            $("label[for='"+ targeting +"']").text(activation);
         });
 
     });

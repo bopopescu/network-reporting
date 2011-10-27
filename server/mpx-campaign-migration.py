@@ -134,7 +134,7 @@ def fetch_adunits_for_accounts(accounts):
             sys.exit()
 
 
-def migrate_campaigns():
+def migrate_campaigns(debug=False):
     '''
     CAMPAIGN MIGRATION
     Every account should have one marketplace campaign defaulted to `active=False`
@@ -158,7 +158,7 @@ def migrate_campaigns():
                                                .filter('campaign_type IN', ['marketplace', 'backfill_marketplace'])
 
         for c in existing_mpx_campaigns:
-            print 'found old mpx campaign', c.key()
+            if debug: print 'found old mpx campaign', c.key()
             DEREF_CACHE[c.key()] = c    # put old mpx campaign deref cache, used for migrating adgroups
             if not c.key().name():
                 c.deleted = True
@@ -230,7 +230,7 @@ def migrate_adgroups_and_creatives(debug=False):
 
         for ag in all_adgroups_under_account:
             if ag._campaign in DEREF_CACHE: # this adgroup is under an old mpx campaign
-                print 'found old mpx adgroup', ag
+                if debug: print 'found old mpx adgroup', ag.key()
                 ADGROUPS_TO_PUT.append(ag)
                 if not ag.key().name():
                     ag.deleted = True

@@ -1179,6 +1179,8 @@ def mpx_info(request, *args, **kwargs):
 class MarketplaceIndexHandler(RequestHandler):
     def get(self):
 
+        settings.DEBUG=False
+
         # Marketplace settings are kept as a single campaign.
         # Only one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
@@ -1210,6 +1212,7 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # Get the top level marketplace stats for the account
         top_level_mpx_stats = stats_fetcher.get_account_stats(start_date, end_date)
+
 
         logging.warn(top_level_mpx_stats)
 

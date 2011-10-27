@@ -37,7 +37,7 @@
 
   {% if not marketplace.active %}
   <div class="alert-message block-message clearfix">
-    <a href="#" class="close"> x </a>
+    {# <a href="#" class="close"> x </a> #}
     We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
     Flip the On/Off switch to get started,
     or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
@@ -100,9 +100,15 @@
         </thead>
         <tbody>
           <tr style="border:none;">
-            <td> {{ top_level_mpx_stats.impressions|default_if_none:"0"|withsep }} </td>
-            <td> {{ top_level_mpx_stats.ecpm|default_if_none:"0" }} </td>
-            <td> {{ top_level_mpx_stats.revenue|default_if_none:"0"|withsep }} </td>
+            {% if top_level_mpx_stats %}
+              <td> {{ top_level_mpx_stats.impressions|default_if_none:"0"|withsep }} </td>
+              <td> {{ top_level_mpx_stats.ecpm|default_if_none:"0" }} </td>
+              <td> {{ top_level_mpx_stats.revenue|default_if_none:"0"|withsep }} </td>
+            {% else %}
+              <td> 0 </td>
+              <td> $0.00 </td>
+              <td> $0.00 </td>
+            {% endif %}
           </tr>
         </tbody>
       </table>

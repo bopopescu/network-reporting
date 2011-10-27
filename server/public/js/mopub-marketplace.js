@@ -10,7 +10,7 @@
     var AdUnit = Backbone.Model.extend({
         // If we don't set defaults, the templates will explode
         defaults : {
-            active: true,
+            active: false,
             attempts: 0,
             clicks: 0,
             ctr: 0,
@@ -141,7 +141,7 @@
             // $(".ctr", app_row).text(this.model.get("ctr"));
 
             var adunit_show_link = $('a.adunits', app_row);
-            adunit_show_link.click(showAdUnits);
+            adunit_show_link.click(showAdUnits).click();
             $('a.edit_price_floor', app_row).click(function(e) {
                 e.preventDefault();
                 adunit_show_link.click();

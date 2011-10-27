@@ -1053,6 +1053,17 @@ class AJAXStatsHandler(RequestHandler):
             days = StatsModel.get_days(start_date, int(date_range))
         else:
             days = StatsModel.lastdays(int(date_range))
+            
+        if self.start_date: # this is tarded. the start date is really the end of the date range.
+            end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
+        else:
+            end_date = datetime.date.today()
+
+        if self.date_range:
+            start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
+        else:
+            start_date = end_date - datetime.timedelta(13)
+            
 
         advs = self.params.getlist('adv')
         pubs = self.params.getlist('pub')
@@ -1083,6 +1094,13 @@ class AJAXStatsHandler(RequestHandler):
                         e_ctr = summed_stats.ctr or DEFAULT_CTR
                         summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
                     elif 'marketplace' in adgroup.campaign.campaign_type:
+                        # Overwrite the revenue from MPX if its marketplace
+                        # TODO: overwrite clicks as well
+                        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+                        mpx_stats = stats_fetcher.get_account_stats( start_date, end_date)
+                        summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
+                        summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
+
                         summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm

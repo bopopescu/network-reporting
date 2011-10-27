@@ -1188,12 +1188,9 @@ class MarketplaceIndexHandler(RequestHandler):
         apps = AppQueryManager.get_apps(self.account)
         app_keys = simplejson.dumps([str(app.key()) for app in apps])
 
-        # Set up a MarketplaceStatsFetcher with this account only
-        # if settings.DEBUG:
-        #     stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-        # else:
+        # Set up a MarketplaceStatsFetcher with this account
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-        stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+        #stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
 
         # Form the date range
         # this is tarded. the start date is really the end of the date range.
@@ -1267,7 +1264,7 @@ class MarketplaceIndexHandler(RequestHandler):
 
 @login_required
 def marketplace_index(request, *args, **kwargs):
-    return MarketplaceIndexHandler()(request, *args, **kwargs)
+    return MarketplaceIndexHandler()(request, use_cache=False, *args, **kwargs)
 
 
 class AddBlocklistHandler(RequestHandler):
@@ -1300,7 +1297,7 @@ class RemoveBlocklistHandler(RequestHandler):
 
 @login_required
 def remove_blocklist_handler(request,*args,**kwargs):
-    return RemoveBlocklistHandler()(request,*args,**kwargs)
+    return RemoveBlocklistHandler()(request, use_cache=False, *args, **kwargs)
 
 
 class MarketplaceOnOffHandler(RequestHandler):

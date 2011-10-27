@@ -67,20 +67,20 @@ class MarketplaceStatsFetcher(object):
             stats_dict[id] = counts
         return stats_dict
 
-    
-    def _get_pub_inventory(self, pub, start, end):
+    def _get_pub_inventory(self, pub, start, end, daily=False):
         """
         This is an alternative to _get_inventory. Here, pub is used in the broad
         sense to represent a pub/app/adunit. When stats for only a single 
         pub/app/adunit are necessary. The endpoint this uses is much faster
         but less flexible so this should be used whenever possible
+
+        :param daily: when set to True, return daily breakdown of stats
         """
         if isinstance(start, datetime.date):
             start = start.strftime("%m-%d-%Y")
 
         if isinstance(end, datetime.date):
             end = end.strftime("%m-%d-%Y")
-
             
         url = "%s%spub=%s&start=%s&end=%s" % \
             (self._base_url,
@@ -90,32 +90,41 @@ class MarketplaceStatsFetcher(object):
              end)
         response_dict = _fetch_and_decode(url)
         stats_sum = response_dict['sum']
-        counts = {"revenue": currency(stats_sum['rev']),
-                  "impressions": int(stats_sum['imp']),
-                  "clicks": 0, #TODO: hard coded to 0
-                  "ecpm": currency(ecpm(stats_sum['rev'], 
-                                        stats_sum['imp'])),
-                  "ctr": percentage(ctr(0., stats_sum['imp']))}
+        counts = _transform_stats(stats_sum)
+        
+        if daily:
+            # append daily breakdown of stats
+            daily_stats_list = response_dict['daily']
+            daily_stats_list_transformed = []
+            for daily_stats in daily_stats_list:
+                daily_stats_transformed = _transform_stats(daily_stats)
+                daily_stats_transformed['date'] = daily_stats['date']
+                daily_stats_list_transformed.append(daily_stats_transformed)
+            counts['daily'] = daily_stats_list_transformed
+
         stats_dict = {pub: counts}
         return stats_dict
         
-    def get_app_stats(self, app_key, start, end):
+    def get_app_stats(self, app_key, start, end, daily=False):
         stats = self._get_pub_inventory(app_key,
-                                    start=start.strftime("%m-%d-%Y"),
-                                    end=end.strftime("%m-%d-%Y"))
+                                        start=start.strftime("%m-%d-%Y"),
+                                        end=end.strftime("%m-%d-%Y"),
+                                        daily=daily)
         return stats.get(app_key, {})
 
 
-    def get_adunit_stats(self, adunit_key, start, end):
+    def get_adunit_stats(self, adunit_key, start, end, daily=False):
         stats = self._get_pub_inventory(adunit_key,
-                                    start=start.strftime("%m-%d-%Y"),
-                                    end=end.strftime("%m-%d-%Y"))
+                                        start=start.strftime("%m-%d-%Y"),
+                                        end=end.strftime("%m-%d-%Y"),
+                                        daily=daily)
         return stats.get(adunit_key, {})
 
-    def get_account_stats(self, start, end):
+    def get_account_stats(self, start, end, daily=False):
         stats = self._get_pub_inventory(self.pub_id,
-                                    start=start.strftime("%m-%d-%Y"),
-                                    end=end.strftime("%m-%d-%Y"))
+                                        start=start.strftime("%m-%d-%Y"),
+                                        end=end.strftime("%m-%d-%Y"),
+                                        daily=daily)
         return stats.get(self.pub_id, {})
 
     def get_all_dsp_stats(self, start, end):
@@ -204,6 +213,14 @@ class MarketplaceStatsFetcher(object):
             limit = 3
 
         return {}
+
+def _transform_stats(stats_dict):
+    return {"revenue": currency(stats_dict['rev']),
+            "impressions": int(stats_dict['imp']),
+            "clicks": stats_dict.get('clk', 0), # no clk currently from /stats/pub
+            "ecpm": currency(ecpm(stats_dict['rev'], stats_dict['imp'])),
+            "ctr": percentage(ctr(stats_dict.get('clk', 0), stats_dict['imp']))}
+
 
 def _fetch_and_decode(url):
     try:

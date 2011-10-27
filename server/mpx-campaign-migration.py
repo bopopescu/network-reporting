@@ -23,12 +23,12 @@ from account.models import Account
 from advertiser.models import *
 from advertiser.query_managers import CreativeQueryManager, AdGroupQueryManager, CampaignQueryManager
 from publisher.models import *
-# from publisher.query_managers import *
+
 AdUnit = Site
 
 LIMIT = 100
-# APP_ID = 'mopub-inc'
-APP_ID = 'mopub-experimental'
+APP_ID = 'mopub-inc'
+# APP_ID = 'mopub-experimental'
 HOST = '38.%s.appspot.com' % APP_ID
 
 def auth_func():
@@ -112,7 +112,29 @@ def fetch_all_adgroups():
         sys.exit()
 
 
-def migrate_campaigns():
+# for debugging
+def fetch_adgroups_for_accounts(accounts):
+    for a in accounts:
+        try:
+            adgroups = AdGroup.all().filter('account =', a)
+            ALL_ADGROUPS.extend(adgroups)
+        except:
+            traceback.print_exc()
+            sys.exit()
+
+
+# for debugging
+def fetch_adunits_for_accounts(accounts):
+    for a in accounts:
+        try:
+            adunits = AdUnit.all().filter('account =', a)
+            ALL_ADUNITS.extend(adunits)
+        except:
+            traceback.print_exc()
+            sys.exit()
+
+
+def migrate_campaigns(debug=False):
     '''
     CAMPAIGN MIGRATION
     Every account should have one marketplace campaign defaulted to `active=False`
@@ -134,8 +156,9 @@ def migrate_campaigns():
         # archive old existing mpx campaigns, if any
         existing_mpx_campaigns = Campaign.all().filter('account =', account) \
                                                .filter('campaign_type IN', ['marketplace', 'backfill_marketplace'])
+
         for c in existing_mpx_campaigns:
-            print 'found old mpx campaign', c
+            if debug: print 'found old mpx campaign', c.key()
             DEREF_CACHE[c.key()] = c    # put old mpx campaign deref cache, used for migrating adgroups
             if not c.key().name():
                 c.deleted = True
@@ -151,7 +174,7 @@ def migrate_campaigns():
     print 'to put %i campaigns\n' % len(CAMPAIGNS_TO_PUT)
 
 
-def migrate_adgroups_and_creatives():
+def migrate_adgroups_and_creatives(debug=False):
     '''
     ADGROUP MIGRATION
     Create a marketplace adgroup for every adunit
@@ -194,26 +217,51 @@ def migrate_adgroups_and_creatives():
 
     print 'to put %i creatives\n' % len(CREATIVES_TO_PUT)
 
-    adunits_targeted_by_old_mpx_adgroups = set()
 
     # for each account, archive old existing mpx adgroups, if any
     processed_so_far = 0
     for account in ALL_ACCOUNTS:
+        adunit_keys_targeted_by_old_mpx_adgroups = set()
+
         account_key = account.key()
         all_adunits_under_account = filter(lambda adunit: adunit._account == account_key, ALL_ADUNITS)
+        all_adunit_keys_under_account = set([a.key() for a in all_adunits_under_account])
         all_adgroups_under_account = filter(lambda adgroup: adgroup._account == account_key, ALL_ADGROUPS)
 
         for ag in all_adgroups_under_account:
             if ag._campaign in DEREF_CACHE: # this adgroup is under an old mpx campaign
-                print 'found old mpx adgroup', ag
+                if debug: print 'found old mpx adgroup', ag.key()
                 ADGROUPS_TO_PUT.append(ag)
                 if not ag.key().name():
                     ag.deleted = True
-                adunits_targeted_by_old_mpx_adgroups |= set(ag.site_keys)
+                adunit_keys_targeted_by_old_mpx_adgroups |= set(ag.site_keys)
 
         # for adunits not targeted by any old mpx adgroups, set their adgroups default to `active=False`
-        adunits_not_targeted_by_old_mpx_adgroups = set(all_adunits_under_account) - adunits_targeted_by_old_mpx_adgroups
-        for adunit in adunits_not_targeted_by_old_mpx_adgroups:
+        adunit_keys_not_targeted_by_old_mpx_adgroups = all_adunit_keys_under_account - adunit_keys_targeted_by_old_mpx_adgroups
+
+        if debug:
+            print 'all adunit keys under account'
+            for a in set(all_adunit_keys_under_account):
+                print a
+            print
+
+            print 'all adunit keys targeted by old mpx adgroups'
+            for a in adunit_keys_targeted_by_old_mpx_adgroups:
+                print a
+            print
+
+            print 'all adunit keys NOT targed by old mpx adgroups'
+            for a in adunit_keys_not_targeted_by_old_mpx_adgroups:
+                print a
+            print
+
+        for a_k in adunit_keys_not_targeted_by_old_mpx_adgroups:
+            if a_k in DEREF_CACHE:
+                adunit = DEREF_CACHE[a_k]
+            else:
+                adunit = AdUnit.get(a_k)
+                DEREF_CACHE[a_k] = adunit
+
             new_mpx_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), adunit._account)
             new_mpx_adgroup_dict[new_mpx_adgroup.key()].active = False
 
@@ -234,6 +282,15 @@ def main():
     fetch_all_accounts()
     fetch_all_adunits()
     fetch_all_adgroups()
+
+
+    # # for testing single accounts at a time
+    # #
+    # global ALL_ACCOUNTS
+    # ALL_ACCOUNTS = [Account.get('agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExNzI5Mjc2MTM5NTA2OTE2MjAxNQw')]
+    # fetch_adgroups_for_accounts(ALL_ACCOUNTS)
+    # fetch_adunits_for_accounts(ALL_ACCOUNTS)
+
 
     # migrate models
     migrate_campaigns()
@@ -258,10 +315,6 @@ def main():
         CreativeQueryManager.put(chunk)
         total += len(chunk)
         print 'put in %i creatives' % total
-
-
-
-
 
 
 

@@ -841,10 +841,10 @@
         {% endcomment %}
 
 
-        {% if network %}
-          <h2>Marketplace Performance <img id="promo-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img> </h2>
+        {% if marketplace %}
+          <h2><a href="{% url marketplace_index %}">MoPub Marketplace</a>  <img id="promo-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img> </h2>
         {% else %}
-          <h2>No marketplace campaigns  </h2>
+          <h2><a href="{% url marketplace_index %}">Marketplace not activated</a> </h2>
         {% endif %}
 
         {% if marketplace %}
@@ -929,7 +929,7 @@
           <h2>No network campaigns  </h2>
         {% endif %}
 
-                {% if network %}
+        {% if network %}
 
                   {% comment %}
                   <div id="network-rollups" class="rollup fig4">
@@ -1049,16 +1049,10 @@
 
 
 
-              {% else %}
-
-                <div class="alert-message block-message info">
-                  Ad network campaigns can be set up to serve ads from any of the big ad networks. Click 'Add a campaign' to get started using ad networks.
-                </div>
-
             {% endif %}
 
 
-                    {% if not backfill_promo %}
+            {% if not backfill_promo %}
           <h2> No backfill promotional campaigns </h2>
         {% else %}
           <h2>Backfill Promotional <img id="bfill-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img> </h2>

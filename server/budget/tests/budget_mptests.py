@@ -44,10 +44,6 @@ EVEN_STATIC_BUDGET = 50
 EVEN_TOTAL = EVEN_STATIC_BUDGET * TEST_TS_PER_DAY
 
 
-def test_advance(budget, dtetime):
-    slice_num = budget_service.timeslice_advance(budget, testing=True, advance_to_datetime = dtetime)
-    logging.warning("Advancing....\n%s" % budget)
-    return slice_num
 
 def build_has_budget_for_bids(budget):
     def helper(bid):
@@ -58,6 +54,17 @@ def build_has_budget_for_bids(budget):
     return helper
 
 class TestBudgetUnitTests(unittest.TestCase):
+
+    def test_mock_budget_advance(self, testing=False, advance_to_datetime = None):
+        budget_service._mock_budget_advance(advance_to_datetime, testing)
+        self.e_c = Campaign.get(self.e_c.key())
+        self.aao_c = Campaign.get(self.aao_c.key())
+        self.e_budget = Budget.get(self.e_budget.key())
+        self.aao_budget = Budget.get(self.aao_budget.key())
+
+    def test_advance(self, dtetime):
+        self.test_mock_budget_advance(testing=True, advance_to_datetime = dtetime)
+        logging.warning("Advancing....")
 
     def setUp(self):
         # First, create an instance of the Testbed class.
@@ -91,9 +98,11 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget = Budget(start_datetime = self.budget_start,
                                delivery_type = 'evenly',
                                static_slice_budget = 50.0,
+                            active = True,
                                testing = True,
                                )
         self.aao_budget = Budget(start_datetime = self.budget_start,
+                            active = True,
                                  delivery_type = 'allatonce',
                                  static_total_budget = 5000.0,
                                  testing = True,
@@ -113,34 +122,6 @@ class TestBudgetUnitTests(unittest.TestCase):
                             )
         self.e_c.put()
 
-#        self.expensive_adgroup = AdGroup(account=self.account,
-#                                          campaign=self.expensive_budget,
-#                                          site_keys=[self.adunit.key()],
-#                                          bid_strategy="cpc",
-#                                          bid=100000.0) # 100 per click
-#        self.expensive_adgroup.put()
-#
-#        self.expensive_budgetreative = Creative(account=self.account,
-#                                ad_group=self.expensive_adgroup,
-#                                tracking_url="test-tracking-url",
-#                                cpc=.03)
-#        self.expensive_budgetreative.put()
-#
-#        self.cheap_adgroup = AdGroup(account=self.account,
-#                              campaign=self.e_budget,
-#                              site_keys=[self.adunit.key()],
-#                              bid_strategy="cpc",
-#                              budget=1000.0,
-#                              budget_strategy="evenly",
-#                              bid=10000.0)
-#        self.cheap_adgroup.put()
-#
-#
-#        self.e_budgetreative = Creative(account=self.account,
-#                                ad_group=self.cheap_adgroup,
-#                                tracking_url="test-tracking-url",
-#                                cpc=.03)
-#        self.e_budgetreative.put()
 
     @property
     def bids(self):
@@ -195,7 +176,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(memcache.get("thing"),0)
 
     def mptest_even_basic(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         # We can do the bid one time
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
 
@@ -205,7 +186,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.e_budget), 0)
 
     def mptest_aao_basic(self):
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         # We can do the bid one time
         eq_(budget_service._apply_if_able(self.aao_budget, 50), True)
 
@@ -216,7 +197,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
 
     def mptest_basic_cheap(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         # We can do the cheap bidding 50 times
         for i in xrange(50):
             eq_(budget_service._apply_if_able(self.e_budget, 1), True)
@@ -225,7 +206,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
     def mptest_timeslices_update(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         # We can do the bid one time
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
         # But it uses up all the timeslice's money and fails the second
@@ -233,7 +214,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.e_budget), 0)
 
         # Then after we advance the timeslice
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # We now have more budget and can do the bid one more time
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
         # But it uses up all the timeslice's money and fails the second
@@ -241,13 +222,13 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.e_budget), 0)
 
     def mptest_timeslices_rollover(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         # We can do the bid one time
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service.remaining_ts_budget(self.e_budget), 49)
 
         # Then after we advance the timeslice
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service.remaining_ts_budget(self.e_budget), 99)
         eq_(budget_service._apply_if_able(self.e_budget, 9), True)
@@ -259,9 +240,9 @@ class TestBudgetUnitTests(unittest.TestCase):
         # But it uses up all the timeslice's money and fails the 91st time
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
-    def mptest_multiple_budgetampaigns(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+    def mptest_multiple_campaigns(self):
+        slice_num = self.test_advance(self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service._apply_if_able(self.aao_budget, 100), True)
@@ -269,15 +250,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service._apply_if_able(self.aao_budget, 100), True)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-        budget_service.timeslice_advance(self.aao_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service.remaining_ts_budget(self.e_budget), 98)
         eq_(budget_service.remaining_ts_budget(self.aao_budget), 4800)
 
-    def mptest_multiple_budgetampaigns_advance_twice(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+    def mptest_multiple_campaigns_advance_twice(self):
+        slice_num = self.test_advance(self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service._apply_if_able(self.aao_budget, 100), True)
@@ -285,33 +265,31 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service._apply_if_able(self.aao_budget, 100), True)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-        budget_service.timeslice_advance(self.aao_budget, testing=True)
-        budget_service.timeslice_advance(self.aao_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service.remaining_ts_budget(self.e_budget), 148)
         eq_(budget_service.remaining_ts_budget(self.aao_budget), 4800)
 
     def mptest_remaining_daily_budget(self):
         # We have init'd the TS w/ 50
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service.remaining_ts_budget(self.e_budget), 49)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # We have moved 100 to the current timeslice budget
         eq_(budget_service.remaining_ts_budget(self.e_budget), 99)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # We have moved 200 to the current timeslice budget
         eq_(budget_service.remaining_ts_budget(self.e_budget), 199)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service.remaining_ts_budget(self.e_budget),249)
 
@@ -325,16 +303,16 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, day_before_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.e_budget, 100), False)
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         # After advancing to datetime.date(1987,4,4) we should have a budget
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
 
     def mptest_cache_failure_then_spend(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service.remaining_ts_budget(self.e_budget), 49)
@@ -345,11 +323,11 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.e_budget), 49)
 
     def mptest_cache_failure_then_spend_multiple_timeslices(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service.remaining_ts_budget(self.e_budget), 99)
 
@@ -359,7 +337,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.e_budget), 98)
 
     def mptest_cache_failure_then_apply_expense(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service.remaining_ts_budget(self.e_budget), 49)
@@ -378,7 +356,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.e_budget), 47)
 
     def mptest_cache_failure_then_advance(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service.remaining_ts_budget(self.e_budget), 50)
 
@@ -386,7 +364,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(self.e_budget.spent_today, 0)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(self.e_budget.spent_today, 50)
 
@@ -395,7 +373,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         budget_service._delete_memcache(self.e_budget)
 
         # Memcache miss -> restart spending at last snapshot (50)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(self.e_budget.spent_today, 50)
 
@@ -404,42 +382,42 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_ts_budget(self.e_budget), 99)
 
     def mptest_cache_failure_then_advance_multiple_timeslices(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service.remaining_ts_budget(self.e_budget), 49)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service.remaining_ts_budget(self.e_budget), 99)
 
         budget_service._delete_memcache(self.e_budget)
         # Memcache miss -> restart timeslice at last snapshot (99)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # advanced 4 TS, spent 1, should have 199 left
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service.remaining_ts_budget(self.e_budget), 198)
 
     def mptest_budget_logging_basic(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service.remaining_ts_budget(self.e_budget), 49)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         last_log = self.e_budget.timeslice_logs.filter('slice_num = ', self.e_budget.curr_slice -1).get()
         eq_(last_log.actual_spending, 1)
 
     def mptest_very_expensive(self):
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.e_budget, 10000), False)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
@@ -449,7 +427,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Even has 50 * 288 budget
         self.e_budget.delivery_type = "allatonce"
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
 
         eq_(self.e_budget.daily_budget, EVEN_TOTAL)
@@ -460,7 +438,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Even campaign has 50 * 288 total budget
         self.e_budget.delivery_type = "allatonce"
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         logging.warning("Remaing TS Budget: %s" % remaining_ts_budget(self.e_budget))
 
         eq_(budget_service._apply_if_able(self.e_budget, 400), True)
@@ -468,7 +446,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.e_budget, 200), True)
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 600)
 
-        #test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        #self.test_advance(self.budget_start + ONE_DAY)
         budget_service._delete_memcache(self.e_budget)
 
         # Fall back to snapshot
@@ -481,18 +459,18 @@ class TestBudgetUnitTests(unittest.TestCase):
         # Campain has 12 * 50 daily budget = 600
         self.e_budget.delivery_type = "allatonce"
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 400), True)
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 400)
         eq_(budget_service._apply_if_able(self.e_budget, 6000), False)
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 400)
 
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY) # to backup
+        slice_num = self.test_advance(self.budget_start + ONE_DAY) # to backup
         budget_service._delete_memcache(self.e_budget)
 
         # Fall back to snapshot
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY + ONE_DAY) # to backup
+        slice_num = self.test_advance(self.budget_start + ONE_DAY + ONE_DAY) # to backup
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL)
 
         eq_(budget_service._apply_if_able(self.e_budget, 400), True)
@@ -505,12 +483,12 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.delivery_type = "allatonce"
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # The end of the second day
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         second_spending = budget_service.get_spending_for_date_range(self.e_budget,
                                                    self.budget_start,
@@ -525,18 +503,18 @@ class TestBudgetUnitTests(unittest.TestCase):
         # The campaign has a $1000 daily budget, and goes for 1 days inclusive -> $1,000
         self.e_budget.delivery_type = "allatonce"
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start - ONE_DAY)
+        slice_num = self.test_advance(self.budget_start - ONE_DAY)
         eq_(budget_service._apply_if_able(self.e_budget, 500), False)
 
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
 
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # The end of the second day
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         second_spending = budget_service._get_spending_for_date(self.e_budget,
                                                       self.budget_start, testing=True)
@@ -551,7 +529,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.put()
 
         logging.warning("INITIAL ADVANCE")
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL)
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
@@ -560,7 +538,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         # The end of the first day
         logging.warning("FIRST ADVANCE")
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
 
@@ -568,7 +546,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         # The end of the second day
         logging.warning("SECOND ADVANCE")
-        slice_num = test_advance(self.e_budget, self.budget_end)
+        slice_num = self.test_advance(self.budget_end)
 
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
@@ -576,7 +554,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         # The end of the third day
         logging.warning("THIRD ADVANCE")
-        slice_num = test_advance(self.e_budget, self.budget_end + ONE_DAY)
+        slice_num = self.test_advance(self.budget_end + ONE_DAY)
 
         first_spending = budget_service.get_spending_for_date_range(self.e_budget,
                                                   self.budget_start,
@@ -618,7 +596,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.delivery_type = "allatonce"
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL)
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
@@ -626,14 +604,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # The end of the first day
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
 
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # The end of the second day
-        slice_num = test_advance(self.e_budget, self.budget_start + 2*ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + 2*ONE_DAY)
 
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
@@ -642,7 +620,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # The end of the third day
-        slice_num = test_advance(self.e_budget, self.budget_start + 3*ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + 3*ONE_DAY)
 
         # Three days have advanced and we have spent 1500
         # We have spent 0 today
@@ -652,7 +630,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 100)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         total_spending = budget_service.get_spending_for_date_range(self.e_budget,
                                                    self.budget_start - 2*ONE_DAY,
@@ -667,7 +645,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL)
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
@@ -675,14 +653,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # The end of the first day
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
 
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # The end of the second day
-        slice_num = test_advance(self.e_budget, self.budget_start + 2*ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + 2*ONE_DAY)
 
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
@@ -691,7 +669,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # The end of the third day
-        slice_num = test_advance(self.e_budget, self.budget_start + 3*ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + 3*ONE_DAY)
 
         # Three days have advanced and we have spent 1500
         # We have spent 0 today
@@ -701,7 +679,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 100)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         total_spending = budget_service.get_spending_for_date_range(self.e_budget,
                                                    self.budget_start - 2*ONE_DAY,
@@ -717,7 +695,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.end_datetime = self.budget_start + JUST_UNDER_ONE_DAY
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL)
 
         eq_(budget_service.percent_delivered(self.e_budget), 0.0)
@@ -726,7 +704,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         total_spending = budget_service.get_spending_for_date_range(self.e_budget,
                                                    self.budget_start - 2*ONE_DAY,
@@ -739,7 +717,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.percent_delivered(self.e_budget), per_deliv)
 
         # The end of the first day
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         # We have still delivered 50.0%
         eq_(budget_service.percent_delivered(self.e_budget), per_deliv)
@@ -753,7 +731,7 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         total_budget = self.e_budget.total_budget
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         #600 available
 
         eq_(budget_service.percent_delivered(self.e_budget), 0.0)
@@ -765,7 +743,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.percent_delivered(self.e_budget), per_deliv)
 
         # The end of the first day
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
         #700 available
         eq_(budget_service.percent_delivered(self.e_budget), per_deliv)
 
@@ -776,19 +754,19 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.percent_delivered(self.e_budget), per_deliv)
 
         # The end of the second day
-        slice_num = test_advance(self.e_budget, self.budget_start + 2*ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + 2*ONE_DAY)
 
         # We have still delivered some %
         eq_(budget_service.percent_delivered(self.e_budget), per_deliv)
 
     def mptest_percent_delivered_none(self):
         """ No end date, not finite, % deliv is None """
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service.percent_delivered(self.e_budget), None)
 
 
-    def mptest_finite_budgetampaign(self):
+    def mptest_finite_campaign(self):
 
          # The campaign has a $1000 daily budget, and goes for 10 days inclusive -> $10,000
          self.e_budget.end_datetime = self.budget_end
@@ -805,10 +783,10 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.put()
 
         # Advance the budget 1 day (and 10 timeslices)
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         for i in xrange(10):
-            budget_service.timeslice_advance(self.e_budget,testing=True)
+            self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
         # We have spent 500 out of 1000 total
@@ -824,10 +802,10 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.put()
 
         # Advance the budget 1 days (and 10 timeslices)
-        slice_num = test_advance(self.e_budget, self.budget_start)
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
         for i in xrange(10):
-            budget_service.timeslice_advance(self.e_budget,testing=True)
+            self.test_mock_budget_advance(testing=True)
 
         # 1000 remaining
         eq_(budget_service._apply_if_able(self.e_budget, 100), True)
@@ -843,7 +821,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # Another advance, backs up to db
-        budget_service.timeslice_advance(self.e_budget,testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service.remaining_daily_budget(self.e_budget), EVEN_TOTAL - 500)
 
         # Catastrophic cache failure again!!!
@@ -865,14 +843,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         # Advance the budget to the second day of the campaign
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
         # All of Day 1's budget wasn't spent, spend that shittttt
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
-        budget_service.timeslice_advance(self.e_budget,testing=True)
-        budget_service.timeslice_advance(self.e_budget,testing=True)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # One day + 2 TS's worth = EVEN_TOTAL + 150 alloc, less 500 = 
         # We have $EVEN_TOTAL - 350
@@ -892,13 +870,13 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.put()
 
         # Advance the budget 1 day (and 10 timeslices)
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         for i in xrange(10):
             # Try to apply this expense, but we can't because the TS budget isn't enough
             # it has to rollover!
             eq_(budget_service._apply_if_able(self.e_budget, 600), False)
-            budget_service.timeslice_advance(self.e_budget,testing=True)
+            self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 500), True)
 
@@ -913,11 +891,11 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.aao_budget.put()
 
         # Advance the budget
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service.remaining_daily_budget(self.aao_budget), 5000)
 
-        test_advance(self.aao_budget, self.budget_start + ONE_DAY)
+        self.test_advance(self.budget_start + ONE_DAY)
 
         eq_(budget_service.remaining_daily_budget(self.aao_budget), 5000)
 
@@ -931,7 +909,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.aao_budget.put()
 
         # Advance the budget and spend the full 1000
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.aao_budget, 1000), True)
 
@@ -940,7 +918,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.aao_budget.end_datetime = self.budget_end + 5 * ONE_DAY
         self.aao_budget.put()
 
-        slice_num = test_advance(self.aao_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         eq_(budget_service.remaining_daily_budget(self.aao_budget), 4000.)
 
@@ -954,14 +932,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.aao_budget.put()
 
         # Advance the budget and spend the full 1000
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.aao_budget, 1000), True)
 
         # 9K budget remains, but before the end of the first day we
         # change the end date, now the campaign goes for 5 days total, 4 days remain
         self.aao_budget.end_datetime = self.budget_end - 2*ONE_DAY
         self.aao_budget.put()
-        slice_num = test_advance(self.aao_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         eq_(budget_service.remaining_daily_budget(self.aao_budget), 4000)
 
@@ -975,14 +953,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.aao_budget.put()
 
         # Advance the budget and spend the full 1000
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.aao_budget, 1000), True)
 
         # 9K budget remains, but before the end of the first day we
         # increase the budget. Now we have 9 days and 18000 more to spend.
         self.aao_budget.set_total_budget(10000)
         self.aao_budget.put()
-        slice_num = test_advance(self.aao_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         eq_(budget_service.remaining_daily_budget(self.aao_budget), 9000.)
 
@@ -996,15 +974,15 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.aao_budget.put()
 
         # Advance the budget and spend 500, twice
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.aao_budget, 500), True)
 
-        slice_num = test_advance(self.aao_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         eq_(budget_service._apply_if_able(self.aao_budget, 500), True)
 
-        slice_num = test_advance(self.aao_budget, self.budget_start + 2*ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + 2*ONE_DAY)
 
         eq_(budget_service.remaining_daily_budget(self.aao_budget), 4000)
 
@@ -1014,7 +992,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 600), True)
         eq_(budget_service._apply_if_able(self.e_budget, 200), False)
@@ -1022,7 +1000,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.set_total_daily_budget(1200)
         self.e_budget.put()
 
-        budget_service.timeslice_advance(self.e_budget,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 600), True)
         eq_(budget_service._apply_if_able(self.e_budget, 100), False)
@@ -1031,18 +1009,18 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.aao_budget.end_datetime = self.budget_end
         self.aao_budget.put()
 
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.aao_budget, 500), True)
 
-        slice_num = test_advance(self.aao_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         eq_(budget_service._apply_if_able(self.aao_budget, 500), True)
 
         self.aao_budget.set_total_budget(2000)
         self.aao_budget.put()
 
-        budget_service.timeslice_advance(self.aao_budget,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.aao_budget, 1000), True)
         eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
@@ -1051,14 +1029,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.aao_budget.end_datetime = self.budget_start + 3*ONE_DAY
         self.aao_budget.put()
 
-        slice_num = test_advance(self.aao_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.aao_budget, 500), True)
-        slice_num = test_advance(self.aao_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         self.aao_budget.end_datetime = self.budget_start + 2*ONE_DAY
         self.aao_budget.put()
 
-        budget_service.timeslice_advance(self.aao_budget,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.aao_budget, 4500), True)
         eq_(budget_service._apply_if_able(self.aao_budget, 100), False)
@@ -1079,14 +1057,14 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(self.e_budget.is_active_for_date(self.budget_end + ONE_DAY),False)
 
         # Advance the budget and the ts budgets
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         # 1000 remaining because the 6K budget is split between the 6 remaining days
         eq_(budget_service.remaining_daily_budget(self.e_budget), 1000)
         logging.warning("Next slice budget: %s" % self.e_budget.next_slice_budget)
 
         # Advance the budget and the ts budgets
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
         logging.warning("Next slice budget after skip: %s" % self.e_budget.next_slice_budget)
 
         # 12 slices for today, each slice should have 100, try it, make it work
@@ -1098,17 +1076,17 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.put()
 
         # Advance the budget and the ts budgets
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         # 50 TS budget, spend it
         eq_(budget_service._apply_if_able(self.e_budget,50), True)
 
-        budget_service.timeslice_advance(self.e_budget,testing=True)
+        self.test_mock_budget_advance(testing=True)
         # 50 left, unspent
         self.e_budget.set_total_daily_budget(3000)
         self.e_budget.put()
         # New static_ts_budget is 250 PER SLICE. 2 slices went by, should be 500, spent 50, have 50
-        budget_service.timeslice_advance(self.e_budget,testing=True)
+        self.test_mock_budget_advance(testing=True)
         # Third slice, should have spent 750, only have spent 50, should have 700 to spend
 
         eq_(budget_service._apply_if_able(self.e_budget, 700), True)
@@ -1125,13 +1103,13 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.put()
 
         # Advance the budget and the ts budgets.  START OF THE DAY, SHOULD NOT WORK
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.e_budget,1), False)
 
-        budget_service.timeslice_advance(self.e_budget,testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget,1), False)
 
-        budget_service.timeslice_advance(self.e_budget,testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget,50), True)
 
         eq_(budget_service._apply_if_able(self.e_budget,1), False)
@@ -1188,16 +1166,16 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.delivery_type = 'allatonce'
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.e_budget, 4050), True)
         BudgetQueryManager.prep_update_budget(self.e_budget, start_datetime = self.e_budget.start_datetime + datetime.timedelta(minutes=480))
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 50), False)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 950), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
@@ -1207,46 +1185,46 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.static_total_budget = 7200.
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 100), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 100), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 100), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
         # on slice 3, each slice has 100 to spend, 
 
         BudgetQueryManager.prep_update_budget(self.e_budget, start_datetime = self.e_budget.start_datetime + ONE_DAY)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 100), False)
 
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 60), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 120), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 120), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 120), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(self.e_budget.total_spent, 720)
 
@@ -1255,44 +1233,44 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.static_total_budget = 7200.
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.e_budget, 100), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_total_budget = 14400)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # Expected to spend 200/slice, spent 100 in 2 slices, 300 left
         eq_(budget_service._apply_if_able(self.e_budget, 300), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 300), False)
         eq_(budget_service._apply_if_able(self.e_budget, 200), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_total_budget = 7200)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # spent 600, expected to spend 400, 100/slice, 
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 200), False)
         eq_(budget_service._apply_if_able(self.e_budget, 100), True)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 200), False)
         eq_(budget_service._apply_if_able(self.e_budget, 100), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(self.e_budget.total_spent, 800)
         pass
 
@@ -1303,30 +1281,30 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.static_total_budget = 7200.
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.e_budget, 7000), True)
         eq_(budget_service._apply_if_able(self.e_budget, 200), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_total_budget = 10200)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 2900), True)
         eq_(budget_service._apply_if_able(self.e_budget, 100), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
         BudgetQueryManager.prep_update_budget(self.e_budget, static_total_budget = 7200)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
         BudgetQueryManager.prep_update_budget(self.e_budget, static_total_budget = 10201)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(self.e_budget.total_spent, 10201)
 
@@ -1336,16 +1314,16 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.delivery_type = 'allatonce'
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.e_budget, 4050), True)
         BudgetQueryManager.prep_update_budget(self.e_budget, start_datetime = self.e_budget.start_datetime + datetime.timedelta(minutes=480))
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 50), False)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 950), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
@@ -1357,30 +1335,30 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.static_total_budget = 7200.
         self.e_budget.put()
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         eq_(budget_service._apply_if_able(self.e_budget, 7000), True)
         eq_(budget_service._apply_if_able(self.e_budget, 200), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_total_budget = 10200)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 2900), True)
         eq_(budget_service._apply_if_able(self.e_budget, 100), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
         BudgetQueryManager.prep_update_budget(self.e_budget, static_total_budget = 7200)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
         BudgetQueryManager.prep_update_budget(self.e_budget, static_total_budget = 10201)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(self.e_budget.total_spent, 10201)
 
@@ -1390,57 +1368,57 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.delivery_type = 'allatonce'
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 600), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_slice_budget = 100)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 600), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_slice_budget = 10)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 100), False)
         eq_(budget_service._apply_if_able(self.e_budget, 10), False)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_slice_budget = 101)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 100), False)
         eq_(budget_service._apply_if_able(self.e_budget, 12), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(self.e_budget.total_spent, 1212)
 
     def mptest_daily_evenly_end_update_budget(self):
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
         # should spent 50, did
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_slice_budget = 10)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # should've spent 20, spent 50   2TS
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # should've spent 30, spent 50   3TS
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # should've spent 40, spent 50   4TS
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # should've spent 50, spent 50   5TS
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # should've spent 60, spent 50   6TS
 
         eq_(budget_service._apply_if_able(self.e_budget, 10), True)
@@ -1448,12 +1426,12 @@ class TestBudgetUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_slice_budget = 100)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # should've spent 700, spent 60
 
         eq_(budget_service._apply_if_able(self.e_budget, 640), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(self.e_budget.total_spent, 700)
 
@@ -1463,24 +1441,24 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget.delivery_type = 'allatonce'
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 300), True)
         BudgetQueryManager.prep_update_budget(self.e_budget, end_datetime = self.e_budget.end_datetime - ONE_DAY)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.e_budget, 300), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, start_datetime = self.e_budget.start_datetime - ONE_DAY)
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
         # 2 days (according to the update) have been processed.  
         # We should have spent 1800, only spent 600, 1200 today
         eq_(budget_service._apply_if_able(self.e_budget, 1200), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(self.e_budget.total_spent, 1800)
 
@@ -1489,26 +1467,26 @@ class TestBudgetUnitTests(unittest.TestCase):
     def mptest_daily_evenly_end_update_datetime(self):
         self.e_budget.end_datetime = self.budget_end
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
         BudgetQueryManager.prep_update_budget(self.e_budget, end_datetime = self.e_budget.end_datetime - ONE_DAY)
         # changing the enddate of a daily campaign doesn't really do anything....
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, start_datetime = self.e_budget.start_datetime - ONE_DAY)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # as before, we've spent 100, the budget now began a day before now, 
         # so we should've spent all 600 + 100 for today.  New Ts should have 650
         eq_(budget_service._apply_if_able(self.e_budget, 650), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # Now that we spent the buildup, we shouldn't have any more than a single TS
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(self.e_budget.total_spent, 800)
 
@@ -1516,23 +1494,25 @@ class TestBudgetUnitTests(unittest.TestCase):
     def mptest_daily_aao_no_end_update_budget(self):
         self.e_budget.delivery_type = 'allatonce'
         self.e_budget.put()
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 300), True)
         BudgetQueryManager.prep_update_budget(self.e_budget, static_slice_budget = 10)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
         #10/slice = 120/day
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
         #120/day, days don't roll over
         eq_(budget_service._apply_if_able(self.e_budget, 120), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
         BudgetQueryManager.prep_update_budget(self.e_budget, static_slice_budget = 20)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
-
+        logging.warning("\nPre Advance\nBUDGET IN QUESTION: %s\n\n" % self.e_budget)
+        self.test_mock_budget_advance(testing=True)
+        logging.warning("\nPost Advance\nBUDGET IN QUESTION: %s\n\n" % self.e_budget)
+        logging.warning("Expected: %s  Total: %s" % (self.e_budget.expected_spent, self.e_budget.spent_today))
         eq_(budget_service._apply_if_able(self.e_budget, 120), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         # Because end dates aren't set, the total spent constrains NOTHING
@@ -1540,34 +1520,34 @@ class TestBudgetUnitTests(unittest.TestCase):
 
     #50/slice 600/day
     def mptest_daily_evenly_no_end_update_budget(self):
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
         eq_(budget_service._apply_if_able(self.e_budget, 50), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_slice_budget = 20)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 10), True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
         BudgetQueryManager.prep_update_budget(self.e_budget, static_slice_budget = 1)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), False)
 
-        slice_num = test_advance(self.e_budget, self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.e_budget, 1), True)
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # Because end dates aren't set, the total spent constrains NOTHING
         eq_(self.e_budget.total_spent, 62)
@@ -1587,7 +1567,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         """ Simulate multiple machines reading True from memcache when
         only a small number of these machines should """
 
-        slice_num = test_advance(self.e_budget, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
         tuples = map(build_has_budget_for_bids(self.e_budget), self.bids)
 
         # They should all be True the first time through
@@ -1600,15 +1580,15 @@ class TestBudgetUnitTests(unittest.TestCase):
                 budget_service.apply_expense(self.e_budget, bid)
         eq_(tot_apply/tot, 1)
         # hella overspent.  Should've spent 50, spent 250
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # 100
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # 150
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # 200
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # 250
-        budget_service.timeslice_advance(self.e_budget, testing=True)
+        self.test_mock_budget_advance(testing=True)
         # 300, spent 250, have 50, but braking in place!
         tuples = map(build_has_budget_for_bids(self.e_budget), self.bids)
         # They should all be True the first time through

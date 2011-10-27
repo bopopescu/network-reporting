@@ -20,6 +20,11 @@ class BudgetQueryManager(QueryManager):
         logging.warning("\n\nCAMPAIGN IS: %s\n\n" % camp)
         # Update budget
         if camp.budget_obj:
+            budget = camp.budget_obj
+            if camp.active != budget.active:
+                budget.active = camp.active()
+                budget.put()
+
             update_dict = {}
             if not camp.start_datetime == camp.budget_obj.start_datetime:
                 update_dict['start_datetime'] = camp.start_datetime
@@ -27,8 +32,6 @@ class BudgetQueryManager(QueryManager):
                 update_dict['end_datetime'] = camp.end_datetime
             if not camp.budget_strategy == camp.budget_obj.delivery_type:
                 update_dict['delivery_type'] = camp.budget_strategy
-            if not camp.active == camp.budget_obj.active:
-                update_dict['active'] = camp.active
 
             if camp.budget:
                 slice_budget = get_slice_budget_from_daily(camp.budget)
@@ -76,7 +79,6 @@ class BudgetQueryManager(QueryManager):
     def prep_update_budget(cls, budget, 
                            start_datetime = None,
                            end_datetime = False,
-                           active = None,
                            delivery_type = None,
                            static_total_budget = None,
                            static_slice_budget = None,
@@ -87,8 +89,6 @@ class BudgetQueryManager(QueryManager):
             end_datetime = budget.end_datetime
         if start_datetime is None:
             start_datetime = budget.start_datetime
-        if active is None:
-            active = budget.active
         if delivery_type is None:
             delivery_type = budget.delivery_type
 
@@ -97,7 +97,7 @@ class BudgetQueryManager(QueryManager):
             static_total_budget = budget.static_total_budget
             static_slice_budget = budget.static_slice_budget
 
-        update_str = build_budget_update_string(start_datetime, end_datetime, active, delivery_type, static_total_budget, static_slice_budget)
+        update_str = build_budget_update_string(start_datetime, end_datetime, delivery_type, static_total_budget, static_slice_budget)
         budget.update = True
         budget.update_str = update_str
         budget.put()
@@ -107,7 +107,7 @@ class BudgetQueryManager(QueryManager):
     def exec_update_budget(self, budget):
         """ Takes the update string, applies all the updates, logs the change """
 
-        new_start, new_end, new_active, new_delivery, new_static_total, new_static_slice = parse_budget_update_string(budget.update_str)
+        new_start, new_end, new_delivery, new_static_total, new_static_slice = parse_budget_update_string(budget.update_str)
 
         change_log = BudgetChangeLog(start_datetime      = budget.start_datetime,
                                      end_datetime        = budget.end_datetime,

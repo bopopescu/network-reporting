@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
@@ -8,7 +10,9 @@ from advertiser.models import ( Campaign,
                                 AdGroup,
                                 )
 from budget import budget_service
-from budget.models import Budget
+from budget.helpers import get_slice_from_datetime
+from budget.memcache_budget import set_slice
+from budget.models import Budget, BudgetSliceCounter
 
 import logging
 import datetime
@@ -24,7 +28,19 @@ from google.appengine.ext import webapp
 CAMPAIGNS_PER_WORKER = 30
 
 def budget_advance(request):
-    budgets = Budget.all()..filter('active =', True).fetch(1000000)
+    slice_counter = BudgetSliceCounter.all().get()
+    # If there is no global counter, then create it
+    if not slice_counter:
+        slice_counter = BudgetSliceCounter(slice_num = get_slice_from_datetime(datetime.now()))
+        # otherwise incr it
+    else:
+        slice_counter.slice_num += 1
+
+    slice_counter.put()
+    # set it memc
+    set_slice(slice_counter.slice_num)
+
+    budgets = Budget.all().filter('active =', True).fetch(1000000)
     #campaigns = Campaign.all().filter("budget >", 0).filter("active =", True).fetch(1000000)
     keys = [budget.key() for budget in budgets]
     count = len(keys)
@@ -88,7 +104,8 @@ def chart(request, campaign_key):
 def budget_view(request, adgroup_key):
     adgroup = AdGroup.get(adgroup_key)
 
-    budget = adgroup.campaign.budget_obj
+    camp = adgroup.campaign
+    budget = camp.budget_obj
 
     if budget:
         remaining_daily_budget = budget_service.remaining_daily_budget(budget)
@@ -99,38 +116,34 @@ def budget_view(request, adgroup_key):
         remaining_daily_budget = None
         braking_fraction = None
 
-    today = datetime.datetime.now()
+    today = datetime.datetime.now().date()
     one_month_ago = today - datetime.timedelta(days=30)
 
-    daily_logs = budget_service._get_daily_logs_for_datetime_range(budget,
+    daily_logs = budget_service._get_daily_logs_for_date_range(budget,
                                                                    one_month_ago,
                                                                    today)
 
 
-    slicer = BudgetSlicer.get_or_insert_for_campaign(camp)
-    ts_logs = slicer.timeslice_logs.order("-end_date").fetch(DEFAULT_TIMESLICES)
+    ts_logs = budget_service._get_ts_logs_for_date_range(budget, one_month_ago, today)
 
     #### Build budgetslicer address ####
     # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="
     prefix = "https://appengine.google.com/datastore/edit?app_id=mopub-inc&namespace=&key="
 
-    budget_obj = BudgetSlicer.get_or_insert_for_campaign(camp)
-    budget_obj_url = prefix + str(budget_obj.key())
+    budget_obj_url = prefix + str(budget.key())
 
 
     #### Build memcache clearing urls ####
     # clear_prefix = "http://localhost:8080"
     clear_prefix = "http://app.mopub.com"
 
-    daily_key = budget_service._make_campaign_daily_budget_key(camp)
-    ts_key = budget_service._make_campaign_ts_budget_key(camp)
+    ts_key = budget_service._make_campaign_ts_budget_key(budget)
 
-    clear_memcache_daily_url = clear_prefix + "/m/clear?key=" + daily_key + "&namespace=budget"
     clear_memcache_ts_url = clear_prefix + "/m/clear?key=" + ts_key + "&namespace=budget"
 
 
-
     context =  {'campaign': camp,
+                'budget': budget,
                 'remaining_daily_budget': remaining_daily_budget,
                 'remaining_ts_budget': remaining_ts_budget,
                 'daily_logs': daily_logs,
@@ -138,7 +151,6 @@ def budget_view(request, adgroup_key):
                 'today': today,
                 'one_month_ago': one_month_ago,
                 'budget_obj_url': budget_obj_url,
-                'clear_memcache_daily_url': clear_memcache_daily_url,
                 'clear_memcache_ts_url': clear_memcache_ts_url,
                 'braking_fraction': braking_fraction}
 

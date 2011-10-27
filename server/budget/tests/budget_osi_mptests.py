@@ -38,12 +38,20 @@ from google.appengine.ext import testbed
 ONE_DAY = datetime.timedelta(days=1)
 JUST_UNDER_ONE_DAY = datetime.timedelta(minutes=1435)
 
-def test_advance(budget, dtetime):
-    slice_num = budget_service.timeslice_advance(budget, testing=True, advance_to_datetime = dtetime)
-    logging.warning("Advancing....\n%s" % budget)
-    return slice_num
 
 class TestBudgetOSIUnitTests(unittest.TestCase):
+
+    def test_mock_budget_advance(self, testing=False, advance_to_datetime = None):
+        budget_service._mock_budget_advance(advance_to_datetime, testing)
+        self.full_c = Campaign.get(self.full_c.key())
+        self.cheap_c = Campaign.get(self.cheap_c.key())
+        self.full_b = Budget.get(self.full_b.key())
+        self.cheap_b = Budget.get(self.cheap_b.key())
+
+    def test_advance(self, dtetime):
+        slice_num = self.test_mock_budget_advance(testing=True, advance_to_datetime = dtetime)
+        logging.warning("Advancing....")
+        return slice_num
 
     def setUp(self):
         # First, create an instance of the Testbed class.
@@ -79,6 +87,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
                              delivery_type = 'evenly',
                              static_total_budget = 2400.0,
                              testing=True,
+                            active = True,
                              )
         self.full_b.put()
 
@@ -107,6 +116,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
                               delivery_type = 'evenly',
                               static_slice_budget = 100.0,
                               testing = True,
+                            active = True,
                               )
         self.cheap_b.put()
 
@@ -132,8 +142,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         self.cheap_creative.put()
 
         # Init both budgets
-        slice_num = test_advance(self.full_b, self.budget_start)
-        slice_num = test_advance(self.cheap_b, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
 
     def tearDown(self):
         self.testbed.deactivate()
@@ -142,13 +151,13 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # We spend it all this first time
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
-        budget_service.timeslice_advance(self.cheap_b,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # Each slice has a budget of 100
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.cheap_b, 50), True)
 
         most_recent = self.cheap_b.most_recent_slice_log
@@ -157,7 +166,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(most_recent.actual_spending, 100)
 
         # Now the most recent was 100
-        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
         most_recent = self.cheap_b.most_recent_slice_log
         eq_(most_recent.actual_spending, 50)
 
@@ -168,11 +177,11 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # We spend it all this first time
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
-        budget_service.timeslice_advance(self.cheap_b,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
-        budget_service.timeslice_advance(self.cheap_b,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # In the most recent completed timeslice, we spent 100%
         last_budgetslice = self.cheap_b.most_recent_slice_log
@@ -190,14 +199,14 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_b,testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service._apply_if_able(self.cheap_b, 50), True)
 
         # In the most recent completed timeslice, we spent 100%
         eq_(budget_service.get_osi(self.cheap_b), True)
 
         # We only spent 50 on the second one
-        budget_service.timeslice_advance(self.cheap_b,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # In the most recent completed timeslice, we only spent 50%
         eq_(budget_service.get_osi(self.cheap_b), False)
@@ -207,11 +216,11 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # Each slice has a budget of 100
         # We spend it all this first time
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
-        budget_service.timeslice_advance(self.cheap_b,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # We spend it all this second time
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
-        budget_service.timeslice_advance(self.cheap_b,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # We only spend 50 on the third one
         eq_(budget_service._apply_if_able(self.cheap_b, 50), True)
@@ -220,7 +229,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service.get_osi(self.cheap_b), True)
 
         # We only spent 50 on the third one
-        budget_service.timeslice_advance(self.cheap_b,testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # In the most recent completed timeslice, we only spent 50%
         eq_(budget_service.get_osi(self.cheap_b), False)
@@ -228,21 +237,22 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
     def mptest_get_osi_with_changing_budget(self):
 
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
-        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # Each slice has a budget of 100
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
         # We only spend 50 on the second one
-        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
 
         # Double the daily budget right before an advance
         self.cheap_b.set_total_daily_budget(2400.)
         self.cheap_b.put()
-
-        slice_num = test_advance(self.cheap_b, self.budget_start + ONE_DAY)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         # Several slice_logs have advanced, last one has nothing, so false
         eq_(budget_service.get_osi(self.cheap_b), False)
@@ -250,7 +260,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         # Now we spend the full 2000
         eq_(budget_service._apply_if_able(self.cheap_b, 200), True)
 
-        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # In the most recent completed timeslice, we spent 200
         eq_(budget_service.get_osi(self.cheap_b), True)
@@ -261,7 +271,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
 
         # We do one round to set up the OSI
         eq_(budget_service._apply_if_able(self.cheap_b, 100), True)
-        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # We spend 99
         eq_(budget_service._apply_if_able(self.cheap_b, 33), True)
@@ -269,7 +279,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.cheap_b, 33), True)
         eq_(budget_service._apply_if_able(self.cheap_b, 2), False)
 
-        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # We spent the most that we could
 
@@ -285,7 +295,7 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         eq_(budget_service._apply_if_able(self.full_b, 100), True)
 
         for i in xrange(9):
-            budget_service.timeslice_advance(self.full_b,testing=True)
+            self.test_mock_budget_advance(testing=True)
             eq_(budget_service._apply_if_able(self.full_b, 100), True)
 
         # 1000$ has been spent and the last timeslice is about to end,
@@ -294,13 +304,13 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         self.full_b.end_datetime=datetime.datetime(2000,1,13,23,59)
         self.full_b.put()
 
-        slice_num = test_advance(self.full_b, self.budget_start + ONE_DAY)
-        slice_num = test_advance(self.full_b, self.budget_start + 2*ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
+        slice_num = self.test_advance(self.budget_start + 2*ONE_DAY)
         rem = remaining_ts_budget(self.full_b)
 
         # The budget should now only have $1000 to spend over 2 days
         eq_(budget_service._apply_if_able(self.full_b, rem), True)
-        budget_service.timeslice_advance(self.full_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service.get_osi(self.full_b), True)
 
@@ -312,28 +322,28 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
 
         eq_(budget_service._apply_if_able(self.full_b, 100), True)
         for i in xrange(8):
-            budget_service.timeslice_advance(self.full_b, testing=True)
+            self.test_mock_budget_advance(testing=True)
             eq_(budget_service._apply_if_able(self.full_b, 100), True)
 
         # The last timeslice is about to begin, and the user says that
         # the campaign must end tomorrow.
-        budget_service.timeslice_advance(self.full_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         #self.full_b.end_datetime = self.budget_start + JUST_UNDER_ONE_DAY
         self.full_b.end_datetime = self.budget_start + ONE_DAY
         self.full_b.put()
 
-        budget_service.timeslice_advance(self.full_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service.get_osi(self.full_b), False)
 
         # We have spent 900 out of the $2000 total, we should now be able to spend
         # $1100
         eq_(budget_service._apply_if_able(self.full_b, 1130.76), True)
-        budget_service.timeslice_advance(self.full_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service.get_osi(self.full_b), True)
 
         eq_(budget_service._apply_if_able(self.full_b, 10.76), True)
-        budget_service.timeslice_advance(self.full_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
         eq_(budget_service.get_osi(self.full_b), False)
 
 

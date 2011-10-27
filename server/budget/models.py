@@ -133,17 +133,14 @@ class Budget(db.Model):
         if self.static_slice_budget:
             # This is finite
             if self.finite:
-                logging.warning("Daily, finite Expected: %s\t\t\tTotal Spent: %s" % (expected, self.total_spent))
                 return expected - self.total_spent
 
             # This is unending
             else:
-                logging.warning("Daily, infinite Expected: %s\t\t\tSpent Today: %s" % (expected, self.total_spent))
                 return expected - self.spent_today
 
         # This is a total budget
         elif self.static_total_budget:
-            logging.warning("Total, doesn't matter Expected: %s\t\t\tTotal Spent: %s" % (expected, self.total_spent))
             return expected - self.total_spent
 
         # This is a fucked up situation
@@ -211,8 +208,6 @@ class Budget(db.Model):
             if self.delivery_type == 'allatonce':
                 return self.static_total_budget
             else:
-                logging.warning("slice budget: %s" % self.slice_budget)
-                logging.warning("total slices: %s" % self.total_slices)
                 return self.slice_budget * self.elapsed_slices
 
         elif self.static_slice_budget:
@@ -363,22 +358,10 @@ class Budget(db.Model):
                 self.static_slice_budget = total / TS_PER_DAY
             return True
 
-class BudgetClone(db.Model):
-    start_datetime = db.DateTimeProperty(required=True)
-    end_datetime = db.DateTimeProperty(required=False)
+class BudgetSliceCounter(db.Model):
+    """ The global count, maintain slice state for all budgets """
+    slice_num = db.IntegerProperty()
 
-    delivery_type = db.StringProperty(choices = ['evenly', 'allatonce'])
-    static_total_budget = db.FloatProperty()
-    static_slice_budget = db.FloatProperty()
-
-    curr_slice = db.IntegerProperty(default=0)
-    curr_date = db.DateProperty()
-
-    total_spent = db.FloatProperty()
-
-    current_budget = db.ReferenceProperty(Budget, collection_name = 'previous_budgets')
-
-    created_at = db.DateTimeProperty(auto_now_add=True)
 
 class BudgetChangeLog(db.Model):
     start_datetime = db.DateTimeProperty()
@@ -440,7 +423,6 @@ class BudgetSliceLog(db.Model):
     def osi(self):
         osi_rate = self.desired_spending * SUCCESSFUL_DELIV_PER
         osi = self.actual_spending >= osi_rate
-        logging.warning("Acutal spend: %s\nDesired: %s\nOSI Rate: %s\nOSI: %s" % (self.actual_spending, self.desired_spending, osi_rate, osi))
         return osi
 
 

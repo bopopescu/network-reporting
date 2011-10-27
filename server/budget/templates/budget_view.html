@@ -10,14 +10,14 @@
 
 {% block content %} 
 
-{% if not campaign.budget %}  
+{% if not campaign.budget_obj %}  
   <h2> NOTE: This campaign does not have a budget set. It has an unlimited budget. </h2>  
 {% endif %}
 <h3>      
   
   <table style="border-spacing:20px 2px; border-collapse:separate">
     <tr>
-      <td>Base Daily Budget:</td> <td>{{campaign.budget|currency}}</td> 
+      <td>Base Daily Budget:</td> <td>{{budget.daily_budget|currency}}</td> 
       <td><h5> <a href="{{budget_obj_url}}">View/Edit Budget </a> </h5></td>
     </tr>
     <tr>
@@ -41,17 +41,14 @@
     <table style="border-spacing:20px 2px; border-collapse:separate">
       <tr>
         <th> Date</th>
-        <th> Delivered</th>
         <th> Start </th>
-        <th> End </th>
+        <th> Spent </th>
       </tr>
       {% for log in daily_logs%}
       <tr class="alternating-color">
         <td> {{log.date}}</td>
-        <td> {{log.delivery}}</td>
         <td> {{log.initial_daily_budget}}</td>
-        <td> {{log.remaining_daily_budget}}</td>
- 
+        <td> {{log.spent_today}}</td>
       </tr>
       {% endfor %}
     </table>
@@ -62,17 +59,19 @@
     <h3 style="margin-left:50px">Today</h3>
     <table style="border-spacing:20px 2px; border-collapse:separate">
       <tr>
-        <th> Time</th>
+        <th> Timeslice</th>
         <th> Desired Spending</th>
         <th> Actual Spending </th>
-        <th> Rem Daily Budget </th>
+        <th> Rem Budget </th>
+        <th> Timeslice OSI</th>
       </tr>
       {% for log in ts_logs%}
       <tr class="alternating-color">
-        <td> {{log.end_date}}</td>
+        <td> {{log.slice_num}}</td>
         <td> {{log.desired_spending}}</td>
         <td> {{log.actual_spending}}</td>
-        <td> {{log.remaining_daily_budget}}</td>
+        <td> {{log.remaining_spending}}</td>
+        <td> {{log.osi}}</td>
       </tr>
       {% endfor %}
     </table>

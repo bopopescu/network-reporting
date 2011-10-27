@@ -49,12 +49,20 @@ from common.utils.system_test_framework import run_auction, fake_request
 
 """ This module is where all of our ad_server system and end-to-end tests can live. """
 
-def test_advance(budget, dtetime):
-    slice_num = budget_service.timeslice_advance(budget, testing=True, advance_to_datetime = dtetime)
-    logging.warning("Advancing....\n%s" % budget)
-    return slice_num
+
 
 class TestBudgetEndToEnd(unittest.TestCase):
+
+    def test_mock_budget_advance(self, testing=False, advance_to_datetime = None):
+        budget_service._mock_budget_advance(advance_to_datetime, testing)
+        self.expensive_c = Campaign.get(self.expensive_c.key())
+        self.cheap_c = Campaign.get(self.cheap_c.key())
+        self.exp_b = Budget.get(self.exp_b.key())
+        self.cheap_b = Budget.get(self.cheap_b.key())
+
+    def test_advance(self, dtetime):
+        slice_num = self.test_mock_budget_advance(testing=True, advance_to_datetime = dtetime)
+        logging.warning("Advancing....")
 
     def setUp(self):
 
@@ -88,6 +96,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         self.exp_b = Budget(start_datetime = self.budget_start,
                             delivery_type = 'evenly',
                             static_slice_budget = 100.0,
+                            active = True,
                             testing = True)
         self.exp_b.put()
 
@@ -118,6 +127,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         self.cheap_b = Budget(start_datetime = self.budget_start,
                             delivery_type = 'evenly',
                             static_slice_budget = 100.0,
+                            active = True,
                             testing = True)
         self.cheap_b.put()
 
@@ -145,8 +155,10 @@ class TestBudgetEndToEnd(unittest.TestCase):
 
         self.switch_adgroups_to_cpm()
 
-        slice_num = test_advance(self.exp_b, self.budget_start)
-        slice_num = test_advance(self.cheap_b, self.budget_start)
+        slice_num = self.test_advance(self.budget_start)
+        logging.warning("In setup:")
+        for b in Budget.all():
+            logging.warning("%s" % b)
 
 
 
@@ -245,8 +257,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
         # We use none of our cheap campaign budget
 
         # Advance all of our campaigns
-        budget_service.timeslice_advance(self.exp_b, testing=True)
-        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
 
         # We again have enough budget for one expensive ad
@@ -266,6 +277,11 @@ class TestBudgetEndToEnd(unittest.TestCase):
 
 
     def mptest_allatonce(self):
+
+        logging.warning("In the test:")
+        for b in Budget.all():
+            logging.warning("%s, %s" % (b,b.key()))
+
         BudgetQueryManager.prep_update_budget(self.cheap_b, delivery_type = 'allatonce')
         BudgetQueryManager.prep_update_budget(self.exp_b, delivery_type = 'allatonce')
         # Spend budgets out
@@ -273,8 +289,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
             pass
 
         # Exec the allatonce change
-        budget_service.timeslice_advance(self.exp_b, testing=True)
-        budget_service.timeslice_advance(self.cheap_b, testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         eq_(budget_service.remaining_daily_budget(self.cheap_c.budget_obj),1100)
         eq_(budget_service.remaining_daily_budget(self.expensive_c.budget_obj),1100)

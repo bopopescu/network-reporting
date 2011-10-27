@@ -1,8 +1,25 @@
 from google.appengine.api import memcache
 
 import logging
-from budget.models import Budget
+from budget.models import Budget, BudgetSliceCounter
 from budget.helpers import get_curr_slice_num
+
+
+BUDGET_SLICE_KEY = 'Th3Budg3tSlic3K3y'
+
+def set_slice(slice_num):
+    """ sets the memc value for the current timeslice """
+    memcache.set(BUDGET_SLICE_KEY, slice_num, namespace='budget')
+
+def memcache_get_slice():
+    """ Gets the memc value for the current timeslice """
+    slice_num = memcache.get(BUDGET_SLICE_KEY, namespace = 'budget')
+    if slice_num is None:
+        slice_counter = BudgetSliceCounter.all().get()
+        slice_num = slice_counter.slice_num
+        set_slice(slice_num)
+
+    return slice_num
 
 def remaining_ts_budget(budget):
     """ Either gets the remaining from memc, or constructs it from

@@ -8,17 +8,19 @@ from google.appengine.api import memcache
 from ad_server.debug_console import trace_logging
 from advertiser.models import Campaign
 from advertiser.query_managers import AdGroupQueryManager
-from budget.helpers import get_curr_slice_num, get_slice_from_datetime
+from budget.helpers import get_curr_slice_num, get_slice_from_datetime, get_datetime_from_slice
 from budget.memcache_budget import (remaining_ts_budget,
                                     total_spent,
                                     braking_fraction,
+                                    set_slice,
+                                    memcache_get_slice,
                                     _make_budget_ts_key,
                                     _make_budget_spent_key,
                                     _make_budget_braking_key,
                                     _to_memcache_int,
                                     _from_memcache_int,
                                     )
-from budget.models import BudgetSliceLog
+from budget.models import BudgetSliceLog, BudgetSliceCounter, Budget
 from budget.query_managers import BudgetQueryManager
 
 ONE_DAY = timedelta(days = 1)
@@ -67,16 +69,39 @@ def _apply_if_able(budget, cost, today=None):
 #########################################################
 
 def get_spending_for_date_range(budget, start_date, end_date, testing=False):
-    start_slice = get_slice_from_datetime(start_date.date(), testing)
-    end_slice = (get_slice_from_datetime(end_date.date() + ONE_DAY, testing))
-    #logging.warning("\n\nSpending for slice:%s to slice:%s\n\n" % (start_slice, end_slice))
-    keys = BudgetSliceLog.get_keys_for_slices(budget, xrange(start_slice, end_slice))
-    logs = BudgetSliceLog.get(keys)
+    logs = _get_ts_logs_for_date_range(budget, start_date, end_date, testing)
     tot = 0.0
     for log in logs:
         if log and log.actual_spending:
             tot += log.actual_spending
     return tot
+
+def _get_ts_logs_for_date_range(budget, start_date, end_date, testing=False):
+    start_slice = get_slice_from_datetime(start_date.date(), testing)
+    end_slice = (get_slice_from_datetime(end_date.date() + ONE_DAY, testing))
+    #logging.warning("\n\nSpending for slice:%s to slice:%s\n\n" % (start_slice, end_slice))
+    keys = BudgetSliceLog.get_keys_for_slices(budget, xrange(start_slice, end_slice))
+    logs = BudgetSliceLog.get(keys)
+    return logs
+
+def _get_daily_logs_for_date_range(budget, start_date, end_date, testing=False):
+    daily_logs = []
+    temp = start_date
+    while temp <= end_date:
+        daily_log = dict(date = temp,
+                         initial_daily_budget = budget.daily_budget,
+                         spent_today = 0
+                         )
+        logs = _get_ts_logs_for_date_range(budget, start_date, end_date, testing)
+        for log in logs:
+            try:
+                daily_log['spent_today'] += log.actual_spending
+            except:
+                pass
+        temp += ONE_DAY
+        daily_logs.append(daily_log)
+    return daily_logs
+
 
 def _get_spending_for_date(budget, date, testing=False):
     return get_spending_for_date_range(budget, date, date, testing)
@@ -119,20 +144,46 @@ def apply_expense(budget, cost, curr_slice=None):
 
         memcache.incr(spent_key, _to_memcache_int(cost), namespace='budget', initial_value = total_spent(budget))
 
+def _mock_budget_advance(advance_to_datetime=None, testing=False):
+    """ This simulates what the budget_advance Cron Job will do without
+    all the fancy TQ's and other junk because screw that """
+
+    slice_counter = BudgetSliceCounter.all().get()
+    # If there is no global thing set, then set that shit
+    if not slice_counter:
+        # If no date is specified, start @ NOW
+        if advance_to_datetime is None:
+            advance_to_datetime = datetime.now()
+        slice_num = get_slice_from_datetime(advance_to_datetime,testing)
+        slice_counter = BudgetSliceCounter(slice_num = slice_num)
+    else:
+        # we're advancing, if a date is specified advance to that date
+        if advance_to_datetime:
+            slice_counter.slice_num = get_slice_from_datetime(advance_to_datetime,testing)
+        # otherwise just go up by one
+        else:
+            slice_counter.slice_num += 1
+
+    set_slice(slice_counter.slice_num)
+    slice_counter.put()
+    budgets = Budget.all().filter('active =', True).fetch(100)
+    for budget in budgets:
+        timeslice_advance(budget, testing=testing, advance_to_datetime=advance_to_datetime)
+        budget.put()
+
+
+
 def timeslice_advance(budget, testing=False, advance_to_datetime = None):
     """ Update the budget_obj to have the correct total_spent at the start of this TS
     Update the old slicelog to hvae the correct total_spent at the end of it's TS
     Save the current memcache snapshot in a new slicelog
 
     TIMESLICE ADVANCE IS THE GOD OF BUDGETS. THIS METHOD CREATES, DESTROYS, UPDATES, ETC. """
-    if not testing and advance_to_datetime is None:
-        advance_to_datetime = datetime.now()
-        slice_num = get_slice_from_datetime(advance_to_datetime, testing)
-    elif testing and advance_to_datetime is None:
-        slice_num = None
-    else:
-        slice_num = get_slice_from_datetime(advance_to_datetime, testing)
 
+    # The memc TS is advanced before timeslice_advance is called by anyone.
+    slice_num = memcache_get_slice()
+    if advance_to_datetime is None:
+        advance_to_datetime = get_datetime_from_slice(slice_num, budget.testing)
 
     if not budget:
         return
@@ -144,24 +195,18 @@ def timeslice_advance(budget, testing=False, advance_to_datetime = None):
         # We're advancing to a slice that is exactly when or after the budget
         # shoudl be init'd
         if slice_num and slice_num >= budget.start_slice:
-            logging.warning("\n\nNo Last Log, initing budget")
             _initialize_budget(budget, testing = testing, slice_num = slice_num, date = advance_to_datetime.date())
+
         # advancing to a date that is before we shoudl start
         elif slice_num:
-            logging.warning("\n\nNo Last Log, advancing to slice_num")
             budget.curr_slice = slice_num
             budget.curr_date = advance_to_datetime.date()
             budget.put()
-        # budget has a curr slice
-        elif budget.curr_slice:
-            logging.warning("\n\nNo Last Log, advancing a slice")
-            budget.curr_slice += 1
-            budget.put()
+
     else:
 ######################### ONLY DONE WHEN TESTING ########################
         # Budget is Init'd, but we're advancing more than a single TS.  
         if slice_num is not None and testing:
-            logging.warning("\n\nLast Log, mega-advancing")
             while budget.curr_slice != slice_num:
                 last_log = budget.last_slice_log
 
@@ -171,19 +216,16 @@ def timeslice_advance(budget, testing=False, advance_to_datetime = None):
                 budget.total_spent = curr_total_spent
                 budget.put()
 
-
-                _update_budgets(budget, last_log, spent_this_timeslice = spent_this_ts, testing=testing)
+                _update_budgets(budget, slice_num, last_log, spent_this_timeslice = spent_this_ts, testing=testing)
 ######################### DONE WITH ONLY TESTING ########################
         else:
-            logging.warning("\n\nLast Log, default advancing")
-
             curr_total_spent = total_spent(budget)
             spent_this_ts = curr_total_spent - budget.total_spent
 
             budget.total_spent = curr_total_spent
             budget.put()
 
-            _update_budgets(budget, last_log, spent_this_timeslice = spent_this_ts, testing=testing)
+            _update_budgets(budget, slice_num, last_log, spent_this_timeslice = spent_this_ts, testing=testing)
     return budget.curr_slice
 
 def _initialize_budget(budget, testing = False, slice_num = None, date=None):
@@ -215,22 +257,20 @@ def _initialize_budget(budget, testing = False, slice_num = None, date=None):
     brake_key = _make_budget_braking_key(budget)
     spent_key = _make_budget_spent_key(budget)
 
-    logging.warning("Setting spent to 0\nSetting ts budget to:%s\nSetting braking fraction to:%s" % (new_log.desired_spending, new_log.prev_braking_fraction))
 
     memcache.set(spent_key, 0, namespace = 'budget')
     memcache.set(ts_key, _to_memcache_int(new_log.desired_spending), namespace = 'budget')
     memcache.set(brake_key, new_log.prev_braking_fraction, namespace = 'budget')
 
 
-def _update_slicelogs(budget, last_log, new_braking, spent_this_timeslice):
+def _update_slicelogs(budget, slice_num, last_log, new_braking, spent_this_timeslice):
     """ Sets the actual spending of the most recent TS and
         Sets the prev_total_spending, and
         prev_braking_fraction of the new slice """
-
     last_log.actual_spending = spent_this_timeslice
     last_log.put()
     new_log = BudgetSliceLog(budget = budget,
-                             slice_num = last_log.slice_num + 1,
+                             slice_num = slice_num,
                              desired_spending = budget.next_slice_budget,
                              prev_total_spending = budget.total_spent,
                              prev_braking_fraction = new_braking)
@@ -240,13 +280,16 @@ def _update_slicelogs(budget, last_log, new_braking, spent_this_timeslice):
     return new_log
 
 
-def _update_budgets(budget, last_log, spent_this_timeslice=None, testing=False):
+def _update_budgets(budget, slice_num, last_log, spent_this_timeslice=None, testing=False):
     """ Updates budget related objects
         Updates previous slicelog
         Creates current slicelog
         Updates spending and braking fraction in Memcache
         """
-    budget.curr_slice += 1
+    # Slice_num is the slice_num specified by a global BudgetSliceCounter.  
+    # Keeps everyone on the same page :D
+    budget.curr_slice = slice_num
+
     next_day = budget.curr_date + ONE_DAY
     # Advance the day counter if it makes sense to do so
     if budget.curr_slice >= get_slice_from_datetime(next_day, testing):
@@ -266,11 +309,10 @@ def _update_budgets(budget, last_log, spent_this_timeslice=None, testing=False):
     else:
         new_braking = calc_braking_fraction(desired_spend, spent_this_timeslice, old_braking)
 
-    new_slice_log  = _update_slicelogs(budget, last_log, new_braking, spent_this_timeslice)
+    new_slice_log  = _update_slicelogs(budget, slice_num, last_log, new_braking, spent_this_timeslice)
 
     if not budget.is_active:
         # Budget isn't active, make sure vals are properly 0'd, continue
-        logging.warning("Zeroing TS, braking to 1.0, budget is inactive for it's current slice")
         memcache.set(ts_key, 0, namespace = 'budget')
         memcache.set(brake_key, 1.0, namespace = 'budget')
         return
@@ -298,7 +340,6 @@ def get_osi(budget):
 
     else:
         adgroup = AdGroupQueryManager().get_adgroups(campaign = budget.campaign.get())[0]
-        logging.warning("Adgroup: %s\nAdGroup bid: %s\nLast des: %s" % (adgroup, adgroup.bid, last_complete_slice.desired_spending))
 
         if adgroup and last_complete_slice.desired_spending < adgroup.bid/1000:
             return True

@@ -849,7 +849,7 @@
 
         {% if marketplace %}
           <div id='marketplace-rollups' class="campaignData-rollup">
-            <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+            <table width="100%" style='text-align:center; font-size:18px; font-weight:400;'>
               <thead>
                 <tr>
                   <th width=25%>Impressions</th>
@@ -869,7 +869,8 @@
               </tbody>
             </table>
           </div>
-          <table class="dataTable campaignData-main">
+
+          <table class="dataTable campaignData-main" style="display:none;">
             <thead>
               <tr>
                 <th class="campaignData-icon"></th>
@@ -885,6 +886,7 @@
             </thead>
             <tbody>
               {% for adgroup in marketplace %}
+                {% if forloop.counter == 1 %}
                 <tr class="campaignData marketplace_row campaign-status-all campaign-targeting-all incomplete
                            {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
                     id="{{adgroup.key}}">
@@ -907,6 +909,7 @@
                   <td class="dataTable-data numeric marketplace-clk clk">--</td>
                   <td class="dataTable-data numeric marketplace-ctr ctr">--</td>
                 </tr>
+                {% endif %}
               {% endfor %}
             </tbody>
           </table>

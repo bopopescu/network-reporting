@@ -1,18 +1,18 @@
 /*
  * Nullify all of the preset styles
  */
-/* 
-  HTML5 ✰ Boilerplate 
-  
+/*
+  HTML5 ✰ Boilerplate
+
   style.css contains a reset, font normalization and some base styles.
-  
+
   credit is left where credit is due.
   much inspiration was taken from these projects:
     yui.yahooapis.com/2.8.1/build/base/base.css
     camendesign.com/design/
     praegnanz.de/weblog/htmlcssjs-kickstart
 */
-/* 
+/*
   html5doctor.com Reset Stylesheet (Eric Meyer's Reset Reloaded + HTML5 baseline)
   v1.4 2009-07-27 | Authors: Eric Meyer & Richard Clark
   html5doctor.com/html-5-reset-stylesheet/
@@ -1877,7 +1877,7 @@ a.disabled {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   border-width: 1px;
   border-style: solid;
-  font-size: 16px; }
+  font-size: 15px; }
   .alert-message .close {
     *margin-top: 3px;
     /* IE7 spacing */ }
@@ -1938,9 +1938,9 @@ a.disabled {
     -moz-box-shadow: none;
     box-shadow: none;
     background-image: none;
-    background-color: #fdf5d9;
+    background-color: #FFFDF2;
     padding: 14px;
-    border-color: #fceec1; }
+    border-color: #E6D2B8; }
     .alert-message.block-message ul, .alert-message.block-message p {
       margin-right: 30px; }
     .alert-message.block-message ul {

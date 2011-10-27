@@ -8,9 +8,9 @@ from common.ragendja.template import render_to_response
 
 from common.utils.query_managers import CachedQueryManager
 
-from account.models import Account
+from account.models import Account, PaymentRecord
 from account.forms import AccountForm, NetworkConfigForm, PaymentInfoForm
-from account.query_managers import AccountQueryManager
+from account.query_managers import AccountQueryManager, PaymentRecordQueryManager
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager, AppQueryManager
 import logging
 from common.utils.request_handler import RequestHandler
@@ -192,21 +192,26 @@ def payment_info_change(request, *args, **kwargs):
 
 class PaymentHistoryHandler(RequestHandler):
     def get(self, *args, **kwargs):
-        payment_history = get_payment_records(self.account.key(),
-                                              self.account.date_added,
-                                              datetime.date.today())
+        balance = 0
+        payment_records = PaymentRecordQueryManager().get_payment_records(account=self.account.key())
 
-        get_month = lambda record : record['date'][0:7]
-        monthly_records = [(month, sum([r['rev'] for r in record])) \
-                           for month, record in groupby(payment_history['daily'], get_month)]
+        if payment_records:
+            payment_records = sorted(payment_records, key=lambda record: record.payment_date, reverse=True)
 
-        logging.warn(monthly_records)
+            # For the balance, we find the last date covered by payment, then get the amount of revenue since then
+            # We assume that the last date covered by payment brings the balance back to $0
+            latest_record = max(payment_records, key=lambda record: record.payment_end)
+            earnings = get_balance(self.account.key(),
+                                   latest_record.payment_end+datetime.timedelta(days=1),
+                                   datetime.date.today())
+            balance = earnings['sum']['rev']
+
         return render_to_response(self.request,
                                   'account/payment_history.html',
-                                  {'monthly_records': monthly_records})
+                                  {'payment_records': payment_records,
+                                   'balance': balance})
 
-def get_payment_records(pub_id, start_date, end_date):
-
+def get_balance(pub_id, start_date, end_date):
 
     url = "http://mpx.mopub.com/pub" + \
           "?pub=" + str(pub_id) + \

@@ -435,9 +435,9 @@ class TestAdAuction(unittest.TestCase):
 
         test_html = '<html>blah....</html>'
         content = '{"xhtml_real": "%s", "revenue": 10000.50}' % test_html
-        marketplace_battle = MarketplaceBattle(self.client_context, self.adunit_context)
+        marketplace_battle = MarketplaceBattle(self.client_context, self.adunit_context, [1,2,3,4])
         creative = marketplace_battle._process_marketplace_response(content, self.dummy_marketplace_creative)
-        #creative = marketplace_battle.run() 
+        # creative = marketplace_battle.run() 
         eq_(creative.html_data, test_html)                                                
 
 

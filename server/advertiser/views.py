@@ -1203,8 +1203,22 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # We list the app traits in the table, and then load their stats over ajax using Backbone.
         # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
-        apps = AppQueryManager.get_apps(self.account)
-        app_keys = simplejson.dumps([str(app.key()) for app in apps])
+        logging.info('\n\n\n\n\n\n\n')
+        logging.info('hi')
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
+
+        apps = {}
+        for au in adunits:
+            app = apps.get(au.app_key.key())
+            if not app:
+                app = AppQueryManager.get(au.app_key.key())
+                logging.info(app.name)
+                app.adunits = [au]
+                apps[au.app_key.key()] = app
+            else:
+                app.adunits += [au]
+        app_keys = simplejson.dumps([str(k) for k in apps.keys()])
 
         # Set up a MarketplaceStatsFetcher with this account
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
@@ -1272,8 +1286,9 @@ class MarketplaceIndexHandler(RequestHandler):
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
-                                      'apps': apps,
+                                      'apps': apps.values(),
                                       'app_keys': app_keys,
+                                      'adunit_keys': adunit_keys,
                                       'top_level_mpx_stats': top_level_mpx_stats,
                                       'blocklist': blocklist,
                                       'date_range': self.date_range

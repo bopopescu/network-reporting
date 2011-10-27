@@ -52,6 +52,20 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         else:
             os_type = None
         self.html_context['os'] = os_type
+        self.html_context['use_impression_pixel'] = self.\
+                                                _should_use_impression_pixel()
+
+    def _should_use_impression_pixel(self):
+        """
+        Due to SDK changes various mopub clients expect either the impression
+        to be tracked by the HTML or the native code.
+
+        Returns True if the HTML should contain an image tag with the
+        appropriate impression tracking url
+        """
+        os = self.html_context['os']
+        is_fullscreen = self.html_context['is_fullscreen']
+        return (os == 'android' or not is_fullscreen)
         
     def _get_ad_type(self):
         return 'html'

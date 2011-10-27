@@ -158,11 +158,11 @@ MAX_OBJECTS = 200
 
 
 MPX_DSP_IDS = [
-    '4e45baaddadbc70de9000002', # AdSymptotic
+    #'4e45baaddadbc70de9000002', # AdSymptotic
     '4e8d03fb71729f4a1d000000', # MdotM
-    '4e4d8fb01e368b22f0000000', # TapEngage
-    '4e821f9cab8c762bc4000000', # Qriously
-    # '4e8ca48955e9df59fa000000', # mopub_noop
-    '4e69334aa8fd3a790d000000', # TapSense
-    '4e45baaddadbc70de9000001', # TapAd
+    #'4e4d8fb01e368b22f0000000', # TapEngage
+    #'4e821f9cab8c762bc4000000', # Qriously
+    #'4e8ca48955e9df59fa000000', # mopub_noop
+    #'4e69334aa8fd3a790d000000', # TapSense
+    #'4e45baaddadbc70de9000001', # TapAd
 ]

@@ -234,17 +234,18 @@
                             <thead>
                               <tr>
                                 <th class="dataTable-name big">Marketplace</th>
+                              <th class="dataTable-data numeric special"></th>
+                              <th class="dataTable-data numeric special"></th>
+                              <th class="dataTable-data numeric special"></th>
+                              <th class="dataTable-data numeric special"></th>
                               <th class="dataTable-data numeric special">Revenue</th>
                               <th class="dataTable-data numeric special">ECPM</th>
-                        <th class="dataTable-data numeric special">Attempts</th>
-                        <th class="dataTable-data numeric special">Impressions</th>
-                        <th class="dataTable-data numeric special">Fillrate</th>
-                        <th class="dataTable-data numeric special">Clicks</th>
-                        <th class="dataTable-data numeric special">CTR</th>
+                              <th class="dataTable-data numeric special">Impressions</th>
                           </tr>
                       </thead>
                       <tbody>
                   {% for adgroup in marketplace %}
+                  {% if forloop.counter0 == 0 %}
                   <tr>
                     <th class="campaignData-icon dataTable-name">
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
@@ -254,14 +255,15 @@
                       <span class="muted">MoPub Marketplace Beta</span>
                     </th>
 
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
                   </tr>
+                  {% endif %}
                   {% endfor %}
                 </tbody>
               </table>

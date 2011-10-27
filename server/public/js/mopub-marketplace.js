@@ -237,7 +237,7 @@
           if (this.model.get("active")) {
               $("input.targeting-box", adunit_row).attr('checked', 'checked');
           }
-          $("#" + this.model.id + "-img").hide();
+          console.log(this.model);
 
 
           // Add the event handler to submit targeting changes over ajax.
@@ -352,12 +352,7 @@
                     var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
                     appView.renderInline();
                 });
-                app.fetch({
-                    success: function(){
-                        $('table').trigger('update');
-                        $("#" + app_key + "-img").hide();
-                    }
-                });
+                app.fetch();
             });
         },
         fetchAdunitStats: function (app_key) {
@@ -374,7 +369,12 @@
             });
           });
 
-          adunits.fetch();
+          adunits.fetch({
+              success: function(){
+                  $('table').trigger('update');
+                  $("#" + app_key + "-img").hide();
+              }
+          });
         },
         /*
          * Fetches and renders all of the adunits from an app key.

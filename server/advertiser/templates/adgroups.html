@@ -841,7 +841,7 @@
 
 
         {% if marketplace %}
-          <h2><a href="{% url marketplace_index %}">MoPub Marketplace</a>  <img id="promo-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img> </h2>
+          <h2><a href="{% url marketplace_index %}">MoPub Marketplace</a>  <img id="marketplace-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img> </h2>
         {% else %}
           <h2><a href="{% url marketplace_index %}">Marketplace not activated</a> </h2>
         {% endif %}
@@ -851,18 +851,16 @@
             <table width="100%" style='text-align:center; font-size:18px; font-weight:400;'>
               <thead>
                 <tr>
-                  <th width=25%>Impressions</th>
-                  <th width=25%>Clicks</th>
-                  <th width=25%>CTR</th>
-                  <th width=25%>Conversions</th>
+                  <th width='33.3%'>Revenue</th>
+                  <th width='33.3%'>Impressions</th>
+                  <th width='33.3%'>eCPM</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
+                  <td id='marketplace-total-rev'>--</td>
                   <td id='marketplace-total-imp'>--</td>
-                  <td id='marketplace-total-clk'>--</td>
-                  <td id='marketplace-total-ctr'>--</td>
-                  <td id='marketplace-total-conv'>--</td>
+                  <td id='marketplace-total-ecpm'>--</td>
                   <td></td>
                 </tr>
               </tbody>
@@ -926,7 +924,7 @@
         {% endcomment %}
 
         {% if network %}
-          <h2>Network Performance <img id="promo-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img> </h2>
+          <h2>Network Performance <img id="network-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img> </h2>
         {% else %}
           <h2>No network campaigns  </h2>
         {% endif %}
@@ -1296,7 +1294,7 @@
 
     });
 </script>
-<script src="/js/mopub-advertiser.js?v=80"></script>
+<script src="/js/mopub-advertiser.js?v=83"></script>
 <script src='/js/tokenize_in.js'></script>
 <script src='/js/countries.js'></script>
 {% endblock extraScripts %}

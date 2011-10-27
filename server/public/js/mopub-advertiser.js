@@ -738,6 +738,11 @@ var mopub = mopub || {};
         var stat = parseInt(statText.replace(/,/g, ''), 10);
         return (isNaN(stat)) ? 0 : stat;
     }
+    
+    function parseFloatFromStatText(statText) {
+        var stat = parseFloat(statText.replace(/,/g, ''));
+        return (isNaN(stat)) ? 0 : stat;
+    }
 
     function setSectionLoadingSpinnerHidden(campaignType, hidden) {
         var classPrefix = campaignType.split('_')[0];
@@ -747,49 +752,57 @@ var mopub = mopub || {};
         else $(selector).show();
     }
 
-    function calcAndShowRollupForCampaignType(campaignType) {
-      var req, imp, clk, rev, conv, ctr, fill;
-      req = imp = clk = rev = conv = ctr = fill = 0;
+    function calcAndShowRollupForCampaignType(campaignType, includeInvisibleCampaigns) {
+      var req, imp, clk, rev, conv, ctr, fill, ecpm;
+      req = imp = clk = rev = conv = ctr = fill = ecpm = 0;
 
       var classPrefix = campaignType.split('_')[0];
+      
+      // Sometimes, we want a rollup to include stats for hidden campaigns. For example, the
+      // marketplace campaign is always hidden, but we still want to compute a marketplace rollup.
+      // For these cases, we won't include ":visible" as part of our campaign-finding selector.
+      var visibleSelector = includeInvisibleCampaigns ? '' : ':visible';
 
-      $('.' + classPrefix + '-req:visible').each(function() {
+      $('.' + classPrefix + '-req' + visibleSelector).each(function() {
         req += parseIntFromStatText($(this).text());
       });
 
-      $('.' + classPrefix + '-imp:visible').each(function() {
+      $('.' + classPrefix + '-imp' + visibleSelector).each(function() {
         imp += parseIntFromStatText($(this).text());
       });
 
-      $('.' + classPrefix + '-clk:visible').each(function() {
+      $('.' + classPrefix + '-clk' + visibleSelector).each(function() {
         clk += parseIntFromStatText($(this).text());
       });
 
       // Revenue values may have the "display: none" attribute. When rolling up revenue values,
       // we can't just add up the visible revenue <td>s; we need to filter out those that are
       // a part of visible <tr>s.
-      $('.' + classPrefix + '_row:visible .' + classPrefix + '-rev').each(function() {
-        rev += parseIntFromStatText($(this).text().replace('$', ''));
-      });
+      $('.' + classPrefix + '_row' + visibleSelector + ' .' + classPrefix + '-rev').each(
+        function() { rev += parseFloatFromStatText($(this).text().replace('$', '')); });
 
-      $('.' + classPrefix + '-conv:visible').each(function() {
+      $('.' + classPrefix + '-conv' + visibleSelector).each(function() {
         conv += parseIntFromStatText($(this).text());
       });
 
       ctr = (clk === 0 || imp === 0) ? 0 : clk / imp;
 
       fill = (imp === 0 || req === 0) ? 0 : imp / req;
+      
+      ecpm = (rev === 0 || imp === 0) ? 0 : 1000 * (rev / imp);
 
       $("#" + classPrefix + '-total-req').text(mopub.Utils.formatNumberWithCommas(req));
       $("#" + classPrefix + '-total-imp').text(mopub.Utils.formatNumberWithCommas(imp));
       $("#" + classPrefix + '-total-clk').text(mopub.Utils.formatNumberWithCommas(clk));
-      $("#" + classPrefix + '-total-rev').text('$' + mopub.Utils.formatNumberWithCommas(rev.toFixed(2)));
+      $("#" + classPrefix + '-total-rev').text(
+        '$' + mopub.Utils.formatNumberWithCommas(rev.toFixed(2)));
       $("#" + classPrefix + '-total-conv').text(mopub.Utils.formatNumberWithCommas(conv));
       $("#" + classPrefix + '-total-ctr').text(mopub.Utils.formatNumberAsPercentage(ctr));
       $("#" + classPrefix + '-total-fill').text(
         mopub.Utils.formatNumberAsPercentage(fill) + ' (' +
-        mopub.Utils.formatNumberWithCommas(req) + ')'
-      );
+        mopub.Utils.formatNumberWithCommas(req) + ')');
+      $("#" + classPrefix + '-total-ecpm').text(
+        '$' + mopub.Utils.formatNumberWithCommas(ecpm.toFixed(2)));
 
       $("#" + classPrefix + '-rollups').show();
 
@@ -803,12 +816,14 @@ var mopub = mopub || {};
         var campaignTypes = [
           CampaignTypeEnum.Guaranteed,
           CampaignTypeEnum.Promotional,
+          CampaignTypeEnum.Marketplace,
           CampaignTypeEnum.Network,
           CampaignTypeEnum.Backfill
         ];
 
         $.each(campaignTypes, function(index, type) {
-          calcAndShowRollupForCampaignType(type);
+          var includeInvisibleCampaigns = (type === CampaignTypeEnum.Marketplace);
+          calcAndShowRollupForCampaignType(type, includeInvisibleCampaigns);
         });
     }
 
@@ -1126,7 +1141,9 @@ var mopub = mopub || {};
     }
 
     function campaignStatsFetchComplete(fetchObj) {
-      calcAndShowRollupForCampaignType(fetchObj.campaignType);
+      var campaignType = fetchObj.campaignType;
+      var includeInvisibleCampaigns = (campaignType === CampaignTypeEnum.Marketplace);
+      calcAndShowRollupForCampaignType(campaignType, includeInvisibleCampaigns);
       if (allFetchesCompleted()) onCampaignsFullyUpdated();
     }
 

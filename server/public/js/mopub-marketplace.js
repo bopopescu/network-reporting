@@ -26,6 +26,9 @@
             if (valid_number == NaN) {
                 return "please enter a valid number for the price floor";
             }
+        },
+        url: function() {
+            return '/api/app/' + this.app_id + '/adunits/' + this.id + '?' + window.location.search.substring(1);
         }
     });
 
@@ -542,12 +545,6 @@
         /*
          * Settings page button actions
          */
-
-        $('#blocklist-submit').click(function(e) {
-            e.preventDefault();
-            $("#addblocklist").submit();
-        });
-
     });
 
 })(this.jQuery, this.Backbone);

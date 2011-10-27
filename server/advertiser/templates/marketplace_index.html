@@ -42,11 +42,15 @@
     Flip the On/Off switch to get started,
     or take a look at our <a href="http://www.mopub.com/in-depth/marketplace">information page</a> if you want to know more about how it works.
     <br />
-    <div class="lightswitch right">
+    <div class="lightswitch right" id="top_switch">
       <div class="switch off"></div>
     </div>
   </div>
   {% endif %}
+
+  <div class="alert-message block-message hidden" id="first_time_toast">
+    The MoPub Marketplace is now active. Visit the settings tab if you'd like to change how the Marketplace works.
+  </div>
 
 
   {% comment %}
@@ -247,7 +251,7 @@
     <h2> Marketplace Settings </h2>
     <div class="well">
       <div class="clearfix" style="width: 380px;">
-        <div class="lightswitch left">
+        <div class="lightswitch left" id="bottom_switch">
           <div class="switch {% if marketplace.active %}on{% else %}off{% endif %}"></div>
         </div>
         <div class="right label">
@@ -268,6 +272,11 @@
       </form>
         {% endcomment %}
     </div>
+
+    <div class="alert-message block-message hidden" id="settings_toast">
+      The MoPub Marketplace has been turned off. Visit the settings page if you'd like to turn it on again.
+    </div>
+
 
     <h2>Blocklist</h2>
     <div class="well">
@@ -372,6 +381,27 @@
         });
 
         $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
+
+        $("#top_switch").click(function() {
+
+            if ( $("#top_switch .switch").hasClass('on') ) {
+            $("#first_time_toast").fadeIn();
+                setTimeout(function() {
+                    $("#first_time_toast").fadeOut();
+                }, 3000);
+            }
+        });
+
+        $("#bottom_switch").click(function() {
+
+            if ( $("#bottom_switch .switch").hasClass('off') ) {
+            $("#settings_toast").fadeIn();
+                setTimeout(function() {
+                    $("#settings_toast").fadeOut();
+                }, 3000);
+            }
+        });
+
 
         $('#blocklist-submit').click(function(e) {
             e.preventDefault();

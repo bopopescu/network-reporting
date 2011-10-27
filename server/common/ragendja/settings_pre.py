@@ -20,7 +20,7 @@ else:
 
 on_production_server = have_appserver and \
     not os.environ.get('SERVER_SOFTWARE', '').lower().startswith('devel')
-    
+
 have_appserver = bool(apiproxy_stub_map.apiproxy.GetStub('datastore_v3'))
 
 DEBUG = not on_production_server

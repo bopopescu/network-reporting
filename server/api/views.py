@@ -30,10 +30,10 @@ class AppService(RequestHandler):
     """
     def get(self, app_key=None):
         try:
-            if settings.DEBUG:
-                mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-            else:
-                mpxstats = MarketplaceStatsFetcher(self.account.key())
+            # if settings.DEBUG:
+            #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+            # else:
+            mpxstats = MarketplaceStatsFetcher(self.account.key())
             # If an app key is provided, return the single app
             if app_key:
                 apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
@@ -50,10 +50,10 @@ class AppService(RequestHandler):
 
             # get stats for each app
             for app in apps:
-                if settings.DEBUG:
-                    app.update(mpxstats.get_app_stats("agltb3B1Yi1pbmNyDAsSA0FwcBiLo_8DDA", start_date, end_date))
-                else:
-                    app.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
+                # if settings.DEBUG:
+                #     app.update(mpxstats.get_app_stats("agltb3B1Yi1pbmNyDAsSA0FwcBiLo_8DDA", start_date, end_date))
+                # else:
+                app.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
 
             return JSONResponse(apps)
 
@@ -86,10 +86,10 @@ class AdUnitService(RequestHandler):
     def get(self, app_key = None, adunit_key = None):
         try:
 
-            if settings.DEBUG:
-                mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-            else:
-                mpxstats = MarketplaceStatsFetcher(self.account.key())
+            # if settings.DEBUG:
+            #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+            # else:
+            mpxstats = MarketplaceStatsFetcher(self.account.key())
 
             # TODO: Use actual dates here.
             end_date = datetime.datetime.today()
@@ -102,10 +102,10 @@ class AdUnitService(RequestHandler):
                 response = [adunit.toJSON() for adunit in adunits]
 
                 for au in response:
-                    if settings.DEBUG:
-                        adunit_stats = mpxstats.get_adunit_stats("agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw", start_date, end_date)
-                    else:
-                        adunit_stats = mpxstats.get_adunit_stats(au['id'], start_date, end_date)
+                    # if settings.DEBUG:
+                    #     adunit_stats = mpxstats.get_adunit_stats("agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw", start_date, end_date)
+                    # else:
+                    adunit_stats = mpxstats.get_adunit_stats(au['id'], start_date, end_date)
                     adunit_stats.update({'app_id':app_key})
                     au.update(adunit_stats)
 
@@ -137,20 +137,21 @@ class AdUnitService(RequestHandler):
     def put(self, app_key = None, adunit_key = None):
 
         put_data = simplejson.loads(self.request.raw_post_data)
+        logging.warn(put_data)
+#        try:
+        new_price_floor = put_data['price_floor']
+        activity = put_data['active']
 
-        try:
-            new_price_floor = put_data['price_floor']
-            activity = put_data['active']
+        account_key = self.account.key()
+        adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
 
-            account_key = self.account.key()
-            adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
+        adgroup.mktplace_price_floor = float(new_price_floor)
+        adgroup.active = activity
+        AdGroupQueryManager.put(adgroup)
 
-            adgroup.mktplace_price_floor = float(new_price_floor)
-            adgroup.active = activity
-            AdGroupQueryManager.put(adgroup)
-
-        except KeyError, e:
-            return JSONResponse({'error':str(e)})
+#        except KeyError, e:
+ #           logging.warn(e)
+  #          return JSONResponse({'error':str(e)})
 
         return JSONResponse({'success':'success'})
 
@@ -213,14 +214,14 @@ class CreativeService(RequestHandler):
     """
     def get(self, creative_key=None):
 
-        if settings.DEBUG:
-            mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-        else:
-            mpxstats = MarketplaceStatsFetcher(self.account.key())
+        # if settings.DEBUG:
+        #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+        # else:
+
+        mpxstats = MarketplaceStatsFetcher(self.account.key())
 
         end_date = datetime.datetime.today()
         start_date = end_date - datetime.timedelta(14)
-
         # url = "http://mpx.mopub.com/stats/creatives?pub_id=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw&dsp_id=4e8d03fb71729f4a1d000000"
         # response = urllib2.urlopen(url).read()
         # data = simplejson.loads(response)
@@ -256,6 +257,7 @@ class CreativeService(RequestHandler):
 
 @login_required
 def creative_service(request, *args, **kwargs):
+    ASDF
     return CreativeService()(request, *args, **kwargs)
 
 

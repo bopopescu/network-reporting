@@ -512,7 +512,9 @@
         });
 
         $('#marketplace_stats').tablesorter({
-            widgets: ['adunitSorting']
+            widgets: ['adunitSorting'],
+            sortList: [[1, 0]],
+            headers: { 0: { sorter: false}, 6: {sorter: false}, 7: {sorter: false} }
         });
 
         /*
@@ -539,15 +541,18 @@
         /*
          * Settings page button actions
          */
-        $('#settings-submit').click(function(e) {
-            e.preventDefault();
-            $('#addblocklist').submit();
-            $('').submit();
-        });
 
         $('#blocklist-submit').click(function(e) {
             e.preventDefault();
-            $('#addblocklist').submit();
+            var new_blocklist_domains = $('textarea[name="blocklist"]').val();
+            $.ajax({
+                type: 'post',
+                url: "",
+                data: { blocklist: new_blocklist_domains },
+                success: function() {
+
+                }
+            });
         });
 
     });

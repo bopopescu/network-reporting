@@ -1179,7 +1179,7 @@ def mpx_info(request, *args, **kwargs):
 class MarketplaceIndexHandler(RequestHandler):
     def get(self):
 
-        settings.DEBUG=False
+
 
         # Marketplace settings are kept as a single campaign.
         # Only one should exist per account.
@@ -1191,10 +1191,10 @@ class MarketplaceIndexHandler(RequestHandler):
         app_keys = simplejson.dumps([str(app.key()) for app in apps])
 
         # Set up a MarketplaceStatsFetcher with this account only
-        if settings.DEBUG:
-            stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-        else:
-            stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+        # if settings.DEBUG:
+        #     stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+        # else:
+        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
 
         # Form the date range
         # this is tarded. the start date is really the end of the date range.

@@ -113,6 +113,12 @@ class AdUnitService(RequestHandler):
             else:
                 start_date = end_date - datetime.timedelta(14)
 
+
+
+            logging.warn(start_date)
+            logging.warn(end_date)
+
+
             if app_key:
 
                 app = AppQueryManager.get_app_by_key(app_key)

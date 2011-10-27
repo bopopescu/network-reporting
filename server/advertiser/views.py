@@ -1179,8 +1179,6 @@ def mpx_info(request, *args, **kwargs):
 class MarketplaceIndexHandler(RequestHandler):
     def get(self):
 
-
-
         # Marketplace settings are kept as a single campaign.
         # Only one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
@@ -1195,6 +1193,7 @@ class MarketplaceIndexHandler(RequestHandler):
         #     stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
         # else:
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+        stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
 
         # Form the date range
         # this is tarded. the start date is really the end of the date range.
@@ -1208,6 +1207,10 @@ class MarketplaceIndexHandler(RequestHandler):
             start_date = end_date - datetime.timedelta(int(self.date_range))
         else:
             start_date = end_date - datetime.timedelta(14)
+
+
+        logging.warn(start_date)
+        logging.warn(end_date)
 
 
         # Get the top level marketplace stats for the account

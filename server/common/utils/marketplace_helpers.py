@@ -45,7 +45,7 @@ class MarketplaceStatsFetcher(object):
             end = end.strftime("%m-%d-%Y")
 
         #TODO: cleanup possible trailing &&
-        url = "%s%s%s&%s&%s&%s&%s" % (self._base_url,
+        url = "%s%s%s&%s&%s&start=%s&end=%s" % (self._base_url,
                                       self._inventory,
                                       app_query,
                                       adunit_query,
@@ -172,8 +172,11 @@ class MarketplaceStatsFetcher(object):
 
 def _fetch_and_decode(url):
     try:
+        logging.warn("HOTPOOP")
+        logging.warn(url)
         response = urlopen(url).read()
         response_dict = json.loads(response)
+        logging.warn(response_dict)
     except Exception, ex:
         raise MPStatsAPIException(ex)
 

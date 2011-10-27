@@ -27,19 +27,19 @@ DEV = 'marketing' #11
 OS = 'os' #12
 OS_VER = 'os_ver' #13
 KEY = 'kw' #14
-CHOICES = [('','------------'), 
-           (APP, 'App'), 
-           (AU, 'Ad Unit'), 
-           (P, 'Priority'), 
-           (CAMP, 'Campaign'), 
-           (CRTV, 'Creative'), 
-           (MO, 'Month'), 
-           (WEEK, 'Week'), 
-           (DAY, 'Day'), 
-           (HOUR, 'Hour'), 
-           (CO, 'Country'), 
-           (DEV, 'Device'), 
-           (OS, 'OS'), 
+CHOICES = [('','------------'),
+           (APP, 'App'),
+           (AU, 'Ad Unit'),
+           (P, 'Priority'),
+           (CAMP, 'Campaign'),
+           (CRTV, 'Creative'),
+           (MO, 'Month'),
+           (WEEK, 'Week'),
+           (DAY, 'Day'),
+           (HOUR, 'Hour'),
+           (CO, 'Country'),
+           (DEV, 'Device'),
+           (OS, 'OS'),
            (OS_VER, 'OS Version'),
            ]
            #(KEY, 'Keywords')]
@@ -85,7 +85,7 @@ class ReportForm(mpforms.MPModelForm):
         if commit:
             obj.put()
         return obj
-            
+
 
     class Meta:
         model = ScheduledReport

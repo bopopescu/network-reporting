@@ -59,7 +59,7 @@ class AddReportHandler(RequestHandler):
         return render_to_string(self.request, template_name=template_name, data=kwargs)
 
     def post(self, d1, end, days=None, start=None, d2=None, d3=None,
-                            name=None, saved=False, interval=None,
+                            name=None, saved=False, interval=None, email=False,
                             sched_interval=None, recipients=None, report_key=None):
         if not d2:
             d2 = None
@@ -75,6 +75,10 @@ class AddReportHandler(RequestHandler):
                 return HttpResponseRedirect('/reports/')
         edit = False
         man = ReportQueryManager(self.account)
+
+        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else []
+        recipients = filter(None, recipients)
+
         if report_key is not None:
             logging.info("there is a report key")
             edit = True
@@ -84,12 +88,12 @@ class AddReportHandler(RequestHandler):
                 sched = report.schedule
                 sched.name = name
                 sched.sched_interval = sched_interval
+                sched.recipients = recipients
+                sched.email = True if email else False
                 sched.put()
                 return HttpResponseRedirect('/reports/view/%s/' % sched.key())
 
         saved = True
-        recipients = [r.strip() for r in recipients.replace('\r','\n').replace(',','\n').split('\n') if r] if recipients else []
-
         report = man.add_report(d1,
                                 d2,
                                 d3,
@@ -99,6 +103,7 @@ class AddReportHandler(RequestHandler):
                                 saved = saved,
                                 interval = interval,
                                 sched_interval = sched_interval,
+                                email = True if email else False,
                                 recipients = recipients,
                                 )
         if edit:
@@ -148,7 +153,7 @@ class ViewReportHandler(RequestHandler):
     def get(self, report_key, *args, **kwargs):
         man = ReportQueryManager(self.account)
         report = man.get_report_by_key(report_key)
-        report_frag = ReportForm(initial = {'recipients': self.request.user.email}, instance=report, save_as=True)
+        report_frag = ReportForm(instance=report, save_as=True)
         return render_to_response(self.request, 'reports/view_report.html',
                 dict(report=report.most_recent,
                      report_fragment = report_frag,))

@@ -4,6 +4,7 @@ import sys
 import time
 import traceback
 import urllib
+import urllib2
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -19,6 +20,7 @@ from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 from google.appengine.ext import webapp
 from google.appengine.ext.blobstore import BlobInfo
+from google.appengine.ext.db import BadKeyError
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext.webapp.util import run_wsgi_app
 
@@ -32,6 +34,9 @@ from reporting import models as r_models
 from reporting import query_managers
 
 from account.models import Account
+from advertiser.models import Campaign, AdGroup, Creative
+from publisher.models import Site as AdUnit, App
+
 
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
@@ -44,6 +49,19 @@ MAX_TAIL = 1000 # implies max 100 qps
 MAX_PUT_SIZE = 8
 
 STATS_MODEL_QUERY_KEY = "sm"
+
+MDB_STATS_UPDATER_IP = 'http://mongostats.mopub.com'
+MDB_STATS_UPDATER_HANDLER_PATH = '/update'
+
+
+# DEREF_CACHE description:
+# global dict containing str(key) mappings among publisher and advertiser models:
+# {adunit_str: [app_str, account_str],
+#  adgroup_str: [campaign_str, account_str],
+#  creative_str: [adgroup_str, campaign_str, account_str],
+#  account_str: account object} 
+DEREF_CACHE = {}
+
 
 def increment_stats(stats):
     # datastore get
@@ -68,21 +86,190 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req
                                                date_hour=date_hour,
                                                country=country)
         if not key in stats_dict:
-          stats_dict[key] = r_models.StatsModel(publisher=publisher,
-                                                advertiser=advertiser,
-                                                date_hour=date_hour,
-                                                country=country)
+            stats_dict[key] = r_models.StatsModel(publisher=publisher,
+                                                  advertiser=advertiser,
+                                                  date_hour=date_hour,
+                                                  country=country)
 
         if attribute:
-          # stats_dict[key].attribute += incr
-          setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
+            # stats_dict[key].attribute += incr
+            setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
       
-          if revenue:
-              stats_dict[key].revenue += revenue
+            if revenue:
+                stats_dict[key].revenue += revenue
         if req:      
-          stats_dict[key].reqs.append(req)
+            stats_dict[key].reqs.append(req)
     except Exception, e:
         logging.warning("Error in update_stats: %s"%e)      
+    
+    
+def _create_mdb_json(stats_to_put):
+    # format of d:
+    # { (adunit, creative, date_hour): 
+    #   {'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
+    # }
+    d = {}
+    
+    # format of request_d:
+    # { (adunit, date_hour): request_count }
+    request_d = {}  # no creative
+    
+    for s in stats_to_put:
+        key_name = s.key().name()
+
+        if key_name.endswith('offline'):
+            logging.error('Error in parsing StatsModel keyname %s -- should not be offline' %key_name)
+            continue
+
+        parts = key_name.split(':')
+        
+        # remove country
+        adunit = parts[1]
+        creative = parts[2]
+        date_hour = parts[-1]   # for real-time StatsModels, the date section should always be last!
+        
+        if not creative:    # REQUEST: /m/ad    
+            request_d[(adunit, date_hour)] = request_d.get((adunit, date_hour), 0) + s.request_count
+        else:               # ATTEMPT: /m/req
+            counts = {}
+            counts['attempt_count'] = s.request_count            
+            counts['impression_count'] = s.impression_count
+            counts['click_count'] = s.click_count
+            counts['conversion_count'] = s.conversion_count
+            counts['revenue'] = s.revenue
+
+            key_tuple = (adunit, creative, date_hour)
+
+            # roll up stat counts across all countries
+            if key_tuple in d:
+                # sum up the 2 arrays if key already exists
+                d[key_tuple]['attempt_count'] += counts['attempt_count']
+                d[key_tuple]['impression_count'] += counts['impression_count']
+                d[key_tuple]['click_count'] += counts['click_count']
+                d[key_tuple]['conversion_count'] += counts['conversion_count']
+                d[key_tuple]['revenue'] += counts['revenue']
+            else:
+                d[key_tuple] = counts
+
+    # create new dict json_d with string keys (for json serialization) and fill in request_counts from request_d 
+    # format of json_d:
+    # { 'adunit:creative:date_hour': 
+    #   {'request_count': int, 'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
+    # }
+    json_d = {}
+    for (adunit, creative, date_hour), counts in d.iteritems():
+        k = '%s:%s:%s' % (adunit, creative, date_hour)
+        json_d[k] = d[(adunit, creative, date_hour)]
+        json_d[k]['request_count'] = request_d[(adunit, date_hour)]
+
+    return simplejson.dumps(json_d)
+    
+
+# takes in dict form of mdb_json from _create_mdb_json
+# returns error flag, error msg (if error flag is True), and list of dicts of derefed data in string json form (if error flag is False)
+def _package_mdb_post_data(mdb_dict):
+    mdb_post_list = []
+
+    # key format -> adunit:creative:date_hour
+    # value format -> {'request_count':int, 'attempt_count':int, 'impression_count':int, 'click_count':int, 'conversion_count':int, 'revenue':float}
+    for k, v in mdb_dict.iteritems():
+        parts = k.split(':')
+        if len(parts) != 3:
+            err_msg = 'Error parsing %s -- expecting format adunit:creative:date_hour' % k
+            return True, err_msg, None
+            
+        [adunit, creative, date_hour] = parts
+        
+        # NOTE: deref adunit after creative, since there's a bug where the account is not guaranteed to be retrieved from creative
+        [adgroup, campaign, account] = _deref_creative(creative) or [None, None, None]
+        [app, account] = _deref_adunit(adunit) or [None, None]
+        
+        
+        if None not in [app, account, adgroup, campaign]:
+            post_dict = {'adunit': adunit,
+                         'app': app,
+                         'account': account,
+                         'creative': creative,
+                         'adgroup': adgroup,
+                         'campaign': campaign,
+                         'date_hour': date_hour,
+                         'request_count': v['request_count'],
+                         'attempt_count': v['attempt_count'],
+                         'impression_count': v['impression_count'],
+                         'click_count': v['click_count'],
+                         'conversion_count': v['conversion_count'],
+                         'revenue': v['revenue']}
+            mdb_post_list.append(post_dict)
+        else:
+            err_msg = 'None derefed for key_tuple %s: app=%s, account=%s, adgroup=%s, campaign=%s' % (k, app, account, adgroup, campaign)
+            return True, err_msg, None
+                        
+    # post the list of dicts to MongoDB
+    post_data = simplejson.dumps(mdb_post_list)
+    return False, None, post_data
+
+
+# returns [app_str, account_str] or None
+def _deref_adunit(adunit_str):
+    if adunit_str in DEREF_CACHE:
+        return DEREF_CACHE[adunit_str]
+
+    try:
+        adunit_key = db.Key(adunit_str)
+        adunit = AdUnit.get(adunit_key)
+        app_str = str(adunit._app_key)
+        account_str = str(adunit._account)
+        DEREF_CACHE[adunit_str] = [app_str, account_str]
+        return [app_str, account_str]
+    except BadKeyError, e:
+        logging.error('deref BadKeyError on adunit %s: %s' %(adunit_str, e))
+        return None
+    except Exception, e:
+        logging.error('deref error on adunit %s: %s' %(adunit_str, e))
+        return None
+
+
+# returns [campaign_str, account_str] or None
+def deref_adgroup(adgroup_str):
+    if adgroup_str in DEREF_CACHE:
+        return DEREF_CACHE[adgroup_str]
+
+    try:
+        adgroup_key = db.Key(adgroup_str)
+        adgroup = AdGroup.get(adgroup_key)
+        campaign_str = str(adgroup._campaign)
+        account_str = str(adgroup._account)
+        DEREF_CACHE[adgroup_str] = [campaign_str, account_str]
+        return [campaign_str, account_str]
+    except BadKeyError, e:
+        logging.error('deref BadKeyError on adgroup %s: %s' %(adgroup_str, e))
+        return None
+    except Exception, e:
+        logging.error('deref error on adgroup %s: %s' %(adgroup_str, e))
+        return None
+
+
+# returns [adgroup_str, campaign_str, account_str] or None
+def _deref_creative(creative_str):
+    if creative_str in DEREF_CACHE:
+        return DEREF_CACHE[creative_str]
+
+    try:
+        creative_key = db.Key(creative_str)
+        creative = Creative.get(creative_key)
+        adgroup_str = str(creative._ad_group)        
+        adgroup_deref_results = deref_adgroup(adgroup_str)
+        if adgroup_deref_results:
+            [campaign_str, account_str] = adgroup_deref_results
+            DEREF_CACHE[creative_str] = [adgroup_str, campaign_str, account_str]
+            return [adgroup_str, campaign_str, account_str]
+    except BadKeyError, e:
+        logging.error('deref BadKeyError on creative %s: %s' %(creative_str, e))
+        return None
+    except Exception, e:
+        logging.error('deref error on creative %s: %s' %(creative_str, e))
+        return None
+
     
 class LogTaskHandler(webapp.RequestHandler):
   def get(self):
@@ -230,10 +417,13 @@ class LogTaskHandler(webapp.RequestHandler):
           start += MAX_KEYS # proceed to the next "page"    
 
       query_manager = query_managers.StatsModelQueryManager(account_name)
+      
       try:
-          # raise db.BadRequestError('asdf')
+          # stats_dict structure:
+          # key is StatsModel key_name
+          # value is StatsModel object
           stats_to_put = stats_dict.values()
-          
+      
           # if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
           #     try:
           #         mail.send_mail_to_admins(sender="olp@mopub.com",
@@ -242,12 +432,34 @@ class LogTaskHandler(webapp.RequestHandler):
           #                                       [(str(s._advertiser), str(s._publisher), s.country, s.impression_count) for s in stats_to_put if str(s.country) == 'US']))
           #     except Exception, e:
           #         logging.error("MAIL ERROR: %s",e)
-                                                 
+      
+          # retrieve account object from cache if possible
+          if account_name in DEREF_CACHE:
+              account = DEREF_CACHE[account_name]
+          else:
+              account = Account.get(account_name)
+              DEREF_CACHE[account_name] = account
+          
+          # post to MDB servers if account is using MongoDB for realtime stats
+          if account and account.use_mongodb_stats:
+              mdb_json = _create_mdb_json(stats_to_put)
+              try:
+                  taskqueue.add(name='mdb-'+task_name,
+                                queue_name=queue_name,
+                                method='post',
+                                url='/mdb/update_stats',
+                                payload=mdb_json)
+              except taskqueue.TaskAlreadyExistsError:
+                  logging.info('task %s already exists' % ('mdb-'+task_name))
+
+
+          # traditional put to GAE datastore
           query_manager.put_stats(stats_to_put)
           total_stats = query_manager.all_stats_deltas
       # if the transaction is too large then we split it up and try again    
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)
+      
       except:
           if retry_count > 5:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
@@ -255,7 +467,7 @@ class LogTaskHandler(webapp.RequestHandler):
               total_stats = query_manager.all_stats_deltas
               number_of_stats = len(total_stats)
               max_countries = max([len(stat.get_countries()) for stat in total_stats])
-              account = Account.get(account_name)
+              # account = Account.get(account_name)
               if account:
                   user_email = account.mpuser.email
               else:
@@ -432,6 +644,33 @@ class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
         self.send_blob(blob_info)
         
         
+class MongoUpdateStatsHandler(webapp.RequestHandler):
+    def post(self):
+        mdb_dict = simplejson.loads(self.request.body)  # mdb_dict is json_d in _create_mdb_json()
+        logging.info('POST_BODY: %s' % mdb_dict)
+
+        has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict)
+        if has_err:
+            logging.error(err_msg)
+            #respond immediately without posting any data to MongoDB
+            self.response.out.write(err_msg)
+                
+        logging.info('POST TO MDB: %s' % post_data)
+        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update
+        post_request = urllib2.Request(post_url, post_data)
+        post_response = urllib2.urlopen(post_request)
+        status_code = post_response.code
+        response_msg = post_response.read()
+        
+        handler_response = '%i response from %s: %s\npayload:\n%s' % (status_code, post_url, response_msg, post_data)
+        if status_code == 200: # OK 
+            logging.info(handler_response)
+        else:   # failed    
+            logging.error(handler_response)        
+        self.response.out.write(handler_response)
+
+
+                
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-00', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-01', LogTaskHandler),
@@ -447,6 +686,7 @@ application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskH
                                       ('/files/finalize', FinalizeHandler),
                                       ('/files/download', DownloadLogsHandler),
                                       ('/files/serve/([^/]+)?', ServeLogHandler),
+                                      ('/mdb/update_stats', MongoUpdateStatsHandler),
                                      ],
                                      debug=True)
 

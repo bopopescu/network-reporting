@@ -70,7 +70,7 @@ class JumptapServerSide(ServerSide):
    
     def html_for_response(self, response):
         trace_logging.warning("Jumptap response: %s"%cgi.escape(response.content))
-        if len(response.content) == 0:
+        if len(response.content) == 0 or response.status_code != 200:
             trace_logging.info("Jumptap ad is empty")
             raise ServerSideException("Jumptap ad is empty")
        

@@ -42,7 +42,7 @@
                                         {% if admob_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
                                         {% if admob_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
                   <dl class="formFields {% if admob_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">AdMob Publisher ID:</label></dt>
+                    <dt><label for="appForm-adUnitName">AdMob Default ID:</label></dt>
                     <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.network_config.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd>
                     <div class="adForm-apps {% if admob_status == 2 or admob_status == 3 or admob_status == 4 %} {% else %} show {% endif %}">
                         {% for app in apps%}
@@ -81,7 +81,7 @@
                                         {% if brightroll_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
                                         {% if brightroll_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
                   <dl class="formFields {% if brightroll_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">BrightRoll Publisher ID:</label></dt>
+                    <dt><label for="appForm-adUnitName">BrightRoll Default ID:</label></dt>
                     <dd><input type="text" class="input-text" name="brightroll_pub_id" value="{{account.network_config.brightroll_pub_id|default_if_none:""}}" placeholder="ex: 3836789"/></dd>
 
                     <div class="adForm-apps {% if brightroll_status == 2 or brightroll_status == 3 or brightroll_status == 4 %} {% else %} show {% endif %}">
@@ -105,7 +105,7 @@
                                         {% if chartboost_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
                                         {% if chartboost_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
                   <dl class="formFields {% if chartboost_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">ChartBoost Publisher ID:</label></dt>
+                    <dt><label for="appForm-adUnitName">ChartBoost Default ID:</label></dt>
                     <dd><input type="text" class="input-text" name="chartboost_pub_id" value="{{account.network_config.chartboost_pub_id|default_if_none:""}}" placeholder="ex: 4cf55942bb93162f4500006g"/></dd>
 
                     <div class="adForm-apps {% if chartboost_status == 2 or chartboost_status == 3 or chartboost_status == 4 %} {% else %} show {% endif %}">
@@ -168,7 +168,7 @@
                                         {% if inmobi_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
                                         {% if inmobi_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
                   <dl class="formFields {% if inmobi_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">InMobi Publisher ID:</label></dt>
+                    <dt><label for="appForm-adUnitName">InMobi Default ID:</label></dt>
                     <dd><input type="text" class="input-text" name="inmobi_pub_id" value="{{account.network_config.inmobi_pub_id|default_if_none:""}}" placeholder="ex: 4028cb962b75ff06012b792fc5fb6789" /></dd>
                     <div class="adForm-apps {% if inmobi_status == 2 or inmobi_status == 3 or inmobi_status == 4 %} {% else %} show {% endif %}">
                       {% for app in apps%}
@@ -255,7 +255,7 @@
                                         {% if millennial_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
                                         {% if millennial_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
                   <dl class="formFields {% if millennial_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">Millennial Publisher ID:</label></dt>
+                    <dt><label for="appForm-adUnitName">Millennial Default ID:</label></dt>
                     <dd><input type="text" class="input-text" name="millennial_pub_id" value="{{account.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd>
                     <div class="adForm-apps {% if millennial_status == 2 or millennial_status == 3 or millennial_status == 4 %} {% else %} show {% endif %}">
                       {% for app in apps%}
@@ -277,7 +277,7 @@
                                         {% if mobfox_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
                                         {% if mobfox_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
                   <dl class="formFields {% if mobfox_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">MobFox Publisher ID:</label></dt>
+                    <dt><label for="appForm-adUnitName">MobFox Default ID:</label></dt>
                     <dd><input type="text" class="input-text" name="mobfox_pub_id" value="{{account.network_config.mobfox_pub_id|default_if_none:""}}"  placeholder="ex: 008048afe367bf4ce82ae95363c4xxxx"/></dd>
                     <div class="adForm-apps {% if mobfox_status == 2 or mobfox_status == 3 or mobfox_status == 4 %} {% else %} show {% endif %}">
                       {% for app in apps%}

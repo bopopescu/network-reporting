@@ -41,7 +41,7 @@ then
     nosetests ./ad_server/renderers/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     echo "Network Server Side tests"
     nosetests ./ad_server/networks/tests/ --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
-  
+
     # System Tests (Must live in server root dir for some reason TODO: Fix this)
     echo "System tests"
     nosetests system_mptests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
@@ -51,6 +51,11 @@ then
     # to get coverage, use:
     # nosetests ./ad_server/auction/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox --with-coverage --cover-package ad_server.auction
    
+    # mopub logging tests
+    echo "mopub logging tests"
+    nosetests ./stats/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox 
+
+
 else
     nosetests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --where='./userstore/tests'
     # nosetests ./userstore/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./'
@@ -68,9 +73,12 @@ else
     nosetests ./ad_server/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     nosetests ./ad_server/parser/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     nosetests ./ad_server/renderers/tests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox   
-      nosetests ./ad_server/neworks/tests --with-coverage --with-xunit --gae-lib-root="$1"--match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
+    nosetests ./ad_server/neworks/tests --with-coverage --with-xunit --gae-lib-root="$1"--match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
   
     # System T--with-coverage --with-xunit --gae-lib-root="$1" ests (Must live in server root dir for some reason TODO: Fix this)
     nosetests system_mptests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
     nosetests network_config_mptests --with-coverage --with-xunit --gae-lib-root="$1" --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
+    
+    # mopub logging tests
+    nosetests ./stats/tests --with-coverage --with-xunit --gae-lib-root="$1"--match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
 fi

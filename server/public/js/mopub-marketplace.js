@@ -143,6 +143,7 @@
             // $(".clicks", app_row).text(this.model.get("clicks"));
             // $(".ctr", app_row).text(this.model.get("ctr"));
 
+            /* Don't load this dynamically for now
             var adunit_show_link = $('a.adunits', app_row);
             adunit_show_link.click(showAdUnits).click();
             $('a.edit_price_floor', app_row).click(function(e) {
@@ -154,6 +155,7 @@
                 adunit_show_link.click();
                 $(this).addClass('hidden');
             });
+            *****/
             return this;
         },
         render: function () {
@@ -222,7 +224,50 @@
         initialize: function () {
             this.template = _.template($('#adunit-template').html());
         },
+        renderInline: function () {
+          var current_model = this.model;
 
+          var adunit_row = $("tr.adunit-row#adunit-" + this.model.id, this.el);
+          $(".revenue", adunit_row).text(this.model.get("revenue"));
+          $(".ecpm", adunit_row).text(this.model.get("ecpm"));
+          $(".impressions", adunit_row).text(this.model.get("impressions"));
+          $(".price_floor", adunit_row).html('<input id="'+this.model.id+'" type="text" class="input-text input-text-number number" style="width:50px;" value="'+
+            this.model.get("price_floor")+'"> <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
+          $(".targeting", adunit_row).html('<input class="targeting-box" type="checkbox"> <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
+          if (this.model.get("active")) {
+              $("input.targeting-box", adunit_row).attr('checked', 'checked');
+          }
+
+          // Add the event handler to submit targeting changes over ajax.
+          $("input.targeting-box", adunit_row).click(function() {
+              loading_img = $(".targeting .loading-img", adunit_row);
+              loading_img.show();
+              current_model.set({'active': $(this).is(":checked")});
+              current_model.save({}, {
+                  success: function () {
+                      setTimeout(function() {
+                          loading_img.hide();
+                      }, 2000);
+                  }
+              });
+          });
+          // Add the event handler to submit price floor changes over ajax.
+          $('.price_floor .input-text', adunit_row)
+              .keyup(function() {
+                  loading_img = $(".price_floor .loading-img", adunit_row);
+                  loading_img.show();
+                  current_model.set({'price_floor': $(this).val()});
+                  current_model.save({}, {
+                      success: function () {
+                          setTimeout(function() {
+                              loading_img.hide();
+                          }, 2000);
+                      }
+                  });
+              });
+
+          return this;
+        },
         // Render the model in the template. This assumes that the table
         // row for the app has already been rendered. This will render underneath it's
         // app's row.
@@ -312,6 +357,22 @@
                     }
                 });
             });
+        },
+        fetchAdunitStats: function (app_key) {
+          var adunits = new AdUnitCollection();
+          adunits.app_id = app_key;
+
+          // Once the adunits have been fetched from the server,
+          // render them as well as the app's price floor range
+          adunits.bind('reset', function(adunits_collection) {
+            // Create the views and render each adunit row
+            _.each(adunits_collection.models, function(adunit) {
+                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
+                adunitView.renderInline();
+            });
+          });
+
+          adunits.fetch();
         },
         /*
          * Fetches and renders all of the adunits from an app key.

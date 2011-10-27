@@ -27,7 +27,7 @@ class MarketplaceStatsFetcher(object):
     _creative = "/creatives?"
 
     def __init__(self, pub_id):
-        self.pub_id = pub_id
+        self.pub_id = str(pub_id)
 
     def _get_inventory_query(self, type, values):
         value_tuples = [(type, value) for value in values]
@@ -89,6 +89,8 @@ class MarketplaceStatsFetcher(object):
                                                  self.pub_id,
                                                  start.strftime("%m-%d-%Y"),
                                                  end.strftime("%m-%d-%Y"))
+        logging.warn("HOTPOOP")
+        logging.warn(url)
         dsp = _fetch_and_decode(url)
 
         # Make the stats iterable so we can use them more easily in a template
@@ -152,7 +154,6 @@ class MarketplaceStatsFetcher(object):
                                                                end.strftime("%m-%d-%Y"))
             creative_stats = _fetch_and_decode(url)
             if dsp_key in creative_stats:
-
                 creatives = [creative for creative in creative_stats[dsp_key].values()]
                 for creative in creatives:
                     creative['stats'].update(ctr = ctr(creative['stats']['clk'], creative['stats']['imp']))

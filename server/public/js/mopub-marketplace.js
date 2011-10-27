@@ -35,7 +35,7 @@
     var AdUnitCollection = Backbone.Collection.extend({
         model: AdUnit,
         url: function() {
-            return '/api/app/' + this.app_id + '/adunits/';
+            return '/api/app/' + this.app_id + '/adunits/?' + window.location.search.substring(1);
         }
     });
 
@@ -61,7 +61,7 @@
             ctr: 0
         },
         url: function () {
-            return '/api/app/' + this.id;
+            return '/api/app/' + this.id + "?"  + window.location.search.substring(1);
         },
         parse: function (response) {
             // The api returns everything from this url as a list,
@@ -102,7 +102,7 @@
             domain_blocked: false
         },
         url: function() {
-            return '/api/creative/' +this.id;
+            return '/api/creative/' + this.id + "?" +  window.location.search.substring(1);
         }
     });
 
@@ -115,7 +115,7 @@
     var CreativeCollection = Backbone.Collection.extend({
         model: Creative,
         url: function () {
-            return '/api/dsp/' + this.dsp_key;
+            return '/api/dsp/' + this.dsp_key + "?" + window.location.search.substring(1);
         }
     });
 
@@ -280,6 +280,7 @@
          * Useful for bootstrapping table loads.
          */
         fetchAllApps: function (app_keys) {
+
             _.each(app_keys, function(app_key) {
                 var app = new App({id: app_key});
                 app.bind('change', function(current_app) {

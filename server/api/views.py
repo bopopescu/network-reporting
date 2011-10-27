@@ -30,6 +30,7 @@ class AppService(RequestHandler):
     """
     def get(self, app_key=None):
         try:
+            logging.warn(self.request.GET)
             # if settings.DEBUG:
             #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
             # else:
@@ -44,9 +45,17 @@ class AppService(RequestHandler):
                 apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
 
 
-            # TODO: Use actual dates here.
-            end_date = datetime.datetime.today()
-            start_date = end_date - datetime.timedelta(14)
+            # formulate the date range
+            if self.request.GET.get('s', None):
+                year, month, day = str(self.request.GET.get('s')).split('-')
+                end_date = datetime.date(int(year), int(month), int(day))
+            else:
+                end_date = datetime.date.today()
+
+            if self.request.GET.get('r', None):
+                start_date = end_date - datetime.timedelta(int(self.request.GET.get('r')))
+            else:
+                start_date = end_date - datetime.timedelta(14)
 
             # get stats for each app
             for app in apps:
@@ -86,14 +95,24 @@ class AdUnitService(RequestHandler):
     def get(self, app_key = None, adunit_key = None):
         try:
 
+            logging.warn(self.request.GET)
             # if settings.DEBUG:
             #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
             # else:
             mpxstats = MarketplaceStatsFetcher(self.account.key())
 
-            # TODO: Use actual dates here.
-            end_date = datetime.datetime.today()
-            start_date = end_date - datetime.timedelta(14)
+            # formulate the date range
+            if self.request.GET.get('s', None):
+                year, month, day = str(self.request.GET.get('s')).split('-')
+                end_date = datetime.date(int(year), int(month), int(day))
+            else:
+                end_date = datetime.date.today()
+
+            if self.request.GET.get('r', None):
+                start_date = end_date - datetime.timedelta(int(self.request.GET.get('r')))
+            else:
+                start_date = end_date - datetime.timedelta(14)
+
             if app_key:
 
                 app = AppQueryManager.get_app_by_key(app_key)
@@ -214,9 +233,7 @@ class CreativeService(RequestHandler):
     """
     def get(self, creative_key=None):
 
-        # if settings.DEBUG:
-        #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-        # else:
+        logging.warn(self.request.GET)
 
         mpxstats = MarketplaceStatsFetcher(self.account.key())
 
@@ -257,7 +274,6 @@ class CreativeService(RequestHandler):
 
 @login_required
 def creative_service(request, *args, **kwargs):
-    ASDF
     return CreativeService()(request, *args, **kwargs)
 
 

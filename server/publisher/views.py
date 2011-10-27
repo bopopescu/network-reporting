@@ -41,6 +41,7 @@ from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site, Account, App
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
+from account.models import NetworkConfig
 
 ## Query Managers
 from account.query_managers import AccountQueryManager

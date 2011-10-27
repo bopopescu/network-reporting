@@ -161,7 +161,7 @@
               <span class="inner" style="width:475px;">
                   <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
                   <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span>
-                  <img id="{{a.key}}-img" class="loading-img" style="display:none;" src="/images/icons-custom/spinner-12.gif"></img>
+                  <img id="{{a.key}}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
               </span>
             </td>
             <td class="dataTable-data numeric revenue">--</td>
@@ -178,7 +178,7 @@
             <tbody>
               {% for au in a.adunits %}
               <tr class="adunit-row incomplete for-app-{{a.key}}" id="adunit-{{au.key}}" style="border:none;">
-                <th class="dataTable-name" style="width:475px;"><span class="inner" style="width:475px;"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+                <th class="dataTable-name" style="width:475px;"><span class="inner" style="width:475px;"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a> <img id="{{au.key}}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img></span></th>
                 <td class="dataTable-data numeric revenue" style="border:none;">--</td>
                 <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
                 <td class="dataTable-data numeric impressions" style="border:none;">--</td>

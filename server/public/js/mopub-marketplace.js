@@ -237,6 +237,8 @@
           if (this.model.get("active")) {
               $("input.targeting-box", adunit_row).attr('checked', 'checked');
           }
+          $("#" + this.model.id + "-img").hide();
+
 
           // Add the event handler to submit targeting changes over ajax.
           $("input.targeting-box", adunit_row).click(function() {

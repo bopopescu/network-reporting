@@ -1204,9 +1204,9 @@ class MarketplaceIndexHandler(RequestHandler):
             end_date = datetime.date.today()
 
         if self.date_range:
-            start_date = end_date - datetime.timedelta(int(self.date_range))
+            start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
         else:
-            start_date = end_date - datetime.timedelta(14)
+            start_date = end_date - datetime.timedelta(13)
 
 
         logging.warn(start_date)

@@ -367,9 +367,9 @@ class ShowAppHandler(RequestHandler):
             end_date = date.today()
 
         if self.date_range:
-            start_date = end_date - timedelta(int(self.date_range))
+            start_date = end_date - timedelta(int(self.date_range) - 1)
         else:
-            start_date = end_date - timedelta(14)
+            start_date = end_date - timedelta(13)
 
 
         # load the site
@@ -431,8 +431,8 @@ class ShowAppHandler(RequestHandler):
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
             if ag.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
-                mpx_stats = stats_fetcher.get_app_stats(app.key(), start_date, end_date)
-                ag.stats.revenue = float(mpx_stats.get('pub_rev', 0.0))
+                mpx_stats = stats_fetcher.get_app_stats(str(app_key), start_date, end_date)
+                ag.stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
 
@@ -602,9 +602,9 @@ class AdUnitShowHandler(RequestHandler):
             end_date = date.today()
 
         if self.date_range:
-            start_date = end_date - timedelta(int(self.date_range))
+            start_date = end_date - timedelta(int(self.date_range) - 1)
         else:
-            start_date = end_date - timedelta(14)
+            start_date = end_date - timedelta(13)
 
         days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days]
 
@@ -629,8 +629,8 @@ class AdUnitShowHandler(RequestHandler):
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
             if ag.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
-                mpx_stats = stats_fetcher.get_adunit_stats(adunit.key(), start_date, end_date)
-                ag.stats.revenue = float(mpx_stats.get('pub_rev', 0.0))
+                mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()), start_date, end_date)
+                ag.stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
             
 

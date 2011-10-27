@@ -9,6 +9,7 @@ import re
 from datetime import (datetime,
                       time,
                       date,
+                      timedelta,
                       )
 
 import urllib
@@ -56,6 +57,8 @@ from common.constants import *
 from budget import budget_service
 
 from common.utils.decorators import cache_page_until_post
+from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+
 
 class AppIndexHandler(RequestHandler):
     def get(self):
@@ -243,8 +246,15 @@ class AppCreateHandler(RequestHandler):
 
             AdUnitQueryManager.put(adunit)
 
+            # create marketplace adgroup for this adunit
             mpx_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), self.account.key())
             AdGroupQueryManager.put(mpx_adgroup)
+
+            # create appropriate marketplace creative for this adunit / adgroup (same key_name)
+            mpx_creative = mpx_adgroup.default_creative(key_name=mpx_adgroup.key().name())
+            mpx_creative.adgroup = mpx_adgroup
+            mpx_creative.account = self.account
+            CreativeQueryManager.put(mpx_creative)
 
             # Check if this is the first ad unit for this account
             if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:
@@ -253,7 +263,12 @@ class AppCreateHandler(RequestHandler):
             status = "success"
             if self.account.status == "new":
                 self.account.status = "step4"  # skip to step 4 (add campaigns), but show step 2 (integrate)
-                AccountQueryManager.put_accounts(self.account)
+                # create a network f
+                # TODO (Tiago): add the itunes info here for iOS apps for iAd syncing
+                network_config = NetworkConfig()
+                AccountQueryManager.update_config_and_put(account, network_config)
+
+                # create the marketplace account for the first time
                 mpx = CampaignQueryManager.get_marketplace(self.account)
                 mpx.active = False
                 CampaignQueryManager.put(mpx)
@@ -345,6 +360,18 @@ class ShowAppHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range)
 
+        # Form the date range
+        if self.start_date: # this is tarded. the start date is really the end of the date range.
+            end_date = datetime.strptime(self.start_date, "%Y-%m-%d")
+        else:
+            end_date = date.today()
+
+        if self.date_range:
+            start_date = end_date - timedelta(int(self.date_range))
+        else:
+            start_date = end_date - timedelta(14)
+
+
         # load the site
         app = AppQueryManager.get(app_key)
 
@@ -392,11 +419,22 @@ class ShowAppHandler(RequestHandler):
 
         # get adgroups targeting this app
         app.adgroups = AdGroupQueryManager.get_adgroups(app=app)
+        
+        # used the get marketplace stats from mpx servers
+        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
 
         for ag in app.adgroups:
             ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,advertiser=ag,days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
             ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
+
+            # Overwrite the revenue from MPX if its marketplace
+            # TODO: overwrite clicks as well
+            if ag.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+                mpx_stats = stats_fetcher.get_app_stats(app.key(), start_date, end_date)
+                ag.stats.revenue = float(mpx_stats.get('pub_rev', 0.0))
+                ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
+
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], app.adgroups)
         promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -556,6 +594,18 @@ class AdUnitShowHandler(RequestHandler):
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
             days = StatsModel.lastdays(self.date_range)
+            
+        # Form the date range
+        if self.start_date: # this is tarded. the start date is really the end of the date range.
+            end_date = datetime.strptime(self.start_date, "%Y-%m-%d")
+        else:
+            end_date = date.today()
+
+        if self.date_range:
+            start_date = end_date - timedelta(int(self.date_range))
+        else:
+            start_date = end_date - timedelta(14)
+
         days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days]
 
         adunit.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,days=days)
@@ -565,6 +615,9 @@ class AdUnitShowHandler(RequestHandler):
 
         adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
 
+        # used the get marketplace stats from mpx servers
+        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+
         # Get all of the ad groups for this site
         adunit.adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
         adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
@@ -572,6 +625,14 @@ class AdUnitShowHandler(RequestHandler):
             ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
             ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
+            
+            # Overwrite the revenue from MPX if its marketplace
+            # TODO: overwrite clicks as well
+            if ag.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+                mpx_stats = stats_fetcher.get_adunit_stats(adunit.key(), start_date, end_date)
+                ag.stats.revenue = float(mpx_stats.get('pub_rev', 0.0))
+                ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
+            
 
         # to allow the adunit to be edited
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)

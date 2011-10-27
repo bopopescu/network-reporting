@@ -1274,9 +1274,7 @@ class AddBlocklistHandler(RequestHandler):
             network_config.blocklist.extend(add_blocklist)
             network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
             AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
-
         return HttpResponseRedirect(reverse('marketplace_index'))
-
 
 @login_required
 def add_blocklist_handler(request,*args,**kwargs):

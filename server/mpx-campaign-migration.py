@@ -2,6 +2,17 @@ import sys
 import traceback
 
 
+# for ubuntu EC2
+sys.path.append('/home/ubuntu/mopub/server')
+sys.path.append('/home/ubuntu/google_appengine')
+sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
+
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
 
@@ -229,18 +240,24 @@ def main():
     migrate_adgroups_and_creatives()
 
 
-    # # batch put models
-    # for chunk in chunks(CAMPAIGNS_TO_PUT, LIMIT):
-    #     print 'putting in %i campaigns' % LIMIT
-    #     CampaignQueryManager.put(chunk)
-    #
-    # for chunk in chunks(ADGROUPS_TO_PUT, LIMIT):
-    #     print 'putting in %i adgroups' % LIMIT
-    #     AdGroupQueryManager.put(chunk)
-    #
-    # for chunk in chunks(CREATIVES_TO_PUT, LIMIT):
-    #     print 'putting in %i creatives' % LIMIT
-    #     CreativeQueryManager.put(chunk)
+    # batch put models
+    total = 0
+    for chunk in chunks(CAMPAIGNS_TO_PUT, LIMIT):
+        CampaignQueryManager.put(chunk)
+        total += len(chunk)
+        print 'put in %i campaigns' % total
+
+    total = 0
+    for chunk in chunks(ADGROUPS_TO_PUT, LIMIT):
+        AdGroupQueryManager.put(chunk)
+        total += len(chunk)
+        print 'put in %i adgroups' % total
+
+    total = 0
+    for chunk in chunks(CREATIVES_TO_PUT, LIMIT):
+        CreativeQueryManager.put(chunk)
+        total += len(chunk)
+        print 'put in %i creatives' % total
 
 
 

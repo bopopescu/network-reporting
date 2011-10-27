@@ -267,6 +267,11 @@ button {
 .invisible {
   visibility: hidden; }
 
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
+
 /*
  * Push floating elements into their containing box
  */
@@ -1122,6 +1127,11 @@ td.numeric, th.numeric, .numeric TD {
 .invisible {
   visibility: hidden; }
 
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
+
 /*
  * Push floating elements into their containing box
  */
@@ -1419,6 +1429,11 @@ input.price_floor_change {
 .invisible {
   visibility: hidden; }
 
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
+
 /*
  * Push floating elements into their containing box
  */
@@ -1490,31 +1505,25 @@ input.price_floor_change {
   color: #53a600; }
 
 table.simpletable {
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  border-radius: 3px;
   width: 100%;
   margin-bottom: 10px;
   padding: 0;
   border-collapse: separate;
-  *border-collapse: collapse;
-  border: 1px solid #ddd; }
+  *border-collapse: collapse; }
   table.simpletable th, table.simpletable td {
     padding: 10px 10px 9px;
     text-align: left; }
   table.simpletable th {
-    padding-top: 9px;
     vertical-align: middle;
-    border-bottom: 1px solid #ddd;
-    font-size: 16px; }
+    font-size: 10px;
+    font-weight: 300;
+    text-transform: uppercase;
+    color: #555;
+    padding: 0 0 8px 0; }
   table.simpletable td {
     vertical-align: top; }
     table.simpletable td.align_right {
       text-align: right; }
-  table.simpletable th + th, table.simpletable td + td {
-    border-left: 1px solid #ddd; }
-  table.simpletable tr + tr td {
-    border-top: 1px solid #ddd; }
   table.simpletable tbody tr:first-child td:first-child {
     -webkit-border-radius: 4px 0 0 0;
     -moz-border-radius: 4px 0 0 0;
@@ -1535,95 +1544,133 @@ table.simpletable {
     background: white;
     border-top: 2px solid #ccc;
     font-size: 16px; }
+  table.simpletable tr.even td {
+    background-color: #fff; }
+  table.simpletable tr.odd td {
+    background-color: #f7f7f7; }
+
+.adunit-row.name {
+  padding-left: 50px; }
 
 .zebra-striped tbody tr:nth-child(odd) td {
-  background-color: #f9f9f9;
-  -webkit-box-shadow: inset 0px 1px 5px #eeeeee;
-  -moz-box-shadow: inset 0px 1px 5px #eeeeee;
-  box-shadow: inset 0px 1px 5px #eeeeee; }
+  background-color: #f7f7f7; }
 .zebra-striped tbody tr:nth-child(even) td {
-  background-color: #fff;
-  -webkit-box-shadow: 0px 1px 5px #eeeeee;
-  -moz-box-shadow: 0px 1px 5px #eeeeee;
-  box-shadow: 0px 1px 5px #eeeeee; }
+  background-color: #fff; }
 .zebra-striped tbody tr:hover td {
-  background-color: #EBF2F7;
-  -webkit-box-shadow: 0px 1px 10px #eeeeee;
-  -moz-box-shadow: 0px 1px 10px #eeeeee;
-  box-shadow: 0px 1px 10px #eeeeee; }
+  background-color: #EBF2F7; }
 
-table .header {
-  cursor: pointer; }
-  table .header:after {
-    content: "";
-    float: right;
-    margin-top: 7px;
-    border-width: 0 4px 4px;
-    border-style: solid;
-    border-color: #000 transparent;
-    visibility: hidden; }
-table .headerSortUp,
-table .headerSortDown {
-  background-color: rgba(141, 192, 219, 0.25);
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75); }
-table .header:hover:after {
-  visibility: visible; }
-table .headerSortDown:after,
-table .headerSortDown:hover:after {
-  visibility: visible;
-  filter: alpha(opacity=60);
-  -khtml-opacity: 0.6;
-  -moz-opacity: 0.6;
-  opacity: 0.6; }
-table .headerSortUp:after {
-  border-bottom: none;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 4px solid #000;
-  visibility: visible;
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
-  box-shadow: none;
-  filter: alpha(opacity=60);
-  -khtml-opacity: 0.6;
-  -moz-opacity: 0.6;
-  opacity: 0.6; }
-table .blue {
-  color: #4a74e8;
-  border-bottom-color: #4a74e8; }
-table .headerSortUp.blue,
-table .headerSortDown.blue {
-  background-color: white; }
-table .green {
-  color: #5d8c00;
-  border-bottom-color: #5d8c00; }
-table .headerSortUp.green,
-table .headerSortDown.green {
-  background-color: #c7ff59; }
-table .red {
-  color: #e63c3c;
-  border-bottom-color: #e63c3c; }
-table .headerSortUp.red,
-table .headerSortDown.red {
-  background-color: white; }
-table .yellow {
-  color: #faf0bb;
-  border-bottom-color: #faf0bb; }
-table .headerSortUp.yellow,
-table .headerSortDown.yellow {
-  background-color: white; }
-table .orange {
-  color: #ffb266;
-  border-bottom-color: #ffb266; }
-table .headerSortUp.orange,
-table .headerSortDown.orange {
-  background-color: white; }
-table .purple {
-  color: #6f6bb8;
-  border-bottom-color: #6f6bb8; }
-table .headerSortUp.purple,
-table .headerSortDown.purple {
-  background-color: #f5f5fa; }
+/* table { */
+/*     .header { */
+/*         cursor: pointer; */
+/*         &:after { */
+/*             content: ""; */
+/*             float: right; */
+/*             margin-top: 7px; */
+/*             border-width: 0 4px 4px; */
+/*             border-style: solid; */
+/*             border-color: #000 transparent; */
+/*             visibility: hidden; */
+/*         } */
+/*     } */
+/*     .headerSortUp, */
+/*     .headerSortDown { */
+/*         background-color: rgba(141,192,219,.25); */
+/*         text-shadow: 0 1px 1px rgba(255,255,255,.75); */
+/*     } */
+/*     .header:hover { */
+/*         &:after { */
+/*             visibility:visible; */
+/*         } */
+/*     } */
+/*     // Style the descending (alphabetical) column header */
+/*     .headerSortDown, */
+/*     .headerSortDown:hover { */
+/*         &:after { */
+/*             visibility:visible; */
+/*             @include opacity(60); */
+/*         } */
+/*     } */
+/*     .headerSortUp { */
+/*         &:after { */
+/*             border-bottom: none; */
+/*             border-left: 4px solid transparent; */
+/*             border-right: 4px solid transparent; */
+/*             border-top: 4px solid #000; */
+/*             visibility:visible; */
+/*             @include box-shadow(none); //cant add boxshadow to downward facing arrow :( */
+/*                 @include opacity(60); */
+/*             } */
+/*         } */
+/*     .blue { */
+/*         color: $blue; */
+/*         border-bottom-color: $blue; */
+/*     } */
+/*     .headerSortUp.blue, */
+/*     .headerSortDown.blue { */
+/*         background-color: lighten($blue, 40%); */
+/*     } */
+/*     // Green Table Headings */
+/*     .green { */
+/*         color: $green; */
+/*         border-bottom-color: $green; */
+/*     } */
+/*     .headerSortUp.green, */
+/*     .headerSortDown.green { */
+/*         background-color: lighten($green, 40%); */
+/*     } */
+/*     // Red Table Headings */
+/*     .red { */
+/*         color: $red; */
+/*         border-bottom-color: $red; */
+/*     } */
+/*     .headerSortUp.red, */
+/*     .headerSortDown.red { */
+/*         background-color: lighten($red, 50%); */
+/*     } */
+/*     // Yellow Table Headings */
+/*     .yellow { */
+/*         color: $yellow; */
+/*         border-bottom-color: $yellow; */
+/*     } */
+/*     .headerSortUp.yellow, */
+/*     .headerSortDown.yellow { */
+/*         background-color: lighten($yellow, 40%); */
+/*     } */
+/*     // Orange Table Headings */
+/*     .orange { */
+/*         color: $orange; */
+/*         border-bottom-color: $orange; */
+/*     } */
+/*     .headerSortUp.orange, */
+/*     .headerSortDown.orange { */
+/*         background-color: lighten($orange, 40%); */
+/*     } */
+/*     // Purple Table Headings */
+/*     .purple { */
+/*         color: $purple; */
+/*         border-bottom-color: $purple; */
+/*     } */
+/*     .headerSortUp.purple, */
+/*     .headerSortDown.purple { */
+/*         background-color: lighten($purple, 40%); */
+/*     } */
+/* } */
+.dataTables_length {
+  float: left; }
+
+.dataTables_filter {
+  float: right; }
+
+.paginate_button {
+  display: inline-block; }
+
+tr.adunit-row td:not(.icon) {
+  border-top: 1px dotted #ddd; }
+
+img.app-icon {
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
 
 /*
  * ## Colors
@@ -1660,6 +1707,11 @@ table .headerSortDown.purple {
 
 .invisible {
   visibility: hidden; }
+
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
 
 /*
  * Push floating elements into their containing box
@@ -2270,30 +2322,30 @@ table .headerSortDown.purple {
 .arrow-up {
   width: 0;
   height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-bottom: 20px solid #dddddd; }
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #dddddd; }
 
 .arrow-down {
   width: 0;
   height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-top: 20px solid #dddddd; }
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #dddddd; }
 
 .arrow-right {
   width: 0;
   height: 0;
-  border-top: 20px solid transparent;
-  border-bottom: 20px solid transparent;
-  border-left: 20px solid #dddddd; }
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid #dddddd; }
 
 .arrow-left {
   width: 0;
   height: 0;
-  border-top: 20px solid transparent;
-  border-bottom: 20px solid transparent;
-  border-right: 20px solid #dddddd; }
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid #dddddd; }
 
 .tipsy {
   position: absolute;
@@ -3100,8 +3152,7 @@ ul.adunits {
 
 .app-icon {
   display: block;
-  float: left;
-  width: 50px; }
+  float: left; }
 
 .app-detail {
   float: left;

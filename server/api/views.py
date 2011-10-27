@@ -12,6 +12,7 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
@@ -21,16 +22,19 @@ import datetime
 import logging
 from django.conf import settings
 
+import urllib2
+
 class AppService(RequestHandler):
     """
     API Service for delivering serialized App data
     """
     def get(self, app_key=None):
         try:
-            if settings.DEBUG:
-                mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-            else:
-                mpxstats = MarketplaceStatsFetcher(self.account.key())
+            logging.warn(self.request.GET)
+            # if settings.DEBUG:
+            #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+            # else:
+            mpxstats = MarketplaceStatsFetcher(self.account.key())
             # If an app key is provided, return the single app
             if app_key:
                 apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
@@ -41,16 +45,24 @@ class AppService(RequestHandler):
                 apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
 
 
-            # TODO: Use actual dates here.
-            end_date = datetime.datetime.today()
-            start_date = end_date - datetime.timedelta(14)
+            # formulate the date range
+            if self.request.GET.get('s', None):
+                year, month, day = str(self.request.GET.get('s')).split('-')
+                end_date = datetime.date(int(year), int(month), int(day))
+            else:
+                end_date = datetime.date.today()
+
+            if self.request.GET.get('r', None):
+                start_date = end_date - datetime.timedelta(int(self.request.GET.get('r')))
+            else:
+                start_date = end_date - datetime.timedelta(14)
 
             # get stats for each app
             for app in apps:
-                if settings.DEBUG:
-                    app.update(mpxstats.get_app_stats("agltb3B1Yi1pbmNyDAsSA0FwcBiLo_8DDA", start_date, end_date))
-                else:
-                    endapp.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
+                # if settings.DEBUG:
+                #     app.update(mpxstats.get_app_stats("agltb3B1Yi1pbmNyDAsSA0FwcBiLo_8DDA", start_date, end_date))
+                # else:
+                app.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
 
             return JSONResponse(apps)
 
@@ -83,14 +95,30 @@ class AdUnitService(RequestHandler):
     def get(self, app_key = None, adunit_key = None):
         try:
 
-            if settings.DEBUG:
-                mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-            else:
-                mpxstats = MarketplaceStatsFetcher(self.account.key())
+            logging.warn(self.request.GET)
+            # if settings.DEBUG:
+            #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+            # else:
+            mpxstats = MarketplaceStatsFetcher(self.account.key())
 
-            # TODO: Use actual dates here.
-            end_date = datetime.datetime.today()
-            start_date = end_date - datetime.timedelta(14)
+            # formulate the date range
+            if self.request.GET.get('s', None):
+                year, month, day = str(self.request.GET.get('s')).split('-')
+                end_date = datetime.date(int(year), int(month), int(day))
+            else:
+                end_date = datetime.date.today()
+
+            if self.request.GET.get('r', None):
+                start_date = end_date - datetime.timedelta(int(self.request.GET.get('r')))
+            else:
+                start_date = end_date - datetime.timedelta(14)
+
+
+
+            logging.warn(start_date)
+            logging.warn(end_date)
+
+
             if app_key:
 
                 app = AppQueryManager.get_app_by_key(app_key)
@@ -99,10 +127,10 @@ class AdUnitService(RequestHandler):
                 response = [adunit.toJSON() for adunit in adunits]
 
                 for au in response:
-                    if settings.DEBUG:
-                        adunit_stats = mpxstats.get_adunit_stats("agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw", start_date, end_date)
-                    else:
-                        adunit_stats = mpxstats.get_adunit_stats(au['id'], start_date, end_date)
+                    # if settings.DEBUG:
+                    #     adunit_stats = mpxstats.get_adunit_stats("agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw", start_date, end_date)
+                    # else:
+                    adunit_stats = mpxstats.get_adunit_stats(au['id'], start_date, end_date)
                     adunit_stats.update({'app_id':app_key})
                     au.update(adunit_stats)
 
@@ -111,8 +139,15 @@ class AdUnitService(RequestHandler):
                                                                           get_from_db=True)
                     try:
                         au.update(price_floor = adgroup.mktplace_price_floor)
-                    except AttributeError:
+                    except AttributeError, e:
+                        logging.warn(e)
                         au.update(price_floor = "0.25")
+
+                    try:
+                        au.update(active = adgroup.active)
+                    except AttributeError, e:
+                        logging.warn(e)
+                        au.update(active = False)
 
                 return JSONResponse(response)
             else:
@@ -126,19 +161,22 @@ class AdUnitService(RequestHandler):
 
     def put(self, app_key = None, adunit_key = None):
 
-
         put_data = simplejson.loads(self.request.raw_post_data)
-        try:
-            new_price_floor = put_data['price_floor']
+        logging.warn(put_data)
+#        try:
+        new_price_floor = put_data['price_floor']
+        activity = put_data['active']
 
-            account_key = self.account.key()
-            adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
+        account_key = self.account.key()
+        adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
 
-            adgroup.mktplace_price_floor = float(new_price_floor)
-            AdGroupQueryManager.put(adgroup)
+        adgroup.mktplace_price_floor = float(new_price_floor)
+        adgroup.active = activity
+        AdGroupQueryManager.put(adgroup)
 
-        except KeyError, e:
-            return JSONResponse({'error':str(e)})
+#        except KeyError, e:
+ #           logging.warn(e)
+  #          return JSONResponse({'error':str(e)})
 
         return JSONResponse({'success':'success'})
 
@@ -200,7 +238,35 @@ class CreativeService(RequestHandler):
     API Service for delivering serialized Creative data
     """
     def get(self, creative_key=None):
-        return JSONResponse({'error':'No parameters provided'})
+
+        logging.warn(self.request.GET)
+
+        mpxstats = MarketplaceStatsFetcher(self.account.key())
+
+        end_date = datetime.datetime.today()
+        start_date = end_date - datetime.timedelta(14)
+        # url = "http://mpx.mopub.com/stats/creatives?pub_id=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw&dsp_id=4e8d03fb71729f4a1d000000"
+        # response = urllib2.urlopen(url).read()
+        # data = simplejson.loads(response)
+
+        creative_data = mpxstats.get_all_creatives(start_date, end_date)
+
+        creatives = []
+        for creative in creative_data:
+            creatives.append([
+                creative["creative"]["url"],
+                creative["creative"]["ad_dmn"],
+                creative["stats"]["pub_rev"],
+                currency(creative['stats']['ecpm']),
+                creative["stats"]["imp"],
+                #creative["stats"]["clk"],
+                #percentage_rounded(creative['stats']['ctr']),
+            ])
+
+        return JSONResponse({
+            'aaData': creatives
+        })
+
 
     def post(self):
         pass

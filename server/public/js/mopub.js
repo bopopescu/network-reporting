@@ -608,6 +608,10 @@ if (typeof window.console == "undefined") {
         return x1 + x2;
     };
 
+    mopub.Utils.formatCurrency = function(num) {
+        return "$" + num.toFixed(2);
+    };
+
     mopub.Utils.formatNumberAsPercentage = function(string) {
         // We round to two decimal places.
         return (string*100).toFixed(2) + '%';

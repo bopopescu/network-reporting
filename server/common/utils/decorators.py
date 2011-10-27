@@ -30,7 +30,7 @@ def user_passes_test(test_func, login_url=None, redirect_field_name=REDIRECT_FIE
     that takes the user object and returns True if the user passes.
     """
     from account.query_managers import AccountQueryManager
-    
+
     if not login_url:
         from django.conf import settings
         login_url = settings.LOGIN_URL
@@ -43,7 +43,7 @@ def user_passes_test(test_func, login_url=None, redirect_field_name=REDIRECT_FIE
                 if account:
                     return view_func(request, *args, **kwargs)
                 else:
-                    return HttpResponseRedirect(reverse('registration_register_google'))    
+                    return HttpResponseRedirect(reverse('registration_register_google'))
             path = urlquote(request.get_full_path())
             tup = login_url, redirect_field_name, path
             return HttpResponseRedirect('%s?%s=%s' % tup)
@@ -76,21 +76,21 @@ def cache_page_until_post(time=5*60):
     """ Caches a page until it expires or a post occurs in the session. """
     def wrap(view):
         def new_view(request, *args, **kw):
-            
+
             page_cache_key = _build_page_cache_key(request)
-            
-            if request.method == "POST":
+
+            if request.method in ["POST", "PUT"]:
                 # If we are POSTing, clear the cache
                 session_cache_key = _build_session_cache_key(request)
                 session_cache_key_set = memcache.get(session_cache_key) or set()
                 for key in session_cache_key_set:
                     memcache.delete(key)
-                            
+
                 memcache.delete(session_cache_key)
                 return view(request, *args, **kw)
-                
+
             elif request.method == "GET":
-                # If we are GETting, add to cache and also add to list of 
+                # If we are GETting, add to cache and also add to list of
                 # cached pages to delete on POST
                 cached_response = memcache.get(page_cache_key)
                 if cached_response:
@@ -106,7 +106,7 @@ def cache_page_until_post(time=5*60):
                         memcache_succes = False
                         pass
                     # Add the cached page's key to the list of all the pages
-                    # we have cached since the last POST 
+                    # we have cached since the last POST
                     if memcache_succes:
                         session_cache_key = _build_session_cache_key(request)
                         logging.info("session_cache_key: %s" % session_cache_key)
@@ -114,14 +114,14 @@ def cache_page_until_post(time=5*60):
                         if session_cache_key_set is None:
                             session_cache_key_set = set()
                         session_cache_key_set.add(page_cache_key)
-    
+
                         memcache.set(session_cache_key,
                                      session_cache_key_set)
                     return view_response
 
         return new_view
     return wrap
-    
+
 def _build_session_cache_key(request):
     """ Returns a string to key our session cache under. We use the session
         cache to keep track of what needs to be deleted on a post.
@@ -161,17 +161,17 @@ class wraps_first_arg(object):
         args = list(args)
         if not isinstance(args[1], (list, tuple)):
             args[1] = [args[1]]
-            
-        return self.f(*args)
-      
 
-def returns_unicode(func):         
+        return self.f(*args)
+
+
+def returns_unicode(func):
     """ If the result is an unencoded string, encode it. """
-    def new_func(*args, **kwargs):  
-        unencoded = func(*args,**kwargs)      
+    def new_func(*args, **kwargs):
+        unencoded = func(*args,**kwargs)
         if isinstance(unencoded, basestring):
             if not isinstance(unencoded, unicode):
-                return unicode(unencoded, 'utf-8')  
+                return unicode(unencoded, 'utf-8')
         else:
             return unencoded
     return new_func

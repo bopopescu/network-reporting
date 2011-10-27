@@ -10,6 +10,7 @@
     var AdUnit = Backbone.Model.extend({
         // If we don't set defaults, the templates will explode
         defaults : {
+            active: false,
             attempts: 0,
             clicks: 0,
             ctr: 0,
@@ -34,7 +35,7 @@
     var AdUnitCollection = Backbone.Collection.extend({
         model: AdUnit,
         url: function() {
-            return '/api/app/' + this.app_id + '/adunits/';
+            return '/api/app/' + this.app_id + '/adunits/?' + window.location.search.substring(1);
         }
     });
 
@@ -60,7 +61,7 @@
             ctr: 0
         },
         url: function () {
-            return '/api/app/' + this.id;
+            return '/api/app/' + this.id + "?"  + window.location.search.substring(1);
         },
         parse: function (response) {
             // The api returns everything from this url as a list,
@@ -101,20 +102,20 @@
             domain_blocked: false
         },
         url: function() {
-            return '/api/creative/' +this.id;
+            return '/api/creative/' + this.id + "?" +  window.location.search.substring(1);
         }
     });
 
     /*
      * ## CreativeCollection
-     * 
+     *
      * This is kind of jankity. Right now creatives are 'collected' by DSP,
-     * and its the best way 
+     * and its the best way
      */
     var CreativeCollection = Backbone.Collection.extend({
         model: Creative,
         url: function () {
-            return '/api/dsp/' + this.dsp_key;
+            return '/api/dsp/' + this.dsp_key + "?" + window.location.search.substring(1);
         }
     });
 
@@ -131,12 +132,33 @@
             this.template = _.template($('#app-template').html());
         },
 
+        renderInline: function () {
+            var app_row = $("tr.app-row#app-" + this.model.id, this.el);
+            $(".revenue", app_row).text(this.model.get("revenue"));
+            $(".ecpm", app_row).text(this.model.get("ecpm"));
+            $(".impressions", app_row).text(this.model.get("impressions"));
+            // $(".clicks", app_row).text(this.model.get("clicks"));
+            // $(".ctr", app_row).text(this.model.get("ctr"));
+
+            var adunit_show_link = $('a.adunits', app_row);
+            adunit_show_link.click(showAdUnits).click();
+            $('a.edit_price_floor', app_row).click(function(e) {
+                e.preventDefault();
+                adunit_show_link.click();
+            });
+            $('a.view_targeting', app_row).click(function(e) {
+                e.preventDefault();
+                adunit_show_link.click();
+                $(this).addClass('hidden');
+            });
+            return this;
+        },
         render: function () {
             var renderedContent = $(this.template(this.model.toJSON()));
 
             // When we render an appview, we also attach a handler to fetch
             // and render it's adunits when a link is clicked.
-            $('a.adunits', renderedContent).click(showAdUnits).click();
+            $('a.adunits', renderedContent).click(showAdUnits);
             $('tbody', this.el).append(renderedContent);
             return this;
         }
@@ -179,6 +201,8 @@
         $.each($(".for-app-" + href), function (iter, item) {
             $(item).remove();
         });
+        $("#app-" + href + " a.view_targeting").removeClass("hidden");
+        console.log($("#app-" + href + " a.view_targeting"));
         $(this).text('Show Adunits').unbind("click").click(showAdUnits);
     }
 
@@ -204,17 +228,43 @@
             var current_model = this.model;
             var renderedContent = $(this.template(this.model.toJSON()));
 
-            // Ad the event handler to submit price floor changes over ajax.
+            // Add the event handler to submit price floor changes over ajax.
             $('.price_floor_change', renderedContent)
                 .change(function() {
                     current_model.set({'price_floor': $(this).val()});
                     // Save when they click the save button in the price floor cell
-                    $(".save.btn", $(this).parent()).click(function() {
-                        current_model.save();
-                    });
+                    var save_link = $(".save", $(this).parent());
+                        save_link.click(function(e) {
+                            e.preventDefault();
+                            save_link.addClass('disabled').text('Saving...');
+                            current_model.save({}, {
+                                success: function () {
+                                    setTimeout(function() {
+                                        save_link.removeClass('disabled').text('Saved');
+                                        save_link.text("Save");
+                                    }, 2000);
+                                }
+                            });
+                        });
                 });
+
+            // Add the event handler to submit targeting changes over ajax.
+            $("input.targeting-box", renderedContent).click(function() {
+                var targeting = $(this).attr('name');
+                var activation = $(this).is(":checked") ? "On" : "Off";
+                $("label[for='"+ targeting +"']", renderedContent).text(activation);
+
+                current_model.set({'active': $(this).is(":checked")});
+                current_model.save();
+            });
+
+            // Add the right background color based on where the app is in the table
             var app_row = $('tr#app-' + this.model.get('app_id'), this.el);
+            var zebra = app_row.hasClass("even") ? "even" : "odd";
+            renderedContent.addClass(zebra);
+
             app_row.after(renderedContent);
+
             return this;
         }
     });
@@ -230,6 +280,7 @@
          * Useful for bootstrapping table loads.
          */
         fetchAllApps: function (app_keys) {
+
             _.each(app_keys, function(app_key) {
                 var app = new App({id: app_key});
                 app.bind('change', function(current_app) {
@@ -244,7 +295,21 @@
             });
 
         },
-
+        fetchAppStats: function (app_keys) {
+            _.each(app_keys, function(app_key) {
+                var app = new App({id: app_key});
+                app.bind('change', function(current_app) {
+                    var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
+                    appView.renderInline();
+                });
+                app.fetch({
+                    success: function(){
+                        $('table').trigger('update');
+                        $("#" + app_key + "-img").hide();
+                    }
+                });
+            });
+        },
         /*
          * Fetches and renders all of the adunits from an app key.
          * Useful for showing adunits when a user has clicked on a
@@ -269,11 +334,16 @@
                 }).get("price_floor");
 
                 // Set the app's price floor to the range of the adunits
+                // Keep the "Edit Price Floor" button
+                var btn = $("<a href='#" + app_key + "' class='edit_price_floor' id='" + app_key +"'> Edit Price Floor</a>");
                 if (high == low) {
-                    $(".app-row#app-" + app_key + " .price_floor").text("All $" + high);
+                    $(".app-row#app-" + app_key + " .price_floor").html("All $" + high);
                 } else {
-                    $(".app-row#app-" + app_key + " .price_floor").text("$" + low + " - " + "$" + high);
+                    $(".app-row#app-" + app_key + " .price_floor").html("$" + low + " - " + "$" + high);
                 }
+
+                // Disable the 'view' link in the app row under the targeting column
+                $(".app-row#app-" + app_key + " .view_targeting").addClass("hidden");
 
                 // Create the views and render each adunit row
                 _.each(adunits_collection.models, function(adunit) {
@@ -443,7 +513,9 @@
         });
 
         $('#marketplace_stats').tablesorter({
-            widgets: ['adunitSorting']
+            widgets: ['adunitSorting'],
+            sortList: [[1, 0]],
+            headers: { 0: { sorter: false}, 6: {sorter: false}, 7: {sorter: false} }
         });
 
         /*
@@ -470,17 +542,19 @@
         /*
          * Settings page button actions
          */
-        $('#settings-submit').click(function(e) {
-            e.preventDefault();
-            $('#addblocklist').submit();
-            $('').submit();
-        });
 
         $('#blocklist-submit').click(function(e) {
             e.preventDefault();
-            $('#addblocklist').submit();
-        });
+            var new_blocklist_domains = $('textarea[name="blocklist"]').val();
+            $.ajax({
+                type: 'post',
+                url: "",
+                data: { blocklist: new_blocklist_domains },
+                success: function() {
 
+                }
+            });
+        });
 
     });
 

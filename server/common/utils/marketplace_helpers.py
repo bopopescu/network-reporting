@@ -4,7 +4,7 @@ from urllib2 import urlopen
 import datetime
 
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
-
+from common.constants import MPX_DSP_IDS
 import logging
 
 try:
@@ -27,7 +27,7 @@ class MarketplaceStatsFetcher(object):
     _creative = "/creatives?"
 
     def __init__(self, pub_id):
-        self.pub_id = pub_id
+        self.pub_id = str(pub_id)
 
     def _get_inventory_query(self, type, values):
         value_tuples = [(type, value) for value in values]
@@ -45,7 +45,7 @@ class MarketplaceStatsFetcher(object):
             end = end.strftime("%m-%d-%Y")
 
         #TODO: cleanup possible trailing &&
-        url = "%s%s%s&%s&%s&%s&%s" % (self._base_url,
+        url = "%s%s%s&%s&%s&start=%s&end=%s" % (self._base_url,
                                       self._inventory,
                                       app_query,
                                       adunit_query,
@@ -57,7 +57,7 @@ class MarketplaceStatsFetcher(object):
         stats_dict = {}
         for id, stats in response_dict.iteritems():
             counts = {"revenue": currency(stats['pub_rev']),
-                      "impressions": stats['imp'],
+                      "impressions": int(stats['imp']),
                       "clicks": stats['clk'],
                       "ecpm": currency(ecpm(stats['pub_rev'], stats['imp'])),
                       "ctr": percentage(ctr(stats['clk'], stats['imp']))}
@@ -89,6 +89,8 @@ class MarketplaceStatsFetcher(object):
                                                  self.pub_id,
                                                  start.strftime("%m-%d-%Y"),
                                                  end.strftime("%m-%d-%Y"))
+        logging.warn("HOTPOOP")
+        logging.warn(url)
         dsp = _fetch_and_decode(url)
 
         # Make the stats iterable so we can use them more easily in a template
@@ -124,6 +126,7 @@ class MarketplaceStatsFetcher(object):
         return {}
 
     def get_creatives_for_dsp(self, dsp_key, start, end):
+
         url = "%s%spub_id=%s&dsp_id=%s&start=%s&end=%s" % (self._base_url,
                                                            self._creative,
                                                            self.pub_id,
@@ -140,6 +143,26 @@ class MarketplaceStatsFetcher(object):
 
         return creatives
 
+    def get_all_creatives(self, start, end):
+        all_creatives = []
+        for dsp_key in MPX_DSP_IDS:
+            url = "%s%spub_id=%s&dsp_id=%s&start=%s&end=%s" % (self._base_url,
+                                                               self._creative,
+                                                               self.pub_id,
+                                                               dsp_key,
+                                                               start.strftime("%m-%d-%Y"),
+                                                               end.strftime("%m-%d-%Y"))
+            creative_stats = _fetch_and_decode(url)
+            if dsp_key in creative_stats:
+                creatives = [creative for creative in creative_stats[dsp_key].values()]
+                for creative in creatives:
+                    creative['stats'].update(ctr = ctr(creative['stats']['clk'], creative['stats']['imp']))
+                    creative['stats'].update(ecpm = ecpm(creative['stats']['pub_rev'], creative['stats']['imp']))
+
+                all_creatives.extend(creatives)
+        return all_creatives
+
+
 
     def get_top_creatives(self, dsp_key=None, limit=None):
         if limit == None:
@@ -149,9 +172,11 @@ class MarketplaceStatsFetcher(object):
 
 def _fetch_and_decode(url):
     try:
+        logging.warn("HOTPOOP")
+        logging.warn(url)
         response = urlopen(url).read()
-        logging.warn(response)
         response_dict = json.loads(response)
+        logging.warn(response_dict)
     except Exception, ex:
         raise MPStatsAPIException(ex)
 

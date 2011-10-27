@@ -1183,19 +1183,23 @@ class MarketplaceIndexHandler(RequestHandler):
         # Only one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
 
-        # To bootstrap the Backbone.js models in the page, create a list of
-        # JSON'ed apps. Apps are the highest level model on the page.
-        app_keys = simplejson.dumps([str(app_key) for app_key in AppQueryManager.get_app_keys(self.account)])
+        # We list the app traits in the table, and then load their stats over ajax using Backbone.
+        # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
+        apps = AppQueryManager.get_apps(self.account)
+        app_keys = simplejson.dumps([str(app.key()) for app in apps])
 
         # Set up a MarketplaceStatsFetcher with this account only
-        if settings.DEBUG:
-            stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-        else:
-            stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+        # if settings.DEBUG:
+        #     stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+        # else:
+        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+        stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
 
         # Form the date range
-        if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
+        # this is tarded. the start date is really the end of the date range.
+        if self.start_date:
+            year, month, day = str(self.start_date).split('-')
+            end_date = datetime.date(int(year), int(month), int(day))
         else:
             end_date = datetime.date.today()
 
@@ -1205,9 +1209,15 @@ class MarketplaceIndexHandler(RequestHandler):
             start_date = end_date - datetime.timedelta(14)
 
 
+        logging.warn(start_date)
+        logging.warn(end_date)
+
+
         # Get the top level marketplace stats for the account
         top_level_mpx_stats = stats_fetcher.get_account_stats(start_date, end_date)
 
+
+        logging.warn(top_level_mpx_stats)
 
         # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
 
@@ -1232,7 +1242,7 @@ class MarketplaceIndexHandler(RequestHandler):
         blocklist = []
         network_config = self.account.network_config
         if network_config:
-            blocklist = network_config.blocklist
+            blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
 
         # for dsp in dsps:
         #     creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], start_date, end_date)
@@ -1243,18 +1253,14 @@ class MarketplaceIndexHandler(RequestHandler):
 
         dsps =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
 
-        logging.warn("\n\n\n\n\n\n\n\n\n\n\n")
-        logging.warn(dsps)
-
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
+                                      'apps': apps,
                                       'app_keys': app_keys,
-                                      'dsp_keys': dsps,
-                                      # 'top_level_mpx_stats': top_level_mpx_stats,
+                                      'top_level_mpx_stats': top_level_mpx_stats,
                                       'blocklist': blocklist,
-                                      'creative_totals': creative_totals,
                                       'date_range': self.date_range
                                   })
 
@@ -1283,6 +1289,7 @@ def add_blocklist_handler(request,*args,**kwargs):
 
 class RemoveBlocklistHandler(RequestHandler):
     def get(self, url=None):
+        #url = self.request.GET.get('url')
         network_config = self.account.network_config
         if network_config.blocklist.count(url):
             network_config.blocklist.remove(url)
@@ -1303,10 +1310,8 @@ class MarketplaceOnOffHandler(RequestHandler):
             activate = self.request.POST.get('activate', 'on')
             mpx = CampaignQueryManager.get_marketplace(self.account)
             if activate == 'on':
-                logging.warn("ACTIVATING")
                 mpx.active = True
             elif activate == 'off':
-                logging.warn("DEACTIVATING")
                 mpx.active = False
 
             CampaignQueryManager.put(mpx)

@@ -55,22 +55,28 @@
 }
 
 table.simpletable {
-    @include border-radius(3px);
+//    @include border-radius(3px);
     width: 100%;
     margin-bottom: 10px;
     padding: 0;
     border-collapse: separate;
     *border-collapse: collapse;
-    border: 1px solid #ddd;
+//    border: 1px solid #ddd;
     th, td {
         padding: 10px 10px 9px;
         text-align: left;
     }
     th {
-        padding-top: 9px;
+//        padding-top: 9px;
         vertical-align: middle;
-        border-bottom: 1px solid #ddd;
-        font-size: 16px;
+//        border-bottom: 1px solid #ddd;
+//        font-size: 16px;
+        font-size: 10px;
+        font-weight: 300;
+        text-transform: uppercase;
+        color: #555;
+        //vertical-align: bottom;
+        padding: 0 0 8px 0;
     }
     td {
         vertical-align: top;
@@ -79,10 +85,10 @@ table.simpletable {
         }
     }
     th + th, td + td {
-        border-left: 1px solid #ddd;
+//        border-left: 1px solid #ddd;
     }
     tr + tr td {
-        border-top: 1px solid #ddd;
+//        border-top: 1px solid #ddd;
     }
     tbody tr:first-child td:first-child {
         @include border-radius(4px 0 0 0);
@@ -102,9 +108,19 @@ table.simpletable {
         border-top: 2px solid #ccc;
         font-size: 16px;
     }
+
+    tr.even td {
+        background-color: #fff;
+    }
+
+    tr.odd td {
+        background-color: #f7f7f7;
+    }
 }
 
-
+.adunit-row.name {
+    padding-left: 50px;
+}
 // ZEBRA-STRIPING
 // --------------
 
@@ -112,119 +128,144 @@ table.simpletable {
 .zebra-striped {
     tbody {
         tr:nth-child(odd) td {
-             background-color: #f9f9f9;
-             @include box-shadow(inset 0px 1px 5px #eee);
+             background-color: #f7f7f7;
+             //@include box-shadow(inset 0px 1px 5px #eee);
         }
         tr:nth-child(even) td {
             background-color: #fff;
-            @include box-shadow(0px 1px 5px #eee);
+            //@include box-shadow(0px 1px 5px #eee);
         }
         tr:hover td {
             background-color: #EBF2F7;
-            @include box-shadow(0px 1px 10px #eee);
+            //@include box-shadow(0px 1px 10px #eee);
             //@include box-shadow(none);
         }
     }
 }
 
-table {
+/* table { */
 
-    .header {
-        cursor: pointer;
-        &:after {
-            content: "";
-            float: right;
-            margin-top: 7px;
-            border-width: 0 4px 4px;
-            border-style: solid;
-            border-color: #000 transparent;
-            visibility: hidden;
-        }
-    }
+/*     .header { */
+/*         cursor: pointer; */
+/*         &:after { */
+/*             content: ""; */
+/*             float: right; */
+/*             margin-top: 7px; */
+/*             border-width: 0 4px 4px; */
+/*             border-style: solid; */
+/*             border-color: #000 transparent; */
+/*             visibility: hidden; */
+/*         } */
+/*     } */
 
-    .headerSortUp,
-    .headerSortDown {
-        background-color: rgba(141,192,219,.25);
-        text-shadow: 0 1px 1px rgba(255,255,255,.75);
-    }
+/*     .headerSortUp, */
+/*     .headerSortDown { */
+/*         background-color: rgba(141,192,219,.25); */
+/*         text-shadow: 0 1px 1px rgba(255,255,255,.75); */
+/*     } */
 
-    .header:hover {
-        &:after {
-            visibility:visible;
-        }
-    }
-    // Style the descending (alphabetical) column header
-    .headerSortDown,
-    .headerSortDown:hover {
-        &:after {
-            visibility:visible;
-            @include opacity(60);
-        }
-    }
+/*     .header:hover { */
+/*         &:after { */
+/*             visibility:visible; */
+/*         } */
+/*     } */
+/*     // Style the descending (alphabetical) column header */
+/*     .headerSortDown, */
+/*     .headerSortDown:hover { */
+/*         &:after { */
+/*             visibility:visible; */
+/*             @include opacity(60); */
+/*         } */
+/*     } */
 
-    .headerSortUp {
-        &:after {
-            border-bottom: none;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-top: 4px solid #000;
-            visibility:visible;
-            @include box-shadow(none); //cant add boxshadow to downward facing arrow :(
-                @include opacity(60);
-            }
-        }
+/*     .headerSortUp { */
+/*         &:after { */
+/*             border-bottom: none; */
+/*             border-left: 4px solid transparent; */
+/*             border-right: 4px solid transparent; */
+/*             border-top: 4px solid #000; */
+/*             visibility:visible; */
+/*             @include box-shadow(none); //cant add boxshadow to downward facing arrow :( */
+/*                 @include opacity(60); */
+/*             } */
+/*         } */
 
-    .blue {
-        color: $blue;
-        border-bottom-color: $blue;
-    }
-    .headerSortUp.blue,
-    .headerSortDown.blue {
-        background-color: lighten($blue, 40%);
-    }
-    // Green Table Headings
-    .green {
-        color: $green;
-        border-bottom-color: $green;
-    }
-    .headerSortUp.green,
-    .headerSortDown.green {
-        background-color: lighten($green, 40%);
-    }
-    // Red Table Headings
-    .red {
-        color: $red;
-        border-bottom-color: $red;
-    }
-    .headerSortUp.red,
-    .headerSortDown.red {
-        background-color: lighten($red, 50%);
-    }
-    // Yellow Table Headings
-    .yellow {
-        color: $yellow;
-        border-bottom-color: $yellow;
-    }
-    .headerSortUp.yellow,
-    .headerSortDown.yellow {
-        background-color: lighten($yellow, 40%);
-    }
-    // Orange Table Headings
-    .orange {
-        color: $orange;
-        border-bottom-color: $orange;
-    }
-    .headerSortUp.orange,
-    .headerSortDown.orange {
-        background-color: lighten($orange, 40%);
-    }
-    // Purple Table Headings
-    .purple {
-        color: $purple;
-        border-bottom-color: $purple;
-    }
-    .headerSortUp.purple,
-    .headerSortDown.purple {
-        background-color: lighten($purple, 40%);
-    }
+/*     .blue { */
+/*         color: $blue; */
+/*         border-bottom-color: $blue; */
+/*     } */
+/*     .headerSortUp.blue, */
+/*     .headerSortDown.blue { */
+/*         background-color: lighten($blue, 40%); */
+/*     } */
+/*     // Green Table Headings */
+/*     .green { */
+/*         color: $green; */
+/*         border-bottom-color: $green; */
+/*     } */
+/*     .headerSortUp.green, */
+/*     .headerSortDown.green { */
+/*         background-color: lighten($green, 40%); */
+/*     } */
+/*     // Red Table Headings */
+/*     .red { */
+/*         color: $red; */
+/*         border-bottom-color: $red; */
+/*     } */
+/*     .headerSortUp.red, */
+/*     .headerSortDown.red { */
+/*         background-color: lighten($red, 50%); */
+/*     } */
+/*     // Yellow Table Headings */
+/*     .yellow { */
+/*         color: $yellow; */
+/*         border-bottom-color: $yellow; */
+/*     } */
+/*     .headerSortUp.yellow, */
+/*     .headerSortDown.yellow { */
+/*         background-color: lighten($yellow, 40%); */
+/*     } */
+/*     // Orange Table Headings */
+/*     .orange { */
+/*         color: $orange; */
+/*         border-bottom-color: $orange; */
+/*     } */
+/*     .headerSortUp.orange, */
+/*     .headerSortDown.orange { */
+/*         background-color: lighten($orange, 40%); */
+/*     } */
+/*     // Purple Table Headings */
+/*     .purple { */
+/*         color: $purple; */
+/*         border-bottom-color: $purple; */
+/*     } */
+/*     .headerSortUp.purple, */
+/*     .headerSortDown.purple { */
+/*         background-color: lighten($purple, 40%); */
+/*     } */
+/* } */
+
+
+
+
+.dataTables_length {
+    float: left;
+
+}
+
+.dataTables_filter {
+    float: right;
+
+}
+
+.paginate_button {
+     display: inline-block;
+}
+
+tr.adunit-row td:not(.icon){
+    border-top: 1px dotted #ddd;
+}
+
+img.app-icon {
+    @include border-radius(6px);
 }

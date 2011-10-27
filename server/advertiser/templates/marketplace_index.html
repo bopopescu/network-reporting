@@ -37,7 +37,7 @@
 
   {% if not marketplace.active %}
   <div class="alert-message block-message clearfix">
-    <a href="#" class="close"> x </a>
+    {# <a href="#" class="close"> x </a> #}
     We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
     Flip the On/Off switch to get started,
     or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
@@ -48,15 +48,8 @@
   </div>
   {% endif %}
 
-  <ul class="tabs">
-    <li class="active"> <a href="#performance"> App Performance </a> </li>
-    <li> <a href="#controls"> Creative Performance </a> </li>
-    <li> <a href="#settings"> Settings </a> </li>
-  </ul>
 
-
-  <div class="active tab-section" id="performance">
-
+  {% comment %}
     <div class="rollup fig3">
       <div class="data-figure">
         <div class="figure">
@@ -64,6 +57,15 @@
         </div>
         <div class="label">
           Impressions
+        </div>
+      </div>
+
+      <div class="data-figure">
+        <div class="figure">
+          {{ top_level_mpx_stats.ecpm }}
+        </div>
+        <div class="label">
+          Average eCPM
         </div>
       </div>
       <div class="data-figure">
@@ -74,6 +76,7 @@
           Clicks
         </div>
       </div>
+
       <div class="data-figure">
         <div class="figure">
           {{ top_level_mpx_stats.revenue|withsep }}
@@ -83,23 +86,102 @@
         </div>
       </div>
     </div>
+    {% endcomment %}
 
 
-    <table class="zebra-striped simpletable" id="marketplace_stats">
+    <div class="campaignData-rollup">
+      <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+        <thead>
+          <tr style="border:none;">
+            <th width=33%>Impressions</th>
+            <th width=34%>eCPM</th>
+            <th width=33%>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border:none;">
+            {% if top_level_mpx_stats %}
+              <td> {{ top_level_mpx_stats.impressions|default_if_none:"0"|withsep }} </td>
+              <td> {{ top_level_mpx_stats.ecpm|default_if_none:"0" }} </td>
+              <td> {{ top_level_mpx_stats.revenue|default_if_none:"0"|withsep }} </td>
+            {% else %}
+              <td> 0 </td>
+              <td> $0.00 </td>
+              <td> $0.00 </td>
+            {% endif %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+
+  <ul class="tabs">
+    <li class="active"> <a href="#performance"> App Performance </a> </li>
+    <li> <a href="#controls"> Creative Performance </a> </li>
+    <li> <a href="#settings"> Settings </a> </li>
+  </ul>
+
+
+  <div class="active tab-section" id="performance">
+
+
+    <table class="simpletable" id="marketplace_stats" width="100%">
 
       <thead>
-        <th>App</th>
-        <th width="70">Revenue</th>
-        <th width="70">eCPM</th>
-        {# <th>Attempts</th> #}
-        <th width="100">Impressions</th>
-        {# <th>Fill Rate</th> #}
-        <th width="70">Clicks</th>
-        <th width="70">CTR</th>
-        <th width="120">Price Floor</th>
+        <tr class="cmpaignData" style="border:none;">
+          <th width="50"></th>
+          <th>App</th>
+          <th width="70" style="text-align: right";>Revenue</th>
+          <th width="70" style="text-align: right";>eCPM</th>
+          {# <th>Attempts</th> #}
+          <th width="90" style="text-align: right";>Impressions</th>
+          {# <th>Fill Rate</th> #}
+          {# <th width="70" style="text-align: right";>Clicks</th> #}
+          {# <th width="70" style="text-align: right";>CTR</th> #}
+          <th width="130" style="text-align: right";>Price Floor</th>
+          <th width="70"> Targeted </th>
+        </tr>
       </thead>
 
-      <tbody> </tbody>
+      <tbody>
+        {% for app in apps %}
+        <tr class="app-row {% cycle 'odd' 'even' %}" id="app-{{ app.key }}" style="border:none;">
+          <td class="icon">
+            <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" />
+          </td>
+          <td class="name">
+            <a href="{% url publisher_app_show app.key %}" style="display:inline-block; max-width:250px;">{{ app.name }}</a>
+            <span class="muted unbold"> ({{ app.app_type_text }}) </span>
+            <img id="{{ app.key }}-img" src="/images/icons-custom/spinner-12.gif"></img>
+            <br />
+            <a href="#{{ app.key }}" class="adunits" id="{{app.key}}"> Show AdUnits </a>
+          </td>
+          <td class="revenue" style="text-align: right;">
+            --
+          </td>
+          <td class="ecpm" style="text-align: right;">
+            --
+          </td>
+          <td class="impressions" style="text-align: right;">
+            --
+          </td>
+
+          {% comment %}
+          <td class="clicks" style="text-align: right;">
+            --
+          </td>
+          <td class="ctr" style="text-align: right;">
+            --
+          </td>
+          {% endcomment %}
+          <td class="price_floor" width="130" style="text-align: right">
+            <a href="#{{ app.key }}" class="edit_price_floor" id="{{app.key}}"> Edit Price Floor</a>
+          </td>
+          <td class="targeting"> <a href="#{{ app.key }}" class="view_targeting" id="{{app.key}}"> View </a> </td>
+        </tr>
+      {% endfor %}
+      </tbody>
 
     </table>
 
@@ -108,45 +190,19 @@
 
   <div class="tab-section" id="controls">
 
-    <div class="rollup fig3">
-      <div class="data-figure">
-        <div class="figure">
-          {{ creative_totals.imp|withsep }}
-        </div>
-        <div class="label">
-          Impressions
-        </div>
-      </div>
-      <div class="data-figure">
-        <div class="figure">
-          {{ creative_totals.clk|withsep }}
-        </div>
-        <div class="label">
-          Clicks
-        </div>
-      </div>
-      <div class="data-figure">
-        <div class="figure">
-          {{ creative_totals.pub_rev|currency|withsep }}
-        </div>
-        <div class="label">
-          Revenue
-        </div>
-      </div>
-    </div>
 
-
-    <table class="zebra-striped sortable simpletable">
+    <table class="{#zebra-striped sortable simpletable#}" id="report-table" width="100%">
       <thead>
         <th> Creative </th>
         <th> Advertiser </th>
         <th> Revenue </th>
         <th> eCPM </th>
         <th> Impressions </th>
-        <th> Clicks </th>
-        <th> CTR </th>
+        {#<th> Clicks </th>#}
+        {#<th> CTR </th>#}
       </thead>
       <tbody>
+        {% comment %}
         {% for dsp in dsps %}
           {% for creative in dsp.creatives %}
             <tr>
@@ -180,6 +236,7 @@
         <td> {{ creative_totals.clk }} </td>
         <td> {{ creative_totals.ctr|percentage }} </td>
       </tfoot>
+      {% endcomment %}
     </table>
 
   </div>
@@ -197,17 +254,19 @@
           Turn the Marketplace on or off for your account.
         </div>
       </div>
+
+        {% comment %}>
       <br/>
       <form action="{% url marketplace_settings_change %}" method="POST" id="marketplace_settings_change">
         <input name="blind" type="checkbox" original-title="Coming Soon"/>
         <label for="blind"> Make my marketplace requests blind </label>
-        {% comment %}
+
         <br />
         <input name="default_price_floor_activate" type="checkbox" />
         <input name="default_price_floor" type="text" />
         <label for="default_price_floor"> Set the default price floor for targeted adunits </label>
-        {% endcomment %}
       </form>
+        {% endcomment %}
     </div>
 
     <h2>Blocklist</h2>
@@ -215,9 +274,9 @@
       <div class="clearfix" style="width: 560px;">
         <div id="current_blocklist" class="right">
           <h3> Currently Blocked </h3>
-          {% for url in blocklist %}
-            {{url}}
-            <a href="{% url remove_blocklist_handler url %}">Remove</a>
+          {% for domain in blocklist %}
+            {{domain}}
+            <a href="{% url remove_blocklist_handler %}?url={{ domain|escape }}">Remove</a>
             <br />
           {% empty %}
             There are no blocked advertisers
@@ -225,22 +284,26 @@
         </div>
 
 
-        <form action="{% url add_blocklist_handler %}" method="POST" id="addblocklist" class="validate left">
-          <h3> Add blocked advertiser domains </h3>
-          <textarea rows="10" cols="20" placeholder="Add blocked blocked advertiser domains here. You can add as many as you want at a time." name="blocklist"></textarea>
-          <br />
-          <a href="#" class="btn" id="blocklist-submit"> Add </a>
-        </form>
+
+        <h3> Add blocked advertiser domains </h3>
+        <textarea id="addblocklist" rows="10" cols="20" placeholder="Add blocked blocked advertiser domains here. You can add as many as you want at a time." name="blocklist"></textarea>
+
+        <br />
+
+        <a href="#" class="btn" id="blocklist-submit"> Add </a>
+
 
       </div>
 
 
     </div>
 
+    {% comment %}
     <div class="right button-group">
       <div class="big disabled btn"> Discard Changes </div>
       <div id="settings-submit" class="big primary btn"> Save All Settings </div>
     </div>
+    {% endcomment %}
   </div>
 
 {% endblock content %}
@@ -253,24 +316,66 @@
   <script type="text/html" id="adunit-template">
     {% include "partials/adunit.html" %}
   </script>
-  <script type="text/html">
-    {% include "partials/creative-row.html" %}
-  </script>
+
   <script src="/js/mopub-advertiser.js?v=80"></script>
   <script type="text/javascript" src="/js/underscore.min.js"></script>
   <script type="text/javascript" src="/js/json2.js"></script>
   <script type="text/javascript" src="/js/backbone.min.js"></script>
   <script type="text/javascript" src="/js/jquery.tipsy.js"></script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js?v=99"></script>
+  <script type="text/javascript" src="/js/jquery.datatables.min.js"></script>
   <script type="text/javascript">
     $(document).ready(function() {
-        var app_keys = {{ app_keys|safe }};
-        var dsp_keys = {{ dsp_keys|safe }};
-        Marketplace.fetchAllApps(app_keys);
-        Marketplace.fetchAllCreatives(dsp_keys);
+      var app_keys = {{ app_keys|safe }};
+      Marketplace.fetchAppStats(app_keys);
+
+      var blocklist = {{ blocklist|safe }};
+
+
+        table = $("#report-table").dataTable({
+            "bProcessing": true,
+            "bJQueryUI": true,
+            "sPaginationType": "full_numbers",
+            "oLanguage": {
+                "sEmptyTable": "No creatives have been displayed for this time range."
+            },
+            "aoColumns":[
+                {"sWidth": "330px"},
+                {"sWidth": "190px"},
+                {"sWidth": "120px"},
+                {"sWidth": "90px"},
+                {"sWidth": "90px"}
+                //{"sWidth": "80px"},
+                //{"sWidth": "80px"},
+            ],
+            "bAutoWidth":false,
+            "aaSorting": [[2,'desc']],
+            "sAjaxSource": "/api/creatives/",
+            "fnRowCallback": function(nRow, aData, iDisplayIndex) {
+                $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
+
+                var domain = aData[1];
+                if (_.contains(blocklist, domain)) {
+                    $("td:eq(1)", nRow).text(aData[1] + " (Blocked)");
+                } else if (domain !== null) {
+                    $("td:eq(1)", nRow).html(domain);
+                } else {
+                    $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
+                }
+                $("td:eq(2)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[2]));
+                $("td:eq(3)", nRow).addClass("numeric");
+                $("td:eq(4)", nRow).addClass("numeric");
+                return nRow;
+            }
+        });
 
         $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
 
     });
   </script>
 {% endblock extraScripts %}
+
+{% block extraCSS %}
+<link rel="stylesheet" href="/css/dt_jui.css?v=7"></link>
+{% endblock extraCSS %}
+

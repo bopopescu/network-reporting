@@ -1,6 +1,7 @@
 <tr class="adunit-row for-app-<%= app_id %>" id="adunit-<%= id %>">
+  <td class="icon"></td>
   <td class="name">
-    <div class="left arrow-right" style="margin: 0px 20px 0px -10px;"></div>
+
     <div class="left"><%= name  %></div>
   </td>
   <td class="revenue" style="text-align: right;">
@@ -12,14 +13,17 @@
   <td class="impressions" style="text-align: right;">
     <%= impressions %>
   </td>
-  <td class="clicks" style="text-align: right;">
-    <%= clicks %>
-  </td>
-  <td class="ctr" style="text-align: right;">
-    <%= ctr %>
-  </td>
-  <td class="price_floor">
+  <td class="price_floor"  style="text-align: right">
+    <a href="#" class="save"> Save </a>
     <input id="<%= id %>" class="price_floor_change" type="text" value="<%= price_floor %>"/>
-    <a href="#" class="save btn"> Save </a>
+  </td>
+  <td class="targeting">
+    <% if (active) { %>
+      <input name="targeting-<%= app_id %>" class="targeting-box" type="checkbox" checked="checked"></input>
+      <label for="targeting-<%= app_id %>" class="targeting-on"> On </label>
+    <% } else { %>
+      <input name="targeting-<%= app_id %>" class="targeting-box" type="checkbox"></input>
+      <label for="targeting-<%= app_id %>" class="targeting-off"> Off </label>
+    <% } %>
   </td>
 </tr>

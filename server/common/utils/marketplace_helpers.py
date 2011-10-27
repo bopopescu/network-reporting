@@ -26,6 +26,8 @@ class MarketplaceStatsFetcher(object):
     _dsp = "/dsps?"
     _creative = "/creatives?"
 
+    _pub_inventory = "/pub?" #using this in place of _inventory for performance
+
     def __init__(self, pub_id):
         self.pub_id = str(pub_id)
 
@@ -33,6 +35,7 @@ class MarketplaceStatsFetcher(object):
         value_tuples = [(type, value) for value in values]
         return urlencode(value_tuples)
 
+    
     def _get_inventory(self, start, end, apps=None, adunits=None, pubs=None):
         app_query = self._get_inventory_query('app_id', apps or [])
         adunit_query = self._get_inventory_query('adunit_id', adunits or [])
@@ -64,21 +67,53 @@ class MarketplaceStatsFetcher(object):
             stats_dict[id] = counts
         return stats_dict
 
+    
+    def _get_pub_inventory(self, pub, start, end):
+        """
+        This is an alternative to _get_inventory. Here, pub is used in the broad
+        sense to represent a pub/app/adunit. When stats for only a single 
+        pub/app/adunit are necessary. The endpoint this uses is much faster
+        but less flexible so this should be used whenever possible
+        """
+        if isinstance(start, datetime.date):
+            start = start.strftime("%m-%d-%Y")
+
+        if isinstance(end, datetime.date):
+            end = end.strftime("%m-%d-%Y")
+
+            
+        url = "%s%spub=%s&start=%s&end=%s" % \
+            (self._base_url,
+             self._pub_inventory,
+             pub,
+             start,
+             end)
+        response_dict = _fetch_and_decode(url)
+        stats_sum = response_dict['sum']
+        counts = {"revenue": currency(stats_sum['rev']),
+                  "impressions": int(stats_sum['imp']),
+                  "clicks": 0, #TODO: hard coded to 0
+                  "ecpm": currency(ecpm(stats_sum['rev'], 
+                                        stats_sum['imp'])),
+                  "ctr": percentage(ctr(0., stats_sum['imp']))}
+        stats_dict = {pub: counts}
+        return stats_dict
+        
     def get_app_stats(self, app_key, start, end):
-        stats = self._get_inventory(apps=[app_key],
+        stats = self._get_pub_inventory(app_key,
                                     start=start.strftime("%m-%d-%Y"),
                                     end=end.strftime("%m-%d-%Y"))
         return stats.get(app_key, {})
 
 
     def get_adunit_stats(self, adunit_key, start, end):
-        stats = self._get_inventory(adunits=[adunit_key],
+        stats = self._get_pub_inventory(adunit_key,
                                     start=start.strftime("%m-%d-%Y"),
                                     end=end.strftime("%m-%d-%Y"))
         return stats.get(adunit_key, {})
 
     def get_account_stats(self, start, end):
-        stats = self._get_inventory(pubs=[self.pub_id],
+        stats = self._get_pub_inventory(self.pub_id,
                                     start=start.strftime("%m-%d-%Y"),
                                     end=end.strftime("%m-%d-%Y"))
         return stats.get(self.pub_id, {})
@@ -171,12 +206,11 @@ class MarketplaceStatsFetcher(object):
         return {}
 
 def _fetch_and_decode(url):
-    from google.appengine.api import urlfetch
     try:
         logging.warn("HOTPOOP")
         logging.warn(url)
-        response = urlfetch.fetch(url, deadline=5)
-        response_dict = json.loads(response.content)
+        response = urlopen(url).read()
+        response_dict = json.loads(response)
         logging.warn(response_dict)
     except Exception, ex:
         raise MPStatsAPIException(ex)

@@ -122,10 +122,75 @@
     <li> <a href="#settings"> Settings </a> </li>
   </ul>
 
+  {# Help Content #}
+  <div id="price-floor-helpContent" class="hidden">
+    <h3>What is the Price Floor?</h3>
+    <p>A price floor is the minimum CPM price that you’re willing to be paid for an impression from the Marketplace. For example, if you receive offers for ads that have a $0.50 CPM, but your price floor is $0.60 then those ads will not show.</p>
+    <p>The MoPub Marketplace let's you set different price floors on each ad unit.  You might want your interstitial ad units to have a higher price floor than your banner ad units. </p>
+    <p> In general, we recommend setting your price floor as low as you can.  MoPub will always make sure never to show an ad from the Marketplace that pays you less than an available direct or network impression. </p>
+  </div>
 
   <div class="active tab-section" id="performance">
-
-
+    <div class="appData-columnHeaders">
+      <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
+        <thead>
+          <tr style="border:none;">
+            <th class="appData-icon"></th>
+            <th class="dataTable-name" style="width:475px;"></th>
+            <th class="dataTable-data numeric">Revenue</th>
+            <th class="dataTable-data numeric">eCPM</th>
+            <th class="dataTable-data numeric">Impressions</th>
+            <th class="dataTable-data numeric" style="width:100px;">Price Floor
+              <a href="#" id="price-floor-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+            <th class="dataTable-data numeric">Targeted</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+    {% for a in apps %}
+    <div class="{% cycle 'appData' 'appData appData-alt' %}" id="appData-{{a.key}}">
+      <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+        <tbody>
+          <tr class="app-row" id="app-{{a.key}}" style="border:none;">
+            <td class="appData-icon"><img src="{{ a.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" /></td>
+            <td class="dataTable-name" style="width:475px;">
+              <span class="inner" style="width:475px;">
+                  <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
+                  <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                  <img id="{{a.key}}-img" class="loading-img" style="display:none;" src="/images/icons-custom/spinner-12.gif"></img>
+              </span>
+            </td>
+            <td class="dataTable-data numeric revenue">--</td>
+            <td class="dataTable-data numeric ecpm">--</td>
+            <td class="dataTable-data numeric impressions">--</td>
+            <td class="dataTable-data numeric price_floor" style="width:100px;"></td>
+            <td class="dataTable-data numeric targeting"></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="appData-details" id="dashboard-app-{{forloop.counter0}}-details">
+        <div class="appData-details-inner show">
+          <table class="dataTable">
+            <tbody>
+              {% for au in a.adunits %}
+              <tr class="adunit-row incomplete for-app-{{a.key}}" id="adunit-{{au.key}}" style="border:none;">
+                <th class="dataTable-name" style="width:475px;"><span class="inner" style="width:475px;"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+                <td class="dataTable-data numeric revenue" style="border:none;">--</td>
+                <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
+                <td class="dataTable-data numeric impressions" style="border:none;">--</td>
+                <td class="dataTable-data numeric price_floor" style="border:none;width:100px">
+                  <input id="{{au.key}}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
+                </td>
+                <td class="dataTable-data numeric targeting" style="border:none;"></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+{% comment %}
     <table class="simpletable" id="marketplace_stats" width="100%">
 
       <thead>
@@ -167,14 +232,12 @@
             --
           </td>
 
-          {% comment %}
           <td class="clicks" style="text-align: right;">
             --
           </td>
           <td class="ctr" style="text-align: right;">
             --
           </td>
-          {% endcomment %}
           <td class="price_floor" width="130" style="text-align: right">
             <a href="#{{ app.key }}" class="edit_price_floor" id="{{app.key}}"> Edit Price Floor</a>
           </td>
@@ -184,7 +247,7 @@
       </tbody>
 
     </table>
-
+{% endcomment %}
   </div>
 
 
@@ -326,6 +389,11 @@
     $(document).ready(function() {
       var app_keys = {{ app_keys|safe }};
       Marketplace.fetchAppStats(app_keys);
+
+      var adunit_keys = {{ adunit_keys|safe }};
+      {% for app in apps %}
+      Marketplace.fetchAdunitStats("{{app.key}}");
+      {% endfor %}
 
       var blocklist = {{ blocklist|safe }};
 

@@ -1285,6 +1285,7 @@ def add_blocklist_handler(request,*args,**kwargs):
 
 class RemoveBlocklistHandler(RequestHandler):
     def get(self, url=None):
+        #url = self.request.GET.get('url')
         network_config = self.account.network_config
         if network_config.blocklist.count(url):
             network_config.blocklist.remove(url)

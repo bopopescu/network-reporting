@@ -100,9 +100,9 @@
         </thead>
         <tbody>
           <tr style="border:none;">
-            <td> {{ top_level_mpx_stats.impressions|withsep }} </td>
-            <td> {{ top_level_mpx_stats.ecpm }} </td>
-            <td> {{ top_level_mpx_stats.revenue|withsep }} </td>
+            <td> {{ top_level_mpx_stats.impressions|default_if_none:"0"|withsep }} </td>
+            <td> {{ top_level_mpx_stats.ecpm|default_if_none:"0" }} </td>
+            <td> {{ top_level_mpx_stats.revenue|default_if_none:"0"|withsep }} </td>
           </tr>
         </tbody>
       </table>
@@ -270,7 +270,7 @@
           <h3> Currently Blocked </h3>
           {% for domain in blocklist %}
             {{domain}}
-            <a href="{% url remove_blocklist_handler url=domain %}">Remove</a>
+            <a href="{% url remove_blocklist_handler %}?url={{ domain|escape }}">Remove</a>
             <br />
           {% empty %}
             There are no blocked advertisers

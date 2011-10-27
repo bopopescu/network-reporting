@@ -53,9 +53,9 @@ class AppService(RequestHandler):
                 end_date = datetime.date.today()
 
             if self.request.GET.get('r', None):
-                start_date = end_date - datetime.timedelta(int(self.request.GET.get('r')))
+                start_date = end_date - datetime.timedelta(int(self.request.GET.get('r')) - 1)
             else:
-                start_date = end_date - datetime.timedelta(14)
+                start_date = end_date - datetime.timedelta(13)
 
             # get stats for each app
             for app in apps:
@@ -109,9 +109,9 @@ class AdUnitService(RequestHandler):
                 end_date = datetime.date.today()
 
             if self.request.GET.get('r', None):
-                start_date = end_date - datetime.timedelta(int(self.request.GET.get('r')))
+                start_date = end_date - datetime.timedelta(int(self.request.GET.get('r')) - 1)
             else:
-                start_date = end_date - datetime.timedelta(14)
+                start_date = end_date - datetime.timedelta(13)
 
 
 
@@ -244,7 +244,7 @@ class CreativeService(RequestHandler):
         mpxstats = MarketplaceStatsFetcher(self.account.key())
 
         end_date = datetime.datetime.today()
-        start_date = end_date - datetime.timedelta(14)
+        start_date = end_date - datetime.timedelta(13)
         # url = "http://mpx.mopub.com/stats/creatives?pub_id=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw&dsp_id=4e8d03fb71729f4a1d000000"
         # response = urllib2.urlopen(url).read()
         # data = simplejson.loads(response)

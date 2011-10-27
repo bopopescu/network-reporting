@@ -53,7 +53,7 @@ class AppService(RequestHandler):
                 if settings.DEBUG:
                     app.update(mpxstats.get_app_stats("agltb3B1Yi1pbmNyDAsSA0FwcBiLo_8DDA", start_date, end_date))
                 else:
-                    endapp.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
+                    app.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
 
             return JSONResponse(apps)
 

@@ -545,15 +545,7 @@
 
         $('#blocklist-submit').click(function(e) {
             e.preventDefault();
-            var new_blocklist_domains = $('textarea[name="blocklist"]').val();
-            $.ajax({
-                type: 'post',
-                url: "",
-                data: { blocklist: new_blocklist_domains },
-                success: function() {
-
-                }
-            });
+            $("#addblocklist").submit();
         });
 
     });

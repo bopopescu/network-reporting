@@ -146,6 +146,11 @@
                 e.preventDefault();
                 adunit_show_link.click();
             });
+            $('a.view_targeting', app_row).click(function(e) {
+                e.preventDefault();
+                adunit_show_link.click();
+                $(this).addClass('hidden');
+            });
             return this;
         },
         render: function () {
@@ -196,6 +201,8 @@
         $.each($(".for-app-" + href), function (iter, item) {
             $(item).remove();
         });
+        $("#app-" + href + " a.view_targeting").removeClass("hidden");
+        console.log($("#app-" + href + " a.view_targeting"));
         $(this).text('Show Adunits').unbind("click").click(showAdUnits);
     }
 
@@ -226,13 +233,19 @@
                 .change(function() {
                     current_model.set({'price_floor': $(this).val()});
                     // Save when they click the save button in the price floor cell
-                    $(".save", $(this).parent())
-                        .click(function() {
-                            current_model.save();
-                        })
-                        .addClass('disabled')
-                        .text('Saving...');
-
+                    var save_link = $(".save", $(this).parent());
+                        save_link.click(function(e) {
+                            e.preventDefault();
+                            save_link.addClass('disabled').text('Saving...');
+                            current_model.save({}, {
+                                success: function () {
+                                    setTimeout(function() {
+                                        save_link.removeClass('disabled').text('Saved');
+                                        save_link.text("Save");
+                                    }, 2000);
+                                }
+                            });
+                        });
                 });
 
             // Add the event handler to submit targeting changes over ajax.
@@ -327,6 +340,9 @@
                 } else {
                     $(".app-row#app-" + app_key + " .price_floor").html("$" + low + " - " + "$" + high);
                 }
+
+                // Disable the 'view' link in the app row under the targeting column
+                $(".app-row#app-" + app_key + " .view_targeting").addClass("hidden");
 
                 // Create the views and render each adunit row
                 _.each(adunits_collection.models, function(adunit) {

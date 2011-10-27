@@ -73,7 +73,7 @@ class AppService(RequestHandler):
 
 @login_required
 def app_service(request, *args, **kwargs):
-    return AppService()(request, *args, **kwargs)
+    return AppService()(request, use_cache=False, *args, **kwargs)
 
 
 class AdUnitService(RequestHandler):
@@ -148,7 +148,7 @@ class AdUnitService(RequestHandler):
 
 @login_required
 def adunit_service(request, *args, **kwargs):
-    return AdUnitService()(request, *args, **kwargs)
+    return AdUnitService()(request, use_cache=False, *args, **kwargs)
 
 
 class CampaignService(RequestHandler):
@@ -170,7 +170,7 @@ class CampaignService(RequestHandler):
 
 @login_required
 def campaign_service(request, *args, **kwargs):
-    return CampaignService()(request, *args, **kwargs)
+    return CampaignService()(request, use_cache=False, *args, **kwargs)
 
 
 class AdGroupService(RequestHandler):
@@ -192,7 +192,7 @@ class AdGroupService(RequestHandler):
 
 @login_required
 def adgroup_service(request, *args, **kwargs):
-    return AdGroupService()(request, *args, **kwargs)
+    return AdGroupService()(request, use_cache=False, *args, **kwargs)
 
 
 class CreativeService(RequestHandler):
@@ -214,7 +214,7 @@ class CreativeService(RequestHandler):
 
 @login_required
 def creative_service(request, *args, **kwargs):
-    return CreativeService()(request, *args, **kwargs)
+    return CreativeService()(request, use_cache=False, *args, **kwargs)
 
 
 class DspService(RequestHandler):
@@ -236,6 +236,6 @@ class DspService(RequestHandler):
 
 @login_required
 def dsp_service(request, *args, **kwargs):
-    return DspService()(request, *args, **kwargs)
+    return DspService()(request, use_cache=False, *args, **kwargs)
 
 

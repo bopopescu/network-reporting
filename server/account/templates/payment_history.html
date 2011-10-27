@@ -1,10 +1,20 @@
 {% extends "account/base.html" %}
 {% load filters %}
 {% block pageTitle %}
-  <h1> Payment History </h1>
+  <h1> Marketplace Payments </h1>
 {% endblock pageTitle %}
 {% block content %}
 
+<h2 style="margin:0 0 0 0;">Marketplace Balance</h2>
+<fieldset>
+  <dl class="formFields flat">
+    <dt>Current Balance:</dt>
+    <dd>{{balance|currency}}</dd>
+    <dt>Since:</dt>
+    <dd>{{start_date}}</dd>
+  </dl>
+</fieldset>
+<h2>Payment History</h2>
 <table class="dataTable campaignData-main" id="campaignDataTable-direct-">
   <thead>
     <th class="dataTable-date-short">Payment Date</th>

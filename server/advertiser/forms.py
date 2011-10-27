@@ -1,13 +1,16 @@
 from __future__ import with_statement
 
+from datetime import datetime
 
 from advertiser.models import Campaign, AdGroup, Creative, \
                               TextCreative, TextAndTileCreative,\
                               HtmlCreative, ImageCreative
+
 from common.constants import (  CITY_GEO,
                                 REGION_GEO,
                                 COUNTRY_GEO,
                                 )
+
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
 
@@ -43,6 +46,8 @@ class CampaignForm(mpforms.MPModelForm):
     budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
     budget_type = mpfields.MPChoiceField(choices=[('daily','Daily'),('full_campaign','Full Campaign')],widget=mpwidgets.MPSelectWidget)
     price_floor = mpfields.MPTextField(required=False, initial="0.25")
+    start_time = mpfields.MPTextField(required=True)
+    end_time = mpfields.MPTextField(required=True)
 
     #priority is now based off of campaign_type, not actually priority
     #gtee has 3 levels, this makes it so the database understands the three different levels of gtee
@@ -92,6 +97,25 @@ class CampaignForm(mpforms.MPModelForm):
     def save(self, commit=True):
         obj = super(CampaignForm, self).save(commit=False)
         if obj:
+            start_time = self.cleaned_data['start_time']
+            end_time = self.cleaned_data['end_time']
+            start_date = self.cleaned_data['start_date']
+            end_date = self.cleaned_data['end_date']
+            fmt = '%I:%M %p'
+
+            # Iniit the times
+            start_datetime_time = datetime.strptime(start_time, fmt)
+            end_datetime_time = datetime.strptime(end_time, fmt)
+            start_datetime = datetime(start_date.year, start_date.month, start_date.day, start_datetime_time.hour, start_datetime_time.minute)
+            end_datetime = datetime(end_date.year, end_date.month, end_date.day, end_datetime_time.hour, end_datetime_time.minute)
+
+            # Remove start/end date
+            obj.end_date = None
+            obj.start_date = None
+            # Set the shizz
+            obj.start_datetime = start_datetime
+            obj.end_datetime = end_datetime
+
             type_ = self.cleaned_data['campaign_type']
             if type_ == 'gtee':
                 lev = self.cleaned_data['gtee_level']
@@ -132,7 +156,7 @@ class CampaignForm(mpforms.MPModelForm):
 
     class Meta:
       model = Campaign
-      fields = ('name', 'budget_strategy', 'budget_type', 'full_budget', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level')
+      fields = ('name', 'budget_strategy', 'budget_type', 'full_budget', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level', 'start_time', 'end_time')
 
 
 class AdGroupForm(mpforms.MPModelForm):

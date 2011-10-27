@@ -171,11 +171,12 @@ class MarketplaceStatsFetcher(object):
         return {}
 
 def _fetch_and_decode(url):
+    from google.appengine.api import urlfetch
     try:
         logging.warn("HOTPOOP")
         logging.warn(url)
-        response = urlopen(url).read()
-        response_dict = json.loads(response)
+        response = urlfetch.fetch(url, deadline=5)
+        response_dict = json.loads(response.content)
         logging.warn(response_dict)
     except Exception, ex:
         raise MPStatsAPIException(ex)

@@ -220,57 +220,64 @@
      */
     var AdUnitView = Backbone.View.extend({
 
-        // Define the template
         initialize: function () {
             this.template = _.template($('#adunit-template').html());
         },
+
+        /*
+         * Render the AdUnit into a table row that already exists. Adds handlers
+         * for changing AdUnit attributes over ajax.
+         */
         renderInline: function () {
-          var current_model = this.model;
+            var current_model = this.model;
+            var adunit_row = $("tr.adunit-row#adunit-" + this.model.id, this.el);
 
-          var adunit_row = $("tr.adunit-row#adunit-" + this.model.id, this.el);
-          $(".revenue", adunit_row).text(this.model.get("revenue"));
-          $(".ecpm", adunit_row).text(this.model.get("ecpm"));
-          $(".impressions", adunit_row).text(this.model.get("impressions"));
-          $(".price_floor", adunit_row).html('<input id="'+this.model.id+'" type="text" class="input-text input-text-number number" style="width:50px;" value="'+
-            this.model.get("price_floor")+'"> <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
-          $(".targeting", adunit_row).html('<input class="targeting-box" type="checkbox"> <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
-          if (this.model.get("active")) {
-              $("input.targeting-box", adunit_row).attr('checked', 'checked');
-          }
-          console.log(this.model);
+            $(".revenue", adunit_row).text(this.model.get("revenue"));
+            $(".ecpm", adunit_row).text(this.model.get("ecpm"));
+            $(".impressions", adunit_row).text(this.model.get("impressions"));
+            $(".price_floor", adunit_row).html('<input id="' +
+                                               this.model.id +
+                                               '" type="text" class="input-text input-text-number number" style="width:50px;" value="' +
+                                               this.model.get("price_floor") +
+                                               '"> <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
+            $(".targeting", adunit_row).html('<input class="targeting-box" type="checkbox"> <img class="loading-img hidden" ' +
+                                             ' src="/images/icons-custom/spinner-12.gif"></img>');
+            if (this.model.get("active")) {
+                $("input.targeting-box", adunit_row).attr('checked', 'checked');
+            }
 
+            // Add the event handler to submit targeting changes over ajax.
+            $("input.targeting-box", adunit_row).click(function() {
+                var loading_img = $(".targeting .loading-img", adunit_row);
+                loading_img.show();
+                current_model.set({'active': $(this).is(":checked")});
+                current_model.save({}, {
+                    success: function () {
+                        setTimeout(function() {
+                            loading_img.hide();
+                        }, 2000);
+                    }
+                });
+            });
 
-          // Add the event handler to submit targeting changes over ajax.
-          $("input.targeting-box", adunit_row).click(function() {
-              loading_img = $(".targeting .loading-img", adunit_row);
-              loading_img.show();
-              current_model.set({'active': $(this).is(":checked")});
-              current_model.save({}, {
-                  success: function () {
-                      setTimeout(function() {
-                          loading_img.hide();
-                      }, 2000);
-                  }
-              });
-          });
-          // Add the event handler to submit price floor changes over ajax.
-          $('.price_floor .input-text', adunit_row)
-              .keyup(function() {
-                  loading_img = $(".price_floor .loading-img", adunit_row);
-                  loading_img.show();
-                  current_model.set({'price_floor': $(this).val()});
-                  current_model.save({}, {
-                      success: function () {
-                          setTimeout(function() {
-                              loading_img.hide();
-                          }, 2000);
-                      }
-                  });
-              });
+            // Add the event handler to submit price floor changes over ajax.
+            $('.price_floor .input-text', adunit_row).keyup(function() {
+                var loading_img = $(".price_floor .loading-img", adunit_row);
+                loading_img.show();
+                current_model.set({'price_floor': $(this).val()});
+                current_model.save({}, {
+                    success: function () {
+                        setTimeout(function() {
+                            loading_img.hide();
+                        }, 2000);
+                    }
+                });
+            });
 
-          return this;
+            return this;
         },
-        // Render the model in the template. This assumes that the table
+
+        // Render the adunit model in the template. This assumes that the table
         // row for the app has already been rendered. This will render underneath it's
         // app's row.
         render: function () {
@@ -345,6 +352,11 @@
             });
 
         },
+
+        /*
+         * Fetches all app stats using a list of app keys and renders them into table rows that have already
+         * been created in the page. Useful for decreasing page load time along with `fetchAdunitStats`.
+         */
         fetchAppStats: function (app_keys) {
             _.each(app_keys, function(app_key) {
                 var app = new App({id: app_key});
@@ -355,6 +367,12 @@
                 app.fetch();
             });
         },
+
+        /*
+         * Fetches AdUnit stats over ajax and renders them in already existing table rows.
+         * This method is useful for decreasing page load time. Uses a parent app's key
+         * to bootstrap the fetch.
+         */
         fetchAdunitStats: function (app_key) {
           var adunits = new AdUnitCollection();
           adunits.app_id = app_key;
@@ -371,11 +389,15 @@
 
           adunits.fetch({
               success: function(){
+                  // Trigger any event handlers that have been attached to the table.
+                  // Shouldn't this only trigger for the table that the adunit stats are
+                  // being placed in?
                   $('table').trigger('update');
                   $("#" + app_key + "-img").hide();
               }
           });
         },
+
         /*
          * Fetches and renders all of the adunits from an app key.
          * Useful for showing adunits when a user has clicked on a
@@ -427,12 +449,15 @@
          * adunit rows underneath their apps.
          */
         getAppId: function(adunit) {
-            adunit = $(adunit);
 
+            adunit = $(adunit);
             var app_id = '';
-            _.each(adunit.attr('class').split(' '), function(item) {
-                if (item.search('for-app-') >= 0) {
-                    app_id = item.replace('for-app-', '');
+            var adunit_classes = adunit.attr('class').split(' ');
+
+            _.each(adunit_classes, function(adunit_class) {
+
+                if (adunit_class.search('for-app-') >= 0) {
+                    app_id = adunit_class.replace('for-app-', '');
                 }
             });
 
@@ -496,10 +521,97 @@
                 url: '/campaigns/marketplace/activation/',
                 data: {
                     activate: 'off'
-                },
+                }
             });
             return true;
+        },
+
+        /*
+         * Makes the Creatives Performance tab's datatable
+         */
+        makeCreativePerformanceTable: function (pub_id, dsp_keys, blocklist) {
+            var table = $("#report-table").dataTable({
+                bProcessing: true,
+                // Use jQueryUI to style the table
+                bJQueryUI: true,
+                // Add page numbers to the table instead of just prev/next buttons
+                sPaginationType: "full_numbers",
+                // Message that appears when the table is empty
+                oLanguage: {
+                    sEmptyTable: "No creatives have been displayed for this time range."
+                },
+                // Column Width
+                aoColumns:[
+                    {sWidth: "330px"}, // Creative iFrame
+                    {sWidth: "190px"}, // Advertiser
+                    {sWidth: "120px"}, // Revenue
+                    {sWidth: "90px"},  // eCPM
+                    {sWidth: "90px"}   // Impressions
+                    //{"sWidth": "80px"}, // Clicks
+                    //{"sWidth": "80px"}, // CTR
+                ],
+                // Don't resize table columns, we'll do it manually
+                bAutoWidth:false,
+                // Sort by revenue descending from the start
+                aaSorting: [[2,'desc']],
+                // Endpoint to fetch table data
+                //sAjaxSource: "http://mpx.mopub.com/stats/creatives",
+                sAjaxSource: "/campaigns/marketplace/test_jsonp/",
+                fnServerData: function( sUrl, aoData, fnCallback ) {
+                    $.ajax({
+                        url: sUrl,
+                        data: {
+                            pub_id: "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww",
+                            dsp_id: '4e45baaddadbc70de9000002',
+                            start: "10-24-2011",
+                            end: "10-27-2011",
+                            format:'jsonp'
+                        },
+                        //success: fnCallback,
+                        success: function(data, textStatus, jqXHR) {
+
+                            var creative_data = _.map(data["4e45baaddadbc70de9000002"], function(creative, key) {
+                                var ecpm = (creative['stats']['pub_rev'] / (creative['stats']['imp']+1))*10000;
+                                return [
+                                    creative["creative"]["url"],
+                                    creative["creative"]["ad_dmn"],
+                                    creative["stats"]["pub_rev"],
+                                    ecpm,
+                                    creative["stats"]["imp"]
+                                ];
+                            });
+
+                            var response = {
+                                aaData: creative_data
+                            };
+                            fnCallback(response, textStatus, jqXHR);
+                        },
+                        dataType: "jsonp",
+                        cache: false
+                    } );
+                },
+                fnRowCallback: function(nRow, aData, iDisplayIndex) {
+                    console.log(aData);
+                    $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
+
+                    var domain = aData[1];
+                    if (_.contains(blocklist, domain)) {
+                        $("td:eq(1)", nRow).text(domain + " (Blocked)");
+                    // } else if (domain != null) {
+                    //     $("td:eq(1)", nRow).html(domain);
+                    } else {
+                        $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
+                    }
+                    $("td:eq(2)", nRow).addClass("numeric");
+                    $("td:eq(3)", nRow).addClass("numeric");
+                    $("td:eq(4)", nRow).addClass("numeric");
+                    return nRow;
+                }
+            });
+
+            return table;
         }
+
     };
 
     /*
@@ -512,39 +624,6 @@
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
     window.Marketplace = Marketplace;
-
-
-
-    $.fn.pagination = function(options) {
-        var defaults = {
-            page_length: 10,
-            current_page: 0
-        };
-
-        var table = $(this);
-
-        table.find('tbody tr').show()
-            .lt(currentPage * numPerPage)
-            .hide()
-            .end()
-            .gt((currentPage + 1) * numPerPage - 1)
-            .hide()
-            .end();
-
-        var numRows = table.find('tbody tr').length;
-        var numPages = Math.ceil(numRows / numPerPage);
-
-        var pager = $('<div class="pager"></div>');
-
-        for (var page = 0; page < numPages; page++) {
-            $('<span class="page-number">' + (page + 1) + '</span>')
-                .appendTo(pager).addClass('clickable');
-        }
-
-        // Add the pager after the table
-        pager.after(table);
-    };
-
 
     /*
      * Boomslam
@@ -605,9 +684,34 @@
             });
         });
 
-        /*
-         * Settings page button actions
-         */
+        $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
+
+        $("#top_switch").click(function() {
+
+            if ( $("#top_switch .switch").hasClass('on') ) {
+                $("#first_time_toast").fadeIn();
+                setTimeout(function() {
+                    $("#first_time_toast").fadeOut();
+                }, 3000);
+            }
+        });
+
+        $("#bottom_switch").click(function() {
+
+            if ( $("#bottom_switch .switch").hasClass('off') ) {
+                $("#settings_toast").fadeIn();
+                setTimeout(function() {
+                    $("#settings_toast").fadeOut();
+                }, 3000);
+            }
+        });
+
+
+        $('#blocklist-submit').click(function(e) {
+            e.preventDefault();
+            $("#addblocklist").submit();
+        });
+
     });
 
 })(this.jQuery, this.Backbone);

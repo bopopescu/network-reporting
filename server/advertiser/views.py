@@ -1053,7 +1053,7 @@ class AJAXStatsHandler(RequestHandler):
             days = StatsModel.get_days(start_date, int(date_range))
         else:
             days = StatsModel.lastdays(int(date_range))
-            
+
         if self.start_date: # this is tarded. the start date is really the end of the date range.
             end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
         else:
@@ -1063,7 +1063,7 @@ class AJAXStatsHandler(RequestHandler):
             start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
         else:
             start_date = end_date - datetime.timedelta(13)
-            
+
 
         advs = self.params.getlist('adv')
         pubs = self.params.getlist('pub')
@@ -1195,6 +1195,10 @@ def mpx_info(request, *args, **kwargs):
 
 
 class MarketplaceIndexHandler(RequestHandler):
+    """
+    Rendering of the Marketplace page. At this point, this is the only
+    Marketplace page, and everything is rendered here.
+    """
     def get(self):
 
         # Marketplace settings are kept as a single campaign.
@@ -1203,8 +1207,6 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # We list the app traits in the table, and then load their stats over ajax using Backbone.
         # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
-        logging.info('\n\n\n\n\n\n\n')
-        logging.info('hi')
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
@@ -1237,35 +1239,8 @@ class MarketplaceIndexHandler(RequestHandler):
         else:
             start_date = end_date - datetime.timedelta(13)
 
-
-        logging.warn(start_date)
-        logging.warn(end_date)
-
-
         # Get the top level marketplace stats for the account
         top_level_mpx_stats = stats_fetcher.get_account_stats(start_date, end_date)
-
-
-        logging.warn(top_level_mpx_stats)
-
-        # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
-
-
-        # Get total stats for the rollup/table footer
-        creative_totals = {
-            'imp': 0,
-            'clk': 0,
-            'ctr': 0,
-            'ecpm': 0,
-            'pub_rev': 0
-        }
-
-        # for dsp in dsps:
-        #     creative_totals['imp'] += dsp['stats']['imp']
-        #     creative_totals['clk'] += dsp['stats']['clk']
-        #     creative_totals['ctr'] += dsp['stats']['ctr']
-        #     creative_totals['ecpm'] += dsp['stats']['ecpm']
-        #     creative_totals['pub_rev'] += dsp['stats']['pub_rev']
 
         # Set up the blocklist
         blocklist = []
@@ -1273,14 +1248,7 @@ class MarketplaceIndexHandler(RequestHandler):
         if network_config:
             blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
 
-        # for dsp in dsps:
-        #     creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], start_date, end_date)
-        #     for creative in creatives:
-        #         creative['creative']['advertiser_blocked'] = creative['creative']['ad_dmn'] in blocklist
-        #     dsp.update({'creatives': creatives})
-
-
-        dsps =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
+        dsp_keys =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
@@ -1289,6 +1257,8 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'apps': apps.values(),
                                       'app_keys': app_keys,
                                       'adunit_keys': adunit_keys,
+                                      'dsp_keys':dsp_keys,
+                                      'pub_key': self.account.key(),
                                       'top_level_mpx_stats': top_level_mpx_stats,
                                       'blocklist': blocklist,
                                       'date_range': self.date_range
@@ -1334,7 +1304,6 @@ def remove_blocklist_handler(request,*args,**kwargs):
 
 
 class MarketplaceOnOffHandler(RequestHandler):
-
     def post(self):
         try:
             activate = self.request.POST.get('activate', 'on')
@@ -1349,22 +1318,40 @@ class MarketplaceOnOffHandler(RequestHandler):
         except Exception, e:
             return JSONResponse({'error': e})
 
-
 @login_required
 def marketplace_on_off(request, *args, **kwargs):
     return MarketplaceOnOffHandler()(request, *args, **kwargs)
 
 
 class MarketplaceSettingsChangeHandler(RequestHandler):
-
     def post(self):
         try:
-
             return JSONResponse({'success': str(self.request.POST)})
         except Exception, e:
             return JSONResponse({'success': e})
 
-
 @login_required
 def marketplace_settings_change(request, *args, **kwargs):
     return MarketplaceSettingsChangeHandler()(request, *args, **kwargs)
+
+
+def test_jsonp(request, *args, **kwargs):
+    logging.warn(request.GET)
+    from common_templates.templatetags.filters import currency, percentage, percentage_rounded
+    data = {"4e45baaddadbc70de9000002": {"157:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.06710719999999998, "clk": 0.0, "bid": 1.6070199999999977, "chrg": 0.08284839506172802, "imp": 49.0, "bid_cnt": 784.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/0/320x50girl.png", "dsp": "4e45baaddadbc70de9000002", "_id": "157:4e45baaddadbc70de9000002", "crtv_id": "157"}}, "135:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.20621219999999996, "clk": 0.0, "bid": 0.5432000000000008, "chrg": 0.25458296296295985, "imp": 146.0, "bid_cnt": 258.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tzf_320x50_trex_copy.png", "dsp": "4e45baaddadbc70de9000002", "_id": "135:4e45baaddadbc70de9000002", "crtv_id": "135"}}, "128:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 10.253166300000247, "clk": 0.0, "bid": 44.81724000000253, "chrg": 12.787477477654068, "imp": 6806.0, "bid_cnt": 21700.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tp_320x50_bulldog_trees.png", "dsp": "4e45baaddadbc70de9000002", "_id": "128:4e45baaddadbc70de9000002", "crtv_id": "128"}}, "127:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 2.2066263000000026, "clk": 0.0, "bid": 10.368309999999996, "chrg": 2.7438060200000116, "imp": 1458.0, "bid_cnt": 5071.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tp_320x50_kitten_blue.png", "dsp": "4e45baaddadbc70de9000002", "_id": "127:4e45baaddadbc70de9000002", "crtv_id": "127"}}, "139:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 6.414811200000116, "clk": 0.0, "bid": 17.40092000000083, "chrg": 7.978434230000027, "imp": 4272.0, "bid_cnt": 8353.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tzf_320x50_fox_copy.png", "dsp": "4e45baaddadbc70de9000002", "_id": "139:4e45baaddadbc70de9000002", "crtv_id": "139"}}, "119:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 1.6569770999999904, "clk": 0.0, "bid": 77.55464999996597, "chrg": 2.050049480740752, "imp": 1166.0, "bid_cnt": 40282.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/0/iPhone_Pod_300x50_Groupon_13.jpg", "dsp": "4e45baaddadbc70de9000002", "_id": "119:4e45baaddadbc70de9000002", "crtv_id": "119"}}, "138:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.8074744000000014, "clk": 0.0, "bid": 71.82487000000586, "chrg": 1.0115733333332328, "imp": 1149.0, "bid_cnt": 35596.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tzf_320x50_horse_copy.png", "dsp": "4e45baaddadbc70de9000002", "_id": "138:4e45baaddadbc70de9000002", "crtv_id": "138"}}, "154:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.08237700000000005, "clk": 0.0, "bid": 0.4737699999999998, "chrg": 0.10169999999999997, "imp": 56.0, "bid_cnt": 229.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/0/Zoo_retarget_300x50.png", "dsp": "4e45baaddadbc70de9000002", "_id": "154:4e45baaddadbc70de9000002", "crtv_id": "154"}}, "140:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.33895260000000005, "clk": 0.0, "bid": 1.1651400000000005, "chrg": 0.4184599999999994, "imp": 218.0, "bid_cnt": 570.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tzf_320x50_horse_copy.png", "dsp": "4e45baaddadbc70de9000002", "_id": "140:4e45baaddadbc70de9000002", "crtv_id": "140"}}, "123:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.06781869999999998, "clk": 0.0, "bid": 0.5141300000000001, "chrg": 0.08372679012345602, "imp": 49.0, "bid_cnt": 248.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tp_320x50_kitten_trees.png", "dsp": "4e45baaddadbc70de9000002", "_id": "123:4e45baaddadbc70de9000002", "crtv_id": "123"}}, "142:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 5.465296799999992, "clk": 0.0, "bid": 55.6291300000031, "chrg": 6.774577225185229, "imp": 3758.0, "bid_cnt": 26653.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tzf_320x50_bronto_copy.png", "dsp": "4e45baaddadbc70de9000002", "_id": "142:4e45baaddadbc70de9000002", "crtv_id": "142"}}, "126:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.6383409000000004, "clk": 0.0, "bid": 56.610070000001095, "chrg": 0.7975813580245933, "imp": 907.0, "bid_cnt": 26974.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tp_320x50_dog1_red.png", "dsp": "4e45baaddadbc70de9000002", "_id": "126:4e45baaddadbc70de9000002", "crtv_id": "126"}}, "125:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 2.5895072000000177, "clk": 0.0, "bid": 208.04931999997623, "chrg": 3.246181728394733, "imp": 3680.0, "bid_cnt": 100299.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tp_320x50_bulldog_trees.png", "dsp": "4e45baaddadbc70de9000002", "_id": "125:4e45baaddadbc70de9000002", "crtv_id": "125"}}, "159:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.12455870000000002, "clk": 0.0, "bid": 3.4172599999999886, "chrg": 0.15464037037036804, "imp": 94.0, "bid_cnt": 1642.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/0/320x50nogirl.jpg", "dsp": "4e45baaddadbc70de9000002", "_id": "159:4e45baaddadbc70de9000002", "crtv_id": "159"}}, "141:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 4.546954300000034, "clk": 0.0, "bid": 7.373459999999929, "chrg": 5.6135238271605115, "imp": 3259.0, "bid_cnt": 3492.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tzf_320x50_trex_nocopy.png", "dsp": "4e45baaddadbc70de9000002", "_id": "141:4e45baaddadbc70de9000002", "crtv_id": "141"}}, "155:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.14750860000000005, "clk": 0.0, "bid": 0.7712300000000003, "chrg": 0.18210938271604793, "imp": 105.0, "bid_cnt": 375.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/0/Zoo_retarget_300x50.png", "dsp": "4e45baaddadbc70de9000002", "_id": "155:4e45baaddadbc70de9000002", "crtv_id": "155"}}, "129:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 29.085825499999007, "clk": 0.0, "bid": 49.543050000003056, "chrg": 36.0579327160469, "imp": 21297.0, "bid_cnt": 24346.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tp_320x50_kitten_green.png", "dsp": "4e45baaddadbc70de9000002", "_id": "129:4e45baaddadbc70de9000002", "crtv_id": "129"}}, "130:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 3.876862500000001, "clk": 0.0, "bid": 27.913090000000118, "chrg": 4.7990599850617555, "imp": 2651.0, "bid_cnt": 13345.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tp_320x50_dog1_trees.png", "dsp": "4e45baaddadbc70de9000002", "_id": "130:4e45baaddadbc70de9000002", "crtv_id": "130"}}, "137:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.7056201000000022, "clk": 0.0, "bid": 67.10532000000602, "chrg": 0.8797779012344641, "imp": 996.0, "bid_cnt": 33529.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/1/tzf_320x50_horse_copy.png", "dsp": "4e45baaddadbc70de9000002", "_id": "137:4e45baaddadbc70de9000002", "crtv_id": "137"}}, "109:4e45baaddadbc70de9000002": {"stats": {"pub_rev": 0.011380499999999998, "clk": 0.0, "bid": 2.1614800000000174, "chrg": 0.01405, "imp": 8.0, "bid_cnt": 1031.0}, "creative": {"body": None, "ad_dmn": None, "url": "http://m.adsymptotic.com/i/0/vegas_320x50_2am.gif", "dsp": "4e45baaddadbc70de9000002", "_id": "109:4e45baaddadbc70de9000002", "crtv_id": "109"}}}}
+
+    # creatives = []
+    # for key, creative in data['4e45baaddadbc70de9000002'].iteritems():
+    #     creatives.append([
+    #         creative["creative"]["url"],
+    #         creative["creative"]["ad_dmn"],
+    #         creative["stats"]["pub_rev"],
+    #         10.0,
+    #         creative["stats"]["imp"],
+    #         #creative["stats"]["clk"],
+    #         #percentage_rounded(creative['stats']['ctr']),
+    #     ])
+
+    # response = {'aaData': creatives}
+    s = simplejson.dumps(data)
+    return HttpResponse("%s(%s);" % (request.GET.get('callback'), s))

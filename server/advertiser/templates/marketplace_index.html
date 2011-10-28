@@ -405,80 +405,16 @@
   <script type="text/javascript">
     $(document).ready(function() {
       var app_keys = {{ app_keys|safe }};
-      Marketplace.fetchAppStats(app_keys);
-
-      var adunit_keys = {{ adunit_keys|safe }};
-      {% for app in apps %}
-      Marketplace.fetchAdunitStats("{{app.key}}");
-      {% endfor %}
-
       var blocklist = {{ blocklist|safe }};
+      var dsp_keys = {{ dsp_keys|safe }};
+      var pub_key = "{{ pub_key }}";
 
+      Marketplace.fetchAppStats(app_keys);
+      _.each(app_keys, function(app_key) {
+           Marketplace.fetchAdunitStats(app_key);
+      });
 
-        table = $("#report-table").dataTable({
-            "bProcessing": true,
-            "bJQueryUI": true,
-            "sPaginationType": "full_numbers",
-            "oLanguage": {
-                "sEmptyTable": "No creatives have been displayed for this time range."
-            },
-            "aoColumns":[
-                {"sWidth": "330px"},
-                {"sWidth": "190px"},
-                {"sWidth": "120px"},
-                {"sWidth": "90px"},
-                {"sWidth": "90px"}
-                //{"sWidth": "80px"},
-                //{"sWidth": "80px"},
-            ],
-            "bAutoWidth":false,
-            "aaSorting": [[2,'desc']],
-            "sAjaxSource": "/api/creatives/",
-            "fnRowCallback": function(nRow, aData, iDisplayIndex) {
-                $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
-
-                var domain = aData[1];
-                if (_.contains(blocklist, domain)) {
-                    $("td:eq(1)", nRow).text(aData[1] + " (Blocked)");
-                } else if (domain !== null) {
-                    $("td:eq(1)", nRow).html(domain);
-                } else {
-                    $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
-                }
-                $("td:eq(2)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[2]));
-                $("td:eq(3)", nRow).addClass("numeric");
-                $("td:eq(4)", nRow).addClass("numeric");
-                return nRow;
-            }
-        });
-
-        $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
-
-        $("#top_switch").click(function() {
-
-            if ( $("#top_switch .switch").hasClass('on') ) {
-            $("#first_time_toast").fadeIn();
-                setTimeout(function() {
-                    $("#first_time_toast").fadeOut();
-                }, 3000);
-            }
-        });
-
-        $("#bottom_switch").click(function() {
-
-            if ( $("#bottom_switch .switch").hasClass('off') ) {
-            $("#settings_toast").fadeIn();
-                setTimeout(function() {
-                    $("#settings_toast").fadeOut();
-                }, 3000);
-            }
-        });
-
-
-        $('#blocklist-submit').click(function(e) {
-            e.preventDefault();
-            $("#addblocklist").submit();
-        });
+      var table = Marketplace.makeCreativePerformanceTable(pub_key, dsp_keys, blocklist);
 
     });
   </script>

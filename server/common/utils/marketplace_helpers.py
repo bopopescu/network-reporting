@@ -89,8 +89,7 @@ class MarketplaceStatsFetcher(object):
                                                  self.pub_id,
                                                  start.strftime("%m-%d-%Y"),
                                                  end.strftime("%m-%d-%Y"))
-        logging.warn("HOTPOOP")
-        logging.warn(url)
+
         dsp = _fetch_and_decode(url)
 
         # Make the stats iterable so we can use them more easily in a template

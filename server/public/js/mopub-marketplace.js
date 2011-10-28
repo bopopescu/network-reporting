@@ -556,12 +556,12 @@
                 aaSorting: [[2,'desc']],
                 // Endpoint to fetch table data
                 //sAjaxSource: "http://mpx.mopub.com/stats/creatives",
-                sAjaxSource: "/campaigns/marketplace/test_jsonp/",
+                sAjaxSource: "http://mpx.mopub.com/stats/creatives",
                 fnServerData: function( sUrl, aoData, fnCallback ) {
                     $.ajax({
                         url: sUrl,
                         data: {
-                            pub_id: "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww",
+                            pub_id: pub_id,
                             dsp_id: '4e45baaddadbc70de9000002',
                             start: "10-24-2011",
                             end: "10-27-2011",

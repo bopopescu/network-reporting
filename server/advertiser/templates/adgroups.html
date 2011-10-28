@@ -159,26 +159,26 @@
                     <td class="stats-breakdown-value today"><span class="inner"></span></td>
                     <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
                     <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+                    <th class="stats-breakdown-name"><span class="inner">revenue</span></th>
                   </tr>
                   <tr id="stats-breakdown-impressions">
                     <td class="stats-breakdown-value today"><span class="inner"></span></td>
                     <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
                     <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                    <th class="stats-breakdown-name"><span class="inner">impressions</span></th>
                   </tr>
 
                   <tr id="stats-breakdown-clicks">
                     <td class="stats-breakdown-value today"><span class="inner"></span></td>
                     <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
                     <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                    <th class="stats-breakdown-name"><span class="inner">clicks</span></th>
                   </tr>
                   <tr id="stats-breakdown-ctr">
                     <td class="stats-breakdown-value today"><span class="inner"></span></td>
                     <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
                     <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                    <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+                    <th class="stats-breakdown-name"><span class="inner">ctr</span></th>
                   </tr>
                 </tbody>
               </table>
@@ -842,43 +842,70 @@
             </div>
 
             <div class="tab-section network">
+            {% if network %}
 							<h2 style="margin-top:20px;">Ad Network Revenue Reports</h2>
-						{% if aggregate_stats and network %}
-              <table class="zebra-striped simpletable campaignData-main">
-								<thead>
-									<th class="dataTable-name"> App </th>
-									<th class="dataTable-name"> Ad Network </th>
-									<th class="dataTable-data numeric"> Revenue </th>
-									<th class="dataTable-data numeric"> Attempts </th>
-									<th class="dataTable-data numeric"> Impressions </th>
-									<th class="dataTable-data numeric"> Fill Rate</th>
-									<th class="dataTable-data numeric"> Clicks </th>
-									<th class="dataTable-data numeric"> CTR </th>
-								</thead>
-								<tbody>
-									{% for key, mapper, stats in aggregate_stats %}
-										<tr>
-											<td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
-											<td class="dataTable-name">{{mapper.ad_network_name}}</td>
-											<td class="dataTable-data numeric">{{stats.revenue}}</td>
-											<td class="dataTable-data numeric">{{stats.attempts}}</td>
-											<td class="dataTable-data numeric">{{stats.impressions}}</td>
-											<td class="dataTable-data numeric">{{stats.fill_rate}}</td>
-											<td class="dataTable-data numeric">{{stats.clicks}}</td>
-											<td class="dataTable-data numeric">{{stats.ctr}}</td>
-										</tr>
-									{% endfor %}
-								</tbody>
-							</table>
+              {% if aggregate_stats_list %}
 
-							<a class="right btn" href='/ad_network_reports/add'>Add more network credentials</a>
-						{% else %}
-						  {% if network %}
-                <div class="alert-message block-message info">
-                  Ad network revenue reporting can be set up to see statistics from any of the big ad networks. Click 'Set up network reporting' to get started using ad network reports.
-                </div>
-							  <a class="right btn" href='/ad_network_reports/add'>Set up network reporting</a>
-						  {% endif %}
+                <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+                <section class="offset nomargin" id="dashboard-stats">
+                  <div class="stats">
+                    <div class="stats-breakdown">
+                      <table>
+                        <tbody>
+                          <tr class="active" id="stats-breakdown-requests">
+                            <td class="stats-breakdown-value today"><span class="inner">{{aggregates.revenue|withsep}}</span></td>
+                            <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+                          </tr>
+                          <tr id="stats-breakdown-impressions">
+                            <td class="stats-breakdown-value today"><span class="inner">{{aggregates.impressions|withsep}}</span></td>
+                            <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                          </tr>
+                          <tr id="stats-breakdown-clicks">
+                            <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
+                            <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+                  </div>
+                  <div class="clear"></div>
+                </section>
+
+                <table class="zebra-striped simpletable campaignData-main" style="margin-top:20px;">
+                  <thead>
+                    <th class="dataTable-name"> App </th>
+                    <th class="dataTable-name"> Ad Network </th>
+                    <th class="dataTable-data numeric"> Revenue </th>
+                    <th class="dataTable-data numeric"> Attempts </th>
+                    <th class="dataTable-data numeric"> Impressions </th>
+                    <th class="dataTable-data numeric"> Fill Rate</th>
+                    <th class="dataTable-data numeric"> Clicks </th>
+                    <th class="dataTable-data numeric"> CTR </th>
+                  </thead>
+                  <tbody>
+                    {% for key, mapper, stats in aggregate_stats_list %}
+                      <tr>
+                        <td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
+                        <td class="dataTable-name">{{mapper.ad_network_name}}</td>
+                        <td class="dataTable-data numeric">{{stats.revenue}}</td>
+                        <td class="dataTable-data numeric">{{stats.attempts}}</td>
+                        <td class="dataTable-data numeric">{{stats.impressions}}</td>
+                        <td class="dataTable-data numeric">{{stats.fill_rate}}</td>
+                        <td class="dataTable-data numeric">{{stats.clicks}}</td>
+                        <td class="dataTable-data numeric">{{stats.ctr}}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+
+                <a class="right btn" href='/ad_network_reports/add'>Add more network credentials</a>
+              {% else %}
+                  <div class="alert-message block-message info">
+                    Ad network revenue reporting can be set up to see statistics from any of the big ad networks. Click 'Set up network reporting' to get started using ad network reports.
+                  </div>
+                  <a class="right btn" href='/ad_network_reports/add'>Set up network reporting</a>
+              {% endif %}
 						{% endif %}
 					</div>
           </section>

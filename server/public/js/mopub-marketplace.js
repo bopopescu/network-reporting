@@ -207,7 +207,6 @@
             $(item).remove();
         });
         $("#app-" + href + " a.view_targeting").removeClass("hidden");
-        console.log($("#app-" + href + " a.view_targeting"));
         $(this).text('Show Adunits').unbind("click").click(showAdUnits);
     }
 
@@ -591,7 +590,7 @@
                     } );
                 },
                 fnRowCallback: function(nRow, aData, iDisplayIndex) {
-                    console.log(aData);
+
                     $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
 
                     var domain = aData[1];

@@ -13,7 +13,7 @@
     {# TODO: WTF Android centering is screwed up with the 'center' style #}
     {# TODO: More centering woes, let's just get rid of it #}
     {# <div class="{% if os == 'ios' %}center{% endif %}">     #}
-    <div>  
+    <div style="text-align: center">
         <a href="{{creative.url|safe}}" target="_top"><img src="{{image_url}}" width="{{w}}" height="{{h}}"/></a>
     </div>
     {{ block.super }}

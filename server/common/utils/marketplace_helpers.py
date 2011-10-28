@@ -75,6 +75,33 @@ class MarketplaceStatsFetcher(object):
         but less flexible so this should be used whenever possible
 
         :param daily: when set to True, return daily breakdown of stats
+
+        example output with daily flag set:
+
+        {'ctr': '0.00%',
+        'revenue': '$0.08',
+        'daily': [{'ctr': '0.00%',
+                   'revenue': '$0.00',
+                   'ecpm': '$0.00',
+                   'date': u'2011-10-25',
+                   'impressions': 0,
+                   'clicks': 0},
+                  {'ctr': '0.00%',
+                   'revenue': '$0.01',
+                   'ecpm': '$0.89',
+                   'date': u'2011-10-26',
+                   'impressions': 9,
+                   'clicks': 0},
+                  {'ctr': '0.00%',
+                   'revenue': '$0.07',
+                   'ecpm': '$0.98',
+                   'date': u'2011-10-27',
+                   'impressions': 71,
+                   'clicks': 0}],
+         'ecpm': '$0.98',
+         'impressions': 80,
+         'clicks': 0}
+
         """
         if isinstance(start, datetime.date):
             start = start.strftime("%m-%d-%Y")

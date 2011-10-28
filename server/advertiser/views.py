@@ -1053,7 +1053,7 @@ class AJAXStatsHandler(RequestHandler):
             days = StatsModel.get_days(start_date, int(date_range))
         else:
             days = StatsModel.lastdays(int(date_range))
-            
+
         if self.start_date: # this is tarded. the start date is really the end of the date range.
             end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
         else:
@@ -1063,7 +1063,7 @@ class AJAXStatsHandler(RequestHandler):
             start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
         else:
             start_date = end_date - datetime.timedelta(13)
-            
+
 
         advs = self.params.getlist('adv')
         pubs = self.params.getlist('pub')
@@ -1203,8 +1203,6 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # We list the app traits in the table, and then load their stats over ajax using Backbone.
         # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
-        logging.info('\n\n\n\n\n\n\n')
-        logging.info('hi')
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
@@ -1213,7 +1211,6 @@ class MarketplaceIndexHandler(RequestHandler):
             app = apps.get(au.app_key.key())
             if not app:
                 app = AppQueryManager.get(au.app_key.key())
-                logging.info(app.name)
                 app.adunits = [au]
                 apps[au.app_key.key()] = app
             else:
@@ -1221,8 +1218,8 @@ class MarketplaceIndexHandler(RequestHandler):
         app_keys = simplejson.dumps([str(k) for k in apps.keys()])
 
         # Set up a MarketplaceStatsFetcher with this account
-        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-        #stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+        #stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+        stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
 
         # Form the date range
         # this is tarded. the start date is really the end of the date range.
@@ -1243,10 +1240,10 @@ class MarketplaceIndexHandler(RequestHandler):
 
 
         # Get the top level marketplace stats for the account
-        top_level_mpx_stats = stats_fetcher.get_account_stats(start_date, end_date)
+        mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
 
 
-        logging.warn(top_level_mpx_stats)
+        logging.warn("mpx_stats: %s" % mpx_stats)
 
         # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
 
@@ -1289,8 +1286,10 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'apps': apps.values(),
                                       'app_keys': app_keys,
                                       'adunit_keys': adunit_keys,
-                                      'top_level_mpx_stats': top_level_mpx_stats,
+                                      'mpx_stats': simplejson.dumps(mpx_stats),
                                       'blocklist': blocklist,
+                                      'start_date': start_date,
+                                      'end_date': end_date,
                                       'date_range': self.date_range
                                   })
 

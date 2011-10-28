@@ -35,7 +35,7 @@ class MarketplaceStatsFetcher(object):
         value_tuples = [(type, value) for value in values]
         return urlencode(value_tuples)
 
-    
+
     def _get_inventory(self, start, end, apps=None, adunits=None, pubs=None):
         app_query = self._get_inventory_query('app_id', apps or [])
         adunit_query = self._get_inventory_query('adunit_id', adunits or [])
@@ -70,7 +70,7 @@ class MarketplaceStatsFetcher(object):
     def _get_pub_inventory(self, pub, start, end, daily=False):
         """
         This is an alternative to _get_inventory. Here, pub is used in the broad
-        sense to represent a pub/app/adunit. When stats for only a single 
+        sense to represent a pub/app/adunit. When stats for only a single
         pub/app/adunit are necessary. The endpoint this uses is much faster
         but less flexible so this should be used whenever possible
 
@@ -108,7 +108,7 @@ class MarketplaceStatsFetcher(object):
 
         if isinstance(end, datetime.date):
             end = end.strftime("%m-%d-%Y")
-            
+
         url = "%s%spub=%s&start=%s&end=%s" % \
             (self._base_url,
              self._pub_inventory,
@@ -118,7 +118,7 @@ class MarketplaceStatsFetcher(object):
         response_dict = _fetch_and_decode(url)
         stats_sum = response_dict['sum']
         counts = _transform_stats(stats_sum)
-        
+
         if daily:
             # append daily breakdown of stats
             daily_stats_list = response_dict['daily']
@@ -131,7 +131,7 @@ class MarketplaceStatsFetcher(object):
 
         stats_dict = {pub: counts}
         return stats_dict
-        
+
     def get_app_stats(self, app_key, start, end, daily=False):
         stats = self._get_pub_inventory(app_key,
                                         start=start.strftime("%m-%d-%Y"),
@@ -160,8 +160,6 @@ class MarketplaceStatsFetcher(object):
                                                  self.pub_id,
                                                  start.strftime("%m-%d-%Y"),
                                                  end.strftime("%m-%d-%Y"))
-        logging.warn("HOTPOOP")
-        logging.warn(url)
         dsp = _fetch_and_decode(url)
 
         # Make the stats iterable so we can use them more easily in a template
@@ -251,11 +249,9 @@ def _transform_stats(stats_dict):
 
 def _fetch_and_decode(url):
     try:
-        logging.warn("HOTPOOP")
         logging.warn(url)
         response = urlopen(url).read()
         response_dict = json.loads(response)
-        logging.warn(response_dict)
     except Exception, ex:
         raise MPStatsAPIException(ex)
 

@@ -605,9 +605,31 @@
             });
         });
 
+        /* Marketplace Graph Functions */
+        function populateGraphWithAccountStats(stats) {
+            var dailyStats = stats["daily"];
+
+            mopub.dashboardStatsChartData = {
+                pointStart: mopub.graphStartDate,
+                pointInterval: 86400000,
+                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "rev")}],
+                impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "imp")}]
+            };
+
+            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+        }
+
         /*
          * Settings page button actions
          */
+         if (mopub.isDashboardPage) {
+           // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't
+           // disappear until all "onload" AJAX requests are complete.
+           setTimeout(populateGraphWithAccountStats, 0);
+         } else {
+           mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+         }
     });
+
 
 })(this.jQuery, this.Backbone);

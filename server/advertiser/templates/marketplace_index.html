@@ -57,7 +57,7 @@
     <div class="rollup fig3">
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.impressions|withsep }}
+          {{ mpx_stats.impressions|withsep }}
         </div>
         <div class="label">
           Impressions
@@ -66,7 +66,7 @@
 
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.ecpm }}
+          {{ mpx_stats.ecpm }}
         </div>
         <div class="label">
           Average eCPM
@@ -74,7 +74,7 @@
       </div>
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.clicks|withsep }}
+          {{ mpx_stats.clicks|withsep }}
         </div>
         <div class="label">
           Clicks
@@ -83,7 +83,7 @@
 
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.revenue|withsep }}
+          {{ mpx_stats.revenue|withsep }}
         </div>
         <div class="label">
           Revenue
@@ -104,10 +104,10 @@
         </thead>
         <tbody>
           <tr style="border:none;">
-            {% if top_level_mpx_stats %}
-              <td> {{ top_level_mpx_stats.impressions|default_if_none:"0"|withsep }} </td>
-              <td> {{ top_level_mpx_stats.ecpm|default_if_none:"0" }} </td>
-              <td> {{ top_level_mpx_stats.revenue|default_if_none:"0"|withsep }} </td>
+            {% if mpx_stats %}
+              <td> {{ mpx_stats.impressions|default_if_none:"0"|withsep }} </td>
+              <td> {{ mpx_stats.ecpm|default_if_none:"0" }} </td>
+              <td> {{ mpx_stats.revenue|default_if_none:"0"|withsep }} </td>
             {% else %}
               <td> 0 </td>
               <td> $0.00 </td>
@@ -135,6 +135,43 @@
   </div>
 
   <div class="active tab-section" id="performance">
+    <section class="offset nomargin" id="dashboard-stats">
+      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <div class="stats">
+        <div class="stats-breakdown">
+          <table>
+            <tbody>
+              <tr class="active" id="stats-breakdown-revenue">
+                <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+              </tr>
+              <tr id="stats-breakdown-impressions">
+                <td class="stats-breakdown-value today"><span class="inner">{{today.impressions|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impressions|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.impressions|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stats-breakdown-buttons">
+          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+            <label for="stats-breakdown-dateOptions-option-0">Today</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+            <label for="stats-breakdown-dateOptions-option-2">All</label>
+          </span>
+        </div>
+        <div class="chart stats-chart" id="dashboard-stats-chart">
+        </div>
+      </div>
+      <div class="clear"></div>
+    </section>
+
     <div class="appData-columnHeaders">
       <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
         <thead>
@@ -404,6 +441,13 @@
   <script type="text/javascript" src="/js/jquery.datatables.min.js"></script>
   <script type="text/javascript">
     $(document).ready(function() {
+      var mopub = mopub || {};
+      mopub.graphStartDate = Date.UTC({{start_date.year}},
+            {{start_date.month|add:"-1"}},
+            {{start_date.day}});
+      mopub.accountStats = {{mpx_stats|safe}};
+      populateGraphWithAccountStats(mopub.accountStats);
+
       var app_keys = {{ app_keys|safe }};
       Marketplace.fetchAppStats(app_keys);
 

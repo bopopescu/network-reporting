@@ -1053,7 +1053,7 @@ class AJAXStatsHandler(RequestHandler):
             days = StatsModel.get_days(start_date, int(date_range))
         else:
             days = StatsModel.lastdays(int(date_range))
-            
+
         if self.start_date: # this is tarded. the start date is really the end of the date range.
             end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
         else:
@@ -1063,7 +1063,7 @@ class AJAXStatsHandler(RequestHandler):
             start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
         else:
             start_date = end_date - datetime.timedelta(13)
-            
+
 
         advs = self.params.getlist('adv')
         pubs = self.params.getlist('pub')
@@ -1195,6 +1195,10 @@ def mpx_info(request, *args, **kwargs):
 
 
 class MarketplaceIndexHandler(RequestHandler):
+    """
+    Rendering of the Marketplace page. At this point, this is the only
+    Marketplace page, and everything is rendered here.
+    """
     def get(self):
 
         # Marketplace settings are kept as a single campaign.
@@ -1203,8 +1207,6 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # We list the app traits in the table, and then load their stats over ajax using Backbone.
         # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
-        logging.info('\n\n\n\n\n\n\n')
-        logging.info('hi')
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
@@ -1237,35 +1239,8 @@ class MarketplaceIndexHandler(RequestHandler):
         else:
             start_date = end_date - datetime.timedelta(13)
 
-
-        logging.warn(start_date)
-        logging.warn(end_date)
-
-
         # Get the top level marketplace stats for the account
         top_level_mpx_stats = stats_fetcher.get_account_stats(start_date, end_date)
-
-
-        logging.warn(top_level_mpx_stats)
-
-        # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
-
-
-        # Get total stats for the rollup/table footer
-        creative_totals = {
-            'imp': 0,
-            'clk': 0,
-            'ctr': 0,
-            'ecpm': 0,
-            'pub_rev': 0
-        }
-
-        # for dsp in dsps:
-        #     creative_totals['imp'] += dsp['stats']['imp']
-        #     creative_totals['clk'] += dsp['stats']['clk']
-        #     creative_totals['ctr'] += dsp['stats']['ctr']
-        #     creative_totals['ecpm'] += dsp['stats']['ecpm']
-        #     creative_totals['pub_rev'] += dsp['stats']['pub_rev']
 
         # Set up the blocklist
         blocklist = []
@@ -1273,14 +1248,7 @@ class MarketplaceIndexHandler(RequestHandler):
         if network_config:
             blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
 
-        # for dsp in dsps:
-        #     creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], start_date, end_date)
-        #     for creative in creatives:
-        #         creative['creative']['advertiser_blocked'] = creative['creative']['ad_dmn'] in blocklist
-        #     dsp.update({'creatives': creatives})
-
-
-        dsps =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
+        dsp_keys =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
@@ -1289,6 +1257,8 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'apps': apps.values(),
                                       'app_keys': app_keys,
                                       'adunit_keys': adunit_keys,
+                                      'dsp_keys':dsp_keys,
+                                      'pub_key': self.account.key(),
                                       'top_level_mpx_stats': top_level_mpx_stats,
                                       'blocklist': blocklist,
                                       'date_range': self.date_range
@@ -1334,7 +1304,6 @@ def remove_blocklist_handler(request,*args,**kwargs):
 
 
 class MarketplaceOnOffHandler(RequestHandler):
-
     def post(self):
         try:
             activate = self.request.POST.get('activate', 'on')
@@ -1349,22 +1318,20 @@ class MarketplaceOnOffHandler(RequestHandler):
         except Exception, e:
             return JSONResponse({'error': e})
 
-
 @login_required
 def marketplace_on_off(request, *args, **kwargs):
     return MarketplaceOnOffHandler()(request, *args, **kwargs)
 
 
 class MarketplaceSettingsChangeHandler(RequestHandler):
-
     def post(self):
         try:
-
             return JSONResponse({'success': str(self.request.POST)})
         except Exception, e:
             return JSONResponse({'success': e})
 
-
 @login_required
 def marketplace_settings_change(request, *args, **kwargs):
     return MarketplaceSettingsChangeHandler()(request, *args, **kwargs)
+
+

@@ -574,9 +574,9 @@
                                 return [
                                     creative["creative"]["url"],
                                     creative["creative"]["ad_dmn"],
-                                    creative["stats"]["pub_rev"],
-                                    ecpm,
-                                    creative["stats"]["imp"]
+                                    mopub.Utils.formatCurrency(creative["stats"]["pub_rev"]),
+                                    mopub.Utils.formatCurrency(ecpm),
+                                    mopub.Utils.formatNumberWithCommas(creative["stats"]["imp"])
                                 ];
                             });
 

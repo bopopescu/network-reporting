@@ -561,7 +561,6 @@
                         url: sUrl,
                         data: {
                             pub_id: pub_id,
-                            dsp_id: '4e8d03fb71729f4a1d000000',
                             start: "10-24-2011",
                             end: "10-27-2011",
                             format:'jsonp'
@@ -569,7 +568,7 @@
                         //success: fnCallback,
                         success: function(data, textStatus, jqXHR) {
 
-                            var creative_data = _.map(data["4e8d03fb71729f4a1d000000"], function(creative, key) {
+                            var creative_data = _.map(data, function(creative, key) {
                                 var ecpm = (creative['stats']['pub_rev'] / (creative['stats']['imp']+1))*10000;
                                 return [
                                     creative["creative"]["url"],

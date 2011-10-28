@@ -6,4 +6,7 @@ class iAdRenderer(BaseNativeRenderer):
     iAdRenderer => BaseNativeRenderer => BaseCreativeRenderer
     """
     def _get_ad_type(self):
-        return 'iAd'
+        if self.adunit.is_fullscreen():
+            return 'iAd_full'
+        else:
+            return 'iAd'

@@ -43,6 +43,48 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     credential):
                 yield mapper
 
+    def get_index_stats(self, start_date, end_date):
+        """Get required data for the index page of ad network reports.
+
+        Generate a list of aggregate stats for the ad networks, apps and
+        account fro a date range of the last 7 days. Roll up these aggregate
+        stats.
+
+        Return the rolled up aggregates and the aggregate stats list in a
+        tuple.
+        """
+        mappers = list(self.get_ad_network_mappers())
+
+        keys = [s.key() for s in mappers]
+        # Get aggregate stats for all the different ad network mappers for the
+        # account between the selected date range
+        aggregates_list = [self.get_ad_network_aggregates(n, start_date,
+            end_date) for n in mappers]
+        aggregate_stats_list = zip(keys, mappers, aggregates_list)
+        aggregates = self.roll_up_stats(aggregates_list)
+
+        # Get the daily stats list.
+        daily_stats = [self.get_stats_for_date(date).__dict__ for date in
+                date_magic.gen_days(start_date, end_date)]
+
+        # Sort alphabetically by application name then by ad network name
+        aggregate_stats_list = sorted(aggregate_stats_list, key = lambda s:
+                s[1].application.name + s[1].ad_network_name)
+
+        return (aggregates, daily_stats, aggregate_stats_list)
+
+    def get_stats_for_date(self, date):
+        """Get rolled up stats for the given date.
+
+        Return rolled up stats.
+        """
+        login_credentials_list = list(AdNetworkLoginCredentials.all().filter(
+                'account =', self.account))
+        mappers = list(AdNetworkAppMapper.all().filter('ad_network_login IN',
+                login_credentials_list))
+        return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
+            date).filter('ad_network_app_mapper IN', mappers)))
+
     def get_ad_network_aggregates(self, ad_network_app_mapper,
             start_date, end_date):
         """Calculate aggregate stats for an ad network and app

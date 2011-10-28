@@ -30,6 +30,10 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
     @classmethod
+    def kind(self):
+        return 'AdNetworkLoginInfo'
+
+    @classmethod
     def get_by_network(self, account, network):
         return self.get_by_key_name('k:%s:%s' % (account.key(), network))
 
@@ -73,10 +77,33 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
 class AdNetworkAggregate(db.Model): #(date)
     date = db.DateProperty(required=True)
 
-    found = db.IntegerProperty(default=0)
-    updated = db.IntegerProperty(default=0)
-    mapped = db.IntegerProperty(default=0)
-    failed = db.IntegerProperty(default=0)
+    # Could be done with the Expando class but probably better to make
+    # explicit.
+
+    admob_found = db.IntegerProperty(default=0)
+    admob_updated = db.IntegerProperty(default=0)
+    admob_mapped = db.IntegerProperty(default=0)
+    admob_failed = db.IntegerProperty(default=0)
+
+    jumptap_found = db.IntegerProperty(default=0)
+    jumptap_updated = db.IntegerProperty(default=0)
+    jumptap_mapped = db.IntegerProperty(default=0)
+    jumptap_failed = db.IntegerProperty(default=0)
+
+    iad_found = db.IntegerProperty(default=0)
+    iad_updated = db.IntegerProperty(default=0)
+    iad_mapped = db.IntegerProperty(default=0)
+    iad_failed = db.IntegerProperty(default=0)
+
+    inmobi_found = db.IntegerProperty(default=0)
+    inmobi_updated = db.IntegerProperty(default=0)
+    inmobi_mapped = db.IntegerProperty(default=0)
+    inmobi_failed = db.IntegerProperty(default=0)
+
+    mobfox_found = db.IntegerProperty(default=0)
+    mobfox_updated = db.IntegerProperty(default=0)
+    mobfox_mapped = db.IntegerProperty(default=0)
+    mobfox_failed = db.IntegerProperty(default=0)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):

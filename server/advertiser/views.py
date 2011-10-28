@@ -137,19 +137,12 @@ class AdGroupIndexHandler(RequestHandler):
         from ad_network_reports.query_managers import AdNetworkReportQueryManager
         from datetime import date, timedelta
         manager = AdNetworkReportQueryManager(self.account)
-        mappers = list(manager.get_ad_network_mappers())
+        # TODO:Take start date and end date from page.
+        start_date = date.today() - timedelta(days=8)
+        end_date = date.today() - timedelta(days=1)
 
-        keys = [s.key() for s in mappers]
-        # Get aggregate stats for all the different ad network mappers for the
-        # account between the selected date range
-        aggregates = [manager.get_ad_network_aggregates(n, date.today() -
-            timedelta(days = 8), date.today() - timedelta(days = 1)) for n in
-            mappers]
-        aggregate_stats = zip(keys, mappers, aggregates)
-
-        # Sort alphabetically by application name then by ad network name
-        aggregate_stats = sorted(aggregate_stats, key = lambda s:
-                s[1].application.name + s[1].ad_network_name)
+        aggregates, daily_stats, aggregate_stats_list = \
+                manager.get_index_stats(start_date, end_date)
 
         return render_to_response(self.request,
                                  'advertiser/adgroups.html',
@@ -170,7 +163,9 @@ class AdGroupIndexHandler(RequestHandler):
                                    'backfill_promo': backfill_promo_campaigns,
                                    'account': self.account,
                                    'helptext':help_text,
-                                   'aggregate_stats' : aggregate_stats})
+                                   'aggregates': aggregates,
+                                   'aggregate_stats_list':
+                                   aggregate_stats_list})
 
 ####### Helpers for campaign page #######
 

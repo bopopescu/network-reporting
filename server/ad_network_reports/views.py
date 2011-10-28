@@ -8,6 +8,7 @@ from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from datetime import timedelta, date
 from django.contrib.auth.decorators import login_required
+from django.utils import simplejson
 from django.shortcuts import redirect
 
 from account.models import Account
@@ -16,30 +17,39 @@ AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
 
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self, account_key=None):
-        """Generate a list of aggregtate stats for the ad networks, apps and
-        account.
+        """Create the index page for ad network reports for an account.
+
+        Create a manager and get required stats for the webpage.
 
         Return a webpage with the list of stats in a table.
         """
         manager = create_manager(account_key, self.account)
-        mappers = list(manager.get_ad_network_mappers())
+        # TODO:Take start date and end date from page.
+        start_date = date.today() - timedelta(days=8)
+        end_date = date.today() - timedelta(days=1)
 
-        keys = [s.key() for s in mappers]
-        # Get aggregate stats for all the different ad network mappers for the
-        # account between the selected date range
-        aggregates = [manager.get_ad_network_aggregates(n, date.today() -
-            timedelta(days = 8), date.today() - timedelta(days = 1)) for n in
-            mappers]
-        aggregate_stats = zip(keys, mappers, aggregates)
+        aggregates, daily_stats, aggregate_stats_list = manager. \
+                get_index_stats(start_date, end_date)
 
-        # Sort alphabetically by application name then by ad network name
-        aggregate_stats = sorted(aggregate_stats, key = lambda s:
-                s[1].application.name + s[1].ad_network_name)
+        logging.warning("account key: ", account_key)
+        if account_key:
+            add_credentials_url = '/ad_network_reports/manage/' + \
+                    str(account_key) + '/add'
+        else:
+            add_credentials_url = '/ad_network_reports/add'
 
         return render_to_response(self.request,
                                   'ad_network_reports/ad_network_index.html',
                                   {
-                                      "aggregate_stats" : aggregate_stats,
+                                      'start_date' : start_date,
+                                      'end_date' : end_date,
+                                      'add_credentials_url' :
+                                      add_credentials_url,
+                                      'aggregates' : aggregates,
+                                      'daily_stats' : simplejson.dumps(
+                                          daily_stats),
+                                      'aggregate_stats_list' :
+                                        aggregate_stats_list
                                   })
 
 @login_required
@@ -80,10 +90,12 @@ class AddLoginInfoHandler(RequestHandler):
 #        from publisher.models import App, Site
 #        from google.appengine.ext import db
 #        from account.models import Account, NetworkConfig
+#        account = Account()
+#        account.put()
 #        chess_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_chess_com_test', iad_pub_id = '329218549')
 #        chess_network_config.put()
 #
-#        chess_app = App(account = self.account, name = "Chess.com - Play & Learn Chess", network_config = chess_network_config)
+#        chess_app = App(account = account, name = "Chess.com - Play & Learn Chess", network_config = chess_network_config)
 #        chess_app.put()
 #
 #        bet_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_bet_test', admob_pub_id = 'a14c7d7e56eaff8')
@@ -92,24 +104,24 @@ class AddLoginInfoHandler(RequestHandler):
 #        bet_iad_network_config = NetworkConfig(iad_pub_id = '418612824')
 #        bet_iad_network_config.put()
 #
-#        bet_app = App(account = self.account, name = "BET WAP Site", network_config = bet_network_config) # Name must be the same as in Jumptap
+#        bet_app = App(account = account, name = "BET WAP Site", network_config = bet_network_config) # Name must be the same as in Jumptap
 #        bet_app.put()
 #
 #        adunit_network_config = NetworkConfig(jumptap_pub_id =
 #        'bet_wap_site_106andpark_top').put()
 #        Site(app_key = bet_app, network_config = adunit_network_config).put()
 #
-#        bet_iad_app = App(account = self.account, name = "106 & Park", network_config = bet_iad_network_config)
+#        bet_iad_app = App(account = account, name = "106 & Park", network_config = bet_iad_network_config)
 #        bet_iad_app.put()
 #
 #        officejerk_network_config = NetworkConfig(jumptap_pub_id = 'office_jerk_test')
 #        officejerk_network_config.put()
 #
-#        officejerk_app = App(account = self.account, name = "Office Jerk", network_config = officejerk_network_config)
+#        officejerk_app = App(account = account, name = "Office Jerk", network_config = officejerk_network_config)
 #        officejerk_app.put()
 
         if account_key:
-            account = Account.get(account)
+            account = Account.get(account_key)
         else:
             account = self.account
 
@@ -134,8 +146,8 @@ class AddLoginInfoHandler(RequestHandler):
                                   })
 
     def post(self, account_key=None):
-        """Create AdNetworkLoginCredentials and AdNetworkAppMappers for all apps that
-        have pub ids for this network and account.
+        """Create AdNetworkLoginCredentials and AdNetworkAppMappers for all apps
+        that have pub ids for this network and account.
 
         Return a redirect to the ad nework report index.
         """

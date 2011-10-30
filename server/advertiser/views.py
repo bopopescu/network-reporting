@@ -1219,8 +1219,8 @@ class MarketplaceIndexHandler(RequestHandler):
         app_keys = simplejson.dumps([str(k) for k in apps.keys()])
 
         # Set up a MarketplaceStatsFetcher with this account
-        #stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-        stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+        #stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
 
         # Form the date range
         # this is tarded. the start date is really the end of the date range.

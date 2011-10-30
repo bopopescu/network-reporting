@@ -955,7 +955,7 @@ if (typeof window.console == "undefined") {
                 seriesName = name;
                 seriesData = value;
 
-                if (seriesType == 'line' && activeMetric == 'ctr') {
+                if (seriesType == 'line') {
                     seriesLineWidth = (seriesName == 'MoPub Optimized') ? 3 : 2;
                 } else seriesLineWidth = 4;
             });
@@ -990,10 +990,10 @@ if (typeof window.console == "undefined") {
             yAxis: {
                 labels: {
                     formatter: function() {
-                        if(activeMetric == 'revenue') {
-                            text = '$' + Highcharts.numberFormat(this.value, 0);
+                        if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                            return '$' + Highcharts.numberFormat(this.value, 0);
                         } else if(activeMetric == 'ctr') {
-                            text = Highcharts.numberFormat(this.value, 0) + '%';
+                            return Highcharts.numberFormat(this.value, 0) + '%';
                         } else {
                             if (this.value >= 1000000000) {
                                 return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
@@ -1015,9 +1015,9 @@ if (typeof window.console == "undefined") {
                 formatter: function() {
                     var text = '', value = '', total = '';
 
-                    if(activeMetric == 'revenue') {
-                        value = '$' + Highcharts.numberFormat(this.y, 0);
-                        total = '$' + Highcharts.numberFormat(this.total, 0) + ' total';
+                    if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                        value = '$' + Highcharts.numberFormat(this.y, 2);
+                        total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
                     } else if (activeMetric == 'clicks') {
                         value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
                         total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;

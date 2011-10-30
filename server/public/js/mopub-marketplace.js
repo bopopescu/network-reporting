@@ -138,8 +138,8 @@ var mopub = mopub || {};
         renderInline: function () {
             var app_row = $("tr.app-row#app-" + this.model.id, this.el);
             $(".revenue", app_row).text(this.model.get("revenue"));
-            $(".ecpm", app_row).text(this.model.get("ecpm"));
             $(".impressions", app_row).text(this.model.get("impressions"));
+            $(".ecpm", app_row).text(this.model.get("ecpm"));
             // $(".clicks", app_row).text(this.model.get("clicks"));
             // $(".ctr", app_row).text(this.model.get("ctr"));
 
@@ -228,8 +228,8 @@ var mopub = mopub || {};
 
           var adunit_row = $("tr.adunit-row#adunit-" + this.model.id, this.el);
           $(".revenue", adunit_row).text(this.model.get("revenue"));
-          $(".ecpm", adunit_row).text(this.model.get("ecpm"));
           $(".impressions", adunit_row).text(this.model.get("impressions"));
+          $(".ecpm", adunit_row).text(this.model.get("ecpm"));
           $(".price_floor", adunit_row).html('<input id="'+this.model.id+'" type="text" class="input-text input-text-number number" style="width:50px;" value="'+
             this.model.get("price_floor")+'"> <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
           $(".targeting", adunit_row).html('<input class="targeting-box" type="checkbox"> <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
@@ -603,14 +603,23 @@ var mopub = mopub || {};
             });
         });
 
-        /*
-        ** Graphing
-        */
+        /*---------------------------------------/
+        / Marketplace Graph
+        /---------------------------------------*/
+
         function getCurrentChartSeriesType() {
             var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
-            if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
+            if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ecpm') return 'line';
             else return 'area';
         }
+
+        // Use breakdown to switch charts
+        $('.stats-breakdown tr').click(function(e) {
+          $('#dashboard-stats-chart').fadeOut(100, function() {
+            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+            $(this).show();
+          });
+        });
 
         var dailyStats = mopub.accountStats["daily"];
         mopub.dashboardStatsChartData = {
@@ -621,6 +630,79 @@ var mopub = mopub || {};
             ecpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ecpm_float")}]
         };
         mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+
+        /*---------------------------------------/
+        / UI
+        /---------------------------------------*/
+
+        // set up dateOptions
+        $('#dashboard-dateOptions input').click(function() {
+          var option = $(this).val();
+          var hash = document.location.hash;
+          if(option == 'custom') {
+            $('#dashboard-dateOptions-custom-modal').dialog({
+              width: 570,
+              buttons: [
+                {
+                  text: 'Set dates',
+                  css: { fontWeight: '600' },
+                  click: function() {
+                    var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
+                    var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                    var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+
+                    var from_day=from_date.getDate();
+                    var from_month=from_date.getMonth()+1;
+                    var from_year=from_date.getFullYear();
+
+                    $(this).dialog("close");
+                    var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
+                    document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day + hash;
+                  }
+                },
+                {
+                  text: 'Cancel',
+                  click: function() {
+                    $(this).dialog("close");
+                  }
+                }
+              ]
+            });
+          }
+          else {
+            // Tell server about selected option to get new data
+            var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
+            document.location.href = location+'?r=' + option + hash;
+          }
+        });
+
+        // set up stats breakdown dateOptions
+        $('#stats-breakdown-dateOptions input').click(function() {
+          $('.stats-breakdown-value').hide();
+          $('.stats-breakdown-value.'+$(this).val()).show();
+        });
+
+        // set up custom dateOptions modal dialog
+        $('#dashboard-dateOptions-custom-from').datepicker({
+          defaultDate: '-15d',
+          maxDate: '0d',
+          onSelect: function(selectedDate) {
+            var other = $('#dashboard-dateOptions-custom-to');
+            var instance = $(this).data("datepicker");
+            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+            other.datepicker('option', 'minDate', date);
+          }
+        });
+        $('#dashboard-dateOptions-custom-to').datepicker({
+          defaultDate: '-1d',
+          maxDate: '0d',
+          onSelect: function(selectedDate) {
+            var other = $('#dashboard-dateOptions-custom-from');
+            var instance = $(this).data("datepicker");
+            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+            other.datepicker('option', 'maxDate', date);
+          }
+        });
     });
 
 

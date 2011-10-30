@@ -185,8 +185,8 @@
             <th class="appData-icon"></th>
             <th class="dataTable-name" style="width:475px;"></th>
             <th class="dataTable-data numeric">Revenue</th>
-            <th class="dataTable-data numeric">eCPM</th>
             <th class="dataTable-data numeric">Impressions</th>
+            <th class="dataTable-data numeric">eCPM</th>
             <th class="dataTable-data numeric" style="width:100px;">Price Floor
               <a href="#" id="price-floor-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
             <th class="dataTable-data numeric">Enabled</th>
@@ -208,8 +208,8 @@
               </span>
             </td>
             <td class="dataTable-data numeric revenue">--</td>
-            <td class="dataTable-data numeric ecpm">--</td>
             <td class="dataTable-data numeric impressions">--</td>
+            <td class="dataTable-data numeric ecpm">--</td>
             <td class="dataTable-data numeric price_floor" style="width:100px;"></td>
             <td class="dataTable-data numeric targeting"></td>
           </tr>
@@ -223,8 +223,8 @@
               <tr class="adunit-row incomplete for-app-{{a.key}}" id="adunit-{{au.key}}" style="border:none;">
                 <th class="dataTable-name" style="width:475px;"><span class="inner" style="width:475px;"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
                 <td class="dataTable-data numeric revenue" style="border:none;">--</td>
-                <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
                 <td class="dataTable-data numeric impressions" style="border:none;">--</td>
+                <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
                 <td class="dataTable-data numeric price_floor" style="border:none;width:100px">
                   <input id="{{au.key}}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
                 </td>
@@ -245,9 +245,9 @@
           <th width="50"></th>
           <th>App</th>
           <th width="70" style="text-align: right";>Revenue</th>
-          <th width="70" style="text-align: right";>eCPM</th>
           {# <th>Attempts</th> #}
           <th width="90" style="text-align: right";>Impressions</th>
+          <th width="70" style="text-align: right";>eCPM</th>
           {# <th>Fill Rate</th> #}
           {# <th width="70" style="text-align: right";>Clicks</th> #}
           {# <th width="70" style="text-align: right";>CTR</th> #}
@@ -272,13 +272,12 @@
           <td class="revenue" style="text-align: right;">
             --
           </td>
-          <td class="ecpm" style="text-align: right;">
-            --
-          </td>
           <td class="impressions" style="text-align: right;">
             --
           </td>
-
+          <td class="ecpm" style="text-align: right;">
+            --
+          </td>
           <td class="clicks" style="text-align: right;">
             --
           </td>
@@ -309,8 +308,8 @@
         <th> Creative </th>
         <th> Advertiser </th>
         <th> Revenue </th>
-        <th> eCPM </th>
         <th> Impressions </th>
+        <th> eCPM </th>
         {#<th> Clicks </th>#}
         {#<th> CTR </th>#}
       </thead>
@@ -332,8 +331,8 @@
                 {% endif %}{% endif %}
               </td>
               <td style="text-align:right;"> {{ creative.stats.pub_rev|currency }} </td>
-              <td style="text-align:right;"> {{ creative.stats.ecpm|currency }} </td>
               <td style="text-align:right;"> {{ creative.stats.imp }} </td>
+              <td style="text-align:right;"> {{ creative.stats.ecpm|currency }} </td>
               <td style="text-align:right;"> {{ creative.stats.clk }} </td>
               <td style="text-align:right;"> {{ creative.stats.ctr|percentage }} </td>
             </tr>
@@ -344,8 +343,8 @@
         <td> Totals </td>
         <td></td>
         <td> {{ creative_totals.pub_rev|currency }} </td>
-        <td> {{ creative_totals.ecpm|currency }} </td>
         <td> {{ creative_totals.imp }} </td>
+        <td> {{ creative_totals.ecpm|currency }} </td>
         <td> {{ creative_totals.clk }} </td>
         <td> {{ creative_totals.ctr|percentage }} </td>
       </tfoot>
@@ -438,7 +437,6 @@
     {% include "partials/adunit.html" %}
   </script>
 
-  <script src="/js/mopub-advertiser.js?v=83"></script>
   <script type="text/javascript" src="/js/underscore.min.js"></script>
   <script type="text/javascript" src="/js/json2.js"></script>
   <script type="text/javascript" src="/js/backbone.min.js"></script>

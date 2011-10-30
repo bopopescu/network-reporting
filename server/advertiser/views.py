@@ -22,6 +22,7 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+from common.utils.timezones import Pacific_tzinfo
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
 from advertiser.models import *
@@ -1227,7 +1228,7 @@ class MarketplaceIndexHandler(RequestHandler):
             year, month, day = str(self.start_date).split('-')
             end_date = datetime.date(int(year), int(month), int(day))
         else:
-            end_date = datetime.date.today()
+            end_date = datetime.datetime.now(Pacific_tzinfo()).date()
 
         if self.date_range:
             start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
@@ -1242,11 +1243,9 @@ class MarketplaceIndexHandler(RequestHandler):
         # Get the top level marketplace stats for the account
         mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
 
-
         logging.warn("mpx_stats: %s" % mpx_stats)
 
         # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
-
 
         # Get total stats for the rollup/table footer
         creative_totals = {
@@ -1279,6 +1278,14 @@ class MarketplaceIndexHandler(RequestHandler):
 
         dsps =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
 
+        today_stats = []
+        yesterday_stats = []
+        try:
+            today_stats = mpx_stats["daily"][-1];
+            yesterday_stats = mpx_stats["daily"][-2];
+        except:
+            pass
+
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
@@ -1287,6 +1294,9 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'app_keys': app_keys,
                                       'adunit_keys': adunit_keys,
                                       'mpx_stats': simplejson.dumps(mpx_stats),
+                                      'totals': mpx_stats,
+                                      'today_stats': today_stats,
+                                      'yesterday_stats': yesterday_stats,
                                       'blocklist': blocklist,
                                       'start_date': start_date,
                                       'end_date': end_date,

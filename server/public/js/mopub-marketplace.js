@@ -1,7 +1,7 @@
 /*
  * # Mopub Marketplace JS
  */
-
+var mopub = mopub || {};
 (function($, Backbone) {
 
     /*
@@ -207,7 +207,6 @@
             $(item).remove();
         });
         $("#app-" + href + " a.view_targeting").removeClass("hidden");
-        console.log($("#app-" + href + " a.view_targeting"));
         $(this).text('Show Adunits').unbind("click").click(showAdUnits);
     }
 
@@ -237,7 +236,6 @@
           if (this.model.get("active")) {
               $("input.targeting-box", adunit_row).attr('checked', 'checked');
           }
-          console.log(this.model);
 
 
           // Add the event handler to submit targeting changes over ajax.
@@ -605,30 +603,24 @@
             });
         });
 
-        /* Marketplace Graph Functions */
-        function populateGraphWithAccountStats(stats) {
-            var dailyStats = stats["daily"];
-
-            mopub.dashboardStatsChartData = {
-                pointStart: mopub.graphStartDate,
-                pointInterval: 86400000,
-                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "rev")}],
-                impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "imp")}]
-            };
-
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+        /*
+        ** Graphing
+        */
+        function getCurrentChartSeriesType() {
+            var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
+            if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
+            else return 'area';
         }
 
-        /*
-         * Settings page button actions
-         */
-         if (mopub.isDashboardPage) {
-           // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't
-           // disappear until all "onload" AJAX requests are complete.
-           setTimeout(populateGraphWithAccountStats, 0);
-         } else {
-           mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-         }
+        var dailyStats = mopub.accountStats["daily"];
+        mopub.dashboardStatsChartData = {
+            pointStart: mopub.graphStartDate,
+            pointInterval: 86400000,
+            revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue_float")}],
+            impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
+            ecpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ecpm_float")}]
+        };
+        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
     });
 
 

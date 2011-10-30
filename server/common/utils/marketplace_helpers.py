@@ -241,9 +241,11 @@ class MarketplaceStatsFetcher(object):
 
 def _transform_stats(stats_dict):
     return {"revenue": currency(stats_dict['rev']),
+            "revenue_float": stats_dict['rev'],
             "impressions": int(stats_dict['imp']),
             "clicks": stats_dict.get('clk', 0), # no clk currently from /stats/pub
             "ecpm": currency(ecpm(stats_dict['rev'], stats_dict['imp'])),
+            "ecpm_float": ecpm(stats_dict['rev'], stats_dict['imp']),
             "ctr": percentage(ctr(stats_dict.get('clk', 0), stats_dict['imp']))}
 
 

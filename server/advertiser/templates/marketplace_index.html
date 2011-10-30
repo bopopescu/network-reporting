@@ -97,20 +97,20 @@
       <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
         <thead>
           <tr style="border:none;">
+            <th width=33%>Revenue</th>
             <th width=33%>Impressions</th>
             <th width=34%>eCPM</th>
-            <th width=33%>Revenue</th>
           </tr>
         </thead>
         <tbody>
           <tr style="border:none;">
-            {% if mpx_stats %}
-              <td> {{ mpx_stats.impressions|default_if_none:"0"|withsep }} </td>
-              <td> {{ mpx_stats.ecpm|default_if_none:"0" }} </td>
-              <td> {{ mpx_stats.revenue|default_if_none:"0"|withsep }} </td>
+            {% if totals %}
+            <td> {{ totals.revenue|default_if_none:"$0"|withsep }} </td>
+              <td> {{ totals.impressions|default_if_none:"0"|withsep }} </td>
+              <td> {{ totals.ecpm|default_if_none:"$0" }} </td>
             {% else %}
-              <td> 0 </td>
               <td> $0.00 </td>
+              <td> 0 </td>
               <td> $0.00 </td>
             {% endif %}
           </tr>
@@ -142,16 +142,22 @@
           <table>
             <tbody>
               <tr class="active" id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|withsep}}</span></td>
+                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.revenue|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.revenue|withsep}}</span></td>
                 <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
               </tr>
               <tr id="stats-breakdown-impressions">
-                <td class="stats-breakdown-value today"><span class="inner">{{today.impressions|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impressions|withsep}}</span></td>
+                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.impressions|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.impressions|withsep}}</span></td>
                 <td class="stats-breakdown-value all"><span class="inner">{{totals.impressions|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+              </tr>
+              <tr id="stats-breakdown-ecpm">
+                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.ecpm|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.ecpm|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.ecpm|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">eCPM</span></th>
               </tr>
             </tbody>
           </table>
@@ -437,16 +443,14 @@
   <script type="text/javascript" src="/js/json2.js"></script>
   <script type="text/javascript" src="/js/backbone.min.js"></script>
   <script type="text/javascript" src="/js/jquery.tipsy.js"></script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js?v=102"></script>
   <script type="text/javascript" src="/js/jquery.datatables.min.js"></script>
   <script type="text/javascript">
+    var mopub = mopub || {};
     $(document).ready(function() {
-      var mopub = mopub || {};
       mopub.graphStartDate = Date.UTC({{start_date.year}},
             {{start_date.month|add:"-1"}},
             {{start_date.day}});
       mopub.accountStats = {{mpx_stats|safe}};
-      populateGraphWithAccountStats(mopub.accountStats);
 
       var app_keys = {{ app_keys|safe }};
       Marketplace.fetchAppStats(app_keys);
@@ -523,9 +527,9 @@
             e.preventDefault();
             $("#addblocklist").submit();
         });
-
     });
   </script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js?v=102"></script>
 {% endblock extraScripts %}
 
 {% block extraCSS %}

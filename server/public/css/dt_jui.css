@@ -98,18 +98,18 @@ table.display thead th div.DataTables_sort_wrapper span {
 	padding: 2px 0;
 }
 
-tr.level0 {
+table#report-table tr.level0 {
     font-weight:bold;
 }
 
-tr.level1 {
+table#report-table tr.level1 {
 }
 
-tr.level2 {
+table#report-table tr.level2 {
     color: #777;
 }
 
-tr {
+table#report-table tr {
     border: 1px dotted #CCC;
     border-right-style: none;
     border-left-style: none;

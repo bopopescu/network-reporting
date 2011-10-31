@@ -74,7 +74,7 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
-class AdNetworkAggregate(db.Model): #(date)
+class AdNetworkManagementStats(db.Model): #(date)
     date = db.DateProperty(required=True)
 
     # Could be done with the Expando class but probably better to make

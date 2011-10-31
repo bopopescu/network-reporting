@@ -137,9 +137,9 @@
 
 {% block content %}
 
-{% block ad_network_title %}
+{% block adNetworkTitle %}
 <h2>{{app_name}} on {{ad_network_name}}</h2>
-{% endblock %}
+{% endblock adNetworkTitle %}
 
 {% block graph %}
 <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
@@ -167,13 +167,17 @@
 	</div>
 	<div class="clear"></div>
 </section>
-{% endblock %}
+{% endblock graph %}
 
-{% block table_start %}
-<table class="zebra-striped simpletable campaignData-main" style="margin-top:20px;">
+<div style="padding-top:250px; text-align:center;">
+  {% block tableTitle %}
+  <h3 class="dataTable-title">Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+  {% endblock tableTitle %}
+</div>
+
+<table class="zebra-striped simpletable campaignData-main">
 	<thead>
-{% endblock %}
-		{% block table_head %}
+		{% block tableHead %}
 		<th class="dataTable-name"> Date </th>
 		<th class="dataTable-data numeric"> Revenue </th>
 		<th class="dataTable-data numeric"> Attempts </th>
@@ -181,12 +185,10 @@
 		<th class="dataTable-data numeric"> Fill Rate</th>
 		<th class="dataTable-data numeric"> Clicks </th>
 		<th class="dataTable-data numeric"> CTR </th>
-		{% endblock %}
-  {% block table_break %}
+		{% endblock tableHead %}
 	</thead>
 	<tbody>
-	{% endblock %}
-		{% block table_data %}
+		{% block tableData %}
 		{% for stats in stats_list %}
 			<tr>
 				<td class="dataTable-name">{{stats.date|format_date_compact}}</td>
@@ -198,13 +200,11 @@
 				<td class="dataTable-data numeric">{{stats.ctr}}</td>
 			</tr>
 		{% endfor %}
-		{% endblock %}
-{% block table_end %}
+		{% endblock tableData %}
 	</tbody>
 </table>
-{% endblock %}
 
-{% block appended_content %}
-{% endblock %}
+{% block appendedContent %}
+{% endblock appendedContent %}
 
 {% endblock content %}

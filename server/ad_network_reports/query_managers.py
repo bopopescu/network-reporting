@@ -268,6 +268,9 @@ def get_all_login_credentials():
     """Return all AdNetworkLoginCredentials entities ordered by account."""
     return AdNetworkLoginCredentials.all().order('account')
 
+def get_management_stats(days):
+    return AdNetworkManagementStats.all().filter('date IN', days)
+
 def create_manager(account_key, my_account):
     if account_key:
         return(AdNetworkReportQueryManager(db.get(account_key)))

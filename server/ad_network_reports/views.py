@@ -3,7 +3,7 @@ import logging
 
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        create_manager
+        get_management_stats, create_manager
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from datetime import date, timedelta
@@ -199,3 +199,35 @@ class AddLoginInfoHandler(RequestHandler):
 @login_required
 def add_login_credentials(request, *args, **kwargs):
     return AddLoginInfoHandler()(request, *args, **kwargs)
+
+class AdNetworkReportManageHandler(RequestHandler):
+    def get(self):
+        """Create the ad network reports management page.
+
+        Get the list of management stats and login credentials that resulted in
+        error.
+
+        Return a webpage with the list of management stats in a table.
+        """
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
+        else:
+            days = StatsModel.lastdays(self.date_range, 1)
+
+        management_stats_list = get_management_stats(days)
+
+        return render_to_response(self.request,
+                                  'ad_network_reports/ad_network_index' \
+                                          '.html',
+                                  {
+                                      'start_date' : days[0],
+                                      'end_date' : days[-1],
+                                      'date_range' : self.date_range,
+                                      'ad_network_names' : AD_NETWORK_NAMES,
+                                      'management_stats_list' :
+                                      management_stats_list
+                                  })
+
+@login_required
+def manage_ad_network_reports(request, *args, **kwargs):
+    return AdNetworkReportManageHandler()(request, *args, **kwargs)

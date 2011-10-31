@@ -1,9 +1,14 @@
 {% extends 'ad_network_base.html' %}
+{% load filters %}
 
-{% block ad_network_title %}
+{% block adNetworkTitle %}
 {% endblock %}
 
-{% block table_head %}
+{% block tableTitle %}
+<h3 class="dataTable-title">Aggregate Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+{% endblock tableTitle %}
+
+{% block tableHead %}
 <th class="dataTable-name"> App </th>
 <th class="dataTable-name"> Ad Network </th>
 <th class="dataTable-data numeric"> Revenue </th>
@@ -12,9 +17,9 @@
 <th class="dataTable-data numeric"> Fill Rate</th>
 <th class="dataTable-data numeric"> Clicks </th>
 <th class="dataTable-data numeric"> CTR </th>
-{% endblock %}
+{% endblock tableHead %}
 
-{% block table_data %}
+{% block tableData %}
 {% for key, mapper, stats in aggregate_stats_list %}
 	<tr>
 		<td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
@@ -27,8 +32,8 @@
 		<td class="dataTable-data numeric">{{stats.ctr}}</td>
 	</tr>
 {% endfor %}
-{% endblock %}
+{% endblock tableData %}
 
-{% block appended_content %}
+{% block appendedContent %}
 <a class="right btn" href={{add_credentials_url}}>Add more network credentials</a>
-{% endblock %}
+{% endblock appendedContent %}

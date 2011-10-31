@@ -58,6 +58,16 @@ var mopub = mopub || {};
             }
         }
 
+        // Wipe this asap
+        if (window.location.pathname.search('/campaigns/edit/') >= 0) {
+            $("input[name='start_date']").attr('disabled', 'disabled');
+            $("input[name='end_date']").attr('disabled', 'disabled');
+            $("select[name='bid_strategy']").attr('disabled', 'disabled');
+            $("input[name='bid']").attr('disabled', 'disabled');
+            $("input[name='budget']").attr('disabled', 'disabled');
+            $("select[name='budget_type']").attr('disabled', 'disabled');
+        }
+
         function campaignAdgroupFormOnLoad(){
 
 
@@ -346,47 +356,6 @@ var mopub = mopub || {};
       $('#campaignAdgroupForm').ajaxForm(options);
 
 
-      // set up "Help" links
-      // $('#campaignForm-type-helpLink').click(function(e) {
-      //     e.preventDefault();
-      //     $('#campaignForm-type-helpContent').dialog({
-      //         buttons: { "Close": function() { $(this).dialog("close"); } }
-      //     });
-      // });
-
-      // $('#campaignForm-priority-helpLink').click(function(e) {
-      //     e.preventDefault();
-      //     $('#campaignForm-priority-helpContent').dialog({
-      //         buttons: { "Close": function() { $(this).dialog('close'); }}
-      //     });
-      // });
-
-      // $('#campaignForm-promo-priority-helpLink').click(function(e) {
-      //     e.preventDefault();
-      //     $('#campaignForm-promo-priority-helpContent').dialog({
-      //         buttons: { "Close": function() { $(this).dialog('close'); }}
-      //     });
-      // });
-
-      // $('#campaignForm-customHtml-helpLink').click(function(e) {
-      //     e.preventDefault();
-      //     $('#campaignForm-customHtml-helpContent').dialog({
-      //         buttons: { "Close": function() { $(this).dialog("close"); } }
-      //     });
-      // });
-
-      // $('#campaignForm-bid-helpLink').click(function(e) {
-      //     e.preventDefault();
-      //     $('#campaignForm-bid-helpContent').dialog({
-      //         buttons: { "Close": function() { $(this).dialog("close"); } }
-      //     });
-      // });
-      // $('#campaignForm-keyword-helpLink').click(function(e) {
-      //     e.preventDefault();
-      //     $('#campaignForm-keyword-helpContent').dialog({
-      //         buttons: { "Close": function() { $(this).dialog("close"); } }
-      //     });
-      // });
 
 
       $.each(['type', 'priority', 'promo-priority', 'customHtml', 'bid', 'keyword'], function(iter, link_type) {
@@ -424,24 +393,6 @@ var mopub = mopub || {};
               });
           $form.submit();
       }
-
-      // $('#creativeManagementForm-pause')
-      //     .click(function(e){
-      //         e.preventDefault();
-      //         creativeMange('pause');
-      //     });
-
-      // $('#creativeManagementForm-resume')
-      //     .click(function(e){
-      //         e.preventDefault();
-      //         creativeMange('resume');
-      //     });
-
-      // $('#creativeManagementForm-delete')
-      //     .click(function(e){
-      //         e.preventDefault();
-      //         creativeMange('delete');
-      //     });
 
       $.each(['pause', 'resume', 'delete'], function(iter, form_control) {
           $('#creativeManagementForm-' + form_control)
@@ -627,55 +578,10 @@ var mopub = mopub || {};
         $('.adTypeDependent.'+$(this).val(),form).show();
       }).filter(':checked').click();
 
-
-    // $('#campaignAdgroupForm-submit')
-    //   .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
-    //   .click(function(e){
-    //     e.preventDefault();
-    //     $('#campaignAdgroupForm').submit();
-    //   });
-
-    ////////////////////////////////////
-    //////////  /campaigns/ ////////////
-    ////////////////////////////////////
-
     $('#advertisers-addCampaign')
       .button({ icons : {primary : 'ui-icon-circle-plus'} });
 
     $('#advertisers-adgroups-editAdGroupButton').button({ icons: { primary: "ui-icon-wrench" } });
-
-
-
-    // // TODO: This is not DRY
-    // $('#campaignForm-pause')
-    //   .click(function(e) {
-    //     e.preventDefault();
-    //     $('#campaignForm').find("#action").attr("value","pause").end().submit();
-    // });
-
-    // $('#campaignForm-resume')
-    //   .click(function(e) {
-    //     e.preventDefault();
-    //     $('#campaignForm').find("#action").attr("value","resume").end().submit();
-    // });
-
-    // $('#campaignForm-activate')
-    //   .click(function(e) {
-    //     e.preventDefault();
-    //     $('#campaignForm').find("#action").attr("value","activate").end().submit();
-    // });
-
-    // $('#campaignForm-archive')
-    //   .click(function(e) {
-    //     e.preventDefault();
-    //     $('#campaignForm').find("#action").attr("value","archive").end().submit();
-    // });
-
-    // $('#campaignForm-delete')
-    //   .click(function(e) {
-    //     e.preventDefault();
-    //     $('#campaignForm').find("#action").attr("value","delete").end().submit();
-    // });
 
       $.each(['pause', 'resume', 'activate', 'archive', 'delete'], function(iter, action) {
           $('#campaignForm-' + action)
@@ -684,9 +590,6 @@ var mopub = mopub || {};
                   $('#campaignForm').find("#action").attr("value", action).end().submit();
               });
       });
-
-
-    ///// Filter Campaigns by status and targeted apps /////
 
 
     function refreshAlternatingColor(){
@@ -738,7 +641,7 @@ var mopub = mopub || {};
         var stat = parseInt(statText.replace(/,/g, ''), 10);
         return (isNaN(stat)) ? 0 : stat;
     }
-    
+
     function parseFloatFromStatText(statText) {
         var stat = parseFloat(statText.replace(/,/g, ''));
         return (isNaN(stat)) ? 0 : stat;
@@ -757,7 +660,7 @@ var mopub = mopub || {};
       req = imp = clk = rev = conv = ctr = fill = ecpm = 0;
 
       var classPrefix = campaignType.split('_')[0];
-      
+
       // Sometimes, we want a rollup to include stats for hidden campaigns. For example, the
       // marketplace campaign is always hidden, but we still want to compute a marketplace rollup.
       // For these cases, we won't include ":visible" as part of our campaign-finding selector.
@@ -788,14 +691,13 @@ var mopub = mopub || {};
       ctr = (clk === 0 || imp === 0) ? 0 : clk / imp;
 
       fill = (imp === 0 || req === 0) ? 0 : imp / req;
-      
+
       ecpm = (rev === 0 || imp === 0) ? 0 : 1000 * (rev / imp);
 
       $("#" + classPrefix + '-total-req').text(mopub.Utils.formatNumberWithCommas(req));
       $("#" + classPrefix + '-total-imp').text(mopub.Utils.formatNumberWithCommas(imp));
       $("#" + classPrefix + '-total-clk').text(mopub.Utils.formatNumberWithCommas(clk));
-      $("#" + classPrefix + '-total-rev').text(
-        '$' + mopub.Utils.formatNumberWithCommas(rev.toFixed(2)));
+      $("#" + classPrefix + '-total-rev').text('$' + mopub.Utils.formatNumberWithCommas(rev.toFixed(2)));
       $("#" + classPrefix + '-total-conv').text(mopub.Utils.formatNumberWithCommas(conv));
       $("#" + classPrefix + '-total-ctr').text(mopub.Utils.formatNumberAsPercentage(ctr));
       $("#" + classPrefix + '-total-fill').text(
@@ -854,7 +756,7 @@ var mopub = mopub || {};
         cpc: "cpc",
         cpm: "ecpm",
         ctr: "ctr",
-        fill_rate: "fill",
+        fill_rate: "fill"
     };
 
     var campaignsData = {};
@@ -1467,97 +1369,96 @@ var mopub = mopub || {};
         e.preventDefault();
     });
 
-    // set up showing/hiding of app details
-    $('.appData-details').each(function() {
-      var details = $(this);
-      var data = $('.appData-details-inner', details);
-      var button = $('.appData-details-toggleButton', details);
+        // set up showing/hiding of app details
+        $('.appData-details').each(function() {
+            var details = $(this);
+            var data = $('.appData-details-inner', details);
+            var button = $('.appData-details-toggleButton', details);
 
-      function getButtonTextElement() {
-        var buttonTextElement = $('.ui-button-text', button);
-        if(buttonTextElement.length === 0) {
-            buttonTextElement = button;
-        }
-        return buttonTextElement;
-      }
+            function getButtonTextElement() {
+                var buttonTextElement = $('.ui-button-text', button);
+                if(buttonTextElement.length === 0) {
+                    buttonTextElement = button;
+                }
+                return buttonTextElement;
+            }
 
-      function didShowData() {
-        data.removeClass('hide');
-        data.addClass('show');
-        button.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-        getButtonTextElement().text('Hide details');
-      }
+            function didShowData() {
+                data.removeClass('hide');
+                data.addClass('show');
+                button.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+                getButtonTextElement().text('Hide details');
+            }
 
-      function didHideData() {
-        data.removeClass('show');
-        data.addClass('hide');
-        button.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-        getButtonTextElement().text('Show details');
-      }
+            function didHideData() {
+                data.removeClass('show');
+                data.addClass('hide');
+                button.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+                getButtonTextElement().text('Show details');
+            }
 
-      if(data.hasClass('show')) {
-        didShowData();
-      }
-      else {
-        data.hide();
-        didHideData();
-      }
+            if(data.hasClass('show')) {
+                didShowData();
+            }
+            else {
+                data.hide();
+                didHideData();
+            }
 
-      button.click(function(e) {
-        e.preventDefault();
-        if(data.hasClass('show')) {
-          data.slideUp('fast');
-          didHideData();
-        }
-        else {
-          data.slideDown('fast');
-          didShowData();
-        }
-      });
-    });
-
-    // set up toggle all app details button
-    $('#dashboard-apps-toggleAllButton').click(function(e) {
-      e.preventDefault();
-      var hiddenAppDetails = $('.appData-details .hide').parents('.appData-details');
-      var shownAppDetails = $('.appData-details .show').parents('.appData-details');
-      if(hiddenAppDetails.length > 0) {
-        hiddenAppDetails.each(function() {
-          $('.appData-details-toggleButton', $(this)).click();
+            button.click(function(e) {
+                e.preventDefault();
+                if(data.hasClass('show')) {
+                    data.slideUp('fast');
+                    didHideData();
+                }
+                else {
+                    data.slideDown('fast');
+                    didShowData();
+                    }
+            });
         });
-      }
-      else {
-        shownAppDetails.each(function() {
-          $('.appData-details-toggleButton', $(this)).click();
+
+        // set up toggle all app details button
+        $('#dashboard-apps-toggleAllButton').click(function(e) {
+            e.preventDefault();
+            var hiddenAppDetails = $('.appData-details .hide').parents('.appData-details');
+            var shownAppDetails = $('.appData-details .show').parents('.appData-details');
+            if (hiddenAppDetails.length > 0) {
+                hiddenAppDetails.each(function() {
+                    $('.appData-details-toggleButton', $(this)).click();
+                });
+            } else {
+                shownAppDetails.each(function() {
+                    $('.appData-details-toggleButton', $(this)).click();
+                });
+            }
         });
-      }
-    });
 
-    // Do Campaign Export Select stuff
-    $('#advertiser-adgroups-exportSelect')
-     .change(function(e) {
-        e.preventDefault();
-        var val = $(this).val();
-        if (val != 'exp') {
-            $('#campaignExportForm')
-                .find('#campaignExportType')
-                .val(val)
-                .end()
-                .submit();
+        // Do Campaign Export Select stuff
+        $('#advertiser-adgroups-exportSelect')
+            .change(function(e) {
+                e.preventDefault();
+                var val = $(this).val();
+                if (val != 'exp') {
+                    $('#campaignExportForm')
+                        .find('#campaignExportType')
+                        .val(val)
+                        .end()
+                        .submit();
+                }
+                $(this).selectmenu('index', 0);
+            });
+
+        // Hide unneeded li entry
+        $('#advertiser-adgroups-exportSelect-menu').find('li').first().hide();
+
+        // For campaigns/create //
+
+        if ($("#campaignForm-details") != []){
+            // Only execute this if we are on the new campaigns form
+            var preselected_tag = window.location.hash.substr(1);
+            $("#advertiser-CampaignType-"+preselected_tag).click();
         }
-        $(this).selectmenu('index', 0);
+
     });
-
-    // Hide unneeded li entry
-    $('#advertiser-adgroups-exportSelect-menu').find('li').first().hide();
-
-    // For campaigns/create //
-
-    if ($("#campaignForm-details") != []){
-        // Only execute this if we are on the new campaigns form
-        var preselected_tag = window.location.hash.substr(1);
-        $("#advertiser-CampaignType-"+preselected_tag).click();
-    }
-
-  }); // End document31 onready
  })(this.jQuery);

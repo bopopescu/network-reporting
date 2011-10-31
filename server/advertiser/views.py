@@ -22,6 +22,7 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+from common.utils.timezones import Pacific_tzinfo
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
 from advertiser.models import *
@@ -1215,7 +1216,6 @@ class MarketplaceIndexHandler(RequestHandler):
             app = apps.get(au.app_key.key())
             if not app:
                 app = AppQueryManager.get(au.app_key.key())
-                logging.info(app.name)
                 app.adunits = [au]
                 apps[au.app_key.key()] = app
             else:
@@ -1232,15 +1232,34 @@ class MarketplaceIndexHandler(RequestHandler):
             year, month, day = str(self.start_date).split('-')
             end_date = datetime.date(int(year), int(month), int(day))
         else:
-            end_date = datetime.date.today()
+            end_date = datetime.datetime.now(Pacific_tzinfo()).date()
 
         if self.date_range:
             start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
         else:
             start_date = end_date - datetime.timedelta(13)
 
-        # Get the top level marketplace stats for the account
-        top_level_mpx_stats = stats_fetcher.get_account_stats(start_date, end_date)
+        mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
+
+        logging.warn("mpx_stats: %s" % mpx_stats)
+
+        # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
+
+        # Get total stats for the rollup/table footer
+        creative_totals = {
+            'imp': 0,
+            'clk': 0,
+            'ctr': 0,
+            'ecpm': 0,
+            'pub_rev': 0
+        }
+
+        # for dsp in dsps:
+        #     creative_totals['imp'] += dsp['stats']['imp']
+        #     creative_totals['clk'] += dsp['stats']['clk']
+        #     creative_totals['ctr'] += dsp['stats']['ctr']
+        #     creative_totals['ecpm'] += dsp['stats']['ecpm']
+        #     creative_totals['pub_rev'] += dsp['stats']['pub_rev']
 
         # Set up the blocklist
         blocklist = []
@@ -1249,6 +1268,14 @@ class MarketplaceIndexHandler(RequestHandler):
             blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
 
         dsp_keys =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
+
+        today_stats = []
+        yesterday_stats = []
+        try:
+            today_stats = mpx_stats["daily"][-1];
+            yesterday_stats = mpx_stats["daily"][-2];
+        except:
+            pass
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
@@ -1259,8 +1286,13 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'adunit_keys': adunit_keys,
                                       'dsp_keys':dsp_keys,
                                       'pub_key': self.account.key(),
-                                      'top_level_mpx_stats': top_level_mpx_stats,
+                                      'mpx_stats': simplejson.dumps(mpx_stats),
+                                      'totals': mpx_stats,
+                                      'today_stats': today_stats,
+                                      'yesterday_stats': yesterday_stats,
                                       'blocklist': blocklist,
+                                      'start_date': start_date,
+                                      'end_date': end_date,
                                       'date_range': self.date_range
                                   })
 

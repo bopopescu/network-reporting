@@ -57,7 +57,7 @@
     <div class="rollup fig3">
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.impressions|withsep }}
+          {{ mpx_stats.impressions|withsep }}
         </div>
         <div class="label">
           Impressions
@@ -66,7 +66,7 @@
 
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.ecpm }}
+          {{ mpx_stats.ecpm }}
         </div>
         <div class="label">
           Average eCPM
@@ -74,7 +74,7 @@
       </div>
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.clicks|withsep }}
+          {{ mpx_stats.clicks|withsep }}
         </div>
         <div class="label">
           Clicks
@@ -83,7 +83,7 @@
 
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.revenue|withsep }}
+          {{ mpx_stats.revenue|withsep }}
         </div>
         <div class="label">
           Revenue
@@ -97,20 +97,20 @@
       <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
         <thead>
           <tr style="border:none;">
+            <th width=33%>Revenue</th>
             <th width=33%>Impressions</th>
             <th width=34%>eCPM</th>
-            <th width=33%>Revenue</th>
           </tr>
         </thead>
         <tbody>
           <tr style="border:none;">
-            {% if top_level_mpx_stats %}
-              <td> {{ top_level_mpx_stats.impressions|default_if_none:"0"|withsep }} </td>
-              <td> {{ top_level_mpx_stats.ecpm|default_if_none:"0" }} </td>
-              <td> {{ top_level_mpx_stats.revenue|default_if_none:"0"|withsep }} </td>
+            {% if totals %}
+            <td> {{ totals.revenue|default_if_none:"$0"|withsep }} </td>
+              <td> {{ totals.impressions|default_if_none:"0"|withsep }} </td>
+              <td> {{ totals.ecpm|default_if_none:"$0" }} </td>
             {% else %}
-              <td> 0 </td>
               <td> $0.00 </td>
+              <td> 0 </td>
               <td> $0.00 </td>
             {% endif %}
           </tr>
@@ -135,6 +135,49 @@
   </div>
 
   <div class="active tab-section" id="performance">
+    <section class="offset nomargin" id="dashboard-stats">
+      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <div class="stats">
+        <div class="stats-breakdown">
+          <table>
+            <tbody>
+              <tr class="active" id="stats-breakdown-revenue">
+                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.revenue|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.revenue|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+              </tr>
+              <tr id="stats-breakdown-impressions">
+                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.impressions|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.impressions|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.impressions|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+              </tr>
+              <tr id="stats-breakdown-ecpm">
+                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.ecpm|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.ecpm|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.ecpm|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">eCPM</span></th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stats-breakdown-buttons">
+          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+            <label for="stats-breakdown-dateOptions-option-0">Today</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+            <label for="stats-breakdown-dateOptions-option-2">All</label>
+          </span>
+        </div>
+        <div class="chart stats-chart" id="dashboard-stats-chart">
+        </div>
+      </div>
+      <div class="clear"></div>
+    </section>
+
     <div class="appData-columnHeaders">
       <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
         <thead>
@@ -142,8 +185,8 @@
             <th class="appData-icon"></th>
             <th class="dataTable-name" style="width:475px;"></th>
             <th class="dataTable-data numeric">Revenue</th>
-            <th class="dataTable-data numeric">eCPM</th>
             <th class="dataTable-data numeric">Impressions</th>
+            <th class="dataTable-data numeric">eCPM</th>
             <th class="dataTable-data numeric" style="width:100px;">Price Floor
               <a href="#" id="price-floor-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
             <th class="dataTable-data numeric">Enabled</th>
@@ -165,8 +208,8 @@
               </span>
             </td>
             <td class="dataTable-data numeric revenue">--</td>
-            <td class="dataTable-data numeric ecpm">--</td>
             <td class="dataTable-data numeric impressions">--</td>
+            <td class="dataTable-data numeric ecpm">--</td>
             <td class="dataTable-data numeric price_floor" style="width:100px;"></td>
             <td class="dataTable-data numeric targeting"></td>
           </tr>
@@ -180,8 +223,8 @@
               <tr class="adunit-row incomplete for-app-{{a.key}}" id="adunit-{{au.key}}" style="border:none;">
                 <th class="dataTable-name" style="width:475px;"><span class="inner" style="width:475px;"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
                 <td class="dataTable-data numeric revenue" style="border:none;">--</td>
-                <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
                 <td class="dataTable-data numeric impressions" style="border:none;">--</td>
+                <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
                 <td class="dataTable-data numeric price_floor" style="border:none;width:100px">
                   <input id="{{au.key}}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
                 </td>
@@ -202,9 +245,9 @@
           <th width="50"></th>
           <th>App</th>
           <th width="70" style="text-align: right";>Revenue</th>
-          <th width="70" style="text-align: right";>eCPM</th>
           {# <th>Attempts</th> #}
           <th width="90" style="text-align: right";>Impressions</th>
+          <th width="70" style="text-align: right";>eCPM</th>
           {# <th>Fill Rate</th> #}
           {# <th width="70" style="text-align: right";>Clicks</th> #}
           {# <th width="70" style="text-align: right";>CTR</th> #}
@@ -229,13 +272,12 @@
           <td class="revenue" style="text-align: right;">
             --
           </td>
-          <td class="ecpm" style="text-align: right;">
-            --
-          </td>
           <td class="impressions" style="text-align: right;">
             --
           </td>
-
+          <td class="ecpm" style="text-align: right;">
+            --
+          </td>
           <td class="clicks" style="text-align: right;">
             --
           </td>
@@ -285,8 +327,8 @@
                 {% endif %}{% endif %}
               </td>
               <td style="text-align:right;"> {{ creative.stats.pub_rev|currency }} </td>
-              <td style="text-align:right;"> {{ creative.stats.ecpm|currency }} </td>
               <td style="text-align:right;"> {{ creative.stats.imp }} </td>
+              <td style="text-align:right;"> {{ creative.stats.ecpm|currency }} </td>
               <td style="text-align:right;"> {{ creative.stats.clk }} </td>
               <td style="text-align:right;"> {{ creative.stats.ctr|percentage }} </td>
             </tr>
@@ -297,8 +339,8 @@
         <td> Totals </td>
         <td></td>
         <td> {{ creative_totals.pub_rev|currency }} </td>
-        <td> {{ creative_totals.ecpm|currency }} </td>
         <td> {{ creative_totals.imp }} </td>
+        <td> {{ creative_totals.ecpm|currency }} </td>
         <td> {{ creative_totals.clk }} </td>
         <td> {{ creative_totals.ctr|percentage }} </td>
       </tfoot>
@@ -391,15 +433,19 @@
     {% include "partials/adunit.html" %}
   </script>
 
-  <script src="/js/mopub-advertiser.js?v=83"></script>
   <script type="text/javascript" src="/js/underscore.min.js"></script>
   <script type="text/javascript" src="/js/json2.js"></script>
   <script type="text/javascript" src="/js/backbone.min.js"></script>
   <script type="text/javascript" src="/js/jquery.tipsy.js"></script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js?v=107"></script>
   <script type="text/javascript" src="/js/jquery.datatables.min.js"></script>
   <script type="text/javascript">
+    var mopub = mopub || {};
     $(document).ready(function() {
+      mopub.graphStartDate = Date.UTC({{start_date.year}},
+            {{start_date.month|add:"-1"}},
+            {{start_date.day}});
+      mopub.accountStats = {{mpx_stats|safe}};
+
       var app_keys = {{ app_keys|safe }};
       var blocklist = {{ blocklist|safe }};
       var dsp_keys = {{ dsp_keys|safe }};
@@ -414,9 +460,10 @@
 
     });
   </script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js?v=103"></script>
 {% endblock extraScripts %}
 
 {% block extraCSS %}
-<link rel="stylesheet" href="/css/dt_jui.css?v=7"></link>
+<link rel="stylesheet" href="/css/dt_jui.css?v=8"></link>
 {% endblock extraCSS %}
 

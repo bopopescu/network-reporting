@@ -5,9 +5,6 @@ import math
 
 from datetime import datetime, timedelta
 
-#from advertiser.models import Campaign
-
-DEFAULT_FUDGE_FACTOR = 0.005
 
 # increase numbers by the slighest amount because floating pt errors tend to yield numbers JUST less 
 # than what we want (999.9999999999999 instead of 1000)
@@ -23,7 +20,6 @@ class Budget(db.Model):
     start_datetime = db.DateTimeProperty(required=True)
     end_datetime = db.DateTimeProperty(required=False)
     active = db.BooleanProperty()
-    #campaign = db.ReferenceProperty(Campaign, collection_name = '_budget_obj')
 
     # All at once, evenly
     delivery_type = db.StringProperty(choices = ['evenly', 'allatonce'])
@@ -74,17 +70,13 @@ class Budget(db.Model):
     def is_active_for_timeslice(self, slice_num):
         """ Returns True if the campaign is active for this TS
         False otherwise """
-        logging.warning("slice: %s  start: %s" % (slice_num, self.start_slice))
         if slice_num is None:
             return False
 
         if slice_num >= self.start_slice:
-            logging.warning("First pass")
             if (self.end_slice and slice_num <= self.end_slice) or self.end_slice is None:
-                logging.warning("second pass")
                 return True
             else:
-                logging.warning("Fail here")
                 return False
         else:
             return False
@@ -143,7 +135,6 @@ class Budget(db.Model):
         and the desired spend """
         expected = self.expected_spent
         # This is a daily budget
-        logging.warning("Expected spent: %s" % expected)
         if self.static_slice_budget:
             # This is finite
             if self.finite:
@@ -163,7 +154,8 @@ class Budget(db.Model):
 
     @property
     def slice_budget(self):
-        """ Returns static_slice_budget or DYNAMIC slice_budget """
+        """ Returns static_slice_budget or slice_budget
+        as a function of total and the number of slices """
 
         # if we have a static slice budget, just spend that shit
         if self.static_slice_budget:
@@ -205,14 +197,6 @@ class Budget(db.Model):
         return tot
 
 
-    ######################## NOTE ###############################
-    #   This is why I want to make budgets immutable,
-    #   If you change the daily budget, then the 'expected_spent'
-    #   value is going to be WAY off, even though it's not really.
-    #   If, instead, the old budget were gotten rid of and a new budget
-    #   were created, all budgets would have the appropriate expected
-    #   spending.
-    #############################################################
     @property
     def expected_spent(self):
         """ Returns the amount the campaign SHOULDVE spent up until now
@@ -256,7 +240,6 @@ class Budget(db.Model):
     def elapsed_slices(self):
         """ Number of slices that have elapsed """
         # curr - start + 1 because current slice counts as having happened
-        logging.warning("\n\nCurr: %s\t\tStart: %s" % (self.curr_slice, self.start_slice))
         return (self.curr_slice - self.start_slice) + 1
 
     @property
@@ -391,7 +374,7 @@ class BudgetChangeLog(db.Model):
 
 
 class BudgetSliceLog(db.Model):
-    """ SliceLogs aren't really imported as slicelogs (they are, but not REALLY) as much
+    """ SliceLogs aren't really important as slicelogs (they are, but not REALLY) as much
     as they are important as Memcache snapshots.  They basically have the last known good
     MC configuration and are used if shit hits the fan """
 
@@ -462,7 +445,4 @@ class BudgetSliceLog(db.Model):
     def get_keys_for_slices(cls, budget, slices):
         for slice_num in slices:
             yield cls.get_key(budget, slice_num)
-
-    #TODO: Custom init stuff, k:ts_log:<camp>:<slice>
-
 

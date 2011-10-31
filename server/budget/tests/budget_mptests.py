@@ -81,10 +81,6 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.budget_arb_start = datetime.datetime(2000,1,10,4,33)
         self.budget_arb_end = datetime.datetime(2000,1,15,14,3)
 
-        # We simplify the budgetmanger for testing purposes
-        #budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
-        #budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
-
         # Set up default models
         self.account = Account()
         self.account.put()

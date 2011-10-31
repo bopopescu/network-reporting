@@ -368,6 +368,9 @@ def calc_braking_fraction(desired_spend, actual_spend, prev_fraction):
     # prev braking rate is .5, we show this campaign 50% of the time that we actually can show it
     # so we get 1000 requests, but only show 500
 
+    # If we wanted to spend 0, and spent 0, then don't change anything
+    if actual_spend == desired_spend and acutal_spend == 0:
+        return prev_fraction
     # if we overdeliver by 2x, actual will be 20 to desired 10, rate factor is 2
     # if we underdeliver by 2x, actual will be 5 to desired 10, rate factor of .5
     try:

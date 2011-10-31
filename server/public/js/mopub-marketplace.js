@@ -569,13 +569,13 @@ var mopub = mopub || {};
                         success: function(data, textStatus, jqXHR) {
 
                             var creative_data = _.map(data, function(creative, key) {
-                                var ecpm = (creative['stats']['pub_rev'] / (creative['stats']['imp']+1))*10000;
+                                var ecpm = (creative['stats']['pub_rev'] / (creative['stats']['imp']+1))*1000;
                                 return [
                                     creative["creative"]["url"],
                                     creative["creative"]["ad_dmn"],
-                                    mopub.Utils.formatCurrency(creative["stats"]["pub_rev"]),
-                                    mopub.Utils.formatCurrency(ecpm),
-                                    mopub.Utils.formatNumberWithCommas(creative["stats"]["imp"])
+                                    creative["stats"]["pub_rev"],
+                                    ecpm,
+                                    creative["stats"]["imp"]
                                 ];
                             });
 
@@ -595,14 +595,14 @@ var mopub = mopub || {};
                     var domain = aData[1];
                     if (_.contains(blocklist, domain)) {
                         $("td:eq(1)", nRow).text(domain + " (Blocked)");
-                    // } else if (domain != null) {
-                    //     $("td:eq(1)", nRow).html(domain);
+                     } else if (domain != null) {
+                         $("td:eq(1)", nRow).html(domain);
                     } else {
                         $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
                     }
-                    $("td:eq(2)", nRow).addClass("numeric");
-                    $("td:eq(3)", nRow).addClass("numeric");
-                    $("td:eq(4)", nRow).addClass("numeric");
+                    $("td:eq(2)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[2]));
+                    $("td:eq(3)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[3]));
+                    $("td:eq(4)", nRow).addClass("numeric").text(mopub.Utils.formatNumberWithCommas(aData[4]));
                     return nRow;
                 }
             });

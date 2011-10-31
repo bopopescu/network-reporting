@@ -1,113 +1,34 @@
-{% extends 'base.html' %}
-{% load filters %}
-{% block navLinks %}
-            <li><a href="{% url publisher_index %}">Dashboard</a></li>
-            <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-            <li><a href="{% url reports_index %}">Reports</a></li>
-{% endblock navLinks %}
-{% block pageTitle %}<h1>Ad Network Reports</h1>{% endblock pageTitle %}
-{% block messageCenter %}{% endblock messageCenter %}
-{% block titleBarRight %}{% endblock titleBarRight %}
+{% extends 'ad_network_base.html' %}
 
-{% block extraScripts %}
-  <script type="text/javascript">
-    var mopub = mopub || {};
+{% block ad_network_title %}
+{% endblock %}
 
-    $(function() {
-        $("#dashboard-dateOptions").remove();
+{% block table_head %}
+<th class="dataTable-name"> App </th>
+<th class="dataTable-name"> Ad Network </th>
+<th class="dataTable-data numeric"> Revenue </th>
+<th class="dataTable-data numeric"> Attempts </th>
+<th class="dataTable-data numeric"> Impressions </th>
+<th class="dataTable-data numeric"> Fill Rate</th>
+<th class="dataTable-data numeric"> Clicks </th>
+<th class="dataTable-data numeric"> CTR </th>
+{% endblock %}
 
-        // Use breakdown to switch charts
-        $('.stats-breakdown tr').click(function(e) {
-          $('#dashboard-stats-chart').fadeOut(100, function() {
-            mopub.Chart.setupDashboardStatsChart('line');
-            $(this).show();
-          });
-        });
+{% block table_data %}
+{% for key, mapper, stats in aggregate_stats_list %}
+	<tr>
+		<td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
+		<td class="dataTable-name">{{mapper.ad_network_name}}</td>
+		<td class="dataTable-data numeric">{{stats.revenue}}</td>
+		<td class="dataTable-data numeric">{{stats.attempts}}</td>
+		<td class="dataTable-data numeric">{{stats.impressions}}</td>
+		<td class="dataTable-data numeric">{{stats.fill_rate}}</td>
+		<td class="dataTable-data numeric">{{stats.clicks}}</td>
+		<td class="dataTable-data numeric">{{stats.ctr}}</td>
+	</tr>
+{% endfor %}
+{% endblock %}
 
-        mopub.graphStartDate = Date.UTC({{start_date.year}},
-            {{start_date.month|add:"-1"}},
-            {{start_date.day}});
-
-        function populateGraphWithStats(dailyStats) {
-            mopub.dashboardStatsChartData = {
-                pointStart: mopub.graphStartDate,
-                pointInterval: 86400000,
-                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
-                impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
-                clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "clicks")}],
-            };
-
-            mopub.Chart.setupDashboardStatsChart('line');
-        }
-
-        populateGraphWithStats({{daily_stats|safe}});
-
-    });
-
-  </script>
-{% endblock extraScripts %}
-
-{% block content %}
-
-  {% if aggregate_stats_list %}
-   
-    <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-    <section class="offset nomargin" id="dashboard-stats">
-      <div class="stats">
-        <div class="stats-breakdown">
-          <table>
-            <tbody>
-              <tr class="active" id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner">{{aggregates.revenue|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-              </tr>
-              <tr id="stats-breakdown-impressions">
-                <td class="stats-breakdown-value today"><span class="inner">{{aggregates.impressions|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-              </tr>
-              <tr id="stats-breakdown-clicks">
-                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
-      </div>
-      <div class="clear"></div>
-    </section>
-
-    <table class="zebra-striped simpletable campaignData-main" style="margin-top:20px;">
-      <thead>
-        <th class="dataTable-name"> App </th>
-        <th class="dataTable-name"> Ad Network </th>
-        <th class="dataTable-data numeric"> Revenue </th>
-        <th class="dataTable-data numeric"> Attempts </th>
-        <th class="dataTable-data numeric"> Impressions </th>
-        <th class="dataTable-data numeric"> Fill Rate</th>
-        <th class="dataTable-data numeric"> Clicks </th>
-        <th class="dataTable-data numeric"> CTR </th>
-      </thead>
-      <tbody>
-        {% for key, mapper, stats in aggregate_stats_list %}
-          <tr>
-            <td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
-            <td class="dataTable-name">{{mapper.ad_network_name}}</td>
-            <td class="dataTable-data numeric">{{stats.revenue}}</td>
-            <td class="dataTable-data numeric">{{stats.attempts}}</td>
-            <td class="dataTable-data numeric">{{stats.impressions}}</td>
-            <td class="dataTable-data numeric">{{stats.fill_rate}}</td>
-            <td class="dataTable-data numeric">{{stats.clicks}}</td>
-            <td class="dataTable-data numeric">{{stats.ctr}}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-  
-    <a class="right btn" href={{add_credentials_url}}>Add more network credentials</a>
-  {% else %}
-    <a class="right btn" href={{add_credentials_url}}>Set up network reporting</a>
-  {% endif %}
-
-{% endblock content %}
+{% block appended_content %}
+<a class="right btn" href={{add_credentials_url}}>Add more network credentials</a>
+{% endblock %}

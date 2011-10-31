@@ -29,9 +29,9 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
                     kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
-    @classmethod
-    def kind(self):
-        return 'AdNetworkLoginInfo'
+#    @classmethod
+#    def kind(self):
+#        return 'AdNetworkLoginInfo'
 
     @classmethod
     def get_by_network(self, account, network):

@@ -147,7 +147,7 @@
                           {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                           Starts {{adgroup.campaign.start_date|format_date_compact}}.
                           {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                          Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                          Ends {{adgroup.campaign.end_date|format_date_compact}}.
                           {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                           All dates.
                           {% endif %}

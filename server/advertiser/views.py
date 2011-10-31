@@ -390,9 +390,9 @@ class CreateCampaignAJAXHander(RequestHandler):
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
                 CampaignQueryManager.put(campaign)
                 #
-                # XXX NEED TO MAKE THIS DO STUFF WITH THE BUDGET OBJECT
 
                 budget_obj = BudgetQueryManager.update_or_create_budget_for_campaign(campaign)
+                logging.warning("%s" % budget_obj)
                 campaign.budget_obj = budget_obj
 
                 #budget_service.update_budget(campaign, save_campaign = False)
@@ -776,6 +776,8 @@ class PauseAdGroupHandler(RequestHandler):
                     for creative in a.creatives:
                         creative.deleted = True
                         update_creatives.append(creative)
+                BudgetQueryManager.update_or_create_budget_for_campaign(a.campaign)
+
 
         if update_objs:
             AdGroupQueryManager.put(update_objs)
@@ -1088,11 +1090,12 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = adgroup.cpm
 
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
+                    logging.warning("Perecent Delivered: %s" % percent_delivered)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
 
                     summed_stats.status = filters.campaign_status(adgroup)
-                    if adgroup.running and adgroup.campaign.budget_obj:
+                    if adgroup.running and adgroup.campaign.budget_obj and adgroup.campaign.budget_obj.delivery_type != 'allatonce':
                         summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign.budget_obj) else "behind"
                     else:
                         summed_stats.on_schedule = "none"

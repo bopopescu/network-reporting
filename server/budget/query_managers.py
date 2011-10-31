@@ -1,6 +1,7 @@
 import logging
 
 from budget.models import BudgetChangeLog, Budget, BudgetSliceLog
+from budget.tzinfo import Pacific, utc
 from common.utils.query_managers import QueryManager
 
 from budget.helpers import (build_budget_update_string,
@@ -22,14 +23,25 @@ class BudgetQueryManager(QueryManager):
         if camp.budget_obj:
             budget = camp.budget_obj
             if camp.active != budget.active:
-                budget.active = camp.active()
+                budget.active = camp.active
                 budget.put()
 
             update_dict = {}
+            # Camp datetimes will either be PST/PDT and aware of it, or UTC and unaware of it
+            # budget datetimes will always be UTC and unaware
+            
+            # if Campaigns are aware of their tz, set them to UTC and make them unaware of it
+            # doesn't matter if we put budgets at this point because when it gets put it'll fix itself
+            if str(camp.start_datetime.tzinfo) == str(Pacific):
+                camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo = None)
+            if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
+                camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo = None)
+
             if not camp.start_datetime == camp.budget_obj.start_datetime:
                 update_dict['start_datetime'] = camp.start_datetime
             if not camp.end_datetime == camp.budget_obj.end_datetime:
                 update_dict['end_datetime'] = camp.end_datetime
+
             if not camp.budget_strategy == camp.budget_obj.delivery_type:
                 update_dict['delivery_type'] = camp.budget_strategy
 
@@ -44,7 +56,7 @@ class BudgetQueryManager(QueryManager):
                     update_dict['static_total_budget'] = camp.full_budget
                     update_dict['static_slice_budget'] = None
             else:
-                return False
+                return None
                 # This is more appropriate
                 raise WTFError
 

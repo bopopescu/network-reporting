@@ -3,16 +3,24 @@ from budget.helpers import get_curr_slice_num, get_slice_from_datetime, TS_PER_D
 import logging
 import math
 
+from datetime import datetime, timedelta
+
 #from advertiser.models import Campaign
 
 DEFAULT_FUDGE_FACTOR = 0.005
 
+# increase numbers by the slighest amount because floating pt errors tend to yield numbers JUST less 
+# than what we want (999.9999999999999 instead of 1000)
+FLOAT_FUDGE_FACTOR = 1.000000001
+
 SUCCESSFUL_DELIV_PER = .95
+
+JUST_UNDER_ONE_DAY = timedelta(minutes = 1439)
 
 
 class Budget(db.Model):
 
-    start_datetime = db.DateTimeProperty(required=False)#True)
+    start_datetime = db.DateTimeProperty(required=True)
     end_datetime = db.DateTimeProperty(required=False)
     active = db.BooleanProperty()
     #campaign = db.ReferenceProperty(Campaign, collection_name = '_budget_obj')
@@ -57,7 +65,8 @@ class Budget(db.Model):
         return self.is_active_for_timeslice(self.curr_slice)
 
     def is_active_for_date(self, dte):
-        return self.is_active_for_datetime(dte)
+        temp = datetime(dte.year, dte.month, dte.day) + JUST_UNDER_ONE_DAY
+        return self.is_active_for_datetime(temp)
 
     def is_active_for_datetime(self, dtetime):
         return self.is_active_for_timeslice(get_slice_from_datetime(dtetime, self.testing))
@@ -65,13 +74,17 @@ class Budget(db.Model):
     def is_active_for_timeslice(self, slice_num):
         """ Returns True if the campaign is active for this TS
         False otherwise """
+        logging.warning("slice: %s  start: %s" % (slice_num, self.start_slice))
         if slice_num is None:
             return False
 
         if slice_num >= self.start_slice:
+            logging.warning("First pass")
             if (self.end_slice and slice_num <= self.end_slice) or self.end_slice is None:
+                logging.warning("second pass")
                 return True
             else:
+                logging.warning("Fail here")
                 return False
         else:
             return False
@@ -130,6 +143,7 @@ class Budget(db.Model):
         and the desired spend """
         expected = self.expected_spent
         # This is a daily budget
+        logging.warning("Expected spent: %s" % expected)
         if self.static_slice_budget:
             # This is finite
             if self.finite:
@@ -153,10 +167,10 @@ class Budget(db.Model):
 
         # if we have a static slice budget, just spend that shit
         if self.static_slice_budget:
-            return self.static_slice_budget
+            return self.static_slice_budget * FLOAT_FUDGE_FACTOR
 
         elif self.finite and self.static_total_budget:
-            return self.static_total_budget / self.total_slices
+            return (self.static_total_budget / self.total_slices) * FLOAT_FUDGE_FACTOR
         else:
             return self.static_total_budget
 
@@ -178,6 +192,9 @@ class Budget(db.Model):
         """ Computes the amount spent today from the slicelogs
             Uses curr_date and curr_slice to determine which logs to get
         """
+        # If this budget hasn't been init'd, don't return anything
+        if not (self.curr_date and self.curr_slice):
+            return 0.0
         day_start_slice = get_slice_from_datetime(self.curr_date, self.testing)
         keys = BudgetSliceLog.get_keys_for_slices(self, xrange(day_start_slice, self.curr_slice))
         todays_logs = BudgetSliceLog.get(keys)
@@ -238,8 +255,8 @@ class Budget(db.Model):
     @property
     def elapsed_slices(self):
         """ Number of slices that have elapsed """
-
         # curr - start + 1 because current slice counts as having happened
+        logging.warning("\n\nCurr: %s\t\tStart: %s" % (self.curr_slice, self.start_slice))
         return (self.curr_slice - self.start_slice) + 1
 
     @property

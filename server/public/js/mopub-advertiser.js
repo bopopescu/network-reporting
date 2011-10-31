@@ -1542,15 +1542,18 @@ var mopub = mopub || {};
         $("#advertiser-CampaignType-"+preselected_tag).click();
     }
 
-    function makeValidTime(timeStr) {
+    function makeValidTime(timeStr, defHour, defMin, defAmPm) {
         // Checks to see if a timeStr is valid, returns valid form
         // AM/PM (and variants) are optional.
 
         var timePat = /^(\d{1,2}):(\d{2})(\s?(AM|am|PM|pm|aM|pM|Pm|Am))?$/;
 
+        if (defMin < 10) {
+            defMin = '0' + defMin;
+        }
         var matchArray = timeStr.match(timePat);
         if (matchArray == null) {
-            return "12:00 AM";
+            return defHour + ':' + defMin + ' ' + defAmPm;
         }
 
         hour = matchArray[1];
@@ -1583,13 +1586,13 @@ var mopub = mopub || {};
         }
         // Set invalid times to 0 minutes and 12 hours and default to AM
         if (minute < 0 || minute > 59) {
-            minute = "00";
+            minute = defMin; 
         }
         if (hour < 0 || hour > 23) {
-            hour = 12;
+            hour = defHour;
         }
         if (ampm === undefined) {
-            ampm = 'AM';
+            ampm = defAmPm;
         }
 
         else {
@@ -1598,10 +1601,40 @@ var mopub = mopub || {};
         return hour + ':' + minute + ' ' + ampm ;
     }
 
-    $('.input-text-time').change(function(e){
+    $('#start-date').change(function(e) {
         e.preventDefault();
         var val = $(this).val();
-        val = makeValidTime(val);
+        if (val != '') {
+            $('#start-time').change();
+        }
+    });
+
+    $('#stop-date').change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != '') {
+            $('#stop-time').change();
+        }
+    });
+
+    $('.input-text-time').change(function(e){
+        e.preventDefault();
+        var id = $(this).attr('id');
+        var val = $(this).val();
+        if (id == 'start-time') {
+            if($('#start-date').val()=='') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 12, 0, 'AM');
+            }
+        }
+        else if (id == 'stop-time') {
+            if($('#stop-date').val()=='') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 11, 59, 'PM');
+            }
+        }
         $(this).val(val);
     });
   }); // End document31 onready

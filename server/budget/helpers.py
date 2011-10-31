@@ -30,6 +30,9 @@ def get_curr_slice_num(curr_ts=None):
 def get_slice_from_datetime(dte, testing=False):
     """ Given a datetime obj, returns the UTC timeslice """
     dte_ts = time.mktime(dte.timetuple())
+    return get_slice_from_ts(dte_ts, testing)
+
+def get_slice_from_ts(dte_ts, testing=False):
     if testing:
         return int(math.floor(dte_ts/TEST_SEC_PER_TS))
     else:
@@ -41,6 +44,9 @@ def get_datetime_from_slice(slice_num, testing = False):
         utc_ts = slice_num * TEST_SEC_PER_TS
     else:
         utc_ts = slice_num * SEC_PER_TS
+    return get_datettime_from_ts(utc_ts)
+
+def get_datettime_from_ts(utc_ts):
     return datetime.fromtimestamp(utc_ts)
 
 def get_slice_budget_from_daily(daily_budget, testing = False):

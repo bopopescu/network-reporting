@@ -66,6 +66,7 @@
         <th> Timeslice OSI</th>
       </tr>
       {% for log in ts_logs%}
+      {% if log %}
       <tr class="alternating-color">
         <td> {{log.slice_num}}</td>
         <td> {{log.desired_spending}}</td>
@@ -73,6 +74,7 @@
         <td> {{log.remaining_spending}}</td>
         <td> {{log.osi}}</td>
       </tr>
+      {% endif %}
       {% endfor %}
     </table>
   </div>

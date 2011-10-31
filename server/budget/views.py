@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import time
 
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
@@ -10,12 +11,11 @@ from advertiser.models import ( Campaign,
                                 AdGroup,
                                 )
 from budget import budget_service
-from budget.helpers import get_slice_from_datetime
+from budget.helpers import get_slice_from_datetime, get_slice_from_ts
 from budget.memcache_budget import set_slice
 from budget.models import Budget, BudgetSliceCounter
 
 import logging
-import datetime
 
 # For taskqueue
 from google.appengine.api import taskqueue
@@ -31,7 +31,8 @@ def budget_advance(request):
     slice_counter = BudgetSliceCounter.all().get()
     # If there is no global counter, then create it
     if not slice_counter:
-        slice_counter = BudgetSliceCounter(slice_num = get_slice_from_datetime(datetime.now()))
+        logging.warning("%s" % datetime.now())
+        slice_counter = BudgetSliceCounter(slice_num = get_slice_from_ts(time.time()))
         # otherwise incr it
     else:
         slice_counter.slice_num += 1
@@ -77,7 +78,9 @@ def budget_advance(request):
 
     return HttpResponse('Advanced budget timeslices: %s' % text)
 
-def advance_worker(request, daily=False):
+def advance_worker(request):
+    logging.warning("ADVANCING")
+
     serial_key_shard = request.POST['key_shard']
     keys = serial_key_shard.split(',')
 
@@ -116,15 +119,15 @@ def budget_view(request, adgroup_key):
         remaining_daily_budget = None
         braking_fraction = None
 
-    today = datetime.datetime.now().date()
-    one_month_ago = today - datetime.timedelta(days=30)
+    today = datetime.now().date()
+    one_month_ago = today - timedelta(days=30)
 
     daily_logs = budget_service._get_daily_logs_for_date_range(budget,
                                                                    one_month_ago,
                                                                    today)
 
 
-    ts_logs = budget_service._get_ts_logs_for_date_range(budget, one_month_ago, today)
+    ts_logs = budget_service._get_ts_logs_for_date_range(budget, today, today)
 
     #### Build budgetslicer address ####
     # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="
@@ -137,10 +140,11 @@ def budget_view(request, adgroup_key):
     # clear_prefix = "http://localhost:8080"
     clear_prefix = "http://app.mopub.com"
 
-    ts_key = budget_service._make_campaign_ts_budget_key(budget)
+    ts_key = budget_service._make_budget_ts_key(budget)
 
     clear_memcache_ts_url = clear_prefix + "/m/clear?key=" + ts_key + "&namespace=budget"
 
+    logging.warning("Ts logs: %s" % ts_logs)
 
     context =  {'campaign': camp,
                 'budget': budget,

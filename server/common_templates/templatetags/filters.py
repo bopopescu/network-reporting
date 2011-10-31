@@ -147,7 +147,7 @@ def campaign_status(adgroup):
     if (campaign.start_date is None or d >= campaign.start_date) and (campaign.end_date is None or d <= campaign.end_date):
         if not adgroup.active:
             return "Paused"
-        if adgroup.campaign.budget: 
+        if adgroup.campaign.budget:
             if adgroup.percent_delivered and adgroup.percent_delivered < 100.0:
                 return "Running"
             elif adgroup.percent_delivered and adgroup.percent_delivered >= 100.0:

@@ -47,6 +47,7 @@ from ad_server.networks.dummy_server_side import (DummyServerSideSuccess,
 from common.utils.helpers import to_uni, to_ascii
 
 from budget.models import Budget
+from budget.tzinfo import UTC, Pacific
 # from budget import budget_service
 #
 # A campaign.    Campaigns have budgetary and time based restrictions.
@@ -71,8 +72,8 @@ class Campaign(db.Model):
     end_date = db.DateProperty()
 
     # New start and end date properties
-    start_datetime = db.DateProperty()
-    end_datetime = db.DateProperty()
+    start_datetime = db.DateTimeProperty()
+    end_datetime = db.DateTimeProperty()
 
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)

@@ -1,7 +1,7 @@
 from __future__ import with_statement
 import random 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from google.appengine.api import memcache
 
@@ -46,7 +46,6 @@ def has_budget(budget, cost, today=None):
 
     memc_ts_budget = remaining_ts_budget(budget)
     trace_logging.warning("Memcache ts: %s" % memc_ts_budget)
-    logging.warning("Has_budget Memcache ts: %s   cost: %s" % (memc_ts_budget, cost))
 
     if memc_ts_budget < cost:
         logging.warning("Bitch you's too poor.  Trying to spend %s with a ts budget of %s" % (cost, memc_ts_budget))
@@ -77,8 +76,13 @@ def get_spending_for_date_range(budget, start_date, end_date, testing=False):
     return tot
 
 def _get_ts_logs_for_date_range(budget, start_date, end_date, testing=False):
-    start_slice = get_slice_from_datetime(start_date.date(), testing)
-    end_slice = (get_slice_from_datetime(end_date.date() + ONE_DAY, testing))
+    if isinstance(start_date, datetime):
+        start_date = start_date.date()
+    if isinstance(end_date, datetime):
+        end_date = end_date.date()
+        
+    start_slice = get_slice_from_datetime(start_date, testing)
+    end_slice = (get_slice_from_datetime(end_date + ONE_DAY, testing))
     #logging.warning("\n\nSpending for slice:%s to slice:%s\n\n" % (start_slice, end_slice))
     keys = BudgetSliceLog.get_keys_for_slices(budget, xrange(start_slice, end_slice))
     logs = BudgetSliceLog.get(keys)
@@ -87,19 +91,22 @@ def _get_ts_logs_for_date_range(budget, start_date, end_date, testing=False):
 def _get_daily_logs_for_date_range(budget, start_date, end_date, testing=False):
     daily_logs = []
     temp = start_date
+    i = 0
     while temp <= end_date:
-        daily_log = dict(date = temp,
-                         initial_daily_budget = budget.daily_budget,
-                         spent_today = 0
-                         )
-        logs = _get_ts_logs_for_date_range(budget, start_date, end_date, testing)
-        for log in logs:
-            try:
-                daily_log['spent_today'] += log.actual_spending
-            except:
-                pass
+        logging.warning("Temp: %s  active:%s" % (get_slice_from_datetime(temp), budget.is_active_for_date(temp)))
+        if budget.is_active_for_date(temp):
+            daily_log = dict(date = temp,
+                             initial_daily_budget = budget.daily_budget,
+                             spent_today = 0
+                             )
+            logs = _get_ts_logs_for_date_range(budget, temp, temp, testing)
+            for log in logs:
+                try:
+                    daily_log['spent_today'] += log.actual_spending
+                except:
+                    pass
+            daily_logs.append(daily_log)
         temp += ONE_DAY
-        daily_logs.append(daily_log)
     return daily_logs
 
 
@@ -107,8 +114,15 @@ def _get_spending_for_date(budget, date, testing=False):
     return get_spending_for_date_range(budget, date, date, testing)
 
 def percent_delivered(budget):
+    """ Get the % of the budget that has been delivered """
     if not budget:
         return None
+    if budget.static_slice_budget and not budget.finite:
+        spent_today = budget.spent_today
+        if spent_today:
+            return budget.daily_budget / (spent_today * 1.0)
+        else:
+            return 0.0
 
     total_budget = budget.total_budget
     if total_budget:
@@ -116,6 +130,7 @@ def percent_delivered(budget):
         # includes the memcache spending
         return total_spent(budget) / (total_budget * 1.0)
     else:
+        logging.warning("OMG no total budget...? %s" % budget)
         return None
 
 def remaining_daily_budget(budget):
@@ -257,7 +272,7 @@ def _initialize_budget(budget, testing = False, slice_num = None, date=None):
     brake_key = _make_budget_braking_key(budget)
     spent_key = _make_budget_spent_key(budget)
 
-
+    logging.warning("\n\nSetting TS Spend: %s\nBraking: %s" % (new_log.desired_spending, new_log.prev_braking_fraction))
     memcache.set(spent_key, 0, namespace = 'budget')
     memcache.set(ts_key, _to_memcache_int(new_log.desired_spending), namespace = 'budget')
     memcache.set(brake_key, new_log.prev_braking_fraction, namespace = 'budget')
@@ -319,7 +334,7 @@ def _update_budgets(budget, slice_num, last_log, spent_this_timeslice=None, test
 
     # Update memc with values from the new slice log (since it's the backup for MC anyway)
 
-    #logging.warning("Setting ts budget to:%s\nSetting braking fraction to:%s" % (new_slice_log.desired_spending, new_slice_log.prev_braking_fraction))
+    logging.warning("Setting ts budget to:%s\nSetting braking fraction to:%s" % (new_slice_log.desired_spending, new_slice_log.prev_braking_fraction))
     memcache.set(ts_key, _to_memcache_int(new_slice_log.desired_spending), namespace = 'budget')
     memcache.set(brake_key, new_slice_log.prev_braking_fraction, namespace = 'budget')
 
@@ -333,7 +348,6 @@ def get_osi(budget):
     
         First TS that is run has no record, so return True in this case """
     last_complete_slice = budget.most_recent_slice_log
-    logging.warning("Log %s" % last_complete_slice)
     
     if last_complete_slice is None:
         return True

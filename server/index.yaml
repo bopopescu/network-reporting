@@ -91,24 +91,6 @@ indexes:
   - name: deleted
   - name: name
 
-- kind: BudgetDailyLog
-  properties:
-  - name: budget
-  - name: end_date
-    direction: desc
-
-- kind: BudgetDailyLog
-  properties:
-  - name: budget
-  - name: end_datetime
-    direction: desc
-
-- kind: BudgetDailyLog
-  properties:
-  - name: budget_obj
-  - name: end_date
-    direction: desc
-
 - kind: BudgetSliceLog
   properties:
   - name: budget
@@ -118,6 +100,12 @@ indexes:
   properties:
   - name: budget
   - name: end_date
+    direction: desc
+
+- kind: BudgetSliceLog
+  properties:
+  - name: budget
+  - name: slice_num
     direction: desc
 
 - kind: BudgetSliceLog

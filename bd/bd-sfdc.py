@@ -3,7 +3,7 @@
 # Parses iTunes RSS feeds and creates Lead objects in SFDC for each of the applications
 # discovered. 
 #
-# Usage: ./bd-sfdc.py --user jim@mopub.com --pw fhaaCohb0hXCNSQnreJUPhHbgKYNaQf00
+# Usage: ./bd-sfdc.py --user jim@mopub.com --pw fhaaCohb2SbVB0IFXhsseGfJ3Onr9UA46
 #
 
 import feedparser

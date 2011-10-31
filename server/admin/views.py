@@ -228,7 +228,7 @@ def update_sfdc_leads(request, *args, **kwargs):
     
     # Gnarly constants
     USER = "jim@mopub.com"
-    PW = "fhaaCohb14IaRUwM7VoAM4YEBqYfpCIl6H"
+    PW = "fhaaCohb2SbVB0IFXhsseGfJ3Onr9UA46"
     BATCH_SIZE = 1      # this is so low because we cannot override the urlfetch timeout easily w/ beatbox, so only have 5 seconds to do it
     DAYS_BACK = 1       # only update N days of recent users at a time
     ACCOUNT_FETCH_MAX = 1000   # maximum number of records to pull out of Account table

@@ -1227,17 +1227,20 @@ class MarketplaceIndexHandler(RequestHandler):
         #stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
 
         # Form the date range
-        # this is tarded. the start date is really the end of the date range.
+        # TODO: This should be rewritten so the JS passes a start/end date OR the number of days
         if self.start_date:
             year, month, day = str(self.start_date).split('-')
-            end_date = datetime.date(int(year), int(month), int(day))
+            start_date = datetime.date(int(year), int(month), int(day))
+            if self.date_range:
+                end_date = start_date + datetime.timedelta(int(self.date_range) - 1)
+            else:
+                end_date = start_date + datetime.timedelta(13)
         else:
             end_date = datetime.datetime.now(Pacific_tzinfo()).date()
-
-        if self.date_range:
-            start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
-        else:
-            start_date = end_date - datetime.timedelta(13)
+            if self.date_range:
+                start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
+            else:
+                start_date = end_date - datetime.timedelta(13)
 
         mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
 

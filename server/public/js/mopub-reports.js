@@ -631,10 +631,6 @@ function obj_equals(x, y) {
         }
     }).change();
 
-<<<<<<< HEAD
-
-=======
->>>>>>> master
     $('#reportStateChangeForm-delete')
         .click(function(e) {
             e.preventDefault();

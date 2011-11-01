@@ -125,7 +125,7 @@ class Account(db.Model):
 
     # have they accepted the marketplace terms of service?
     accepted_mpx_tos = db.BooleanProperty(default=False)
-    
+
     # use MongoDB for realtime stats
     # ex: Outblaze and Mobipeak have too many apps for GAE realtime stats to handle
     use_mongodb_stats = db.BooleanProperty(default=False)
@@ -175,6 +175,10 @@ class PaymentRecord(db.Model):
     account = db.ReferenceProperty(Account, collection_name="payment_records")
     amount = db.FloatProperty(default=float(0))
     status = db.StringProperty()
-    payment_date = db.DateProperty()
-    payment_start = db.DateProperty()
-    payment_end = db.DateProperty()
+    date_executed = db.DateTimeProperty()
+    period_start = db.DateProperty()
+    period_end = db.DateProperty()
+    scheduled_payment = db.BooleanProperty(default=False)  # Whether this is a scheduled payment of actual payment
+    resolved = db.BooleanProperty(default=False) # For scheduled payment, resolved means it has been paid
+    created = db.DateTimeProperty(auto_now_add=True)
+

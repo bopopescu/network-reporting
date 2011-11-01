@@ -124,6 +124,15 @@ class PaymentRecordQueryManager(QueryManager):
     def get_payment_records(cls, account=None, limit=MAX_OBJECTS):
         records = PaymentRecord.all()
         if account:
-            records = records.filter("account =",account)
+            records = records.filter("account =", account)
+        records = records.filter("scheduled_payment =", False)
         return records.fetch(limit)
 
+    @classmethod
+    def get_scheduled_payments(cls, account=None, resolved=False, limit=MAX_OBJECTS):
+        records = PaymentRecord.all()
+        if account:
+            records = records.filter("account =", account)
+        records = records.filter("scheduled_payment =", True)
+        records = records.filter("resolved =", resolved)
+        return records.fetch(limit)

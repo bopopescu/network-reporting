@@ -33,11 +33,9 @@ def has_budget(budget, cost, today=None):
 
     if budget is None:
         return False
-    logging.warning("Start slice: %s  end slice: %s   curr slice: %s" % (budget.start_slice, budget.end_slice, budget.curr_slice))
 
     if not budget.is_active:
         trace_logging.warning('Budget is not active for slice: %s' % budget.curr_slice)
-        logging.warning("Not active")
         return False
 
     if random.random() > braking_fraction(budget):
@@ -83,7 +81,6 @@ def _get_ts_logs_for_date_range(budget, start_date, end_date, testing=False):
         
     start_slice = get_slice_from_datetime(start_date, testing)
     end_slice = (get_slice_from_datetime(end_date + ONE_DAY, testing))
-    #logging.warning("\n\nSpending for slice:%s to slice:%s\n\n" % (start_slice, end_slice))
     keys = BudgetSliceLog.get_keys_for_slices(budget, xrange(start_slice, end_slice))
     logs = BudgetSliceLog.get(keys)
     return logs
@@ -93,7 +90,6 @@ def _get_daily_logs_for_date_range(budget, start_date, end_date, testing=False):
     temp = start_date
     i = 0
     while temp <= end_date:
-        logging.warning("Temp: %s  active:%s" % (get_slice_from_datetime(temp), budget.is_active_for_date(temp)))
         if budget.is_active_for_date(temp):
             daily_log = dict(date = temp,
                              initial_daily_budget = budget.daily_budget,
@@ -126,7 +122,6 @@ def percent_delivered(budget):
 
     total_budget = budget.total_budget
     if total_budget:
-        t_spent = total_spent(budget)
         # includes the memcache spending
         return total_spent(budget) / (total_budget * 1.0)
     else:
@@ -146,7 +141,7 @@ def remaining_daily_budget(budget):
     tot_spend_today = budget.spent_today + ts_spend
     return budget.daily_budget - tot_spend_today
 
-def apply_expense(budget, cost, curr_slice=None):
+def apply_expense(budget, cost, curr_slice=None, today = None):
     """ Subtract $$$ from the budget, add to total spent
     This will get cleaned up later """
 
@@ -272,8 +267,8 @@ def _initialize_budget(budget, testing = False, slice_num = None, date=None):
     brake_key = _make_budget_braking_key(budget)
     spent_key = _make_budget_spent_key(budget)
 
-    logging.warning("\n\nSetting TS Spend: %s\nBraking: %s" % (new_log.desired_spending, new_log.prev_braking_fraction))
-    memcache.set(spent_key, 0, namespace = 'budget')
+    # Don't init budget to 0, init to total spent amt.  This is useful for migrations. Otherwise shit is fucked
+    memcache.set(spent_key, budget.total_spent, namespace = 'budget')
     memcache.set(ts_key, _to_memcache_int(new_log.desired_spending), namespace = 'budget')
     memcache.set(brake_key, new_log.prev_braking_fraction, namespace = 'budget')
 
@@ -334,7 +329,6 @@ def _update_budgets(budget, slice_num, last_log, spent_this_timeslice=None, test
 
     # Update memc with values from the new slice log (since it's the backup for MC anyway)
 
-    logging.warning("Setting ts budget to:%s\nSetting braking fraction to:%s" % (new_slice_log.desired_spending, new_slice_log.prev_braking_fraction))
     memcache.set(ts_key, _to_memcache_int(new_slice_log.desired_spending), namespace = 'budget')
     memcache.set(brake_key, new_slice_log.prev_braking_fraction, namespace = 'budget')
 
@@ -369,8 +363,8 @@ def calc_braking_fraction(desired_spend, actual_spend, prev_fraction):
     # so we get 1000 requests, but only show 500
 
     # If we wanted to spend 0, and spent 0, then don't change anything
-    if actual_spend == desired_spend and acutal_spend == 0:
-        return prev_fraction
+    if actual_spend == desired_spend and actual_spend == 0:
+        return max(min(prev_fraction, 1.0), 0.01)
     # if we overdeliver by 2x, actual will be 20 to desired 10, rate factor is 2
     # if we underdeliver by 2x, actual will be 5 to desired 10, rate factor of .5
     try:
@@ -390,4 +384,4 @@ def calc_braking_fraction(desired_spend, actual_spend, prev_fraction):
 
     # if the actual_spend and desired spend are fine, then the factor is ~1, so the divide is fine
     # dont' return a value >1
-    return min(new_braking, 1.0)
+    return max(min(new_braking, 1.0), 0.01)

@@ -1,8 +1,7 @@
 from google.appengine.api import memcache
 
 import logging
-from budget.models import Budget, BudgetSliceCounter
-from budget.helpers import get_curr_slice_num
+from budget.models import BudgetSliceCounter
 
 
 BUDGET_SLICE_KEY = 'Th3Budg3tSlic3K3y'
@@ -54,6 +53,8 @@ def total_spent(budget):
         logging.error("Spending cache miss for budget with key: %s" % key)
 
         total = budget.total_spent
+        if total is None:
+            return 0
         memc_total = _to_memcache_int(total)
         memcache.add(key, memc_total, namespace='budget')
 

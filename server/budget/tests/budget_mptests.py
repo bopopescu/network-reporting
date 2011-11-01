@@ -759,7 +759,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         """ No end date, not finite, % deliv is None """
         slice_num = self.test_advance(self.budget_start)
 
-        eq_(budget_service.percent_delivered(self.e_budget), None)
+        eq_(budget_service.percent_delivered(self.e_budget), 0.0)
 
 
     def mptest_finite_campaign(self):
@@ -1124,8 +1124,8 @@ class TestBudgetUnitTests(unittest.TestCase):
 
         eq_(self.e_budget.is_active_for_date(self.budget_start), False)
         eq_(self.e_budget.is_active_for_date(self.budget_start + 3*ONE_DAY), False)
-        eq_(self.e_budget.is_active_for_date(self.budget_start + 1*ONE_DAY), True)
-        eq_(self.e_budget.is_active_for_date(self.budget_start + 2*ONE_DAY), True)
+        eq_(self.e_budget.is_active_for_datetime(self.budget_start + 1*ONE_DAY), True)
+        eq_(self.e_budget.is_active_for_datetime(self.budget_start + 2*ONE_DAY), True)
 
     def mptest_calc_braking_fraction_simple(self):
         # We wanted to spend 100, but spent 200 instead.

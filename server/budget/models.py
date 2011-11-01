@@ -6,13 +6,75 @@ import math
 from datetime import datetime, timedelta
 
 
-# increase numbers by the slighest amount because floating pt errors tend to yield numbers JUST less 
+# increase numbers by the slighest amount because floating pt errors tend to yield numbers JUST less
 # than what we want (999.9999999999999 instead of 1000)
 FLOAT_FUDGE_FACTOR = 1.000000001
 
 SUCCESSFUL_DELIV_PER = .95
 
 JUST_UNDER_ONE_DAY = timedelta(minutes = 1439)
+
+class BudgetSlicer(db.Model):
+
+    campaign = db.ReferenceProperty()
+
+    # New Models
+    spent_today = db.FloatProperty(default = 0.)
+    spent_in_campaign = db.FloatProperty(default = 0.)
+    current_timeslice = db.IntegerProperty(default = 0)
+
+    @property
+    def timeslice_budget(self):
+        """ The amount to increase the remaining_timeslice_budget amount by
+        every minute or so. This is how much we want to spend on this budget """
+        remaining_timeslice = DEFAULT_TIMESLICES-self.current_timeslice
+        remaining_budget = self.campaign.budget - self.spent_today
+        return remaining_budget / remaining_timeslice * (1.0 + DEFAULT_FUDGE_FACTOR)
+
+    def set_timeslice(self, seconds):
+        self.current_timeslice = int(math.floor((DEFAULT_TIMESLICES*seconds)/86400))
+
+    def advance_timeslice(self):
+        self.current_timeslice = int((self.current_timeslice+1)%DEFAULT_TIMESLICES)
+
+    def __init__(self, parent=None, key_name=None, **kwargs):
+        if not key_name and not kwargs.get('key', None):
+            # We are not coming from database
+            campaign = kwargs.get('campaign',None)
+            if campaign:
+                key_name = self.get_key_name(campaign)
+
+        super(BudgetSlicer, self).__init__(parent=parent,
+                                           key_name=key_name,
+                                            **kwargs)
+
+    @classmethod
+    def get_key_name(cls, campaign):
+        if isinstance(campaign,db.Model):
+            campaign = campaign.key()
+        return "k:"+str(campaign)
+
+    @classmethod
+    def get_by_campaign(cls, campaign):
+        return cls.get_by_key_name(cls.get_key_name(campaign))
+
+
+    @classmethod
+    def get_db_key(cls, campaign):
+        return Key.from_path(cls.kind(), cls.get_key_name(campaign))
+
+    @classmethod
+    def get_or_insert_for_campaign(cls,campaign,**kwargs):
+        key_name = cls.get_key_name(campaign)
+        kwargs.update(campaign=campaign)
+
+        def _txn(campaign):
+            obj = cls.get_by_campaign(campaign)
+            if not obj:
+                obj = BudgetSlicer(**kwargs)
+                obj.put()
+            return obj
+        return db.run_in_transaction(_txn,campaign)
 
 
 class Budget(db.Model):
@@ -26,10 +88,10 @@ class Budget(db.Model):
 
     # One of these is set, the other is none
     #
-    # Static total is set if it's 
+    # Static total is set if it's
     #  -- total USD, no end date, allatonce
     #  -- total USD, no end date, evenly < --- this case makes 0 sense
-    #  -- total USD, end date,    allatonce 
+    #  -- total USD, end date,    allatonce
     #  -- total USD, end date,    evenly
     static_total_budget = db.FloatProperty()
 
@@ -138,14 +200,18 @@ class Budget(db.Model):
         if self.static_slice_budget:
             # This is finite
             if self.finite:
+                logging.warning("Expected: %s  Spent: %s\n%s" % (expected, self.total_spent, self))
                 return expected - self.total_spent
 
             # This is unending
             else:
-                return expected - self.spent_today
+                spent_today = self.spent_today
+                logging.warning("Expected: %s  Spent today: %s\n%s" % (expected, spent_today, self))
+                return expected - spent_today
 
         # This is a total budget
         elif self.static_total_budget:
+            logging.warning("Expected: %s  Spent: %s\n%s" % (expected, self.total_spent, self))
             return expected - self.total_spent
 
         # This is a fucked up situation
@@ -159,10 +225,22 @@ class Budget(db.Model):
 
         # if we have a static slice budget, just spend that shit
         if self.static_slice_budget:
-            return self.static_slice_budget * FLOAT_FUDGE_FACTOR
+            if self.testing:
+                return self.static_slice_budget
+            else:
+                if self.testing:
+                    return self.static_slice_budget
+                else:
+                    return self.static_slice_budget * FLOAT_FUDGE_FACTOR
 
         elif self.finite and self.static_total_budget:
-            return (self.static_total_budget / self.total_slices) * FLOAT_FUDGE_FACTOR
+            if self.testing:
+                return (self.static_total_budget / self.total_slices)
+            else:
+                if self.testing:
+                    return (self.static_total_budget / self.total_slices)
+                else:
+                    return (self.static_total_budget / self.total_slices) * FLOAT_FUDGE_FACTOR
         else:
             return self.static_total_budget
 
@@ -266,18 +344,30 @@ class Budget(db.Model):
     def last_slice_log(self):
         """ Returns the most recent slicelog for this budget """
         try:
-            return self.timeslice_logs.order('-slice_num').get()
+            current = BudgetSliceLog.get(BudgetSliceLog.get_key(self, self.curr_slice))
+            return current
         except:
             return None
+
+        #try:
+        #    return self.timeslice_logs.order('-slice_num').get()
+        #except:
+        #    return None
 
     @property
     def most_recent_slice_log(self):
         """ Returns the most recent slicelog for this budget """
         try:
-            # Get the two most recent, the most recent will ALWAYS be incomplete
-            return self.timeslice_logs.order('-slice_num').fetch(2)[1]
+            old = BudgetSliceLog.get(BudgetSliceLog.get_key(self, self.curr_slice - 1))
+            return old
         except:
             return None
+
+        #try:
+            # Get the two most recent, the most recent will ALWAYS be incomplete
+        #    return self.timeslice_logs.order('-slice_num').fetch(2)[1]
+        #except:
+        #    return None
 
 
 
@@ -296,7 +386,7 @@ class Budget(db.Model):
             new_total = self.total_budget + incr
             self.static_slice_budget = new_total / self.total_slices
             return True
-        # Can't set the total budget if we have a slice budget 
+        # Can't set the total budget if we have a slice budget
         # and the campaign isn't finite....
         else:
             return False
@@ -314,7 +404,7 @@ class Budget(db.Model):
         elif self.finite:
             self.static_slice_budget = total / self.total_slices
             return True
-        # Can't set the total budget if we have a slice budget 
+        # Can't set the total budget if we have a slice budget
         # and the campaign isn't finite....
         else:
             return False
@@ -367,10 +457,12 @@ class BudgetChangeLog(db.Model):
     start_datetime = db.DateTimeProperty()
     end_datetime = db.DateTimeProperty()
 
-    delivery_Type = db.StringProperty()
+    delivery_type = db.StringProperty()
     static_total_budget = db.FloatProperty()
     static_slice_budget = db.FloatProperty()
     budget = db.ReferenceProperty(Budget, collection_name = 'change_logs')
+
+    created_at = db.DateTimeProperty(auto_now_add=True)
 
 
 class BudgetSliceLog(db.Model):
@@ -378,8 +470,12 @@ class BudgetSliceLog(db.Model):
     as they are important as Memcache snapshots.  They basically have the last known good
     MC configuration and are used if shit hits the fan """
 
+    #Fields for migrations
+    budget_obj = db.ReferenceProperty(BudgetSlicer,collection_name="timeslice_logs")
+    end_date = db.DateTimeProperty()
+
     budget = db.ReferenceProperty(Budget, collection_name = 'timeslice_logs')
-    slice_num = db.IntegerProperty(required = True)
+    slice_num = db.IntegerProperty(required = True, default=0)
 
     desired_spending = db.FloatProperty()
 

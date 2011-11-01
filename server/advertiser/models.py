@@ -84,6 +84,9 @@ class Campaign(db.Model):
 
     budget_obj = db.ReferenceProperty(Budget, collection_name = 'campaign')
 
+    def __repr__(self):
+        return "Camp(start:(%s,%s) end:(%s,%s) active:%s daily:%s total:%s spread:%s type:%s)" % (self.start_date, self.start_datetime, self.end_date, self.end_datetime, self.active, self.budget, self.full_budget, self.budget_strategy, self.budget_type)
+
     @property
     def owner_key(self):
         return None

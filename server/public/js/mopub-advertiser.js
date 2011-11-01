@@ -59,14 +59,14 @@ var mopub = mopub || {};
         }
 
         // Wipe this asap
-        if (window.location.pathname.search('/campaigns/edit/') >= 0) {
-            $("input[name='start_date']").attr('disabled', 'disabled');
-            $("input[name='end_date']").attr('disabled', 'disabled');
-            $("select[name='bid_strategy']").attr('disabled', 'disabled');
-            $("input[name='bid']").attr('disabled', 'disabled');
-            $("input[name='budget']").attr('disabled', 'disabled');
-            $("select[name='budget_type']").attr('disabled', 'disabled');
-        }
+        // if (window.location.pathname.search('/campaigns/edit/') >= 0) {
+        //     $("input[name='start_date']").attr('disabled', 'disabled');
+        //     $("input[name='end_date']").attr('disabled', 'disabled');
+        //     $("select[name='bid_strategy']").attr('disabled', 'disabled');
+        //     $("input[name='bid']").attr('disabled', 'disabled');
+        //     $("input[name='budget']").attr('disabled', 'disabled');
+        //     $("select[name='budget_type']").attr('disabled', 'disabled');
+        // }
 
         function campaignAdgroupFormOnLoad(){
 

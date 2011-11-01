@@ -29,9 +29,9 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
                     kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
-    @classmethod
-    def kind(self):
-        return 'AdNetworkLoginInfo'
+#    @classmethod
+#    def kind(self):
+#        return 'AdNetworkLoginInfo'
 
     @classmethod
     def get_by_network(self, account, network):
@@ -73,7 +73,7 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
-class AdNetworkAggregate(db.Model): #(date)
+class AdNetworkManagementStats(db.Model): #(date)
     date = db.DateProperty(required=True)
 
     # Could be done with the Expando class but probably better to make
@@ -82,30 +82,33 @@ class AdNetworkAggregate(db.Model): #(date)
     admob_found = db.IntegerProperty(default=0)
     admob_updated = db.IntegerProperty(default=0)
     admob_mapped = db.IntegerProperty(default=0)
-    admob_failed = db.IntegerProperty(default=0)
+    admob_login_failed = db.IntegerProperty(default=0)
 
     jumptap_found = db.IntegerProperty(default=0)
     jumptap_updated = db.IntegerProperty(default=0)
     jumptap_mapped = db.IntegerProperty(default=0)
-    jumptap_failed = db.IntegerProperty(default=0)
+    jumptap_login_failed = db.IntegerProperty(default=0)
 
     iad_found = db.IntegerProperty(default=0)
     iad_updated = db.IntegerProperty(default=0)
     iad_mapped = db.IntegerProperty(default=0)
-    iad_failed = db.IntegerProperty(default=0)
+    iad_login_failed = db.IntegerProperty(default=0)
 
     inmobi_found = db.IntegerProperty(default=0)
     inmobi_updated = db.IntegerProperty(default=0)
     inmobi_mapped = db.IntegerProperty(default=0)
-    inmobi_failed = db.IntegerProperty(default=0)
+    inmobi_login_failed = db.IntegerProperty(default=0)
 
     mobfox_found = db.IntegerProperty(default=0)
     mobfox_updated = db.IntegerProperty(default=0)
     mobfox_mapped = db.IntegerProperty(default=0)
-    mobfox_failed = db.IntegerProperty(default=0)
+    mobfox_login_failed = db.IntegerProperty(default=0)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s' % kwargs['date'].
                     strftime('%Y-%m-%d'))
-        super(AdNetworkAggregate, self).__init__(*args, **kwargs)
+        super(AdNetworkManagementStats, self).__init__(*args, **kwargs)
+
+    def increment(self, field):
+        setattr(self, field, getattr(self, field) + 1)

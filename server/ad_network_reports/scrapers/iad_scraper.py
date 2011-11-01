@@ -30,7 +30,7 @@ class IAdScraper(Scraper):
         self.authenticate()
 
     def __del__(self):
-        #self.browser.quit()
+        self.browser.quit()
         self.disp.stop()
 
     def authenticate(self):

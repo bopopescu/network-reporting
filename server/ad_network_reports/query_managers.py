@@ -2,7 +2,7 @@ import logging
 import sys
 import urllib
 
-EC2 = False
+EC2 = True
 
 if EC2:
     sys.path.append('/home/ubuntu/mopub/server')

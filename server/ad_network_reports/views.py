@@ -104,39 +104,7 @@ class AddLoginInfoHandler(RequestHandler):
     def get(self, account_key=None):
         """Return form with ad network login info."""
         # Add a bunch of test data to the db
-#        from account.models import NetworkConfig
-#        from publisher.models import App, Site
-#        from google.appengine.ext import db
-#        from account.models import Account, NetworkConfig
-#        account = Account()
-#        account.put()
-#        chess_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_chess_com_test', iad_pub_id = '329218549')
-#        chess_network_config.put()
-#
-#        chess_app = App(account = account, name = "Chess.com - Play & Learn Chess", network_config = chess_network_config)
-#        chess_app.put()
-#
-#        bet_network_config = NetworkConfig(jumptap_pub_id = 'jumptap_bet_test', admob_pub_id = 'a14c7d7e56eaff8')
-#        bet_network_config.put()
-#
-#        bet_iad_network_config = NetworkConfig(iad_pub_id = '418612824')
-#        bet_iad_network_config.put()
-#
-#        bet_app = App(account = account, name = "BET WAP Site", network_config = bet_network_config) # Name must be the same as in Jumptap
-#        bet_app.put()
-#
-#        adunit_network_config = NetworkConfig(jumptap_pub_id =
-#        'bet_wap_site_106andpark_top').put()
-#        Site(app_key = bet_app, network_config = adunit_network_config).put()
-#
-#        bet_iad_app = App(account = account, name = "106 & Park", network_config = bet_iad_network_config)
-#        bet_iad_app.put()
-#
-#        officejerk_network_config = NetworkConfig(jumptap_pub_id = 'office_jerk_test')
-#        officejerk_network_config.put()
-#
-#        officejerk_app = App(account = account, name = "Office Jerk", network_config = officejerk_network_config)
-#        officejerk_app.put()
+        #load_test_data(self.account)
 
         if account_key:
             account = Account.get(account_key)
@@ -146,7 +114,8 @@ class AddLoginInfoHandler(RequestHandler):
         forms = []
         for name in AD_NETWORK_NAMES:
             try:
-                instance = AdNetworkLoginCredentials.get_by_network(account, name)
+                instance = AdNetworkLoginCredentials.get_by_ad_network_name(
+                        account, name)
                 form = LoginInfoForm(instance=instance, prefix=name)
             except Exception, error:
                 instance = None
@@ -235,3 +204,48 @@ class AdNetworkReportManageHandler(RequestHandler):
 @login_required
 def manage_ad_network_reports(request, *args, **kwargs):
     return AdNetworkReportManageHandler()(request, *args, **kwargs)
+
+def load_test_data(account=None):
+    from account.models import NetworkConfig
+    from publisher.models import App, Site
+    from google.appengine.ext import db
+    from account.models import Account, NetworkConfig
+
+    if account = None:
+        account = Account()
+        account.put()
+
+    chess_network_config = NetworkConfig(jumptap_pub_id=
+            'jumptap_chess_com_test', iad_pub_id='329218549')
+    chess_network_config.put()
+
+    chess_app = App(account=account, name="Chess.com - Play & Learn Chess",
+            network_config = chess_network_config)
+    chess_app.put()
+
+    bet_network_config = NetworkConfig(jumptap_pub_id='jumptap_bet_test',
+            admob_pub_id = 'a14c7d7e56eaff8')
+    bet_network_config.put()
+
+    bet_iad_network_config = NetworkConfig(iad_pub_id='418612824')
+    bet_iad_network_config.put()
+
+    bet_app = App(account=account, name="BET WAP Site", network_config=
+            bet_network_config)
+    bet_app.put()
+
+    adunit_network_config = NetworkConfig(jumptap_pub_id=
+    'bet_wap_site_106andpark_top').put()
+    Site(app_key=bet_app, network_config=adunit_network_config).put()
+
+    bet_iad_app = App(account=account, name="106 & Park", network_config=
+            bet_iad_network_config)
+    bet_iad_app.put()
+
+    officejerk_network_config = NetworkConfig(jumptap_pub_id=
+            'office_jerk_test')
+    officejerk_network_config.put()
+
+    officejerk_app = App(account=account, name="Office Jerk", network_config=
+            officejerk_network_config)
+    officejerk_app.put()

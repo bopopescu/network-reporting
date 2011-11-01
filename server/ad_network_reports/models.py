@@ -34,8 +34,9 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 #        return 'AdNetworkLoginInfo'
 
     @classmethod
-    def get_by_network(self, account, network):
-        return self.get_by_key_name('k:%s:%s' % (account.key(), network))
+    def get_by_ad_network_name(self, account, ad_network_name):
+        return self.get_by_key_name('k:%s:%s' % (account.key(),
+            ad_network_name))
 
 class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
     ad_network_name = db.StringProperty(required=True)
@@ -51,6 +52,10 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['ad_network_name'],
                     kwargs['publisher_id']))
         super(AdNetworkAppMapper, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def get_by_publisher_id(self, ad_network_name, publisher_id):
+        return self.get_by_key_name('k:%s:%s' % (ad_network_name, publisher_id))
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper, required=
@@ -72,6 +77,11 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
                     'ad_network_app_mapper'].key(), kwargs['date'].
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def get_by_app_mapper_and_date(self, app_mapper, date):
+        return self.get_by_key_name('k:%s:%s' % (app_mapper.key(),
+            date.strftime('%Y-%m-%d')))
 
 class AdNetworkManagementStats(db.Model): #(date)
     date = db.DateProperty(required=True)
@@ -112,3 +122,7 @@ class AdNetworkManagementStats(db.Model): #(date)
 
     def increment(self, field):
         setattr(self, field, getattr(self, field) + 1)
+
+    @classmethod
+    def get_by_date(self, date):
+        return self.get_by_key_name('k:%s' % date.strftime('%Y-%m-%d'))

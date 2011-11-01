@@ -152,7 +152,7 @@ def update_ad_networks(start_date = None, end_date = None):
             # want email and the information is relevant (ie. yesterdays stats)
             if (account_key != previous_account_key and
                     previous_account_key):
-                if login_credentials.email:
+                if login_credentials.email and test_date == yesterday:
                     send_stats_mail(db.get(previous_account_key), manager, test_date, valid_stats_list)
                 valid_stats_list = []
             previous_account_key = account_key
@@ -250,12 +250,14 @@ def update_ad_networks(start_date = None, end_date = None):
                         ecpm = float(stats.ecpm)
                         ).put()
 
-                if test_date == yesterday:
+                if test_date == yesterday and login_credentials and \
+                        login_credentials.email:
                     valid_stats_list.append((ad_network_app_mapper.application.
                         name, ad_network_app_mapper.ad_network_name, stats))
 
         aggregate.put()
-        if test_date == yesterday and login_credentials and login_credentials.email:
+        if test_date == yesterday and login_credentials and \
+                login_credentials.email:
             send_stats_mail(login_credentials.account, manager, test_date,
                     valid_stats_list)
 

@@ -441,9 +441,8 @@ class CreateCampaignAJAXHander(RequestHandler):
                         #and delete the old creative just marks as deleted!
                         CreativeQueryManager.delete(adgroup.net_creative)
 
-                    #creative should now reference the appropriate creative (new if different, old if the same, updated old if same and custom)
-                    if not has_adgroup_instance: #ensure form posts do not change ownership
-                        creative.account = self.account
+                    # the creative should always have the same account as the adgroup
+                    creative.account = adgroup.account
                     #put the creative so we can reference it
                     CreativeQueryManager.put(creative)
                     #set adgroup to reference the correct creative

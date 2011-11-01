@@ -13,144 +13,386 @@
 {% endblock navLinks %}
 
 {% block messageCenter %} {% endblock messageCenter %}
-{% block dateButtons %} {% endblock dateButtons %}
+{% block dateButtons %}
+
+  <div id="titlebar-center">
+    <span class="buttonset" id="dashboard-dateOptions">
+      <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
+      <label for="dashboard-dateOptions-option-7">7 days</label>
+      <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
+      <label for="dashboard-dateOptions-option-14">14 days</label>
+      <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
+        <label for="dashboard-dateOptions-option-30">30 days</label>
+        <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
+        <label for="dashboard-dateOptions-option-custom">Custom ...</label>
+      </span>
+      <div id="dashboard-dateOptions-custom-modal">
+        <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
+        <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
+      </div>
+    </div>
+{% endblock dateButtons %}
 
 {% block content %}
 
+  {% if not marketplace.active %}
   <div class="alert-message block-message clearfix">
-    <a href="#" class="close"> x </a>
+    {# <a href="#" class="close"> x </a> #}
     We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
     Flip the On/Off switch to get started,
-    or take a look at our <a href="{% url mpx_info %}">information page</a> if you want to know more about how it works.
+    or take a look at our <a href="http://www.mopub.com/in-depth/marketplace">information page</a> if you want to know more about how it works.
     <br />
-    <!-- <div class="lightswitch"> -->
-    <!--   <div class="switch on"></div> -->
-    <!-- </div> -->
-    <a class="btn start icon right" href="{% url mpx_info %}">Get Started</a>
+    <div class="lightswitch right" id="top_switch">
+      <div class="switch off"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="alert-message block-message hidden" id="first_time_toast">
+    The MoPub Marketplace is now active. Visit the settings tab if you'd like to change how the Marketplace works.
   </div>
 
 
-  <ul class="tabs">
-    <li class="active"> <a href="#performance"> App Performance </a> </li>
-    <li> <a href="#controls"> Creative Performance </a> </li>
-    <li> <a href="#settings"> Settings </a> </li>
-  </ul>
-
-
-  <div class="active tab-section" id="performance">
-
+  {% comment %}
     <div class="rollup fig3">
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.impressions|withsep }}
+          {{ mpx_stats.impressions|withsep }}
         </div>
         <div class="label">
           Impressions
         </div>
       </div>
+
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.clicks|withsep }}
+          {{ mpx_stats.ecpm }}
+        </div>
+        <div class="label">
+          Average eCPM
+        </div>
+      </div>
+      <div class="data-figure">
+        <div class="figure">
+          {{ mpx_stats.clicks|withsep }}
         </div>
         <div class="label">
           Clicks
         </div>
       </div>
+
       <div class="data-figure">
         <div class="figure">
-          {{ top_level_mpx_stats.revenue|withsep }}
+          {{ mpx_stats.revenue|withsep }}
         </div>
         <div class="label">
           Revenue
         </div>
       </div>
     </div>
+    {% endcomment %}
 
 
-    <table class="zebra-striped simpletable" id="marketplace_stats">
+    <div class="campaignData-rollup">
+      <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+        <thead>
+          <tr style="border:none;">
+            <th width=33%>Revenue</th>
+            <th width=33%>Impressions</th>
+            <th width=34%>eCPM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border:none;">
+            {% if totals %}
+            <td> {{ totals.revenue|default_if_none:"$0"|withsep }} </td>
+              <td> {{ totals.impressions|default_if_none:"0"|withsep }} </td>
+              <td> {{ totals.ecpm|default_if_none:"$0" }} </td>
+            {% else %}
+              <td> $0.00 </td>
+              <td> 0 </td>
+              <td> $0.00 </td>
+            {% endif %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+
+  <ul class="tabs">
+    <li class="active"> <a href="#performance"> Performance </a> </li>
+    <li> <a href="#controls"> Creative Review </a> </li>
+    <li> <a href="#settings"> Settings </a> </li>
+  </ul>
+
+  {# Help Content #}
+  <div id="price-floor-helpContent" class="hidden">
+    <h3>What is the Price Floor?</h3>
+    <p>A price floor is the minimum CPM price that you’re willing to be paid for an impression from the Marketplace. For example, if you receive offers for ads that have a $0.50 CPM, but your price floor is $0.60 then those ads will not show.</p>
+    <p>The MoPub Marketplace let's you set different price floors on each ad unit.  You might want your interstitial ad units to have a higher price floor than your banner ad units. </p>
+    <p> In general, we recommend setting your price floor as low as you can.  MoPub will always make sure never to show an ad from the Marketplace that pays you less than an available direct or network impression. </p>
+  </div>
+
+  <div class="active tab-section" id="performance">
+    <section class="offset nomargin" id="dashboard-stats">
+      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <div class="stats">
+        <div class="stats-breakdown">
+          <table>
+            <tbody>
+              <tr class="active" id="stats-breakdown-revenue">
+                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.revenue|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.revenue|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+              </tr>
+              <tr id="stats-breakdown-impressions">
+                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.impressions|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.impressions|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.impressions|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+              </tr>
+              <tr id="stats-breakdown-ecpm">
+                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.ecpm|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.ecpm|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.ecpm|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">eCPM</span></th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stats-breakdown-buttons">
+          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+            <label for="stats-breakdown-dateOptions-option-0">Today</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+            <label for="stats-breakdown-dateOptions-option-2">All</label>
+          </span>
+        </div>
+        <div class="chart stats-chart" id="dashboard-stats-chart">
+        </div>
+      </div>
+      <div class="clear"></div>
+    </section>
+
+    <section id="dashboard-apps">
+    <div class="appData-columnHeaders">
+      <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
+        <thead>
+          <tr style="border:none;">
+            <th class="appData-icon"></th>
+            <th class="dataTable-name" style="width:475px;"></th>
+            <th class="dataTable-data numeric">Revenue</th>
+            <th class="dataTable-data numeric">Impressions</th>
+            <th class="dataTable-data numeric">eCPM</th>
+            <th class="dataTable-data numeric" style="width:100px;">Price Floor
+              <a href="#" id="price-floor-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+            <th class="dataTable-data numeric">Enabled</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+    {% for a in apps %}
+    <div class="{% cycle 'appData' 'appData appData-alt' %}" id="appData-{{a.key}}">
+      <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+        <tbody>
+          <tr class="app-row" id="app-{{a.key}}" style="border:none;">
+            <td class="appData-icon"><img src="{{ a.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" /></td>
+            <td class="dataTable-name" style="width:475px;">
+              <span class="inner" style="width:475px;">
+                  <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
+                  <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                  <img id="{{a.key}}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+              </span>
+            </td>
+            <td class="dataTable-data numeric revenue">--</td>
+            <td class="dataTable-data numeric impressions">--</td>
+            <td class="dataTable-data numeric ecpm">--</td>
+            <td class="dataTable-data numeric price_floor" style="width:100px;"></td>
+            <td class="dataTable-data numeric targeting"></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="appData-details" id="dashboard-app-{{forloop.counter0}}-details">
+        <div class="appData-details-inner show">
+          <table class="dataTable">
+            <tbody>
+              {% for au in a.adunits %}
+              <tr class="adunit-row incomplete for-app-{{a.key}}" id="adunit-{{au.key}}" style="border:none;">
+                <th class="dataTable-name" style="width:475px;"><span class="inner" style="width:475px;"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+                <td class="dataTable-data numeric revenue" style="border:none;">--</td>
+                <td class="dataTable-data numeric impressions" style="border:none;">--</td>
+                <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
+                <td class="dataTable-data numeric price_floor" style="border:none;width:100px">
+                  <input id="{{au.key}}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
+                </td>
+                <td class="dataTable-data numeric targeting" style="border:none;"></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+{% comment %}
+    <table class="simpletable" id="marketplace_stats" width="100%">
 
       <thead>
-        <th>App</th>
-        <th width="70">Revenue</th>
-        <th width="70">eCPM</th>
-        {# <th>Attempts</th> #}
-        <th width="100">Impressions</th>
-        {# <th>Fill Rate</th> #}
-        <th width="70">Clicks</th>
-        <th width="70">CTR</th>
-        <th width="100">Price Floor</th>
+        <tr class="cmpaignData" style="border:none;">
+          <th width="50"></th>
+          <th>App</th>
+          <th width="70" style="text-align: right";>Revenue</th>
+          {# <th>Attempts</th> #}
+          <th width="90" style="text-align: right";>Impressions</th>
+          <th width="70" style="text-align: right";>eCPM</th>
+          {# <th>Fill Rate</th> #}
+          {# <th width="70" style="text-align: right";>Clicks</th> #}
+          {# <th width="70" style="text-align: right";>CTR</th> #}
+          <th width="130" style="text-align: right";>Price Floor</th>
+          <th width="70"> Targeted </th>
+        </tr>
       </thead>
 
-      <tbody> </tbody>
+      <tbody>
+        {% for app in apps %}
+        <tr class="app-row {% cycle 'odd' 'even' %}" id="app-{{ app.key }}" style="border:none;">
+          <td class="icon">
+            <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" />
+          </td>
+          <td class="name">
+            <a href="{% url publisher_app_show app.key %}" style="display:inline-block; max-width:250px;">{{ app.name }}</a>
+            <span class="muted unbold"> ({{ app.app_type_text }}) </span>
+            <img id="{{ app.key }}-img" src="/images/icons-custom/spinner-12.gif"></img>
+            <br />
+            <a href="#{{ app.key }}" class="adunits" id="{{app.key}}"> Show AdUnits </a>
+          </td>
+          <td class="revenue" style="text-align: right;">
+            --
+          </td>
+          <td class="impressions" style="text-align: right;">
+            --
+          </td>
+          <td class="ecpm" style="text-align: right;">
+            --
+          </td>
+          <td class="clicks" style="text-align: right;">
+            --
+          </td>
+          <td class="ctr" style="text-align: right;">
+            --
+          </td>
+          <td class="price_floor" width="130" style="text-align: right">
+            <a href="#{{ app.key }}" class="edit_price_floor" id="{{app.key}}"> Edit Price Floor</a>
+          </td>
+          <td class="targeting"> <a href="#{{ app.key }}" class="view_targeting" id="{{app.key}}"> View </a> </td>
+        </tr>
+      {% endfor %}
+      </tbody>
 
     </table>
-
+{% endcomment %}
+  </section>
   </div>
 
 
   <div class="tab-section" id="controls">
-    <div class="clearfix alert-message block-message info">
-      <div class="close">x</div>
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enimad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-    </div>
 
-    {% for dsp in dsps %}
-      <h2> <a href="{{ dsp.url }}"> {{ dsp.name }} </a> </h2>
-      <div class="well">
-        <table class="zebra-striped sortable simpletable">
-          <thead>
-            <th> Creative </th>
-            <th> Impressions </th>
-            <th> Clicks </th>
-            <th> CTR </th>
-            <th> eCPM </th>
-            <th> Revenue </th>
-          </thead>
-          <tbody>
-            {% for creative in dsp.creatives %}
-              <tr>
-                <td> <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe> </td>
-                <td> {{ creative.stats.imp }} </td>
-                <td> {{ creative.stats.clk }} </td>
-                <td> {{ creative.stats.ctr|percentage }} </td>
-                <td> {{ creative.stats.ecpm|currency }} </td>
-                <td> {{ creative.stats.pub_rev }} </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-          <tfoot>
-            <td> Totals </td>
-            <td> {{ dsp.stats.imp }} </td>
-            <td> {{ dsp.stats.clk }} </td>
-            <td> {{ dsp.stats.ctr|percentage }} </td>
-            <td> {{ dsp.stats.ecpm|currency }} </td>
-            <td> {{ dsp.stats.pub_rev }} </td>
-          </tfoot>
-        </table>
-      </div>
-    {% endfor %}
+    <table class="{#zebra-striped sortable simpletable#}" id="report-table" width="100%">
+      <thead>
+        <th> Creative </th>
+        <th> Advertiser </th>
+        <th> Revenue </th>
+        <th> eCPM </th>
+        <th> Impressions </th>
+        {#<th> Clicks </th>#}
+        {#<th> CTR </th>#}
+      </thead>
+      <tbody>
+        {% comment %}
+        {% for dsp in dsps %}
+          {% for creative in dsp.creatives %}
+            <tr>
+              <td> {#<img src="/images/loading2.gif" />#} <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe>   </td>
+              <td>
+                {% if creative.creative.advertiser_blocked %}
+                  {{ creative.creative.ad_dmn }}
+                  (Blocked)
+                {% else %} {% if creative.creative.ad_dmn %}
+                {{ creative.creative.ad_dmn }}
+                  <a href="#" id={{ creative.creative.ad_dmn }} class="block"> Block </a>
+                {% else %}
+                  --
+                {% endif %}{% endif %}
+              </td>
+              <td style="text-align:right;"> {{ creative.stats.pub_rev|currency }} </td>
+              <td style="text-align:right;"> {{ creative.stats.imp }} </td>
+              <td style="text-align:right;"> {{ creative.stats.ecpm|currency }} </td>
+              <td style="text-align:right;"> {{ creative.stats.clk }} </td>
+              <td style="text-align:right;"> {{ creative.stats.ctr|percentage }} </td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <td> Totals </td>
+        <td></td>
+        <td> {{ creative_totals.pub_rev|currency }} </td>
+        <td> {{ creative_totals.imp }} </td>
+        <td> {{ creative_totals.ecpm|currency }} </td>
+        <td> {{ creative_totals.clk }} </td>
+        <td> {{ creative_totals.ctr|percentage }} </td>
+      </tfoot>
+      {% endcomment %}
+    </table>
+
 
   </div>
+
 
   <div class="clearfix tab-section" id="settings">
 
     <h2> Marketplace Settings </h2>
     <div class="well">
-      <label for="blind"> Make my marketplace requests blind </label>
-      <input name="blind" type="checkbox" disabled="disabled" />
-      <br />
-      <label for="default_price_floor"> Set the default price floor for targeted adunits </label>
-      <input name="default_price_floor" type="checkbox" disabled="disabled" />
+      <div class="clearfix" style="width: 380px;">
+        <div class="lightswitch left" id="bottom_switch">
+          <div class="switch {% if marketplace.active %}on{% else %}off{% endif %}"></div>
+        </div>
+        <div class="right label">
+          Turn the Marketplace on or off for your account.
+        </div>
+      </div>
+
+        {% comment %}>
+      <br/>
+      <form action="{% url marketplace_settings_change %}" method="POST" id="marketplace_settings_change">
+        <input name="blind" type="checkbox" original-title="Coming Soon"/>
+        <label for="blind"> Make my marketplace requests blind </label>
+
+        <br />
+        <input name="default_price_floor_activate" type="checkbox" />
+        <input name="default_price_floor" type="text" />
+        <label for="default_price_floor"> Set the default price floor for targeted adunits </label>
+      </form>
+        {% endcomment %}
     </div>
+
+    <div class="alert-message block-message hidden" id="settings_toast">
+      The MoPub Marketplace has been turned off. Visit the settings page if you'd like to turn it on again.
+    </div>
+
 
     <h2>Blocklist</h2>
     <div class="well">
       <div class="clearfix" style="width: 560px;">
         <div id="current_blocklist" class="right">
           <h3> Currently Blocked </h3>
-          {% for url in blocklist %}
-            {{url}}
-            <a href="{% url remove_blocklist_handler url %}">Remove</a>
+          {% for domain in blocklist %}
+            {{domain}}
+            <a href="{% url remove_blocklist_handler %}?url={{ domain|escape }}">Remove</a>
             <br />
           {% empty %}
             There are no blocked advertisers
@@ -158,22 +400,28 @@
         </div>
 
 
+
+
+
         <form action="{% url add_blocklist_handler %}" method="POST" id="addblocklist" class="validate left">
           <h3> Add blocked advertiser domains </h3>
-          <textarea rows="10" cols="20" placeholder="Add blocked blocked advertiser domains here. You can add as many as you want at a time." name="blocklist"></textarea>
+          <textarea rows="10" cols="20" placeholder="Add each advertiser domain you would like to block on a separate line." name="blocklist"></textarea>
           <br />
           <a href="#" class="btn" id="blocklist-submit"> Add </a>
         </form>
+
 
       </div>
 
 
     </div>
 
+    {% comment %}
     <div class="right button-group">
       <div class="big disabled btn"> Discard Changes </div>
       <div id="settings-submit" class="big primary btn"> Save All Settings </div>
     </div>
+    {% endcomment %}
   </div>
 
 {% endblock content %}
@@ -186,31 +434,38 @@
   <script type="text/html" id="adunit-template">
     {% include "partials/adunit.html" %}
   </script>
-  <script type="text/html">
-    {% include "partials/inventory.html" %}
-  </script>
+
   <script type="text/javascript" src="/js/underscore.min.js"></script>
   <script type="text/javascript" src="/js/json2.js"></script>
   <script type="text/javascript" src="/js/backbone.min.js"></script>
   <script type="text/javascript" src="/js/jquery.tipsy.js"></script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js"></script>
+  <script type="text/javascript" src="/js/jquery.datatables.min.js"></script>
   <script type="text/javascript">
+    var mopub = mopub || {};
     $(document).ready(function() {
-        var app_keys = {{ app_keys|safe }};
-        Marketplace.fetchAllApps(app_keys);
+      mopub.graphStartDate = Date.UTC({{start_date.year}},
+            {{start_date.month|add:"-1"}},
+            {{start_date.day}});
+      mopub.accountStats = {{mpx_stats|safe}};
 
-        $('#settings-submit').click(function(e) {
-            e.preventDefault();
-            $('#addblocklist').submit();
-        });
+      var app_keys = {{ app_keys|safe }};
+      var blocklist = {{ blocklist|safe }};
+      var dsp_keys = {{ dsp_keys|safe }};
+      var pub_key = "{{ pub_key }}";
 
-        $('#blocklist-submit').click(function(e) {
-            e.preventDefault();
-            $('#addblocklist').submit();
-        });
+      Marketplace.fetchAppStats(app_keys);
+      _.each(app_keys, function(app_key) {
+           Marketplace.fetchAdunitStats(app_key);
+      });
 
-
+      var table = Marketplace.makeCreativePerformanceTable(pub_key, dsp_keys, blocklist);
 
     });
   </script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js?v=103"></script>
 {% endblock extraScripts %}
+
+{% block extraCSS %}
+<link rel="stylesheet" href="/css/dt_jui.css?v=8"></link>
+{% endblock extraCSS %}
+

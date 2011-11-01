@@ -1,10 +1,12 @@
 import logging, os, re, datetime, hashlib
 
+from django.conf import settings
+
 from urllib import urlencode
 from copy import deepcopy
 
 import base64, binascii
-from google.appengine.api import users, images
+from google.appengine.api import users, images, files
 from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
@@ -20,6 +22,7 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+from common.utils.timezones import Pacific_tzinfo
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
 from advertiser.models import *
@@ -44,6 +47,8 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 from reporting.query_managers import StatsModelQueryManager
 from budget import budget_service
 from budget.models import BudgetSlicer
+
+from common.constants import MPX_DSP_IDS
 
 from django.views.decorators.cache import cache_page
 
@@ -133,16 +138,6 @@ class AdGroupIndexHandler(RequestHandler):
 
         help_text = None
 
-        # Ad Network Reports
-        from ad_network_reports.query_managers import AdNetworkReportQueryManager
-        from datetime import date, timedelta
-        manager = AdNetworkReportQueryManager(self.account)
-        # TODO:Take start date and end date from page.
-        start_date = date.today() - timedelta(days=8)
-        end_date = date.today() - timedelta(days=1)
-
-        aggregates, daily_stats, aggregate_stats_list = \
-                manager.get_index_stats(start_date, end_date)
 
         return render_to_response(self.request,
                                  'advertiser/adgroups.html',
@@ -163,9 +158,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    'backfill_promo': backfill_promo_campaigns,
                                    'account': self.account,
                                    'helptext':help_text,
-                                   'aggregates': aggregates,
-                                   'aggregate_stats_list':
-                                   aggregate_stats_list})
+                               })
 
 ####### Helpers for campaign page #######
 
@@ -469,7 +462,7 @@ class CreateCampaignAJAXHander(RequestHandler):
                             if app_key_identifier[0] == str(app.key()):
                                 app_network_config_data[app_key_identifier[1]] = value
 
-                        logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
+                        # logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
                         app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
                         app_network_config = app_form.save(commit=False)
                         AppQueryManager.update_config_and_put(app, app_network_config)
@@ -659,8 +652,8 @@ class ShowAdGroupHandler(RequestHandler):
                                                            advertiser=adgroup,
                                                            days=days)
                 app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
-                if app.icon:
-                    app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
+                # if app.icon:
+                #     app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
                 apps[au.app_key.key()] = app
             else:
                 app.adunits += [au]
@@ -1062,6 +1055,17 @@ class AJAXStatsHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(int(date_range))
 
+        if self.start_date: # this is tarded. the start date is really the end of the date range.
+            end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
+        else:
+            end_date = datetime.date.today()
+
+        if self.date_range:
+            start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
+        else:
+            start_date = end_date - datetime.timedelta(13)
+
+
         advs = self.params.getlist('adv')
         pubs = self.params.getlist('pub')
 
@@ -1091,6 +1095,13 @@ class AJAXStatsHandler(RequestHandler):
                         e_ctr = summed_stats.ctr or DEFAULT_CTR
                         summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
                     elif 'marketplace' in adgroup.campaign.campaign_type:
+                        # Overwrite the revenue from MPX if its marketplace
+                        # TODO: overwrite clicks as well
+                        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+                        mpx_stats = stats_fetcher.get_account_stats( start_date, end_date)
+                        summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
+                        summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
+
                         summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
@@ -1100,8 +1111,10 @@ class AJAXStatsHandler(RequestHandler):
                     adgroup.percent_delivered = percent_delivered
 
                     summed_stats.status = filters.campaign_status(adgroup)
+
+
                     if adgroup.running and adgroup.campaign.budget:
-                        summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign) else "behind"
+                        summed_stats.on_schedule = str(budget_service.get_osi(adgroup.campaign) * 100)
                     else:
                         summed_stats.on_schedule = "none"
                 stats_dict[key]['sum'] = summed_stats.to_dict()
@@ -1167,6 +1180,10 @@ def campaign_export(request, *args, **kwargs):
     return CampaignExporter()(request, *args, **kwargs)
 
 
+# Marketplace Views
+# At some point in the future, these should be branched into their own django app
+
+
 class MPXInfoHandler(RequestHandler):
     def get(self):
         return render_to_response(self.request,
@@ -1179,60 +1196,110 @@ def mpx_info(request, *args, **kwargs):
 
 
 class MarketplaceIndexHandler(RequestHandler):
+    """
+    Rendering of the Marketplace page. At this point, this is the only
+    Marketplace page, and everything is rendered here.
+    """
     def get(self):
 
         # Marketplace settings are kept as a single campaign.
         # Only one should exist per account.
-        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account)
+        marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
 
+        # We list the app traits in the table, and then load their stats over ajax using Backbone.
+        # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
-        # To bootstrap the Backbone.js models in the page, create a list of
-        # JSON'ed apps. Apps are the highest level model on the page.
-        app_keys = simplejson.dumps([str(app_key) for app_key in AppQueryManager.get_app_keys(self.account)])
+        apps = {}
+        for au in adunits:
+            app = apps.get(au.app_key.key())
+            if not app:
+                app = AppQueryManager.get(au.app_key.key())
+                app.adunits = [au]
+                apps[au.app_key.key()] = app
+            else:
+                app.adunits += [au]
+        app_keys = simplejson.dumps([str(k) for k in apps.keys()])
 
-        # Set up a MarketplaceStatsFetcher with this account only
-        stats_fetcher = MarketplaceStatsFetcher(account_keys=[self.account.key()])
+        # Set up a MarketplaceStatsFetcher with this account
+        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+        #stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
 
-        # Get the top level marketplace stats for the account
-        top_level_mpx_stats = stats_fetcher.get_account_stats(self.account.key())
+        # Form the date range
+        # this is tarded. the start date is really the end of the date range.
+        if self.start_date:
+            year, month, day = str(self.start_date).split('-')
+            end_date = datetime.date(int(year), int(month), int(day))
+        else:
+            end_date = datetime.datetime.now(Pacific_tzinfo()).date()
 
-        # Get all of the dsp stats
-        today = datetime.date.today()
-        two_weeks_ago = datetime.timedelta(0,0,0,0,0,0,2)
-        dsps = stats_fetcher.get_all_dsp_stats(today, two_weeks_ago)
+        if self.date_range:
+            start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
+        else:
+            start_date = end_date - datetime.timedelta(13)
+
+        mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
+
+        logging.warn("mpx_stats: %s" % mpx_stats)
+
+        # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
+
+        # Get total stats for the rollup/table footer
+        creative_totals = {
+            'imp': 0,
+            'clk': 0,
+            'ctr': 0,
+            'ecpm': 0,
+            'pub_rev': 0
+        }
+
+        # for dsp in dsps:
+        #     creative_totals['imp'] += dsp['stats']['imp']
+        #     creative_totals['clk'] += dsp['stats']['clk']
+        #     creative_totals['ctr'] += dsp['stats']['ctr']
+        #     creative_totals['ecpm'] += dsp['stats']['ecpm']
+        #     creative_totals['pub_rev'] += dsp['stats']['pub_rev']
 
         # Set up the blocklist
         blocklist = []
         network_config = self.account.network_config
         if network_config:
-            blocklist = network_config.blocklist
+            blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
 
-        for dsp in dsps:
-            creatives = stats_fetcher.get_creatives_for_dsp(dsp['key'], today, two_weeks_ago)
-            dsp.update({'creatives': creatives})
+        dsp_keys =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
 
+        today_stats = []
+        yesterday_stats = []
+        try:
+            today_stats = mpx_stats["daily"][-1];
+            yesterday_stats = mpx_stats["daily"][-2];
+        except:
+            pass
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
+                                      'apps': apps.values(),
                                       'app_keys': app_keys,
-                                      'dsps': dsps,
-                                      'top_level_mpx_stats': top_level_mpx_stats,
-                                      'blocklist': blocklist
+                                      'adunit_keys': adunit_keys,
+                                      'dsp_keys':dsp_keys,
+                                      'pub_key': self.account.key(),
+                                      'mpx_stats': simplejson.dumps(mpx_stats),
+                                      'totals': mpx_stats,
+                                      'today_stats': today_stats,
+                                      'yesterday_stats': yesterday_stats,
+                                      'blocklist': blocklist,
+                                      'start_date': start_date,
+                                      'end_date': end_date,
+                                      'date_range': self.date_range
                                   })
-
-    def post(self):
-        pass
 
 
 @login_required
 def marketplace_index(request, *args, **kwargs):
-    return MarketplaceIndexHandler()(request, *args, **kwargs)
-
-
-
-
+    return MarketplaceIndexHandler()(request, use_cache=False, *args, **kwargs)
 
 
 class AddBlocklistHandler(RequestHandler):
@@ -1245,15 +1312,16 @@ class AddBlocklistHandler(RequestHandler):
             network_config.blocklist.extend(add_blocklist)
             network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
             AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
-
         return HttpResponseRedirect(reverse('marketplace_index'))
 
 @login_required
 def add_blocklist_handler(request,*args,**kwargs):
     return AddBlocklistHandler()(request,*args,**kwargs)
 
+
 class RemoveBlocklistHandler(RequestHandler):
     def get(self, url=None):
+        #url = self.request.GET.get('url')
         network_config = self.account.network_config
         if network_config.blocklist.count(url):
             network_config.blocklist.remove(url)
@@ -1261,6 +1329,41 @@ class RemoveBlocklistHandler(RequestHandler):
 
         return HttpResponseRedirect(reverse('marketplace_index'))
 
+
 @login_required
 def remove_blocklist_handler(request,*args,**kwargs):
-    return RemoveBlocklistHandler()(request,*args,**kwargs)
+    return RemoveBlocklistHandler()(request, use_cache=False, *args, **kwargs)
+
+
+class MarketplaceOnOffHandler(RequestHandler):
+    def post(self):
+        try:
+            activate = self.request.POST.get('activate', 'on')
+            mpx = CampaignQueryManager.get_marketplace(self.account)
+            if activate == 'on':
+                mpx.active = True
+            elif activate == 'off':
+                mpx.active = False
+
+            CampaignQueryManager.put(mpx)
+            return JSONResponse({'success': 'success'})
+        except Exception, e:
+            return JSONResponse({'error': e})
+
+@login_required
+def marketplace_on_off(request, *args, **kwargs):
+    return MarketplaceOnOffHandler()(request, *args, **kwargs)
+
+
+class MarketplaceSettingsChangeHandler(RequestHandler):
+    def post(self):
+        try:
+            return JSONResponse({'success': str(self.request.POST)})
+        except Exception, e:
+            return JSONResponse({'success': e})
+
+@login_required
+def marketplace_settings_change(request, *args, **kwargs):
+    return MarketplaceSettingsChangeHandler()(request, *args, **kwargs)
+
+

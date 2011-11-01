@@ -279,7 +279,7 @@
         $('#sched_interval').change();
         $("#reportName-input").val(state.name);
         if (state.email) {
-            $('#email-input-checkbox').attr('checked',checked);
+            $('#email-input-checkbox').attr('checked');
         }
         else {
             $('#email-input-checkbox').removeAttr('checked');
@@ -496,6 +496,7 @@
         }).change();
 
 
+
 function obj_equals(x, y) {
     for(p in y) {
         if(typeof(x[p])=='undefined') {return false;}
@@ -617,14 +618,18 @@ function obj_equals(x, y) {
 
     $("#sched_interval")
     .change(function(e) {
-        $('#email-input').hide();
         $('.schedule-help').hide();
         $('.schedule-help.'+$(this).val()).show();
-        if ($(this).val() != 'none') {
-            $('#email-input').show();
-        }
     }).change();
 
+    $("#email-input-checkbox")
+    .change(function(e) {
+        if ($(this).attr('checked')) {
+            $('#email-recipients').show();
+        } else {
+            $('#email-recipients').hide();
+        }
+    }).change();
 
     $('#reportStateChangeForm-delete')
         .click(function(e) {

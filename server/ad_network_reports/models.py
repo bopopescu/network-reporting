@@ -109,4 +109,4 @@ class AdNetworkManagementStats(db.Model): #(date)
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s' % kwargs['date'].
                     strftime('%Y-%m-%d'))
-        super(AdNetworkAggregate, self).__init__(*args, **kwargs)
+        super(AdNetworkManagementStats, self).__init__(*args, **kwargs)

@@ -59,6 +59,11 @@
             This campaign needs to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
           </div>
 {% endif %}
+{% if campaign.marketplace %}
+<div class="alert-message block-message">
+  The revenue numbers reported for the marketplace may be incorrect.  For now, the revenue number should be disregarded.  This error will be fixed on Wednesday, October 26.  If you would like accurate revenue numbers in the meantime, email support@mopub.com and we can generate revenue reports for you.
+</div>
+{% endif %}
 {% if message  %}
           <div class="alert-message block-message error">
             {{message|safe}}

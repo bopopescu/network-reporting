@@ -1,21 +1,31 @@
 ﻿{% extends 'ad_network_base.html' %}
 {% load filters %}
 
-{% block adNetworkTitle %}
+{% block extraScripts %}
+{% endblock extraScripts %}
 
+{% block adNetworkTitle %}
 {% endblock %}
-<h2>Management</h2>
+
+{% block graph %}
+{% endblock graph %}
+
 {% block tableTitle %}
 <h3 class="dataTable-title">Management Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
 {% endblock tableTitle %}
 
 {% block tableHead %}
-<th class="dataTable-name">  </th>
-<th class="dataTable-name"> Ad Network </th>
-<th class="dataTable-data numeric"> Revenue </th>
-<th class="dataTable-data numeric"> Attempts </th>
-<th class="dataTable-data numeric"> Impressions </th>
-<th class="dataTable-data numeric"> Fill Rate</th>
-<th class="dataTable-data numeric"> Clicks </th>
-<th class="dataTable-data numeric"> CTR </th>
+{% for key, value in management_stats_list.0 %}
+	<th class="dataTable-name"> {{key}} </th>
+{% endfor %}
 {% endblock tableHead %}
+
+{% block tableData %}
+{% for management_stats in management_stats_list %}
+	<tr>
+	  {% for key, value in management_stats %}
+		<td class="dataTable-name"> {{value}} </td>
+    {% endfor %}
+	</tr>
+{% endfor %}
+{% endblock tableData %}

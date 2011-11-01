@@ -22,7 +22,7 @@ from account.models import NetworkConfig
 from common.utils import date_magic
 from common.utils.query_managers import CachedQueryManager
 from ad_network_reports.models import AdNetworkLoginCredentials, \
-        AdNetworkAppMapper, AdNetworkScrapeStats
+        AdNetworkAppMapper, AdNetworkScrapeStats, AdNetworkManagementStats
 from publisher.models import App
 
 class Stats(object):

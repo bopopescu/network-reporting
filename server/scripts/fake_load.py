@@ -63,9 +63,9 @@ def threadproc():
         try:
             # HTTP requests to exercise the server go here
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            print "http://mpx.mopub.com/spent"
+            print "http://38-john.mopub-inc.appspot.com"
             resp, content = h.request(
-                "http://mpx.mopub.com/spent")
+                "http://38-john.mopub-inc.appspot.com")
             if resp.status != 200:
                 print "Response not OK"
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

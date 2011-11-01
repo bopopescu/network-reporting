@@ -2,7 +2,7 @@
   <td class="name clearfix">
     <img src="<%= icon_url %>" alt="Icon" width="45" height="45" class="app-icon" />
     <div class="app-detail">
-      <a href="<%= url %>"><%= name  %></a>
+      <a href="<%= url %>" style="display:inline-block; max-width:175px;"><%= name  %></a>
       <span class="muted unbold"> ( <%= app_type %> ) </span>
       <br />
       <a href="#<%= id %>" class="adunits" id="<%= id %>"> Show Adunits </a>
@@ -24,6 +24,6 @@
     <%= ctr %>
   </td>
   <td class="price_floor">
-    <%= price_floor %>
+    --
   </td>
 </tr>

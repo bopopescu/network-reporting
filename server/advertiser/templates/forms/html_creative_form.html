@@ -4,3 +4,9 @@
                             <dd> 
                               <textarea name="{{form.html_data.name}}" rows="10" placeholder="HTML Body Content">{{form.html_data.value}}</textarea> 
                             </dd>
+                            <div class="hidden">
+                            <dt>ORMMA HTML:</dt>
+                            <dd>
+                              {{form.ormma_html|raw}}
+                            </dd>
+                            </div>

@@ -214,16 +214,20 @@ class AdNetworkReportManageHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range, 1)
 
-        management_stats_list = get_management_stats(days)
+        management_stats_list = [dict(management_stats).items() for
+                management_stats in get_management_stats(days)] or [[("NO" \
+                        " DATA", 0)]]
+        logging.warning(management_stats_list)
+        for key, value in management_stats_list[0]:
+            logging.warning(key)
 
         return render_to_response(self.request,
-                                  'ad_network_reports/ad_network_index' \
-                                          '.html',
+                                  'ad_network_reports/manage_ad_network_' \
+                                          'reports.html',
                                   {
                                       'start_date' : days[0],
                                       'end_date' : days[-1],
                                       'date_range' : self.date_range,
-                                      'ad_network_names' : AD_NETWORK_NAMES,
                                       'management_stats_list' :
                                       management_stats_list
                                   })

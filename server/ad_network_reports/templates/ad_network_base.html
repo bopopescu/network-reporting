@@ -112,7 +112,6 @@
         });
 
     });
-
   </script>
 {% endblock extraScripts %}
 
@@ -169,11 +168,11 @@
 </section>
 {% endblock graph %}
 
+{% block tableTitle %}
 <div style="padding-top:250px; text-align:center;">
-  {% block tableTitle %}
   <h3 class="dataTable-title">Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-  {% endblock tableTitle %}
 </div>
+{% endblock tableTitle %}
 
 <table class="zebra-striped simpletable campaignData-main">
 	<thead>

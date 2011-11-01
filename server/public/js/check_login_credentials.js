@@ -17,7 +17,7 @@
 				} else {
 					$.post("/ad_network_reports/add/",
 						$("#loginCredentials").serialize(), function() {
-							window.location = "/campaigns/";
+							window.location = "/ad_network_reports/";
 						});
 				}
 			   } else {

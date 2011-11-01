@@ -358,20 +358,12 @@ class ShowAppHandler(RequestHandler):
     # Set start date if passed in, otherwise get most recent days
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
+            start_date = self.start_date
+            end_date = start_date + timedelta(int(self.date_range) - 1)
         else:
             days = StatsModel.lastdays(self.date_range)
-
-        # Form the date range
-        if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.strptime(self.start_date, "%Y-%m-%d")
-        else:
             end_date = date.today()
-
-        if self.date_range:
             start_date = end_date - timedelta(int(self.date_range) - 1)
-        else:
-            start_date = end_date - timedelta(13)
-
 
         # load the site
         app = AppQueryManager.get(app_key)
@@ -590,22 +582,14 @@ class AdUnitShowHandler(RequestHandler):
         if adunit.account.key() != self.account.key():
             raise Http404
 
-        # Set start date if passed in, otherwise get most recent days
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
+            start_date = self.start_date
+            end_date = start_date + timedelta(int(self.date_range) - 1)
         else:
             days = StatsModel.lastdays(self.date_range)
-
-        # Form the date range
-        if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.strptime(self.start_date, "%Y-%m-%d")
-        else:
             end_date = date.today()
-
-        if self.date_range:
             start_date = end_date - timedelta(int(self.date_range) - 1)
-        else:
-            start_date = end_date - timedelta(13)
 
         days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days]
 

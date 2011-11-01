@@ -43,7 +43,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     credential):
                 yield mapper
 
-    def get_index_stats(self, start_date, end_date):
+    def get_index_stats(self, days):
         """Get required data for the index page of ad network reports.
 
         Generate a list of aggregate stats for the ad networks, apps and
@@ -58,14 +58,14 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         keys = [s.key() for s in mappers]
         # Get aggregate stats for all the different ad network mappers for the
         # account between the selected date range
-        aggregates_list = [self.get_ad_network_aggregates(n, start_date,
-            end_date) for n in mappers]
+        aggregates_list = [self.get_ad_network_aggregates(n, days) for n in
+                mappers]
         aggregate_stats_list = zip(keys, mappers, aggregates_list)
         aggregates = self.roll_up_stats(aggregates_list)
 
         # Get the daily stats list.
         daily_stats = [self.get_stats_for_date(date).__dict__ for date in
-                date_magic.gen_days(start_date, end_date)]
+                days]
 
         # Sort alphabetically by application name then by ad network name
         aggregate_stats_list = sorted(aggregate_stats_list, key = lambda s:
@@ -86,15 +86,15 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             date).filter('ad_network_app_mapper IN', mappers)))
 
     def get_ad_network_aggregates(self, ad_network_app_mapper,
-            start_date, end_date):
+            days):
         """Calculate aggregate stats for an ad network and app
-        between the given start date and end date.
+        for the given days.
 
         Return the aggregate stats.
         """
         query = AdNetworkScrapeStats.all()
         query.filter('ad_network_app_mapper =', ad_network_app_mapper)
-        query.filter('date IN', date_magic.gen_days(start_date, end_date))
+        query.filter('date IN', days)
 
         return self.roll_up_stats(query)
 
@@ -267,6 +267,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 def get_all_login_credentials():
     """Return all AdNetworkLoginCredentials entities ordered by account."""
     return AdNetworkLoginCredentials.all().order('account')
+
+def get_management_stats(days):
+    return AdNetworkManagementStats.all().filter('date IN', days)
 
 def create_manager(account_key, my_account):
     if account_key:

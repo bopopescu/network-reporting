@@ -3,13 +3,14 @@ import logging
 
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        create_manager
+        get_management_stats, create_manager
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
-from datetime import timedelta, date
+from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.shortcuts import redirect
+from reporting.models import StatsModel
 
 from account.models import Account
 
@@ -23,34 +24,46 @@ class AdNetworkReportIndexHandler(RequestHandler):
 
         Return a webpage with the list of stats in a table.
         """
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
+        else:
+            days = StatsModel.lastdays(self.date_range, 1)
+
         manager = create_manager(account_key, self.account)
-        # TODO:Take start date and end date from page.
-        start_date = date.today() - timedelta(days=8)
-        end_date = date.today() - timedelta(days=1)
 
         aggregates, daily_stats, aggregate_stats_list = manager. \
-                get_index_stats(start_date, end_date)
+                get_index_stats(days)
 
-        logging.warning("account key: ", account_key)
         if account_key:
             add_credentials_url = '/ad_network_reports/manage/' + \
                     str(account_key) + '/add'
         else:
             add_credentials_url = '/ad_network_reports/add'
 
-        return render_to_response(self.request,
-                                  'ad_network_reports/ad_network_index.html',
-                                  {
-                                      'start_date' : start_date,
-                                      'end_date' : end_date,
-                                      'add_credentials_url' :
-                                      add_credentials_url,
-                                      'aggregates' : aggregates,
-                                      'daily_stats' : simplejson.dumps(
-                                          daily_stats),
-                                      'aggregate_stats_list' :
-                                        aggregate_stats_list
-                                  })
+        if aggregate_stats_list:
+            return render_to_response(self.request,
+                                      'ad_network_reports/ad_network_index' \
+                                              '.html',
+                                      {
+                                          'start_date' : days[0],
+                                          'end_date' : days[-1],
+                                          'date_range' : self.date_range,
+                                          'add_credentials_url' :
+                                          add_credentials_url,
+                                          'aggregates' : aggregates,
+                                          'daily_stats' : simplejson.dumps(
+                                              daily_stats),
+                                          'aggregate_stats_list' :
+                                            aggregate_stats_list
+                                      })
+        else:
+            return render_to_response(self.request,
+                                      'ad_network_reports/ad_network_setup' \
+                                              '.html',
+                                      {
+                                          'add_credentials_url' :
+                                          add_credentials_url,
+                                      })
 
 @login_required
 def ad_network_report_index(request, *args, **kwargs):
@@ -65,16 +78,21 @@ class ViewAdNetworkReportHandler(RequestHandler):
         manager = AdNetworkReportQueryManager()
         ad_network_app_mapper = manager.get_ad_network_app_mapper(
                 ad_network_app_mapper_key = ad_network_app_mapper_key)
-        dates = manager.get_ad_network_app_stats(ad_network_app_mapper)
+        stats_list = manager.get_ad_network_app_stats(ad_network_app_mapper)
+        daily_stats = [stats.__dict__ for stats in stats_list]
+        aggregates = manager.roll_up_stats(stats_list)
         return render_to_response(self.request,
                                   'ad_network_reports/'
-                                  'view_app_ad_network_report.html',
+                                  'ad_network_base.html',
                                   {
-                                      "ad_network_name" :
+                                      'ad_network_name' :
                                       ad_network_app_mapper.ad_network_name,
-                                      "app_name" : ad_network_app_mapper.
+                                      'app_name' : ad_network_app_mapper.
                                       application.name,
-                                       "dates" : dates
+                                      'aggregates' : aggregates,
+                                      'daily_stats' : simplejson.dumps(
+                                          daily_stats),
+                                       'stats' : stats_list
                                   })
 
 @login_required
@@ -181,3 +199,35 @@ class AddLoginInfoHandler(RequestHandler):
 @login_required
 def add_login_credentials(request, *args, **kwargs):
     return AddLoginInfoHandler()(request, *args, **kwargs)
+
+class AdNetworkReportManageHandler(RequestHandler):
+    def get(self):
+        """Create the ad network reports management page.
+
+        Get the list of management stats and login credentials that resulted in
+        error.
+
+        Return a webpage with the list of management stats in a table.
+        """
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
+        else:
+            days = StatsModel.lastdays(self.date_range, 1)
+
+        management_stats_list = get_management_stats(days)
+
+        return render_to_response(self.request,
+                                  'ad_network_reports/ad_network_index' \
+                                          '.html',
+                                  {
+                                      'start_date' : days[0],
+                                      'end_date' : days[-1],
+                                      'date_range' : self.date_range,
+                                      'ad_network_names' : AD_NETWORK_NAMES,
+                                      'management_stats_list' :
+                                      management_stats_list
+                                  })
+
+@login_required
+def manage_ad_network_reports(request, *args, **kwargs):
+    return AdNetworkReportManageHandler()(request, *args, **kwargs)

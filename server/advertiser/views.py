@@ -1180,10 +1180,22 @@ def campaign_export(request, *args, **kwargs):
     return CampaignExporter()(request, *args, **kwargs)
 
 
+# Network Views
+# At some point in the future, these *could* be branched into their own django app
+class NetworkIndexHandler(RequestHandler):
+    def get(self):
+        return render_to_response(self.request,
+                                  "advertiser/network_index.html",
+                                  {})
+
+@login_required
+def network_index(request, *args, **kwargs):
+    return NetworkIndexHandler()(request, *args, **kwargs)
+
+
+
 # Marketplace Views
 # At some point in the future, these should be branched into their own django app
-
-
 class MPXInfoHandler(RequestHandler):
     def get(self):
         return render_to_response(self.request,
@@ -1224,10 +1236,8 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # Set up a MarketplaceStatsFetcher with this account
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-        #stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
 
         # Form the date range
-        # TODO: This should be rewritten so the JS passes a start/end date OR the number of days
         if self.start_date:
             year, month, day = str(self.start_date).split('-')
             start_date = datetime.date(int(year), int(month), int(day))
@@ -1244,9 +1254,6 @@ class MarketplaceIndexHandler(RequestHandler):
 
         mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
 
-        logging.warn("mpx_stats: %s" % mpx_stats)
-
-        # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
 
         # Get total stats for the rollup/table footer
         creative_totals = {
@@ -1256,13 +1263,6 @@ class MarketplaceIndexHandler(RequestHandler):
             'ecpm': 0,
             'pub_rev': 0
         }
-
-        # for dsp in dsps:
-        #     creative_totals['imp'] += dsp['stats']['imp']
-        #     creative_totals['clk'] += dsp['stats']['clk']
-        #     creative_totals['ctr'] += dsp['stats']['ctr']
-        #     creative_totals['ecpm'] += dsp['stats']['ecpm']
-        #     creative_totals['pub_rev'] += dsp['stats']['pub_rev']
 
         # Set up the blocklist
         blocklist = []

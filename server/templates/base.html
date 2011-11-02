@@ -27,9 +27,6 @@
   <!-- modernizr -->
   <script src="/js/mylibs/modernizr-1.6.min.js"></script>
 
-  <!-- sorttable -->
-
-
   <!-- Google load for jquery and jqueryui -->
   <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
   <script type="text/javascript">
@@ -110,7 +107,7 @@
             <li><a href="{% url publisher_index %}">Dashboard</a></li>
             <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
             <li><a href="{% url marketplace_index %}">Marketplace</a></li>
-            <li><a href="{% url reports_index %}">Reports</a></li>
+            <li><a href="{% url network_index %}">Networks</a></li>
             {% endblock navLinks %}
           </ul>
         </nav>
@@ -124,6 +121,7 @@
                   <li> <a href="{% url account_index %}">General Settings</a> </li>
                   <li> <a href="{% url ad_network_settings %}">Ad Network Settings </a> </li>
                   <li> <a href="{% url payment_history %}">Payment History </a> </li>
+                  <li> <a href="{% url reports_index %}">Reports</a></li>
                 </ul>
               </div>
             </li>

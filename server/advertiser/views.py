@@ -1184,9 +1184,26 @@ def campaign_export(request, *args, **kwargs):
 # At some point in the future, these *could* be branched into their own django app
 class NetworkIndexHandler(RequestHandler):
     def get(self):
+
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
+        else:
+            days = StatsModel.lastdays(self.date_range)
+
+        logging.warn(self.date_range)
+        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
+        # TODO:: Optimize IO
+
+
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
-                                  {})
+                                  {
+                                      'networks': network_campaigns,
+                                      'start_date': days[0],
+                                      'end_date':days[-1],
+                                      'date_range': self.date_range
+                                  })
 
 @login_required
 def network_index(request, *args, **kwargs):
@@ -1218,11 +1235,12 @@ class MarketplaceIndexHandler(RequestHandler):
         # Only one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
 
-        # We list the app traits in the table, and then load their stats over ajax using Backbone.
-        # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
+        # Get all of the adunit keys for bootstrapping the apps
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
+        # We list the app traits in the table, and then load their stats over ajax using Backbone.
+        # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
         apps = {}
         for au in adunits:
             app = apps.get(au.app_key.key())
@@ -1270,8 +1288,7 @@ class MarketplaceIndexHandler(RequestHandler):
         if network_config:
             blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
 
-        dsp_keys =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
-
+        # Get today and yesterday's stats for the graph
         today_stats = []
         yesterday_stats = []
         try:
@@ -1287,7 +1304,6 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'apps': apps.values(),
                                       'app_keys': app_keys,
                                       'adunit_keys': adunit_keys,
-                                      'dsp_keys':dsp_keys,
                                       'pub_key': self.account.key(),
                                       'mpx_stats': simplejson.dumps(mpx_stats),
                                       'totals': mpx_stats,

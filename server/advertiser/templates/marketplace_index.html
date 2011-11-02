@@ -450,7 +450,6 @@
 
       var app_keys = {{ app_keys|safe }};
       var blocklist = {{ blocklist|safe }};
-      var dsp_keys = {{ dsp_keys|safe }};
       var pub_key = "{{ pub_key }}";
 
       Marketplace.fetchAppStats(app_keys);
@@ -458,11 +457,11 @@
            Marketplace.fetchAdunitStats(app_key);
       });
 
-      var table = Marketplace.makeCreativePerformanceTable(pub_key, dsp_keys, blocklist);
+      var table = Marketplace.makeCreativePerformanceTable(pub_key, [],  blocklist);
 
     });
   </script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js?v=103"></script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js?v=104"></script>
 {% endblock extraScripts %}
 
 {% block extraCSS %}

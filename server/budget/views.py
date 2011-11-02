@@ -110,17 +110,24 @@ def budget_view(request, adgroup_key):
         remaining_daily_budget = budget_service.remaining_daily_budget(budget)
         remaining_ts_budget = budget_service.remaining_ts_budget(budget)
         braking_fraction = budget_service.braking_fraction(budget)
+        expected = budget.expected_spent
+        if budget.static_slice_budget and not budget.finite:
+            total = budget.spent_today
+        else:
+            total = budget.total_spent
     else:
         remaining_ts_budget = None
         remaining_daily_budget = None
         braking_fraction = None
+        expected = None
+        total = None
 
     today = datetime.now().date()
     one_month_ago = today - timedelta(days=30)
 
     daily_logs = budget_service._get_daily_logs_for_date_range(budget,
-                                                                   one_month_ago,
-                                                                   today)
+                                                               one_month_ago,
+                                                               today)
 
 
     ts_logs = budget_service._get_ts_logs_for_date_range(budget, today, today)
@@ -152,7 +159,9 @@ def budget_view(request, adgroup_key):
                 'one_month_ago': one_month_ago,
                 'budget_obj_url': budget_obj_url,
                 'clear_memcache_ts_url': clear_memcache_ts_url,
-                'braking_fraction': braking_fraction}
+                'braking_fraction': braking_fraction,
+                'expected': expected,
+                'total': total,}
 
 
 

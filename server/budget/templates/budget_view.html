@@ -17,8 +17,16 @@
   
   <table style="border-spacing:20px 2px; border-collapse:separate">
     <tr>
-      <td>Base Daily Budget:</td> <td>{{budget.daily_budget|currency}}</td> 
+      <td>Base Slice Budget:</td> <td>{{budget.slice_budget}}</td> 
       <td><h5> <a href="{{budget_obj_url}}">View/Edit Budget </a> </h5></td>
+    </tr>
+    <tr>
+      <td>Expected Spend: </td> <td>{{expected}}</td>
+      <td>If this is an infinite daily campaign this means the amount of money that should've been spent <b>TODAY</b> up until now, otherwise it's the amount of money that should've been spent up until now <b>IN TOTAL</b></td>
+    </tr>
+    <tr>
+      <td>Total Spend: </td> <td>{{total}}</td>
+      <td>If this is an infinite daily campaign, this is the amount of money spent <b>TODAY</b>, otherwise it's the amount of money spent <b>IN TOTAL</b></td>
     </tr>
     <tr>
       <td>Timeslice Budget: </td> <td>{{remaining_ts_budget|currency}}</td>
@@ -29,6 +37,7 @@
       <td>Braking Percentage: </td> <td>{{braking_fraction|percentage}}</td>
       <td> (25% means that 25% of machines will actually try to execute the request)</td>
     </tr>
+
     
   </table>
 

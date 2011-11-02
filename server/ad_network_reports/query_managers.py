@@ -16,19 +16,22 @@ if EC2:
 
     import common.utils.test.setup
 
-from google.appengine.ext import db
-
-from account.models import NetworkConfig
-from common.utils import date_magic
-from common.utils.query_managers import CachedQueryManager
+from account.query_managers import AccountQueryManager
 from ad_network_reports.models import AdNetworkLoginCredentials, \
         AdNetworkAppMapper, AdNetworkScrapeStats, AdNetworkManagementStats
-from publisher.models import App
+from common.utils.query_managers import CachedQueryManager
+from Crypto.Cipher import AES
+from Crypto import Random
+from google.appengine.ext import db
+from publisher.query_managers import AppQueryManager
+
+PASSWORD_KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
 class Stats(object):
     pass
 
 class AdNetworkReportQueryManager(CachedQueryManager):
+
     def __init__(self, account=None):
         self.account = account
 
@@ -152,21 +155,32 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         query.order('-date')
         return query
 
-    def get_ad_network_app_mapper(self, ad_network_app_mapper_key = None,
-            publisher_id = None, login_credentials = None):
+    def get_ad_network_app_mapper(self, ad_network_app_mapper_key=None,
+            publisher_id=None, ad_network_name=None):
         """Keyword arguments: either an ad_network_app_mapper_key or a
         publisher_id and login_credentials.
 
         Return the corresponding AdNetworkAppMapper.
         """
         if ad_network_app_mapper_key:
-            return db.get(ad_network_app_mapper_key)
-        elif publisher_id and login_credentials:
-            query = AdNetworkAppMapper.all()
-            query.filter('publisher_id =', publisher_id)
-            query.filter('ad_network_login =', login_credentials)
-            return query.get()
+            return AdNetworkAppMapper.get(ad_network_app_mapper_key)
+        elif publisher_id and ad_network_name:
+            return AdNetworkAppMapper.get_by_publisher_id(publisher_id,
+                    ad_network_name)
         return None
+
+    def get_app_publisher_ids(self, ad_network_name):
+        """Check apps to see if their pub_id for the given ad_network is
+        defined
+
+        Return generator of publisher ids at the application level for the
+        account on the ad_network.
+        """
+        for app in AppQueryManager.get_apps_with_network_configs(self.account):
+            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
+                    None)
+            if pub_id != None:
+                yield pub_id
 
     def get_apps_with_publisher_ids(self, ad_network_name):
         """Check apps to see if their pub_id for the given ad_network is
@@ -175,16 +189,15 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return generator of applications with publisher ids for the account on
         the ad_network.
         """
-        for app in App.all().filter('account =',
-                self.account).filter('network_config !=', None):
-            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
-                    None)
-            if pub_id != None:
+        for app in AppQueryManager.get_apps_with_network_configs(self.account):
+            publisher_id = getattr(app.network_config, '%s_pub_id'
+                    % ad_network_name, None)
+            if publisher_id != None:
                 # example return (App, NetworkConfig.admob_pub_id)
-                yield (app, pub_id)
+                yield (app, publisher_id)
 
-    def create_login_credentials_and_mappers(self, ad_network_name, username,
-            password, client_key, send_email):
+    def create_login_credentials_and_mappers(self, ad_network_name, username='',
+            password='', client_key='', send_email=False):
         """Check login credentials by making a request to tornado on EC2. If
         they're valid create AdNetworkLoginCredentials and AdNetworkAppMapper
         entities and store them in the db.
@@ -192,10 +205,17 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return None if the login credentials are correct otherwise return an
         error message.
         """
+        iv = ''
+        if password:
+            iv = Random.get_random_bytes(16)
+            aes_cfb = AES.new(PASSWORD_KEY, AES.MODE_CFB, iv)
+            password = aes_cfb.encrypt(password)
+
         login_credentials = AdNetworkLoginCredentials(account=self.account,
                                         ad_network_name=ad_network_name,
                                         username=username,
                                         password=password,
+                                        iv=iv,
                                         client_key=client_key,
                                         email=send_email)
         login_credentials.put()
@@ -220,31 +240,17 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         # Sanity check
         if publisher_id:
             ad_network_name = login_credentials.ad_network_name
-            for app in App.all().filter('account =',
-                    self.account).filter('network_config !=', None):
+            for app, app_publisher_id in self.get_apps_with_publisher_ids(
+                    ad_network_name):
                 # Is the app in Mopub?
-                if getattr(app.network_config, ad_network_name + '_pub_id', None) \
-                        == publisher_id:
+                if publisher_id == app_publisher_id:
                     mapper = AdNetworkAppMapper(ad_network_name=ad_network_name,
                                                 publisher_id=publisher_id,
-                                                ad_network_login=login_credentials,
+                                                ad_network_login=
+                                                        login_credentials,
                                                 application=app)
                     mapper.put()
                     return mapper
-
-    def get_app_publisher_ids(self, ad_network_name):
-        """Check apps to see if their pub_id for the given ad_network is
-        defined
-
-        Return generator of publisher ids at the application level for the
-        account on the ad_network.
-        """
-        for app in App.all().filter('account =',
-                self.account).filter('network_config !=', None):
-            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
-                    None)
-            if pub_id != None:
-                yield pub_id
 
     def get_adunit_publisher_ids(self, ad_network_name):
         """Get the ad unit publisher ids with the ad network from the generator
@@ -252,7 +258,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         Return a generator of ad unit publisher ids.
         """
-        for app in App.all().filter('account =', self.account):
+        for app in AppQueryManager.get_apps_with_network_configs(self.account):
             for adunit in app.all_adunits:
                 if hasattr(adunit, 'network_config') and getattr(adunit.
                         network_config, '%s_pub_id' % ad_network_name, None):
@@ -269,9 +275,10 @@ def get_all_login_credentials():
     return AdNetworkLoginCredentials.all().order('account')
 
 def get_management_stats(days):
-    return AdNetworkManagementStats.all().filter('date IN', days)
+    return AdNetworkManagementStats.get_by_days(days)
 
 def create_manager(account_key, my_account):
     if account_key:
-        return(AdNetworkReportQueryManager(db.get(account_key)))
+        return(AdNetworkReportQueryManager(AccountQueryManager.
+            get_account_by_key(account_key)))
     return(AdNetworkReportQueryManager(my_account))

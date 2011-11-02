@@ -77,7 +77,7 @@ class ViewAdNetworkReportHandler(RequestHandler):
         """
         manager = AdNetworkReportQueryManager()
         ad_network_app_mapper = manager.get_ad_network_app_mapper(
-                ad_network_app_mapper_key = ad_network_app_mapper_key)
+                ad_network_app_mapper_key=ad_network_app_mapper_key)
         stats_list = manager.get_ad_network_app_stats(ad_network_app_mapper)
         daily_stats = [stats.__dict__ for stats in stats_list]
         aggregates = manager.roll_up_stats(stats_list)
@@ -211,7 +211,7 @@ def load_test_data(account=None):
     from google.appengine.ext import db
     from account.models import Account, NetworkConfig
 
-    if account = None:
+    if account == None:
         account = Account()
         account.put()
 
@@ -242,8 +242,7 @@ def load_test_data(account=None):
             bet_iad_network_config)
     bet_iad_app.put()
 
-    officejerk_network_config = NetworkConfig(jumptap_pub_id=
-            'office_jerk_test')
+    officejerk_network_config = NetworkConfig(jumptap_pub_id='office_jerk_test')
     officejerk_network_config.put()
 
     officejerk_app = App(account=account, name="Office Jerk", network_config=

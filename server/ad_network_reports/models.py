@@ -11,11 +11,14 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
             collection_name='login_credentials')
     ad_network_name = db.StringProperty(required=True)
 
-    # needed for all networks but mobfox
+    # Needed for all networks but mobfox
     username = db.StringProperty()
-    password = db.StringProperty()
+    password = db.ByteStringProperty()
 
-    # needed for admob
+    # Needed to store the password securely
+    iv = db.ByteStringProperty()
+
+    # Needed for admob
     client_key = db.StringProperty()
 
     # Special white list for jumptap
@@ -54,7 +57,7 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
         super(AdNetworkAppMapper, self).__init__(*args, **kwargs)
 
     @classmethod
-    def get_by_publisher_id(self, ad_network_name, publisher_id):
+    def get_by_publisher_id(self, publisher_id, ad_network_name):
         return self.get_by_key_name('k:%s:%s' % (ad_network_name, publisher_id))
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
@@ -124,5 +127,10 @@ class AdNetworkManagementStats(db.Model): #(date)
         setattr(self, field, getattr(self, field) + 1)
 
     @classmethod
-    def get_by_date(self, date):
-        return self.get_by_key_name('k:%s' % date.strftime('%Y-%m-%d'))
+    def get_by_day(self, day):
+        return self.get_by_key_name('k:%s' % day.strftime('%Y-%m-%d'))
+
+    @classmethod
+    def get_by_days(self, days):
+        return self.get_by_key_name(['k:%s' % day.strftime('%Y-%m-%d') for day
+            in days])

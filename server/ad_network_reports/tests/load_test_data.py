@@ -3,6 +3,7 @@ import common.utils.test.setup
 
 from account.models import Account, NetworkConfig
 from ad_network_reports.models import *
+from ad_network_reports.query_managers import AdNetworkReportQueryManager
 from publisher.models import App, Site
 
 REAL_TEST_DATA = False
@@ -149,44 +150,7 @@ else:
     account = Account(key_name = 'test_account')
     account.put()
 
-    # AdMob login info
-    admob_login_credentials = AdNetworkLoginCredentials(account=account,
-                                          ad_network_name='admob',
-                                          username=
-                                          'adnetwork@com2usamerica.com',
-                                          password='4w47m82l5jfdqw1x',
-                                          client_key=
-                                          'ka820827f7daaf94826ce4cee343837a')
-    admob_login_credentials.put()
 
-    # JumpTap login info
-    jumptap_login_credentials = AdNetworkLoginCredentials(account=account,
-                                            ad_network_name='jumptap',
-                                            username='zaphrox',
-                                            password='JR.7x89re0')
-    jumptap_login_credentials.put()
-
-    # iAd login info                                  
-#    iad_login_credentials = AdNetworkLoginCredentials(account=account,
-#                                        ad_network_name='iad',
-#                                        username='chesscom',
-#                                        password='Faisal1Chess')
-#    iad_login_credentials.put()
-
-    # InMobi login info
-    inmobi_login_credentials = AdNetworkLoginCredentials(account=account,
-                                           ad_network_name='inmobi',
-                                           username=
-                                           '4028cb973099fe040130c2aa2a0904b5',
-                                           password='098233019949')
-    inmobi_login_credentials.put()
-
-    # MobFox login info
-    mobfox_login_credentials = AdNetworkLoginCredentials(account=account,
-                                           ad_network_name='mobfox')
-    mobfox_login_credentials.put()
-
-    # Only needed for jumptap
     network_config = NetworkConfig(jumptap_pub_id=TEST_JUMPTAP_PUB_ID,
             admob_pub_id=TEST_ADMOB_PUB_ID, iad_pub_id=TEST_IAD_PUB_ID,
             inmobi_pub_id=TEST_INMOBI_PUB_ID,
@@ -205,13 +169,36 @@ else:
     jumptap_adunit_config.put()
     jumptap_adunit.network_config = jumptap_adunit_config
     jumptap_adunit.put()
+    manager = AdNetworkReportQueryManager(account)
 
-    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
-        'admob', publisher_id=TEST_ADMOB_PUB_ID, ad_network_login=
-        admob_login_credentials))
-    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
-        'jumptap', publisher_id=TEST_JUMPTAP_PUB_ID, ad_network_login=
-        jumptap_login_credentials))
+    # AdMob login info
+    manager.create_login_credentials_and_mappers(ad_network_name='admob',
+                                          username=
+                                          'adnetwork@com2usamerica.com',
+                                          password='4w47m82l5jfdqw1x',
+                                          client_key=
+                                          'ka820827f7daaf94826ce4cee343837a')
+
+    # JumpTap login info
+    manager.create_login_credentials_and_mappers(ad_network_name='jumptap',
+                                            username='zaphrox',
+                                            password='JR.7x89re0')
+    # iAd login info                                  
+#    iad_login_credentials = AdNetworkLoginCredentials(account=account,
+#                                        ad_network_name='iad',
+#                                        username='chesscom',
+#                                        password='Faisal1Chess')
+#    iad_login_credentials.put()
+
+    # InMobi login info
+    manager.create_login_credentials_and_mappers(ad_network_name='inmobi',
+                                           username=
+                                           '4028cb973099fe040130c2aa2a0904b5',
+                                           password='098233019949')
+
+    # MobFox login info
+    manager.create_login_credentials_and_mappers(ad_network_name='mobfox')
+
 #    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
 #        'iad', publisher_id=TEST_IAD_PUB_ID, ad_network_login=
 #        iad_login_credentials))

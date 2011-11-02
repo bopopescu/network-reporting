@@ -25,8 +25,9 @@ from google.appengine.api import mail
 
 from datetime import date, datetime, timedelta
 
-from ad_network_reports.ad_networks import AD_NETWORKS
-from ad_network_reports.models import AdNetworkScrapeStats, AdNetworkManagementStats
+from ad_network_reports.ad_networks import AdNetwork
+from ad_network_reports.models import AdNetworkScrapeStats, \
+        AdNetworkManagementStats
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
         get_all_login_credentials
 from common.utils import date_magic
@@ -74,17 +75,17 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
                 <td>%(ctr).2f%%</td>
                 <td>%(ecpm).2f</td>
             </tr>
-            """ % dict([('app', app_name), ('ad_network_name', ad_network_name)] +
-                stats.__dict__.items()))
+            """ % dict([('app', app_name), ('ad_network_name', ad_network_name)]
+                + stats.__dict__.items()))
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
                        #to='report-monitoring@mopub.com',
                        to='tiago@mopub.com',
                        subject=("Ad Network Revenue Reporting for %s" %
-                           test_date.strftime("%m/%d/%y")),
-                       body=("Learn more at http://mopub-experimental.appspot.com/"
-                             "ad_network_reports/"),
+                                test_date.strftime("%m/%d/%y")),
+                       body=("Learn more at http://mopub-experimental.appspot."
+                                "com/ad_network_reports/"),
                        html=(emails +
                        """
 <table width=100%%>
@@ -123,8 +124,8 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 def update_ad_networks(start_date = None, end_date = None):
     """Update ad network stats.
 
-    Iterate through all AdNetworkLoginCredentials. Login to the ad networks saving
-    the data for the date range in the db.
+    Iterate through all AdNetworkLoginCredentials. Login to the ad networks
+    saving the data for the date range in the db.
 
     Run daily as a cron job in EC2. Email account if account wants email upon
     completion of gathering stats. Email Tiago if errors occur.
@@ -153,47 +154,50 @@ def update_ad_networks(start_date = None, end_date = None):
             if (account_key != previous_account_key and
                     previous_account_key):
                 if login_credentials.email and test_date == yesterday:
-                    send_stats_mail(db.get(previous_account_key), manager, test_date, valid_stats_list)
+                    send_stats_mail(db.get(previous_account_key), manager,
+                            test_date, valid_stats_list)
                 valid_stats_list = []
             previous_account_key = account_key
 
             stats_list = []
             manager = AdNetworkReportQueryManager(login_credentials.account)
-            # Is extra information besides the login credentials requeired for
-            # the ad network? If yes append it.
-            login_info = AD_NETWORKS[login_credentials.ad_network_name]. \
-                    append_extra_info(login_credentials)
 
-            try:
-                scraper = AD_NETWORKS[login_credentials.ad_network_name]. \
-                        constructor(login_info)
+#            try:
+            # AdNetwork is a factory class that returns the appropriate
+            # subclass of itself when created.
+            ad_network = AdNetwork(login_credentials)
 
-                # return a list of NetworkScrapeRecord objects of stats for
-                # each app for the test_date
-                stats_list = scraper.get_site_stats(test_date)
-            except Exception as e:
-                aggregate.increment(login_credentials.ad_network_name + '_login_failed')
-                logging.error(("Couldn't get get stats for %s network for "
-                        "\"%s\" account.  Can try again later or perhaps %s "
-                        "changed it's API or site.") %
-                        (login_credentials.ad_network_name,
-                            login_credentials.account.key(),
-                            login_credentials.ad_network_name))
-                exc_traceback = sys.exc_info()[2]
-                mail.send_mail(sender='olp@mopub.com',
-                               # login_credentials.account.user.email
-                               to='tiago@mopub.com',
-                               subject=("Ad Network Scrape Error on %s" %
-                                   test_date.strftime("%m/%d/%y")),
-                               body=("Couldn't get get stats for %s network "
-                                   "for \"%s\" account. Error:\n %s\n\nTraceback:\n%s" %
-                                   (login_credentials.ad_network_name,
-                                       login_credentials.account.key(), e,
-                                       repr(traceback.extract_tb(exc_traceback)))))
-                continue
+            ad_network.append_extra_info()
+            scraper = ad_network.create_scraper()
+
+            # Return a list of NetworkScrapeRecord objects of stats for
+            # each app for the test_date
+            stats_list = scraper.get_site_stats(test_date)
+#            except Exception as e:
+#                aggregate.increment(login_credentials.ad_network_name +
+#                        '_login_failed')
+#                logging.error(("Couldn't get get stats for %s network for "
+#                        "\"%s\" account.  Can try again later or perhaps %s "
+#                        "changed it's API or site.") %
+#                        (login_credentials.ad_network_name,
+#                            login_credentials.account.key(),
+#                            login_credentials.ad_network_name))
+#                exc_traceback = sys.exc_info()[2]
+#                mail.send_mail(sender='olp@mopub.com',
+#                               to='tiago@mopub.com',
+#                               subject=("Ad Network Scrape Error on %s" %
+#                                   test_date.strftime("%m/%d/%y")),
+#                               body=("Couldn't get get stats for %s network "
+#                                   "for \"%s\" account. Error:\n %s\n\n"
+#                                   "Traceback:\n%s" % (login_credentials.
+#                                       ad_network_name, login_credentials.
+#                                       account.key(), e, repr(traceback.
+#                                           extract_tb(exc_traceback)))))
+#                continue
 
             for stats in stats_list:
-                aggregate.increment(login_credentials.ad_network_name + '_found')
+                aggregate.increment(login_credentials.ad_network_name +
+                        '_found')
 
                 # Add the current day to the db.
 
@@ -203,7 +207,7 @@ def update_ad_networks(start_date = None, end_date = None):
                 # login_credentials and stats.
                 ad_network_app_mapper = manager.get_ad_network_app_mapper(
                         publisher_id=publisher_id,
-                        login_credentials=login_credentials)
+                        ad_network_name=login_credentials.ad_network_name)
 
                 if not ad_network_app_mapper:
                     # Check if the app has been added to MoPub prior to last
@@ -215,16 +219,18 @@ def update_ad_networks(start_date = None, end_date = None):
                         # network.
                         logging.info("%(account)s has pub id %(pub_id)s on "
                                 "%(ad_network)s that\'s NOT in MoPub" %
-                                     dict(account = login_credentials.account.key(),
-                                          pub_id = stats.app_tag,
-                                          ad_network = login_credentials.
+                                     dict(account=login_credentials.account.
+                                         key(),
+                                          pub_id=stats.app_tag,
+                                          ad_network=login_credentials.
                                           ad_network_name))
                         continue
                     else:
                         aggregate.increment(login_credentials.ad_network_name +
                                 '_mapped')
                         logging.info("%(account)s has pub id %(pub_id)s on "
-                                "%(ad_network)s that was FOUND in MoPub and mapped" %
+                                "%(ad_network)s that was FOUND in MoPub and "
+                                "mapped" %
                                      dict(account = login_credentials.account.
                                          key(),
                                           pub_id = stats.app_tag,
@@ -237,17 +243,18 @@ def update_ad_networks(start_date = None, end_date = None):
                                 pub_id = stats.app_tag,
                                 ad_network = login_credentials.ad_network_name))
 
-                aggregate.increment(login_credentials.ad_network_name + '_updated')
-                AdNetworkScrapeStats(ad_network_app_mapper =
+                aggregate.increment(login_credentials.ad_network_name +
+                        '_updated')
+                AdNetworkScrapeStats(ad_network_app_mapper=
                         ad_network_app_mapper,
-                        date = test_date,
-                        revenue = float(stats.revenue),
-                        attempts = stats.attempts,
-                        impressions = stats.impressions,
-                        fill_rate = float(stats.fill_rate),
-                        clicks = stats.clicks,
-                        ctr = float(stats.ctr),
-                        ecpm = float(stats.ecpm)
+                        date=test_date,
+                        revenue=float(stats.revenue),
+                        attempts=stats.attempts,
+                        impressions=stats.impressions,
+                        fill_rate=float(stats.fill_rate),
+                        clicks=stats.clicks,
+                        ctr=float(stats.ctr),
+                        ecpm=float(stats.ecpm)
                         ).put()
 
                 if test_date == yesterday and login_credentials and \

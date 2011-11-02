@@ -19,3 +19,4 @@ class NetworkScrapeRecord(object):
                 'attempts:%(attempts)d impressions:%(impressions)d fill_rate:'
                 '%(fill_rate).2f clicks:%(clicks)d ctr:%(ctr).2f ecpm:%(ecpm)'
                 '.2f>' % self.__dict__)
+

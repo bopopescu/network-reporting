@@ -2,11 +2,13 @@ import selenium
 import sys
 import time
 
-sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
-#sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
+#sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
+sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
+from ad_network_reports.scrapers.unauthorized_login_exception import \
+        UnauthorizedLogin
 from BeautifulSoup import BeautifulSoup
 from datetime import date, datetime
 from pyvirtualdisplay import Display
@@ -55,7 +57,7 @@ class IAdScraper(Scraper):
         time.sleep(3)
 
         if self.browser.title == self.LOGIN_TITLE:
-            raise Exception(self.browser.find_element_by_css_selector(
+            raise UnauthorizedLogin(self.browser.find_element_by_css_selector(
                 'span.dserror').text)
         # We should now have cookies
 

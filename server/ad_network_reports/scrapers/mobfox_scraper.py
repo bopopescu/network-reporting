@@ -51,7 +51,7 @@ class MobFoxScraper(object):
             response = urllib2.urlopen(req)
             line = response.read()
             if line.find("error") != -1:
-                raise Exception(line)
+                raise MobFoxError(line)
             self.dom = minidom.parseString(line)
 
             try:
@@ -83,6 +83,12 @@ class MobFoxScraper(object):
             return nodes[0].nodeValue
         else:
             return 0
+
+class MobFoxError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return repr(self.msg)
 
 if __name__ == '__main__':
     NC = NetworkConfidential()

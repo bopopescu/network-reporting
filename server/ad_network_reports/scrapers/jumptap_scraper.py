@@ -6,11 +6,13 @@ import urllib
 
 from datetime import date, timedelta
 # only needed for testing
-#sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
-sys.path.append('/home/ubuntu/mopub/server')
+sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+#sys.path.append('/home/ubuntu/mopub/server')
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
+from ad_network_reports.scrapers.unauthorized_login_exception import \
+        UnauthorizedLogin
 
 class JumpTapScraper(Scraper):
 
@@ -59,7 +61,12 @@ class JumpTapScraper(Scraper):
 
             req = urllib2.Request(self.SITE_STAT_URL,
                                   urllib.urlencode(query_dict))
-            response = urllib2.urlopen(req)
+            try:
+                response = urllib2.urlopen(req)
+            except urllib2.HTTPError as e:
+                if e.code in (401, 403):
+                    raise UnauthorizedLogin("Invalid login for Jumptap")
+                raise
 
             headers = response.readline().split(',')
             print headers

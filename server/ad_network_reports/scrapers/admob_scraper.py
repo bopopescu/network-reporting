@@ -6,12 +6,14 @@ import sys
 import time
 
 from datetime import date, timedelta
-#sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
-sys.path.append('/home/ubuntu/mopub/server')
+sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+#sys.path.append('/home/ubuntu/mopub/server')
 from ad_network_reports.scrapers.scraper import Scraper, ScraperSite, \
         NetworkConfidential
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
+from ad_network_reports.scrapers.unauthorized_login_exception import \
+        UnauthorizedLogin
 
 def admob_list_encode(sequence, var_name):
     list_var_name = var_name + '[]'
@@ -49,7 +51,8 @@ class AdMobScraper(Scraper):
                     token=self.token)
         else:
             logging.error(response['errors'])
-            raise Exception("\n".join([r['msg'] for r in response['errors']]))
+            raise UnauthorizedLogin("\n".join([r['msg'] for r in response[
+                'errors']]))
 
     def test_login_info(self):
         """Login info has already been tested in the constructor (via the

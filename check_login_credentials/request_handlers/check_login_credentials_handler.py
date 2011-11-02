@@ -6,7 +6,7 @@ sys.path.append('/home/ubuntu/mopub_experimental/server')
 
 import tornado.web
 
-from ad_network_reports.ad_networks import AD_NETWORKS
+from ad_network_reports.ad_networks import AD_NETWORKS, AdNetwork
 from ad_network_reports.forms import LoginInfoForm
 
 class AdNetworkLoginCredentials(object):
@@ -41,14 +41,15 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
 
             try:
                 logging.warning("Creating the scraper object")
-                scraper = AD_NETWORKS[login_credentials.ad_network_name]. \
-                        constructor(login_credentials)
+                scraper = AdNetwork(login_credentials).create_scraper()
                 logging.warning("Testing the login info")
                 scraper.test_login_info()
                 logging.warning("Returning true")
                 self.write(callback + '(true)')
                 return
             except Exception as e:
+                # We don't want Tornado to stop running if something breaks
+                # somewhere.
                 logging.error(e)
 
         logging.warning("Returning false")

@@ -162,38 +162,45 @@ def update_ad_networks(start_date = None, end_date = None):
             stats_list = []
             manager = AdNetworkReportQueryManager(login_credentials.account)
 
-#            try:
-            # AdNetwork is a factory class that returns the appropriate
-            # subclass of itself when created.
-            ad_network = AdNetwork(login_credentials)
+            try:
+                # AdNetwork is a factory class that returns the appropriate
+                # subclass of itself when created.
+                ad_network = AdNetwork(login_credentials)
 
-            ad_network.append_extra_info()
-            scraper = ad_network.create_scraper()
+                ad_network.append_extra_info()
+                scraper = ad_network.create_scraper()
 
-            # Return a list of NetworkScrapeRecord objects of stats for
-            # each app for the test_date
-            stats_list = scraper.get_site_stats(test_date)
-#            except Exception as e:
-#                aggregate.increment(login_credentials.ad_network_name +
-#                        '_login_failed')
-#                logging.error(("Couldn't get get stats for %s network for "
-#                        "\"%s\" account.  Can try again later or perhaps %s "
-#                        "changed it's API or site.") %
-#                        (login_credentials.ad_network_name,
-#                            login_credentials.account.key(),
-#                            login_credentials.ad_network_name))
-#                exc_traceback = sys.exc_info()[2]
-#                mail.send_mail(sender='olp@mopub.com',
-#                               to='tiago@mopub.com',
-#                               subject=("Ad Network Scrape Error on %s" %
-#                                   test_date.strftime("%m/%d/%y")),
-#                               body=("Couldn't get get stats for %s network "
-#                                   "for \"%s\" account. Error:\n %s\n\n"
-#                                   "Traceback:\n%s" % (login_credentials.
-#                                       ad_network_name, login_credentials.
-#                                       account.key(), e, repr(traceback.
-#                                           extract_tb(exc_traceback)))))
-#                continue
+                # Return a list of NetworkScrapeRecord objects of stats for
+                # each app for the test_date
+                stats_list = scraper.get_site_stats(test_date)
+            except UnauthorizedLogin:
+                # TODO: Send user email that we can't get their stats
+                # because their login doesn't work. (Most likely they changed
+                # it since we last verified)
+                continue
+            except Exception as e:
+                # This should catch ANY exception because we don't want to stop
+                # updating stats if something minor breaks somewhere.
+                aggregate.increment(login_credentials.ad_network_name +
+                        '_login_failed')
+                logging.error(("Couldn't get get stats for %s network for "
+                        "\"%s\" account.  Can try again later or perhaps %s "
+                        "changed it's API or site.") %
+                        (login_credentials.ad_network_name,
+                            login_credentials.account.key(),
+                            login_credentials.ad_network_name))
+                exc_traceback = sys.exc_info()[2]
+                mail.send_mail(sender='olp@mopub.com',
+                               to='tiago@mopub.com',
+                               subject=("Ad Network Scrape Error on %s" %
+                                   test_date.strftime("%m/%d/%y")),
+                               body=("Couldn't get get stats for %s network "
+                                   "for \"%s\" account. Error:\n %s\n\n"
+                                   "Traceback:\n%s" % (login_credentials.
+                                       ad_network_name, login_credentials.
+                                       account.key(), e, repr(traceback.
+                                           extract_tb(exc_traceback)))))
+                continue
 
             for stats in stats_list:
                 aggregate.increment(login_credentials.ad_network_name +

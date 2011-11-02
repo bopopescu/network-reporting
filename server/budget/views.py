@@ -83,9 +83,6 @@ def advance_worker(request):
     serial_key_shard = request.POST['key_shard']
     keys = serial_key_shard.split(',')
 
-    for key in keys:
-        logging.info(key)
-
     budgets = Budget.get(keys)
     for budg in budgets:
         budget_service.timeslice_advance(budg, budg.testing)

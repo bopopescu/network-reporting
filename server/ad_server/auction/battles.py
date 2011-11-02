@@ -1,3 +1,5 @@
+import logging
+
 from ad_server.filters.filters import (budget_filter,
                                     active_filter,
                                     kw_filter,
@@ -271,7 +273,6 @@ class MarketplaceBattle(Battle):
             mk_args['price_floor'] = creative.adgroup.mktplace_price_floor
 
         trace_logging.info("\nSending to MPX: %s\n" % mk_args)
-
 
         mpx_url = 'http://mpx.mopub.com/req?' + self._dict_url_params(mk_args)
 

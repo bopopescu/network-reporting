@@ -419,7 +419,7 @@ class ShowAppHandler(RequestHandler):
         for ag in app.adgroups:
             ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,advertiser=ag,days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
+            ag.percent_delivered = budget_service.percent_delivered(ag.campaign.budget_obj)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
@@ -609,7 +609,7 @@ class AdUnitShowHandler(RequestHandler):
         for ag in adunit.adgroups:
             ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
+            ag.percent_delivered = budget_service.percent_delivered(ag.campaign.budget_obj)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well

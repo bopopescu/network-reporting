@@ -30,7 +30,7 @@ def run(client_context, adunit_context, MarketplaceBattle=MarketplaceBattle):
 
     # instantiate but do not run the network battle
     # so that we can get all the eligible network bids
-    # to the marketplace_battle which needs it to the proxy_bids. 
+    # to the marketplace_battle which needs it to the proxy_bids.
     # This allows the networks to "compete" on more even footing
     # with teh marketplace
     network_battle = NetworkBattle(client_context,
@@ -40,24 +40,24 @@ def run(client_context, adunit_context, MarketplaceBattle=MarketplaceBattle):
 
 
 
-    # Run the MarketplaceBattle, and then pass the winning bid into the 
+    # Run the MarketplaceBattle, and then pass the winning bid into the
     # NetworkBattle
-    marketplace_battle = MarketplaceBattle(client_context, 
-                                       adunit_context, 
+    marketplace_battle = MarketplaceBattle(client_context,
+                                       adunit_context,
                                        proxy_bids=network_bids)
 
-    marketplace_creative = marketplace_battle.run()    
-    
+    marketplace_creative = marketplace_battle.run()
+
     if marketplace_creative:
-        marketplace_cpm = marketplace_creative.adgroup.bid    
+        marketplace_cpm = marketplace_creative.adgroup.bid
     else:
         marketplace_cpm = 0.0
-    
+
     # Run NetworkBattle, we pass in a minimum cpm that the networks must beat
-    
+
     # set the min_cpm for the actual run, to be the marketplace's cpm
     network_battle.min_cpm = marketplace_cpm
-    network_creative = network_battle.run()    
+    network_creative = network_battle.run()
     if network_creative:
         return (network_creative, client_context.excluded_adgroup_keys)
     # If the networks couldn't beat the marketplace bid, return marketplace
@@ -67,7 +67,7 @@ def run(client_context, adunit_context, MarketplaceBattle=MarketplaceBattle):
 
     # Finally run backfill Promo
     backfill_battle = BackfillPromoBattle(client_context, adunit_context)
-    backfill_creative = backfill_battle.run()    
+    backfill_creative = backfill_battle.run()
 
     # If the networks couldn't beat the marketplace bid, return marketplace
     if backfill_creative:

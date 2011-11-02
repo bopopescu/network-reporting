@@ -33,13 +33,10 @@ import unittest
 from nose.tools import eq_
 from nose.tools import with_setup
 from budget import budget_service
-from google.appengine.api import memcache
-from budget import models as budgetmodels
-from budget.models import (BudgetSlicer,
+from budget.models import (Budget,
                            BudgetSliceLog,
-                           BudgetDailyLog,
                            )
-
+from google.appengine.api import memcache
 
 
 from advertiser.models import (DummyServerSideSuccessCreative,
@@ -57,18 +54,18 @@ from ad_server.auction.battles import (Battle,
                                        GteeBattle,
                                        GteeHighBattle,
                                        GteeLowBattle,
-                                       MarketplaceBattle,         
-                                      )        
+                                       MarketplaceBattle,
+                                      )
 
 class DummyMarketplaceBattle(MarketplaceBattle):
     """ Like Marketplace but always returns a creative.
-        For Testing purposes. """ 
-    cpm_of_winning_bid = 0.50 # Arbitrary default value for testing        
+        For Testing purposes. """
+    cpm_of_winning_bid = 0.50 # Arbitrary default value for testing
 
     def _process_winner(self, creative):
-        """ return a creative with a default bid. """     
+        """ return a creative with a default bid. """
         creative.adgroup.bid = self.cpm_of_winning_bid
-        return creative                                      
+        return creative
 
 class TestAdAuction(unittest.TestCase):
 
@@ -92,10 +89,6 @@ class TestAdAuction(unittest.TestCase):
         self.testbed.init_memcache_stub()
 
 
-        # We simplify the budgetmanger for testing purposes
-        budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
-        budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
-
         # Set up default models
         self.account = Account()
         self.account.put()
@@ -107,8 +100,8 @@ class TestAdAuction(unittest.TestCase):
                                      app_key=self.app,
                                      name="Test AdUnit",
                                      format=u'320x50')
-        self.adunit.put()   
-        
+        self.adunit.put()
+
         ###################################
         # Make cheap campaign: worth 0.25
         self.cheap_c = Campaign(name="cheap",
@@ -127,36 +120,36 @@ class TestAdAuction(unittest.TestCase):
         self.cheap_creative = DummyServerSideSuccessCreative(account=self.account,
                                 ad_group=self.cheap_adgroup)
         self.cheap_creative.put()
-        
+
         ###################################
-        # Make marketplace campaign: worth 0.50 (default for dummy marketplace)                                   
+        # Make marketplace campaign: worth 0.50 (default for dummy marketplace)
 
         self.dummy_marketplace_c = Campaign(name="dummy_network",
-                                        campaign_type="marketplace") 
+                                        campaign_type="marketplace")
 
         self.dummy_marketplace_c.put()
 
-        self.dummy_marketplace_adgroup = AdGroup(account=self.account,    
-                              campaign=self.dummy_marketplace_c, 
+        self.dummy_marketplace_adgroup = AdGroup(account=self.account,
+                              campaign=self.dummy_marketplace_c,
                               site_keys=[self.adunit.key()],
-                              network_type="dummy") # dummy networks go to the DummyServerSide 
+                              network_type="dummy") # dummy networks go to the DummyServerSide
 
         self.dummy_marketplace_adgroup.put()
 
         self.dummy_marketplace_creative = MarketplaceCreative(account=self.account,
-                                ad_group=self.dummy_marketplace_adgroup)  
+                                ad_group=self.dummy_marketplace_adgroup)
 
         self.dummy_marketplace_creative.put()
-        
+
 
     def tearDown(self):
         self.testbed.deactivate()
-    
-    def _make_expensive_creative_succeed(self):  
+
+    def _make_expensive_creative_succeed(self):
         ###################################
         # Make expensive campaign: worth 1.00
         # Note that this campaign will always fail
-        
+
         self.expensive_c = Campaign(name="expensive",
                                     campaign_type="network")
         self.expensive_c.put()
@@ -173,12 +166,12 @@ class TestAdAuction(unittest.TestCase):
 
         self.expensive_creative = DummyServerSideSuccessCreative(account=self.account,
                                 ad_group=self.expensive_adgroup)
-        self.expensive_creative.put()  
-        
-        adunit_id = str(self.adunit.key())    
-        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)    
-        
-    def _make_expensive_creative_fail(self):  
+        self.expensive_creative.put()
+
+        adunit_id = str(self.adunit.key())
+        self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)
+
+    def _make_expensive_creative_fail(self):
         ###################################
         # Make expensive campaign: worth 1.00
         # Note that this campaign will always fail
@@ -199,15 +192,15 @@ class TestAdAuction(unittest.TestCase):
 
         self.expensive_creative = DummyServerSideFailureCreative(account=self.account,
                                 ad_group=self.expensive_adgroup)
-        self.expensive_creative.put()      
-        
-        adunit_id = str(self.adunit.key())    
+        self.expensive_creative.put()
+
+        adunit_id = str(self.adunit.key())
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)
 
     def mptest_ecpms(self):
-        """ Make sure that we actually have set ecpms for our networks apropriately """   
+        """ Make sure that we actually have set ecpms for our networks apropriately """
         self._make_expensive_creative_fail()
-        eq_(optimizer.get_ecpm(self.adunit_context, self.expensive_creative), 1.00)   
+        eq_(optimizer.get_ecpm(self.adunit_context, self.expensive_creative), 1.00)
         eq_(optimizer.get_ecpm(self.adunit_context, self.cheap_creative), 0.25)
 
 
@@ -215,7 +208,7 @@ class TestAdAuction(unittest.TestCase):
         """ If the best marketplace bid with .50, and there are two networks worth
             1.00 and .25, then if the 1.00 fails, go directly to the marketplace
             without pinging the crappier network. """
-        self._make_expensive_creative_fail()  
+        self._make_expensive_creative_fail()
         client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
                                        country_code=None,
@@ -230,13 +223,13 @@ class TestAdAuction(unittest.TestCase):
         creative, on_fail_exclude_adgroups = ad_auction.run(client_context,
                                                             self.adunit_context,
                                                             MarketplaceBattle=DummyMarketplaceBattle)
-        eq_obj(creative, self.dummy_marketplace_creative)          
-    
+        eq_obj(creative, self.dummy_marketplace_creative)
+
     def mptest_network_beating_marketplace(self):
         """ If a network with an ecpm higher than the best marketplace bid
-            returns a valid creative, use it """       
-        
-        self._make_expensive_creative_succeed()       
+            returns a valid creative, use it """
+
+        self._make_expensive_creative_succeed()
 
         client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
@@ -252,17 +245,17 @@ class TestAdAuction(unittest.TestCase):
         creative, on_fail_exclude_adgroups = ad_auction.run(client_context,
                                                             self.adunit_context,
                                                             MarketplaceBattle=DummyMarketplaceBattle)
-       
+
         eq_obj(creative, self.expensive_creative)
 
-    
-                                                           
+
+
     def mptest_marketplace_beating_failed_networks_with_exclusion(self):
         """ If the best marketplace bid with .50, and there are two networks worth
             1.00 and .25, then if the 1.00 is excluded, go directly to the
             marketplace without pinging the crappier network. """
 
-        self._make_expensive_creative_succeed()  
+        self._make_expensive_creative_succeed()
         client_context = ClientContext(adunit=self.adunit,
                                        keywords=None,
                                        country_code=None,
@@ -276,9 +269,9 @@ class TestAdAuction(unittest.TestCase):
         # Unpack results
         creative, on_fail_exclude_adgroups = ad_auction.run(client_context,
                                                             self.adunit_context,
-                                                            MarketplaceBattle=DummyMarketplaceBattle)     
+                                                            MarketplaceBattle=DummyMarketplaceBattle)
         eq_obj(creative, self.dummy_marketplace_creative)
-                                                                     
+
 
 def eq_obj(obj1, obj2):
     eq_(obj1.key(), obj2.key())

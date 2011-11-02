@@ -1,38 +1,49 @@
+from datetime import datetime, timedelta
+import time
+
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.timezones import Pacific_tzinfo
 # from common.ragendja.auth.decorators import google_login_required as login_required
-from budget import budget_service
-
 from advertiser.models import ( Campaign,
                                 AdGroup,
                                 )
+from budget import budget_service
+from budget.helpers import get_slice_from_datetime, get_slice_from_ts
+from budget.memcache_budget import set_slice
+from budget.models import Budget, BudgetSliceCounter
+
 import logging
-import datetime
 
 # For taskqueue
 from google.appengine.api import taskqueue
 from google.appengine.ext import db
 from google.appengine.ext import webapp
-from advertiser.models import Campaign
-from budget.models import NoSpendingForIncompleteLogError, BudgetSlicer, DEFAULT_TIMESLICES
 
 # The constraints:
 # The maximum bucket size is 100
 # Each worker must complete in less than a timeslice to avoid contention
 CAMPAIGNS_PER_WORKER = 30
 
-def daily_budget_advance(request):
-     return budget_advance(request, daily=True)
+def budget_advance(request):
+    slice_counter = BudgetSliceCounter.all().get()
+    # If there is no global counter, then create it
+    if not slice_counter:
+        logging.warning("%s" % datetime.now())
+        slice_counter = BudgetSliceCounter(slice_num = get_slice_from_ts(time.time()))
+        # otherwise incr it
+    else:
+        slice_counter.slice_num += 1
 
-def timeslice_budget_advance(request):
-    return budget_advance(request, daily=False)
+    slice_counter.put()
+    # set it memc
+    set_slice(slice_counter.slice_num)
 
-def budget_advance(request, daily=False):
-    campaigns = Campaign.all().filter("budget >", 0).filter("active =", True).fetch(1000000)
-    keys = [camp.key() for camp in campaigns]
+    budgets = Budget.all().filter('active =', True).fetch(1000000)
+    #campaigns = Campaign.all().filter("budget >", 0).filter("active =", True).fetch(1000000)
+    keys = [budget.key() for budget in budgets]
     count = len(keys)
 
     # Break keys into shards of 30 and send them to a worker
@@ -57,12 +68,7 @@ def budget_advance(request, daily=False):
         # serialization of dict objects fails for params so we do it manually
         # key_shard = [str(key) for key in key_shard]
 
-        if daily:
-            url = reverse('budget_daily_advance_worker')
-        else:
-            url = reverse('budget_advance_worker')
-
-        taskqueue.add(url=url,
+        taskqueue.add(url=reverse('budget_advance_worker'),
                       queue_name='budget-advance',
                       params={'key_shard': serial_key_shard}
                       )
@@ -70,30 +76,16 @@ def budget_advance(request, daily=False):
         start_index += CAMPAIGNS_PER_WORKER
         end_index += CAMPAIGNS_PER_WORKER
 
-    if daily:
-        return HttpResponse('Advanced budget daily: %s' % text)
-    else:
-        return HttpResponse('Advanced budget timeslices: %s' % text)
+    return HttpResponse('Advanced budget timeslices: %s' % text)
 
-def daily_advance_worker(request):
-    return advance_worker(request,daily=True)
+def advance_worker(request):
 
-def timeslice_advance_worker(request):
-    return advance_worker(request,daily=False)
-
-def advance_worker(request, daily=False):
     serial_key_shard = request.POST['key_shard']
     keys = serial_key_shard.split(',')
 
-    for key in keys:
-        logging.info(key)
-
-    camps = Campaign.get(keys)
-    for camp in camps:
-        if daily:
-            budget_service.daily_advance(camp)
-        else:
-            budget_service.timeslice_advance(camp)
+    budgets = Budget.get(keys)
+    for budg in budgets:
+        budget_service.timeslice_advance(budg, budg.testing)
 
     return HttpResponse('Worker Succeeded')
 
@@ -112,50 +104,46 @@ def budget_view(request, adgroup_key):
     adgroup = AdGroup.get(adgroup_key)
 
     camp = adgroup.campaign
+    budget = camp.budget_obj
 
-    if camp.budget:
-        remaining_daily_budget = budget_service.remaining_daily_budget(camp)
-
-        remaining_ts_budget = budget_service.remaining_ts_budget(camp)
-
-        braking_fraction = budget_service.braking_fraction(camp)      
+    if budget:
+        remaining_daily_budget = budget_service.remaining_daily_budget(budget)
+        remaining_ts_budget = budget_service.remaining_ts_budget(budget)
+        braking_fraction = budget_service.braking_fraction(budget)
     else:
         remaining_ts_budget = None
         remaining_daily_budget = None
         braking_fraction = None
 
-    today = datetime.datetime.now(Pacific_tzinfo()).date()
-    one_month_ago = today - datetime.timedelta(days=30)
+    today = datetime.now().date()
+    one_month_ago = today - timedelta(days=30)
 
-    daily_logs = budget_service._get_daily_logs_for_date_range(camp,
-                                                               one_month_ago,
-                                                               today)
+    daily_logs = budget_service._get_daily_logs_for_date_range(budget,
+                                                                   one_month_ago,
+                                                                   today)
 
 
-    slicer = BudgetSlicer.get_or_insert_for_campaign(camp)
-    ts_logs = slicer.timeslice_logs.order("-end_date").fetch(DEFAULT_TIMESLICES)
+    ts_logs = budget_service._get_ts_logs_for_date_range(budget, today, today)
 
     #### Build budgetslicer address ####
     # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="
     prefix = "https://appengine.google.com/datastore/edit?app_id=mopub-inc&namespace=&key="
 
-    budget_obj = BudgetSlicer.get_or_insert_for_campaign(camp)
-    budget_obj_url = prefix + str(budget_obj.key())
+    budget_obj_url = prefix + str(budget.key())
 
 
     #### Build memcache clearing urls ####
     # clear_prefix = "http://localhost:8080"
     clear_prefix = "http://app.mopub.com"
 
-    daily_key = budget_service._make_campaign_daily_budget_key(camp)
-    ts_key = budget_service._make_campaign_ts_budget_key(camp)
+    ts_key = budget_service._make_budget_ts_key(budget)
 
-    clear_memcache_daily_url = clear_prefix + "/m/clear?key=" + daily_key + "&namespace=budget"
     clear_memcache_ts_url = clear_prefix + "/m/clear?key=" + ts_key + "&namespace=budget"
 
-
+    logging.warning("Ts logs: %s" % ts_logs)
 
     context =  {'campaign': camp,
+                'budget': budget,
                 'remaining_daily_budget': remaining_daily_budget,
                 'remaining_ts_budget': remaining_ts_budget,
                 'daily_logs': daily_logs,
@@ -163,7 +151,6 @@ def budget_view(request, adgroup_key):
                 'today': today,
                 'one_month_ago': one_month_ago,
                 'budget_obj_url': budget_obj_url,
-                'clear_memcache_daily_url': clear_memcache_daily_url,
                 'clear_memcache_ts_url': clear_memcache_ts_url,
                 'braking_fraction': braking_fraction}
 

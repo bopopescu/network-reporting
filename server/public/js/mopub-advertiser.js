@@ -1460,5 +1460,100 @@ var mopub = mopub || {};
             $("#advertiser-CampaignType-"+preselected_tag).click();
         }
 
+    function makeValidTime(timeStr, defHour, defMin, defAmPm) {
+        // Checks to see if a timeStr is valid, returns valid form
+        // AM/PM (and variants) are optional.
+
+        var timePat = /^(\d{1,2}):(\d{2})(\s?(AM|am|PM|pm|aM|pM|Pm|Am))?$/;
+
+        if (defMin < 10) {
+            defMin = '0' + defMin;
+        }
+        var matchArray = timeStr.match(timePat);
+        if (matchArray == null) {
+            return defHour + ':' + defMin + ' ' + defAmPm;
+        }
+
+        hour = matchArray[1];
+        minute = matchArray[2];
+        ampm = matchArray[4];
+
+        // Handle military time stuff
+        if (hour >= 12 && hour <= 23) {
+            hour = hour - 12;
+            // 12:00 AM to 12:00 PM
+            // 12:00    to 12:00 PM
+            //
+            // 15:00 AM to 3:00 PM  
+            // 15:00 PM to 3:00 PM 
+            // 15:00    to 3:00 PM
+            if (hour == 0) {
+                hour = 12;
+                if (ampm === undefined) {
+                    ampm = 'PM';
+                }
+            }
+            else {
+                ampm = 'PM';
+            }
+        }
+
+        if (hour == 0) {
+            ampm = 'AM';
+            hour = 12;
+        }
+        // Set invalid times to 0 minutes and 12 hours and default to AM
+        if (minute < 0 || minute > 59) {
+            minute = defMin; 
+        }
+        if (hour < 0 || hour > 23) {
+            hour = defHour;
+        }
+        if (ampm === undefined) {
+            ampm = defAmPm;
+        }
+
+        else {
+            ampm = ampm.toUpperCase();
+        }
+        return hour + ':' + minute + ' ' + ampm ;
+    }
+
+    $('#start-date').change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != '') {
+            $('#start-time').change();
+        }
     });
+
+    $('#stop-date').change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != '') {
+            $('#stop-time').change();
+        }
+    });
+
+    $('.input-text-time').change(function(e){
+        e.preventDefault();
+        var id = $(this).attr('id');
+        var val = $(this).val();
+        if (id == 'start-time') {
+            if($('#start-date').val()=='') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 12, 0, 'AM');
+            }
+        }
+        else if (id == 'stop-time') {
+            if($('#stop-date').val()=='') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 11, 59, 'PM');
+            }
+        }
+        $(this).val(val);
+    });
+  }); // End document31 onready
  })(this.jQuery);

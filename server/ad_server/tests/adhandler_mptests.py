@@ -38,9 +38,8 @@ from nose.tools import with_setup
 from budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
-from budget.models import (BudgetSlicer,
+from budget.models import (Budget,
                            BudgetSliceLog,
-                           BudgetDailyLog,
                            )
 
 from google.appengine.ext import testbed
@@ -70,11 +69,6 @@ class TestAdAuction(unittest.TestCase):
         # Next, declare which service stubs you want to use.
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_memcache_stub()
-
-
-        # We simplify the budgetmanger for testing purposes
-        budgetmodels.DEFAULT_TIMESLICES = 10 # this means each campaign has 100 dollars per slice
-        budgetmodels.DEFAULT_FUDGE_FACTOR = 0.0
 
         # Set up default models
         self.account = Account()

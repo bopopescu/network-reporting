@@ -458,7 +458,9 @@
            Marketplace.fetchAdunitStats(app_key);
       });
 
-      var table = Marketplace.makeCreativePerformanceTable(pub_key, dsp_keys, blocklist);
+      var start_date = "{{start_date|date:"m-d-Y"}}";
+      var end_date = "{{end_date|date:"m-d-Y"}}";
+      var table = Marketplace.makeCreativePerformanceTable(pub_key, blocklist, start_date, end_date);
 
     });
   </script>

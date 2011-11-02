@@ -1243,10 +1243,6 @@ class MarketplaceIndexHandler(RequestHandler):
 
         mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
 
-        logging.warn("mpx_stats: %s" % mpx_stats)
-
-        # dsps = stats_fetcher.get_all_dsp_stats(start_date, end_date)
-
         # Get total stats for the rollup/table footer
         creative_totals = {
             'imp': 0,

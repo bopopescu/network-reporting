@@ -528,7 +528,7 @@ var mopub = mopub || {};
         /*
          * Makes the Creatives Performance tab's datatable
          */
-        makeCreativePerformanceTable: function (pub_id, dsp_keys, blocklist) {
+        makeCreativePerformanceTable: function (pub_id, blocklist, start_date, end_date) {
             var table = $("#report-table").dataTable({
                 bProcessing: true,
                 // Use jQueryUI to style the table
@@ -561,8 +561,8 @@ var mopub = mopub || {};
                         url: sUrl,
                         data: {
                             pub_id: pub_id,
-                            start: "10-24-2011",
-                            end: "10-27-2011",
+                            start: start_date,
+                            end: end_date,
                             format:'jsonp'
                         },
                         //success: fnCallback,

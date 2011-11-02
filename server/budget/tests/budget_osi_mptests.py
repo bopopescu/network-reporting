@@ -252,10 +252,12 @@ class TestBudgetOSIUnitTests(unittest.TestCase):
         self.cheap_b.put()
         self.test_mock_budget_advance(testing=True)
         self.test_mock_budget_advance(testing=True)
-        slice_num = self.test_advance(self.budget_start + ONE_DAY)
+        self.test_mock_budget_advance(testing=True)
+        self.test_mock_budget_advance(testing=True)
 
         # Several slice_logs have advanced, last one has nothing, so false
         eq_(budget_service.get_osi(self.cheap_b), False)
+        slice_num = self.test_advance(self.budget_start + ONE_DAY)
 
         # Now we spend the full 2000
         eq_(budget_service._apply_if_able(self.cheap_b, 200), True)

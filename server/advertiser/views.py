@@ -1117,15 +1117,8 @@ class AJAXStatsHandler(RequestHandler):
                     adgroup.percent_delivered = percent_delivered
 
                     summed_stats.status = filters.campaign_status(adgroup)
-<<<<<<< HEAD
-
-
-                    if adgroup.running and adgroup.campaign.budget:
-                        summed_stats.on_schedule = str(budget_service.get_osi(adgroup.campaign) * 100)
-=======
                     if adgroup.running and adgroup.campaign.budget_obj and adgroup.campaign.budget_obj.delivery_type != 'allatonce':
                         summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign.budget_obj) else "behind"
->>>>>>> budget-refactor
                     else:
                         summed_stats.on_schedule = "none"
                 stats_dict[key]['sum'] = summed_stats.to_dict()

@@ -26,7 +26,6 @@ var mopub = mopub || {};
             if (valid_number == NaN) {
                 return "please enter a valid number for the price floor";
             }
-            return null;
         },
         url: function() {
             return '/api/app/' + this.app_id + '/adunits/' + this.id + '?' + window.location.search.substring(1);

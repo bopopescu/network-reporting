@@ -123,8 +123,10 @@ class BudgetQueryManager(QueryManager):
         if end:
             # make it the end of the day if it's an end date
             campaign.end_datetime = datetime(end.year, end.month, end.day, 23, 59, 0, tzinfo = Pacific)
+        print "Total spent1: %s" % total_spent
         if not total_spent:
             total_spent = 0.0
+        print "Total spent2: %s" % total_spent
         budget = cls.update_or_create_budget_for_campaign(campaign, total_spent = total_spent)
         if budget is not None:
             budget.put()
@@ -146,6 +148,7 @@ class BudgetQueryManager(QueryManager):
                                                prev_braking_fraction = 1.0,
                                                )
                 all_prev_logs.put()
+        print budget
         return campaign, budget
 
     @classmethod

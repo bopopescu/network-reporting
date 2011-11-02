@@ -30,6 +30,8 @@ SUCCESSFUL_DELIV_PER = .95
 
 
 def has_budget(budget, cost, today=None):
+    trace_logging.warning("Checking Budget...")
+    logging.warning("Checking Budget warning!")
 
     if budget is None:
         return False
@@ -251,7 +253,7 @@ def _initialize_budget(budget, testing = False, slice_num = None, date=None):
     if budget.start_slice > slice_num:
         # Don't init the budget if it shouldn't be init'd
         logging.warning("There is something wrong.  This campaign starts on slice %s, but initializing on slice: %s" % (budget.start_slice, slice_num))
-        return 
+        return
     budget.curr_slice = slice_num
     budget.curr_date = date
     budget.put()
@@ -372,6 +374,7 @@ def calc_braking_fraction(desired_spend, actual_spend, prev_fraction):
     except:
         # 0 error, theoretically infinity, go to a large number
         new_rate_factor = 100.0
+    logging.warning("Rate factor: %s" % new_rate_factor)
 
     # in the overdeliver case, we should've delivered 250 instead of 500, brake is now .25
     # which yields the correct behavior
@@ -382,6 +385,7 @@ def calc_braking_fraction(desired_spend, actual_spend, prev_fraction):
         # div by 0 error, theoretically infinity, go to largest possible value (1)
         new_braking = 1.0
 
+    logging.warning("Braking factor: %s" % new_braking)
     # if the actual_spend and desired spend are fine, then the factor is ~1, so the divide is fine
     # dont' return a value >1
     return max(min(new_braking, 1.0), 0.01)

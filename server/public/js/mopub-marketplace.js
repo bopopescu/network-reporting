@@ -236,9 +236,9 @@ var mopub = mopub || {};
             $(".impressions", adunit_row).text(this.model.get("impressions"));
             $(".price_floor", adunit_row).html('<input id="' +
                                                this.model.id +
-                                               '" type="text" class="input-text input-text-number number" style="width:50px;" value="' +
+                                               '" type="text" class="input-text input-text-number number" style="width:50px;margin: -3px 0;" value="' +
                                                this.model.get("price_floor") +
-                                               '"> <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
+                                               '"> USD <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
             $(".targeting", adunit_row).html('<input class="targeting-box" type="checkbox"> <img class="loading-img hidden" ' +
                                              ' src="/images/icons-custom/spinner-12.gif"></img>');
             if (this.model.get("active")) {

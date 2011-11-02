@@ -574,8 +574,8 @@ var mopub = mopub || {};
                                     creative["creative"]["url"],
                                     creative["creative"]["ad_dmn"],
                                     creative["stats"]["pub_rev"],
-                                    ecpm,
-                                    creative["stats"]["imp"]
+                                    creative["stats"]["imp"],
+                                    ecpm
                                 ];
                             });
 
@@ -601,8 +601,8 @@ var mopub = mopub || {};
                         $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
                     }
                     $("td:eq(2)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[2]));
-                    $("td:eq(3)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[3]));
-                    $("td:eq(4)", nRow).addClass("numeric").text(mopub.Utils.formatNumberWithCommas(aData[4]));
+                    $("td:eq(3)", nRow).addClass("numeric").text(mopub.Utils.formatNumberWithCommas(aData[3]));
+                    $("td:eq(4)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[4]));
                     return nRow;
                 }
             });

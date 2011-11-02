@@ -111,6 +111,8 @@ class BudgetQueryManager(QueryManager):
         else:
             spent_today = 0.0
             spent_in_camp = 0.0
+        print spent_today
+        print spent_in_camp
         total_spent = spent_today + spent_in_camp
         if start is None:
             if campaign.budget is not None or campaign.full_budget is not None:
@@ -122,7 +124,7 @@ class BudgetQueryManager(QueryManager):
             # make it the end of the day if it's an end date
             campaign.end_datetime = datetime(end.year, end.month, end.day, 23, 59, 0, tzinfo = Pacific)
         if not total_spent:
-            total_spent = 0
+            total_spent = 0.0
         budget = cls.update_or_create_budget_for_campaign(campaign, total_spent = total_spent)
         if budget is not None:
             budget.put()

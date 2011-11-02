@@ -84,15 +84,15 @@
     <div class="campaignDependent gtee promo backfill_promo">
       <dt>Start Time:</dt>
       <dd>
-         <input id='start-date' type='text' class="input-text input-text-number" name="start_date" size="15" value="{% if form.start_datetime.value and not form.start_date.value %}{{form.start_datetime.value|date:"m/d/Y"}}{% else %}{{form.start_date.value|date:"m/d/Y"}}{% endif %}" placeholder="Start Date"/>
+      <input id='start-date' type='text' class="input-text input-text-number" name="start_date" size="15" value="{{form.start_datetime.value|date:"m/d/Y"}}" placeholder="Start Date"/>
 
-         <input id='start-time' type='text' class='input-text input-text-number input-text-time' name='start_time' size=10 value="{% if form.start_datetime.value and not form.start_date.value %}{{form.start_datetime.value|date:"g:i A"}}{% endif %}" placeholder='Start Time' /> PST
+         <input id='start-time' type='text' class='input-text input-text-number input-text-time' name='start_time' size=10 value="{{form.start_datetime.value|date:"g:i A"}}" placeholder='Start Time' /> PST
         <div class='helper-text' id='fullCampaignError-date' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
       </dd>
       <dt>Stop Time:</dt>
       <dd>
-        <input id='stop-date' type='text' class="input-text input-text-number" name="end_date" size="15" value="{% if form.end_datetime.value and not form.end_date.value %}{{form.end_datetime.value|date:"m/d/Y"}}{% else %}{{form.end_date.value|date:"m/d/Y"}}{% endif %}"  placeholder="End"/>
-         <input id='stop-time' type='text' class='input-text input-text-number input-text-time' name='end_time' size=10 value="{% if form.end_datetime.value and not form.end_date.value %}{{form.end_datetime.value|date:"g:i A"}}{% endif %}" placeholder='End Time' /> PST
+        <input id='stop-date' type='text' class="input-text input-text-number" name="end_date" size="15" value="{{form.end_datetime.value|date:"m/d/Y"}}"  placeholder="End"/>
+        <input id='stop-time' type='text' class='input-text input-text-number input-text-time' name='end_time' size=10 value="{{form.end_datetime.value|date:"g:i A"}}" placeholder='End Time' /> PST
         <div class='helper-text' id='fullCampaignError-date' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
       </dd>
 

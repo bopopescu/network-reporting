@@ -31,7 +31,6 @@ SUCCESSFUL_DELIV_PER = .95
 
 def has_budget(budget, cost, today=None):
     trace_logging.warning("Checking Budget...")
-    logging.warning("Checking Budget warning!")
 
     if budget is None:
         return False
@@ -48,7 +47,7 @@ def has_budget(budget, cost, today=None):
     trace_logging.warning("Memcache ts: %s" % memc_ts_budget)
 
     if memc_ts_budget < cost:
-        logging.warning("Bitch you's too poor.  Trying to spend %s with a ts budget of %s" % (cost, memc_ts_budget))
+        logging.warning("You's too poor.  Trying to spend %s with a ts budget of %s" % (cost, memc_ts_budget))
         return False
 
     return True
@@ -371,7 +370,6 @@ def calc_braking_fraction(desired_spend, actual_spend, prev_fraction):
     except:
         # 0 error, theoretically infinity, go to a large number
         new_rate_factor = 100.0
-    logging.warning("Rate factor: %s" % new_rate_factor)
 
     # in the overdeliver case, we should've delivered 250 instead of 500, brake is now .25
     # which yields the correct behavior
@@ -382,7 +380,6 @@ def calc_braking_fraction(desired_spend, actual_spend, prev_fraction):
         # div by 0 error, theoretically infinity, go to largest possible value (1)
         new_braking = 1.0
 
-    logging.warning("Braking factor: %s" % new_braking)
     # if the actual_spend and desired spend are fine, then the factor is ~1, so the divide is fine
     # dont' return a value >1
     return max(min(new_braking, 1.0), 0.01)

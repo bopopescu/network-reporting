@@ -270,7 +270,7 @@ def _initialize_budget(budget, testing = False, slice_num = None, date=None):
     spent_key = _make_budget_spent_key(budget)
 
     # Don't init budget to 0, init to total spent amt.  This is useful for migrations. Otherwise shit is fucked
-    memcache.set(spent_key, budget.total_spent, namespace = 'budget')
+    memcache.set(spent_key, _to_memcache_int(budget.total_spent), namespace = 'budget')
     memcache.set(ts_key, _to_memcache_int(new_log.desired_spending), namespace = 'budget')
     memcache.set(brake_key, new_log.prev_braking_fraction, namespace = 'budget')
 

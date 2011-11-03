@@ -6,11 +6,22 @@ sys.path.append('/home/ubuntu/mopub_experimental/server')
 
 import tornado.web
 
+from account.query_managers import AccountQueryManager
 from ad_network_reports.ad_networks import AD_NETWORKS, AdNetwork
 from ad_network_reports.forms import LoginInfoForm
+from ad_network_reports.query_managers import AdNetworkReportQueryManager
 
 class AdNetworkLoginCredentials(object):
     pass
+
+def setup_remote_api():
+    from google.appengine.ext.remote_api import remote_api_stub
+    app_id = 'mopub-experimental'
+    host = '38.latest.mopub-experimental.appspot.com'
+    #app_id = 'mopub-inc'
+    #host = '38.latest.mopub-inc.appspot.com'
+    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func,
+            host)
 
 class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
     def get(self, *args, **kwargs):
@@ -56,6 +67,18 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 # We don't want Tornado to stop running if something breaks
                 # somewhere.
                 logging.error(e)
+            else:
+                setup_remote_api()
+                account_key = self.get_argument('account_key')
+                manager = AdNetworkReportQueryManager(AccountQueryManager.
+                        get_account_by_key(account_key))
+                wants_email = self.get_argument('email', False) and True
+                manager.create_login_credentials_and_mappers(ad_network_name=
+                        login_credentials.ad_network_name,
+                        username=login_credentials.username
+                        password=login_credentials.password
+                        client_key=login_credentials.client_key
+                        send_email=wants_email)
 
         logging.warning("Returning false")
         self.write(callback + '(false)')

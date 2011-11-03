@@ -110,6 +110,7 @@ class AddLoginInfoHandler(RequestHandler):
             account = Account.get(account_key)
         else:
             account = self.account
+            account_key = account.key()
 
         forms = []
         for name in AD_NETWORK_NAMES:

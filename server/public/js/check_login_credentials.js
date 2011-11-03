@@ -10,15 +10,9 @@
 	           	   // Upon success update the database
 			   if (valid) {
 				if (account_key) {
-					$.post("/ad_network_reports/manage/" + account_key + "/add/",
-						$("#loginCredentials").serialize(), function() {
-							window.location = "/ad_network_reports/manage/" + account_key;
-						});
+                  window.location = "/ad_network_reports/manage/" + account_key;
 				} else {
-					$.post("/ad_network_reports/add/",
-						$("#loginCredentials").serialize(), function() {
-							window.location = "/ad_network_reports/";
-						});
+                  window.location = "/ad_network_reports/";
 				}
 			   } else {
 				$("#error").html("Invalid login information.")

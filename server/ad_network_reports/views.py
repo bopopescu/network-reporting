@@ -111,7 +111,7 @@ class AddLoginInfoHandler(RequestHandler):
             management_mode = True
         else:
             account = self.account
-            account_key = account.key()
+            account_key = self.account.key()
             management_mode = False
 
         forms = []
@@ -126,11 +126,13 @@ class AddLoginInfoHandler(RequestHandler):
             form.ad_network = name
             forms.append(form)
 
+        logging.warning('account_key')
+        logging.warning(str(account_key))
         return render_to_response(self.request,
                                   'ad_network_reports/add_login_credentials.html',
                                   {
                                       'management_mode' : management_mode,
-                                      'account_key' : account_key,
+                                      'account_key' : str(account_key),
                                       'ad_network_names' : AD_NETWORK_NAMES,
                                       'forms' : forms,
                                       'error' : "",

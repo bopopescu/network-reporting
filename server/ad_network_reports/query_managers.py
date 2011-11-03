@@ -23,7 +23,7 @@ from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager
 
-PASSWORD_KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
+KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
 class Stats(object):
     pass
@@ -205,18 +205,21 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         """
         from Crypto.Cipher import AES
         from Crypto.Util import randpool
-        iv = ''
+        password_iv = ''
+        username_iv = ''
         if password:
             rp = randpool.RandomPool()
-            iv = rp.get_bytes(16)
-            aes_cfb = AES.new(PASSWORD_KEY, AES.MODE_CFB, iv)
+            password_iv = rp.get_bytes(16)
+            username_iv = rp.get_bytes(16)
+            aes_cfb = AES.new(KEY, AES.MODE_CFB, iv)
             password = aes_cfb.encrypt(password)
 
         login_credentials = AdNetworkLoginCredentials(account=self.account,
                                         ad_network_name=ad_network_name,
                                         username=username,
+                                        username_iv=username_iv,
                                         password=password,
-                                        iv=iv,
+                                        password_iv=password_iv,
                                         client_key=client_key,
                                         email=send_email)
         login_credentials.put()

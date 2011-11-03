@@ -13,10 +13,14 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 
     # Needed for all networks but mobfox
     username = db.StringProperty()
+
+    # Needed to store the username securely
+    username_iv = db.ByteStringProperty()
+
     password = db.ByteStringProperty()
 
     # Needed to store the password securely
-    iv = db.ByteStringProperty()
+    password_iv = db.ByteStringProperty()
 
     # Needed for admob
     client_key = db.StringProperty()

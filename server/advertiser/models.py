@@ -7,8 +7,6 @@ from account.models import Account
 
 from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSION, MAX_ANDROID_VERSION
 import datetime
-from budget.tzinfo import Pacific
-
 
 from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 from ad_server.renderers.admob import AdMobRenderer
@@ -48,6 +46,8 @@ from ad_server.networks.dummy_server_side import (DummyServerSideSuccess,
 
 from common.utils.helpers import to_uni, to_ascii
 
+from budget.models import Budget
+from budget.tzinfo import UTC, Pacific
 # from budget import budget_service
 #
 # A campaign.    Campaigns have budgetary and time based restrictions.
@@ -71,12 +71,21 @@ class Campaign(db.Model):
     start_date = db.DateProperty()
     end_date = db.DateProperty()
 
+    # New start and end date properties
+    start_datetime = db.DateTimeProperty()
+    end_datetime = db.DateTimeProperty()
+
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
 
     # who owns this
     account = db.ReferenceProperty(Account)
     t = db.DateTimeProperty(auto_now_add=True)
+
+    budget_obj = db.ReferenceProperty(Budget, collection_name = 'campaign')
+
+    def __repr__(self):
+        return "Camp(start:(%s,%s) end:(%s,%s) active:%s daily:%s total:%s spread:%s type:%s)" % (self.start_date, self.start_datetime, self.end_date, self.end_datetime, self.active, self.budget, self.full_budget, self.budget_strategy, self.budget_type)
 
     @property
     def owner_key(self):
@@ -341,7 +350,7 @@ class AdGroup(db.Model):
     def running(self):
         """ Must be active and have proper start and end dates"""
         campaign = self.campaign
-        pac_today = datetime.datetime.now(tz=Pacific).date()
+        pac_today = datetime.datetime.now().date()
         if ((not campaign.start_date or campaign.start_date < pac_today) and
             (not campaign.end_date or campaign.end_date > pac_today)):
             if self.active and campaign.active:

@@ -600,13 +600,13 @@
             <tr>
               <th class="campaignData-icon"></th>
               <th> Campaign Name </th>
-              <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-              <th>Status</th>
-              <th width="100">Impressions</th>
-              <th>Clicks</th>
-              <th>CTR</th>
-              <th>Conv</th>
-              <th>Revenue</th>
+              <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+              <th class="numeric">Status</th>
+              <th class="numeric">Impressions</th>
+              <th class="numeric">Clicks</th>
+              <th class="numeric">CTR</th>
+              <th class="numeric">Conv</th>
+              <th class="numeric">Revenue</th>
             </tr>
           </thead>
           <tbody>
@@ -623,19 +623,19 @@
                   <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
 
                   <span class="muted">
-                    {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                    {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                       {{adgroup.campaign.start_date|format_date_compact}} - {{adgroup.campaign.end_date|format_date_compact}}.
                     {% endif %}
 
-                    {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                    {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                       Starts {{adgroup.campaign.start_date|format_date_compact}}.
                     {% endif %}
 
-                    {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                    {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                       Ends {{adgroup.campaign.end_date|format_date_compact}}.
                     {% endif %}
 
-                    {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                    {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                       All dates.
                     {% endif %}
 
@@ -768,13 +768,13 @@
               <tr>
                 <th class="campaignData-icon"></th>
                 <th>Name</th>
-                <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-                <th>Status</th>
-                <th width="100">Impressions</th>
-                <th>Clicks</th>
-                <th>CTR</th>
-                <th>Conv</th>
-                <th>Revenue</th>
+                <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+                <th class="numeric">Status</th>
+                <th class="numeric">Impressions</th>
+                <th class="numeric">Clicks</th>
+                <th class="numeric">CTR</th>
+                <th class="numeric">Conv</th>
+                <th class="numeric">Revenue</th>
               </tr>
             </thead>
             <tbody>
@@ -792,16 +792,16 @@
                     <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
                     <br/>
                     <span class="muted">
-                      {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                      {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                         {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
                       {% endif %}
-                      {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                      {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                         Starts {{adgroup.campaign.start_date|format_date_compact}}.
                       {% endif %}
-                      {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                      {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                         Ends {{adgroup.campaign.start_date|format_date_compact}}.
                       {% endif %}
-                      {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                      {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                         All dates.
                       {% endif %}
                       {% if adgroup.campaign.budget %}
@@ -1000,12 +1000,12 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th>Name</th>
-                    <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-                    <th>Attempts</th>
-                    <th width="100">Impressions</th>
-                    <th>Fillrate</th>
-                    <th>Clicks</th>
-                    <th>CTR</th>
+                    <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+                    <th class="numeric">Attempts</th>
+                    <th class="numeric">Impressions</th>
+                    <th class="numeric">Fillrate</th>
+                    <th class="numeric">Clicks</th>
+                    <th class="numeric">CTR</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1128,13 +1128,13 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th>Name</th>
-                    <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-                    <th>Status</th>
-                    <th width="100">Impressions</th>
-                    <th>Clicks</th>
-                    <th>CTR</th>
-                    <th>Conv</th>
-                    <th>CPA</th>
+                    <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+                    <th class="numeric">Status</th>
+                    <th class="numeric">Impressions</th>
+                    <th class="numeric">Clicks</th>
+                    <th class="numeric">CTR</th>
+                    <th class="numeric">Conv</th>
+                    <th class="numeric">CPA</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1151,13 +1151,13 @@
                     <td class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
                         <span class="muted">
-                            {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
-                            {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                            Starts {{adgroup.campaign.start_date|format_date_compact}}.
-                            {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            Ends {{adgroup.campaign.start_date|format_date_compact}}.
-                            {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                            {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                            {{adgroup.campaign.start_datetime|format_date_compact}}-{{adgroup.campaign.end_datetime|format_date_compact}}.
+                            {% endif %} {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                            Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
+                            {% endif %} {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                            Ends {{adgroup.campaign.start_datetime|format_date_compact}}.
+                            {% endif %} {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                             All dates.
                             {% endif %}
                             {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}

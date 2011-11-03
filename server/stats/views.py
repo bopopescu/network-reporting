@@ -59,7 +59,7 @@ MDB_STATS_UPDATER_HANDLER_PATH = '/update'
 # {adunit_str: [app_str, account_str],
 #  adgroup_str: [campaign_str, account_str],
 #  creative_str: [adgroup_str, campaign_str, account_str],
-#  account_str: account object} 
+#  account_str: account object}
 DEREF_CACHE = {}
 
 
@@ -70,13 +70,13 @@ def increment_stats(stats):
     if stats_obj:
         stats_obj += stats
     else:
-        stats_obj = stats    
+        stats_obj = stats
 
     # datastore put
     # logging.info("putting in key_name: %s value: %s,%s"%(key_name,stats.request_count,stats.impression_count))
     # logging.info("putting in key_name: %s NEW value: %s,%s"%(key_name,stats_obj.request_count,stats_obj.impression_count))
     stats_obj.put()
-    
+
 def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req=None,revenue=None,incr=1):
     publisher = publisher or None
     advertiser = advertiser or None
@@ -93,27 +93,27 @@ def update_stats(stats_dict,publisher,advertiser,date_hour,country,attribute,req
 
         if attribute:
             # stats_dict[key].attribute += incr
-            setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr) 
-      
+            setattr(stats_dict[key],attribute,getattr(stats_dict[key],attribute)+incr)
+
             if revenue:
                 stats_dict[key].revenue += revenue
-        if req:      
+        if req:
             stats_dict[key].reqs.append(req)
     except Exception, e:
-        logging.warning("Error in update_stats: %s"%e)      
-    
-    
+        logging.warning("Error in update_stats: %s"%e)
+
+
 def _create_mdb_json(stats_to_put):
     # format of d:
-    # { (adunit, creative, date_hour): 
+    # { (adunit, creative, date_hour):
     #   {'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
     # }
     d = {}
-    
+
     # format of request_d:
     # { (adunit, date_hour): request_count }
     request_d = {}  # no creative
-    
+
     for s in stats_to_put:
         key_name = s.key().name()
 
@@ -122,17 +122,17 @@ def _create_mdb_json(stats_to_put):
             continue
 
         parts = key_name.split(':')
-        
+
         # remove country
         adunit = parts[1]
         creative = parts[2]
         date_hour = parts[-1]   # for real-time StatsModels, the date section should always be last!
-        
-        if not creative:    # REQUEST: /m/ad    
+
+        if not creative:    # REQUEST: /m/ad
             request_d[(adunit, date_hour)] = request_d.get((adunit, date_hour), 0) + s.request_count
         else:               # ATTEMPT: /m/req
             counts = {}
-            counts['attempt_count'] = s.request_count            
+            counts['attempt_count'] = s.request_count
             counts['impression_count'] = s.impression_count
             counts['click_count'] = s.click_count
             counts['conversion_count'] = s.conversion_count
@@ -151,19 +151,19 @@ def _create_mdb_json(stats_to_put):
             else:
                 d[key_tuple] = counts
 
-    # create new dict json_d with string keys (for json serialization) and fill in request_counts from request_d 
+    # create new dict json_d with string keys (for json serialization) and fill in request_counts from request_d
     # format of json_d:
-    # { 'adunit:creative:date_hour': 
+    # { 'adunit:creative:date_hour':
     #   {'request_count': int, 'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
     # }
     json_d = {}
     for (adunit, creative, date_hour), counts in d.iteritems():
         k = '%s:%s:%s' % (adunit, creative, date_hour)
         json_d[k] = d[(adunit, creative, date_hour)]
-        json_d[k]['request_count'] = request_d[(adunit, date_hour)]
+        json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
 
     return simplejson.dumps(json_d)
-    
+
 
 # takes in dict form of mdb_json from _create_mdb_json
 # returns error flag, error msg (if error flag is True), and list of dicts of derefed data in string json form (if error flag is False)
@@ -177,14 +177,14 @@ def _package_mdb_post_data(mdb_dict):
         if len(parts) != 3:
             err_msg = 'Error parsing %s -- expecting format adunit:creative:date_hour' % k
             return True, err_msg, None
-            
+
         [adunit, creative, date_hour] = parts
-        
+
         # NOTE: deref adunit after creative, since there's a bug where the account is not guaranteed to be retrieved from creative
         [adgroup, campaign, account] = _deref_creative(creative) or [None, None, None]
         [app, account] = _deref_adunit(adunit) or [None, None]
-        
-        
+
+
         if None not in [app, account, adgroup, campaign]:
             post_dict = {'adunit': adunit,
                          'app': app,
@@ -203,7 +203,7 @@ def _package_mdb_post_data(mdb_dict):
         else:
             err_msg = 'None derefed for key_tuple %s: app=%s, account=%s, adgroup=%s, campaign=%s' % (k, app, account, adgroup, campaign)
             return True, err_msg, None
-                        
+
     # post the list of dicts to MongoDB
     post_data = simplejson.dumps(mdb_post_list)
     return False, None, post_data
@@ -257,7 +257,7 @@ def _deref_creative(creative_str):
     try:
         creative_key = db.Key(creative_str)
         creative = Creative.get(creative_key)
-        adgroup_str = str(creative._ad_group)        
+        adgroup_str = str(creative._ad_group)
         adgroup_deref_results = deref_adgroup(adgroup_str)
         if adgroup_deref_results:
             [campaign_str, account_str] = adgroup_deref_results
@@ -270,30 +270,30 @@ def _deref_creative(creative_str):
         logging.error('deref error on creative %s: %s' %(creative_str, e))
         return None
 
-    
+
 class LogTaskHandler(webapp.RequestHandler):
   def get(self):
       # inspect headers of the task
       retry_count = int(self.request.headers.get('X-AppEngine-TaskRetryCount',"0"))
-      
+
       if retry_count > 6: return # bail early
-      
-      
+
+
       task_name = self.request.headers.get('X-AppEngine-TaskName',None)
       queue_name = self.request.headers.get('X-AppEngine-QueueName',None)
-      
+
       memcache_stats_start = memcache.get_stats()
       memcache_stats = None
       # grab parameters from the message of the task
       account_name = self.request.get("account_name")
       account_shard = self.request.get("account_shard")
       time_bucket = int(self.request.get("time"))
-      
+
 
       head_index = 1 # starts at one for a particular time_bucket
 
       # get the last index for a given time bucket
-      
+
       # for a brief moment there will be tasks that were put in without an associated shard
       if account_shard is None or account_shard == '':
           tail_key = stats_accumulator.INDEX_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket)
@@ -313,30 +313,30 @@ class LogTaskHandler(webapp.RequestHandler):
       # else:
       #     logging.info("account: %s time: %s start: %s stop: %s"%(account_name,time_bucket,head_index,tail_index))
       #     logging.info("MEMCACHE STATS: %s"%memcache_stats_start)
-           
 
-      stats_dict = {}      
+
+      stats_dict = {}
       start = head_index
       # paginate the keys
       memcache_misses = 0
-      
-      while start <= tail_index: 
+
+      while start <= tail_index:
           # get another MAX_KEYS or go to the end
           stop = start + MAX_KEYS - 1 if (start+MAX_KEYS-1) < tail_index else tail_index
-          
+
           # if this is an old task we don't use the shard to make the keys
           if account_shard is None or account_shard == '':
-              keys = [stats_accumulator.LOG_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket,log_index=i) 
+              keys = [stats_accumulator.LOG_KEY_FORMAT_OLD%dict(account_name=account_name,time=time_bucket,log_index=i)
                        for i in range(start,stop+1)]
           else:
-              keys = [stats_accumulator.LOG_KEY_FORMAT%dict(account_name=account_name,account_shard=int(account_shard),time=time_bucket,log_index=i) 
+              keys = [stats_accumulator.LOG_KEY_FORMAT%dict(account_name=account_name,account_shard=int(account_shard),time=time_bucket,log_index=i)
                        for i in range(start,stop+1)]
 
           # logging.info("we have %d keys (start:%s stop:%s)"%(len(keys),start,stop))
-          
-          # grab logs from memcache         
-          data_dicts = memcache.get_multi(keys) 
-          current_memcache_misses = (stop - start+1) - len(data_dicts)  
+
+          # grab logs from memcache
+          data_dicts = memcache.get_multi(keys)
+          current_memcache_misses = (stop - start+1) - len(data_dicts)
           memcache_misses += current_memcache_misses
           if memcache_misses:
               memcache_stats = memcache_stats or memcache.get_stats()
@@ -351,7 +351,7 @@ class LogTaskHandler(webapp.RequestHandler):
 
                   req = d.get('req',None)
                   req = int(req) if req else None
-                  
+
                   revenue = d.get('revenue',None)
                   revenue = float(revenue) if revenue else None
 
@@ -361,9 +361,9 @@ class LogTaskHandler(webapp.RequestHandler):
                   req = "%s.%s.%s"%(req,inst,time_bucket)
 
                   appid = d.get('appid',None)
-                  
+
                   country = d.get('country',None)
-                  
+
                   # calculate the datetime object to hour precision
                   now = int(float(d['now']))
                   hour = now-now%3600
@@ -382,7 +382,7 @@ class LogTaskHandler(webapp.RequestHandler):
                                    publisher=adunit,
                                    advertiser=creative,
                                    date_hour=date_hour,
-                                   country=country,                                   
+                                   country=country,
                                    attribute='request_count')
                   elif event == stats_accumulator.IMP_EVENT:
                       update_stats(stats_dict,
@@ -402,7 +402,7 @@ class LogTaskHandler(webapp.RequestHandler):
                                    attribute='click_count',
                                    revenue=revenue)
 
-                  elif event == stats_accumulator.CONV_EVENT: 
+                  elif event == stats_accumulator.CONV_EVENT:
                       update_stats(stats_dict,
                                    publisher=adunit,
                                    advertiser=creative,
@@ -412,34 +412,34 @@ class LogTaskHandler(webapp.RequestHandler):
                                    revenue=revenue)
 
               else:
-                  logging.error("NO value for key %s exists"%k)    
+                  logging.error("NO value for key %s exists"%k)
 
-          start += MAX_KEYS # proceed to the next "page"    
+          start += MAX_KEYS # proceed to the next "page"
 
       query_manager = query_managers.StatsModelQueryManager(account_name)
-      
+
       try:
           # stats_dict structure:
           # key is StatsModel key_name
           # value is StatsModel object
           stats_to_put = stats_dict.values()
-      
+
           # if account_name == "agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww":
           #     try:
           #         mail.send_mail_to_admins(sender="olp@mopub.com",
           #                                  subject="WTF",
-          #                                  body="len: %s\n%s"%(len(stats_to_put), 
+          #                                  body="len: %s\n%s"%(len(stats_to_put),
           #                                       [(str(s._advertiser), str(s._publisher), s.country, s.impression_count) for s in stats_to_put if str(s.country) == 'US']))
           #     except Exception, e:
           #         logging.error("MAIL ERROR: %s",e)
-      
+
           # retrieve account object from cache if possible
           if account_name in DEREF_CACHE:
               account = DEREF_CACHE[account_name]
           else:
               account = Account.get(account_name)
               DEREF_CACHE[account_name] = account
-          
+
           # post to MDB servers if account is using MongoDB for realtime stats
           if account and account.use_mongodb_stats:
               mdb_json = _create_mdb_json(stats_to_put)
@@ -456,10 +456,10 @@ class LogTaskHandler(webapp.RequestHandler):
           # traditional put to GAE datastore
           query_manager.put_stats(stats_to_put)
           total_stats = query_manager.all_stats_deltas
-      # if the transaction is too large then we split it up and try again    
+      # if the transaction is too large then we split it up and try again
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)
-      
+
       except:
           if retry_count > 5:
               exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
@@ -471,9 +471,9 @@ class LogTaskHandler(webapp.RequestHandler):
               if account:
                   user_email = account.mpuser.email
               else:
-                  user_email = None 
-              
-              try:      
+                  user_email = None
+
+              try:
                   pass
                   # mail.send_mail_to_admins(sender="olp@mopub.com",
                   #                           subject="Logging error",
@@ -487,58 +487,58 @@ class LogTaskHandler(webapp.RequestHandler):
                   #                                                                                max_countries,
                   #                                                                                exception_traceback))
               except:
-                  pass                                                                                     
+                  pass
               logging.error(exception_traceback)
           raise Exception("need to try transaction again")
-      
-      # only email if we miss alot (more than .1% or more than 1)      
+
+      # only email if we miss alot (more than .1% or more than 1)
       if not tail_index_str or (memcache_misses > 1 and float(memcache_misses)/float(tail_index) > 0.01):
           account = Account.get(account_name)
           if account:
               user_email = account.mpuser.email
           else:
-              user_email = None 
-          
+              user_email = None
+
           message = "Account: %s email: %s time: %s tail: %s misses: %s retry: %s\nmemcache_stats_starts:%s\nmemcache_stats:%s"%(account_name,
                                                                                   user_email,
                                                                                   time_bucket,
                                                                                   tail_index_str,memcache_misses,retry_count,
                                                                                   memcache_stats_start,memcache_stats)
-          
+
           try:
               pass
               # mail.send_mail_to_admins(sender="olp@mopub.com",
               #                           subject="Logging error (cache miss)",
               #                           body=message)
           except:
-              pass                                
+              pass
           # logging.error(message)
-          
+
 class StatsModelPutTaskHandler(webapp.RequestHandler):
     def get(self):
         # logging.info("ASDF: %s"%"ASdf")
         return self.post()
-    
+
     def post(self):
         # get the account name
         account_name = self.request.get("account_name")
         next_bucket_size = self.request.get("next_size", MAX_PUT_SIZE)
         query_manager = query_managers.StatsModelQueryManager(account_name)
-        
+
         # get the list of protobufs from the post
         # stats_model_protobufs = self.request.get_all(STATS_MODEL_QUERY_KEY)
         stats_model_json_strings = self.request.get_all(STATS_MODEL_QUERY_KEY)
         # decode the objects
         # logging.info("length: %s"%len(stats_model_protobufs))
         # logging.info("try: %s"%stats_model_protobufs[0])
-        
-        # stats_models = [db.model_from_protobuf(entity_pb.EntityProto(pb)) 
+
+        # stats_models = [db.model_from_protobuf(entity_pb.EntityProto(pb))
         #                         for pb in stats_model_protobufs]
         stats_models = [r_models.StatsModel.from_json(jstr) for jstr in stats_model_json_strings]
         try:
             # logging.info('trying to put %d models'%len(stats_models))
             query_manager.put_stats(stats_models)
-        # if the transaction is too large then we split it up and try again    
+        # if the transaction is too large then we split it up and try again
         except db.BadRequestError:
             async_put_models(account_name,stats_models,next_bucket_size)
 
@@ -546,27 +546,27 @@ def async_put_models(account_name,stats_models,bucket_size):
     account_bucket = hash(account_name)%NUM_OVERFLOW_TASK_QUEUES
     task_queue_name = OVERFLOW_TASK_QUEUE_NAME_FORMAT%account_bucket
     # logging.info('queue: %s'%task_queue_name)
-    
+
     next_bucket_size = bucket_size/2 if bucket_size > 1 else 1
-    
+
     # run in transaction so we atomically "put" all the data chunks
     # logging.info('splitting %d models into %d sized chunks'%(len(stats_models),bucket_size))
-    
+
     def _txn():
         for sub_stats in helpers.chunks(stats_models, bucket_size):
             # add sub_stats to the key
             stats_model_json_strings = [sm.to_json() for sm in sub_stats]
-            
+
             t = taskqueue.Task(params={'account_name': account_name,
                                        'next_size': next_bucket_size,
                                        STATS_MODEL_QUERY_KEY: stats_model_json_strings,
                                        },
-                               url='/_ah/queue/bulk-log-processor/put',           
+                               url='/_ah/queue/bulk-log-processor/put',
                                method='POST',
                                countdown=5)
             t.add(task_queue_name, transactional=False)
-    db.run_in_transaction(_txn)        
-    
+    db.run_in_transaction(_txn)
+
 class FinalizeHandler(webapp.RequestHandler):
     def post(self):
         return self.get(self)
@@ -577,30 +577,30 @@ class FinalizeHandler(webapp.RequestHandler):
             files.finalize(file_name)
         except (files.ExistenceError, files.FinalizationError):
             pass # no-opp file is already finalized
-                
+
 
 class DownloadLogsHandler(webapp.RequestHandler):
     def post(self):
         return self.get(self)
-    
+
     def get(self, LIMIT=100):
         date_hour_string = self.request.get('dh')
         limit = int(self.request.get('limit', LIMIT))
         start_time_stamp = self.request.get('start_time', None)
         start_key = self.request.get('start_key', None)
         filename = self.request.get('filename', 'apache')
-        
+
         # date_hour_string = YYYYMMDDHH
         year = int(date_hour_string[:4])
         month = int(date_hour_string[4:6])
         day = int(date_hour_string[6:8])
         hour = int(date_hour_string[8:10])
-        
-        date_hour = datetime.datetime(year=year, 
+
+        date_hour = datetime.datetime(year=year,
                                       month=month,
                                       day=day,
                                       hour=hour)
-        
+
         filename = log_service.get_blob_name_for_time(date_hour, filename) + '.log'
         blob_infos = BlobInfo.all().filter('filename =',filename)
         if start_time_stamp:
@@ -609,13 +609,13 @@ class DownloadLogsHandler(webapp.RequestHandler):
 
         if start_key:
             blob_infos = blob_infos.filter('__key__ >=', db.Key(start_key))
-            
-        
+
+
         # fetch the objects from DB
         blob_infos = blob_infos.fetch(limit+1)
-        
+
         blob_keys = [bi.key() for bi in blob_infos]
-        
+
         # if there are limit + 1 entries returned
         # notify the API user where to start next
         if len(blob_infos) > limit:
@@ -624,7 +624,7 @@ class DownloadLogsHandler(webapp.RequestHandler):
         else:
             next_creation_time_stamp = None
             next_key_name = None
-        
+
         response_dict = dict(urls=['/files/serve/%s'%urllib.quote(str(bk)) for bk in blob_keys[:limit]])
         if next_creation_time_stamp:
             response_dict.update(start_time=str(next_creation_time_stamp))
@@ -633,7 +633,7 @@ class DownloadLogsHandler(webapp.RequestHandler):
             # next_key is actually a BlobKey which is the key_name for the BlobInfo
             next_key = db.Key.from_path(BlobInfo.kind(), str(next_key_name), namespace='')
             response_dict.update(start_key=str(next_key))
-        
+
         self.response.out.write(simplejson.dumps(response_dict))
 
 class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
@@ -642,8 +642,8 @@ class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
         resource = str(urllib.unquote(resource))
         blob_info = BlobInfo.get(resource)
         self.send_blob(blob_info)
-        
-        
+
+
 class MongoUpdateStatsHandler(webapp.RequestHandler):
     def post(self):
         mdb_dict = simplejson.loads(self.request.body)  # mdb_dict is json_d in _create_mdb_json()
@@ -654,23 +654,23 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
             logging.error(err_msg)
             #respond immediately without posting any data to MongoDB
             self.response.out.write(err_msg)
-                
+
         logging.info('POST TO MDB: %s' % post_data)
         post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update
         post_request = urllib2.Request(post_url, post_data)
         post_response = urllib2.urlopen(post_request)
         status_code = post_response.code
         response_msg = post_response.read()
-        
+
         handler_response = '%i response from %s: %s\npayload:\n%s' % (status_code, post_url, response_msg, post_data)
-        if status_code == 200: # OK 
+        if status_code == 200: # OK
             logging.info(handler_response)
-        else:   # failed    
-            logging.error(handler_response)        
+        else:   # failed
+            logging.error(handler_response)
         self.response.out.write(handler_response)
 
 
-                
+
 application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-00', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-01', LogTaskHandler),
@@ -679,7 +679,7 @@ application = webapp.WSGIApplication([('/_ah/queue/bulk-log-processor', LogTaskH
                                       ('/_ah/queue/bulk-log-processor-04', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-05', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-06', LogTaskHandler),
-                                      ('/_ah/queue/bulk-log-processor-07', LogTaskHandler),    
+                                      ('/_ah/queue/bulk-log-processor-07', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-08', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor-09', LogTaskHandler),
                                       ('/_ah/queue/bulk-log-processor/put', StatsModelPutTaskHandler),

@@ -24,29 +24,29 @@ from common.ragendja.template import render_to_response, render_to_string, JSONR
 from common.utils.marketplace_helpers import MarketplaceStatsFetcher
 from common.utils.timezones import Pacific_tzinfo
 # from common.ragendja.auth.decorators import google_login_required as login_required
-
+from account.query_managers import AccountQueryManager
+from account.forms import NetworkConfigForm
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm, \
                              BaseCreativeForm, TextCreativeForm, \
                              ImageCreativeForm, TextAndTileCreativeForm, \
                              HtmlCreativeForm
 
-from publisher.models import Site, Account, App
-from reporting.models import StatsModel
-
-from common.utils.query_managers import CachedQueryManager
-from common.utils.request_handler import RequestHandler
-
-from account.query_managers import AccountQueryManager
-from account.forms import NetworkConfigForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager, TextCreativeQueryManager, \
                                       ImageCreativeQueryManager, TextAndTileCreativeQueryManager, \
                                       HtmlCreativeQueryManager
-from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnitContextQueryManager
-from reporting.query_managers import StatsModelQueryManager
+
 from budget import budget_service
-from budget.models import BudgetSlicer
+from budget.models import Budget
+from budget.query_managers import BudgetQueryManager
+from common.utils.query_managers import CachedQueryManager
+from common.utils.request_handler import RequestHandler
+
+from publisher.models import Site, Account, App
+from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnitContextQueryManager
+from reporting.models import StatsModel
+from reporting.query_managers import StatsModelQueryManager
 
 from common.constants import MPX_DSP_IDS
 
@@ -241,7 +241,7 @@ def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
 def _calc_and_attach_osi_success(adgroups):
     for adgroup in adgroups:
         if adgroup.running and adgroup.campaign.budget:
-            adgroup.osi_success = budget_service.get_osi(adgroup.campaign)
+            adgroup.osi_success = budget_service.get_osi(adgroup.campaign.budget_obj)
 
     return adgroups
 
@@ -257,7 +257,7 @@ class AdGroupArchiveHandler(RequestHandler):
         archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account, archived=True)
 
         for adgroup in archived_adgroups:
-            adgroup.budget_slicer = BudgetSlicer.get_by_campaign(adgroup.campaign)
+            adgroup.budget = adgroup.campaign.budget_obj
 
         return render_to_response(self.request,
                                    'advertiser/archived_adgroups.html',
@@ -394,9 +394,13 @@ class CreateCampaignAJAXHander(RequestHandler):
 
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
                 CampaignQueryManager.put(campaign)
+                #
 
-                # Update budget upon changes or set budget from full_budget. Have to put in datastore first.
-                budget_service.update_budget(campaign, save_campaign = False)
+                budget_obj = BudgetQueryManager.update_or_create_budget_for_campaign(campaign)
+                logging.warning("%s" % budget_obj)
+                campaign.budget_obj = budget_obj
+
+                #budget_service.update_budget(campaign, save_campaign = False)
                 # And then put in datastore again.
                 CampaignQueryManager.put(campaign)
 
@@ -626,7 +630,7 @@ class ShowAdGroupHandler(RequestHandler):
         adgroup = AdGroupQueryManager.get(adgroup_key)
         adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
-        adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+        adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
 
         # Load creatives and populate
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
@@ -776,6 +780,8 @@ class PauseAdGroupHandler(RequestHandler):
                     for creative in a.creatives:
                         creative.deleted = True
                         update_creatives.append(creative)
+                BudgetQueryManager.update_or_create_budget_for_campaign(a.campaign)
+
 
         if update_objs:
             AdGroupQueryManager.put(update_objs)
@@ -1105,15 +1111,14 @@ class AJAXStatsHandler(RequestHandler):
                     else:
                         summed_stats.cpm = adgroup.cpm
 
-                    percent_delivered = budget_service.percent_delivered(adgroup.campaign)
+                    percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
+                    logging.warning("Perecent Delivered: %s" % percent_delivered)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
 
                     summed_stats.status = filters.campaign_status(adgroup)
-
-
-                    if adgroup.running and adgroup.campaign.budget:
-                        summed_stats.on_schedule = str(budget_service.get_osi(adgroup.campaign) * 100)
+                    if adgroup.running and adgroup.campaign.budget_obj and adgroup.campaign.budget_obj.delivery_type != 'allatonce':
+                        summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign.budget_obj) else "behind"
                     else:
                         summed_stats.on_schedule = "none"
                 stats_dict[key]['sum'] = summed_stats.to_dict()

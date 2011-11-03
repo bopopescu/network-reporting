@@ -146,7 +146,7 @@
       border-width: 1px;
       border-style: solid;
 
-      font-size: 16px;
+      font-size: 15px;
 
       // Adjust close icon
       .close {
@@ -186,9 +186,9 @@
       &.block-message {
           @include box-shadow(none);
           background-image: none;
-          background-color: lighten(#fceec1, 5%);
+          background-color: #FFFDF2;
           padding: 14px;
-          border-color: #fceec1;
+          border-color: #E6D2B8;
           ul, p {
               margin-right: 30px;
           }

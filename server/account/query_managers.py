@@ -113,7 +113,7 @@ class AccountQueryManager(CachedQueryManager):
         #     old_account.delete()
 
     @classmethod
-    def get_account_by_key(key):
+    def get_account_by_key(cls, key):
         return Account.get(key)
 
 class UserQueryManager(QueryManager):

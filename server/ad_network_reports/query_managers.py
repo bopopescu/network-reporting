@@ -2,7 +2,7 @@ import logging
 import sys
 import urllib
 
-EC2 = True
+EC2 = False
 
 if EC2:
     sys.path.append('/home/ubuntu/mopub/server')
@@ -20,8 +20,6 @@ from account.query_managers import AccountQueryManager
 from ad_network_reports.models import AdNetworkLoginCredentials, \
         AdNetworkAppMapper, AdNetworkScrapeStats, AdNetworkManagementStats
 from common.utils.query_managers import CachedQueryManager
-from Crypto.Cipher import AES
-from Crypto import Random
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager
 
@@ -205,9 +203,11 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return None if the login credentials are correct otherwise return an
         error message.
         """
+        from Crypto.Cipher import AES
+        from Crypto.Util import randpool
         iv = ''
         if password:
-            iv = Random.get_random_bytes(16)
+            iv = rp.get_bytes(16)
             aes_cfb = AES.new(PASSWORD_KEY, AES.MODE_CFB, iv)
             password = aes_cfb.encrypt(password)
 

@@ -306,8 +306,8 @@
         <th> Creative </th>
         <th> Advertiser </th>
         <th> Revenue </th>
-        <th> eCPM </th>
         <th> Impressions </th>
+        <th> eCPM </th>
         {#<th> Clicks </th>#}
         {#<th> CTR </th>#}
       </thead>
@@ -458,11 +458,13 @@
            Marketplace.fetchAdunitStats(app_key);
       });
 
-      var table = Marketplace.makeCreativePerformanceTable(pub_key, dsp_keys, blocklist);
+      var start_date = "{{start_date|date:"m-d-Y"}}";
+      var end_date = "{{end_date|date:"m-d-Y"}}";
+      var table = Marketplace.makeCreativePerformanceTable(pub_key, blocklist, start_date, end_date);
 
     });
   </script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js?v=103"></script>
+  <script type="text/javascript" src="/js/mopub-marketplace.js?v=105"></script>
 {% endblock extraScripts %}
 
 {% block extraCSS %}

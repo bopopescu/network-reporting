@@ -358,20 +358,12 @@ class ShowAppHandler(RequestHandler):
     # Set start date if passed in, otherwise get most recent days
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
+            start_date = self.start_date
+            end_date = start_date + timedelta(int(self.date_range) - 1)
         else:
             days = StatsModel.lastdays(self.date_range)
-
-        # Form the date range
-        if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.strptime(self.start_date, "%Y-%m-%d")
-        else:
             end_date = date.today()
-
-        if self.date_range:
             start_date = end_date - timedelta(int(self.date_range) - 1)
-        else:
-            start_date = end_date - timedelta(13)
-
 
         # load the site
         app = AppQueryManager.get(app_key)
@@ -420,14 +412,14 @@ class ShowAppHandler(RequestHandler):
 
         # get adgroups targeting this app
         app.adgroups = AdGroupQueryManager.get_adgroups(app=app)
-        
+
         # used the get marketplace stats from mpx servers
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
 
         for ag in app.adgroups:
             ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,advertiser=ag,days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
+            ag.percent_delivered = budget_service.percent_delivered(ag.campaign.budget_obj)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
@@ -587,25 +579,17 @@ class AdUnitShowHandler(RequestHandler):
     def get(self,adunit_key):
     # load the site
         adunit = AdUnitQueryManager.get(adunit_key)
-        if adunit.account.key() != adunit.account.key():
+        if adunit.account.key() != self.account.key():
             raise Http404
 
-        # Set start date if passed in, otherwise get most recent days
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
+            start_date = self.start_date
+            end_date = start_date + timedelta(int(self.date_range) - 1)
         else:
             days = StatsModel.lastdays(self.date_range)
-            
-        # Form the date range
-        if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.strptime(self.start_date, "%Y-%m-%d")
-        else:
             end_date = date.today()
-
-        if self.date_range:
             start_date = end_date - timedelta(int(self.date_range) - 1)
-        else:
-            start_date = end_date - timedelta(13)
 
         days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days]
 
@@ -625,15 +609,15 @@ class AdUnitShowHandler(RequestHandler):
         for ag in adunit.adgroups:
             ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            ag.percent_delivered = budget_service.percent_delivered(ag.campaign)
-            
+            ag.percent_delivered = budget_service.percent_delivered(ag.campaign.budget_obj)
+
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
             if ag.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
                 mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()), start_date, end_date)
                 ag.stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
-            
+
 
         # to allow the adunit to be edited
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)

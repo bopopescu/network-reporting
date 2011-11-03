@@ -236,9 +236,9 @@ var mopub = mopub || {};
             $(".impressions", adunit_row).text(this.model.get("impressions"));
             $(".price_floor", adunit_row).html('<input id="' +
                                                this.model.id +
-                                               '" type="text" class="input-text input-text-number number" style="width:50px;" value="' +
+                                               '" type="text" class="input-text input-text-number number" style="width:50px;margin: -3px 0;" value="' +
                                                this.model.get("price_floor") +
-                                               '"> <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
+                                               '"> USD <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
             $(".targeting", adunit_row).html('<input class="targeting-box" type="checkbox"> <img class="loading-img hidden" ' +
                                              ' src="/images/icons-custom/spinner-12.gif"></img>');
             if (this.model.get("active")) {
@@ -528,7 +528,7 @@ var mopub = mopub || {};
         /*
          * Makes the Creatives Performance tab's datatable
          */
-        makeCreativePerformanceTable: function (pub_id, dsp_keys, blocklist) {
+        makeCreativePerformanceTable: function (pub_id, blocklist, start_date, end_date) {
             var table = $("#report-table").dataTable({
                 bProcessing: true,
                 // Use jQueryUI to style the table
@@ -561,8 +561,8 @@ var mopub = mopub || {};
                         url: sUrl,
                         data: {
                             pub_id: pub_id,
-                            start: "10-24-2011",
-                            end: "10-27-2011",
+                            start: start_date,
+                            end: end_date,
                             format:'jsonp'
                         },
                         //success: fnCallback,
@@ -574,8 +574,8 @@ var mopub = mopub || {};
                                     creative["creative"]["url"],
                                     creative["creative"]["ad_dmn"],
                                     creative["stats"]["pub_rev"],
-                                    ecpm,
-                                    creative["stats"]["imp"]
+                                    creative["stats"]["imp"],
+                                    ecpm
                                 ];
                             });
 
@@ -601,8 +601,8 @@ var mopub = mopub || {};
                         $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
                     }
                     $("td:eq(2)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[2]));
-                    $("td:eq(3)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[3]));
-                    $("td:eq(4)", nRow).addClass("numeric").text(mopub.Utils.formatNumberWithCommas(aData[4]));
+                    $("td:eq(3)", nRow).addClass("numeric").text(mopub.Utils.formatNumberWithCommas(aData[3]));
+                    $("td:eq(4)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[4]));
                     return nRow;
                 }
             });

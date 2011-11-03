@@ -623,19 +623,19 @@
                   <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
 
                   <span class="muted">
-                    {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                    {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                       {{adgroup.campaign.start_date|format_date_compact}} - {{adgroup.campaign.end_date|format_date_compact}}.
                     {% endif %}
 
-                    {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                    {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                       Starts {{adgroup.campaign.start_date|format_date_compact}}.
                     {% endif %}
 
-                    {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                      Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                    {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                      Ends {{adgroup.campaign.end_date|format_date_compact}}.
                     {% endif %}
 
-                    {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                    {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                       All dates.
                     {% endif %}
 
@@ -792,16 +792,16 @@
                     <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
                     <br/>
                     <span class="muted">
-                      {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                      {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                         {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
                       {% endif %}
-                      {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                      {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                         Starts {{adgroup.campaign.start_date|format_date_compact}}.
                       {% endif %}
-                      {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                      {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                         Ends {{adgroup.campaign.start_date|format_date_compact}}.
                       {% endif %}
-                      {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                      {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                         All dates.
                       {% endif %}
                       {% if adgroup.campaign.budget %}
@@ -1151,13 +1151,13 @@
                     <td class="dataTable-name">
                         <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
                         <span class="muted">
-                            {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
-                            {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                            Starts {{adgroup.campaign.start_date|format_date_compact}}.
-                            {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            Ends {{adgroup.campaign.start_date|format_date_compact}}.
-                            {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                            {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                            {{adgroup.campaign.start_datetime|format_date_compact}}-{{adgroup.campaign.end_datetime|format_date_compact}}.
+                            {% endif %} {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                            Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
+                            {% endif %} {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                            Ends {{adgroup.campaign.start_datetime|format_date_compact}}.
+                            {% endif %} {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                             All dates.
                             {% endif %}
                             {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}

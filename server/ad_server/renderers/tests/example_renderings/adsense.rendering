@@ -76,7 +76,7 @@
                                 ad_type: 'text_image', 
                                 output: 'html', 
                                 channel: '',
-                                format: '320x50mb',
+                                format: '320x50_mb',
                                 oe: 'utf8',
                                 color_border: '336699',
                                 color_bg: 'FFFFFF',

@@ -1,165 +1,193 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
 {% block pageTitle %}
-          <div class="breadcrumb">
-            {% if not adgroup.archived %}
-            <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
-            {% else %}
-            <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
-            {% endif %}
-            <h1>Campaign: {{adgroup.name}}</h1>
-          </div>
+  <div class="breadcrumb">
+    {% if not adgroup.archived %}
+      <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
+    {% else %}
+      <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
+    {% endif %}
+    <h1>Campaign: {{adgroup.name}}</h1>
+  </div>
 {% endblock pageTitle %}
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block titleBarRight %}
-        {% if not account.status %}
-        <!-- MixPanel Tracking -->
-        <script type="text/javascript">
-        mpq.push(["track", "Post sign up: Campaign viewed"]);
-        </script>
-        {% endif %}
+  {% if not account.status %}
+    <!-- MixPanel Tracking -->
+    <script type="text/javascript">
+      mpq.push(["track", "Post sign up: Campaign viewed"]);
+    </script>
+  {% endif %}
 
-            <span class="titlebar-right">
-              {% if adgroup.active %}
-                <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
-                  <option value="play" selected="selected">Running</option>
-                  <option value="pause">Pause</option>
-                  <option value="archive">Archive</option>
-                    <option value="delete">Delete</option>
-                </select>
-              {% else %}
-                {% if adgroup.archived %}
-                  <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
-                    <option value="archive">Archived</option>
-                    <option value="play">Resume</option>
-                      <option value="delete">Delete</option>
-                  </select>
-                {% else %}
-                    <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
-                      <option value="pause" selected="selected">Paused</option>
-                      <option value="play">Resume</option>
-                      <option value="archive">Archive</option>
-                    <option value="delete">Delete</option>
-                  </select>
-                {% endif %}
-              {% endif %}
-              <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
-            </span>
+  <span class="titlebar-right">
+    {% if adgroup.active %}
+      <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
+        <option value="play" selected="selected">Running</option>
+        <option value="pause">Pause</option>
+        <option value="archive">Archive</option>
+        <option value="delete">Delete</option>
+      </select>
+    {% else %}
+      {% if adgroup.archived %}
+        <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
+          <option value="archive">Archived</option>
+          <option value="play">Resume</option>
+          <option value="delete">Delete</option>
+        </select>
+      {% else %}
+        <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
+          <option value="pause" selected="selected">Paused</option>
+          <option value="play">Resume</option>
+          <option value="archive">Archive</option>
+          <option value="delete">Delete</option>
+        </select>
+      {% endif %}
+    {% endif %}
+    <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
+  </span>
 {% endblock titleBarRight %}
 
 {% block content %}
-{% if not apps %}
-          <div class="alert-message block-message">
-            This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
-          </div>
-{% endif %}
-{% if not creatives %}
-          <div class="alert-message block-message">
-            This campaign needs to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
-          </div>
-{% endif %}
-{% if campaign.marketplace %}
-<div class="alert-message block-message">
-  The revenue numbers reported for the marketplace may be incorrect.  For now, the revenue number should be disregarded.  This error will be fixed on Wednesday, October 26.  If you would like accurate revenue numbers in the meantime, email support@mopub.com and we can generate revenue reports for you.
-</div>
-{% endif %}
-{% if message  %}
-          <div class="alert-message block-message error">
-            {{message|safe}}
-          </div>
-{% endif %}
-          <div class="separated" id="chartWrapper">
-            <section class="offset nomargin" id="dashboard-stats">
-               <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-              <div class="stats">
-                <div class="stats-breakdown">
-                  <table>
-                    <tbody>
-                    {% if campaign.gtee or campaign.marketplace %}
-                        <tr class="active" id="stats-breakdown-revenue">
-                            <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
-                            <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
-                            <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
-                            <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-                        </tr>
-                    {% endif %}
-                      <tr {% if campaign.network or campaign.promo %} class="active" {% endif %} id="stats-breakdown-impressions">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                      </tr>
-                  {% if campaign.network %}
-                      <tr id="stats-breakdown-attempts">
-                          <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
-                          <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
-                          <td class="stats-breakdown-value all"><span class="inner">{{totals.request_count|withsep}}</span></td>
-                          <th class="stats-breakdown-name"><span class="inner">Attempts</span></th>
-                      </tr>
-                  {% endif %}
-                      <tr id="stats-breakdown-clicks">
-                          <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
-                          <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
-                          <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{totals.ctr|percentage}})</span> {{totals.click_count|withsep}}</span></td>
-                          <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                      </tr>
-                  {% if campaign.promo %}
-                      <tr id="stats-breakdown-conversions">
-                          <td class="stats-breakdown-value today"><span class="inner">{{today.conversion_count|withsep}}</span></td>
-                          <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.conversion_count|withsep}}</span></td>
-                          <td class="stats-breakdown-value all"><span class="inner">{{totals.conversion_count|withsep}}</span></td>
-                          <th class="stats-breakdown-name"><span class="inner">Conversions</span></th>
-                      </tr>
-                  {% endif %}
-                      <tr id="stats-breakdown-users">
-                        <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
-                        <td class="stats-breakdown-value all"><span class="inner">{{totals.user_count|withsep}}</span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="stats-breakdown-buttons">
-                  <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-                    <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-                    <label for="stats-breakdown-dateOptions-option-0">Today</label>
-                    <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-                    <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-                    <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-                    <label for="stats-breakdown-dateOptions-option-2">All</label>
-                  </span>
-                </div>
-                <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-                  <div class="chart-loading-text">Loading ...</div>
-                  <div class="chart-error-text">Could not load chart</div>
-                  <script type="text/javascript">
-                    // chart data
-                    mopub.dashboardStatsChartData = {
-                      //pointStart: 1294963200000,
-                      pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+  {% if not apps %}
+    <div class="alert-message block-message">
+      This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
+    </div>
+  {% endif %}
+  {% if not creatives %}
+    <div class="alert-message block-message">
+      This campaign needs to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
+    </div>
+  {% endif %}
+  {% if campaign.marketplace %}
+    <div class="alert-message block-message">
+      The revenue numbers reported for the marketplace may be incorrect.  For now, the revenue number should be disregarded.  This error will be fixed on Wednesday, October 26.  If you would like accurate revenue numbers in the meantime, email support@mopub.com and we can generate revenue reports for you.
+    </div>
+  {% endif %}
+  {% if message  %}
+    <div class="alert-message block-message error">
+      {{message|safe}}
+    </div>
+  {% endif %}
+  <div class="separated" id="chartWrapper">
+    <section class="offset nomargin" id="dashboard-stats">
+      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <div class="stats">
+        <div class="stats-breakdown">
+          <table>
+            <tbody>
+              {% if campaign.gtee or campaign.marketplace %}
+                <tr class="active" id="stats-breakdown-revenue">
+                  <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
+                  <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
+                  <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+                </tr>
+              {% endif %}
+              <tr {% if campaign.network or campaign.promo %} class="active" {% endif %} id="stats-breakdown-impressions">
+                <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+              </tr>
+              {% if campaign.network %}
+                <tr id="stats-breakdown-attempts">
+                  <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value all"><span class="inner">{{totals.request_count|withsep}}</span></td>
+                  <th class="stats-breakdown-name"><span class="inner">Attempts</span></th>
+                </tr>
+              {% endif %}
+              <tr id="stats-breakdown-clicks">
+                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{totals.ctr|percentage}})</span> {{totals.click_count|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+              </tr>
+              {% if campaign.promo %}
+                <tr id="stats-breakdown-conversions">
+                  <td class="stats-breakdown-value today"><span class="inner">{{today.conversion_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.conversion_count|withsep}}</span></td>
+                  <td class="stats-breakdown-value all"><span class="inner">{{totals.conversion_count|withsep}}</span></td>
+                  <th class="stats-breakdown-name"><span class="inner">Conversions</span></th>
+                </tr>
+              {% endif %}
+              <tr id="stats-breakdown-users">
+                <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner">{{totals.user_count|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stats-breakdown-buttons">
+          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+            <label for="stats-breakdown-dateOptions-option-0">Today</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+            <label for="stats-breakdown-dateOptions-option-2">All</label>
+          </span>
+        </div>
+        <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+          <div class="chart-loading-text">Loading ...</div>
+          <div class="chart-error-text">Could not load chart</div>
+          <script type="text/javascript">
+            // chart data
+            mopub.dashboardStatsChartData = {
+                //pointStart: 1294963200000,
+                pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
                       pointInterval: 86400000,
                       'impressions': [{% for a in graph_adunits %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                                      { '{{a.name|safe|addslashes}}':
+                                        [
+                                            {% for stat in a.all_stats %}
+                                            {{stat.impression_count}}
+                                            {% if not forloop.last %},{% endif %}
+                                            {% endfor %}
+                                        ]
+                                      }
+                                      {% if not forloop.last %},{% endif %}
+                                      {% empty %}
+                                      'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+                                      {% endfor %}
                       ],
                       'clicks': [{% for a in graph_adunits %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{y: {{stat.click_count}}, name: '{{stat.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        { '{{a.name|safe|addslashes}}': [
+                            {% for stat in a.all_stats %}
+                            {y: {{stat.click_count}}, name: '{{stat.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                                 {% empty %}
+                                 'Targeting no adunits': [{y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'} ]
+                                 {% endfor %}
                       ],
                       'users': [{% for a in graph_adunits %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                                {% empty %}
+                                'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+                                {% endfor %}
                       ],
-                      {% if campaign.gtee or campaign.marketplace %}
+                      {% if campaign.gtee  %}
                             'revenue': [{% for a in graph_adunits %}
-                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                                        {% empty %}
+                                        'Targeting no adunits': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+                                        {% endfor %}
                               ]
                         {% endif %} {% if campaign.promo %}
                             'conversions': [{% for a in graph_adunits %}
-                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                                            {% empty %}
+                                            'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+                                            {% endfor %}
                               ]
                         {% endif %} {% if campaign.network %}
                             'attempts': [{% for a in graph_adunits %}
-                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                                         {% empty %}
+                                            'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+                                         {% endfor %}
                               ]
                         {% endif %}
                     };

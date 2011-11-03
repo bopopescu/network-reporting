@@ -514,7 +514,7 @@
 
 
           <br />
-          <a class="right button add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
+          <a id="add_campaign_button" class="right button add icon ui-icon-add"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
 
           <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
             <input type="hidden" name="action" id="action"/>
@@ -624,15 +624,15 @@
 
                   <span class="muted">
                     {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                      {{adgroup.campaign.start_date|format_date_compact}} - {{adgroup.campaign.end_date|format_date_compact}}.
+                      {{adgroup.campaign.start_datetime|format_date_compact}} - {{adgroup.campaign.end_datetime|format_date_compact}}.
                     {% endif %}
 
                     {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                      Starts {{adgroup.campaign.start_date|format_date_compact}}.
+                      Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
                     {% endif %}
 
                     {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                      Ends {{adgroup.campaign.end_date|format_date_compact}}.
+                      Ends {{ adgroup.campaign.end_datetime|format_date_compact }}.
                     {% endif %}
 
                     {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
@@ -641,14 +641,14 @@
 
                     {% ifequal adgroup.campaign.budget_type 'daily' %}
                       {% if adgroup.campaign.budget %}
-                        {{adgroup.campaign.budget|currency}} daily budget.
+                        &nbsp {{adgroup.campaign.budget|currency}} daily budget.
                       {% else %}
-                        Unlimited budget.
+                        &nbsp Unlimited budget.
                       {% endif %}
                     {% endifequal %}
 
                     {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
-                      {{adgroup.campaign.full_budget|currency}} campaign budget.
+                      &nbsp {{adgroup.campaign.full_budget|currency}} campaign budget.
                     {% endifequal %}
                   </span>
 

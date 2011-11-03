@@ -554,8 +554,8 @@ var mopub = mopub || {};
                 // Sort by revenue descending from the start
                 aaSorting: [[2,'desc']],
                 // Endpoint to fetch table data
-                //sAjaxSource: "http://mpx.mopub.com/stats/creatives",
                 sAjaxSource: "http://mpx.mopub.com/stats/creatives",
+                // Tell datatables how to fetch and parse server data
                 fnServerData: function( sUrl, aoData, fnCallback ) {
                     $.ajax({
                         url: sUrl,
@@ -565,7 +565,10 @@ var mopub = mopub || {};
                             end: "10-27-2011",
                             format:'jsonp'
                         },
-                        //success: fnCallback,
+                        // When the data returns from the endpoint, format it the way
+                        // datatables wants. When sort functions are called on the table,
+                        // the type of each data will be considered in sorting, so make sure
+                        // to type cast if necessary.
                         success: function(data, textStatus, jqXHR) {
 
                             var creative_data = _.map(data, function(creative, key) {
@@ -588,6 +591,10 @@ var mopub = mopub || {};
                         cache: false
                     } );
                 },
+                // Callback function that takes table data and renders it
+                // as a table row. Called on each row's data right before
+                // it's rendered in the table (i.e. when a user clicks
+                // 'next'/'prev', or changes the number of displayed rows)
                 fnRowCallback: function(nRow, aData, iDisplayIndex) {
 
                     $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");

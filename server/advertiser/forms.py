@@ -59,7 +59,8 @@ class CampaignForm(mpforms.MPModelForm):
         if instance and instance.campaign_type:
 
             #Take datetimes from UTC to PST/PDT
-            initial.update(start_datetime = instance.start_datetime.replace(tzinfo=utc).astimezone(Pacific))
+            if instance.start_datetime:
+                initial.update(start_datetime = instance.start_datetime.replace(tzinfo=utc).astimezone(Pacific))
             if instance.end_datetime:
                 initial.update(end_datetime = instance.end_datetime.replace(tzinfo=utc).astimezone(Pacific))
             kwargs.update(initial=initial)

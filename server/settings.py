@@ -149,7 +149,7 @@ AUTH_USER_MODULE = 'account.models'
 
 LOGIN_URL = '/account/login/'
 LOGOUT_URL = '/account/logout/'
-LOGIN_REDIRECT_URL = 'http://app.mopub.com/inventory/'
+LOGIN_REDIRECT_URL = '/inventory/'
 
 LOGIN_REQUIRED_PREFIXES = (
     '/inventory/',

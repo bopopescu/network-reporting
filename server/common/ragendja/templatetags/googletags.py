@@ -6,6 +6,8 @@ from google.appengine.api import users
 
 register = Library()
 
+settings.LOGIN_REDIRECT_URL = 'http://app.mopub.com/inventory/'
+
 @register.simple_tag
 def google_login_url(redirect=settings.LOGIN_REDIRECT_URL):
     return escape(users.create_login_url(redirect))

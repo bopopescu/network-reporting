@@ -147,6 +147,8 @@ class AddLoginInfoHandler(RequestHandler):
 
         postcopy = copy.deepcopy(self.request.POST)
         postcopy.update(initial)
+        # Can't have the same name as the model. Fixes unicode bug.
+        postcopy[ad_network + '-password2'] = postcopy[ad_network + '-password']
 
         form = LoginInfoForm(postcopy, prefix=ad_network)
 
@@ -156,7 +158,7 @@ class AddLoginInfoHandler(RequestHandler):
             manager.create_login_credentials_and_mappers(ad_network_name=
                     ad_network,
                     username=form.cleaned_data['username'],
-                    password=form.cleaned_data['password'],
+                    password=form.cleaned_data['password2'],
                     client_key=form.cleaned_data['client_key'],
                     send_email=wants_email)
 

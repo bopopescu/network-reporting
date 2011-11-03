@@ -21,9 +21,6 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     # Needed for admob
     client_key = db.StringProperty()
 
-    # Special white list for jumptap
-    adunit_publisher_ids = db.StringListProperty()
-
     email = db.BooleanProperty(default = False)
 
     def __init__(self, *args, **kwargs):

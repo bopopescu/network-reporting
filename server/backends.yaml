@@ -4,6 +4,6 @@ backends:
   options: public
   class: B4
 - name: frontend-0
-  instances: 10
+  instances: 20
   options: public
   class: B2

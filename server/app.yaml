@@ -84,3 +84,4 @@ handlers:
 
 - url: /.*
   script: main.py
+  secure: optional

@@ -108,8 +108,11 @@ class AddLoginInfoHandler(RequestHandler):
 
         if account_key:
             account = Account.get(account_key)
+            management_mode = True
         else:
             account = self.account
+            account_key = account.key()
+            management_mode = False
 
         forms = []
         for name in AD_NETWORK_NAMES:
@@ -126,6 +129,7 @@ class AddLoginInfoHandler(RequestHandler):
         return render_to_response(self.request,
                                   'ad_network_reports/add_login_credentials.html',
                                   {
+                                      'management_mode' : management_mode,
                                       'account_key' : account_key,
                                       'ad_network_names' : AD_NETWORK_NAMES,
                                       'forms' : forms,

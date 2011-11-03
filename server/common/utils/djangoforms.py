@@ -647,6 +647,7 @@ def property_clean(prop, value):
   """
   if value is not None:
     try:
+      logging.warning(str(prop))
       prop.validate(prop.make_value_from_form(value))
     except (db.BadValueError, ValueError), e:
       raise forms.ValidationError(unicode(e))

@@ -203,13 +203,10 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return None if the login credentials are correct otherwise return an
         error message.
         """
-        #from Crypto.Cipher import AES
-        #from Crypto.Util import randpool
-        import Crypto.Util.randpool as randpool
-        import Crypto.Cipher.AES as AES
+        from Crypto.Cipher import AES
+        from Crypto.Util import randpool
         iv = ''
         if password:
-            logging.warning(dir(AES))
             rp = randpool.RandomPool()
             iv = rp.get_bytes(16)
             aes_cfb = AES.new(PASSWORD_KEY, AES.MODE_CFB, iv)

@@ -10,3 +10,6 @@ class LoginInfoForm(djangoforms.ModelForm):
     class Meta:
         model = AdNetworkLoginCredentials
         fields = ('ad_network_name', 'username', 'client_key')
+        # Password is excluded because we never get an encrypted password from
+        # the front-end and it must be encrypted in the db.
+        exclude = ('account', 'password', 'iv')

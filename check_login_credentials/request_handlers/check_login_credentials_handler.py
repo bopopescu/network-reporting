@@ -2,14 +2,23 @@ import copy
 import json
 import logging
 import sys
-sys.path.append('/home/ubuntu/mopub_experimental/server')
 
 import tornado.web
 
-from account.query_managers import AccountQueryManager
+sys.path.append('/home/ubuntu/mopub/server')
 from ad_network_reports.ad_networks import AD_NETWORKS, AdNetwork
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AdNetworkReportQueryManager
+
+# For google.appengine.ext
+sys.path.append('/home/ubuntu/google_appengine')
+sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+from google.appengine.ext import db
 
 class AdNetworkLoginCredentials(object):
     pass
@@ -22,6 +31,9 @@ def setup_remote_api():
     #host = '38.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func,
             host)
+
+def auth_func():
+    return 'olp@mopub.com', 'N47935'
 
 class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
     def get(self, *args, **kwargs):
@@ -69,14 +81,13 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
             else:
                 setup_remote_api()
                 account_key = self.get_argument('account_key')
-                manager = AdNetworkReportQueryManager(AccountQueryManager.
-                        get_account_by_key(account_key))
+                manager = AdNetworkReportQueryManager(db.get(account_key))
                 wants_email = self.get_argument('email', False) and True
                 manager.create_login_credentials_and_mappers(ad_network_name=
                         login_credentials.ad_network_name,
-                        username=login_credentials.username
-                        password=login_credentials.password
-                        client_key=login_credentials.client_key
+                        username=login_credentials.username,
+                        password=login_credentials.password,
+                        client_key=login_credentials.client_key,
                         send_email=wants_email)
                 return
 

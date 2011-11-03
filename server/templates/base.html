@@ -13,7 +13,7 @@
   <meta name="author" content="">
   {% block extraMeta %}{% endblock %}
   <!-- TypeKit -->
-  <script type="text/javascript" src="http://use.typekit.com/qhz7iwb.js"></script>
+  <script type="text/javascript" src="https://use.typekit.com/qhz7iwb.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
   <link rel="shortcut icon" href="/favicon.ico">
@@ -132,8 +132,6 @@
             {% if user.is_authenticated %}
             <li><a href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
             {% endif %}
-            <!-- <li><a href="{% google_login_url %}">Google Log In</a></li>
-            <li><a href="{% url django.contrib.auth.views.login %}">Hybrid Log In</a></li> -->
           </ul>
         </nav>
       </div>

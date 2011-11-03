@@ -9,5 +9,8 @@ handler500 = 'common.ragendja.views.server_error'
 urlpatterns = auth_patterns + patterns('',
     (r'^_ah/warmup$', 'django.views.generic.simple.direct_to_template',
         {'template': '404.html'}),
+    # backend warmup
+    (r'^_ah/start$', 'django.views.generic.simple.direct_to_template',
+        {'template': '404.html'}),
     (r'^', include('website.urls')),
 ) + urlpatterns

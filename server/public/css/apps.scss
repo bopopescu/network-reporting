@@ -251,6 +251,10 @@
   font-weight: 600;
 }
 
+th.numeric, td.numeric {
+  text-align: right;
+}
+
 .appData-main .dataTable-name {
   padding-top: 0;
   font-size: 14px;

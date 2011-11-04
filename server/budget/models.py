@@ -310,7 +310,11 @@ class Budget(db.Model):
     def total_slices(self):
         """ Number of slices this budget spans """
         if self.end_slice:
-            return self.end_slice - self.start_slice + 1
+            slices = self.end_slice - self.start_slice + 1
+            if slices == 0:
+                logging.warning("Start: %s End: %s" % (self.start_datetime, self.end_datetime))
+                slices = 1
+            return slices
         else:
             return None
 

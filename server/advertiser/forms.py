@@ -24,7 +24,7 @@ from google.appengine.api import images, files
 from publisher.models import Site as AdUnit
 
 from budget.query_managers import BudgetQueryManager
-from budget.tzinfo import Pacific, utc 
+from budget.tzinfo import Pacific, utc
 import logging
 import re
 import urlparse
@@ -47,7 +47,7 @@ class CampaignForm(mpforms.MPModelForm):
     budget_strategy = mpfields.MPChoiceField(choices=[('evenly','Spread evenly'),('allatonce','All at once')],widget=mpwidgets.MPRadioWidget)
     budget_type = mpfields.MPChoiceField(choices=[('daily','Daily'),('full_campaign','Full Campaign')],widget=mpwidgets.MPSelectWidget)
     price_floor = mpfields.MPTextField(required=False, initial="0.25")
-    start_time = mpfields.MPTextField(required=True)
+    start_time = mpfields.MPTextField(required=False)
     end_time = mpfields.MPTextField(required=False)
 
     #priority is now based off of campaign_type, not actually priority
@@ -59,7 +59,8 @@ class CampaignForm(mpforms.MPModelForm):
         if instance and instance.campaign_type:
 
             #Take datetimes from UTC to PST/PDT
-            initial.update(start_datetime = instance.start_datetime.replace(tzinfo=utc).astimezone(Pacific))
+            if instance.start_datetime:
+                initial.update(start_datetime = instance.start_datetime.replace(tzinfo=utc).astimezone(Pacific))
             if instance.end_datetime:
                 initial.update(end_datetime = instance.end_datetime.replace(tzinfo=utc).astimezone(Pacific))
             kwargs.update(initial=initial)
@@ -112,8 +113,13 @@ class CampaignForm(mpforms.MPModelForm):
             fmt = '%I:%M %p'
 
             # Iniit the times
-            start_datetime_time = datetime.strptime(start_time, fmt)
-            start_datetime = datetime(start_date.year, start_date.month, start_date.day, start_datetime_time.hour, start_datetime_time.minute, tzinfo=Pacific)
+
+            if start_time and start_date:
+                start_datetime_time = datetime.strptime(start_time, fmt)
+                start_datetime = datetime(start_date.year, start_date.month, start_date.day, start_datetime_time.hour, start_datetime_time.minute, tzinfo=Pacific)
+            else:
+                start_datetime_time = datetime.today()
+                start_datetime = datetime.today()
 
             if end_date and end_time:
                 end_datetime_time = datetime.strptime(end_time, fmt)

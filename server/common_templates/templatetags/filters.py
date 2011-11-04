@@ -6,6 +6,7 @@ import base64, binascii
 from django.utils import simplejson as json
 import logging
 import string
+from budget.tzinfo import Pacific, utc
 
 from country_codes import COUNTRY_CODE_DICT
 
@@ -107,6 +108,13 @@ def format_date(value):
 def format_date_compact(value):
     if value:
         return "%d/%d" % (value.month, value.day)
+    else:
+        return ""
+
+@register.filter
+def format_date_time(value):
+    if value:
+        return value.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d/%Y %I:%M %p")
     else:
         return ""
 

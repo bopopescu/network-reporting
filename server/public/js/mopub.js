@@ -27,6 +27,36 @@ if (typeof window.console == "undefined") {
 
     $(document).ready(function() {
 
+        /*
+         * ## Mixpanel Event Tracking
+         */
+
+        if (typeof mpq != 'undefined') {
+            // Date options in dashboard
+            $("#dashboard-dateOptions-option-7").click(function(){
+                mpq.event('7 Day Date-option clicked');
+            });
+            $("#dashboard-dateOptions-option-14").click(function(){
+                mpq.event('14 Day Date-option clicked');
+            });
+            $("#dashboard-dateOptions-option-30").click(function(){
+                mpq.event('30 Day Date-option clicked');
+            });
+            $("#dashboard-dateOptions-option-custom").click(function(){
+                mpq.event('Custom Date-option clicked');
+            });
+            // Today/Yesterday/All options in rollup
+            $("#stats-breakdown-dateOptions-option-0").click(function(){
+                mpq.event('"Today" clicked in Stats Breakdown');
+            });
+            $("#stats-breakdown-dateOptions-option-1").click(function(){
+                mpq.event('"Yesterday" clicked in Stats Breakdown');
+            });
+            $("#stats-breakdown-dateOptions-option-2").click(function(){
+                mpq.event('"All" clicked in Stats Breakdown');
+            });
+        }
+
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();

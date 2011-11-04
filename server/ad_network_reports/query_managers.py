@@ -209,10 +209,14 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         username_iv = ''
         if password:
             rp = randpool.RandomPool()
-            password_iv = rp.get_bytes(16)
+
             username_iv = rp.get_bytes(16)
-            aes_cfb = AES.new(KEY, AES.MODE_CFB, iv)
-            password = aes_cfb.encrypt(password)
+            username_aes_cfb = AES.new(KEY, AES.MODE_CFB, username_iv)
+            username = username_aes_cfb.encrypt(username)
+
+            password_iv = rp.get_bytes(16)
+            password_aes_cfb = AES.new(KEY, AES.MODE_CFB, password_iv)
+            password = password_aes_cfb.encrypt(password)
 
         login_credentials = AdNetworkLoginCredentials(account=self.account,
                                         ad_network_name=ad_network_name,

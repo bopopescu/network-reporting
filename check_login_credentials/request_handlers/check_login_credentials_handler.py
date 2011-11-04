@@ -53,7 +53,8 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
 
         logging.warning(args)
         # Can't have the same name as the model. Fixes unicode bug.
-        args[ad_network + '-password2'] = args[ad_network + '-password']
+        args[ad_network + '-password_str'] = args[ad_network + '-password']
+        args[ad_network + '-username_str'] = args[ad_network + '-username']
         form = LoginInfoForm(args, prefix=ad_network)
 
         if form.is_valid():

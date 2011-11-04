@@ -12,7 +12,7 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     ad_network_name = db.StringProperty(required=True)
 
     # Needed for all networks but mobfox
-    username = db.StringProperty()
+    username = db.ByteStringProperty()
 
     # Needed to store the username securely
     username_iv = db.ByteStringProperty()

@@ -208,11 +208,11 @@
               {% endif %}
                 {{ adgroup|campaign_status }} -
                 {% if campaign.start_datetime and campaign.end_datetime %}
-                From {{campaign.start_datetime|format_date_compact}}-{{campaign.end_datetime|format_date_compact}}.
+                From {{campaign.start_datetime|format_date_time}} to {{campaign.end_datetime|format_date_time}}.
                 {% endif %} {% if campaign.start_datetime and not campaign.end_datetime %}
-                Starts {{campaign.start_datetime|format_date_compact}}.
+                Starts {{campaign.start_datetime|format_date_time}}.
                 {% endif %} {% if not campaign.start_datetime and campaign.end_datetime %}
-                Ends {{campaign.start_datetime|format_date_compact}}.
+                Ends {{campaign.start_datetime|format_date_time}}.
                 {% endif %} {% if not campaign.start_datetime and not campaign.end_datetime %}
                 All dates.
                 {% endif %}&nbsp;

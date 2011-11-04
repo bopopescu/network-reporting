@@ -138,41 +138,6 @@ class AddLoginInfoHandler(RequestHandler):
                                       'error' : "",
                                   })
 
-    def post(self, account_key=None):
-        """Create AdNetworkLoginCredentials and AdNetworkAppMappers for all apps
-        that have pub ids for this network and account.
-
-        Return a redirect to the ad nework report index.
-        """
-        initial = {}
-        for network in AD_NETWORK_NAMES:
-            initial[network + '-ad_network_name'] = network
-
-        ad_network = self.request.POST['ad_network_name']
-        wants_email = self.request.POST.get('email', False) and True
-
-        postcopy = copy.deepcopy(self.request.POST)
-        postcopy.update(initial)
-        # Can't have the same name as the model. Fixes unicode bug.
-        postcopy[ad_network + '-password2'] = postcopy[ad_network + '-password']
-
-        form = LoginInfoForm(postcopy, prefix=ad_network)
-
-        if form.is_valid():
-            logging.warning(form.cleaned_data)
-            manager = create_manager(account_key, self.account)
-            manager.create_login_credentials_and_mappers(ad_network_name=
-                    ad_network,
-                    username=form.cleaned_data['username'],
-                    password=form.cleaned_data['password2'],
-                    client_key=form.cleaned_data['client_key'],
-                    send_email=wants_email)
-
-        logging.warn(form.errors)
-
-        # Send an OK, 200, response
-        return TextResponse("")
-
 @login_required
 def add_login_credentials(request, *args, **kwargs):
     return AddLoginInfoHandler()(request, *args, **kwargs)

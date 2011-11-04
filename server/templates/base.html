@@ -25,9 +25,6 @@
   <link rel="stylesheet" href="/css/style.css?v=47">
   {% block extraCSS %}{% endblock %}
 
-  {# modernizr #}
-  <script src="/js/mylibs/modernizr-1.6.min.js"></script>
-
   {# Google load for jquery and jqueryui #}
   <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
   <script type="text/javascript">
@@ -36,20 +33,9 @@
       google.load("jqueryui", "1.8.7");
   </script>
 
-  {#jQuery and jQuery UI Plugins. These are aggregated from all the *.min.js files in /public/js/mylibs/*#}
-  <script src="/js/mylibs/jquery.mopub.js"></script>
-
-  {#jQuery UI SelectMenu Plugins TODO: Where should this go? #}
-  <script src="/js/mylibs/jquery-ui-1.8.7.custom/development-bundle/ui/jquery.ui.selectmenu.js"></script>
-
-
-  <script src="/js/mylibs/jquery.cookie.js"></script>
-
-  {# Highcharts #}
-  <script src="/js/highcharts.js"></script>
-
-  {# Tablesorter #}
-  <script src="/js/jquery.tablesorter.min.js"></script>
+  <script src="/js/mylibs/jquery.ui.selectmenu.js"></script>
+  {# Plugins  aggregated from all the *.js files in /public/js/mylibs/*#}
+  <script src="/js/mopub-plugins.js?v=22"></script>
 
   {# MoPub #}
   <script src="/js/mopub.js?v=37"></script>
@@ -90,6 +76,7 @@
 </head>
 <input type=hidden value="{{user.is_staff}}" id='is_admin_input'></input>
 {% endspaceless %}
+
 {% block body_content %}
   <body id="mopub-dashboard">
     <div id="container">

@@ -25,20 +25,11 @@ if (typeof window.console == "undefined") {
  */
 (function($){
 
+    var mopub = window.mopub || {};
+    var Chart = window.Chart || {};
+    var Stats = window.Stats || {};
+
     $(document).ready(function() {
-
-        // Figure out which part of the site we're on, and select the appropriate
-        // top-level tab
-        if (window.location.pathname.search('/inventory/') >= 0) {
-            $("#nav1 a[href='/inventory/']").parent().addClass('active');
-        } else if (window.location.pathname.search('/campaigns/marketplace/') >= 0) {
-            $("#nav1 a[href='/campaigns/marketplace/']").parent().addClass('active');
-        } else if (window.location.pathname.search('/campaigns/networks/') >= 0) {
-            $("#nav1 a[href='/campaigns/networks/']").parent().addClass('active');
-        } else if (window.location.pathname.search('/campaigns/') >= 0) {
-            $("#nav1 a[href='/campaigns/']").parent().addClass('active');
-        }
-
 
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
@@ -542,7 +533,7 @@ if (typeof window.console == "undefined") {
         });
     };
 
-
+    mopub.Utils = mopub.Utils || {};
 
     /*
      * ## Mopub Utility
@@ -576,15 +567,7 @@ if (typeof window.console == "undefined") {
         return keys;
     };
 
-})(this.jQuery);
-
-
-/*
- * # Ajax Chunked Fetch
- */
-(function(Utils, $) {
-
-    var AjaxChunkedFetch = Utils.AjaxChunkedFetch = function(args) {
+    var AjaxChunkedFetch = mopub.Utils.AjaxChunkedFetch = function(args) {
         this.items = {};
         this.chunkComplete = function(data, chunk, fetchObj) {};
         this.chunkFailure = function(chunk, fetchObj) {};
@@ -753,12 +736,7 @@ if (typeof window.console == "undefined") {
         });
     };
 
-})(mopub.Utils = mopub.Utils || {}, this.jQuery);
 
-/*
- * # Mopub Stats
- */
-(function(Stats, $) {
     /*
      * ## Stat sorting
      */
@@ -867,12 +845,6 @@ if (typeof window.console == "undefined") {
         return ctr;
     };
 
-})(mopub.Stats = mopub.Stats || {}, this.jQuery);
-
-/*
- * # Mopub Charting
- */
-(function(Chart, $) {
     /*
      * ## Dashboard Stats Chart
      */
@@ -1055,6 +1027,11 @@ if (typeof window.console == "undefined") {
     };
 
 
+    window.Chart = Chart;
+    window.Stats = Stats;
+    window.mopub = mopub;
+    window.mopub.Stats = Stats;
+    window.mopub.Chart = Chart;
+    window.Mopub = mopub;
 
-
-})(mopub.Chart = mopub.Chart || {}, this.jQuery);
+})(this.jQuery);

@@ -11,28 +11,28 @@
 {% endblock tableTitle %}
 
 {% block tableHead %}
-<th class="dataTable-name"> App </th>
-<th class="dataTable-name"> Ad Network </th>
-<th class="dataTable-data numeric"> Revenue </th>
-<th class="dataTable-data numeric"> Attempts </th>
-<th class="dataTable-data numeric"> Impressions </th>
-<th class="dataTable-data numeric"> Fill Rate</th>
-<th class="dataTable-data numeric"> Clicks </th>
-<th class="dataTable-data numeric"> CTR </th>
+  <th class="dataTable-name"> App </th>
+  <th class="dataTable-name"> Ad Network </th>
+  <th class="dataTable-data numeric"> Revenue </th>
+  <th class="dataTable-data numeric"> Attempts </th>
+  <th class="dataTable-data numeric"> Impressions </th>
+  <th class="dataTable-data numeric"> Fill Rate</th>
+  <th class="dataTable-data numeric"> Clicks </th>
+  <th class="dataTable-data numeric"> CTR </th>
 {% endblock tableHead %}
 
 {% block tableData %}
 {% for key, mapper, stats in aggregate_stats_list %}
-	<tr>
-		<td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
-		<td class="dataTable-name">{{mapper.ad_network_name}}</td>
-		<td class="dataTable-data numeric">{{stats.revenue}}</td>
-		<td class="dataTable-data numeric">{{stats.attempts}}</td>
-		<td class="dataTable-data numeric">{{stats.impressions}}</td>
-		<td class="dataTable-data numeric">{{stats.fill_rate}}</td>
-		<td class="dataTable-data numeric">{{stats.clicks}}</td>
-		<td class="dataTable-data numeric">{{stats.ctr}}</td>
-	</tr>
+    <tr>
+        <td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
+        <td class="dataTable-name">{{mapper.ad_network_name}}</td>
+        <td class="dataTable-data numeric">{{stats.revenue}}</td>
+        <td class="dataTable-data numeric">{{stats.attempts}}</td>
+        <td class="dataTable-data numeric">{{stats.impressions}}</td>
+        <td class="dataTable-data numeric">{{stats.fill_rate}}</td>
+        <td class="dataTable-data numeric">{{stats.clicks}}</td>
+        <td class="dataTable-data numeric">{{stats.ctr}}</td>
+    </tr>
 {% endfor %}
 {% endblock tableData %}
 

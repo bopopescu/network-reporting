@@ -79,6 +79,9 @@ def cache_page_until_post(time=5*60):
 
             page_cache_key = _build_page_cache_key(request)
 
+            if not page_cache_key:
+                return view(request, *args, **kw)
+
             if request.method in ["POST", "PUT"]:
                 # If we are POSTing, clear the cache
                 session_cache_key = _build_session_cache_key(request)
@@ -133,7 +136,10 @@ def _build_page_cache_key(request):
     """ We key our page_cache off of the session id and the url """
     # TODO: Should we hash this perhaps? What happens if the qs is very long
     path = request.path
-    session_id = request.COOKIES['sessionid']
+    try:
+        session_id = request.COOKIES['sessionid']
+    except KeyError:
+        return None
     query_string = request.META['QUERY_STRING']
     return "page_cache:%s:%s:%s" % (session_id, path, query_string)
 

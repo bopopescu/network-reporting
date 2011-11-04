@@ -53,7 +53,7 @@ def ad_network_reports_mptest():
     for n in test_network_app_mappers:
         n = manager.get_ad_network_app_mapper(ad_network_app_mapper_key =
                 n.key())
-        stats = manager.get_ad_network_app_stats(n)
+        stats = manager.get_ad_network_app_stats(n, [yesterday])
         logging.warning( "network name:%s application name: %s" %
                 (n.ad_network_name, n.application.name))
         logging.warning(str(stats[0].__dict__))

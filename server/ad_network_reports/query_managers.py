@@ -2,9 +2,9 @@ import logging
 import sys
 import urllib
 
-EC2 = False
+from django.conf import settings
 
-if EC2:
+if not settings.DEBUG:
     sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
     sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')

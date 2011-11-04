@@ -1,10 +1,10 @@
 import logging
+import os
 import sys
 import urllib
 
-from django.conf import settings
-
-if not settings.DEBUG:
+# Are we on EC2 (Note can't use django.settings_module since it's not defined)
+if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
     sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')

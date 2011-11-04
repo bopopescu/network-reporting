@@ -3,15 +3,8 @@ import os
 import sys
 import traceback
 
-EC2 = True
-
-from django.conf import settings
-
-if settings.DEBUG:
-    # Assumes it is being called from ./run_tests.sh from server dir
-    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
-    #sys.path.append(os.environ['PWD'])
-else:
+# Are we on EC2 (Note can't use django.settings_module since it's not defined)
+if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
     sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
@@ -20,6 +13,10 @@ else:
     sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
     sys.path.append('/home/ubuntu/google_appengine/lib/webob')
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+else:
+    # Assumes it is being called from ./run_tests.sh from server dir
+    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+    #sys.path.append(os.environ['PWD'])
 
 import common.utils.test.setup
 
@@ -84,8 +81,8 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                       to='report-monitoring@mopub.com',
-                       cc='tiago@mopub.com',
+                       #to='report-monitoring@mopub.com',
+                       to='tiago@mopub.com',
                        subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
                        body=("Learn more at http://mopub-experimental.appspot."

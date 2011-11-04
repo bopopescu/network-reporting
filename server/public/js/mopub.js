@@ -31,7 +31,7 @@ if (typeof window.console == "undefined") {
          * ## Mixpanel Event Tracking
          */
 
-        if (typeof mpq.track != 'undefined') {
+        if (typeof mpq.push != 'undefined') {
             // Date options in dashboard
             try {
                 $("#dashboard-dateOptions-option-7").click(function(){

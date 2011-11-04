@@ -118,8 +118,8 @@ class CampaignForm(mpforms.MPModelForm):
                 start_datetime_time = datetime.strptime(start_time, fmt)
                 start_datetime = datetime(start_date.year, start_date.month, start_date.day, start_datetime_time.hour, start_datetime_time.minute, tzinfo=Pacific)
             else:
-                start_datetime_time = None
-                start_datetime = None
+                start_datetime_time = datetime.today()
+                start_datetime = datetime.today()
 
             if end_date and end_time:
                 end_datetime_time = datetime.strptime(end_time, fmt)

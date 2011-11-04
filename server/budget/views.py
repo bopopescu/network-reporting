@@ -85,7 +85,10 @@ def advance_worker(request):
 
     budgets = Budget.get(keys)
     for budg in budgets:
-        budget_service.timeslice_advance(budg, budg.testing)
+        try:
+            budget_service.timeslice_advance(budg, budg.testing)
+        except:
+            logging.warning("Error advancing budget: %s" % budg)
 
     return HttpResponse('Worker Succeeded')
 

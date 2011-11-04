@@ -5,7 +5,13 @@ import traceback
 
 EC2 = True
 
-if EC2:
+from django.conf import settings
+
+if settings.DEBUG:
+    # Assumes it is being called from ./run_tests.sh from server dir
+    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+    #sys.path.append(os.environ['PWD'])
+else:
     sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
     sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
@@ -14,10 +20,6 @@ if EC2:
     sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
     sys.path.append('/home/ubuntu/google_appengine/lib/webob')
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
-else:
-    # Assumes it is being called from ./run_tests.sh from server dir
-    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
-    #sys.path.append(os.environ['PWD'])
 
 import common.utils.test.setup
 

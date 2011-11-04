@@ -14,18 +14,101 @@
 <h3 class="dataTable-title">Management Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
 {% endblock tableTitle %}
 
-{% block tableHead %}
-{% for key, value in management_stats_list.0 %}
-	<th class="dataTable-name"> {{key}} </th>
-{% endfor %}
-{% endblock tableHead %}
+{% block content %}
 
-{% block tableData %}
-{% for management_stats in management_stats_list %}
-	<tr>
-	  {% for key, value in management_stats %}
-		<td class="dataTable-name"> {{value}} </td>
-    {% endfor %}
-	</tr>
-{% endfor %}
-{% endblock tableData %}
+<table class="zebra-striped simpletable campaignData-main">
+	<thead>
+		<th class="dataTable-name"> admob found </th>
+		<th class="dataTable-name"> admob updated </th>
+		<th class="dataTable-name"> admob mapped </th>
+		<th class="dataTable-name"> admob login_failed </th>
+	</thead>
+	<tbody>
+		{% for management_stats in management_stats_list %}
+	  <tr>
+			<td class="dataTable-name"> {{management_stats.admob_found}} </td>
+			<td class="dataTable-name"> {{management_stats.admob_updated}} </td>
+			<td class="dataTable-name"> {{management_stats.admob_mapped}} </td>
+			<td class="dataTable-name"> {{management_stats.admob_login_failed}} </td>
+	  </tr>
+		{% endfor %}
+	</tbody>
+</table>
+
+<table class="zebra-striped simpletable campaignData-main">
+	<thead>
+		<th class="dataTable-name"> jumptap found </th>
+		<th class="dataTable-name"> jumptap updated </th>
+		<th class="dataTable-name"> jumptap mapped </th>
+		<th class="dataTable-name"> jumptap login_failed </th>
+	</thead>
+	<tbody>
+		{% for management_stats in management_stats_list %}
+	  <tr>
+			<td class="dataTable-name"> {{management_stats.jumptap_found}} </td>
+			<td class="dataTable-name"> {{management_stats.jumptap_updated}} </td>
+			<td class="dataTable-name"> {{management_stats.jumptap_mapped}} </td>
+			<td class="dataTable-name"> {{management_stats.jumptap_login_failed}} </td>
+	  </tr>
+		{% endfor %}
+	</tbody>
+</table>
+
+<table class="zebra-striped simpletable campaignData-main">
+	<thead>
+		<th class="dataTable-name"> iad found </th>
+		<th class="dataTable-name"> iad updated </th>
+		<th class="dataTable-name"> iad mapped </th>
+		<th class="dataTable-name"> iad login_failed </th>
+	</thead>
+	<tbody>
+		{% for management_stats in management_stats_list %}
+	  <tr>
+			<td class="dataTable-name"> {{management_stats.iad_found}} </td>
+			<td class="dataTable-name"> {{management_stats.iad_updated}} </td>
+			<td class="dataTable-name"> {{management_stats.iad_mapped}} </td>
+			<td class="dataTable-name"> {{management_stats.iad_login_failed}} </td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+
+<table class="zebra-striped simpletable campaignData-main">
+	<thead>
+		<th class="dataTable-name"> inmobi found </th>
+		<th class="dataTable-name"> inmobi updated </th>
+		<th class="dataTable-name"> inmobi mapped </th>
+		<th class="dataTable-name"> inmobi login_failed </th>
+	</thead>
+	<tbody>
+		{% for management_stats in management_stats_list %}
+	  <tr>
+			<td class="dataTable-name"> {{management_stats.inmobi_found}} </td>
+			<td class="dataTable-name"> {{management_stats.inmobi_updated}} </td>
+			<td class="dataTable-name"> {{management_stats.inmobi_mapped}} </td>
+			<td class="dataTable-name"> {{management_stats.inmobi_login_failed}} </td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+
+<table class="zebra-striped simpletable campaignData-main">
+	<thead>
+		<th class="dataTable-name"> mobfox found </th>
+		<th class="dataTable-name"> mobfox updated </th>
+		<th class="dataTable-name"> mobfox mapped </th>
+		<th class="dataTable-name"> mobfox login_failed </th>
+	</thead>
+	<tbody>
+		{% for management_stats in management_stats_list %}
+	  <tr>
+			<td class="dataTable-name"> {{management_stats.mobfox_found}} </td>
+			<td class="dataTable-name"> {{management_stats.mobfox_updated}} </td>
+			<td class="dataTable-name"> {{management_stats.mobfox_mapped}} </td>
+			<td class="dataTable-name"> {{management_stats.mobfox_login_failed}} </td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+
+{% endblock content %}

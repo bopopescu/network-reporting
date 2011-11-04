@@ -2,9 +2,9 @@ import logging
 import sys
 import urllib
 
-EC2 = True
+from django.conf import settings
 
-if EC2:
+if not settings.DEBUG:
     sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
     sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
@@ -93,11 +93,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         Return the aggregate stats.
         """
-        query = AdNetworkScrapeStats.all()
-        query.filter('ad_network_app_mapper =', ad_network_app_mapper)
-        query.filter('date IN', days)
-
-        return self.roll_up_stats(query)
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
+                ad_network_app_mapper.key(), days)
+        return self.roll_up_stats(stats_list)
 
     def roll_up_stats(self, stats_iterable):
         """Roll up (aggregate) stats in the stats iterable.
@@ -142,16 +140,15 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         return aggregate_stats
 
-    def get_ad_network_app_stats(self, ad_network_app_mapper):
-        """Filter AdNetworkStats for a given ad_network_app_mapper. Sort
+    def get_ad_network_app_stats(self, ad_network_app_mapper_key, days):
+        """Filter AdNetworkScrapeStats for a given ad_network_app_mapper. Sort
         chronologically by day, newest first (decending order.)
 
-        Return the query (a generator.)
+        Return a list of stats sorted by date.
         """
-        query = AdNetworkScrapeStats.all()
-        query.filter('ad_network_app_mapper =', ad_network_app_mapper)
-        query.order('-date')
-        return query
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
+                ad_network_app_mapper_key, days)
+        return sorted(stats_list, key=lambda stats: stats.date)
 
     def get_ad_network_app_mapper(self, ad_network_app_mapper_key=None,
             publisher_id=None, ad_network_name=None):

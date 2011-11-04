@@ -75,16 +75,31 @@ class ViewAdNetworkReportHandler(RequestHandler):
 
         Return a webpage with the list of stats in a table.
         """
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
+        else:
+            days = StatsModel.lastdays(self.date_range, 1)
+
         manager = AdNetworkReportQueryManager()
         ad_network_app_mapper = manager.get_ad_network_app_mapper(
                 ad_network_app_mapper_key=ad_network_app_mapper_key)
-        stats_list = manager.get_ad_network_app_stats(ad_network_app_mapper)
-        daily_stats = [stats.__dict__ for stats in stats_list]
+        stats_list = manager.get_ad_network_app_stats(ad_network_app_mapper_key,
+                days)
+        daily_stats = []
+        for stats in stats_list:
+            stats_dict = stats.__dict__['_entity']
+            logging.warning("stats dict %s" % stats_dict)
+            del(stats_dict['ad_network_app_mapper'])
+            del(stats_dict['date'])
+            daily_stats.append(stats_dict)
         aggregates = manager.roll_up_stats(stats_list)
         return render_to_response(self.request,
                                   'ad_network_reports/'
                                   'ad_network_base.html',
                                   {
+                                      'start_date' : days[0],
+                                      'end_date' : days[-1],
+                                      'date_range' : self.date_range,
                                       'ad_network_name' :
                                       ad_network_app_mapper.ad_network_name,
                                       'app_name' : ad_network_app_mapper.
@@ -92,7 +107,7 @@ class ViewAdNetworkReportHandler(RequestHandler):
                                       'aggregates' : aggregates,
                                       'daily_stats' : simplejson.dumps(
                                           daily_stats),
-                                       'stats' : stats_list
+                                       'stats_list' : stats_list
                                   })
 
 @login_required
@@ -156,12 +171,8 @@ class AdNetworkReportManageHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range, 1)
 
-        management_stats_list = [dict(management_stats).items() for
-                management_stats in get_management_stats(days)] or [[("NO" \
-                        " DATA", 0)]]
+        management_stats_list = get_management_stats(days)
         logging.warning(management_stats_list)
-        for key, value in management_stats_list[0]:
-            logging.warning(key)
 
         return render_to_response(self.request,
                                   'ad_network_reports/manage_ad_network_' \

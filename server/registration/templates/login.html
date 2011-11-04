@@ -52,4 +52,9 @@
     <a class="google-login-button" href="{% google_login_url %}">&nbsp;</a>
   </div>
 </div>
+{# <script type="text/javascript"> #}
+{# // HACK bc we're having proxy weirdness #}
+{# var button = $(".google-login-button"); #}
+{# button.attr('href', button.attr('href').replace("frontend-0.mopub-inc.appspot.com",document.domain)); #}
+{# </script> #}
 {% endblock content %}

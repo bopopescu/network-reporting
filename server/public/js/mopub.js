@@ -27,6 +27,19 @@ if (typeof window.console == "undefined") {
 
     $(document).ready(function() {
 
+        // Figure out which part of the site we're on, and select the appropriate
+        // top-level tab
+        if (window.location.pathname.search('/inventory/') >= 0) {
+            $("#nav1 a[href='/inventory/']").parent().addClass('active');
+        } else if (window.location.pathname.search('/campaigns/marketplace/') >= 0) {
+            $("#nav1 a[href='/campaigns/marketplace/']").parent().addClass('active');
+        } else if (window.location.pathname.search('/campaigns/networks/') >= 0) {
+            $("#nav1 a[href='/campaigns/networks/']").parent().addClass('active');
+        } else if (window.location.pathname.search('/campaigns/') >= 0) {
+            $("#nav1 a[href='/campaigns/']").parent().addClass('active');
+        }
+
+
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
@@ -329,68 +342,6 @@ if (typeof window.console == "undefined") {
         }
     };
 
-
-    /*
-     * ## Template rendering
-     *
-     * This function lets you use data to fill in predefined template strings.
-     *
-     * Usage:
-     * `str` - A template string. Templates can include javascript logic enclosed in <% %>
-     *         brackets, similar to rails' erb templates.
-     *
-     * `data` - A javascript object which contains data to fill the template with.
-     *
-     * e.g.
-     *
-     * `var template = "<%= user %> is <%= desc %>.";`
-     *
-     * `var data1 = {user: 'John', desc: 'cool'};`
-     *
-     * `var data2 = {user: 'Nafis', desc: 'lame'};`
-     *
-     * `$.renderTemplate(template, data1); // "John is cool"`
-     *
-     * For more complex examples, see [this](http://ejohn.org/blog/javascript-micro-templating/)
-     */
-    var template_cache = {};
-    $.renderTemplate = function tmpl (str, data){
-        // Figure out if we're getting a template, or if we need to
-        // load the template - and be sure to cache the result.
-        var fn = !/\W/.test(str) ?
-            template_cache[str] = template_cache[str] || tmpl(document.getElementById(str).innerHTML) :
-
-        // Generate a reusable function that will serve as a template
-        // generator (and which will be cached).
-        new Function("obj",
-                     "var p=[],print=function(){p.push.apply(p,arguments);};" +
-
-                     // Introduce the data as local variables using with(){}
-                     "with(obj){p.push('" +
-
-                     // Convert the template into pure JavaScript
-                     str
-                     .replace(/[\r\t\n]/g, " ")
-                     .split("<%").join("\t")
-                     .replace(/((^|%>)[^\t]*)'/g, "$1\r")
-                     .replace(/\t=(.*?)%>/g, "',$1,'")
-                     .split("\t").join("');")
-                     .split("%>").join("p.push('")
-                     .split("\r").join("\\'")
-                     + "');}return p.join('');");
-
-        // Provide some basic currying to the user
-        return data ? fn( data ) : fn;
-    };
-
-    /*
-     * Alternate binding for the renderTemplate function
-     */
-    $.fn.renderTemplate = function (str, data) {
-        return $(this).html($.renderTemplate(str, data));
-    };
-
-
     /*
      * ## Dropdown Menus
      *
@@ -598,12 +549,12 @@ if (typeof window.console == "undefined") {
      */
     mopub.Utils.formatNumberWithCommas = function(string) {
         string += '';
-        x = string.split('.');
-        x1 = x[0];
-        x2 = x.length > 1 ? '.' + x[1] : '';
+        var x = string.split('.');
+        var x1 = x[0];
+        var x2 = x.length > 1 ? '.' + x[1] : '';
         var rgx = /(\d+)(\d{3})/;
         while (rgx.test(x1)) {
-            x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            var x1 = x1.replace(rgx, '$1' + ',' + '$2');
         }
         return x1 + x2;
     };
@@ -793,7 +744,7 @@ if (typeof window.console == "undefined") {
                     self.fetchObject.markAsFailed();
                 } else {
                     // Schedule retry and extend the backoff delay.
-                    setTimeout(function() { self.execute() }, self.backoffDelay);
+                    setTimeout(function() { self.execute(); }, self.backoffDelay);
                     self.backoffDelay *= AjaxChunkedFetch.BACKOFF_MULTIPLIER;
                 }
             },

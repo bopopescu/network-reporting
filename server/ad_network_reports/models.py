@@ -83,9 +83,15 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
     @classmethod
-    def get_by_app_mapper_and_date(self, app_mapper, date):
+    def get_by_app_mapper_and_day(self, app_mapper, day):
         return self.get_by_key_name('k:%s:%s' % (app_mapper.key(),
-            date.strftime('%Y-%m-%d')))
+            day.strftime('%Y-%m-%d')))
+
+    @classmethod
+    def get_by_app_mapper_and_days(self, app_mapper_key, days):
+        return [stats for stats in self.get_by_key_name(['k:%s:%s' % (
+            app_mapper_key, day.strftime('%Y-%m-%d')) for day in days]) if stats
+            != None]
 
 class AdNetworkManagementStats(db.Model): #(date)
     date = db.DateProperty(required=True)
@@ -133,5 +139,5 @@ class AdNetworkManagementStats(db.Model): #(date)
 
     @classmethod
     def get_by_days(self, days):
-        return self.get_by_key_name(['k:%s' % day.strftime('%Y-%m-%d') for day
-            in days])
+        return [stats for stats in self.get_by_key_name(['k:%s' % day.strftime(
+            '%Y-%m-%d') for day in days]) if stats != None]

@@ -9,29 +9,10 @@
   <li><a href="{% url publisher_index %}">Dashboard</a></li>
   <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
   <li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
-  <li><a href="{% url reports_index %}">Reports</a></li>
+  <li><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
 
 {% block messageCenter %} {% endblock messageCenter %}
-{% block dateButtons %}
-
-  <div id="titlebar-center">
-    <span class="buttonset" id="dashboard-dateOptions">
-      <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
-      <label for="dashboard-dateOptions-option-7">7 days</label>
-      <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
-      <label for="dashboard-dateOptions-option-14">14 days</label>
-      <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
-        <label for="dashboard-dateOptions-option-30">30 days</label>
-        <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
-        <label for="dashboard-dateOptions-option-custom">Custom ...</label>
-      </span>
-      <div id="dashboard-dateOptions-custom-modal">
-        <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
-        <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
-      </div>
-    </div>
-{% endblock dateButtons %}
 
 {% block content %}
 
@@ -52,73 +33,30 @@
     The MoPub Marketplace is now active. Visit the settings tab if you'd like to change how the Marketplace works.
   </div>
 
-
-  {% comment %}
-    <div class="rollup fig3">
-      <div class="data-figure">
-        <div class="figure">
-          {{ mpx_stats.impressions|withsep }}
-        </div>
-        <div class="label">
-          Impressions
-        </div>
-      </div>
-
-      <div class="data-figure">
-        <div class="figure">
-          {{ mpx_stats.ecpm }}
-        </div>
-        <div class="label">
-          Average eCPM
-        </div>
-      </div>
-      <div class="data-figure">
-        <div class="figure">
-          {{ mpx_stats.clicks|withsep }}
-        </div>
-        <div class="label">
-          Clicks
-        </div>
-      </div>
-
-      <div class="data-figure">
-        <div class="figure">
-          {{ mpx_stats.revenue|withsep }}
-        </div>
-        <div class="label">
-          Revenue
-        </div>
-      </div>
-    </div>
-    {% endcomment %}
-
-
-    <div class="campaignData-rollup">
-      <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-        <thead>
-          <tr style="border:none;">
-            <th width=33%>Revenue</th>
-            <th width=33%>Impressions</th>
-            <th width=34%>eCPM</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="border:none;">
-            {% if totals %}
+  <div class="campaignData-rollup">
+    <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+      <thead>
+        <tr style="border:none;">
+          <th width=33%>Revenue</th>
+          <th width=33%>Impressions</th>
+          <th width=34%>eCPM</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border:none;">
+          {% if totals %}
             <td> {{ totals.revenue|default_if_none:"$0"|withsep }} </td>
-              <td> {{ totals.impressions|default_if_none:"0"|withsep }} </td>
-              <td> {{ totals.ecpm|default_if_none:"$0" }} </td>
-            {% else %}
-              <td> $0.00 </td>
-              <td> 0 </td>
-              <td> $0.00 </td>
-            {% endif %}
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-
+            <td> {{ totals.impressions|default_if_none:"0"|withsep }} </td>
+            <td> {{ totals.ecpm|default_if_none:"$0" }} </td>
+          {% else %}
+            <td> $0.00 </td>
+            <td> 0 </td>
+            <td> $0.00 </td>
+          {% endif %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <ul class="tabs">
     <li class="active"> <a href="#performance"> Performance </a> </li>
@@ -449,7 +387,6 @@
 
       var app_keys = {{ app_keys|safe }};
       var blocklist = {{ blocklist|safe }};
-      var dsp_keys = {{ dsp_keys|safe }};
       var pub_key = "{{ pub_key }}";
 
       Marketplace.fetchAppStats(app_keys);
@@ -464,6 +401,7 @@
     });
   </script>
   <script type="text/javascript" src="/js/mopub-marketplace.js?v=105"></script>
+
 {% endblock extraScripts %}
 
 {% block extraCSS %}

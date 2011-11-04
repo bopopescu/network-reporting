@@ -2,7 +2,12 @@ import logging
 import sys
 import urllib
 
-EC2 = True
+from django.conf import settings
+
+if settings.DEBUG:
+    EC2 = False
+else:
+    EC2 = True
 
 if EC2:
     sys.path.append('/home/ubuntu/mopub/server')

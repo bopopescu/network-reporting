@@ -27,9 +27,6 @@
   <!-- modernizr -->
   <script src="/js/mylibs/modernizr-1.6.min.js"></script>
 
-  <!-- sorttable -->
-
-
   <!-- Google load for jquery and jqueryui -->
   <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
   <script type="text/javascript">
@@ -110,7 +107,7 @@
             <li><a href="{% url publisher_index %}">Dashboard</a></li>
             <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
             <li><a href="{% url marketplace_index %}">Marketplace</a></li>
-            <li><a href="{% url reports_index %}">Reports</a></li>
+            <li><a href="{% url network_index %}">Networks</a></li>
             {% endblock navLinks %}
           </ul>
         </nav>
@@ -124,6 +121,7 @@
                   <li> <a href="{% url account_index %}">General Settings</a> </li>
                   <li> <a href="{% url ad_network_settings %}">Ad Network Settings </a> </li>
                   <li> <a href="{% url payment_history %}">Payment History </a> </li>
+                  <li> <a href="{% url reports_index %}">Reports</a></li>
                 </ul>
               </div>
             </li>
@@ -141,24 +139,9 @@
       <div id="titlebar">
         <div class="pageWidth">
           {% block pageTitle %}<h1>Dashboard</h1>{% endblock pageTitle %}
-{% block dateButtons %}
-          <div id="titlebar-center">
-            <span class="buttonset" id="dashboard-dateOptions">
-              <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-7">7 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
-              <label for="dashboard-dateOptions-option-14">14 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
-              <label for="dashboard-dateOptions-option-30">30 days</label>
-              <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
-              <label for="dashboard-dateOptions-option-custom">Custom ...</label>
-            </span>
-            <div id="dashboard-dateOptions-custom-modal">
-              <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
-              <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
-            </div>
-          </div>
-{% endblock dateButtons %}
+          {% block dateButtons %}
+            {% include "partials/datecontrols.html" %}
+          {% endblock dateButtons %}
           <div id="titlebar-right">
 {% block titleBarRight %}
 <!-- Disable for now

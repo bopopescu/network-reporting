@@ -245,7 +245,7 @@ class AdGroupForm(mpforms.MPModelForm):
             # Set up cities
             cities = []
             for city in instance.cities:
-                cities.append(str(city))
+                cities.append(city)
             geo_predicates = []
             for geo_pred in  instance.geo_predicates:
                 preds = geo_pred.split(',')

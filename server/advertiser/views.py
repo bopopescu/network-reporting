@@ -140,7 +140,7 @@ class AdGroupIndexHandler(RequestHandler):
 
 
         return render_to_response(self.request,
-                                 'advertiser/adgroups.html',
+                                 'advertiser/adgroup_index.html',
                                   {'adgroups':adgroups,
                                    # 'graph_adgroups': graph_adgroups,
                                    # 'graph_gtee_adgroups': graph_gtee_adgroups,

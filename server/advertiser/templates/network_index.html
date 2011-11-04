@@ -6,10 +6,10 @@
 {% endblock pageTitle %}
 
 {% block navLinks %}
-<li><a href="{% url publisher_index %}">Dashboard</a></li>
-<li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
-<li><a href="{% url marketplace_index %}">Marketplace</a></li>
-<li class="active"><a href="{% url network_index %}">Networks</a></li>
+  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li><a href="{% url marketplace_index %}">Marketplace</a></li>
+  <li class="active"><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
 
 
@@ -21,7 +21,7 @@
       <img id="network-loading-img" class="loading-img" style="display:none" src="../../images/icons-custom/spinner-16.gif"></img>
     </h2>
   {% else %}
-    <h2>No network campaigns  </h2>
+    <h2> No network campaigns </h2>
   {% endif %}
 
   <div class="clearfix">

@@ -19,4 +19,10 @@ urlpatterns = patterns('advertiser.views',
   url(r'^archive/$','archive',name='advertiser_archive'),
   url(r'^export/$', 'campaign_export', name='campaign_export'),
   url(r'^mpx/$', 'mpx_info', name='mpx_info'),
+
+  url(r'^marketplace/$', 'marketplace_index', name='marketplace_index'),
+  url(r'^marketplace/addblocklist$', 'add_blocklist_handler', name='add_blocklist_handler'),
+  url(r'^marketplace/removeblocklist/$', 'remove_blocklist_handler', name='remove_blocklist_handler'),
+  url(r'^marketplace/activation/$', 'marketplace_on_off', name='marketplace_on_off'),
+  url(r'^marketplace/settings/$', 'marketplace_settings_change', name='marketplace_settings_change'),
 )

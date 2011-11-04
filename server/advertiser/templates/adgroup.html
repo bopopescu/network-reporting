@@ -50,14 +50,19 @@
 
 {% block content %}
 {% if not apps %}
-          <div class="alert-message">
+          <div class="alert-message block-message">
             This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
           </div>
 {% endif %}
 {% if not creatives %}
-          <div class="alert-message">
+          <div class="alert-message block-message">
             This campaign needs to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
           </div>
+{% endif %}
+{% if campaign.marketplace %}
+<div class="alert-message block-message">
+  The revenue numbers reported for the marketplace may be incorrect.  For now, the revenue number should be disregarded.  This error will be fixed on Wednesday, October 26.  If you would like accurate revenue numbers in the meantime, email support@mopub.com and we can generate revenue reports for you.
+</div>
 {% endif %}
 {% if message  %}
           <div class="alert-message block-message error">
@@ -174,13 +179,13 @@
               <img src="/images/paused.gif" width="9" height="9"/>
               {% endif %}
                 {{ adgroup|campaign_status }} -
-                {% if campaign.start_date and campaign.end_date %}
-                From {{campaign.start_date|format_date_compact}}-{{campaign.end_date|format_date_compact}}.
-                {% endif %} {% if campaign.start_date and not campaign.end_date %}
-                Starts {{campaign.start_date|format_date_compact}}.
-                {% endif %} {% if not campaign.start_date and campaign.end_date %}
-                Ends {{campaign.start_date|format_date_compact}}.
-                {% endif %} {% if not campaign.start_date and not campaign.end_date %}
+                {% if campaign.start_datetime and campaign.end_datetime %}
+                From {{campaign.start_datetime|format_date_compact}}-{{campaign.end_datetime|format_date_compact}}.
+                {% endif %} {% if campaign.start_datetime and not campaign.end_datetime %}
+                Starts {{campaign.start_datetime|format_date_compact}}.
+                {% endif %} {% if not campaign.start_datetime and campaign.end_datetime %}
+                Ends {{campaign.start_datetime|format_date_compact}}.
+                {% endif %} {% if not campaign.start_datetime and not campaign.end_datetime %}
                 All dates.
                 {% endif %}&nbsp;
                 {% if campaign.gtee or campaign.marketplace %}{% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}

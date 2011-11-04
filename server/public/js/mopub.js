@@ -1,31 +1,36 @@
 /*
-    MoPub Global JS
-*/
+ * # MoPub Global JS
+ */
 
 //For JSLint Validation:
-/*global console: true, Highcharts: true*/
+//global console: true, Highcharts: true
 
 //mopub singleton object
 var mopub = mopub || {};
 mopub.Utils = mopub.Utils || {};
 
-(function($){
-    // dom ready
-    $(document).ready(function() {
-        /*---------------------------------------/
-        / Marketplace Hiding
-        /---------------------------------------*/
+/*
+ * Make sure there's a console.log function in case we forgot to remove debug statements
+ */
+if (typeof window.console == "undefined") {
+    window.console = {
+        log: function() {}
+    };
+}
 
+/*
+ * # Global document.ready function
+ * If you want something to happen everywhere, on every page,
+ * it should go here.
+ */
+(function($){
+
+    $(document).ready(function() {
+
+        // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
         }
-
-
-
-
-        /*---------------------------------------/
-        / UI Stuff
-        /---------------------------------------*/
 
         // preload images (defined below)
         var JQUERY_UI_IMAGE_PATH = '/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/images';
@@ -43,7 +48,8 @@ mopub.Utils = mopub.Utils || {};
             JQUERY_UI_IMAGE_PATH + '/ui-bg_inset-soft_25_595959_1x100.png',
             JQUERY_UI_IMAGE_PATH + '/ui-icons_0090d9_256x240.png',
             JQUERY_UI_IMAGE_PATH + '/ui-icons_cc2929_256x240.png',
-            JQUERY_UI_IMAGE_PATH + '/ui-icons_ffffff_256x240.png'
+            JQUERY_UI_IMAGE_PATH + '/ui-icons_ffffff_256x240.png',
+            '/placeholders/image.gif'
         );
 
         // replace <legend> with <h2>
@@ -71,20 +77,16 @@ mopub.Utils = mopub.Utils || {};
         // set up validation to be run on form submit
         $('.validate').validate();
 
-        // set up treeview
-        // $(".treeview").treeview({
-        //        animated: "fast",
-        //        collapsed: true,
-        //        unique: true,
-        //        persist: "cookie",
-        //        })
-        //
+        // Tables with the 'sortable' class will be made sortable by default
+        $(".sortable").tablesorter();
 
-        $(".tree").treeview();
+        // Tabify tabs
+        $('.tabs').tabs();
 
+        // Where is this used?
+        // $(".tree").treeview();
 
-
-        // override default jQuery UI dialog options
+        // Override default jQuery UI dialog options
         $.extend($.ui.dialog.prototype.options, {
             modal: true,
             resizable: false,
@@ -92,23 +94,27 @@ mopub.Utils = mopub.Utils || {};
             width: 400
         });
 
-        // override default jQuery UI datepicker options
+        // Override default jQuery UI datepicker options
         $.datepicker.setDefaults({
             dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         });
 
-        // set up form placeholders
+        // Set up form placeholders
         $('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });
 
-        // set up text overflow elements
+        // Set up text overflow elements
         $('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
 
-        // set up the dropdown
+        // Set up dropdowns
         $(".dropdown-head").dropdown('.dropdown');
-        /*---------------------------------------/
-        / Tooltips
-        /---------------------------------------*/
 
+        // Set up alert-message closing
+        $(".alert-message .close").click(function() {
+            $(this).parent().fadeOut();
+        });
+
+        // Set up tooltips.
+        // FYI: These are being phased out
         $.fn.qtip.styles.mopub = {
             background: '#303030',
             color: '#ffffff',
@@ -127,10 +133,8 @@ mopub.Utils = mopub.Utils || {};
         $('a[title]').qtip({ style: { name: 'mopub', tip: true } });
         $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
 
-        /*---------------------------------------/
-        / Message Center
-        /---------------------------------------*/
 
+        // Message Center
         // hide message center when page loads if there are no messages
         function hideMessageCenterIfNoMessages() {
             if($('.messageCenter-message').length === 0) {
@@ -139,7 +143,7 @@ mopub.Utils = mopub.Utils || {};
         }
         hideMessageCenterIfNoMessages();
 
-        // set up "More info" links
+        // Set up "More info" links
         $('.messageCenter-message-moreInfoLink').click(function(e) {
             e.preventDefault();
             var link = $(this);
@@ -151,7 +155,7 @@ mopub.Utils = mopub.Utils || {};
             });
         });
 
-        // set up "Hide this" links
+        // Set up "Hide this" links
         $('.messageCenter-message-hide').click(function(e) {
             e.preventDefault();
             var link = $(this);
@@ -163,23 +167,17 @@ mopub.Utils = mopub.Utils || {};
             // TODO: tell server that message.attr('id') has been hidden
         });
 
-        /*---------------------------------------/
-        / Stats Breakdown
-        /---------------------------------------*/
-
+        // Set up stats breakdown
         $('.stats-breakdown tr').click(function(e) {
-         var row = $(this);
-         if(!row.hasClass('active')) {
-             var table = row.parents('table');
-             $('tr.active', table).removeClass('active');
-             row.addClass('active');
-         }
+            var row = $(this);
+            if(!row.hasClass('active')) {
+                var table = row.parents('table');
+                $('tr.active', table).removeClass('active');
+                row.addClass('active');
+            }
         });
 
-        /*---------------------------------------/
-        / Highcharts default options
-        /---------------------------------------*/
-
+        // Set up highcharts default options
         Highcharts.setOptions({
             chart: {
                 animation: false,
@@ -302,26 +300,26 @@ mopub.Utils = mopub.Utils || {};
             }
         });
 
-    /*---------------------------------------/
-    / What's This?-ifier
-    /---------------------------------------*/
+        // Set up 'What's This?' dialogs
+        $('.whatsthis').click(function(e) {
+            e.preventDefault();
+            $('#'+$(this).attr('id').replace('helpLink', 'helpContent')).dialog({
+                buttons: { "Close": function() { $(this).dialog('close');} }
+            });
+        });
 
-      $('.whatsthis').click(function(e) {
-          e.preventDefault();
-          $('#'+$(this).attr('id').replace('helpLink', 'helpContent')).dialog({
-            buttons: { "Close": function() { $(this).dialog('close');} }
-          });
-      });
+    }); // end $(document).ready
 
-    });
 
-    /*---------------------------------------/
-    / Image Preloader
-    /---------------------------------------*/
+    /*
+     * # MoPub-defined jQuery utility functions and extensions
+     */
 
+    /*
+     * ## Image Preloader
+     * Caches images for faster loading
+     */
     var cache = [];
-
-    // Arguments are image paths relative to the current page.
     $.preLoadImages = function() {
         var args_len = arguments.length;
         for (var i = args_len; i--;) {
@@ -329,12 +327,77 @@ mopub.Utils = mopub.Utils || {};
             cacheImage.src = arguments[i];
             cache.push(cacheImage);
         }
-        // Commented out for cleanliness
-        // log(cache);
     };
 
-    // Creates a dropdown menu
-    // Usage: `$(dropdown-trigger).dropdown(things-that-dropdown);`
+
+    /*
+     * ## Template rendering
+     *
+     * This function lets you use data to fill in predefined template strings.
+     *
+     * Usage:
+     * `str` - A template string. Templates can include javascript logic enclosed in <% %>
+     *         brackets, similar to rails' erb templates.
+     *
+     * `data` - A javascript object which contains data to fill the template with.
+     *
+     * e.g.
+     *
+     * `var template = "<%= user %> is <%= desc %>.";`
+     *
+     * `var data1 = {user: 'John', desc: 'cool'};`
+     *
+     * `var data2 = {user: 'Nafis', desc: 'lame'};`
+     *
+     * `$.renderTemplate(template, data1); // "John is cool"`
+     *
+     * For more complex examples, see [this](http://ejohn.org/blog/javascript-micro-templating/)
+     */
+    var template_cache = {};
+    $.renderTemplate = function tmpl (str, data){
+        // Figure out if we're getting a template, or if we need to
+        // load the template - and be sure to cache the result.
+        var fn = !/\W/.test(str) ?
+            template_cache[str] = template_cache[str] || tmpl(document.getElementById(str).innerHTML) :
+
+        // Generate a reusable function that will serve as a template
+        // generator (and which will be cached).
+        new Function("obj",
+                     "var p=[],print=function(){p.push.apply(p,arguments);};" +
+
+                     // Introduce the data as local variables using with(){}
+                     "with(obj){p.push('" +
+
+                     // Convert the template into pure JavaScript
+                     str
+                     .replace(/[\r\t\n]/g, " ")
+                     .split("<%").join("\t")
+                     .replace(/((^|%>)[^\t]*)'/g, "$1\r")
+                     .replace(/\t=(.*?)%>/g, "',$1,'")
+                     .split("\t").join("');")
+                     .split("%>").join("p.push('")
+                     .split("\r").join("\\'")
+                     + "');}return p.join('');");
+
+        // Provide some basic currying to the user
+        return data ? fn( data ) : fn;
+    };
+
+    /*
+     * Alternate binding for the renderTemplate function
+     */
+    $.fn.renderTemplate = function (str, data) {
+        return $(this).html($.renderTemplate(str, data));
+    };
+
+
+    /*
+     * ## Dropdown Menus
+     *
+     * Usage:
+     *
+     * `$(dropdown-trigger).dropdown(things-that-dropdown);`
+     */
     $.fn.dropdown = function(selector) {
         var self = this;
         var over_trigger, over_body = false;
@@ -356,7 +419,7 @@ mopub.Utils = mopub.Utils || {};
             $(self).removeClass('hovered');
         }
 
-        // Check whats being hovered
+        // Set the hover states
         $(this).hover(function() {
             over_trigger = true;
         }, function () {
@@ -380,6 +443,77 @@ mopub.Utils = mopub.Utils || {};
         }, 1);
     };
 
+
+    /*
+     * ## Activity utility functions
+     */
+    function isActive(item) {
+        return item.hasClass('active');
+    }
+
+    function activate (element, container) {
+        if (container.length > 1) {
+            container.each(function(){
+                $(this).removeClass('active');
+            });
+        } else {
+            container.find('.active').removeClass('active');
+        }
+        element.addClass('active');
+    }
+
+
+    /*
+     * ## Tabs
+     * Turns a ul into horizontal tabs, that can be used to hide and show
+     * sections of a page.
+     *
+     * Usage:
+     * `<ul class="tabs">`
+     *
+     * ` <li class="active"> <a href="#s1">Section 1 </a> </li>`
+     *
+     * ` <li> <a href="#s2">Section 2 </a> </li>`
+     *
+     * `</ul>`
+     *
+     * `<div class="active tab-section" id="s1"></div>`
+     *
+     * `<div class="tab-section" id="s2"></div>`
+     *
+     * `$(".tabs").tabs();`
+     *
+     * TODO: Refactor so that the first tab/section are activated if nothing is activated by default
+     */
+    $.fn.tabs = function() {
+        // find the sections within the page we've marked as tab activate-able
+        var tab_sections = $(".tab-section");
+        // bind the ul
+        var ul = $(this);
+        // get the <li>'s within the ul
+        var list_items = $('li', ul);
+        // add actions to each of the li/a clicks
+        $.each(list_items, function(iter, item) {
+            // prevent jumping around when a tab is clicked
+            var anchor = $('a', item);
+            $(anchor).click(function(event){
+                event.preventDefault();
+            });
+            // activate the tab and its section on a click
+            var href = anchor.attr('href');
+            $(item).click(function(){
+                activate($(this), ul);
+                activate($(href), tab_sections);
+            });
+        });
+    };
+
+
+    /*
+     * Escaping/unescaping HTML.
+     *
+     * Be careful: if you escape html thats already escaped, things get weird.
+     */
     $.unescapeHTML = function (html) {
         return $("<div />").html(html).text();
     };
@@ -388,488 +522,588 @@ mopub.Utils = mopub.Utils || {};
         return $("<div />").text(html).html();
     };
 
-    // helper fn for console logging
-    var log;
 
-    if (window.console && typeof console.log === "function"){
-        // use apply to preserve context and invocations with multiple arguments
-        log = function () { console.log.apply(console, arguments); };
-    } else {
-        log = function(){ return; };
-    }
+    /*
+     * ## jQuery Lightswitch
+     *
+     * lightswitch takes two functions, an on function and an off function.
+     * When the lightswitch in the page is clicked on or off, the the corresponding
+     * function is called. If the function returns true, the switch is slid.
+     *
+     * Usage:
+     *
+     * `var on = function() {`
+     *
+     * `   console.log('BOOMSLAM');`
+     *
+     * `   return true;`
+     *
+     * `};`
+     *
+     *
+     * `var off = function() {`
+     *
+     * `   console.log('SEE YA');`
+     *
+     * `   return true;`
+     *
+     * `};`
+     *
+     * `$(".lightswitch").lightswitch(on, off);`
+     *
+     * HTML:
+     * <div class="lightswitch">
+     *   <div class="switch on"></div>
+     * </div>
+     */
+    $.fn.lightswitch = function (on_function, off_function) {
 
-  /*---------------------------------------/
-  / Utility functions.
-  /---------------------------------------*/
+        if (typeof on_function == 'undefined') {
+            on_function = function () {
+                return true;
+            };
+        }
 
-  mopub.Utils.formatNumberWithCommas = function(string) {
-    string += '';
-    x = string.split('.');
-    x1 = x[0];
-    x2 = x.length > 1 ? '.' + x[1] : '';
-    var rgx = /(\d+)(\d{3})/;
-    while (rgx.test(x1)) {
-      x1 = x1.replace(rgx, '$1' + ',' + '$2');
-    }
-    return x1 + x2;
-  };
+        if (typeof off_function == 'undefined') {
+            off_function = function () {
+                return true;
+            };
+        }
 
-  mopub.Utils.formatNumberAsPercentage = function(string) {
-    // We round to two decimal places.
-    return (string*100).toFixed(2) + '%';
-  };
+        var light_switch = $(this);
+        var switcher = $('.switch', light_switch);
 
-  mopub.Utils.getKeysFromObject = function(object) {
-    var keys = [];
-    for (var key in object) {
-      if (object.hasOwnProperty(key)) keys.push(key);
-    }
-    return keys;
-  };
+        light_switch.click(function () {
+            if (switcher.hasClass('on')) {
+                var result = off_function();
+                if (result) {
+                    switcher.removeClass('on').addClass('off');
+                }
+
+            } else if (switcher.hasClass('off')) {
+                var result = on_function();
+                if (result) {
+                    switcher.removeClass('off').addClass('on');
+                }
+            } else {
+                switcher.addClass('off');
+            }
+        });
+    };
+
+
+
+    /*
+     * ## Mopub Utility
+     */
+    mopub.Utils.formatNumberWithCommas = function(string) {
+        string += '';
+        x = string.split('.');
+        x1 = x[0];
+        x2 = x.length > 1 ? '.' + x[1] : '';
+        var rgx = /(\d+)(\d{3})/;
+        while (rgx.test(x1)) {
+            x1 = x1.replace(rgx, '$1' + ',' + '$2');
+        }
+        return x1 + x2;
+    };
+
+    mopub.Utils.formatCurrency = function(num) {
+        return "$" + num.toFixed(2);
+    };
+
+    mopub.Utils.formatNumberAsPercentage = function(string) {
+        // We round to two decimal places.
+        return (string*100).toFixed(2) + '%';
+    };
+
+    mopub.Utils.getKeysFromObject = function(object) {
+        var keys = [];
+        for (var key in object) {
+            if (object.hasOwnProperty(key)) keys.push(key);
+        }
+        return keys;
+    };
 
 })(this.jQuery);
 
-// =====================================================================
-// mopub.Utils.AjaxChunkedFetch
-// =====================================================================
 
+/*
+ * # Ajax Chunked Fetch
+ */
 (function(Utils, $) {
 
-  var AjaxChunkedFetch = Utils.AjaxChunkedFetch = function(args) {
-    this.items = {};
-    this.chunkComplete = function(data, chunk, fetchObj) {};
-    this.chunkFailure = function(chunk, fetchObj) {};
-    this.fetchComplete = function(fetchObj) {};
-    $.extend(this, args);
+    var AjaxChunkedFetch = Utils.AjaxChunkedFetch = function(args) {
+        this.items = {};
+        this.chunkComplete = function(data, chunk, fetchObj) {};
+        this.chunkFailure = function(chunk, fetchObj) {};
+        this.fetchComplete = function(fetchObj) {};
+        $.extend(this, args);
 
-    // Whether the fetch has successfully fetched all items.
-    this.isComplete = false;
+        // Whether the fetch has successfully fetched all items.
+        this.isComplete = false;
 
-    // Whether any part of this fetch has failed.
-    this.hasFailed = false;
+        // Whether any part of this fetch has failed.
+        this.hasFailed = false;
 
-    // Keep track of the unfetched items (for internal use).
-    this.unfetchedItems = {};
-    var self = this;
-    $.each(this.items, function(index, item) { self.unfetchedItems[item] = {}; });
+        // Keep track of the unfetched items (for internal use).
+        this.unfetchedItems = {};
+        var self = this;
+        $.each(this.items, function(index, item) { self.unfetchedItems[item] = {}; });
 
-    return this;
-  };
+        return this;
+    };
 
-  AjaxChunkedFetch.chunkArray = function(array, chunkSize) {
-    if (!array) return [];
+    AjaxChunkedFetch.chunkArray = function(array, chunkSize) {
+        if (!array) return [];
 
-    var chunks = [];
-    $.each(array, function(index, elem) {
-      var chunkNumber = Math.floor(index / chunkSize);
-      var indexInChunk = index % chunkSize;
-      chunks[chunkNumber] = chunks[chunkNumber] || [];
-      chunks[chunkNumber][indexInChunk] = elem;
-    });
-    return chunks;
-  };
+        var chunks = [];
+        $.each(array, function(index, elem) {
+            var chunkNumber = Math.floor(index / chunkSize);
+            var indexInChunk = index % chunkSize;
+            chunks[chunkNumber] = chunks[chunkNumber] || [];
+            chunks[chunkNumber][indexInChunk] = elem;
+        });
+        return chunks;
+    };
 
-  // Time to wait before terminating AJAX request.
-  AjaxChunkedFetch.TIMEOUT_MILLISECONDS = 10000;
+    // Time to wait before terminating AJAX request.
+    AjaxChunkedFetch.TIMEOUT_MILLISECONDS = 10000;
 
-  // Maximum number of AJAX retries before giving up.
-  AjaxChunkedFetch.MAX_FAILED_ATTEMPTS = 3;
+    // Maximum number of AJAX retries before giving up.
+    AjaxChunkedFetch.MAX_FAILED_ATTEMPTS = 3;
 
-  // Number of items to be fetched in a single AJAX request.
-  AjaxChunkedFetch.DEFAULT_CHUNK_SIZE = 8;
+    // Number of items to be fetched in a single AJAX request.
+    AjaxChunkedFetch.DEFAULT_CHUNK_SIZE = 8;
 
-  // Time to wait before retrying a failed AJAX request.
-  AjaxChunkedFetch.BACKOFF_TIME_MILLISECONDS = 1000;
+    // Time to wait before retrying a failed AJAX request.
+    AjaxChunkedFetch.BACKOFF_TIME_MILLISECONDS = 1000;
 
-  // Multiplier to increase the backoff time when there are consecutive failures.
-  AjaxChunkedFetch.BACKOFF_MULTIPLIER = 1.5;
+    // Multiplier to increase the backoff time when there are consecutive failures.
+        AjaxChunkedFetch.BACKOFF_MULTIPLIER = 1.5;
 
-  AjaxChunkedFetch.prototype.unfetchedItemsEmpty = function() {
-    for (var key in this.unfetchedItems) {
-      if (this.unfetchedItems.hasOwnProperty(key)) return false;
-    }
-    return true;
-  };
-
-  AjaxChunkedFetch.prototype.start = function() {
-    this.isComplete = false;
-    this.hasFailed = false;
-    var chunks = AjaxChunkedFetch.chunkArray(this.items, AjaxChunkedFetch.DEFAULT_CHUNK_SIZE);
-    this.executeFetchRequestsForChunks(chunks);
-  };
-
-  AjaxChunkedFetch.prototype.executeFetchRequestsForChunks = function(chunks) {
-    // If there are no items, automatically declare this fetch to be complete.
-    if (chunks.length <= 0) {
-      this.isComplete = true;
-      this.fetchComplete(this);
-      return;
-    }
-
-    // If there's no URL constructor, declare this fetch failed and mark each chunk as failed.
-    if (!this.urlConstructor) {
-      this.hasFailed = true;
-      for (var i = 0, len = chunks.length; i < len; i++) {
-        this.chunkFailure(chunk, this);
-      };
-      return;
-    }
-
-    var self = this;
-    $.each(chunks, function(index, chunk) {
-      // Create a fetch request for each chunk and execute it.
-      var request = new FetchRequest({
-        items: chunk,
-        url: self.urlConstructor(chunk, self),
-        success: self.chunkComplete,
-        failure: self.chunkFailure,
-        fetchObject: self
-      });
-      request.execute();
-    });
-  };
-
-  AjaxChunkedFetch.prototype.markItemsComplete = function(items) {
-    var self = this;
-    $.each(items, function(index, item) {
-      delete self.unfetchedItems[item];
-    });
-
-    if (this.unfetchedItemsEmpty()) {
-      this.isComplete = true;
-      this.hasFailed = false;
-      this.fetchComplete(this);
-    }
-  };
-
-  AjaxChunkedFetch.prototype.markAsFailed = function() {
-    this.hasFailed = true;
-  };
-
-  AjaxChunkedFetch.prototype.retry = function() {
-    // TODO: this might be called before all fetch requests have finished, which can result in
-    // some items being fetched unnecessarily.
-
-    if (!this.hasFailed) return;
-    var unfetched = mopub.Utils.getKeysFromObject(this.unfetchedItems);
-    var chunks = AjaxChunkedFetch.chunkArray(unfetched, AjaxChunkedFetch.DEFAULT_CHUNK_SIZE);
-    this.executeFetchRequestsForChunks();
-  };
-
-  // =====================================================================
-
-  var FetchRequest = AjaxChunkedFetch.FetchRequest = function(args) {
-    this.items = [];
-    this.url = "";
-
-    this.success = function(data) {};
-    this.failure = function() {};
-
-    this.failedAttempts = 0;
-    this.backoffDelay = AjaxChunkedFetch.BACKOFF_TIME_MILLISECONDS;
-
-    $.extend(this, args);
-
-    return this;
-  };
-
-  FetchRequest.prototype.execute = function() {
-    var self = this;
-
-    $.ajax({
-      url: self.url,
-
-      dataType: 'json',
-
-      success: function() {
-        return function(data) {
-          self.success(data, self.items, self.fetchObject);
-          self.fetchObject.markItemsComplete(self.items);
-        };
-      }(),
-
-      error: function() {
-        self.failedAttempts++;
-        if (self.failedAttempts > AjaxChunkedFetch.MAX_FAILED_ATTEMPTS) {
-          self.failure(self.items, self.fetchObject);
-          self.fetchObject.markAsFailed();
-        } else {
-          // Schedule retry and extend the backoff delay.
-          setTimeout(function() { self.execute() }, self.backoffDelay);
-          self.backoffDelay *= AjaxChunkedFetch.BACKOFF_MULTIPLIER;
+    AjaxChunkedFetch.prototype.unfetchedItemsEmpty = function() {
+        for (var key in this.unfetchedItems) {
+            if (this.unfetchedItems.hasOwnProperty(key)) return false;
         }
-      },
+        return true;
+    };
 
-      timeout: AjaxChunkedFetch.TIMEOUT_MILLISECONDS
-    });
-  };
+    AjaxChunkedFetch.prototype.start = function() {
+        this.isComplete = false;
+        this.hasFailed = false;
+        var chunks = AjaxChunkedFetch.chunkArray(this.items, AjaxChunkedFetch.DEFAULT_CHUNK_SIZE);
+        this.executeFetchRequestsForChunks(chunks);
+    };
+
+    AjaxChunkedFetch.prototype.executeFetchRequestsForChunks = function(chunks) {
+        // If there are no items, automatically declare this fetch to be complete.
+        if (chunks.length <= 0) {
+            this.isComplete = true;
+            this.fetchComplete(this);
+            return;
+        }
+
+        // If there's no URL constructor, declare this fetch failed and mark each chunk as failed.
+        if (!this.urlConstructor) {
+            this.hasFailed = true;
+            for (var i = 0, len = chunks.length; i < len; i++) {
+                this.chunkFailure(chunk, this);
+            };
+            return;
+        }
+
+        var self = this;
+        $.each(chunks, function(index, chunk) {
+            // Create a fetch request for each chunk and execute it.
+            var request = new FetchRequest({
+                items: chunk,
+                url: self.urlConstructor(chunk, self),
+                success: self.chunkComplete,
+                failure: self.chunkFailure,
+                fetchObject: self
+            });
+            request.execute();
+        });
+    };
+
+    AjaxChunkedFetch.prototype.markItemsComplete = function(items) {
+        var self = this;
+        $.each(items, function(index, item) {
+            delete self.unfetchedItems[item];
+        });
+
+        if (this.unfetchedItemsEmpty()) {
+            this.isComplete = true;
+            this.hasFailed = false;
+            this.fetchComplete(this);
+        }
+    };
+
+    AjaxChunkedFetch.prototype.markAsFailed = function() {
+        this.hasFailed = true;
+    };
+
+    AjaxChunkedFetch.prototype.retry = function() {
+        // TODO: this might be called before all fetch requests have finished, which can result in
+        // some items being fetched unnecessarily.
+
+        if (!this.hasFailed) return;
+        var unfetched = mopub.Utils.getKeysFromObject(this.unfetchedItems);
+        var chunks = AjaxChunkedFetch.chunkArray(unfetched, AjaxChunkedFetch.DEFAULT_CHUNK_SIZE);
+        this.executeFetchRequestsForChunks();
+    };
+
+
+
+    var FetchRequest = AjaxChunkedFetch.FetchRequest = function(args) {
+        this.items = [];
+        this.url = "";
+
+        this.success = function(data) {};
+        this.failure = function() {};
+
+        this.failedAttempts = 0;
+        this.backoffDelay = AjaxChunkedFetch.BACKOFF_TIME_MILLISECONDS;
+
+        $.extend(this, args);
+
+        return this;
+    };
+
+    FetchRequest.prototype.execute = function() {
+        var self = this;
+
+        $.ajax({
+            url: self.url,
+
+            dataType: 'json',
+
+            success: function() {
+                return function(data) {
+                    self.success(data, self.items, self.fetchObject);
+                    self.fetchObject.markItemsComplete(self.items);
+                };
+                }(),
+
+            error: function() {
+                self.failedAttempts++;
+                if (self.failedAttempts > AjaxChunkedFetch.MAX_FAILED_ATTEMPTS) {
+                    self.failure(self.items, self.fetchObject);
+                    self.fetchObject.markAsFailed();
+                } else {
+                    // Schedule retry and extend the backoff delay.
+                    setTimeout(function() { self.execute() }, self.backoffDelay);
+                    self.backoffDelay *= AjaxChunkedFetch.BACKOFF_MULTIPLIER;
+                }
+            },
+
+            timeout: AjaxChunkedFetch.TIMEOUT_MILLISECONDS
+        });
+    };
 
 })(mopub.Utils = mopub.Utils || {}, this.jQuery);
 
-// =====================================================================
-// mopub.Stats
-// =====================================================================
-
+/*
+ * # Mopub Stats
+ */
 (function(Stats, $) {
+    /*
+     * ## Stat sorting
+     */
+    Stats.sortStatsObjectsByStat = function(objects, statName) {
+        objects.sort(function(a, b) {
+            var statA = parseFloat(a["stats"]["sum"][statName]);
+                var statB = parseFloat(b["stats"]["sum"][statName]);
+            if (statA < statB) return 1;
+            if (statA > statB) return -1;
+            else return 0;
+        });
+        return objects;
+    };
 
-  Stats.sortStatsObjectsByStat = function(objects, statName) {
-    objects.sort(function(a, b) {
-      var statA = parseFloat(a["stats"]["sum"][statName]);
-      var statB = parseFloat(b["stats"]["sum"][statName]);
-      if (statA < statB) return 1;
-      if (statA > statB) return -1;
-      else return 0;
-    });
-    return objects;
-  };
+    /*
+     * ## DOCUMENT THIS
+     */
+    Stats.statArrayFromDailyStats = function(arrayOfDailyStats, statName) {
+        return $.map(arrayOfDailyStats, function(oneDayStats) {
+                return parseFloat(oneDayStats[statName]);
+        });
+    };
 
-  Stats.statArrayFromDailyStats = function(arrayOfDailyStats, statName) {
-    return $.map(arrayOfDailyStats, function(oneDayStats) {
-      return parseFloat(oneDayStats[statName]);
-    });
-  };
+    /*
+     * ## DOCUMENT THIS
+     */
+    Stats.getGraphSummedStatsForStatName = function(statName, objects) {
+        var result = [];
 
-  Stats.getGraphSummedStatsForStatName = function(statName, objects) {
-    var result = [];
+        var topThreePerformers = objects.splice(0, 3);
+        var otherPerformers = objects;
 
-    var topThreePerformers = objects.splice(0, 3);
-    var otherPerformers = objects;
+        // Get stats for the top three performers.
+        $.each(topThreePerformers, function(index, statsObject) {
+                var name = statsObject["key"];
+            var arrayOfDailyStats = statsObject["stats"]["daily_stats"];
+            var graphStatsObject = {};
+            graphStatsObject[name] = Stats.statArrayFromDailyStats(arrayOfDailyStats, statName);
+            result.push(graphStatsObject);
+        });
 
-    // Get stats for the top three performers.
-    $.each(topThreePerformers, function(index, statsObject) {
-      var name = statsObject["key"];
-      var arrayOfDailyStats = statsObject["stats"]["daily_stats"];
-      var graphStatsObject = {};
-      graphStatsObject[name] = Stats.statArrayFromDailyStats(arrayOfDailyStats, statName);
-      result.push(graphStatsObject);
-    });
+        if (otherPerformers.length == 0) return result;
 
-    if (otherPerformers.length == 0) return result;
+        // Get stats for all other performers.
+        var statsForOtherPerformers = Stats.sumDailyStatsAcrossStatsObjects(otherPerformers, statName);
+        var otherDict = { "Others": statsForOtherPerformers };
+        result.push(otherDict);
 
-    // Get stats for all other performers.
-    var statsForOtherPerformers = Stats.sumDailyStatsAcrossStatsObjects(otherPerformers, statName);
-    var otherDict = { "Others": statsForOtherPerformers };
-    result.push(otherDict);
+        return result;
+    };
 
-    return result;
-  };
+    /*
+     * ## DOCUMENT THIS
+     */
+    Stats.sumDailyStatsAcrossStatsObjects = function(objects, statName) {
+        var result = [];
+        $.each(objects, function(index, statsObject) {
+            var arrayOfDailyStats = statsObject["stats"]["daily_stats"];
+            $.each(arrayOfDailyStats, function(dayIndex, oneDayStats) {
+                if (!result[dayIndex]) result[dayIndex] = 0;
+                result[dayIndex] += parseFloat(oneDayStats[statName]);
+            });
+        });
+        return result;
+    };
 
-  Stats.sumDailyStatsAcrossStatsObjects = function(objects, statName) {
-    var result = [];
-    $.each(objects, function(index, statsObject) {
-      var arrayOfDailyStats = statsObject["stats"]["daily_stats"];
-      $.each(arrayOfDailyStats, function(dayIndex, oneDayStats) {
-        if (!result[dayIndex]) result[dayIndex] = 0;
-        result[dayIndex] += parseFloat(oneDayStats[statName]);
-      });
-    });
-    return result;
-  };
+    /*
+     * ## DOCUMENT THIS
+     */
+    Stats.getGraphCtrStats = function(objects) {
+        var result = [];
 
-  Stats.getGraphCtrStats = function(objects) {
-    var result = [];
+        var topThreePerformers = objects.splice(0, 3);
+        var otherPerformers = objects;
 
-    var topThreePerformers = objects.splice(0, 3);
-    var otherPerformers = objects;
+        // Get stats for the top campaigns.
+        $.each(topThreePerformers, function(index, statsObject) {
+            var name = statsObject["key"];
+            var arrayOfDailyStats = statsObject["stats"]["daily_stats"];
+            var graphStatsObject = {};
+            graphStatsObject[name] = Stats.statArrayFromDailyStats(arrayOfDailyStats, "ctr");
+            result.push(graphStatsObject);
+        });
 
-    // Get stats for the top campaigns.
-    $.each(topThreePerformers, function(index, statsObject) {
-      var name = statsObject["key"];
-      var arrayOfDailyStats = statsObject["stats"]["daily_stats"];
-      var graphStatsObject = {};
-      graphStatsObject[name] = Stats.statArrayFromDailyStats(arrayOfDailyStats, "ctr");
-      result.push(graphStatsObject);
-    });
+        if (otherPerformers.length == 0) return result;
 
-    if (otherPerformers.length == 0) return result;
+        // Get stats for all other campaigns.
+        var statsForOtherPerformers = Stats.getDailyCtrAcrossStatsObjects(otherPerformers);
+        var otherDict = { "Others": statsForOtherPerformers };
+        result.push(otherDict);
 
-    // Get stats for all other campaigns.
-    var statsForOtherPerformers = Stats.getDailyCtrAcrossStatsObjects(otherPerformers);
-    var otherDict = { "Others": statsForOtherPerformers };
-    result.push(otherDict);
+        return result;
+    };
 
-    return result;
-  };
+    /*
+     * ## DOCUMENT THIS
+     */
+    Stats.getDailyCtrAcrossStatsObjects = function(objects) {
+        var ctr = [];
+        var clicks = Stats.sumDailyStatsAcrossStatsObjects(objects, "click_count");
+        var impressions = Stats.sumDailyStatsAcrossStatsObjects(objects, "impression_count");
 
-  Stats.getDailyCtrAcrossStatsObjects = function(objects) {
-    var ctr = [];
-    var clicks = Stats.sumDailyStatsAcrossStatsObjects(objects, "click_count");
-    var impressions = Stats.sumDailyStatsAcrossStatsObjects(objects, "impression_count");
-
-    for (var i = 0, len = clicks.length; i < len; i++) {
-      ctr[i] = (clicks[i] / impressions[i]) || 0;
-    }
-    return ctr;
-  };
+        for (var i = 0, len = clicks.length; i < len; i++) {
+            ctr[i] = (clicks[i] / impressions[i]) || 0;
+        }
+        return ctr;
+    };
 
 })(mopub.Stats = mopub.Stats || {}, this.jQuery);
 
-// =====================================================================
-// mopub.Chart
-// =====================================================================
-
+/*
+ * # Mopub Charting
+ */
 (function(Chart, $) {
+    /*
+     * ## Dashboard Stats Chart
+     */
+    Chart.setupDashboardStatsChart = function(seriesType) {
+        // get active metric from breakdown
+        var metricElement = $('#dashboard-stats .stats-breakdown .active');
+        if (metricElement === null || metricElement.length === 0) return;
+        var metricElementIdComponents = metricElement.attr('id').split('-');
+        var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
 
-  Chart.setupDashboardStatsChart = function(seriesType) {
-    // get active metric from breakdown
-    var metricElement = $('#dashboard-stats .stats-breakdown .active');
-    if (metricElement === null || metricElement.length === 0) return;
-    var metricElementIdComponents = metricElement.attr('id').split('-');
-    var activeMetric = metricElementIdComponents[metricElementIdComponents.length - 1];
-
-    // get data
-    var data = mopub.dashboardStatsChartData;
-    if (typeof data == 'undefined') {
-      Chart.chartError();
-      return;
-    }
-
-    // set up series
-    var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
-    var chartSeries = [];
-    var activeData = data[activeMetric];
-    if (typeof activeData == 'undefined') {
-      Chart.chartError();
-      return;
-    }
-
-    $.each(activeData, function(i, seriesObject) {
-      var seriesName, seriesData, seriesLineWidth;
-
-      $.each(seriesObject, function(name, value) {
-        seriesName = name;
-        seriesData = value;
-
-        if (seriesType == 'line' && activeMetric == 'ctr') {
-          seriesLineWidth = (seriesName == 'MoPub Optimized') ? 3 : 2;
-        } else seriesLineWidth = 4;
-      });
-
-      chartSeries.push({
-        name: seriesName,
-        data: seriesData,
-        color: colors[i],
-        lineWidth: seriesLineWidth
-      });
-    });
-
-    // setup HighCharts chart
-    this.trafficChart = new Highcharts.Chart({
-      chart: {
-        renderTo: 'dashboard-stats-chart',
-        defaultSeriesType: seriesType,
-        marginTop: 0,
-        marginBottom: 55
-      },
-      plotOptions: {
-        series: {
-          pointStart: data.pointStart,
-          pointInterval: data.pointInterval
+        // get data
+        var data = mopub.dashboardStatsChartData;
+        if (typeof data == 'undefined') {
+            Chart.chartError();
+            return;
         }
-      },
-      legend: {
-        verticalAlign: "bottom",
-        y: -7,
-        enabled: (chartSeries.length > 1)
-      },
-      yAxis: {
-        labels: {
-          formatter: function() {
-            if(activeMetric == 'revenue') {
-              text = '$' + Highcharts.numberFormat(this.value, 0);
-            }
-            else if(activeMetric == 'ctr') {
-              text = Highcharts.numberFormat(this.value, 0) + '%';
-            }
-            else {
-              if (this.value >= 1000000000) {
-                return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
-              } else if (this.value >= 1000000) {
-                return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
-              } else if (this.value >= 1000) {
-                return Highcharts.numberFormat(this.value / 1000, 0) + "K";
-              } else if (this.value > 0) {
-                return Highcharts.numberFormat(this.value, 0);
-              } else {
-                return "0";
-              }
-            }
-          }
+
+        // set up series
+        var colors = ['#0090d9', '#e57300', '#53a600', '#444444'];
+        var chartSeries = [];
+        var activeData = data[activeMetric];
+        if (typeof activeData == 'undefined') {
+            Chart.chartError();
+            return;
         }
-      },
-      tooltip: {
-        formatter: function() {
-          var text = '', value = '', total = '';
 
-          if(activeMetric == 'revenue') {
-            value = '$' + Highcharts.numberFormat(this.y, 0);
-            total = '$' + Highcharts.numberFormat(this.total, 0) + ' total';
-          }
-          else if (activeMetric == 'clicks') {
-            value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
-            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
-          }
-          else if (activeMetric == 'ctr') {
-            value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
-            total = "";
-          }
-          else {
-            value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
-            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
-          }
+        $.each(activeData, function(i, seriesObject) {
+            var seriesName, seriesData, seriesLineWidth;
 
-          text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
-          text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
+            $.each(seriesObject, function(name, value) {
+                seriesName = name;
+                seriesData = value;
 
-          if(chartSeries.length > 1) {
-            text += '<span style="font-size: 12px; color: #666;">';
-            if (this.total > 0 && total) {
-              text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
-            }
-            else if (total) {
-              text += '(' + total + ')';
-            }
-            text += '</span>';
-          }
-          return text;
-        }
-      },
-      series: chartSeries
-    });
+                if (seriesType == 'line') {
+                    seriesLineWidth = (seriesName == 'MoPub Optimized') ? 3 : 2;
+                } else seriesLineWidth = 4;
+            });
 
-    $('#dashboard-stats-chart').removeClass('chart-loading');
-  };
+            chartSeries.push({
+                name: seriesName,
+                data: seriesData,
+                color: colors[i],
+                lineWidth: seriesLineWidth
+            });
+        });
 
-  Chart.chartError = function() {
-    $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
-  };
+        // setup HighCharts chart
+        this.trafficChart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'dashboard-stats-chart',
+                defaultSeriesType: seriesType,
+                marginTop: 0,
+                marginBottom: 55
+            },
+            plotOptions: {
+                series: {
+                    pointStart: data.pointStart,
+                    pointInterval: data.pointInterval
+                }
+            },
+            legend: {
+                verticalAlign: "bottom",
+                y: -7,
+                enabled: (chartSeries.length > 1)
+            },
+            yAxis: {
+                labels: {
+                    formatter: function() {
+                        if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                            return '$' + Highcharts.numberFormat(this.value, 0);
+                        } else if(activeMetric == 'ctr') {
+                            return Highcharts.numberFormat(this.value, 0) + '%';
+                        } else {
+                            if (this.value >= 1000000000) {
+                                return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
+                            } else if (this.value >= 1000000) {
+                                return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
+                            } else if (this.value >= 1000) {
+                                return Highcharts.numberFormat(this.value / 1000, 0) + "K";
+                            } else if (this.value > 0) {
+                                return Highcharts.numberFormat(this.value, 0);
+                            } else {
+                                return "0";
+                            }
+                        }
+                        return "0";
+                    }
+                }
+            },
+            tooltip: {
+                formatter: function() {
+                    var text = '', value = '', total = '';
+
+                    if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                        value = '$' + Highcharts.numberFormat(this.y, 2);
+                        total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
+                    } else if (activeMetric == 'clicks') {
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                        total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                    } else if (activeMetric == 'ctr') {
+                        value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
+                        total = "";
+                    } else {
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                        total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                    }
+
+                    text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';
+                    text += '<span style="padding: 0; font-weight: 600; color: ' + this.series.color + '">' + this.series.name + '</span>' + ': <strong style="font-weight: 600;">' + value + '</strong><br/>';
+
+                    if(chartSeries.length > 1) {
+                        text += '<span style="font-size: 12px; color: #666;">';
+                        if (this.total > 0 && total) {
+                            text += '(' + Highcharts.numberFormat(this.percentage, 0) + '% of ' + total + ')';
+                        } else if (total) {
+                            text += '(' + total + ')';
+                        }
+                        text += '</span>';
+                    }
+                    return text;
+                }
+            },
+            series: chartSeries
+        });
+
+        $('#dashboard-stats-chart').removeClass('chart-loading');
+     };
+
+    /*
+     * ## Pie charts
+     * Utility function for creating a pie chart with default options
+     */
+    Chart.setupPieChart = function (selector, title, chart_data) {
+
+        this.impressionPieChart = new Highcharts.Chart({
+            chart: {
+                renderTo: selector,
+                plotBackgroundColor: null,
+                plotShadow: true,
+                margin: 0
+            },
+            title: {
+                text: title
+            },
+            tooltip: {
+                formatter: function() {
+                    return "<b>"+ this.point.name +"</b>: "+ this.point.total + " " + title;
+                }
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: "pointer",
+                    dataLabels: {
+                        enabled: false,
+                        color:  "#000000",
+                        connectorColor: "#000000",
+                        formatter: function() {
+                            return "<b>"+ this.point.name +"</b>: "+ this.percentage.toFixed(2) +" %";
+                        }
+                    },
+                    showInLegend: true
+                }
+            },
+            legend: {
+                verticalAlign: "bottom"
+            },
+            series: [{
+                type: "pie",
+                name: title,
+                data: chart_data
+            }]
+        });
+
+    };
+
+
+    Chart.chartError = function() {
+        $('#dashboard-stats-chart').removeClass('chart-loading').addClass('chart-error');
+    };
+
+
+
 
 })(mopub.Chart = mopub.Chart || {}, this.jQuery);
-
-function obj_equals(x, y) {
-    for(p in y) {
-        if(typeof(x[p])=='undefined') {return false;}
-    }
-    for(p in y) {
-        if (y[p]) {
-            switch(typeof(y[p])) {
-                case 'object':
-                    if (!y[p].equals(x[p])) { return false }; break;
-                case 'function':
-                    if (typeof(x[p])=='undefined' || (p != 'equals' && y[p].toString() != x[p].toString())) { return false; }; break;
-                default:
-                    if (y[p] != x[p]) { return false; }
-            }
-        }
-        else {
-            if (x[p]) {
-                return false;
-            }
-        }
-    }
-    for(p in x){
-        if(typeof(y[p])=='undefined') {return false;}
-    }
-    return true;
-}
-

@@ -1,10 +1,15 @@
+from google.appengine.ext import blobstore
 from google.appengine.ext import db
 from google.appengine.api import users
 
 from account.models import Account, NetworkConfig
 from advertiser.models import Creative
 
-# 
+import datetime
+import time
+import logging
+
+#
 # A mobile app, which can have multiple Sites on which ads can be displayed
 #
 class App(db.Model):
@@ -31,66 +36,87 @@ class App(db.Model):
             u'utilities',
             u'weather',
     )
-    
+
     account = db.ReferenceProperty(Account)
-  
+
     name = db.StringProperty(required=True)
     global_id = db.StringProperty() # used to store appstore or marketplace id
     adsense_app_name = db.StringProperty()
     adsense_app_id = db.StringProperty()
     admob_bgcolor = db.StringProperty()
     admob_textcolor = db.StringProperty()
-    
+
     app_type = db.StringProperty(required=True, default='iphone', choices=['iphone', 'android', 'ipad', 'mweb'])
     description = db.TextProperty()
     url = db.StringProperty()
     package = db.StringProperty()
     # For MPX
     categories = db.StringListProperty()
-    
+
     icon = db.BlobProperty()
-    
+    icon_blob = blobstore.BlobReferenceProperty()
+
     # Ad network overrides
     jumptap_app_id = db.StringProperty()
     millennial_app_id = db.StringProperty()
 
     deleted = db.BooleanProperty(default=False)
-  
+
     t = db.DateTimeProperty(auto_now_add=True)
-    
+
     exchange_creative = db.ReferenceProperty(Creative)
-    
+
     experimental_fraction = db.FloatProperty(default=0.0)
-    
+
     network_config = db.ReferenceProperty(NetworkConfig, collection_name="apps")
-    
+
     primary_category = db.StringProperty(choices=CATEGORY_CHOICES)
     secondary_category = db.StringProperty(choices=CATEGORY_CHOICES)
-  
+
+    def app_type_text(self):
+        types = {
+            'iphone': 'iOS',
+            'android': 'Android',
+            'ipad': 'iPad',
+            'mweb': 'Mobile Web'
+        }
+        return types[self.app_type]
+
+    @property
+    def icon_url(self):
+        from google.appengine.api import images
+        if not self.icon_blob: return "/placeholders/image.gif"
+        return images.get_serving_url(self.icon_blob)
+
+
     def get_owner(self):
         return None
-  
+
     def set_owner(self, value):
         pass
-  
+
     def owner(self):
         return property(get_owner, set_owner)
-    
+
     @property
     def owner_key(self):
         return None
-    
+
     @property
     def owner_name(self):
         return None
-  
-    
+
+    def toJSON(self):
+        d = to_dict(self, ignore = ['icon', 'account', 'network_config'])
+        d.update(icon_url=self.icon_url)
+        return d
+
 class Site(db.Model):
     DEVICE_FORMAT_CHOICES = (
            u'phone',
            u'tablet',
        )
-       
+
     FORMAT_CHOICES = (
           u'full',
           u'full_tablet',
@@ -105,109 +131,113 @@ class Site(db.Model):
     # TODO: Why is this "app_key" and not "app"?
     app_key = db.ReferenceProperty(App, collection_name="all_adunits")
     account = db.ReferenceProperty(Account)
-    
+
     # TODO: figure out how to expose this
     adsense_channel_id = db.StringProperty()
-    
+
     name = db.StringProperty(required=True, default='Banner Ad')
     url = db.StringProperty()
     description = db.TextProperty()
     custom_width = db.IntegerProperty()
     custom_height = db.IntegerProperty()
-    
+
     device_format = db.StringProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
     format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width
     resizable = db.BooleanProperty(default=False)
     landscape = db.BooleanProperty(default=False)
 
     deleted = db.BooleanProperty(default=False)
-    
+
     # what kind of ad is preferred here
     ad_type = db.StringProperty(choices=['text', 'image'], default='image',required=False)
-    
+
     # Ad network overrides
     jumptap_site_id = db.StringProperty()
     millennial_site_id = db.StringProperty()
-    
+
     # additional keywords that are passed to the auction
     keywords = db.TextProperty() # TODO: make sure this doesn't break shit
-    # keywords = db.StringListProperty()                          
-    
+    # keywords = db.StringListProperty()
+
     refresh_interval = db.IntegerProperty(default=0)
     animation_type = db.StringProperty(default='0') # NOTE: this is a string in case we don't want enumeration later
-    
+
     # color scheme
     color_border = db.StringProperty(required=True, default='336699')
     color_bg = db.StringProperty(required=True, default='FFFFFF')
     color_link = db.StringProperty(required=True, default='0000FF')
     color_text = db.StringProperty(required=True, default='000000')
     color_url = db.StringProperty(required=True, default='008000')
-    
+
     # creation time
     t = db.DateTimeProperty(auto_now_add=True)
-    
+
     network_config = db.ReferenceProperty(NetworkConfig, collection_name="adunits")
-    
+
+    def toJSON(self):
+        d = to_dict(self, ignore = ['account', 'network_config', 'app_key'])
+        return d
+
     def is_fullscreen(self):
         return 'full' in self.format
 
     def is_tablet(self):
         return 'tablet' in self.format
-    
+
     def get_height(self):
-        if self.format == 'custom' and self.custom_height: 
+        if self.format == 'custom' and self.custom_height:
             return self.custom_height
         dimensions = self.format.split('x')
-        if len(dimensions) > 1: 
+        if len(dimensions) > 1:
             return int(dimensions[1])
         else:
             return 0
 
     def get_width(self):
-        if self.format == 'custom' and self.custom_width: 
+        if self.format == 'custom' and self.custom_width:
             return self.custom_width
         dimensions = self.format.split('x')
-        if len(dimensions) > 1: 
+        if len(dimensions) > 1:
             return int(dimensions[0])
         else:
             return 0
-    
+
     # Now we can access app_key using app
     def _get_app(self):
         return self.app_key
     def _set_app(self, value):
         self.app_key = value
     app = property(_get_app, _set_app)
-      
+
     @classmethod
     def site_by_id(c, id):
         if id.startswith('ca'):
             account = Account.gql('where adsense_pub_id = :1', id).get()
             s = Site.gql('where account = :1', account).get()
         else:
-            s = Site.get(id)      
+            s = Site.get(id)
         return s
-       
+
     def get_owner(self):
         return self.app_key
-        
+
     def set_owner(self, value):
         self.app_key = value
-        
+
     def owner(self):
         return property(get_owner, set_owner)
-  
+
     @property
     def owner_key(self):
-        return self._app_key            
-  
+        return self._app_key
+
     @property
     def owner_name(self):
         return "app_key"
-        
+
     def get_pub_id(self, pub_id_attr):
         """ Look up the pub string in all levels """
-        
+
         # If not found, return None
         adunit_level_id = getattr(self.network_config, pub_id_attr, None)
         if adunit_level_id:
@@ -216,13 +246,48 @@ class Site(db.Model):
         app_level_id = getattr(self.app.network_config, pub_id_attr, None)
         if app_level_id:
             return app_level_id
-        
+
         account_level_id = getattr(self.account.network_config, pub_id_attr, None)
         if account_level_id:
             return account_level_id
+
 
 ###############
 # rename Site #
 ###############
 
 AdUnit = Site
+
+
+# Serialization
+
+SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
+
+def to_dict(model, ignore = None):
+    if ignore == None:
+        ignore = []
+
+    output = {}
+    output.update(id=str(model.key()))
+    properties = model.properties().iteritems()
+
+    for key, prop in properties:
+        value = getattr(model, key)
+        if key in ignore:
+            output[key] = '_ignored'
+        elif value is None or isinstance(value, SIMPLE_TYPES):
+            output[key] = value
+        elif isinstance(value, datetime.date):
+            # Convert date/datetime to ms-since-epoch ("new Date()").
+            ms = time.mktime(value.utctimetuple()) * 1000
+            ms += getattr(value, 'microseconds', 0) / 1000
+            output[key] = int(ms)
+        elif isinstance(value, db.GeoPt):
+            output[key] = {'lat': value.lat, 'lon': value.lon}
+        elif isinstance(value, db.Model):
+            output[key] = to_dict(value)
+        else:
+            output[key] = 'Could not encode'
+            #raise ValueError('cannot encode ' + repr(prop))
+
+    return output

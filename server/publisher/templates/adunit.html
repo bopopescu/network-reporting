@@ -13,7 +13,7 @@
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block content %}{% if not adunit.adgroups %}
-          <div class="alert-message">
+          <div class="alert-message block-message">
             There are no campaigns targeting this ad unit.  To show ads here, set up a new ad campaign or add this ad unit to an existing campaign on the <a href="{% url advertiser_campaign %}">Campaigns</a> page.
           </div>
 {% endif %}
@@ -147,7 +147,7 @@
                           {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                           Starts {{adgroup.campaign.start_date|format_date_compact}}.
                           {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                          Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                          Ends {{adgroup.campaign.end_date|format_date_compact}}.
                           {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
                           All dates.
                           {% endif %}
@@ -234,34 +234,36 @@
                             <thead>
                               <tr>
                                 <th class="dataTable-name big">Marketplace</th>
+                              <th class="dataTable-data numeric special"></th>
+                              <th class="dataTable-data numeric special"></th>
+                              <th class="dataTable-data numeric special"></th>
+                              <th class="dataTable-data numeric special"></th>
                               <th class="dataTable-data numeric special">Revenue</th>
                               <th class="dataTable-data numeric special">ECPM</th>
-                        <th class="dataTable-data numeric special">Attempts</th>
-                        <th class="dataTable-data numeric special">Impressions</th>
-                        <th class="dataTable-data numeric special">Fillrate</th>
-                        <th class="dataTable-data numeric special">Clicks</th>
-                        <th class="dataTable-data numeric special">CTR</th>
+                              <th class="dataTable-data numeric special">Impressions</th>
                           </tr>
                       </thead>
                       <tbody>
                   {% for adgroup in marketplace %}
+                  {% if forloop.counter0 == 0 %}
                   <tr>
                     <th class="campaignData-icon dataTable-name">
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
+                      <a href="{% url marketplace_index %}">{{adgroup.name}}</a>
                       <span class="muted">MoPub Marketplace Beta</span>
                     </th>
 
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
+                    <td class="dataTable-data numeric"></td>
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
                   </tr>
+                  {% endif %}
                   {% endfor %}
                 </tbody>
               </table>

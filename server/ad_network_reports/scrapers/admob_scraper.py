@@ -5,12 +5,15 @@ import logging
 import sys
 import time
 
-from datetime import date
+from datetime import date, timedelta
 sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+#sys.path.append('/home/ubuntu/mopub/server')
 from ad_network_reports.scrapers.scraper import Scraper, ScraperSite, \
         NetworkConfidential
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
+from ad_network_reports.scrapers.unauthorized_login_exception import \
+        UnauthorizedLogin
 
 def admob_list_encode(sequence, var_name):
     list_var_name = var_name + '[]'
@@ -48,7 +51,8 @@ class AdMobScraper(Scraper):
                     token=self.token)
         else:
             logging.error(response['errors'])
-            raise Exception("\n".join([r['msg'] for r in response['errors']]))
+            raise UnauthorizedLogin("\n".join([r['msg'] for r in response[
+                'errors']]))
 
     def test_login_info(self):
         """Login info has already been tested in the constructor (via the
@@ -72,6 +76,7 @@ class AdMobScraper(Scraper):
         return sites
 
     def get_site_stats(self, start_date):
+        logging.warning("TEST DATE FOR ADMOB: %s" % start_date.strftime('%Y %m %d'))
         end_date = start_date
 
         ids = [str(site.identifier) for site in self.get_sites()]
@@ -98,9 +103,9 @@ class AdMobScraper(Scraper):
             nsr = NetworkScrapeRecord(revenue = stats['revenue'],
                                       attempts = stats['requests'],
                                       impressions = stats['impressions'],
-                                      fill_rate = stats['fill_rate'],
+                                      fill_rate = stats['fill_rate'] * 100,
                                       clicks = stats['clicks'],
-                                      ctr = stats['ctr'],
+                                      ctr = stats['ctr'] * 100,
                                       ecpm = stats['ecpm'])
 
             if 'site_id' in stats:
@@ -113,9 +118,9 @@ class AdMobScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'betmobilemail@gmail.com'
-    NC.password = 'knwyt4f5v94b61qz'
-    NC.client_key = 'k9417383a8224757c05fbe9aa1ef8e4c'
+    NC.username = 'adnetwork@com2usamerica.com'
+    NC.password = '4w47m82l5jfdqw1x'
+    NC.client_key = 'ka820827f7daaf94826ce4cee343837a'
     NC.ad_network_name = 'admob'
     SCRAPER = AdMobScraper(NC)
-    print SCRAPER.get_site_stats(date.today())
+    print SCRAPER.get_site_stats(date.today()) #- timedelta(days=2))

@@ -1,5 +1,5 @@
+#application: mopub-inc
 application: mopub-experimental
-# application: mopub-experimental
 version: 38
 
 runtime: python
@@ -73,6 +73,10 @@ handlers:
   script: ad_server/main.py
 
 - url: /_ah/queue/.*
+  script: stats/views.py
+  login: admin
+
+- url: /mdb/.*
   script: stats/views.py
   login: admin
 

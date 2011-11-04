@@ -31,9 +31,8 @@ from nose.tools import eq_
 from nose.tools import with_setup
 from budget import budget_service
 from google.appengine.api import memcache
-from budget.models import (BudgetSlicer,
+from budget.models import (Budget,
                            BudgetSliceLog,
-                           BudgetDailyLog,
                            )
 
 from google.appengine.ext import testbed

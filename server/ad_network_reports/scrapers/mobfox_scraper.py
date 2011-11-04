@@ -1,8 +1,11 @@
 import logging
+import sys
 import time
 import urllib2
 import urllib
 
+#sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+sys.path.append('/home/ubuntu/mopub/server')
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import NetworkConfidential
@@ -12,18 +15,23 @@ from xml.dom import minidom
 class MobFoxScraper(object):
     """One app stats returned per request sent. Can't break down by ad unit."""
     # API_KEY is MoPub specific
-    API_KEY = 'e64d04079c63c14644fc9690a925c8af'
+    API_KEY = 'MOPUB30082011'
+    API_URL = 'http://account.mobfox.com/mopub_reportingapi.php?'
 
-    def __init__(self, credentials):
-        self.publisher_ids = credentials.publisher_ids
+    def __init__(self, login_info):
+        """Take tuple of login credentials and app level publisher ids.
+
+        Only need publisher ids.
+        """
+        if isinstance(login_info, tuple):
+            self.publisher_ids = login_info[1]
 
     def test_login_info(self):
-        """Test publisher_ids.
+        """Mobfox login is correct because MoPub has it.
 
-        Raise an error if one of the publisher ids is incorrect otherwise
-        return None.
+        Return None.
         """
-        self.get_site_stats(date.today() - timedelta(days = 1))
+        pass
 
     def get_site_stats(self, from_date):
         to_date = from_date
@@ -37,13 +45,13 @@ class MobFoxScraper(object):
         reports = []
         for pub_id in self.publisher_ids:
             req_dict['publisher_id'] = pub_id
-            req = urllib2.Request('http://account.mobfox.com/reporting_api.php?'
+            req = urllib2.Request(self.API_URL
                     + urllib.urlencode(req_dict))
 
             response = urllib2.urlopen(req)
             line = response.read()
             if line.find("error") != -1:
-                raise Exception(line)
+                raise MobFoxError(line)
             self.dom = minidom.parseString(line)
 
             try:
@@ -70,10 +78,21 @@ class MobFoxScraper(object):
         return reports
 
     def get_value(self, name):
-        return self.dom.getElementsByTagName(name)[0].childNodes[0].nodeValue
+        nodes = self.dom.getElementsByTagName(name)[0].childNodes
+        if nodes:
+            return nodes[0].nodeValue
+        else:
+            return 0
+
+class MobFoxError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return repr(self.msg)
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.publisher_ids = ['fb8b314d6e62912617e81e0f7078b47e']
-    SCRAPER = MobFoxScraper(NC)
-    print SCRAPER.get_site_stats(date.today())
+    publisher_ids = ['ddcc935d2bc034b2823e04b24ff544a9',
+            'e884e3c21a498d57f7d1cb1400c5ab9b']
+    SCRAPER = MobFoxScraper((NC, publisher_ids))
+    print SCRAPER.get_site_stats(date.today() - timedelta(days=1))

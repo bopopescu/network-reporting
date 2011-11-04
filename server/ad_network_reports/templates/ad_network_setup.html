@@ -1,0 +1,25 @@
+﻿{% extends 'base.html' %}
+{% load filters %}
+{% block navLinks %}
+            <li><a href="{% url publisher_index %}">Dashboard</a></li>
+            <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+            <li><a href="{% url reports_index %}">Reports</a></li>
+{% endblock navLinks %}
+{% block pageTitle %}<h1>Ad Network Reports</h1>{% endblock pageTitle %}
+{% block messageCenter %}{% endblock messageCenter %}
+{% block titleBarRight %}{% endblock titleBarRight %}
+
+{% block extraScripts %}
+  <script type="text/javascript">
+    $(function() {
+      $("#dashboard-dateOptions").remove();
+    });
+  </script>
+{% endblock extraScripts %}
+
+{% block content %}
+<div class="alert-message block-message info">
+  Ad network revenue reporting can be set up to see statistics from any of the big ad networks. Click 'Set up network reporting' to get started using ad network reports.
+</div>
+<a class="right btn" href={{add_credentials_url}}>Set up network reporting</a>
+{% endblock content %}

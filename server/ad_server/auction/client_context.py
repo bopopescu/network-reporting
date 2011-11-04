@@ -1,10 +1,10 @@
-import datetime   
-from common.utils.marketplace_helpers import get_width_and_height      
-from common.utils.helpers import to_uni, to_ascii    
+import datetime
+from common.utils.marketplace_helpers import get_width_and_height
+from common.utils.helpers import to_uni, to_ascii
 
 class ClientContext(object):
     """ All of the information provided to us by the client.
-    
+
         Along with adunit context, this provides all the necessary information
         for running a battle. """
     def __init__ (self,
@@ -13,16 +13,16 @@ class ClientContext(object):
                   country_code=None, # Two characater country code.
                   region_code=None, # For future use.
     	          excluded_adgroup_keys=[],
-    	          raw_udid=None, 
+    	          raw_udid=None,
     	          mopub_id=None,
     	          ll=None,
     	          request_id=None,
     	          now=datetime.datetime.now(),
-    	          user_agent=None,  
-    	          geo_predicates=["country_name=US","country_name=*"],   #TODO get rid of this horrible hack. Refactor geopreds!   
+    	          user_agent=None,
+    	          geo_predicates=["country_name=US","country_name=*"],   #TODO get rid of this horrible hack. Refactor geopreds!
     	          experimental=None,
     	          client_ip=None,
-    	          ):         
+    	          ):
         self.adunit = adunit
         self.keywords = keywords
         self.country_code = country_code
@@ -34,20 +34,20 @@ class ClientContext(object):
         self.request_id = request_id
         self.now = now
         self.user_agent = user_agent
-        self.experimental = experimental  
+        self.experimental = experimental
         self.geo_predicates = geo_predicates
-        self.client_ip = client_ip        
-        
-        
+        self.client_ip = client_ip
+
+
     @classmethod
     def from_request(cls, request):
-        """ Builds a client_context object based off of client's request. """    
+        """ Builds a client_context object based off of client's request. """
         client_context = ClientContext()
         # Do things
-        
-        return client_context    
-        
-        
+
+        return client_context
+
+
     def make_marketplace_dict(self, adunit_context):
         return build_marketplace_dict(adunit_context.adunit,
                                       self.keywords,
@@ -57,7 +57,7 @@ class ClientContext(object):
                                       self.client_ip,
                                       adunit_context,
                                       self.country_code)
-            
+
     def __eq__(self, other):
         return self.adunit == other.adunit \
             and self.keywords == other.keywords \
@@ -73,7 +73,7 @@ class ClientContext(object):
             and self.experimental == other.experimental \
             and self.geo_predicates == other.geo_predicates \
             and self.client_ip == other.client_ip
-        
+
 
 def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context, country):
         app = adunit.app_key
@@ -103,7 +103,7 @@ def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context, countr
                     pub_domain = app.account.domain,
                     pub_rev_share = app.account.network_config.rev_share,
                     price_floor = app.account.network_config.price_floor,
-                    primary_category = primary_category, 
+                    primary_category = primary_category,
                     secondary_category = secondary_category,
                     #app_bundle = app.package if app.app_type == 'android' else None,
                     # These return 0 if interstitial or w/e, don't return 0 just None
@@ -111,11 +111,13 @@ def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context, countr
                     height = adunit_height,
                     paid = 0,
                     country = country,
+                    blind = 1 if app.account.network_config.blind else 0,
+                    blocked_advs = app.account.network_config.blocklist,
                     )
         none_keys = []
         for k,v in ret.iteritems():
             if v is None:
-                none_keys.append(k) 
+                none_keys.append(k)
             ret[k] = to_ascii(v)
         for key in none_keys:
             del(ret[key])

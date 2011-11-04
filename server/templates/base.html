@@ -21,14 +21,14 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />
-  <link rel="stylesheet" href="/css/style.css?v=41">
+  <link rel="stylesheet" href="/css/style.css?v=46">
   {% block extraCSS %}{% endblock %}
 
   <!-- modernizr -->
   <script src="/js/mylibs/modernizr-1.6.min.js"></script>
 
   <!-- sorttable -->
-  <script src="/js/sorttable.js"></script>
+
 
   <!-- Google load for jquery and jqueryui -->
   <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
@@ -44,28 +44,19 @@
    <!--jQuery UI SelectMenu Plugins TODO: Where should this go? -->
   <script src="/js/mylibs/jquery-ui-1.8.7.custom/development-bundle/ui/jquery.ui.selectmenu.js"></script>
 
-  <script src="/js/mylibs/jquery.treeview/jquery.treeview.js"></script>
-  <link rel="stylesheet" href="/js/mylibs/jquery.treeview/jquery.treeview.css" />
+  <!-- <script src="/js/mylibs/jquery.treeview/jquery.treeview.js"></script> -->
+  <!-- <link rel="stylesheet" href="/js/mylibs/jquery.treeview/jquery.treeview.css" /> -->
   <script src="/js/mylibs/jquery.cookie.js"></script>
 
   <!-- Highcharts -->
   <script src="/js/mylibs/highcharts/highcharts.js"></script>
 
-  <!-- MoPub -->
-  <script src="/js/mopub.js?v=34"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=33"></script>{% endblock extraScripts %}
+  <!-- Tablesorter -->
+  <script src="/js/jquery.tablesorter.min.js"></script>
 
-  <!-- KISSmetrics -->
-  <script type="text/javascript">
-    var _kmq = _kmq || [];
-    function _kms(u){
-      setTimeout(function(){
-        var s = document.createElement('script'); var f = document.getElementsByTagName('script')[0]; s.type = 'text/javascript'; s.async = true;
-        s.src = u; f.parentNode.insertBefore(s, f);
-      }, 1);
-    }
-    _kms('//i.kissmetrics.com/i.js');_kms('//doug1izaerwt3.cloudfront.net/bac035c888be28f161fd88b0e4d2325d67acb2a9.1.js');
-  </script>
+  <!-- MoPub -->
+  <script src="/js/mopub.js?v=37"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=34"></script>{% endblock extraScripts %}
 
   <!-- Mixpanel -->
   <script type="text/javascript">
@@ -118,6 +109,7 @@
             {% block navLinks %}
             <li><a href="{% url publisher_index %}">Dashboard</a></li>
             <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+            <li><a href="{% url marketplace_index %}">Marketplace</a></li>
             <li><a href="{% url reports_index %}">Reports</a></li>
             {% endblock navLinks %}
           </ul>
@@ -233,7 +225,7 @@
             {% if flash %}
                 <!-- There's one or more flash-scoped objects -->
                 {% for key, value in flash.items %}
-                    <div class="{{ key }} alert-message">
+                    <div class="{{ key }} alert-message block-message">
                         {% autoescape off %}
                         {{ value }}
                         {% endautoescape %}

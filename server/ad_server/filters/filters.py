@@ -1,4 +1,4 @@
-import logging 
+import logging
 from ad_server.debug_console import trace_logging
 
 
@@ -15,23 +15,23 @@ from ad_server.parser.useragent_parser import get_os
 
 from common.utils.decorators import deprecated
 
-from common.constants import (VALID_FULL_FORMATS,     
+from common.constants import (VALID_FULL_FORMATS,
                               VALID_TABLET_FULL_FORMATS,
-                              MIN_IOS_VERSION, 
-                              MAX_IOS_VERSION, 
-                              MIN_ANDROID_VERSION, 
+                              MIN_IOS_VERSION,
+                              MAX_IOS_VERSION,
+                              MIN_ANDROID_VERSION,
                               MAX_ANDROID_VERSION
                              )
 ###############################
 # BASIC INCLUSION FILTERS
 #
-# --- Each filter function is a function which takes some arguments (or none) necessary 
-#       for the filter to work its magic. log_mesg is the message that will be logged 
+# --- Each filter function is a function which takes some arguments (or none) necessary
+#       for the filter to work its magic. log_mesg is the message that will be logged
 #       for the associated objects that eval'd to false.
 # --- ALL FILTER GENERATOR FUNCTIONS MUST RETURN (filter_function, log_mesg, [])
-# --- The empty list is the list that will contain all elt's for which the 
+# --- The empty list is the list that will contain all elt's for which the
 # --- Filters should return TRUE if the element being tested should be kept
-#       
+#
 ###############################
 
 def budget_filter():
@@ -39,13 +39,19 @@ def budget_filter():
     def real_filter(a):
         # Check if we need smoothing, if so, use budgeting
         a.bid = a.bid or 0.0
-        return (budget_service.has_budget(a.campaign, a.bid/1000))
+        # The amount of budget doesn't really matter. As long as a budget
+        # has.  This is technically incorrect for CPC/CPA ads, but because
+        # of what was mentioned before, it doesn't really matter.
+        if a.campaign.budget_obj:
+            return (budget_service.has_budget(a.campaign.budget_obj, a.bid/1000))
+        else:
+            return True
     return (real_filter, log_mesg, [])
 
 def active_filter():
     log_mesg = "Removed due to inactivity: %s"
     def real_filter(a):
-        return (a.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
+        return (a.campaign.active and a.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
     return (real_filter, log_mesg, [])
 
 def kw_filter(keywords):
@@ -53,22 +59,22 @@ def kw_filter(keywords):
     def real_filter(adgroup):
         # if there are no keywords then we don't need to exclude
         if not adgroup.keywords:
-            return True 
-        
-        keyword_match = False 
+            return True
+
+        keyword_match = False
         # lists of tuples:
         # m_age:19 AND m_gender:m
         # m_age:20 AND m_gender:f
         # is transformed to
         # [(m_age:19,m_gender:m),(m_age:20,m_gender:f)]
-        anded_keywords = [k.split(' AND ') for k in adgroup.keywords] 
+        anded_keywords = [k.split(' AND ') for k in adgroup.keywords]
         trace_logging.info("KEYWORDS: %s == %s"%(keywords,anded_keywords))
         for anded_keyword in anded_keywords:
             anded_keyword = (kw.lower() for kw in anded_keyword)
             if set(anded_keyword) <= set(keywords):
-                keyword_match = True 
+                keyword_match = True
                 break
-        return keyword_match # return False if there is a match and vice versa        
+        return keyword_match # return False if there is a match and vice versa
     return (real_filter, log_mesg, [])
 
 
@@ -82,20 +88,20 @@ def geo_filter(acceptable_geo_preds_list):
 def os_filter(user_agent):
     log_mesg = "Removed due to OS restrictions: %s"
     def real_filter(a):
-        
+
         # Do not do device targeting if it is turned off
         if not a.device_targeting:
             return True
-        
+
         user_os_name, user_model, user_os_version = get_os(user_agent)
-        
+
         # If we don't know the user agent
         if user_os_name is None:
             if a.target_other:
                 return True
             else:
                 return False
-        
+
         # We do know the OS but we don't know what the os_version is
         if user_os_version is None:
             if user_os_name == 'iOS':
@@ -108,7 +114,7 @@ def os_filter(user_agent):
                     return True
                 else:
                     return False
-                    
+
         def in_range(user_nums, max_nums, min_nums):
             # Make all lists same length to make comparison easier
             max_len = max(len(user_nums), len(max_nums), len(min_nums))
@@ -118,7 +124,7 @@ def os_filter(user_agent):
                 max_nums.append('0')
             while len(min_nums) < max_len:
                 min_nums.append('0')
-            
+
             # Do comparison
             is_less = False
             is_more = False
@@ -133,10 +139,10 @@ def os_filter(user_agent):
                         return False
                     elif int(num) > int(min_nums[i]):
                         is_more = True
-            
-            # Comparison succeeded            
+
+            # Comparison succeeded
             return True
-        
+
         # We know the OS and the os_version
         user_nums = user_os_version.split('.')
         if user_os_name == "iOS":
@@ -158,10 +164,10 @@ def os_filter(user_agent):
                 max_nums = a.android_version_max.split('.')
                 min_nums = a.android_version_min.split('.')
                 return in_range(user_nums, max_nums, min_nums)
-                
+
     return (real_filter, log_mesg, [])
 
-def mega_filter(*filters): 
+def mega_filter(*filters):
     def actual_filter(a):
         for (f, msg, lst) in filters:
             if not f(a):
@@ -169,7 +175,7 @@ def mega_filter(*filters):
                 return False
         return True
     return actual_filter
-                       
+
 
 
 ######################################
@@ -183,7 +189,7 @@ def format_filter(adunit):
     log_mesg = "Removed due to format mismatch, expected " + str(adunit_format) + ": %s"
     def real_filter(creative):
         if not adunit_format or not creative.format:
-            return True 
+            return True
         if creative.multi_format:
             if adunit_format in creative.multi_format:
                 return True
@@ -194,7 +200,7 @@ def format_filter(adunit):
                 # if the creative is a full screen one, make sure its the correct orientation
                 if creative.format in ['full','full_landscape']:
                     return creative.landscape == adunit.landscape
-                else:    
+                else:
                     return creative.format in VALID_FULL_FORMATS
         if adunit_format == 'full_tablet' or adunit_format == 'full_tablet_landscape':
             if creative.multi_format:
@@ -203,7 +209,7 @@ def format_filter(adunit):
                 # if the creative is a full screen one, make sure its the correct orientation
                 if creative.format in ['full_tablet', 'full_tablet']:
                     return creative.landscape == adunit.landscape
-                else:    
+                else:
                     return creative.format in VALID_TABLET_FULL_FORMATS
         if adunit_format == 'custom' and creative.format == 'custom':
             return adunit.custom_width == creative.custom_width and adunit.custom_height == creative.custom_height
@@ -236,14 +242,14 @@ def freq_filter(type, key_func, udid, now, frq_dict):
     Super generic, made this way since all frequencies are just
      -verify frequency cap, if yes make sure we're not over it, otherwise carry on
     so I just made a way to generate them"""
-    
+
     log_mesg = "Removed due to " + type + " frequency cap: %s"
     def real_filter(a):
         a_key = key_func(udid, now, a.key())
         #This is why all frequency cap attributes must follow the same naming convention, otherwise this
         #trick doesn't work
         try:
-            frq_cap = getattr(a, '%s_frequency_cap' % type) 
+            frq_cap = getattr(a, '%s_frequency_cap' % type)
         except:
             frq_cap = 0
 
@@ -256,7 +262,7 @@ def freq_filter(type, key_func, udid, now, frq_dict):
         return (not frq_cap or imp_cnt < frq_cap)
     return (real_filter, log_mesg, [])
 
-#this is identical to mega_filter except it logs the adgroup 
+#this is identical to mega_filter except it logs the adgroup
 def all_freq_filter(*filters):
     def actual_filter(a):
         #print the adgroup title so the counts/cap printing in the acutal filter don't confuse things
@@ -274,7 +280,7 @@ CAPTURE_DIST = 50
 EARTH_RADIUS = 3958.75587
 
 def to_rad(x):
-    return (pi*x)/180 
+    return (pi*x)/180
 
 def ll_dist(p1, p2):
     lat1, lng1 = (to_rad(x) for x in p1)
@@ -286,7 +292,7 @@ def ll_dist(p1, p2):
     return EARTH_RADIUS * c
 
 
-def lat_lon_filter(ll=None):   
+def lat_lon_filter(ll=None):
     ll_p = None
     #ll should be input as a string, turn it into a list of floats
     if ll:
@@ -294,17 +300,17 @@ def lat_lon_filter(ll=None):
     log_mesg = "Removed due to being outside target lat/long radii: %s"
     def real_filter(a):
         #If ll_p is none or adgroup has no city targets, dont' exclude
-        if not ll_p or not a.cities or len(a.cities) == 0: 
-            return True 
-        #City format is ll:ste:city:ccode, split on ':', take the first entry, 'lat,lon', split that on ',' to get ('lat','lon') 
+        if not ll_p or not a.cities or len(a.cities) == 0:
+            return True
+        #City format is ll:ste:city:ccode, split on ':', take the first entry, 'lat,lon', split that on ',' to get ('lat','lon')
         # for every city.  Apply map to this split list to get (float('lat'), float('lon'))
         latlons = ((float(k) for k in t.split(',')) for t in (city.split(':')[0] for city in a.cities))
         for lat, lon in latlons:
             #Check all lat, lon pairs.  If any one of them is too far, return True
             # since all filters are exclusion filters (True means don't keep it)
             if ll_dist((lat,lon),ll_p) < CAPTURE_DIST:
-                return True 
-        return False 
+                return True
+        return False
     return (real_filter, log_mesg, [])
 
 ###############

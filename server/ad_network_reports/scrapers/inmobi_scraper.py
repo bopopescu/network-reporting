@@ -1,10 +1,15 @@
 import json
 import logging
+import sys
 import urllib2
 
+#sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
+sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
+from ad_network_reports.scrapers.unauthorized_login_exception import \
+        UnauthorizedLogin
 from datetime import datetime, date, timedelta
 from hashlib import sha1
 from hmac import new as hmac
@@ -31,8 +36,6 @@ class InMobiScraper(Scraper):
     def get_site_stats(self, start_date):
         # Date can't be today
         end_date = start_date
-        # range can't start and end on the same date for InMobi
-        start_date -= timedelta(days = 1)
 
         start_str = start_date.strftime('%d%b%Y').lower()
         end_str = end_date.strftime('%d%b%Y').lower()
@@ -54,14 +57,20 @@ class InMobiScraper(Scraper):
         req.add_header('Date', now)
         req.add_header('x-data-user', self.username)
 
-        resp = urllib2.urlopen(req)
-        line = resp.read()
-        print line
+        try:
+            response = urllib2.urlopen(req)
+        except urllib2.HTTPError as e:
+            if e.code in (401, 403):
+                raise UnauthorizedLogin("Invalid login for InMobi")
+            raise
+
+        line = response.read()
         if line.find('error') != -1:
             logging.error("Day range (%s to %s) selected for InMobi doesn\'t "
                     "have any data. %s" % (start_date.strftime("%Y %m %d"),
                         end_date.strftime("%Y %m %d"), line))
-            raise Exception(line)
+            raise InMobiError(line[line.find('<error>') + len('<error>') :
+                line.find('</error>')])
 
         dictionary = json.loads(line)
 
@@ -80,12 +89,18 @@ class InMobiScraper(Scraper):
 
         return reports
 
+class InMobiError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return repr(self.msg)
+
 if __name__ == '__main__':
     NC = NetworkConfidential()
     # access_id
-    NC.username = '4028cb973099fe040130c2aa2a0904b5'
+    NC.username = '4028cb972fe21753012ffb7680350267'
     # secret_key
-    NC.password = '098233019949'
+    NC.password = '0588884947763'
     NC.ad_network_name = 'inmobi'
     SCRAPER = InMobiScraper(NC)
-    print SCRAPER.get_site_stats(date.today() - timedelta(days = 1))
+    print SCRAPER.get_site_stats(date.today() - timedelta(days=2))

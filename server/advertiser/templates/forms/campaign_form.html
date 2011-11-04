@@ -12,7 +12,6 @@
       <select id="campaign_type_select" name="{{form.campaign_type.name}}">
         <option value="gtee" {% if form.campaign_type.value == "marketplace" or form.campaign_type.value == "network"%} disabled="disabled" {% endif %}{% if not form.campaign_type.value or form.campaign_type.value == "gtee"%}selected{% endif %}> Guaranteed </option>
         <option value="promo"  {% if form.campaign_type.value == "marketplace" or form.campaign_type.value == "network"%} disabled="disabled" {% endif %}{% ifequal form.campaign_type.value "promo" %}selected{% endifequal %} > Promotional </option>
-        <option value="marketplace" {% if form.campaign_type.value == "gtee" or form.campaign_type.value == "promo" or form.campaign_type.value == "network" %} disabled="disabled" {% endif %} {% ifequal form.campaign_type.value "marketplace" %}selected{% endifequal %}> Marketplace</option>
         <option value="network" {% if form.campaign_type.value == "gtee" or form.campaign_type.value == "promo" or form.campaign_type.value == "marketplace" %} disabled="disabled" {% endif %} {% ifequal form.campaign_type.value "network" %}selected{% endifequal %}> Network</option>
       </select>
       <a href="#" id="campaignForm-type-helpLink">What's this?</a>
@@ -25,10 +24,6 @@
         <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
         <h4>Network</h4>
         <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
-        <span class='marketplace'>
-          <h4>Marketplace</h4>
-          <p>A <strong>Marketplace</strong> campaign enables the MoPub marketplace for the selected adunits</p>
-        </span>
       </div>
     </dd>
 
@@ -82,10 +77,17 @@
     </dd>
     {{ form.description|attrs:'{"placeholder":"Campaign for My New App"}' }}
     <div class="campaignDependent gtee promo backfill_promo">
-      <dt>Dates:</dt>
+      <dt>Start Time:</dt>
       <dd>
-        <input type='text' class="input-text input-text-number" name="{{form.start_date.name}}" size="15" value="{{form.start_date.value|date:"m/d/Y"}}" placeholder="Start"/> -
-        <input type='text' class="input-text input-text-number" name="{{form.end_date.name}}" size="15" value="{{form.end_date.value|date:"m/d/Y"}}"  placeholder="End"/>
+      <input id='start-date' type='text' class="input-text input-text-number" name="start_date" size="15" value="{{form.start_datetime.value|date:"m/d/Y"}}" placeholder="Start Date"/>
+
+         <input id='start-time' type='text' class='input-text input-text-number input-text-time' name='start_time' size=10 value="{{form.start_datetime.value|date:"g:i A"}}" placeholder='Start Time' /> PST
+        <div class='helper-text' id='fullCampaignError-date' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
+      </dd>
+      <dt>Stop Time:</dt>
+      <dd>
+        <input id='stop-date' type='text' class="input-text input-text-number" name="end_date" size="15" value="{{form.end_datetime.value|date:"m/d/Y"}}"  placeholder="End"/>
+        <input id='stop-time' type='text' class='input-text input-text-number input-text-time' name='end_time' size=10 value="{{form.end_datetime.value|date:"g:i A"}}" placeholder='End Time' /> PST
         <div class='helper-text' id='fullCampaignError-date' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
       </dd>
 

@@ -1,464 +1,386 @@
-from google.appengine.api import memcache
-from ad_server.debug_console import trace_logging
-import datetime
-from advertiser.models import ( Campaign,
-                                )
+from __future__ import with_statement
+import random 
 import logging
-import random
+from datetime import datetime, timedelta, date
 
-from budget.models import (BudgetSlicer,
-                           BudgetSliceLog,
-                           BudgetDailyLog,
-                           NoSpendingForIncompleteLogError,
-                           )
-                           
-from budget.query_managers import BudgetSliceLogQueryManager
-from budget.tzinfo import Pacific
+from google.appengine.api import memcache
 
-from budget.memcache_budget import (spent_today,
-                                    remaining_daily_budget,
-                                    remaining_ts_budget
-                                    )
-                                    
+from ad_server.debug_console import trace_logging
+from advertiser.models import Campaign
+
 from advertiser.query_managers import AdGroupQueryManager
+from budget.helpers import get_curr_slice_num, get_slice_from_datetime, get_datetime_from_slice
+from budget.memcache_budget import (remaining_ts_budget,
+                                    total_spent,
+                                    braking_fraction,
+                                    set_slice,
+                                    memcache_get_slice,
+                                    _make_budget_ts_key,
+                                    _make_budget_spent_key,
+                                    _make_budget_braking_key,
+                                    _to_memcache_int,
+                                    _from_memcache_int,
+                                    )
+from budget.models import BudgetSliceLog, BudgetSliceCounter, Budget
+from budget.query_managers import BudgetQueryManager
 
 """
-A service that determines if a campaign can be shown based upon the defined 
+A service that determines if a campaign can be shown based upon the defined
 budget for that campaign. If the budget_type is "evenly", a minute by minute
-timeslice-budget is kept as well. 
+timeslice-budget is kept as well.
 """
+ONE_DAY = timedelta(days = 1)
 
-test_timeslice = 0
-test_daily_budget = 0
+SUCCESSFUL_DELIV_PER = .95
 
-def pac_today():
-    return datetime.datetime.now(tz=Pacific).date()
-    
-def pac_dt():
-    return datetime.datetime.now(tz=Pacific)
-    
-def has_budget(campaign, cost, today=pac_today()):
-    """ Returns True if the cost is less than the budget in the current timeslice.
-        Campaigns that have not yet begun always return false"""
-    
-    if campaign.budget is None:
-        # TEMP: If past July 15th with no errors, remove this
-        if campaign.full_budget:
-            trace_logging.error("full_budget without budget in campaign: %s" % campaign.key())
-         # TEMP: If past July 15th with no errors, remove this
-         
-        return True
-    
-    trace_logging.warning("active: %s"%campaign.is_active_for_date(today))
-    if not campaign.is_active_for_date(today):
+def has_budget(budget, cost, today=None):
+    trace_logging.warning("Checking Budget...")
+
+    if budget is None:
         return False
 
-    
-    
-    # For now we comment this out, to get a sense of the fraction behavior
-    
-    # Determine if we need to slow down to prevent race conditions
-    # Only let through things less than the braking fraction
-    if random.random() > braking_fraction(campaign):
+    if not budget.is_active:
+        trace_logging.warning('Budget is not active for slice: %s' % budget.curr_slice)
         return False
-    
-    memcache_daily_budget = remaining_daily_budget(campaign)
-    trace_logging.warning("memcache: %s"%memcache_daily_budget)
-    
-    if memcache_daily_budget < cost:
+
+    if random.random() > braking_fraction(budget):
+        trace_logging.warning("Braking says slllowww down (didn't pass random check)")
         return False
-    
-    if campaign.budget_strategy == "evenly":
-        memcache_ts_budget = remaining_ts_budget(campaign)
-        trace_logging.warning("memcache ts: %s"%memcache_ts_budget)
-        if memcache_ts_budget < cost:
-            return False
-            
-    # All budgets are met:
+
+    memc_ts_budget = remaining_ts_budget(budget)
+    trace_logging.warning("Memcache ts: %s" % memc_ts_budget)
+
+    if memc_ts_budget < cost:
+        logging.warning("You's too poor.  Trying to spend %s with a ts budget of %s" % (cost, memc_ts_budget))
+        return False
+
     return True
-    
-def apply_expense(campaign, cost, today=pac_today()):
-    """ Applies an expense to our memcache """
-    if campaign and campaign.budget and campaign.is_active_for_date(today):
-        ts_key = _make_campaign_ts_budget_key(campaign)
-        daily_key = _make_campaign_daily_budget_key(campaign)
-        spent_key = _make_campaign_spent_today_key(campaign)
-    
-        memcache.decr(ts_key, _to_memcache_int(cost), namespace="budget")
-        memcache.decr(daily_key, _to_memcache_int(cost), namespace="budget")
-        memcache.incr(spent_key, _to_memcache_int(cost), namespace="budget", initial_value=spent_today(campaign))
 
-def timeslice_advance(campaign, testing=False):
-    """ Adds a new timeslice's worth of budget and pulls the budget
-    expenditures into the database. Executed once per timeslice."""
-    if not campaign.budget:
-        return
-    budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    # Update timeslice budget in memory
-    key = _make_campaign_ts_budget_key(campaign)
-    if testing:
-        budget_obj.advance_timeslice()
-    else:
-        dt = pac_dt()
-        budget_obj.set_timeslice(dt.hour*60*60+dt.minute*60+dt.second)
+################## Used for testing #####################
+def _delete_memcache(budget):
+    keys = (_make_budget_ts_key(budget), _make_budget_spent_key(budget), _make_budget_braking_key(budget))
+    for key in keys:
+        memcache.delete(key, namespace = 'budget')
 
-    spent_this_timeslice = spent_today(campaign)-budget_obj.spent_today
-    budget_obj.spent_today = spent_today(campaign)
+def _apply_if_able(budget, cost, today=None):
+    success = has_budget(budget, cost, today)
+    if success:
+        apply_expense(budget, cost, today)
+    return success
+#########################################################
 
-    budget_obj.put()
-    
-    _backup_budgets(campaign, spent_this_timeslice=spent_this_timeslice)
+def get_spending_for_date_range(budget, start_date, end_date, testing=False):
+    logs = _get_ts_logs_for_date_range(budget, start_date, end_date, testing)
+    tot = 0.0
+    for log in logs:
+        if log and log.actual_spending:
+            tot += log.actual_spending
+    return tot
 
-    memcache.set(key, _to_memcache_int(budget_obj.timeslice_budget), namespace="budget")
-            
-def daily_advance(campaign, new_date=pac_today()):
-    """ Adds a new timeslice's worth of daily budget, logs the daily spending and initializes a new log
-    Executed once daily just after midnight. Will not increment a campaign that is not active.
-    """
-    today = new_date
-    if not campaign.budget:
-        return
-    
-    budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    rem_daily_budget = remaining_daily_budget(campaign)
-    daily_spending = spent_today(campaign)
-    
-    yesterday = today - datetime.timedelta(days=1)
-    
-    # Attach the remaining_daily_budget to yesterday if it was initialized
-    try:
-        yesterday_log = budget_obj.daily_logs.filter("date =", yesterday).get()
-        yesterday_log.remaining_daily_budget = rem_daily_budget
-        yesterday_log.actual_spending = daily_spending
-        yesterday_log.put()
-    except AttributeError:
-        # If the log was not initialized, then this is a new campaign and
-        # we build a new one.
-        yesterday_log = BudgetDailyLog(budget_obj=budget_obj,
-                          initial_daily_budget=campaign.budget,
-                          remaining_daily_budget = rem_daily_budget,
-                          actual_spending = daily_spending,
-                          date=yesterday,
-                          )
-        yesterday_log.put()
-    
+def _get_ts_logs_for_date_range(budget, start_date, end_date, testing=False):
+    if isinstance(start_date, datetime):
+        start_date = start_date.date()
+    if isinstance(end_date, datetime):
+        end_date = end_date.date()
         
-    budget_obj.spent_in_campaign += daily_spending
-    budget_obj.put()
-    
-    spent_key = _make_campaign_spent_today_key(campaign)    
-    memcache.set(spent_key, _to_memcache_int(0), namespace="budget")
-    
-    if campaign.budget_type == "full_campaign":
-        if campaign.budget_strategy == "evenly":
-            campaign.budget = _redistribute_budget(campaign,new_date)
-        else:
-            campaign.budget = campaign.full_budget - budget_obj.spent_in_campaign
-        budget_obj.campaign=campaign
-        
-    daily_budget_key = _make_campaign_daily_budget_key(campaign)
-    memcache.set(daily_budget_key, _to_memcache_int(campaign.budget), namespace="budget")
-    
-    daily_log = BudgetDailyLog(budget_obj=budget_obj,
-                               initial_daily_budget=campaign.budget,
-                               date=today,
-                               )
-    daily_log.put()
-        
-    budget_obj.spent_today = 0.
-    
-    ts_budget_key = _make_campaign_ts_budget_key(campaign)
-    memcache.set(ts_budget_key, _to_memcache_int(0), namespace="budget")
-    
-    budget_obj.put()
-    campaign.put() 
-  
-def percent_delivered(campaign, today=pac_today()):
-    """ Gives the percent of the budget that has been delivered.
-    Gives the percent of the daily budget that has been delivered so far today """
-    if not (campaign.budget and campaign.finite) and not campaign.budget_type == "full_campaign":
+    start_slice = get_slice_from_datetime(start_date, testing)
+    end_slice = (get_slice_from_datetime(end_date + ONE_DAY, testing))
+    keys = BudgetSliceLog.get_keys_for_slices(budget, xrange(start_slice, end_slice))
+    logs = BudgetSliceLog.get(keys)
+    return logs
+
+def _get_daily_logs_for_date_range(budget, start_date, end_date, testing=False):
+    daily_logs = []
+    temp = start_date
+    i = 0
+    while temp <= end_date:
+        if budget.is_active_for_date(temp):
+            daily_log = dict(date = temp,
+                             initial_daily_budget = budget.daily_budget,
+                             spent_today = 0
+                             )
+            logs = _get_ts_logs_for_date_range(budget, temp, temp, testing)
+            for log in logs:
+                try:
+                    daily_log['spent_today'] += log.actual_spending
+                except:
+                    pass
+            daily_logs.append(daily_log)
+        temp += ONE_DAY
+    return daily_logs
+
+
+def _get_spending_for_date(budget, date, testing=False):
+    return get_spending_for_date_range(budget, date, date, testing)
+
+def percent_delivered(budget):
+    """ Get the % of the budget that has been delivered """
+    if not budget:
         return None
-        
-    if campaign.budget_type == "daily":
-        # The number of days in the campaign, inclusive
-        num_days = (campaign.end_date - campaign.start_date).days + 1
-        total_budget = campaign.budget * num_days
+    if budget.static_slice_budget and not budget.finite:
+        spent_today = budget.spent_today
+        if spent_today:
+            return budget.daily_budget / (spent_today * 1.0)
+        else:
+            return 0.0
+
+    total_budget = budget.total_budget
+    if total_budget:
+        # includes the memcache spending
+        return total_spent(budget) / (total_budget * 1.0)
     else:
-        total_budget = campaign.full_budget
-     
-    # logging.error("percent del date: %s" % today)
-    # logging.error("total: %s" % total_budget)
-    # logging.error("remaining: %s" % remaining_daily_budget(campaign))
-    
-    budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    
-    return ((budget_obj.spent_in_campaign+spent_today(campaign)) / total_budget) * 100
-    
-def get_spending_for_date_range(campaign, start_date, end_date, today=pac_today()):
-    """ Gets the spending for a date range (inclusive). Uses realtime budget information for
-        campaigns that are currently in progress. """
-    daily_logs = _get_daily_logs_for_date_range(campaign, start_date, end_date, today=today)
-    
-    # logging.warning("dlogs: %s" % daily_logs.get())
-    # logging.warning("today: %s" % today)
-    # logging.warning("sdate: %s" % campaign.start_date)
-    # If there are no results, check if today is the start date
-    if not daily_logs.get():
-        if today == campaign.start_date:
-            return spent_today(campaign)
-    
-    total_spending = 0.0
-    for log in daily_logs:
-        try:
-            total_spending += log.spending
-        except NoSpendingForIncompleteLogError:
-            total_spending += spent_today(campaign)
-    
-    return total_spending
+        logging.warning("OMG no total budget...? %s" % budget)
+        return None
 
-def update_budget(campaign, dt = pac_dt(), save_campaign=True):
-    """ Update budget is called whenever a campaign is created or saved. 
-        It sets a new daily budget as well as fixing the outdated values
-        in memcache. """
-    
-    if campaign.budget_type and (campaign.budget_type == "full_campaign" or campaign.budget):
-        budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
-        if campaign.budget_type == "full_campaign":
-            if campaign.budget_strategy == "evenly":
-                campaign.budget = _redistribute_budget(campaign, dt.date())
-            else:
-                campaign.budget = campaign.full_budget-budget_obj.spent_in_campaign
-            budget_obj.campaign = campaign
-            
-        if campaign.is_active_for_date(dt.date()):
-            spent = spent_today(campaign)
-            daily_budget_key = _make_campaign_daily_budget_key(campaign)
-                        
-            memcache.set(daily_budget_key, _to_memcache_int(campaign.budget-spent), namespace="budget")
+def remaining_daily_budget(budget):
+    """ Legacy for testing, also
+    for $/day allatonce campaigns maybe """
 
-            budget_obj.set_timeslice(dt.hour*60*60+dt.minute*60+dt.second)
-            
-            if campaign.budget_strategy == "evenly":
-                ts_key = _make_campaign_ts_budget_key(campaign)
-                spent_in_timeslice = spent_today(campaign)-budget_obj.spent_today
-                remaining_timeslice = budget_obj.timeslice_budget-spent_in_timeslice
-                memcache.set(ts_key, _to_memcache_int(remaining_timeslice), namespace="budget")
-        budget_obj.put()
-        if save_campaign:
-            campaign.put()
-                    
-def get_osi(campaign):
-    """ Returns True if the most recent completed timeslice spent within 95% of the 
-        desired total. 
+    # if it's an allatonce with static total, just dump everything, so what's 
+    # left for today is everything that hasn't been spent otherwise
+    if budget.delivery_type == 'allatonce' and budget.static_total_budget:
+        return budget.daily_budget - total_spent(budget)
 
-        The first timeslice that is run, there is no previously initialized
-        timeslice, so we have no recording for a desired budget. Because of
-        this, we always return True initially."""  
-    last_budgetslice = BudgetSliceLogQueryManager().get_most_recent(campaign)
-    successful_delivery = .95
-    
-    # If there is no log built yet, we return True
-    if last_budgetslice is None:
+    ts_spend = total_spent(budget) - budget.total_spent
+    tot_spend_today = budget.spent_today + ts_spend
+    return budget.daily_budget - tot_spend_today
+
+def apply_expense(budget, cost, curr_slice=None, today = None):
+    """ Subtract $$$ from the budget, add to total spent
+    This will get cleaned up later """
+
+    if budget and budget.is_active:
+
+        ts_key = _make_budget_ts_key(budget)
+        spent_key = _make_budget_spent_key(budget)
+
+        memcache.decr(ts_key, _to_memcache_int(cost), namespace='budget')
+
+        memcache.incr(spent_key, _to_memcache_int(cost), namespace='budget', initial_value = total_spent(budget))
+
+def _mock_budget_advance(advance_to_datetime=None, testing=False):
+    """ This simulates what the budget_advance Cron Job will do without
+    all the fancy TQ's and other junk because screw that """
+
+    slice_counter = BudgetSliceCounter.all().get()
+    # If there is no global thing set, then set that shit
+    if not slice_counter:
+        # If no date is specified, start @ NOW
+        if advance_to_datetime is None:
+            advance_to_datetime = datetime.now()
+        slice_num = get_slice_from_datetime(advance_to_datetime,testing)
+        slice_counter = BudgetSliceCounter(slice_num = slice_num)
+    else:
+        # we're advancing, if a date is specified advance to that date
+        if advance_to_datetime:
+            slice_counter.slice_num = get_slice_from_datetime(advance_to_datetime,testing)
+        # otherwise just go up by one
+        else:
+            slice_counter.slice_num += 1
+
+    set_slice(slice_counter.slice_num)
+    slice_counter.put()
+    budgets = Budget.all().filter('active =', True).fetch(100)
+    for budget in budgets:
+        timeslice_advance(budget, testing=testing, advance_to_datetime=advance_to_datetime)
+        budget.put()
+
+
+def timeslice_advance(budget, testing=False, advance_to_datetime = None):
+    """ Update the budget_obj to have the correct total_spent at the start of this TS
+    Update the old slicelog to hvae the correct total_spent at the end of it's TS
+    Save the current memcache snapshot in a new slicelog
+
+    TIMESLICE ADVANCE IS THE GOD OF BUDGETS. THIS METHOD CREATES, DESTROYS, UPDATES, ETC. """
+
+    # The memc TS is advanced before timeslice_advance is called by anyone.
+    slice_num = memcache_get_slice()
+    if advance_to_datetime is None:
+        advance_to_datetime = get_datetime_from_slice(slice_num, budget.testing)
+
+    if not budget:
+        return
+
+    last_log = budget.last_slice_log
+
+    # no previous slice log, this budget hasn't been initialized
+    if last_log is None:
+        # We're advancing to a slice that is exactly when or after the budget
+        # shoudl be init'd
+        if slice_num and slice_num >= budget.start_slice:
+            _initialize_budget(budget, testing = testing, slice_num = slice_num, date = advance_to_datetime.date())
+
+        # advancing to a date that is before we shoudl start
+        elif slice_num:
+            budget.curr_slice = slice_num
+            budget.curr_date = advance_to_datetime.date()
+            budget.put()
+    else:
+######################### ONLY DONE WHEN TESTING ########################
+        # Budget is Init'd, but we're advancing more than a single TS.  
+        if slice_num is not None and testing:
+            while budget.curr_slice != slice_num:
+                last_log = budget.last_slice_log
+
+                curr_total_spent = total_spent(budget)
+                spent_this_ts = curr_total_spent - budget.total_spent
+
+                budget.total_spent = curr_total_spent
+                budget.put()
+
+                _update_budgets(budget, slice_num, last_log, spent_this_timeslice = spent_this_ts, testing=testing)
+######################### DONE WITH ONLY TESTING ########################
+        else:
+            curr_total_spent = total_spent(budget)
+            spent_this_ts = curr_total_spent - budget.total_spent
+
+            budget.total_spent = curr_total_spent
+            budget.put()
+
+            _update_budgets(budget, slice_num, last_log, spent_this_timeslice = spent_this_ts, testing=testing)
+    return budget.curr_slice
+
+def _initialize_budget(budget, testing = False, slice_num = None, date=None):
+    """ Start this budget running!
+        Create slicelog
+        Update spending, braking in memc
+    """
+    if slice_num is None:
+        slice_num = get_curr_slice_num()
+    if date is None:
+        date = datetime.now().date()
+
+    if budget.start_slice > slice_num:
+        # Don't init the budget if it shouldn't be init'd
+        logging.warning("There is something wrong.  This campaign starts on slice %s, but initializing on slice: %s" % (budget.start_slice, slice_num))
+        return
+    budget.curr_slice = slice_num
+    budget.curr_date = date
+    budget.put()
+
+    new_log = BudgetSliceLog(budget = budget,
+                             slice_num = slice_num,
+                             desired_spending = budget.next_slice_budget,
+                             prev_total_spending = budget.total_spent,
+                             prev_braking_fraction = 1.0)
+
+    new_log.put()
+    ts_key = _make_budget_ts_key(budget)
+    brake_key = _make_budget_braking_key(budget)
+    spent_key = _make_budget_spent_key(budget)
+
+    # Don't init budget to 0, init to total spent amt.  This is useful for migrations. Otherwise shit is fucked
+    memcache.set(spent_key, _to_memcache_int(budget.total_spent), namespace = 'budget')
+    memcache.set(ts_key, _to_memcache_int(new_log.desired_spending), namespace = 'budget')
+    memcache.set(brake_key, new_log.prev_braking_fraction, namespace = 'budget')
+
+
+def _update_slicelogs(budget, slice_num, last_log, new_braking, spent_this_timeslice):
+    """ Sets the actual spending of the most recent TS and
+        Sets the prev_total_spending, and
+        prev_braking_fraction of the new slice """
+    last_log.actual_spending = spent_this_timeslice
+    last_log.put()
+    new_log = BudgetSliceLog(budget = budget,
+                             slice_num = slice_num,
+                             desired_spending = budget.next_slice_budget,
+                             prev_total_spending = budget.total_spent,
+                             prev_braking_fraction = new_braking)
+    new_log.put()
+    if budget.curr_slice != new_log.slice_num:
+        logging.warning("Ayyyeee tharr be problems around.  Budget curr slice: %s  Timeslice currslice: %s" % (budget.curr_slice, new_log.slice_num))
+    return new_log
+
+
+def _update_budgets(budget, slice_num, last_log, spent_this_timeslice=None, testing=False):
+    """ Updates budget related objects
+        Updates previous slicelog
+        Creates current slicelog
+        Updates spending and braking fraction in Memcache
+        """
+    # Slice_num is the slice_num specified by a global BudgetSliceCounter.  
+    # Keeps everyone on the same page :D
+    budget.curr_slice = slice_num
+
+    next_day = budget.curr_date + ONE_DAY
+    # Advance the day counter if it makes sense to do so
+    if budget.curr_slice >= get_slice_from_datetime(next_day, testing):
+        budget.curr_date = next_day
+    budget.put()
+
+    if budget.update:
+        BudgetQueryManager.exec_update_budget(budget)
+
+    ts_key = _make_budget_ts_key(budget)
+    brake_key = _make_budget_braking_key(budget)
+
+    desired_spend = last_log.desired_spending
+    old_braking = braking_fraction(budget)
+    if spent_this_timeslice == 0 and desired_spend == 0:
+        new_braking = old_braking
+    else:
+        new_braking = calc_braking_fraction(desired_spend, spent_this_timeslice, old_braking)
+
+    new_slice_log  = _update_slicelogs(budget, slice_num, last_log, new_braking, spent_this_timeslice)
+
+    if not budget.is_active:
+        # Budget isn't active, make sure vals are properly 0'd, continue
+        memcache.set(ts_key, 0, namespace = 'budget')
+        memcache.set(brake_key, 1.0, namespace = 'budget')
+        return
+
+    # Update memc with values from the new slice log (since it's the backup for MC anyway)
+
+    memcache.set(ts_key, _to_memcache_int(new_slice_log.desired_spending), namespace = 'budget')
+    memcache.set(brake_key, new_slice_log.prev_braking_fraction, namespace = 'budget')
+
+    return
+
+def get_osi(budget):
+    """ Returns True if the most recent completed TS spent ~95% of the desired total.
+
+    Because OSI is a function of the last timeslice log, chaning budgets
+    won't cause it to get all fucked up-like
+
+        First TS that is run has no record, so return True in this case """
+    last_complete_slice = budget.most_recent_slice_log
+
+    if last_complete_slice is None:
         return True
+
     else:
-        adgroup = AdGroupQueryManager().get_adgroups(campaign=campaign)[0]
-        if last_budgetslice.desired_spending < adgroup.bid/1000:
+        adgroup = AdGroupQueryManager().get_adgroups(campaign = budget.campaign.get())[0]
+
+        if adgroup and last_complete_slice.desired_spending < adgroup.bid/1000:
             return True
         else:
-            return last_budgetslice.actual_spending >= last_budgetslice.desired_spending*successful_delivery 
+            return last_complete_slice.osi
 
-        
-                
-################ BUDGET BRAKING ###################                
-                
-def calc_braking_fraction(desired_spending, actual_spending, prev_fraction):
-    """ Looks at the previous minute, if we overdelivered by 15 percent or more,
-        we reduce the fraction by half. If we ever underdeliver, we double it """
-    
-    if actual_spending > desired_spending * 1.15:
-        new_fraction = prev_fraction * 0.5
-    
-    elif actual_spending < desired_spending * 0.95:
-        # Use more machines if underdelivering. Never go above 1.0
-        new_fraction = min(prev_fraction * 2.0, 1.0)
-    
-    else:
-        new_fraction = prev_fraction
-        
-    return new_fraction
+def calc_braking_fraction(desired_spend, actual_spend, prev_fraction):
+    """ Given the desired spend, the actual spend, and the previous braking fraction
+    compute the new braking fraction.  Basically, the current fraction delivers the
+    proper amount, keep it, otherwise adjust it to be accurate """
 
+    # prev braking rate is .5, we show this campaign 50% of the time that we actually can show it
+    # so we get 1000 requests, but only show 500
 
-def braking_fraction(campaign):
-    """ Looks up the budget braking fraction in memcache. 
-        1.00 means that we let through all traffic. 
-        0.25 means we only let through one quearter. """
-    key = _make_braking_fraction_key(campaign)
-    return memcache.get(key, namespace="budget") or 1.0 # If nothing is in memcache try on 100%
-            
-def _make_braking_fraction_key(campaign):
-    return 'braking_fraction:%s'%(campaign.key())    
-                
-################ HELPER FUNCTIONS ###################
+    # if we overdeliver by 2x, actual will be 20 to desired 10, rate factor is 2
+    # if we underdeliver by 2x, actual will be 5 to desired 10, rate factor of .5
+    try:
+        new_rate_factor = float(actual_spend)/desired_spend
+    except:
+        # 0 error, theoretically infinity, go to a large number
+        new_rate_factor = 100.0
 
+    # in the overdeliver case, we should've delivered 250 instead of 500, brake is now .25
+    # which yields the correct behavior
+    # in the underdeliver case we should've delivered 1000 instead of 500, brake is now 1
+    try:
+        new_braking = prev_fraction/new_rate_factor
+    except:
+        # div by 0 error, theoretically infinity, go to largest possible value (1)
+        new_braking = 1.0
 
-def _get_daily_logs_for_date_range(campaign, start_date, end_date, today=pac_today()):
-    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    daily_logs = slicer.daily_logs.filter("date >=", start_date).filter("date <=", end_date)
-    return daily_logs
-    
-def _get_ts_logs_for_date(campaign, date):
-    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    min_dt = datetime.datetime.combine(date,datetime.time.min)
-    max_dt = datetime.datetime.combine(date,datetime.time.max)
-    ts_logs = slicer.timeslice_logs.filter("end_date >=", min_dt).filter("end_date <=", max_dt)
-    return ts_logs
-
-def _make_campaign_ts_budget_key(campaign):
-    """Returns a unique budget key based upon campaign.key """
-    return 'timeslice_budget:%s'%(campaign.key())
-
-def _make_campaign_daily_budget_key(campaign):
-    """Returns a unique budget key based upon campaign.key """
-    return 'daily_budget:%s'%(campaign.key())
-    
-def _make_campaign_spent_today_key(campaign):
-    """Returns a unique budget key based upon campaign.key """
-    return 'spent_today:%s'%(campaign.key())
-
-def _redistribute_budget(campaign,new_date):
-    #Recalculate daily budget for full campaigns in response to changes in end_date or full_budget
-    budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    if (new_date-datetime.timedelta(days=1) - campaign.start_date).days >= 0:
-        new_budget = (campaign.full_budget-budget_obj.spent_in_campaign)/((campaign.end_date-new_date).days+1)
-        if new_budget < 0:
-            return 0.
-        else:
-            return new_budget
-    else:
-        return campaign.full_budget/((campaign.end_date-campaign.start_date).days+1)
-        
-
-def _to_memcache_int(value):
-    """multiplies by 10^5 and converts to an int"""
-    return int(max(value,0)*100000)
-    
-def _from_memcache_int(value):
-    value = float(value)
-    return value/100000
-    
-def _set_memcache(campaign, val):
-    key = _make_campaign_ts_budget_key(campaign)
-    memcache.set(key, _to_memcache_int(val), namespace="budget")
-
-def _backup_budgets(campaign, spent_this_timeslice = None):
-    """ Makes a timeslice budget summary, also includes the remaining daily budget"""
-    budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
-
-    mem_budget = remaining_ts_budget(campaign)
-    rem_daily_budget = remaining_daily_budget(campaign)
-
-    # Make BudgetSliceLog
-    desired_spending = budget_obj.timeslice_budget
-    
-    last_log = budget_obj.timeslice_logs.order("-end_date").get()
-    
-    if last_log:
-        last_log.remaining_daily_budget = rem_daily_budget
-        last_log.actual_spending = spent_this_timeslice
-        last_log.put()
-        
-        # If we had a previoius log, we can calculate the braking fraction too
-        old_braking_fraction = braking_fraction(campaign)
-
-        new_braking_fraction = calc_braking_fraction(last_log.desired_spending,
-                                                     spent_this_timeslice,
-                                                     old_braking_fraction)
-
-        key = _make_braking_fraction_key(campaign)
-        memcache.set(key, new_braking_fraction, namespace="budget")
-    
-    
-    new_log = BudgetSliceLog(budget_obj=budget_obj,
-                             desired_spending=desired_spending,
-                             end_date=pac_dt())
-    new_log.put()
-    
-
-    
-
-################ TESTING FUNCTIONS ###################
-
-def _get_log_for_date(campaign, date):
-    
-    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    daily_log = slicer.daily_logs.filter("date =", date).get()
-    
-    return daily_log
-
-def _fudge_spending_for_date(campaign, date, spending):
-    """ Fudges the amount that was spent, for testing or fixing bugs """
-    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    daily_log = _get_log_for_date(campaign, date)
-    if not daily_log:
-        daily_log = BudgetDailyLog(budget_obj=slicer,
-                          initial_daily_budget=float(spending),
-                          remaining_daily_budget = 0.0,
-                          date=date)
-    daily_log.put()
-
-
-def _get_spending_for_date(campaign, date):
-    
-    slicer = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    daily_log = slicer.daily_logs.filter("date =", date).get()
-    
-    return daily_log.spending
-
-
-def _apply_if_able(campaign, cost, today=pac_today()):
-    """ For testing purposes """
-    success = has_budget(campaign, cost, today=today)
-    if success:
-        apply_expense(campaign, cost, today=today)
-    return success
-
-
-def _flush_cache_and_slicer(campaign):
-    """ For testing. Deletes the slicer and all logs"""
-    _delete_memcache(campaign)
-
-    budget_obj = BudgetSlicer.get_or_insert_for_campaign(campaign)
-    
-    for log in budget_obj.timeslice_logs:
-        log.delete()
-
-    for log in budget_obj.daily_logs:
-         log.delete()
-    
-    budget_obj.delete()
-
-def _flush_all():
-    campaigns = Campaign.all()
-    # We use campaigns as an iterator
-    for camp in campaigns:
-        if camp.budget is not None:
-            logging.error("flushing: %s" % camp.name)
-            _flush_cache_and_slicer(camp)
-
-def _delete_memcache(campaign):
-    """ To simulate cache failure on both campaign and daily """
-    key = _make_campaign_ts_budget_key(campaign)
-    memcache.delete(key, namespace="budget")
-
-    key = _make_campaign_daily_budget_key(campaign)
-    memcache.delete(key, namespace="budget")
-    
-    key = _make_campaign_spent_today_key(campaign)
-    memcache.delete(key, namespace="budget")
-
-def _advance_all(testing=False):
-    campaigns = Campaign.all()
-    # We use campaigns as an iterator
-    for camp in campaigns:
-        if camp.budget is not None:
-            timeslice_advance(camp, testing=testing)
+    # if the actual_spend and desired spend are fine, then the factor is ~1, so the divide is fine
+    # dont' return a value >1
+    return max(min(new_braking, 1.0), 0.01)

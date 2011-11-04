@@ -3,7 +3,8 @@ import common.utils.test.setup
 
 from account.models import Account, NetworkConfig
 from ad_network_reports.models import *
-from publisher.models import App
+from ad_network_reports.query_managers import AdNetworkReportQueryManager
+from publisher.models import App, Site
 
 REAL_TEST_DATA = False
 
@@ -20,16 +21,16 @@ if REAL_TEST_DATA:
     officejerk_app.put()
 
     # JumpTap login info
-    officejerk_jumptap_login_info = AdNetworkLoginInfo(account = officejerk_account, ad_network_name = 'jumptap', username = 'vrubba',
+    officejerk_jumptap_login_credentials = AdNetworkLoginCredentials(account = officejerk_account, ad_network_name = 'jumptap', username = 'vrubba',
                                             password = 'fluik123!')
-    officejerk_jumptap_login_info.put()
-    entities.append(AdNetworkAppMapper(application = officejerk_app, ad_network_name = 'jumptap', publisher_id = 'office_jerk_test', ad_network_login = officejerk_jumptap_login_info, send_email = True))
+    officejerk_jumptap_login_credentials.put()
+    entities.append(AdNetworkAppMapper(application = officejerk_app, ad_network_name = 'jumptap', publisher_id = 'office_jerk_test', ad_network_login = officejerk_jumptap_login_credentials))
 
     # InMobi login info
-    # inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = 'info@fluik.com',
+    # inmobi_login_credentials = AdNetworkLoginCredentials(account = account, ad_network_name = 'inmobi', username = 'info@fluik.com',
     #                                     password = 'fluik123!')
-    # inmobi_login_info.put()
-    # entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'inmobi', publisher_id = TEST_ADMOB_PUB_ID, ad_network_login = inmobi_login_info))
+    # inmobi_login_credentials.put()
+    # entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'inmobi', publisher_id = TEST_ADMOB_PUB_ID, ad_network_login = inmobi_login_credentials))
 
     """ Chess.com """
     chess_account = Account(key_name = 'chess_com_test_account', title = 'Chess.com')
@@ -42,21 +43,21 @@ if REAL_TEST_DATA:
     chess_app.put()
 
     # iAd login info                                        
-    chess_iad_login_info = AdNetworkLoginInfo(account = chess_account, ad_network_name = 'iad', username = 'chesscom',
+    chess_iad_login_credentials = AdNetworkLoginCredentials(account = chess_account, ad_network_name = 'iad', username = 'chesscom',
                                            password = 'Faisal1Chess')
-    chess_iad_login_info.put()
-    entities.append(AdNetworkAppMapper(application = chess_app, ad_network_name = 'iad', publisher_id = '329218549', ad_network_login = chess_iad_login_info, send_email = True))
+    chess_iad_login_credentials.put()
+    entities.append(AdNetworkAppMapper(application = chess_app, ad_network_name = 'iad', publisher_id = '329218549', ad_network_login = chess_iad_login_credentials))
 
     # JumpTap login info
-    chess_jumptap_login_info = AdNetworkLoginInfo(account = chess_account, ad_network_name = 'jumptap', username = 'chesscom',
+    chess_jumptap_login_credentials = AdNetworkLoginCredentials(account = chess_account, ad_network_name = 'jumptap', username = 'chesscom',
                                             password = 'Y7u8i9o0')
-    chess_jumptap_login_info.put()
-    entities.append(AdNetworkAppMapper(application = chess_app, ad_network_name = 'jumptap', publisher_id = 'jumptap_chess_com_test', ad_network_login = chess_jumptap_login_info, send_email = True))
+    chess_jumptap_login_credentials.put()
+    entities.append(AdNetworkAppMapper(application = chess_app, ad_network_name = 'jumptap', publisher_id = 'jumptap_chess_com_test', ad_network_login = chess_jumptap_login_credentials))
 
     # InMobi login info
-    # inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = 'chesscom@gmail.com',
+    # inmobi_login_credentials = AdNetworkLoginCredentials(account = account, ad_network_name = 'inmobi', username = 'chesscom@gmail.com',
     #                                     password = 'Y7u8i9o0')
-    # inmobi_login_info.put()
+    # inmobi_login_credentials.put()
 
     """ Flashlight Zaphrox """
     zaphrox_account = Account(key_name = 'flashlight_zaphrox_test_account', title = 'Flashlight Zaphrox')
@@ -69,16 +70,16 @@ if REAL_TEST_DATA:
     zaphrox_app.put()
 
     # JumpTap login info
-    zaphrox_jumptap_login_info = AdNetworkLoginInfo(account = zaphrox_account, ad_network_name = 'jumptap', username = 'zaphrox',
+    zaphrox_jumptap_login_credentials = AdNetworkLoginCredentials(account = zaphrox_account, ad_network_name = 'jumptap', username = 'zaphrox',
                                             password = 'JR.7x89re0')
-    zaphrox_jumptap_login_info.put()
-    entities.append(AdNetworkAppMapper(application = zaphrox_app, ad_network_name = 'jumptap', publisher_id = 'flashlight_zaphrox_test', ad_network_login = zaphrox_jumptap_login_info, send_email = True))
+    zaphrox_jumptap_login_credentials.put()
+    entities.append(AdNetworkAppMapper(application = zaphrox_app, ad_network_name = 'jumptap', publisher_id = 'flashlight_zaphrox_test', ad_network_login = zaphrox_jumptap_login_credentials))
 
     # InMobi login info
     # NOT WORKING
-    # inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = 'JR.7x89re0',
+    # inmobi_login_credentials = AdNetworkLoginCredentials(account = account, ad_network_name = 'inmobi', username = 'JR.7x89re0',
     #                                     password = '1Bom.7fG8k')
-    # inmobi_login_info.put()
+    # inmobi_login_credentials.put()
 
     # MobFox login info
     # need the publisher id
@@ -100,22 +101,22 @@ if REAL_TEST_DATA:
     bet_iad_app.put()
 
     # iAd login info                                        
-    bet_iad_login_info = AdNetworkLoginInfo(account = bet_account, ad_network_name = 'iad', username = 'betnetworks',
+    bet_iad_login_credentials = AdNetworkLoginCredentials(account = bet_account, ad_network_name = 'iad', username = 'betnetworks',
                                            password = 'betjames')
-    bet_iad_login_info.put()
-    entities.append(AdNetworkAppMapper(application = bet_iad_app, ad_network_name = 'iad', publisher_id = '418612824', ad_network_login = bet_iad_login_info, send_email = True))
+    bet_iad_login_credentials.put()
+    entities.append(AdNetworkAppMapper(application = bet_iad_app, ad_network_name = 'iad', publisher_id = '418612824', ad_network_login = bet_iad_login_credentials))
 
     # AdMob login info
-    bet_admob_login_info = AdNetworkLoginInfo(account = bet_account, ad_network_name = 'admob', username = 'betmobilemail@gmail.com',
+    bet_admob_login_credentials = AdNetworkLoginCredentials(account = bet_account, ad_network_name = 'admob', username = 'betmobilemail@gmail.com',
                                           password = 'knwyt4f5v94b61qz', client_key = 'k9417383a8224757c05fbe9aa1ef8e4c')
-    bet_admob_login_info.put()
-    entities.append(AdNetworkAppMapper(application = bet_app, ad_network_name = 'admob', publisher_id = 'a14e1c8bcb5cec6', ad_network_login = bet_admob_login_info, send_email = True))
+    bet_admob_login_credentials.put()
+    entities.append(AdNetworkAppMapper(application = bet_app, ad_network_name = 'admob', publisher_id = 'a14e1c8bcb5cec6', ad_network_login = bet_admob_login_credentials))
 
     # JumpTap login info
-    bet_jumptap_login_info = AdNetworkLoginInfo(account = bet_account, ad_network_name = 'jumptap', username = 'betnetwork',
+    bet_jumptap_login_credentials = AdNetworkLoginCredentials(account = bet_account, ad_network_name = 'jumptap', username = 'betnetwork',
                                             password = 'BETjames')
-    bet_jumptap_login_info.put()
-    entities.append(AdNetworkAppMapper(application = bet_app, ad_network_name = 'jumptap', publisher_id = 'jumptap_bet_test', ad_network_login = bet_jumptap_login_info, send_email = True))
+    bet_jumptap_login_credentials.put()
+    entities.append(AdNetworkAppMapper(application = bet_app, ad_network_name = 'jumptap', publisher_id = 'jumptap_bet_test', ad_network_login = bet_jumptap_login_credentials))
 
     """ Com2us """
     # com2us_account = Account(key_name = 'com2us_test_account', title = 'Com2us')
@@ -125,57 +126,35 @@ if REAL_TEST_DATA:
     # com2us_app.put()
     # 
     # # JumpTap login info
-    # com2us_jumptap_login_info = AdNetworkLoginInfo(account = com2us_account, ad_network_name = 'jumptap', username = 'com2ususa',
+    # com2us_jumptap_login_credentials = AdNetworkLoginCredentials(account = com2us_account, ad_network_name = 'jumptap', username = 'com2ususa',
                                             # password = 'zjaxntm1')
-    # com2us_jumptap_login_info.put()
+    # com2us_jumptap_login_credentials.put()
 
     # InMobi login info
-    # inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = '4028cb972fe21753012ffb7680350267',
+    # inmobi_login_credentials = AdNetworkLoginCredentials(account = account, ad_network_name = 'inmobi', username = '4028cb972fe21753012ffb7680350267',
     #                                     password = '0588884947763')
-    # inmobi_login_info.put()
+    # inmobi_login_credentials.put()
 
     # MobFox login info
     # need the publisher id
     
-    # entities.append(AdNetworkAppMapper(application = com2us_app, ad_network_name = 'jumptap', publisher_id = 'com2us_test', ad_network_login = inmobi_login_info, send_email = True))
+    # entities.append(AdNetworkAppMapper(application = com2us_app, ad_network_name = 'jumptap', publisher_id = 'com2us_test', ad_network_login = inmobi_login_credentials))
 
 else:
-    TEST_JUMPTAP_PUB_ID = 'test' # Needed in network config
-    TEST_ADMOB_PUB_ID = 'a14a9ed9bf1fdcd'
+    TEST_JUMPTAP_PUB_ID = 'pa_zaphrox_zaphrox_drd_app'
+    TEST_ADMOB_PUB_ID = 'a14cf615dc654dd'
     TEST_IAD_PUB_ID = '329218549'
     TEST_INMOBI_PUB_ID ='4028cba630724cd90130c2adc9b6024f'
     TEST_MOBFOX_PUB_ID = 'fb8b314d6e62912617e81e0f7078b47e'
 
-    account = Account()
+    account = Account(key_name = 'test_account')
     account.put()
 
-    # AdMob login info
-    admob_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'admob', username = 'njamal@stanford.edu',
-                                          password = 'xckjhfn3xprkxksm', client_key = 'k907a03ee39cecb699b5ad45c5eded01')
-    admob_login_info.put()
 
-    # JumpTap login info
-    jumptap_login_info = AdNetworkLoginInfo(account = account, ad_network_name
-            = 'jumptap', username = 'betnetwork', password = 'BETjames',
-            adunits = ['bet_wap_site_106andpark_top'])
-    jumptap_login_info.put()
-
-    # iAd login info                                  
-    iad_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'iad', username = 'chesscom',
-                                           password = 'Faisal1Chess')
-    iad_login_info.put()
-
-    # InMobi login info
-    inmobi_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'inmobi', username = '4028cb973099fe040130c2aa2a0904b5',
-                                        password = '098233019949')
-    inmobi_login_info.put()
-
-    # MobFox login info
-    mobfox_login_info = AdNetworkLoginInfo(account = account, ad_network_name = 'mobfox', publisher_ids = ['fb8b314d6e62912617e81e0f7078b47e'])
-    mobfox_login_info.put()
-
-    # Only needed for jumptap
-    network_config = NetworkConfig(jumptap_pub_id = TEST_JUMPTAP_PUB_ID)
+    network_config = NetworkConfig(jumptap_pub_id=TEST_JUMPTAP_PUB_ID,
+            admob_pub_id=TEST_ADMOB_PUB_ID, iad_pub_id=TEST_IAD_PUB_ID,
+            inmobi_pub_id=TEST_INMOBI_PUB_ID,
+            mobfox_pub_id=TEST_MOBFOX_PUB_ID)
     network_config.put()
 
     # name corresponds to jumptap login info
@@ -183,11 +162,52 @@ else:
             network_config)
     app.put()
 
-    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'admob', publisher_id = TEST_ADMOB_PUB_ID, ad_network_login = admob_login_info))
-    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'jumptap', publisher_id = TEST_JUMPTAP_PUB_ID, ad_network_login = jumptap_login_info, send_email = True))
-    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'iad', publisher_id = TEST_IAD_PUB_ID, ad_network_login = iad_login_info))
-    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'inmobi', publisher_id = TEST_INMOBI_PUB_ID, ad_network_login = inmobi_login_info))
-    entities.append(AdNetworkAppMapper(application = app, ad_network_name = 'mobfox', publisher_id = TEST_MOBFOX_PUB_ID, ad_network_login = mobfox_login_info))
+    # Test adding adunit pub id for jumptap
+    jumptap_adunit = Site(app_key=app)
+    jumptap_adunit_config = NetworkConfig(jumptap_pub_id=
+            'bet_wap_site_106andpark_top')
+    jumptap_adunit_config.put()
+    jumptap_adunit.network_config = jumptap_adunit_config
+    jumptap_adunit.put()
+    manager = AdNetworkReportQueryManager(account)
+
+    # AdMob login info
+    manager.create_login_credentials_and_mappers(ad_network_name='admob',
+                                          username=
+                                          'adnetwork@com2usamerica.com',
+                                          password='4w47m82l5jfdqw1x',
+                                          client_key=
+                                          'ka820827f7daaf94826ce4cee343837a')
+
+    # JumpTap login info
+    manager.create_login_credentials_and_mappers(ad_network_name='jumptap',
+                                            username='zaphrox',
+                                            password='JR.7x89re0')
+    # iAd login info                                  
+#    iad_login_credentials = AdNetworkLoginCredentials(account=account,
+#                                        ad_network_name='iad',
+#                                        username='chesscom',
+#                                        password='Faisal1Chess')
+#    iad_login_credentials.put()
+
+    # InMobi login info
+    manager.create_login_credentials_and_mappers(ad_network_name='inmobi',
+                                           username=
+                                           '4028cb973099fe040130c2aa2a0904b5',
+                                           password='098233019949')
+
+    # MobFox login info
+    manager.create_login_credentials_and_mappers(ad_network_name='mobfox')
+
+#    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
+#        'iad', publisher_id=TEST_IAD_PUB_ID, ad_network_login=
+#        iad_login_credentials))
+#    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
+#        'inmobi', publisher_id=TEST_INMOBI_PUB_ID, ad_network_login=
+#        inmobi_login_credentials))
+#    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
+#        'mobfox', publisher_id=TEST_MOBFOX_PUB_ID, ad_network_login=
+#        mobfox_login_credentials))
 
 
 db.put(entities)

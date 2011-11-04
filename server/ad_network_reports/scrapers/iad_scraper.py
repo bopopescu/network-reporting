@@ -1,10 +1,14 @@
+import selenium
 import sys
 import time
 
+#sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
+sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
-sys.path.append('../..') # only needed for testing
+from ad_network_reports.scrapers.unauthorized_login_exception import \
+        UnauthorizedLogin
 from BeautifulSoup import BeautifulSoup
 from datetime import date, datetime
 from pyvirtualdisplay import Display
@@ -44,15 +48,16 @@ class IAdScraper(Scraper):
         login = self.browser.find_element_by_css_selector('#accountname')
         login.clear()
         login.send_keys(self.username)
-        account_password = self.browser.find_element_by_name('theAccountPW')
+        account_password = \
+                self.browser.find_element_by_css_selector('#accountpassword')
         account_password.clear()
         account_password.send_keys(self.password)
         self.browser.find_element_by_name('appleConnectForm').submit()
         # There are some redirects and shit that happens, chill out for a bit
-        time.sleep(10)
+        time.sleep(3)
 
         if self.browser.title == self.LOGIN_TITLE:
-            raise Exception(self.browser.find_element_by_css_selector(
+            raise UnauthorizedLogin(self.browser.find_element_by_css_selector(
                 'span.dserror').text)
         # We should now have cookies
 
@@ -75,8 +80,9 @@ class IAdScraper(Scraper):
                 click()
         time.sleep(1)
         self.set_date('#gwt-debug-date-range-selector-start-date-box',
-                start_date)
-        self.set_date('#gwt-debug-date-range-selector-end-date-box', end_date)
+                 start_date)
+        self.set_date('#gwt-debug-date-range-selector-end-date-box',
+                 end_date)
 
     def get_cal_date(self):
         # Wait for page to load
@@ -87,7 +93,17 @@ class IAdScraper(Scraper):
     def set_date(self, selector, test_date):
         # Open up the date box
         self.browser.find_element_by_css_selector(selector).click()
-        curr_date = self.get_cal_date()
+        time.sleep(1)
+        exception = True
+        count = 0
+        while exception and count < 10:
+            exception = False
+            try:
+                curr_date = self.get_cal_date()
+            except selenium.common.exceptions.NoSuchElementException as \
+                    exception:
+                self.browser.find_element_by_css_selector(selector).click()
+            count += 1
         # Which way do we go
         if curr_date > test_date:
             button = 'td>div.datePickerPreviousButton'
@@ -98,6 +114,7 @@ class IAdScraper(Scraper):
                 test_date.year:
             self.browser.find_element_by_css_selector(button).click()
             curr_date = self.get_cal_date()
+            time.sleep(1)
         days = self.browser.find_elements_by_css_selector('.datePickerDay')
         for day in days:
             if 'datePickDayIsFiller' in day.get_attribute('class'):
@@ -111,6 +128,7 @@ class IAdScraper(Scraper):
 
         # Set the dates
         self.set_dates(start_date, end_date)
+        time.sleep(3)
         # read the shit
         page = None
         while page is None:
@@ -162,7 +180,7 @@ class IAdScraper(Scraper):
                                       fill_rate = app_dict['fill_rate'],
                                       clicks = int(app_dict['ctr'] * app_dict[
                                           'impressions']),
-                                      ctr = app_dict['ctr'],
+                                      ctr = app_dict['ctr'] * 100,
                                       ecpm = app_dict['ecpm'],
                                       app_tag = app_dict['apple_id'])
             records.append(nsr)
@@ -170,8 +188,8 @@ class IAdScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'betnetworks'
-    NC.password = 'betjames'
+    NC.username = 'chesscom'
+    NC.password = 'Faisal1Chess'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
     print SCRAPER.get_site_stats(date.today())

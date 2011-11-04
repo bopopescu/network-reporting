@@ -31,13 +31,13 @@ class NetworkConfigForm(mpforms.MPModelForm):
 
     class Meta:
         model = NetworkConfig
-        exclude = ("rev_share", "price_floor")
+        exclude = ("rev_share", "price_floor", "blocklist")
 
-    def clean(self):
-        cleaned_data = self.cleaned_data
-        for key, value in cleaned_data.iteritems():
-            cleaned_data[key] = value.strip() if value else value
-        return cleaned_data
+    # def clean(self):
+    #     cleaned_data = self.cleaned_data
+    #     for key, value in cleaned_data.iteritems():
+    #         cleaned_data[key] = value.strip() if value else value
+    #     return cleaned_data
 
 
 class PaymentInfoForm(mpforms.MPModelForm):

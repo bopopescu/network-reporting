@@ -20,6 +20,8 @@ urlpatterns = patterns('advertiser.views',
   url(r'^export/$', 'campaign_export', name='campaign_export'),
   url(r'^mpx/$', 'mpx_info', name='mpx_info'),
 
+  url(r'^networks/$', 'network_index', name='network_index'),
+
   url(r'^marketplace/$', 'marketplace_index', name='marketplace_index'),
   url(r'^marketplace/addblocklist$', 'add_blocklist_handler', name='add_blocklist_handler'),
   url(r'^marketplace/removeblocklist/$', 'remove_blocklist_handler', name='remove_blocklist_handler'),

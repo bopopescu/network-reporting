@@ -36,6 +36,14 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
+    def get_network_campaigns(cls, account):
+        networks = cls.Model.all().filter('campaign_type =', 'network')\
+                      .filter('deleted =',False)\
+                      .filter('account =',account)
+        return networks
+
+
+    @classmethod
     def get_marketplace(cls, account, from_db=False):
         """
         Returns the only campaign that can belong to this account.

@@ -1370,3 +1370,32 @@ def marketplace_settings_change(request, *args, **kwargs):
     return MarketplaceSettingsChangeHandler()(request, *args, **kwargs)
 
 
+
+# Network Views
+# At some point in the future, these *could* be branched into their own django app
+class NetworkIndexHandler(RequestHandler):
+    def get(self):
+
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
+        else:
+            days = StatsModel.lastdays(self.date_range)
+
+        logging.warn(self.date_range)
+        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
+        # TODO:: Optimize IO
+
+
+        return render_to_response(self.request,
+                                  "advertiser/network_index.html",
+                                  {
+                                      'networks': network_campaigns,
+                                      'start_date': days[0],
+                                      'end_date':days[-1],
+                                      'date_range': self.date_range
+                                  })
+
+@login_required
+def network_index(request, *args, **kwargs):
+    return NetworkIndexHandler()(request, *args, **kwargs)

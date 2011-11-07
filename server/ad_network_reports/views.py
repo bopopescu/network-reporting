@@ -88,7 +88,6 @@ class ViewAdNetworkReportHandler(RequestHandler):
         daily_stats = []
         for stats in stats_list:
             stats_dict = stats.__dict__['_entity']
-            logging.warning("stats dict %s" % stats_dict)
             del(stats_dict['ad_network_app_mapper'])
             del(stats_dict['date'])
             daily_stats.append(stats_dict)
@@ -141,8 +140,6 @@ class AddLoginInfoHandler(RequestHandler):
             form.ad_network = name
             forms.append(form)
 
-        logging.warning('account_key')
-        logging.warning(str(account_key))
         return render_to_response(self.request,
                                   'ad_network_reports/add_login_credentials.html',
                                   {
@@ -172,7 +169,6 @@ class AdNetworkReportManageHandler(RequestHandler):
             days = StatsModel.lastdays(self.date_range, 1)
 
         management_stats_list = get_management_stats(days)
-        logging.warning(management_stats_list)
 
         return render_to_response(self.request,
                                   'ad_network_reports/manage_ad_network_' \

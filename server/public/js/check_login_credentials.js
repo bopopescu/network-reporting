@@ -4,7 +4,7 @@
 	   // Check if data submited is valid.
 	   data = $(this).serialize();
 	   data += ("&account_key=" + account_key);
-	   $.ajax({url: 'http://checklogincredentials.mopub.com:8888',
+	   $.ajax({url: 'http://checklogincredentials.mopub.com',
 		   data: data,
 		   crossDomain: true, 
 		   dataType: "jsonp",

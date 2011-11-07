@@ -1,3 +1,4 @@
+import os
 import urllib
 import urllib2
 import json
@@ -5,15 +6,18 @@ import logging
 import sys
 import time
 
-from datetime import date, timedelta
-sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
-#sys.path.append('/home/ubuntu/mopub/server')
+# Paths only needed for testing
+if os.path.exists('/home/ubuntu/'):
+    sys.path.append('/home/ubuntu/mopub/server')
+else:
+    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
 from ad_network_reports.scrapers.scraper import Scraper, ScraperSite, \
         NetworkConfidential
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
+from datetime import date, timedelta
 
 def admob_list_encode(sequence, var_name):
     list_var_name = var_name + '[]'

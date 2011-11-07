@@ -14,5 +14,8 @@ application = tornado.web.Application([
 ], debug=False)
 
 if __name__ == "__main__":
-    application.listen(8888)
+    if(len(sys.argv) > 1):
+        application.listen(sys.argv[1])
+    else:
+        application.listen(80)
     tornado.ioloop.IOLoop.instance().start()

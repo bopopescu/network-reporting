@@ -81,8 +81,8 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                       #to='report-monitoring@mopub.com',
-                       to='tiago@mopub.com',
+                       to='report-monitoring@mopub.com',
+                       cc='tiago@mopub.com',
                        subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
                        body=("Learn more at http://mopub-experimental.appspot."

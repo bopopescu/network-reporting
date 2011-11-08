@@ -544,9 +544,11 @@ class StatsModelQueryManager(CachedQueryManager):
             new_stats.append(new_stat)
         return new_stats
 
-    #Pass in StatModel for just today
-    #Pass in day as datetime object, if day == today, then patches with newest mongo data
     def _patch_mongodb_stats_for_today(self, stat, pub, adv, day):
+        """"Patches a StatModel with MongoDB's latest data for today
+            Stat is the StatModel for a chosen day
+            Day is a datetime object. If day == today, we attempt to pull data, 
+            else nothing occurs"""
         formatted_day = day.strftime("%y%m%d")
         if StatsModel.today().strftime("%y%m%d") == formatted_day:
             url = "http://mongostats.mopub.com/stats?start_date=" + formatted_day

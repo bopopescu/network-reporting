@@ -305,3 +305,44 @@ def dsp_service(request, *args, **kwargs):
     return DspService()(request, use_cache=False, *args, **kwargs)
 
 
+
+class NetworkCampaignService(RequestHandler):
+    """
+    API Service for delivering serialized network campaign data
+    """
+    def get(self, campaign_key=None):
+
+
+        start_date = request.GET.get('start_date', None)
+        end_date = request.GET.get('end_date', None)
+        batch = request.GET.get('batch', None)
+
+        # If campaign_key isn't None, they want a single campaign.
+        # Give it to them.
+        if campaign_key:
+            pass
+
+        # If batch parameters are found, it means they want a couple
+        # of campaigns at once. This is usually used to load data in chunks to
+        # balance network latency with I/O, and also so that something is always
+        # happening on the page.
+        elif batch:
+            pass
+        else:
+
+        return JSONResponse({'error':'No parameters provided'})
+
+    def post(self):
+        pass
+
+    def put(self):
+        pass
+
+    def delete(self):
+        pass
+
+
+@login_required
+def network_campaign_service(request, *args, **kwargs):
+    return NetworkCampaignService()(request, use_cache=False, *args, **kwargs)
+

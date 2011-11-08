@@ -328,7 +328,10 @@ class NetworkCampaignService(RequestHandler):
         # happening on the page.
         elif batch:
             pass
+
+        # If no parameters are passed in any way, return all of the network campaigns.
         else:
+            network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
 
         return JSONResponse({'error':'No parameters provided'})
 

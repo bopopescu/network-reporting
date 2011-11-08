@@ -959,6 +959,11 @@ if (typeof window.console == "undefined") {
     /*
      * ## Dashboard Stats Chart
      */
+
+    Chart.insertStatsChart = function(selector, seriesType, data) {
+        var metricElement = $(selector);
+    };
+
     Chart.setupDashboardStatsChart = function(seriesType) {
         // get active metric from breakdown
         var metricElement = $('#dashboard-stats .stats-breakdown .active');

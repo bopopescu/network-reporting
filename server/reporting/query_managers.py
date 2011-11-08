@@ -553,7 +553,7 @@ class StatsModelQueryManager(CachedQueryManager):
         formatted_day = day.strftime("%y%m%d")
         if StatsModel.today().strftime("%y%m%d") == formatted_day:
             url = "http://mongostats.mopub.com/stats?start_date=" + formatted_day
-            url += "&end_date=" + formatted_today
+            url += "&end_date=" + formatted_day
             url += "&acct=" + str(self.account_obj.key())
             url += "&pub=%s&adv=%s"%(pub or "", adv or "")
 

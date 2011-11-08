@@ -30,6 +30,7 @@
         Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
       </h3>
 
+
       {# Controls and stats breakdown for the top realtime stats #}
       <div class="stats">
         <div class="stats-breakdown">
@@ -77,6 +78,12 @@
 
     </section>
   </div>
+
+  <br />
+  <a id="add_campaign_button" class="right button add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
+  <br />
+
+
 
 <br />
   {% if networks %}
@@ -188,5 +195,5 @@
 
     });
 </script>
-<script src="/js/mopub.advertiser.min.js?v=1"></script>
+<script src="/js/mopub-advertiser.js?v=1"></script>
 {% endblock extraScripts %}

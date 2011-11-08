@@ -187,3 +187,7 @@ def country_code_to_name(country_code):
     else:
         logging.warning("No country name for code: %s"%country_code)
         return None
+
+@register.filter
+def to_json(python_obj):
+    return json.dumps(python_obj)

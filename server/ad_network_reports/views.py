@@ -32,7 +32,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
         manager = create_manager(account_key, self.account)
 
         aggregates, daily_stats, aggregate_stats_list = manager. \
-                get_index_stats(days)
+                get_index_data(days)
 
         if account_key:
             add_credentials_url = '/ad_network_reports/manage/' + \
@@ -81,10 +81,10 @@ class ViewAdNetworkReportHandler(RequestHandler):
             days = StatsModel.lastdays(self.date_range, 1)
 
         manager = AdNetworkReportQueryManager()
-        ad_network_app_mapper = manager.get_ad_network_app_mapper(
+        ad_network_app_mapper = manager.get_ad_network_mapper(
                 ad_network_app_mapper_key=ad_network_app_mapper_key)
-        stats_list = manager.get_ad_network_app_stats(ad_network_app_mapper_key,
-                days)
+        stats_list = manager.get_stats_list_for_mapper_and_days(
+                ad_network_app_mapper_key, days)
         daily_stats = []
         for stats in stats_list:
             stats_dict = stats.__dict__['_entity']

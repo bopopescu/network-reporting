@@ -213,7 +213,7 @@ def update_ad_networks(start_date = None, end_date = None):
 
                 # Get the ad_network_app_mapper object that corresponds to the
                 # login_credentials and stats.
-                ad_network_app_mapper = manager.get_ad_network_app_mapper(
+                ad_network_app_mapper = manager.get_ad_network_mapper(
                         publisher_id=publisher_id,
                         ad_network_name=login_credentials.ad_network_name)
 

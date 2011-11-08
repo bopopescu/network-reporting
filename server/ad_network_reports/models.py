@@ -38,8 +38,8 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 #        return 'AdNetworkLoginInfo'
 
     @classmethod
-    def get_by_ad_network_name(self, account, ad_network_name):
-        return self.get_by_key_name('k:%s:%s' % (account.key(),
+    def get_by_ad_network_name(cls, account, ad_network_name):
+        return cls.get_by_key_name('k:%s:%s' % (account.key(),
             ad_network_name))
 
 class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
@@ -58,8 +58,8 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
         super(AdNetworkAppMapper, self).__init__(*args, **kwargs)
 
     @classmethod
-    def get_by_publisher_id(self, publisher_id, ad_network_name):
-        return self.get_by_key_name('k:%s:%s' % (ad_network_name, publisher_id))
+    def get_by_publisher_id(cls, publisher_id, ad_network_name):
+        return cls.get_by_key_name('k:%s:%s' % (ad_network_name, publisher_id))
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper, required=
@@ -83,13 +83,13 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
     @classmethod
-    def get_by_app_mapper_and_day(self, app_mapper, day):
-        return self.get_by_key_name('k:%s:%s' % (app_mapper.key(),
+    def get_by_app_mapper_and_day(cls, app_mapper, day):
+        return cls.get_by_key_name('k:%s:%s' % (app_mapper.key(),
             day.strftime('%Y-%m-%d')))
 
     @classmethod
-    def get_by_app_mapper_and_days(self, app_mapper_key, days):
-        return [stats for stats in self.get_by_key_name(['k:%s:%s' % (
+    def get_by_app_mapper_and_days(cls, app_mapper_key, days):
+        return [stats for stats in cls.get_by_key_name(['k:%s:%s' % (
             app_mapper_key, day.strftime('%Y-%m-%d')) for day in days]) if stats
             != None]
 
@@ -134,10 +134,10 @@ class AdNetworkManagementStats(db.Model): #(date)
         setattr(self, field, getattr(self, field) + 1)
 
     @classmethod
-    def get_by_day(self, day):
-        return self.get_by_key_name('k:%s' % day.strftime('%Y-%m-%d'))
+    def get_by_day(cls, day):
+        return cls.get_by_key_name('k:%s' % day.strftime('%Y-%m-%d'))
 
     @classmethod
-    def get_by_days(self, days):
-        return [stats for stats in self.get_by_key_name(['k:%s' % day.strftime(
+    def get_by_days(cls, days):
+        return [stats for stats in cls.get_by_key_name(['k:%s' % day.strftime(
             '%Y-%m-%d') for day in days]) if stats != None]

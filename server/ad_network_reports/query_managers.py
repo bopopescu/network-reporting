@@ -44,7 +44,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     credential):
                 yield mapper
 
-    def get_index_stats(self, days):
+    def get_index_data(self, days):
         """Get required data for the index page of ad network reports.
 
         Generate a list of aggregate stats for the ad networks, apps and
@@ -59,14 +59,14 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         keys = [s.key() for s in mappers]
         # Get aggregate stats for all the different ad network mappers for the
         # account between the selected date range
-        aggregates_list = [self.get_ad_network_aggregates(n, days) for n in
+        aggregates_list = [self._get_stats_for_mapper_and_days(n, days) for n in
                 mappers]
         aggregate_stats_list = zip(keys, mappers, aggregates_list)
         aggregates = self.roll_up_stats(aggregates_list)
 
         # Get the daily stats list.
-        daily_stats = [self.get_stats_for_date(date).__dict__ for date in
-                days]
+        daily_stats = [self._get_stats_for_date(date).__dict__ for
+                date in days]
 
         # Sort alphabetically by application name then by ad network name
         aggregate_stats_list = sorted(aggregate_stats_list, key = lambda s:
@@ -74,8 +74,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         return (aggregates, daily_stats, aggregate_stats_list)
 
-    def get_stats_for_date(self, date):
-        """Get rolled up stats for the given date.
+    def _get_stats_for_date(self, date):
+        """Get rolled up stats for the given date (include all ad networks).
 
         Return rolled up stats.
         """
@@ -86,7 +86,20 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
             date).filter('ad_network_app_mapper IN', mappers)))
 
-    def get_ad_network_aggregates(self, ad_network_app_mapper,
+    def _get_stats_for_date_and_network(self, date, ad_network_name):
+        """Get rolled up stats for the given date and ad network name.
+
+        Return rolled up stats.
+        """
+        login_credentials = AdNetworkLoginCredentials.get_by_ad_network_name(
+                account, ad_network_name)
+        mappers = list(AdNetworkAppMapper.all().filter('ad_network_login =',
+                login_credentials))
+        return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
+            date).filter('ad_network_app_mapper IN', mappers)))
+
+
+    def _get_stats_for_mapper_and_days(self, ad_network_app_mapper,
             days):
         """Calculate aggregate stats for an ad network and app
         for the given days.
@@ -140,7 +153,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         return aggregate_stats
 
-    def get_ad_network_app_stats(self, ad_network_app_mapper_key, days):
+    def get_stats_list_for_mapper_and_days(self, ad_network_app_mapper_key,
+            days):
         """Filter AdNetworkScrapeStats for a given ad_network_app_mapper. Sort
         chronologically by day, newest first (decending order.)
 
@@ -150,7 +164,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 ad_network_app_mapper_key, days)
         return sorted(stats_list, key=lambda stats: stats.date)
 
-    def get_ad_network_app_mapper(self, ad_network_app_mapper_key=None,
+    def get_ad_network_mapper(self, ad_network_app_mapper_key=None,
             publisher_id=None, ad_network_name=None):
         """Keyword arguments: either an ad_network_app_mapper_key or a
         publisher_id and login_credentials.
@@ -164,20 +178,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     ad_network_name)
         return None
 
-    def get_app_publisher_ids(self, ad_network_name):
-        """Check apps to see if their pub_id for the given ad_network is
-        defined
-
-        Return generator of publisher ids at the application level for the
-        account on the ad_network.
-        """
-        for app in AppQueryManager.get_apps_with_network_configs(self.account):
-            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
-                    None)
-            if pub_id != None:
-                yield pub_id
-
-    def get_apps_with_publisher_ids(self, ad_network_name):
+    def _get_apps_with_publisher_ids(self, ad_network_name):
         """Check apps to see if their pub_id for the given ad_network is
         defined
 
@@ -225,7 +226,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                         email=send_email)
         login_credentials.put()
 
-        apps_with_publisher_ids = self.get_apps_with_publisher_ids(
+        apps_with_publisher_ids = self._get_apps_with_publisher_ids(
                 ad_network_name)
         # Create all the different AdNetworkAppMappers for all the
         # applications on the ad network for the user and add them to the db
@@ -245,7 +246,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         # Sanity check
         if publisher_id:
             ad_network_name = login_credentials.ad_network_name
-            for app, app_publisher_id in self.get_apps_with_publisher_ids(
+            for app, app_publisher_id in self._get_apps_with_publisher_ids(
                     ad_network_name):
                 # Is the app in Mopub?
                 if publisher_id == app_publisher_id:
@@ -256,6 +257,19 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                                 application=app)
                     mapper.put()
                     return mapper
+
+    def get_app_publisher_ids(self, ad_network_name):
+        """Check apps to see if their pub_id for the given ad_network is
+        defined
+
+        Return generator of publisher ids at the application level for the
+        account on the ad_network.
+        """
+        for app in AppQueryManager.get_apps_with_network_configs(self.account):
+            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
+                    None)
+            if pub_id != None:
+                yield pub_id
 
     def get_adunit_publisher_ids(self, ad_network_name):
         """Get the ad unit publisher ids with the ad network from the generator

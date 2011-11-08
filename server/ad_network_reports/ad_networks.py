@@ -48,9 +48,10 @@ class JumpTapAdNetwork(AdNetwork):
         """
         super(self.__class__, self).append_extra_info()
         manager = AdNetworkReportQueryManager(self.login_credentials.account)
-        self.login_credentials = (self.login_credentials, manager.get_app_publisher_ids(
-            self.login_credentials.ad_network_name), manager.
-            get_adunit_publisher_ids(self.login_credentials.ad_network_name))
+        self.login_credentials = (self.login_credentials, manager.
+                get_app_publisher_ids(self.login_credentials.ad_network_name),
+                manager.get_adunit_publisher_ids(self.login_credentials.
+                    ad_network_name))
 
 class IAdAdNetwork(AdNetwork):
     scraper = IAdScraper

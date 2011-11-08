@@ -148,7 +148,13 @@ class CampaignForm(mpforms.MPModelForm):
                 obj.full_budget = None
 
 
-            # Iniit the times
+            # HACK:
+            # Network campaigns don't use the date/time fields. Some foreign customers
+            # were experiencing issues because date/time fields are formatted
+            # differently in the browser and django would mark them invalid.
+            # They're hidden fields in the form, so the error would never show
+            # up. For network campaigns, we're just setting them to None as a quick
+            # fix. See #603 in lighthouse for more.
             if not type_ in ('gtee', 'gtee_high', 'gtee_low', 'promo'):
                 start_datetime = None
                 start_datetime_time = None

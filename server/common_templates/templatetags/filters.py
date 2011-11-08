@@ -6,6 +6,7 @@ import base64, binascii
 from django.utils import simplejson as json
 import logging
 import string
+from budget.tzinfo import Pacific, utc
 
 from country_codes import COUNTRY_CODE_DICT
 
@@ -111,6 +112,13 @@ def format_date_compact(value):
         return ""
 
 @register.filter
+def format_date_time(value):
+    if value:
+        return value.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d/%Y %I:%M %p")
+    else:
+        return ""
+
+@register.filter
 def truncate(value, arg):
     if len(value) > arg:
         return "%s..." % value[:(arg-3)]
@@ -179,3 +187,7 @@ def country_code_to_name(country_code):
     else:
         logging.warning("No country name for code: %s"%country_code)
         return None
+
+@register.filter
+def to_json(python_obj):
+    return json.dumps(python_obj)

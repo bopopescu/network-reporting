@@ -306,8 +306,8 @@ def lat_lon_filter(ll=None):
         # for every city.  Apply map to this split list to get (float('lat'), float('lon'))
         latlons = ((float(k) for k in t.split(',')) for t in (city.split(':')[0] for city in a.cities))
         for lat, lon in latlons:
-            #Check all lat, lon pairs.  If any one of them is too far, return True
-            # since all filters are exclusion filters (True means don't keep it)
+            #Check all lat, lon pairs.  If any one of them is too far, return False
+            # since all filters are inclusion filters (False means don't keep it)
             if ll_dist((lat,lon),ll_p) < CAPTURE_DIST:
                 return True
         return False

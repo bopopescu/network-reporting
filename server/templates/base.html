@@ -13,7 +13,7 @@
   <meta name="author" content="">
   {% block extraMeta %}{% endblock %}
   <!-- TypeKit -->
-  <script type="text/javascript" src="http://use.typekit.com/qhz7iwb.js"></script>
+  <script type="text/javascript" src="https://use.typekit.com/qhz7iwb.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
   <link rel="shortcut icon" href="/favicon.ico">
@@ -21,7 +21,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />
-  <link rel="stylesheet" href="/css/style.css?v=46">
+  <link rel="stylesheet" href="/css/style.css?v=47">
   {% block extraCSS %}{% endblock %}
 
   <!-- modernizr -->
@@ -54,10 +54,6 @@
   <!-- Tablesorter -->
   <script src="/js/jquery.tablesorter.min.js"></script>
 
-  <!-- MoPub -->
-  <script src="/js/mopub.js?v=37"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=34"></script>{% endblock extraScripts %}
-
   <!-- Mixpanel -->
   <script type="text/javascript">
     var mpq=[];
@@ -70,6 +66,10 @@
 
   </script>
   <!-- End Mixpanel -->
+
+  <!-- MoPub -->
+  <script src="/js/mopub.js?v=40"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=34"></script>{% endblock extraScripts %}
 
   <!--[if lt IE 7 ]>
     <script src="/js/mylibs/dd_belatedpng.js"></script>
@@ -132,8 +132,6 @@
             {% if user.is_authenticated %}
             <li><a href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
             {% endif %}
-            <!-- <li><a href="{% google_login_url %}">Google Log In</a></li>
-            <li><a href="{% url django.contrib.auth.views.login %}">Hybrid Log In</a></li> -->
           </ul>
         </nav>
       </div>

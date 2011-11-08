@@ -8,7 +8,7 @@
     var geo_s = 'http://ws.geonames.org/searchJSON?';
     $(document).ready( function () {
             var priors = {% if form.geo.value %}{{form.geo.value|safe}}{% else %}[]{% endif %};
-            var city_priors = {% if form.cities.value %}{{form.cities.value|safe}}{% else %}[]{% endif %};
+            var city_priors = {{form.cities.value|to_json|safe}};
             var pre = {type: 'country', data: []};
             var city_pre = {type: 'city', data: []};
             //Not being used right now

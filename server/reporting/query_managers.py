@@ -3,6 +3,15 @@ import logging
 import time
 import copy
 import traceback
+from urllib import urlopen
+try:
+    import json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        from django.utils import simplejson as json
+
 
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
@@ -70,6 +79,8 @@ class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel
     
     def __init__(self, account, offline=False, include_geo=False):
+        #Hack to keep account object for mongo stats
+        self.account_obj = account
         if isinstance(account, db.Key):
             self.account = account
         elif isinstance(account, db.Model):
@@ -167,7 +178,7 @@ class StatsModelQueryManager(CachedQueryManager):
             days = days or []
         
         account = account or self.account
-
+        
         if account:
             parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=offline))
         else:
@@ -223,6 +234,10 @@ class StatsModelQueryManager(CachedQueryManager):
                 stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()))
             stat.include_geo = self.include_geo
             final_stats.append(stat)
+        
+        #Gets latest mongo stats for today, if enabled
+        if self.account_obj.use_mongodb_stats:
+            self._patch_mongodb_stats_for_today(final_stats[-1], publisher, advertiser, days[-1])    
         return final_stats
     
     def accumulate_stats(self, stat):
@@ -528,3 +543,31 @@ class StatsModelQueryManager(CachedQueryManager):
                                   **props)
             new_stats.append(new_stat)
         return new_stats
+
+    #Pass in StatModel for just today
+    #Pass in day as datetime object, if day == today, then patches with newest mongo data
+    def _patch_mongodb_stats_for_today(self, stat, pub, adv, day):
+        formatted_day = day.strftime("%y%m%d")
+        if StatsModel.today().strftime("%y%m%d") == formatted_day:
+            url = "http://mongostats.mopub.com/stats?start_date=" + formatted_day
+            url += "&end_date=" + formatted_today
+            url += "&acct=" + str(self.account_obj.key())
+            url += "&pub=%s&adv=%s"%(pub or "", adv or "")
+
+            today_dict = {}
+            try:
+                response = urlopen(url).read()
+                today_dict = json.loads(response)
+                key = "%s||%s||%s"%(pub or "*", adv or "*", str(self.account_obj.key()))
+                today_dict = today_dict['all_stats'][key]['daily_stats'][0]
+            except Exception, ex:
+                logging.error(ex)
+        
+            #Replace StatModel properties with today's stats
+            if today_dict:
+                stat.revenue = today_dict['revenue']
+                stat.impression_count = today_dict['impression_count']
+                stat.attemp_count = today_dict['attempt_count']
+                stat.request_count = today_dict['request_count']
+                stat.click_count = today_dict['click_count']
+    

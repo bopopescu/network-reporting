@@ -548,7 +548,8 @@ class StatsModelQueryManager(CachedQueryManager):
         """"Patches a StatModel with MongoDB's latest data for today
             Stat is the StatModel for a chosen day
             Day is a datetime object. If day == today, we attempt to pull data, 
-            else nothing occurs"""
+            else nothing occurs
+        """
         formatted_day = day.strftime("%y%m%d")
         if StatsModel.today().strftime("%y%m%d") == formatted_day:
             url = "http://mongostats.mopub.com/stats?start_date=" + formatted_day

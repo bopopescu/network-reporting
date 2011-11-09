@@ -34,7 +34,7 @@ from reporting.query_managers import StatsModelQueryManager
 from google.appengine.api import taskqueue
 
 from admin import beatbox
-from common.utils.decorators import cache_page_until_post
+from common.utils.decorators import cache_page_until_post, staff_login_required
 from common.utils import simplejson
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
@@ -43,7 +43,7 @@ NUM_DAYS = 14
 BIDDER_SPENT_URL = "http://mpx.mopub.com/spent"
 BIDDER_SPENT_MAX = 2000
 
-@login_required
+@staff_login_required
 @cache_page_until_post()
 def admin_switch_user(request,*args,**kwargs):
     params = request.POST or request.GET
@@ -53,18 +53,17 @@ def admin_switch_user(request,*args,**kwargs):
     response = HttpResponseRedirect(url)
     
     # drop a cookie of the email is the admin user is trying to impersonate
-    if users.is_current_user_admin():
-    	email = params.get('user_email',None)
-    	set_cookie = False
-    	if email:
-    	  user = UserQueryManager.get_by_email(email)
-    	  account = AccountQueryManager.get_current_account(user=user)
-    	  if account:
-    		response.set_cookie('account_impersonation',str(account.key()))
-    		response.set_cookie('account_email',str(account.mpuser.email))
-    		set_cookie = True
-    	if not set_cookie:
-    	  response.delete_cookie('account_impersonation')	 
+    email = params.get('user_email',None)
+    set_cookie = False
+    if email:
+      user = UserQueryManager.get_by_email(email)
+      account = AccountQueryManager.get_current_account(user=user)
+      if account:
+        response.set_cookie('account_impersonation',str(account.key()))
+        response.set_cookie('account_email',str(account.mpuser.email))
+        set_cookie = True
+    if not set_cookie:
+      response.delete_cookie('account_impersonation')
     return response
   
   
@@ -157,7 +156,7 @@ def dashboard_prep(request, *args, **kwargs):
 def rep_timed_out(rep):
     return not rep.data and rep.status == 'Pending' and (datetime.datetime.now() - rep.created_at).seconds > 7200
  
-@login_required
+@staff_login_required
 def reports_dashboard(request, *args, **kwargs):
     if users.is_current_user_admin():
         reps = Report.all().order('-created_at').fetch(50)
@@ -167,7 +166,7 @@ def reports_dashboard(request, *args, **kwargs):
     else:
         return Http404()
 
-@login_required
+@staff_login_required
 def dashboard(request, *args, **kwargs):
     offline = request.GET.get('offline',False)
     offline = True if offline == "1" else False

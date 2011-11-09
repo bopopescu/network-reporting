@@ -236,7 +236,7 @@ class StatsModelQueryManager(CachedQueryManager):
             final_stats.append(stat)
         
         #Gets latest mongo stats for today, if enabled
-        if self.account_obj.use_mongodb_stats:
+        if self.account_obj and self.account_obj.use_mongodb_stats:
             self._patch_mongodb_stats_for_today(final_stats[-1], publisher, advertiser, days[-1])    
         return final_stats
     

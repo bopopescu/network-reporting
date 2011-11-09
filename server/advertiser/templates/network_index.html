@@ -168,14 +168,19 @@
         </tbody>
       </table>
 
-      <div class="form-submit-left">
-        <span class="buttonWrap">
-          <a class="button pause icon" id="campaignForm-pause">Pause</a>
-          <a class="button play icon" id="campaignForm-resume">Resume</a>
-          <a class="button stop icon" id="campaignForm-archive">Archive</a>
-        </span>
+      <div class="clearfix">
+        <div class="form-submit-left">
+          <span class="buttonWrap">
+            <a class="button pause icon" id="campaignForm-pause">Pause</a>
+            <a class="button play icon" id="campaignForm-resume">Resume</a>
+            <a class="button stop icon" id="campaignForm-archive">Archive</a>
+          </span>
+          <div class="right"> <a href="{% url ad_network_reports_index %}"> Ad Network Reports </a> </div>
+        </div>
       </div>
     </form>
+
+
 
   {% endif %}
 
@@ -198,7 +203,7 @@
 </script>
 <script src="/js/mopub-advertiser.js?v=1"></script>
 <script>
-  $(function() { mopub.Advertiser.initializeNetworkPage(); $("#stats-breakdown-revenue").show();});
+  $(function() { mopub.Advertiser.initializeNetworkPage({{ bootstrapping_data|safe }}); $("#stats-breakdown-revenue").show();});
 </script>
 
 {% endblock extraScripts %}

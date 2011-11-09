@@ -29,22 +29,22 @@ var mopub = mopub || {};
             // which we are depricating in favor of backbone. In the future,
             // this method will have bootstrapping code for backbone, but right
             // now we only use it to generate the revenue chart.
-            var data = [
-                {
-                    name:'InMobi',
-                    data: [1, 2, 3, 4, 5, 6, 7]
-                },
-                {
-                    name:'AdMob',
-                    data: [2, 4, 7, 9, 12, 6, 10]
-                },
-                {
-                    name:'Jumptap',
-                    data: [10, 2, 19, 9, 11, 4, 10]
-                }
-            ];
+            // var data = [
+            //     {
+            //         name:'InMobi',
+            //         data: [1, 2, 3, 4, 5, 6, 7]
+            //     },
+            //     {
+            //         name:'AdMob',
+            //         data: [2, 4, 7, 9, 12, 6, 10]
+            //     },
+            //     {
+            //         name:'Jumptap',
+            //         data: [10, 2, 19, 9, 11, 4, 10]
+            //     }
+            // ];
 
-            mopub.Chart.createStatsChart('#revenue-chart', data);
+            mopub.Chart.createStatsChart('#revenue-chart', bootstrapping_data);
 
             // More hackiness. Unbind the normal click event to the revenue breakdown
             // because it screws up the new chart we made. Also set window.isNetworkPage

@@ -48,6 +48,8 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
+from ad_network_reports.query_managers import AdNetworkReportQueryManager
+
 from common.constants import MPX_DSP_IDS
 
 from django.views.decorators.cache import cache_page
@@ -1400,11 +1402,10 @@ class NetworkIndexHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range)
 
-        logging.warn(self.date_range)
-        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
-        # TODO:: Optimize IO
+        network_revenues = AdNetworkReportQueryManager(self.account).get_chart_stats_for_all_networks(days)
 
+        bootstrapping_data = [{'name': net['name'],'data': [stats.revenue for stats in net['stats']]} for net in network_revenues]
 
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
@@ -1412,7 +1413,8 @@ class NetworkIndexHandler(RequestHandler):
                                       'networks': network_campaigns,
                                       'start_date': days[0],
                                       'end_date':days[-1],
-                                      'date_range': self.date_range
+                                      'date_range': self.date_range,
+                                      'bootstrapping_data': simplejson.dumps(bootstrapping_data)
                                   })
 
 @login_required

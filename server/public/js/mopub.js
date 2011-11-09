@@ -944,8 +944,7 @@ if (typeof window.console == "undefined") {
     Chart.highChartDefaultOptions = {
         chart: {
             defaultSeriesType: 'line',
-            marginTop: 0,
-            marginBottom: 50
+            margin: [30,0,30,45]
         },
         legend: {
             verticalAlign: "bottom",
@@ -1000,9 +999,9 @@ if (typeof window.console == "undefined") {
      };
 
 
-
-
-
+    /*
+     * Old chart stuff. Depricating.
+     */
     Chart.insertStatsChart = function(selector, seriesType, data) {
         var metricElement = $(selector);
     };

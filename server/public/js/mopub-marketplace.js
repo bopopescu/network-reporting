@@ -21,6 +21,15 @@ var mopub = mopub || {};
             price_floor: 0,
             revenue: 0
         },
+        calcCtr: function () {
+            return (this.get('clicks') / (this.get('impressions')+1));
+        },
+        calcEcpm: function () {
+            return (this.get('revenue') / (this.get('impressions')+1)*1000);
+        },
+        calcFillRate: function () {
+
+        },
         validate: function(attributes) {
             var valid_number = Number(attributes.price_floor);
             if (valid_number == NaN) {
@@ -747,8 +756,20 @@ var mopub = mopub || {};
             $("#addblocklist").submit();
         });
 
+
+
+
+
+
+
+
+
+
+
         /*
-         * REFACTOR: No more copy/pasting! Don't duplicate functionality!!!!!!
+         * F THIS.
+         * REFACTOR.
+         *
          * Everything here and below needs to not exist in this file, because
          * it already exists in two other files. Obvo refactor.
          */

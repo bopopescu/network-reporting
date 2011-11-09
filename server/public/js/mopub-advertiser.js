@@ -358,12 +358,20 @@ var mopub = mopub || {};
 
 
 
-      $.each(['type', 'priority', 'promo-priority', 'customHtml', 'bid', 'keyword'], function(iter, link_type) {
+      $.each(['type', 'priority', 'promo-priority', 'bid', 'keyword'], function(iter, link_type) {
           $('#campaignForm-' + link_type + '-helpLink').click(function(e) {
               e.preventDefault();
               $('#campaignForm-' + link_type + '-helpContent').dialog({
                   buttons: { "Close": function() { $(this).dialog("close"); } }
               });
+          });
+      });
+
+      $('#campaignForm-customHtml-helpLink').click(function(e) {
+          e.preventDefault();
+          $('#campaignForm-customHtml-helpContent').dialog({
+              buttons: { "Close": function() { $(this).dialog("close"); }},
+              width: 700
           });
       });
 

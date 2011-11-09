@@ -180,23 +180,18 @@
           MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
           <br/>
           <br/>
-          <h4>AdSense Example:</h4>
-          The custom HTML snippet for AdSense is:
+          <h4>Example:</h4>
+          A sample HTML snippet from Glam Media is:
           <br/>
-          <code> &lt;script type=&quot;text/javascript&quot;&gt;
           <br/>
-          &lt;!--
-          // XHTML should not attempt to parse these strings, declare them CDATA.<br/>
-          /* &lt;![CDATA[ */<br/><br/>
-          window.googleAfmcRequest = {<br/>
-          &nbsp;&nbsp;client: 'XXXXXXXXXXXXXX',<br/>
-          &nbsp;&nbsp;format: '320x50_mb',<br/>
-          &nbsp;&nbsp;output: 'html',<br/>
-          &nbsp;&nbsp;slotname: 'XXXXXXXXX',<br/>
-          };<br/>
-          /* ]]&gt; */<br/>
-          //--&gt;&lt;/script&gt;<br/>
-          &lt;script type=&quot;text/javascript&quot; src = &quot;http://pagead2.googlesyndication.com/pagead/show_afmc_ads.js&quot;&gt;&lt;/script&gt;
+          <code>
+            &lt;script type="text/javascript"><br/>
+              window.glam_affiliate_id = 1234567890;<br/>
+              if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
+              if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
+              var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
+              document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
+            &lt;/script><br/>
           </code>
         </div>
       </div>

@@ -5,16 +5,16 @@
 
 {% block content %}
 <div class="content-main">
-  
+
   <div id="login-left">
     <form action="" method="POST" accept-charset="utf-8" id="accountForm">
       {% csrf_token %}
-      <fieldset id="appForm-details"> 
-        <legend>Welcome Back!</legend> 
+      <fieldset id="appForm-details">
+        <legend>Welcome Back!</legend>
         <p>
           Enter your email and password to log back in to MoPub
         </p>
-        <dl class="formFields"> 
+        <dl class="formFields">
             <dt>Email: </dt>
             <dd>
                 <input type="text" name="username" class="{% if form.username.errors or form.errors %}error{% endif %}" value="{{form.data.username}}"/>
@@ -24,15 +24,15 @@
             <dd>
                 <input type="password" name="password" class="{% if form.password.errors or form.errors %}error{% endif %}" value="{{form.data.password}}"/>
                 {% if form.password.errors %}<span class="error">(Required)</span>{% endif %}
-            </dd>    
+            </dd>
             {% for error in form.non_field_errors %}
             <dt>
             </dt>
             <dd>
-              <span class="error">{{ error|safe }}</span> 
+              <span class="error">{{ error|safe }}</span>
             </dd>
             {% endfor %}
-            
+
             <dt>&nbsp;</dt>
             <dd>
               <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Log in</a></span> or <a href="{% url registration_register %}">register for a MoPub account</a>
@@ -49,7 +49,7 @@
   </div>
   <div id="google-login">
     <p>Or log in to MoPub with your Google Account</p>
-    <a class="google-login-button" href="{% google_login_url %}">&nbsp;</a>
+    <a class="google-login-button" href="{% google_login_url "/account/migrate/" %}">&nbsp;</a>
   </div>
 </div>
 {# <script type="text/javascript"> #}

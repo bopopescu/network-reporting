@@ -23,6 +23,8 @@ from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager
 
+AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
+
 KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
 class Stats(object):
@@ -65,7 +67,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         aggregates = self.roll_up_stats(aggregates_list)
 
         # Get the daily stats list.
-        daily_stats = [self._get_stats_for_date(date).__dict__ for
+        daily_stats = [self._get_stats_for_day(date).__dict__ for
                 date in days]
 
         # Sort alphabetically by application name then by ad network name
@@ -74,7 +76,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         return (aggregates, daily_stats, aggregate_stats_list)
 
-    def _get_stats_for_date(self, date):
+    def _get_stats_for_day(self, day):
         """Get rolled up stats for the given date (include all ad networks).
 
         Return rolled up stats.
@@ -84,20 +86,30 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         mappers = list(AdNetworkAppMapper.all().filter('ad_network_login IN',
                 login_credentials_list))
         return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
-            date).filter('ad_network_app_mapper IN', mappers)))
+            day).filter('ad_network_app_mapper IN', mappers)))
 
-    def _get_stats_for_date_and_network(self, date, ad_network_name):
+    def get_chart_stats_for_all_networks(self, days):
+        daily_stats = []
+        for ad_network_name in AD_NETWORK_NAMES:
+            login = AdNetworkLoginCredentials.get_by_ad_network_name(
+                    self.account, ad_network_name)
+            mappers = list(AdNetworkAppMapper.all().filter('ad_network_login =',
+                    login))
+
+            network_stats_dict = {}
+            network_stats_dict['name'] = ad_network_name
+            network_stats_dict['stats'] = [self._get_stats_for_network_and_day(
+                mappers, day) for day in days]
+            daily_stats.append(network_stats_dict)
+        return daily_stats
+
+    def _get_stats_for_network_and_day(self, mappers, day):
         """Get rolled up stats for the given date and ad network name.
 
         Return rolled up stats.
         """
-        login_credentials = AdNetworkLoginCredentials.get_by_ad_network_name(
-                account, ad_network_name)
-        mappers = list(AdNetworkAppMapper.all().filter('ad_network_login =',
-                login_credentials))
         return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
-            date).filter('ad_network_app_mapper IN', mappers)))
-
+            day).filter('ad_network_app_mapper IN', mappers)))
 
     def _get_stats_for_mapper_and_days(self, ad_network_app_mapper,
             days):

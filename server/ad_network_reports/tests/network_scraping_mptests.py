@@ -58,5 +58,7 @@ def ad_network_reports_mptest():
 
     # Do aggregate statistics work?
     aggregates, daily_stats, aggregate_stats_list = manager.get_index_data(
-            date_magic.gen_days(date.today() - timedelta(days = 8),
-                date.today() - timedelta(days = 1)))
+            date_magic.gen_days(date.today() - timedelta(days=8),
+                date.today() - timedelta(days=1)))
+    logging.info(manager.get_chart_stats_for_all_networks(date_magic.gen_days(
+        date.today() - timedelta(days=8), date.today() - timedelta(days=1))))

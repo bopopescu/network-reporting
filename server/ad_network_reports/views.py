@@ -2,8 +2,8 @@ import copy
 import logging
 
 from ad_network_reports.forms import LoginInfoForm
-from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        get_management_stats, create_manager
+from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
+        AdNetworkReportQueryManager, get_management_stats, create_manager
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from datetime import date, timedelta
@@ -13,8 +13,6 @@ from django.shortcuts import redirect
 from reporting.models import StatsModel
 
 from account.models import Account
-
-AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
 
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self, account_key=None):

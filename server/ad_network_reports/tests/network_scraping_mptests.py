@@ -37,9 +37,6 @@ def ad_network_reports_mptest():
     # Verify results.
     manager = AdNetworkReportQueryManager(account)
 
-    logging.warning([(app, publisher_id) for app, publisher_id in
-        manager.get_apps_with_publisher_ids('jumptap')])
-
     test_network_app_mappers = list(manager.get_ad_network_mappers())
     assert len(test_network_app_mappers) > 0
     #assert len(test_network_app_mappers) == len(entities)
@@ -51,15 +48,17 @@ def ad_network_reports_mptest():
     yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
     logging.info("YESTERDAY: %s" % yesterday.strftime('%Y %m %d'))
     for n in test_network_app_mappers:
-        n = manager.get_ad_network_app_mapper(ad_network_app_mapper_key =
+        n = manager.get_ad_network_mapper(ad_network_app_mapper_key =
                 n.key())
-        stats = manager.get_ad_network_app_stats(n)
+        stats = manager.get_stats_list_for_mapper_and_days(n.key(), [yesterday])
         logging.warning( "network name:%s application name: %s" %
                 (n.ad_network_name, n.application.name))
         logging.warning(str(stats[0].__dict__))
         assert stats[0].date == yesterday
 
     # Do aggregate statistics work?
-    aggregates = [manager.get_ad_network_aggregates(n, date_magic.gen_days(
-        date.today() - timedelta(days = 8), date.today() - timedelta(days = 1)))
-        for n in test_network_app_mappers]
+    aggregates, daily_stats, aggregate_stats_list = manager.get_index_data(
+            date_magic.gen_days(date.today() - timedelta(days=8),
+                date.today() - timedelta(days=1)))
+    logging.info(manager.get_chart_stats_for_all_networks(date_magic.gen_days(
+        date.today() - timedelta(days=8), date.today() - timedelta(days=1))))

@@ -1,9 +1,13 @@
 import selenium
+import os
 import sys
 import time
 
-#sys.path.append('/home/ubuntu/mopub/server') # only needed for testing
-sys.path.append('/Users/tiagobandeira/Documents/mopub/server') # only needed for testing
+# Paths only needed for testing
+if os.path.exists('/home/ubuntu/'):
+    sys.path.append('/home/ubuntu/mopub/server')
+else:
+    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
@@ -45,16 +49,28 @@ class IAdScraper(Scraper):
         self.browser.get(self.STATS_PAGE)
 
         time.sleep(1)
-        login = self.browser.find_element_by_css_selector('#accountname')
-        login.clear()
-        login.send_keys(self.username)
-        account_password = \
-                self.browser.find_element_by_css_selector('#accountpassword')
-        account_password.clear()
-        account_password.send_keys(self.password)
-        self.browser.find_element_by_name('appleConnectForm').submit()
-        # There are some redirects and shit that happens, chill out for a bit
-        time.sleep(3)
+        count = 0
+        while self.browser.title == self.LOGIN_TITLE and count < 3:
+            login = self.browser.find_element_by_css_selector('#accountname')
+            login.clear()
+            login.send_keys(self.username)
+            account_password = \
+                    self.browser.find_element_by_css_selector('#accountpassword')
+            account_password.clear()
+            account_password.send_keys(self.password)
+            submit_count = 0
+            exception = True
+            while exception and count < 10:
+                exception = False
+                try:
+                    self.browser.find_element_by_name('appleConnectForm').submit()
+                except selenium.common.exceptions.NoSuchElementException as \
+                        exception:
+                    pass
+                submit_count += 1
+            # There are some redirects and shit that happens, chill out for a bit
+            time.sleep(3)
+            count += 1
 
         if self.browser.title == self.LOGIN_TITLE:
             raise UnauthorizedLogin(self.browser.find_element_by_css_selector(

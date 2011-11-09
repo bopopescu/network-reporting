@@ -3,9 +3,8 @@ import os
 import sys
 import traceback
 
-EC2 = True
-
-if EC2:
+# Are we on EC2 (Note can't use django.settings_module since it's not defined)
+if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
     sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
@@ -30,6 +29,8 @@ from ad_network_reports.models import AdNetworkScrapeStats, \
         AdNetworkManagementStats
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
         get_all_login_credentials
+from ad_network_reports.scrapers.unauthorized_login_exception import \
+        UnauthorizedLogin
 from common.utils import date_magic
 from pytz import timezone
 
@@ -80,8 +81,8 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                       #to='report-monitoring@mopub.com',
-                       to='tiago@mopub.com',
+                       to='report-monitoring@mopub.com',
+                       cc='tiago@mopub.com',
                        subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
                        body=("Learn more at http://mopub-experimental.appspot."
@@ -212,7 +213,7 @@ def update_ad_networks(start_date = None, end_date = None):
 
                 # Get the ad_network_app_mapper object that corresponds to the
                 # login_credentials and stats.
-                ad_network_app_mapper = manager.get_ad_network_app_mapper(
+                ad_network_app_mapper = manager.get_ad_network_mapper(
                         publisher_id=publisher_id,
                         ad_network_name=login_credentials.ad_network_name)
 

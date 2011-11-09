@@ -37,6 +37,7 @@
   {# Plugins  aggregated from all the *.js files in /public/js/mylibs/*#}
   <script src="/js/mopub-plugins.js?v=22"></script>
 
+
   {# MoPub #}
   <script src="/js/mopub.js?v=37"></script>
   {% block extraScripts %}
@@ -44,6 +45,7 @@
   {% endblock extraScripts %}
 
   {# Mixpanel #}
+
   <script type="text/javascript">
     var mpq=[];
     mpq.push(["init","2941bda924fcaaff6ec23f27b41f0129"]);
@@ -55,6 +57,10 @@
 
   </script>
   {#  End Mixpanel #}
+
+  <!-- MoPub -->
+  <script src="/js/mopub.js?v=40"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=34"></script>{% endblock extraScripts %}
 
   <!--[if lt IE 7 ]>
     <script src="/js/mylibs/dd_belatedpng.js"></script>

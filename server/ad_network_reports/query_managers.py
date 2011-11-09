@@ -1,15 +1,10 @@
 import logging
+import os
 import sys
 import urllib
 
-from django.conf import settings
-
-if settings.DEBUG:
-    EC2 = False
-else:
-    EC2 = True
-
-if EC2:
+# Are we on EC2 (Note can't use django.settings_module since it's not defined)
+if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
     sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
@@ -27,6 +22,8 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
 from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager
+
+AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
 
 KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
@@ -49,7 +46,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     credential):
                 yield mapper
 
-    def get_index_stats(self, days):
+    def get_index_data(self, days):
         """Get required data for the index page of ad network reports.
 
         Generate a list of aggregate stats for the ad networks, apps and
@@ -64,14 +61,14 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         keys = [s.key() for s in mappers]
         # Get aggregate stats for all the different ad network mappers for the
         # account between the selected date range
-        aggregates_list = [self.get_ad_network_aggregates(n, days) for n in
+        aggregates_list = [self._get_stats_for_mapper_and_days(n, days) for n in
                 mappers]
         aggregate_stats_list = zip(keys, mappers, aggregates_list)
         aggregates = self.roll_up_stats(aggregates_list)
 
         # Get the daily stats list.
-        daily_stats = [self.get_stats_for_date(date).__dict__ for date in
-                days]
+        daily_stats = [self._get_stats_for_day(date).__dict__ for
+                date in days]
 
         # Sort alphabetically by application name then by ad network name
         aggregate_stats_list = sorted(aggregate_stats_list, key = lambda s:
@@ -79,8 +76,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         return (aggregates, daily_stats, aggregate_stats_list)
 
-    def get_stats_for_date(self, date):
-        """Get rolled up stats for the given date.
+    def _get_stats_for_day(self, day):
+        """Get rolled up stats for the given date (include all ad networks).
 
         Return rolled up stats.
         """
@@ -89,20 +86,41 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         mappers = list(AdNetworkAppMapper.all().filter('ad_network_login IN',
                 login_credentials_list))
         return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
-            date).filter('ad_network_app_mapper IN', mappers)))
+            day).filter('ad_network_app_mapper IN', mappers)))
 
-    def get_ad_network_aggregates(self, ad_network_app_mapper,
+    def get_chart_stats_for_all_networks(self, days):
+        daily_stats = []
+        for ad_network_name in AD_NETWORK_NAMES:
+            login = AdNetworkLoginCredentials.get_by_ad_network_name(
+                    self.account, ad_network_name)
+            mappers = list(AdNetworkAppMapper.all().filter('ad_network_login =',
+                    login))
+
+            network_stats_dict = {}
+            network_stats_dict['name'] = ad_network_name
+            network_stats_dict['stats'] = [self._get_stats_for_network_and_day(
+                mappers, day) for day in days]
+            daily_stats.append(network_stats_dict)
+        return daily_stats
+
+    def _get_stats_for_network_and_day(self, mappers, day):
+        """Get rolled up stats for the given date and ad network name.
+
+        Return rolled up stats.
+        """
+        return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
+            day).filter('ad_network_app_mapper IN', mappers)))
+
+    def _get_stats_for_mapper_and_days(self, ad_network_app_mapper,
             days):
         """Calculate aggregate stats for an ad network and app
         for the given days.
 
         Return the aggregate stats.
         """
-        query = AdNetworkScrapeStats.all()
-        query.filter('ad_network_app_mapper =', ad_network_app_mapper)
-        query.filter('date IN', days)
-
-        return self.roll_up_stats(query)
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
+                ad_network_app_mapper.key(), days)
+        return self.roll_up_stats(stats_list)
 
     def roll_up_stats(self, stats_iterable):
         """Roll up (aggregate) stats in the stats iterable.
@@ -147,18 +165,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         return aggregate_stats
 
-    def get_ad_network_app_stats(self, ad_network_app_mapper):
-        """Filter AdNetworkStats for a given ad_network_app_mapper. Sort
+    def get_stats_list_for_mapper_and_days(self, ad_network_app_mapper_key,
+            days):
+        """Filter AdNetworkScrapeStats for a given ad_network_app_mapper. Sort
         chronologically by day, newest first (decending order.)
 
-        Return the query (a generator.)
+        Return a list of stats sorted by date.
         """
-        query = AdNetworkScrapeStats.all()
-        query.filter('ad_network_app_mapper =', ad_network_app_mapper)
-        query.order('-date')
-        return query
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
+                ad_network_app_mapper_key, days)
+        return sorted(stats_list, key=lambda stats: stats.date)
 
-    def get_ad_network_app_mapper(self, ad_network_app_mapper_key=None,
+    def get_ad_network_mapper(self, ad_network_app_mapper_key=None,
             publisher_id=None, ad_network_name=None):
         """Keyword arguments: either an ad_network_app_mapper_key or a
         publisher_id and login_credentials.
@@ -172,20 +190,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     ad_network_name)
         return None
 
-    def get_app_publisher_ids(self, ad_network_name):
-        """Check apps to see if their pub_id for the given ad_network is
-        defined
-
-        Return generator of publisher ids at the application level for the
-        account on the ad_network.
-        """
-        for app in AppQueryManager.get_apps_with_network_configs(self.account):
-            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
-                    None)
-            if pub_id != None:
-                yield pub_id
-
-    def get_apps_with_publisher_ids(self, ad_network_name):
+    def _get_apps_with_publisher_ids(self, ad_network_name):
         """Check apps to see if their pub_id for the given ad_network is
         defined
 
@@ -233,7 +238,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                         email=send_email)
         login_credentials.put()
 
-        apps_with_publisher_ids = self.get_apps_with_publisher_ids(
+        apps_with_publisher_ids = self._get_apps_with_publisher_ids(
                 ad_network_name)
         # Create all the different AdNetworkAppMappers for all the
         # applications on the ad network for the user and add them to the db
@@ -253,7 +258,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         # Sanity check
         if publisher_id:
             ad_network_name = login_credentials.ad_network_name
-            for app, app_publisher_id in self.get_apps_with_publisher_ids(
+            for app, app_publisher_id in self._get_apps_with_publisher_ids(
                     ad_network_name):
                 # Is the app in Mopub?
                 if publisher_id == app_publisher_id:
@@ -264,6 +269,19 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                                 application=app)
                     mapper.put()
                     return mapper
+
+    def get_app_publisher_ids(self, ad_network_name):
+        """Check apps to see if their pub_id for the given ad_network is
+        defined
+
+        Return generator of publisher ids at the application level for the
+        account on the ad_network.
+        """
+        for app in AppQueryManager.get_apps_with_network_configs(self.account):
+            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
+                    None)
+            if pub_id != None:
+                yield pub_id
 
     def get_adunit_publisher_ids(self, ad_network_name):
         """Get the ad unit publisher ids with the ad network from the generator

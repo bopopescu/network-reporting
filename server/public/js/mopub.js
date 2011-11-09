@@ -217,7 +217,8 @@ if (typeof window.console == "undefined") {
                 animation: false,
                 backgroundColor: null,
                 borderRadius: 0,
-                margin: [30,0,30,45]
+                margin: [30,0,30,45],
+                height: 185
             },
             title: { text: null },
             lang: {
@@ -960,6 +961,124 @@ if (typeof window.console == "undefined") {
      * ## Dashboard Stats Chart
      */
 
+    /*
+     * ## Y-Axis formating utility functions
+     *
+     * There are a couple of different ways to format the y-axis labels.
+     * Here are a couple of utility y-axis formatting functions.
+     */
+    Chart.moneyLabelFormatter = function() {
+        return '$' + Highcharts.numberFormat(this.value, 0);
+    };
+
+    Chart.percentageLabelFormatter = function() {
+        return Highcharts.numberFormat(this.value, 0) + '%';
+    };
+
+    Chart.numberLabelFormatter = function() {
+        if (this.value >= 1000000000) {
+            return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
+        } else if (this.value >= 1000000) {
+            return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
+        } else if (this.value >= 1000) {
+            return Highcharts.numberFormat(this.value / 1000, 0) + "K";
+        } else if (this.value > 0) {
+            return Highcharts.numberFormat(this.value, 0);
+        } else {
+            return "0";
+        }
+    };
+
+    /*
+     * ## Tooltip Utility functions
+     *
+     * Like the y-axis formatting, tooltips change depending on the type
+     * of data they feature. Here are a couple of common ones.
+     */
+    Chart.defaultTooltipFormatter = function() {
+        var value = Highcharts.numberFormat(this.y, 0);
+        var total = Highcharts.numberFormat(this.total, 0);
+        var text = '<span style="font-size: 14px;">'
+            + Highcharts.dateFormat('%A, %B %e, %Y', this.x)
+            + '</span>'
+            + '<br/>'
+            + '<span style="padding: 0; '
+            + 'font-weight: 600; '
+            + 'color: ' + this.series.color
+            + '">'
+            + this.series.name
+            + '</span>'
+            + ': <strong style="font-weight: 600;">'
+            + value
+            + '</strong><br/>';
+        return text;
+    };
+
+    /*
+     * ## Chart default options
+     */
+    Chart.highChartDefaultOptions = {
+        chart: {
+            defaultSeriesType: 'line',
+            marginTop: 0,
+            marginBottom: 50
+        },
+        legend: {
+            verticalAlign: "bottom",
+            y: -7,
+            enabled: true
+        },
+        yAxis: {
+            labels: {
+                formatter: Chart.numberLabelFormatter
+            }
+        },
+        tooltip: {
+            formatter: Chart.defaultTooltipFormatter
+        }
+    };
+
+    /*
+     * New way of setting up a stats chart. Let's use this.
+     */
+    Chart.createStatsChart = function(selector, data, extraOptions) {
+
+        // extraOptions aren't required
+        if (typeof extraOptions == 'undefined') {
+            extraOptions = {};
+        }
+
+        // If the data isn't formatted correctly, bring up a chart error
+        if (typeof data == 'undefined') {
+            Chart.chartError();
+            return;
+        }
+
+        // Each data item should have a color and a line width
+        var colors = ['#0090d9', '#e57300', '#53a600', '#444444', '#60beef'];
+        $.each(data, function(iter, item){
+            if (typeof item.color == 'undefined') {
+                item.color = colors[iter % colors.length];
+            }
+            item.lineWidth = 4;
+        });
+
+        // Create the highcharts options from the
+        var options = $.extend(Chart.highChartDefaultOptions, {
+            chart: {
+                renderTo: selector.replace('#','')
+            },
+            series: data
+        });
+
+        // setup HighCharts chart
+        var highchart = new Highcharts.Chart(options);
+     };
+
+
+
+
+
     Chart.insertStatsChart = function(selector, seriesType, data) {
         var metricElement = $(selector);
     };
@@ -1013,7 +1132,9 @@ if (typeof window.console == "undefined") {
                 renderTo: 'dashboard-stats-chart',
                 defaultSeriesType: seriesType,
                 marginTop: 0,
-                marginBottom: 55
+                marginBottom: 55,
+                height: 185
+
             },
             plotOptions: {
                 series: {

@@ -12,6 +12,71 @@
 var mopub = mopub || {};
 
 (function($){
+
+
+    var Advertiser = {
+
+        /*
+         * Right now this method just gets ad network reporting
+         * data into the revenue table. In the future, it should
+         * generate all of the tables, and should bootstrap the
+         * stats using backbone.
+         */
+        initializeNetworkPage: function(bootstrapping_data) {
+            $("#stats-breakdown-revenue").show();
+
+            // Impressions/Clicks/CTR are loaded using an AjaxChunkedFetch,
+            // which we are depricating in favor of backbone. In the future,
+            // this method will have bootstrapping code for backbone, but right
+            // now we only use it to generate the revenue chart.
+            var data = [
+                {
+                    name:'InMobi',
+                    data: [1, 2, 3, 4, 5, 6, 7]
+                },
+                {
+                    name:'AdMob',
+                    data: [2, 4, 7, 9, 12, 6, 10]
+                },
+                {
+                    name:'Jumptap',
+                    data: [10, 2, 19, 9, 11, 4, 10]
+                }
+            ];
+
+            mopub.Chart.createStatsChart('#revenue-chart', data);
+
+            // More hackiness. Unbind the normal click event to the revenue breakdown
+            // because it screws up the new chart we made. Also set window.isNetworkPage
+            // so that the revenue breakdown isn't hidden.
+            $("#stats-breakdown-revenue").unbind('click');
+            window.isNetworkPage = true;
+
+            // The impressions/clicks/ctr charts use the old-style chart loading
+            // mechanism over ajax, and have click events somewhere lower in this
+            // page. Revenue hadn't normally been included, so I've included the
+            // click event functionality here. In the future, I'll move the other
+            // stats stuff in here.
+
+            $("#stats-breakdown-revenue").click(function(e) {
+                $(".stats-breakdown tr").removeClass('active');
+                $(this).addClass('active');
+                $("#dashboard-stats-chart").hide().attr('style', 'display:none;');
+                $("#revenue-chart").show();
+            });
+
+            $.each(['impressions', 'clicks', 'ctr'], function (iter, item) {
+                $("#stats-breakdown-" + item).click(function() {
+                    $("#revenue-chart").hide();
+                    $("#dashboard-stats-chart").show();
+                });
+            });
+        }
+    };
+
+    window.mopub.Advertiser = Advertiser;
+
+
     // dom ready
     $(document).ready(function() {
 
@@ -787,7 +852,7 @@ var mopub = mopub || {};
     function showOrHideRevenueBreakdown() {
       // Hide the revenue breakdown if there are no guaranteed campaigns.
       var guaranteed = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
-      if (guaranteed.length == 0) $("#stats-breakdown-revenue").hide();
+      if (guaranteed.length == 0 && !window.isNetworkPage) $("#stats-breakdown-revenue").hide();
       else $("#stats-breakdown-revenue").show();
     }
 
@@ -1557,5 +1622,22 @@ var mopub = mopub || {};
         }
         $(this).val(val);
     });
-  }); // End document31 onready
+
+
+        $("#stats-breakdown-revenue").show();
+
+        if (mopub.isNetworkPage) {
+            $("#stats-breakdown-revenue").click(function() {
+                $("#dashboard-stats-chart").hide().attr('style', 'display:none;').remove();
+                $("#revenue-chart").show();
+            });
+
+            $.each(['impressions', 'clicks', 'ctr'], function (iter, item) {
+                $("#stats-breakdown-" + item).click(function() {
+                    $("#revenue-chart").hide();
+                    $("#dashboard-stats-chart").show();
+                });
+            });
+        }
+    }); // End document31 onready
  })(this.jQuery);

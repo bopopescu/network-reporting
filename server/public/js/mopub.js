@@ -25,6 +25,10 @@ if (typeof window.console == "undefined") {
  */
 (function($){
 
+    var mopub = window.mopub || {};
+    var Chart = window.Chart || {};
+    var Stats = window.Stats || {};
+
     $(document).ready(function() {
 
         /*
@@ -60,6 +64,7 @@ if (typeof window.console == "undefined") {
 
             }
         }
+
 
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
@@ -364,68 +369,6 @@ if (typeof window.console == "undefined") {
         }
     };
 
-
-    /*
-     * ## Template rendering
-     *
-     * This function lets you use data to fill in predefined template strings.
-     *
-     * Usage:
-     * `str` - A template string. Templates can include javascript logic enclosed in <% %>
-     *         brackets, similar to rails' erb templates.
-     *
-     * `data` - A javascript object which contains data to fill the template with.
-     *
-     * e.g.
-     *
-     * `var template = "<%= user %> is <%= desc %>.";`
-     *
-     * `var data1 = {user: 'John', desc: 'cool'};`
-     *
-     * `var data2 = {user: 'Nafis', desc: 'lame'};`
-     *
-     * `$.renderTemplate(template, data1); // "John is cool"`
-     *
-     * For more complex examples, see [this](http://ejohn.org/blog/javascript-micro-templating/)
-     */
-    var template_cache = {};
-    $.renderTemplate = function tmpl (str, data){
-        // Figure out if we're getting a template, or if we need to
-        // load the template - and be sure to cache the result.
-        var fn = !/\W/.test(str) ?
-            template_cache[str] = template_cache[str] || tmpl(document.getElementById(str).innerHTML) :
-
-        // Generate a reusable function that will serve as a template
-        // generator (and which will be cached).
-        new Function("obj",
-                     "var p=[],print=function(){p.push.apply(p,arguments);};" +
-
-                     // Introduce the data as local variables using with(){}
-                     "with(obj){p.push('" +
-
-                     // Convert the template into pure JavaScript
-                     str
-                     .replace(/[\r\t\n]/g, " ")
-                     .split("<%").join("\t")
-                     .replace(/((^|%>)[^\t]*)'/g, "$1\r")
-                     .replace(/\t=(.*?)%>/g, "',$1,'")
-                     .split("\t").join("');")
-                     .split("%>").join("p.push('")
-                     .split("\r").join("\\'")
-                     + "');}return p.join('');");
-
-        // Provide some basic currying to the user
-        return data ? fn( data ) : fn;
-    };
-
-    /*
-     * Alternate binding for the renderTemplate function
-     */
-    $.fn.renderTemplate = function (str, data) {
-        return $(this).html($.renderTemplate(str, data));
-    };
-
-
     /*
      * ## Dropdown Menus
      *
@@ -626,19 +569,19 @@ if (typeof window.console == "undefined") {
         });
     };
 
-
+    mopub.Utils = mopub.Utils || {};
 
     /*
      * ## Mopub Utility
      */
     mopub.Utils.formatNumberWithCommas = function(string) {
         string += '';
-        x = string.split('.');
-        x1 = x[0];
-        x2 = x.length > 1 ? '.' + x[1] : '';
+        var x = string.split('.');
+        var x1 = x[0];
+        var x2 = x.length > 1 ? '.' + x[1] : '';
         var rgx = /(\d+)(\d{3})/;
         while (rgx.test(x1)) {
-            x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            var x1 = x1.replace(rgx, '$1' + ',' + '$2');
         }
         return x1 + x2;
     };
@@ -660,15 +603,7 @@ if (typeof window.console == "undefined") {
         return keys;
     };
 
-})(this.jQuery);
-
-
-/*
- * # Ajax Chunked Fetch
- */
-(function(Utils, $) {
-
-    var AjaxChunkedFetch = Utils.AjaxChunkedFetch = function(args) {
+    var AjaxChunkedFetch = mopub.Utils.AjaxChunkedFetch = function(args) {
         this.items = {};
         this.chunkComplete = function(data, chunk, fetchObj) {};
         this.chunkFailure = function(chunk, fetchObj) {};
@@ -828,7 +763,7 @@ if (typeof window.console == "undefined") {
                     self.fetchObject.markAsFailed();
                 } else {
                     // Schedule retry and extend the backoff delay.
-                    setTimeout(function() { self.execute() }, self.backoffDelay);
+                    setTimeout(function() { self.execute(); }, self.backoffDelay);
                     self.backoffDelay *= AjaxChunkedFetch.BACKOFF_MULTIPLIER;
                 }
             },
@@ -837,12 +772,7 @@ if (typeof window.console == "undefined") {
         });
     };
 
-})(mopub.Utils = mopub.Utils || {}, this.jQuery);
 
-/*
- * # Mopub Stats
- */
-(function(Stats, $) {
     /*
      * ## Stat sorting
      */
@@ -951,12 +881,6 @@ if (typeof window.console == "undefined") {
         return ctr;
     };
 
-})(mopub.Stats = mopub.Stats || {}, this.jQuery);
-
-/*
- * # Mopub Charting
- */
-(function(Chart, $) {
     /*
      * ## Dashboard Stats Chart
      */
@@ -1264,6 +1188,12 @@ if (typeof window.console == "undefined") {
     };
 
 
+    window.Chart = Chart;
+    window.Stats = Stats;
+    window.mopub = mopub;
+    window.mopub.Stats = Stats;
+    window.mopub.Chart = Chart;
+    window.Mopub = mopub;
 
+})(this.jQuery);
 
-})(mopub.Chart = mopub.Chart || {}, this.jQuery);

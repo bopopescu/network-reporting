@@ -42,7 +42,6 @@ class CampaignQueryManager(QueryManager):
                       .filter('account =',account)
         return networks
 
-
     @classmethod
     def get_marketplace(cls, account, from_db=False):
         """
@@ -119,7 +118,7 @@ class CampaignQueryManager(QueryManager):
             return camp
 
     @classmethod
-    def get_campaigns(cls,account=None,adunit=None,deleted=False,limit=MAX_OBJECTS):
+    def get_campaigns(cls, account=None, adunit=None, deleted=False, limit=MAX_OBJECTS):
         campaigns = Campaign.all()
         if not (deleted == None):
             campaigns = campaigns.filter("deleted =",deleted)

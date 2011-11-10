@@ -435,7 +435,7 @@
     $rollup_width: 947px;
     @include clearfix;
     @include border-radius;
-    @include gradientBar(#FFFFFF, #EEEEEE);
+    @include vertical-three-colors-gradient(#fff, #f8f8f8, 10%, #eee);
     width: $rollup_width;
     border: 1px solid #E8E8E8;
     border-bottom: 1px solid #DDD;
@@ -448,7 +448,7 @@
         text-align: center;
     }
     h2 {
-        font-size: 24px;
+        font-size: 30px;
         font-weight: 400;
     }
     h4 {

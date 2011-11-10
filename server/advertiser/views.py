@@ -1397,24 +1397,31 @@ def marketplace_settings_change(request, *args, **kwargs):
 class NetworkIndexHandler(RequestHandler):
     def get(self):
 
+        # form the date range
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
             days = StatsModel.lastdays(self.date_range)
 
+        # grab the network campaigns and their stats
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
-        network_revenues = AdNetworkReportQueryManager(self.account).get_chart_stats_for_all_networks(days)
+        network_stats = AdNetworkReportQueryManager(self.account).get_chart_stats_for_all_networks(days)
 
-        bootstrapping_data = [{'name': net['name'],'data': [stats.revenue for stats in net['stats']]} for net in network_revenues]
+        total_revenue = sum([day.revenue for network in network_stats for day in network['stats']])
+        total_clicks = sum([day.clicks for network in network_stats for day in network['stats']])
+        total_impressions = sum([day.impressions for network in network_stats for day in network['stats']])
 
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
                                   {
-                                      'networks': network_campaigns,
+                                      'network_campaigns': network_campaigns,
+                                      'network_stats': network_stats,
                                       'start_date': days[0],
                                       'end_date':days[-1],
                                       'date_range': self.date_range,
-                                      'bootstrapping_data': simplejson.dumps(bootstrapping_data)
+                                      'total_revenue': total_revenue,
+                                      'total_clicks': total_clicks,
+                                      'total_impressions': total_impressions
                                   })
 
 @login_required

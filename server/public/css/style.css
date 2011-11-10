@@ -2195,17 +2195,13 @@ a.disabled {
   -moz-border-radius: 5px;
   border-radius: 5px;
   background-color: #eeeeee;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(white), to(#eeeeee));
-  background-image: -moz-linear-gradient(top, white, #eeeeee);
-  background-image: -ms-linear-gradient(top, white, #eeeeee);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, white), color-stop(100%, #eeeeee));
-  background-image: -webkit-linear-gradient(top, white, #eeeeee);
-  background-image: -o-linear-gradient(top, white, #eeeeee);
-  background-image: linear-gradient(top, white, #eeeeee);
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-  border-color: #eeeeee #eeeeee #c8c8c8;
-  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
+  background-repeat: no-repeat;
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(white), color-stop(10%, #f8f8f8), to(#eeeeee));
+  background-image: -webkit-linear-gradient(white, #f8f8f8 10%, #eeeeee);
+  background-image: -moz-linear-gradient(white, #f8f8f8 10%, #eeeeee);
+  background-image: -ms-linear-gradient(white, #f8f8f8 10%, #eeeeee);
+  background-image: -o-linear-gradient(white, #f8f8f8 10%, #eeeeee);
+  background-image: linear-gradient(white, #f8f8f8 10%, #eeeeee);
   width: 947px;
   border: 1px solid #E8E8E8;
   border-bottom: 1px solid #DDD;
@@ -2224,7 +2220,7 @@ a.disabled {
     padding: 0;
     text-align: center; }
   .rollup h2 {
-    font-size: 24px;
+    font-size: 30px;
     font-weight: 400; }
   .rollup h4 {
     font-weight: 200;

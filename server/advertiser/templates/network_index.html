@@ -15,7 +15,47 @@
 
 {% block content %}
 
-  {% if networks %}
+  <h2> Ad Network Stats</h2>
+
+  <div class="alert-message block-message info">
+    MoPub is now collecting ad network performance data directly from ad networks you use. Below is the data we've collected from the ad networks for which you've given us login credentials. For more information, like network-specific performance, visit our new <a href="{% url ad_network_reports_index %}"> ad network reports dashboard</a>.
+  </div>
+
+  <div class="rollup fig3">
+
+    <div class="data-figure">
+      <div class="figure">
+        {{ total_revenue|currency }}
+      </div>
+      <div class="label">
+        Revenue
+      </div>
+    </div>
+
+    <div class="data-figure">
+      <div class="figure">
+        {{ total_impressions|withsep }}
+      </div>
+      <div class="label">
+        Impressions
+      </div>
+    </div>
+
+    <div class="data-figure">
+      <div class="figure">
+        {{ total_clicks|withsep }}
+      </div>
+      <div class="label">
+        Clicks
+      </div>
+    </div>
+
+    <div class="right"> <a href="{% url ad_network_reports_index %}"> Ad Network Reports </a> </div>
+  </div>
+
+  <br />
+
+  {% if network_campaigns %}
     <h2>
       Network Performance
       <img id="network-loading-img" class="loading-img" style="display:none" src="../../images/icons-custom/spinner-16.gif"></img>
@@ -85,7 +125,7 @@
   <br />
 
 <br />
-  {% if networks %}
+  {% if network_campaigns %}
     <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
       <div id='network-rollups' class="campaignData-rollup">
         <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
@@ -122,7 +162,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for network in networks %}
+          {% for network in network_campaigns %}
             {% for adgroup in network.adgroups %}
               <tr class="campaignData
                          network_row
@@ -175,7 +215,6 @@
             <a class="button play icon" id="campaignForm-resume">Resume</a>
             <a class="button stop icon" id="campaignForm-archive">Archive</a>
           </span>
-          <div class="right"> <a href="{% url ad_network_reports_index %}"> Ad Network Reports </a> </div>
         </div>
       </div>
     </form>
@@ -202,8 +241,5 @@
     });
 </script>
 <script src="/js/mopub-advertiser.js?v=1"></script>
-<script>
-  $(function() { mopub.Advertiser.initializeNetworkPage({{ bootstrapping_data|safe }}); $("#stats-breakdown-revenue").show();});
-</script>
 
 {% endblock extraScripts %}

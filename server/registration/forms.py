@@ -286,7 +286,7 @@ class MPAuthenticationForm(AuthenticationForm):
             user = UserQueryManager.get_by_email(username)
 
             # if the user is a google account user only
-            if user.user and not user.has_usable_password():
+            if user and not user.has_usable_password():
                 raise forms.ValidationError(_("Your account setup requires you to use your Google Account to <a href='%s'>log in</a>. \
                                             <br/>If you want to unlink your google account, first log in then <a href='%s'>migrate</a> your account."%
                                             (users.create_login_url('/inventory/'),reverse('registration_migrate_user'))

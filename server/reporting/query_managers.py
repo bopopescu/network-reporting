@@ -108,7 +108,7 @@ class StatsModelQueryManager(CachedQueryManager):
         stats = []
         for account,apps in account_app_dict.iteritems():
             stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days)
-            
+                    
         return stats    
         
     def get_stats_for_hours(self, publisher=None, advertiser=None, date_hour=None, date_hours=None, account=None, country=None, offline=False):
@@ -236,8 +236,7 @@ class StatsModelQueryManager(CachedQueryManager):
             final_stats.append(stat)
         
         #Gets latest mongo stats for today, if enabled
-        if self.account_obj.use_mongodb_stats:
-            self._patch_mongodb_stats_for_today(final_stats[-1], publisher, advertiser, days[-1])    
+            self._patch_mongodb_stats_for_today(final_stats[-1], publisher, advertiser, account, days[-1])    
         return final_stats
     
     def accumulate_stats(self, stat):
@@ -544,24 +543,30 @@ class StatsModelQueryManager(CachedQueryManager):
             new_stats.append(new_stat)
         return new_stats
 
-    def _patch_mongodb_stats_for_today(self, stat, pub, adv, day):
+    def _patch_mongodb_stats_for_today(self, stat, pub, adv, acct, day):
         """"Patches a StatModel with MongoDB's latest data for today
             Stat is the StatModel for a chosen day
             Day is a datetime object. If day == today, we attempt to pull data, 
             else nothing occurs
         """
+        acct_str = None
+        if acct:
+            if self.account_obj and self.account_obj.use_mongodb_stats:
+                acct_str = str(account_obj.key())
+            else: 
+                return
+                
         formatted_day = day.strftime("%y%m%d")
         if StatsModel.today().strftime("%y%m%d") == formatted_day:
             url = "http://mongostats.mopub.com/stats?start_date=" + formatted_day
             url += "&end_date=" + formatted_today
-            url += "&acct=" + str(self.account_obj.key())
-            url += "&pub=%s&adv=%s"%(pub or "", adv or "")
+            url += "&acct=%s&pub=%s&adv=%s"%(acct_str or "", pub or "", adv or "")
 
             today_dict = {}
             try:
                 response = urlopen(url).read()
                 today_dict = json.loads(response)
-                key = "%s||%s||%s"%(pub or "*", adv or "*", str(self.account_obj.key()))
+                key = "%s||%s||%s"%(pub or "*", adv or "*", acct_str or "*")
                 today_dict = today_dict['all_stats'][key]['daily_stats'][0]
             except Exception, ex:
                 logging.error(ex)

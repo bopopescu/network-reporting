@@ -112,28 +112,6 @@ class CampaignForm(mpforms.MPModelForm):
             end_date = self.cleaned_data['end_date']
             fmt = '%I:%M %p'
 
-            # Iniit the times
-
-            if start_time and start_date:
-                start_datetime_time = datetime.strptime(start_time, fmt)
-                start_datetime = datetime(start_date.year, start_date.month, start_date.day, start_datetime_time.hour, start_datetime_time.minute, tzinfo=Pacific)
-            else:
-                start_datetime_time = None
-                start_datetime = None
-
-            if end_date and end_time:
-                end_datetime_time = datetime.strptime(end_time, fmt)
-                end_datetime = datetime(end_date.year, end_date.month, end_date.day, end_datetime_time.hour, end_datetime_time.minute, tzinfo=Pacific)
-            else:
-                end_datetime = None
-
-            # Remove start/end date
-            obj.end_date = None
-            obj.start_date = None
-            # Set the shizz
-            obj.start_datetime = start_datetime
-            obj.end_datetime = end_datetime
-
             type_ = self.cleaned_data['campaign_type']
             if type_ == 'gtee':
                 lev = self.cleaned_data['gtee_level']
@@ -168,13 +146,72 @@ class CampaignForm(mpforms.MPModelForm):
                 obj.budget = None
             else:
                 obj.full_budget = None
+
+
+            # HACK:
+            # Network campaigns don't use the date/time fields. Some foreign customers
+            # were experiencing issues because date/time fields are formatted
+            # differently in the browser and django would mark them invalid.
+            # They're hidden fields in the form, so the error would never show
+            # up. For network campaigns, we're just setting them to None as a quick
+            # fix. See #603 in lighthouse for more.
+            if not type_ in ('gtee', 'gtee_high', 'gtee_low', 'promo'):
+                start_datetime = None
+                start_datetime_time = None
+
+            elif start_time and start_date:
+                start_datetime_time = datetime.strptime(start_time, fmt)
+                start_datetime = datetime(start_date.year,
+                                          start_date.month,
+                                          start_date.day,
+                                          start_datetime_time.hour,
+                                          start_datetime_time.minute,
+                                          tzinfo=Pacific)
+
+            else:
+                start_datetime_time = datetime.today()
+                start_datetime = datetime.today()
+
+            if end_date and end_time:
+                end_datetime_time = datetime.strptime(end_time, fmt)
+                end_datetime = datetime(end_date.year,
+                                        end_date.month,
+                                        end_date.day,
+                                        end_datetime_time.hour,
+                                        end_datetime_time.minute,
+                                        tzinfo=Pacific)
+            else:
+                end_datetime = None
+
+            # Remove start/end date
+            obj.end_date = None
+            obj.start_date = None
+            # Set the shizz
+            obj.start_datetime = start_datetime
+            obj.end_datetime = end_datetime
+
+
         if commit:
             obj.put()
         return obj
 
     class Meta:
       model = Campaign
-      fields = ('name', 'budget_strategy', 'budget_type', 'full_budget', 'description', 'budget', 'campaign_type', 'start_date', 'end_date', 'gtee_level','promo_level', 'start_time', 'end_time', 'start_datetime', 'end_datetime')
+      fields = ('name',
+                'budget_strategy',
+                'budget_type',
+                'full_budget',
+                'description',
+                'budget',
+                'campaign_type',
+                'start_date',
+                'end_date',
+                'gtee_level',
+                'promo_level',
+                'start_time',
+                'end_time',
+                'start_datetime',
+                'end_datetime')
 
 
 class AdGroupForm(mpforms.MPModelForm):
@@ -187,7 +224,9 @@ class AdGroupForm(mpforms.MPModelForm):
     custom_method = mpfields.MPTextField(required=False)
     cities = forms.Field(widget=forms.MultipleHiddenInput, required=False)
 
-    device_targeting = mpfields.MPChoiceField(choices=[(False,'All'),(True,'Filter by device and OS')],widget=mpwidgets.MPRadioWidget)
+    device_targeting = mpfields.MPChoiceField(choices=[(False,'All'),
+                                                       (True,'Filter by device and OS')],
+                                              widget=mpwidgets.MPRadioWidget)
 
     ios_version_max = mpfields.MPChoiceField(choices=IOS_VERSION_CHOICES,
                                              widget=mpwidgets.MPSelectWidget)
@@ -245,7 +284,7 @@ class AdGroupForm(mpforms.MPModelForm):
             # Set up cities
             cities = []
             for city in instance.cities:
-                cities.append(str(city))
+                cities.append(city)
             geo_predicates = []
             for geo_pred in  instance.geo_predicates:
                 preds = geo_pred.split(',')

@@ -236,7 +236,8 @@ class StatsModelQueryManager(CachedQueryManager):
             final_stats.append(stat)
         
         #Gets latest mongo stats for today, if enabled
-            self._patch_mongodb_stats_for_today(final_stats[-1], publisher, advertiser, account, days[-1])    
+        self._patch_mongodb_stats_for_today(final_stats[-1], publisher, advertiser, account, days[-1]) 
+           
         return final_stats
     
     def accumulate_stats(self, stat):

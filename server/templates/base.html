@@ -54,10 +54,6 @@
   <!-- Tablesorter -->
   <script src="/js/jquery.tablesorter.min.js"></script>
 
-  <!-- MoPub -->
-  <script src="/js/mopub.js?v=37"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=34"></script>{% endblock extraScripts %}
-
   <!-- Mixpanel -->
   <script type="text/javascript">
     var mpq=[];
@@ -70,6 +66,10 @@
 
   </script>
   <!-- End Mixpanel -->
+
+  <!-- MoPub -->
+  <script src="/js/mopub.js?v=40"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=34"></script>{% endblock extraScripts %}
 
   <!--[if lt IE 7 ]>
     <script src="/js/mylibs/dd_belatedpng.js"></script>
@@ -262,7 +262,7 @@
             Logged in as <a href="{% url account_index %}">{{user.email}}</a>
             {% endif %}
 {% block adminSelect %}
-{% if user.is_admin %}
+{% if user.is_staff %}
                   <div style="float:right;padding-left:10px">
                     <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
                       Sudo: <input id="user_switcher" type="text" name="user_email" placeholder="user@email.com"/>

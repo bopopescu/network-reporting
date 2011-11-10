@@ -358,12 +358,20 @@ var mopub = mopub || {};
 
 
 
-      $.each(['type', 'priority', 'promo-priority', 'customHtml', 'bid', 'keyword'], function(iter, link_type) {
+      $.each(['type', 'priority', 'promo-priority', 'bid', 'keyword'], function(iter, link_type) {
           $('#campaignForm-' + link_type + '-helpLink').click(function(e) {
               e.preventDefault();
               $('#campaignForm-' + link_type + '-helpContent').dialog({
                   buttons: { "Close": function() { $(this).dialog("close"); } }
               });
+          });
+      });
+
+      $('#campaignForm-customHtml-helpLink').click(function(e) {
+          e.preventDefault();
+          $('#campaignForm-customHtml-helpContent').dialog({
+              buttons: { "Close": function() { $(this).dialog("close"); }},
+              width: 700
           });
       });
 
@@ -526,6 +534,8 @@ var mopub = mopub || {};
         var creative_form = $("#"+creative_key+"-edit");
         creative_form.dialog({width:1000});
       });
+
+        $("#add_campaign_button").button({ icons : { primary : 'ui-icon-circle-plus'} });
 
     $('#advertiser-adgroups-addCreativeButton')
       .button({ icons : { primary : 'ui-icon-circle-plus'} })
@@ -1484,8 +1494,8 @@ var mopub = mopub || {};
             // 12:00 AM to 12:00 PM
             // 12:00    to 12:00 PM
             //
-            // 15:00 AM to 3:00 PM  
-            // 15:00 PM to 3:00 PM 
+            // 15:00 AM to 3:00 PM
+            // 15:00 PM to 3:00 PM
             // 15:00    to 3:00 PM
             if (hour == 0) {
                 hour = 12;
@@ -1504,7 +1514,7 @@ var mopub = mopub || {};
         }
         // Set invalid times to 0 minutes and 12 hours and default to AM
         if (minute < 0 || minute > 59) {
-            minute = defMin; 
+            minute = defMin;
         }
         if (hour < 0 || hour > 23) {
             hour = defHour;

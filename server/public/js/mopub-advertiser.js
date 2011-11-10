@@ -1,14 +1,6 @@
 /*
-  MoPub Advertiser JS
-*/
-
-// We list standard globals for jslint */
-/*globals $, log, window */
-
-// We also list some globals that we have defined. TODO: clean this up
-/*globals calculateAndShowBudget, Highcharts, creatives*/
-
-// global mopub object
+ *  MoPub Advertiser JS
+ */
 var mopub = mopub || {};
 
 (function($){
@@ -16,61 +8,52 @@ var mopub = mopub || {};
 
     var Advertiser = {
 
-        /*
-         * Right now this method just gets ad network reporting
-         * data into the revenue table. In the future, it should
-         * generate all of the tables, and should bootstrap the
-         * stats using backbone.
-         */
-        initializeNetworkPage: function(bootstrapping_data) {
-            $("#stats-breakdown-revenue").show();
+        initializeNetworkPage: function () {
 
-            // Impressions/Clicks/CTR are loaded using an AjaxChunkedFetch,
-            // which we are depricating in favor of backbone. In the future,
-            // this method will have bootstrapping code for backbone, but right
-            // now we only use it to generate the revenue chart.
-            // var data = [
-            //     {
-            //         name:'InMobi',
-            //         data: [1, 2, 3, 4, 5, 6, 7]
-            //     },
-            //     {
-            //         name:'AdMob',
-            //         data: [2, 4, 7, 9, 12, 6, 10]
-            //     },
-            //     {
-            //         name:'Jumptap',
-            //         data: [10, 2, 19, 9, 11, 4, 10]
-            //     }
-            // ];
+        },
 
-            mopub.Chart.createStatsChart('#revenue-chart', bootstrapping_data);
+        initializeCredentialsPage: function (management_mode, account_key) {
+            $("#loginCredentials").submit(function(event) {
+                event.preventDefault();
 
-            // More hackiness. Unbind the normal click event to the revenue breakdown
-            // because it screws up the new chart we made. Also set window.isNetworkPage
-            // so that the revenue breakdown isn't hidden.
-            $("#stats-breakdown-revenue").unbind('click');
-            window.isNetworkPage = true;
-
-            // The impressions/clicks/ctr charts use the old-style chart loading
-            // mechanism over ajax, and have click events somewhere lower in this
-            // page. Revenue hadn't normally been included, so I've included the
-            // click event functionality here. In the future, I'll move the other
-            // stats stuff in here.
-
-            $("#stats-breakdown-revenue").click(function(e) {
-                $(".stats-breakdown tr").removeClass('active');
-                $(this).addClass('active');
-                $("#dashboard-stats-chart").hide().attr('style', 'display:none;');
-                $("#revenue-chart").show();
-            });
-
-            $.each(['impressions', 'clicks', 'ctr'], function (iter, item) {
-                $("#stats-breakdown-" + item).click(function() {
-                    $("#revenue-chart").hide();
-                    $("#dashboard-stats-chart").show();
+                // Check if data submitted in the form is valid login
+                // information for the ad network
+                var data = $(this).serialize();
+                data += ("&account_key=" + account_key);
+                $.ajax({
+                    url: 'http://checklogincredentials.mopub.com',
+                    data: data,
+                    crossDomain: true,
+                    dataType: "jsonp",
+                    success: function(valid) {
+                        // Upon success update the database
+                        if (valid) {
+                            if (management_mode) {
+                                window.location = "/ad_network_reports/manage/" + account_key;
+                            } else {
+                                window.location = "/ad_network_reports/";
+                            }
+                        } else {
+                            $("#error").html("Invalid login information.");
+                        }
+                    }
                 });
             });
+
+
+
+            // Hides/shows network forms based on which was selected
+            // in the dropdown
+            $("#ad_network_selector").change(function() {
+                var network = $(this).val();
+                $('.network_form').each(function () {
+                    if ($(this).attr('id') == network + '-fields') {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }).change();
         }
     };
 
@@ -122,16 +105,6 @@ var mopub = mopub || {};
                 }
             }
         }
-
-        // Wipe this asap
-        // if (window.location.pathname.search('/campaigns/edit/') >= 0) {
-        //     $("input[name='start_date']").attr('disabled', 'disabled');
-        //     $("input[name='end_date']").attr('disabled', 'disabled');
-        //     $("select[name='bid_strategy']").attr('disabled', 'disabled');
-        //     $("input[name='bid']").attr('disabled', 'disabled');
-        //     $("input[name='budget']").attr('disabled', 'disabled');
-        //     $("select[name='budget_type']").attr('disabled', 'disabled');
-        // }
 
         function campaignAdgroupFormOnLoad(){
 

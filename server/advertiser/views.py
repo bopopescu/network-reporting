@@ -60,10 +60,12 @@ class AdGroupIndexHandler(RequestHandler):
 
     def get(self):
         # Set start date if passed in, otherwise get most recent days
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range)
+        # if self.start_date:
+        #     days = StatsModel.get_days(self.start_date, self.date_range)
+        # else:
+        #     days = StatsModel.lastdays(self.date_range)
+
+        days = StatsModel.lastdays(90)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 

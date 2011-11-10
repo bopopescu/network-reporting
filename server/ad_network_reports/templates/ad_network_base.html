@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+﻿{% extends "base.html" %}
 {% load filters %}
 {% block navLinks %}
   <li><a href="{% url publisher_index %}">Dashboard</a></li>
@@ -117,67 +117,57 @@
 {% endblock extraScripts %}
 
 {% block dateButtons %}
-<div id="titlebar-center">
-    <span class="buttonset" id="dashboard-dateOptions">
-        <input type="radio" name="dashboard-dateOptions-option" value="7" id="dashboard-dateOptions-option-7" {% ifequal date_range 7 %}checked="checked" {% endifequal %}/>
-        <label for="dashboard-dateOptions-option-7">7 days</label>
-        <input type="radio" name="dashboard-dateOptions-option" value="14" id="dashboard-dateOptions-option-14" {% ifequal date_range 14 %}checked="checked" {% endifequal %}{% if not date_range %}checked="checked" {% endif %}/>
-        <label for="dashboard-dateOptions-option-14">14 days</label>
-        <input type="radio" name="dashboard-dateOptions-option" value="30" id="dashboard-dateOptions-option-30" {% ifequal date_range 30 %}checked="checked" {% endifequal %}/>
-        <label for="dashboard-dateOptions-option-30">30 days</label>
-        <input type="radio" name="dashboard-dateOptions-option" value="custom" id="dashboard-dateOptions-option-custom" {% if date_range != 7 and date_range != 14 and date_range != 30 %}checked="checked" {% endif %}/>
-        <label for="dashboard-dateOptions-option-custom">Custom ...</label>
-    </span>
-    <div id="dashboard-dateOptions-custom-modal">
-        <div id="dashboard-dateOptions-custom-from"><h4>Start date:</h4></div>
-        <div id="dashboard-dateOptions-custom-to"><h4>End date:</h4></div>
-    </div>
-</div>
+  {% include "partials/datecontrols.html" %}
 {% endblock dateButtons %}
 
 {% block content %}
 
-{% block adNetworkTitle %}
-<h2>{{app_name}} on {{ad_network_name}}</h2>
-{% endblock adNetworkTitle %}
+  {% block adNetworkTitle %}
+    <h2>{{app_name}} on {{ad_network_name}}</h2>
+  {% endblock adNetworkTitle %}
 
-{% block graph %}
-<h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-<section class="offset nomargin" id="dashboard-stats">
-    <div class="stats">
+  {% block graph %}
+
+    <ul class="pills">
+      <li> Foo </li>
+      <li> Bar </li>
+    </ul>
+
+    <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+    <section class="offset nomargin" id="dashboard-stats">
+      <div class="stats clearfix">
         <div class="stats-breakdown">
-            <table>
-                <tbody>
-                    <tr class="active" id="stats-breakdown-revenue">
-                        <td class="stats-breakdown-value today"><span class="inner">{{aggregates.revenue|withsep}}</span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-impressions">
-                        <td class="stats-breakdown-value today"><span class="inner">{{aggregates.impressions|withsep}}</span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-clicks">
-                        <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                </tbody>
-            </table>
+          <table>
+            <tbody>
+              <tr class="active" id="stats-breakdown-revenue">
+                <td class="stats-breakdown-value today"><span class="inner">{{aggregates.revenue|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+              </tr>
+              <tr id="stats-breakdown-impressions">
+                <td class="stats-breakdown-value today"><span class="inner">{{aggregates.impressions|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+              </tr>
+              <tr id="stats-breakdown-clicks">
+                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+      </div>
+    </section>
+  {% endblock graph %}
+
+  {% block tableTitle %}
+    <div style="padding-top:250px; text-align:center;">
+      <h3 class="dataTable-title">Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
     </div>
-    <div class="clear"></div>
-</section>
-{% endblock graph %}
+  {% endblock tableTitle %}
 
-{% block tableTitle %}
-<div style="padding-top:250px; text-align:center;">
-  <h3 class="dataTable-title">Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-</div>
-{% endblock tableTitle %}
-
-<table class="zebra-striped simpletable campaignData-main">
+  <table class="zebra-striped simpletable campaignData-main">
     <thead>
-        {% block tableHead %}
+      {% block tableHead %}
         <th class="dataTable-name"> Date </th>
         <th class="dataTable-data numeric"> Revenue </th>
         <th class="dataTable-data numeric"> Attempts </th>
@@ -185,26 +175,26 @@
         <th class="dataTable-data numeric"> Fill Rate</th>
         <th class="dataTable-data numeric"> Clicks </th>
         <th class="dataTable-data numeric"> CTR </th>
-        {% endblock tableHead %}
+      {% endblock tableHead %}
     </thead>
     <tbody>
-        {% block tableData %}
+      {% block tableData %}
         {% for stats in stats_list %}
-            <tr>
-                <td class="dataTable-name">{{stats.date|format_date_compact}}</td>
-                <td class="dataTable-data numeric">{{stats.revenue}}</td>
-                <td class="dataTable-data numeric">{{stats.attempts}}</td>
-                <td class="dataTable-data numeric">{{stats.impressions}}</td>
-                <td class="dataTable-data numeric">{{stats.fill_rate}}</td>
-                <td class="dataTable-data numeric">{{stats.clicks}}</td>
-                <td class="dataTable-data numeric">{{stats.ctr}}</td>
-            </tr>
+          <tr>
+            <td class="dataTable-name">{{stats.date|format_date_compact}}</td>
+            <td class="dataTable-data numeric">{{stats.revenue}}</td>
+            <td class="dataTable-data numeric">{{stats.attempts}}</td>
+            <td class="dataTable-data numeric">{{stats.impressions}}</td>
+            <td class="dataTable-data numeric">{{stats.fill_rate}}</td>
+            <td class="dataTable-data numeric">{{stats.clicks}}</td>
+            <td class="dataTable-data numeric">{{stats.ctr}}</td>
+          </tr>
         {% endfor %}
-        {% endblock tableData %}
+      {% endblock tableData %}
     </tbody>
-</table>
+  </table>
 
-{% block appendedContent %}
-{% endblock appendedContent %}
+  {% block appendedContent %}
+  {% endblock appendedContent %}
 
 {% endblock content %}

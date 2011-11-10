@@ -22,20 +22,20 @@
 {% endblock tableHead %}
 
 {% block tableData %}
-{% for key, mapper, stats in aggregate_stats_list %}
+  {% for key, mapper, stats in aggregate_stats_list %}
     <tr>
-        <td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
-        <td class="dataTable-name">{{mapper.ad_network_name}}</td>
-        <td class="dataTable-data numeric">{{stats.revenue}}</td>
-        <td class="dataTable-data numeric">{{stats.attempts}}</td>
-        <td class="dataTable-data numeric">{{stats.impressions}}</td>
-        <td class="dataTable-data numeric">{{stats.fill_rate}}</td>
-        <td class="dataTable-data numeric">{{stats.clicks}}</td>
-        <td class="dataTable-data numeric">{{stats.ctr}}</td>
+      <td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
+      <td class="dataTable-name">{{mapper.ad_network_name}}</td>
+      <td class="dataTable-data numeric">{{stats.revenue}}</td>
+      <td class="dataTable-data numeric">{{stats.attempts}}</td>
+      <td class="dataTable-data numeric">{{stats.impressions}}</td>
+      <td class="dataTable-data numeric">{{stats.fill_rate}}</td>
+      <td class="dataTable-data numeric">{{stats.clicks}}</td>
+      <td class="dataTable-data numeric">{{stats.ctr}}</td>
     </tr>
-{% endfor %}
+   {% endfor %}
 {% endblock tableData %}
 
 {% block appendedContent %}
-<a class="right btn" href={{add_credentials_url}}>Add more network credentials</a>
+    <a class="right btn" href={{add_credentials_url}}>Add more network credentials</a>
 {% endblock appendedContent %}

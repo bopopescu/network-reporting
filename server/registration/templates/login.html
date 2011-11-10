@@ -5,7 +5,16 @@
 
 {% block content %}
 <div class="content-main">
-
+  <script type="text/javascript">
+    $(document).ready(function(){
+        $(':input').keypress(function(e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                $('#accountForm').submit();
+            }
+        });
+    });
+  </script>
   <div id="login-left">
     <form action="" method="POST" accept-charset="utf-8" id="accountForm">
       {% csrf_token %}
@@ -35,7 +44,7 @@
 
             <dt>&nbsp;</dt>
             <dd>
-              <span class="buttonWrap"><a href="#" class="button" id="accountForm-submit">Log in</a></span> or <a href="{% url registration_register %}">register for a MoPub account</a>
+              <a href="#" class="button" id="accountForm-submit">Log in</a> or <a href="{% url registration_register %}">register for a MoPub account</a>
             </dd>
             <dt>&nbsp;</dt>
             <dd>

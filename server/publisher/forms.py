@@ -72,15 +72,7 @@ class AppForm(mpforms.MPModelForm):
                     response = urllib.urlopen(self.cleaned_data['img_url'])
                     img = response.read()
 
-
-                    # add the icon it to the blob store
-                    fname = files.blobstore.create(mime_type='image/png')
-                    with files.open(fname, 'a') as f:
-                        f.write(img)
-                    files.finalize(fname)
-                    blob_key = files.blobstore.get_blob_key(fname)
-
-                    obj.icon_blob = blob_key
+                    obj.icon_blob = self.store_icon(img)
                     obj.icon = db.Blob(img) # TODO: stop this!
 
                 except Exception, e: # TODO: appropriately handle the failure
@@ -92,6 +84,8 @@ class AppForm(mpforms.MPModelForm):
             try:
                 img = self.cleaned_data['img_file'].read()
                 icon = images.resize( img, 60, 60)
+
+                obj.icon_blob = self.store_icon(icon)
                 obj.icon = db.Blob(icon)
             except Exception, e: # TODO: appropriate handle the failure
                 raise Exception('WTF2: %s'%e)
@@ -108,6 +102,13 @@ class AppForm(mpforms.MPModelForm):
             raise forms.ValidationError('Please provide a name for your app.')
         return data
 
+    def store_icon(self, icon):
+        # add the icon it to the blob store
+        fname = files.blobstore.create(mime_type='image/png')
+        with files.open(fname, 'a') as f:
+            f.write(icon)
+        files.finalize(fname)
+        return files.blobstore.get_blob_key(fname)
 
 ANIMATION_CHOICES = (
         (u'0', 'No Animation'),

@@ -119,6 +119,13 @@ def format_date_time(value):
         return ""
 
 @register.filter
+def format_time(value):
+    if value:
+        return value.strftime("%I:%M %p")
+    else:
+        return ""
+
+@register.filter
 def truncate(value, arg):
     if len(value) > arg:
         return "%s..." % value[:(arg-3)]

@@ -19,6 +19,8 @@ class TextAndTileRenderer(BaseHtmlRenderer):
         except InvalidBlobKeyError:
             logging.error("Could not find blobkey. Perhaps you are on mopub-experimental.")   
             image_url = ""
+        except NotImplementedError:
+            image_url = "http://localhost:8080/_ah/img/blobby"
             
         self.html_context["image_url"] = image_url
         

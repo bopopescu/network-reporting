@@ -321,9 +321,10 @@ class AbstractCreativeForm(mpforms.MPModelForm):
         # extracts the itunes appid from the url old phobos urls
         # http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=386584429&mt=8
         # in this case: 386584429
-        qs_dict = cgi.parse_qs(urlparse.urlparse(url).query)
-        if 'id' in qs_dict:
-            itunes_id = qs_dict['id'][0]
+        itunes_pattern = re.compile("http://phobos\.apple\.com.*id=(\d+)")
+        itunes_match = itunes_pattern.search(url)
+        if itunes_match:
+            itunes_id = itunes_match.group(1)
             return itunes_id
 
         # extracts the package from the url

@@ -37,7 +37,7 @@
                 clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "clicks")}],
             };
 
-            mopub.Chart.setupDashboardStatsChart('line');
+            mopub.Chart.setupDashboardStatsChart('area');
         }
 
         populateGraphWithStats({{daily_stats|safe}});
@@ -128,19 +128,14 @@
 
   {% block graph %}
 
-    <ul class="pills">
-      <li> Foo </li>
-      <li> Bar </li>
-    </ul>
-
-    <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
     <section class="offset nomargin" id="dashboard-stats">
+          <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
       <div class="stats clearfix">
         <div class="stats-breakdown">
-          <table>
+          <table class="sortable">
             <tbody>
               <tr class="active" id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner">{{aggregates.revenue|withsep}}</span></td>
+                <td class="stats-breakdown-value today"><span class="inner">{{ aggregates.revenue|currency }}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
               </tr>
               <tr id="stats-breakdown-impressions">
@@ -159,42 +154,45 @@
     </section>
   {% endblock graph %}
 
+  {% block innerContent %}
   {% block tableTitle %}
     <div style="padding-top:250px; text-align:center;">
       <h3 class="dataTable-title">Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
     </div>
   {% endblock tableTitle %}
 
-  <table class="zebra-striped simpletable campaignData-main">
-    <thead>
-      {% block tableHead %}
-        <th class="dataTable-name"> Date </th>
-        <th class="dataTable-data numeric"> Revenue </th>
-        <th class="dataTable-data numeric"> Attempts </th>
-        <th class="dataTable-data numeric"> Impressions </th>
-        <th class="dataTable-data numeric"> Fill Rate</th>
-        <th class="dataTable-data numeric"> Clicks </th>
-        <th class="dataTable-data numeric"> CTR </th>
-      {% endblock tableHead %}
-    </thead>
-    <tbody>
-      {% block tableData %}
-        {% for stats in stats_list %}
-          <tr>
-            <td class="dataTable-name">{{stats.date|format_date_compact}}</td>
-            <td class="dataTable-data numeric">{{stats.revenue}}</td>
-            <td class="dataTable-data numeric">{{stats.attempts}}</td>
-            <td class="dataTable-data numeric">{{stats.impressions}}</td>
-            <td class="dataTable-data numeric">{{stats.fill_rate}}</td>
-            <td class="dataTable-data numeric">{{stats.clicks}}</td>
-            <td class="dataTable-data numeric">{{stats.ctr}}</td>
-          </tr>
-        {% endfor %}
-      {% endblock tableData %}
-    </tbody>
-  </table>
+      <table class="zebra-striped simpletable campaignData-main sortable">
+        <thead>
+          {% block tableHead %}
+            <th class="dataTable-name"> Date </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Revenue </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Attempts </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Impressions </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Fill Rate</th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Clicks </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> CTR </th>
+          {% endblock tableHead %}
+        </thead>
+        <tbody>
+          {% block tableData %}
+            {% for stats in stats_list %}
+              <tr>
+                <td class="dataTable-name">{{stats.date|format_date_compact}}</td>
+                <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
+                <td class="dataTable-data numeric">{{stats.attempts|withsep }}</td>
+                <td class="dataTable-data numeric">{{stats.impressions|withsep }}</td>
+                <td class="dataTable-data numeric">{{stats.fill_rate|percentage }}</td>
+                <td class="dataTable-data numeric">{{stats.clicks|withsep }}</td>
+                <td class="dataTable-data numeric">{{stats.ctr|percentage }}</td>
+              </tr>
+            {% endfor %}
+          {% endblock tableData %}
+        </tbody>
+      </table>
 
-  {% block appendedContent %}
-  {% endblock appendedContent %}
+    {% endblock innerContent %}
+
+    {% block appendedContent %}
+    {% endblock appendedContent %}
 
 {% endblock content %}

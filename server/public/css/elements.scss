@@ -21,37 +21,7 @@
  * Tabs
  */
 
-.pills {
-    margin: 0;
-    padding:0;
-    line-height: 1em;
-    list-style: none;
-
-    > li {
-        display: inline-block;
-        width: auto;
-    }
-
-    > li.active a {
-        color: white;
-        text-shadow: #1B83B8 0 1px 0;
-        background: #22A4E6;
-        -webkit-border-radius: 5px;
-        -mox-border-radius: 5px;
-        border-radius: 5px;
-        text-decoration: none;
-    }
-
-    > li a {
-        display: block;
-        padding: 8px 10px 0 10px;
-        height: 26px;
-        font-size: 15px;
-    }
-}
-
-
-.tabs {
+.tabs, .pills {
     padding: 0px 10px;
     margin: 0 -10px 10px -10px;
     border-bottom: 1px solid $light_gray;
@@ -61,7 +31,6 @@
     }
     > li {
         @include top-border-radius(3px);
-        //@include vertical-gradient(#F1F4F6, #D6DCE0);
         @include vertical-gradient(#ffffff, #e6e6e6);
         @include transition(0.1s linear all);
         text-shadow: 0px 1px 1px $off_white;
@@ -103,11 +72,18 @@
     }
 }
 
-.tab-section {
+
+@mixin hideable_section {
     display: none;
     &.active {
         display: block;
     }
+}
+.tab-section {
+    @include hideable_section;
+}
+.pill-section {
+    @include hideable_section;
 }
 
 /*

@@ -22,7 +22,7 @@ DEFAULT_FROM_EMAIL = 'olp@mopub.com'
 SERVER_EMAIL = 'olp@mopub.com'
 
 ADMINS = (
-    ('Bug Team', 'bugs@mopub.com'),
+    ('Front End Team', 'fe@mopub.com'),
 )
 
 MANAGERS = ADMINS

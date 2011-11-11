@@ -185,13 +185,15 @@
             {% if user.is_authenticated %}
               Logged in as <a href="{% url account_index %}">{{user.email}}</a>
             {% endif %}
+
             {% block adminSelect %}
-              {% if user.is_admin %}
+              {% if user.is_staff %}
                 <div style="float:right;padding-left:10px">
                   <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
                     Sudo: <input id="user_switcher" type="text" name="user_email" placeholder="user@email.com"/>
                   </form>
                 </div>
+
                 <script type="text/javascript">
                   function getCookie(c_name) {
                       if (document.cookie.length>0) {

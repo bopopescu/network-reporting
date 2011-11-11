@@ -29,32 +29,26 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
-                    kwargs['ad_network_name']))
+            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(), kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
-#    @classmethod
-#    def kind(self):
-#        return 'AdNetworkLoginInfo'
 
     @classmethod
     def get_by_ad_network_name(cls, account, ad_network_name):
-        return cls.get_by_key_name('k:%s:%s' % (account.key(),
-            ad_network_name))
+        return cls.get_by_key_name('k:%s:%s' % (account.key(), ad_network_name))
 
 class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
     ad_network_name = db.StringProperty(required=True)
     publisher_id = db.StringProperty(required=True)
 
     ad_network_login = db.ReferenceProperty(AdNetworkLoginCredentials,
-            collection_name='ad_network_app_mappers')
-    application = db.ReferenceProperty(App, collection_name=
-            'ad_network_app_mappers')
+                                            collection_name='ad_network_app_mappers')
+    application = db.ReferenceProperty(App, collection_name='ad_network_app_mappers')
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['ad_network_name'],
-                    kwargs['publisher_id']))
+                                               kwargs['publisher_id']))
         super(AdNetworkAppMapper, self).__init__(*args, **kwargs)
 
     @classmethod
@@ -62,8 +56,9 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
         return cls.get_by_key_name('k:%s:%s' % (ad_network_name, publisher_id))
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
-    ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper, required=
-            True, collection_name='ad_network_stats')
+    ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
+                                                 required=True,
+                                                 collection_name='ad_network_stats')
     date = db.DateProperty(required=True)
 
     # stats info for a specific day

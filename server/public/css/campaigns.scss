@@ -175,3 +175,20 @@ ul.adunits {
     float: left;
     margin: 0px 5px;
 }
+
+.ad_network_table {
+    th:not(:first-child) {
+        text-align: center;
+    }
+    .app-row td {
+        font-size: 18px;
+        text-align: left;
+        background: #f9f9f9;
+        &:not(:first-child) {
+            text-align: right;
+        }
+    }
+    .network-row td:not(:first-child) {
+        text-align: right;
+    }
+}

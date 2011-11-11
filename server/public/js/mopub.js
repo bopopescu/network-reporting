@@ -121,6 +121,7 @@ if (typeof window.console == "undefined") {
 
         // Tabify tabs
         $('.tabs').tabs();
+        $('.pills').tabs();
 
         // Where is this used?
         // $(".tree").treeview();

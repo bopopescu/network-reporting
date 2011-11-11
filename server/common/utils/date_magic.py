@@ -21,7 +21,7 @@ def tomorrow(d):
     return d + timedelta(days=1)
 
 def start_next_quarter(d):
-    quarter = (d.month-1) / 3 
+    quarter = (d.month-1) / 3
     if quarter == 0:
         return date(d.year, 4, 1)
     elif quarter == 1:
@@ -42,7 +42,7 @@ def get_next_day(interv, d=None):
         return start_next_month(d)
     elif interv == 'quarterly':
         return start_next_quarter(d)
-    return None 
+    return None
 
 def this_month(d):
     return (start_this_month(d), d)
@@ -118,6 +118,11 @@ def gen_days(start, end, hours=False):
     else:
         return days
 
+def gen_date_range(n, hours=False):
+    today = date.today()
+    n_day = today - timedelta(n)
+    return gen_days(n_day, today, hours)
+
 def get_hours(days, hpd = 24):
     '''Turn a list of days into a list of lists where
     each list is a list of date_hours where the date
@@ -161,7 +166,7 @@ def get_months(days):
     each list is a list of days that make up that month.
     This is done instead of using the fact that StatsModel
     rollups are done for the month because if I want to do a
-    day, week, or hour breakdown for a given month it's easier 
+    day, week, or hour breakdown for a given month it's easier
     if we start with a list of days than a single day denoting the month'''
     months = []
     this_month = -1

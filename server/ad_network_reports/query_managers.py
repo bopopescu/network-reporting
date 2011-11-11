@@ -18,7 +18,9 @@ if os.path.exists('/home/ubuntu/'):
 
 from account.query_managers import AccountQueryManager
 from ad_network_reports.models import AdNetworkLoginCredentials, \
-        AdNetworkAppMapper, AdNetworkScrapeStats, AdNetworkManagementStats
+     AdNetworkAppMapper, \
+     AdNetworkScrapeStats, \
+     AdNetworkManagementStats
 from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager
@@ -36,8 +38,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         self.account = account
 
     def get_ad_network_mappers(self):
-        """Inner join AdNetworkLoginCredentials with AdNetworkAppMapper.
-
+        """
+        Inner join AdNetworkLoginCredentials with AdNetworkAppMapper.
         Return a generator of the AdNetworkAppMappers with this account.
         """
         for credential in AdNetworkLoginCredentials.all().filter('account =',
@@ -47,7 +49,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 yield mapper
 
     def get_index_data(self, days):
-        """Get required data for the index page of ad network reports.
+        """
+        Get required data for the index page of ad network reports.
 
         Generate a list of aggregate stats for the ad networks, apps and
         account fro a date range of the last 7 days. Roll up these aggregate
@@ -172,12 +175,14 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         Return a list of stats sorted by date.
         """
-        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
-                ad_network_app_mapper_key, days)
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(ad_network_app_mapper_key,
+                                                                     days)
         return sorted(stats_list, key=lambda stats: stats.date)
 
-    def get_ad_network_mapper(self, ad_network_app_mapper_key=None,
-            publisher_id=None, ad_network_name=None):
+    def get_ad_network_mapper(self,
+                              ad_network_app_mapper_key=None,
+                              publisher_id=None,
+                              ad_network_name=None):
         """Keyword arguments: either an ad_network_app_mapper_key or a
         publisher_id and login_credentials.
 
@@ -204,8 +209,13 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 # example return (App, NetworkConfig.admob_pub_id)
                 yield (app, publisher_id)
 
-    def create_login_credentials_and_mappers(self, ad_network_name, username='',
-            password='', client_key='', send_email=False):
+    def create_login_credentials_and_mappers(self,
+                                             ad_network_name,
+                                             username='',
+                                             password='',
+                                             client_key='',
+                                             send_email=False,
+                                             use_crypto=True):
         """Check login credentials by making a request to tornado on EC2. If
         they're valid create AdNetworkLoginCredentials and AdNetworkAppMapper
         entities and store them in the db.
@@ -213,20 +223,25 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return None if the login credentials are correct otherwise return an
         error message.
         """
-        from Crypto.Cipher import AES
-        from Crypto.Util import randpool
-        password_iv = ''
-        username_iv = ''
-        if password:
-            rp = randpool.RandomPool()
+        if use_crypto:
+            from Crypto.Cipher import AES
+            from Crypto.Util import randpool
+            password_iv = ''
+            username_iv = ''
+            if password:
+                rp = randpool.RandomPool()
 
-            username_iv = rp.get_bytes(16)
-            username_aes_cfb = AES.new(KEY, AES.MODE_CFB, username_iv)
-            username = username_aes_cfb.encrypt(username)
+                username_iv = rp.get_bytes(16)
+                username_aes_cfb = AES.new(KEY, AES.MODE_CFB, username_iv)
+                username = username_aes_cfb.encrypt(username)
 
-            password_iv = rp.get_bytes(16)
-            password_aes_cfb = AES.new(KEY, AES.MODE_CFB, password_iv)
-            password = password_aes_cfb.encrypt(password)
+                password_iv = rp.get_bytes(16)
+                password_aes_cfb = AES.new(KEY, AES.MODE_CFB, password_iv)
+                password = password_aes_cfb.encrypt(password)
+
+        else:
+            username_iv = username
+            password_iv = password
 
         login_credentials = AdNetworkLoginCredentials(account=self.account,
                                         ad_network_name=ad_network_name,
@@ -246,6 +261,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             publisher_id=publisher_id, ad_network_login=login_credentials,
             application=app) for app, publisher_id in
             apps_with_publisher_ids])
+
+
 
     def find_app_for_stats(self, publisher_id, login_credentials):
         """Attempt to link the publisher id with an App stored in MoPub's db.
@@ -278,10 +295,10 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         account on the ad_network.
         """
         for app in AppQueryManager.get_apps_with_network_configs(self.account):
-            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
-                    None)
+            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name, None)
             if pub_id != None:
                 yield pub_id
+
 
     def get_adunit_publisher_ids(self, ad_network_name):
         """Get the ad unit publisher ids with the ad network from the generator
@@ -295,11 +312,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                         network_config, '%s_pub_id' % ad_network_name, None):
                     yield getattr(adunit.network_config, '%s_pub_id' %
                             ad_network_name)
-#        return [getattr(adunit.network_config, '%s_pub_id' % ad_network_name)
-#                for app in App.all().filter('account =', account) for adunit in
-#                app.all_adunits if hasattr(adunit, 'network_config') and
-#                getattr(adunit.network_config, '%s_pub_id' % ad_network_name,
-#                    None)]
+
 
 def get_all_login_credentials():
     """Return all AdNetworkLoginCredentials entities ordered by account."""
@@ -310,6 +323,93 @@ def get_management_stats(days):
 
 def create_manager(account_key, my_account):
     if account_key:
-        return(AdNetworkReportQueryManager(AccountQueryManager.
-            get_account_by_key(account_key)))
-    return(AdNetworkReportQueryManager(my_account))
+        return AdNetworkReportQueryManager(AccountQueryManager.get_account_by_key(account_key))
+    return AdNetworkReportQueryManager(my_account)
+
+def load_test_data(account=None):
+    from account.models import NetworkConfig
+    from publisher.models import App, Site
+    from google.appengine.ext import db
+    from account.models import Account, NetworkConfig
+
+    if account == None:
+        account = Account()
+        account.put()
+
+    chess_network_config = NetworkConfig(jumptap_pub_id='jumptap_chess_com_test',
+                                         iad_pub_id='329218549')
+    chess_network_config.put()
+
+    chess_app = App(account=account,
+                    name="Chess.com - Play & Learn Chess",
+                    network_config=chess_network_config)
+    chess_app.put()
+
+    bet_network_config = NetworkConfig(jumptap_pub_id='jumptap_bet_test',
+                                       admob_pub_id = 'a14c7d7e56eaff8')
+    bet_network_config.put()
+
+    bet_iad_network_config = NetworkConfig(iad_pub_id='418612824')
+    bet_iad_network_config.put()
+
+    bet_app = App(account=account,
+                  name="BET WAP Site",
+                  network_config=bet_network_config)
+    bet_app.put()
+
+    adunit_network_config = NetworkConfig(jumptap_pub_id='bet_wap_site_106andpark_top').put()
+    Site(app_key=bet_app, network_config=adunit_network_config).put()
+
+    bet_iad_app = App(account=account,
+                      name="106 & Park",
+                      network_config=bet_iad_network_config)
+    bet_iad_app.put()
+
+    officejerk_network_config = NetworkConfig(jumptap_pub_id='office_jerk_test')
+    officejerk_network_config.put()
+
+    officejerk_app = App(account=account,
+                         name="Office Jerk",
+                         network_config=officejerk_network_config)
+    officejerk_app.put()
+
+
+
+def create_fake_data(account=None):
+    """
+    For debugging purposes. Creates some fake data out of the models
+    so we can debug the views and templates.
+    """
+    import random
+    import datetime
+    from common.utils import date_magic
+
+    load_test_data(account)
+
+    a = AdNetworkReportQueryManager(account)
+
+    last_90_days = date_magic.gen_date_range(90)
+
+    for network in AD_NETWORK_NAMES:
+        a.create_login_credentials_and_mappers(network,
+                                               username='bullshit',
+                                               password='bullshit',
+                                               client_key='asdfasf',
+                                               send_email=False,
+                                               use_crypto=False)
+
+
+    for day in last_90_days:
+
+        for mapper in a.get_ad_network_mappers():
+            stats = AdNetworkScrapeStats(revenue = random.random()*100000,
+                                         attempts = random.randint(1, 100000),
+                                         impressions = random.randint(1, 100000),
+                                         fill_rate = random.random()*100,
+                                         clicks = random.randint(1, 1000),
+                                         ctr = random.random()*100,
+                                         ecpm = random.random()*100,
+                                         date = day,
+                                         ad_network_app_mapper=mapper)
+            stats.put()
+

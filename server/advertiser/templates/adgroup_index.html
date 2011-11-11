@@ -90,64 +90,6 @@
     </div>
   {% endif %}
 
-  {% comment %}
-  <div class="separated">
-    <section class="offset nomargin" id="dashboard-stats">
-      <h3 class="stats-chart-title">
-        Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
-      </h3>
-
-      {# Controls and stats breakdown for the top realtime stats #}
-      <div class="stats">
-        <div class="stats-breakdown">
-          <table>
-            <tbody>
-              <tr class="active" id="stats-breakdown-impressions">
-                <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-              </tr>
-              <tr id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-              </tr>
-              <tr id="stats-breakdown-clicks">
-                <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-              </tr>
-              <tr id="stats-breakdown-ctr">
-                <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="stats-breakdown-buttons">
-          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-            <label for="stats-breakdown-dateOptions-option-0">Today</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-            <label for="stats-breakdown-dateOptions-option-2">All</label>
-          </span>
-        </div>
-
-        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
-
-      </div>
-      <div class="clear"></div>
-    </section>
-
-  {% endcomment %}
 
   <section id="dashboard-campaigns">
     <div id="adserverTest" style="display:none;">
@@ -235,14 +177,14 @@
           <thead>
             <tr>
               <th class="campaignData-icon"></th>
-              <th> Campaign Name </th>
-              <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-              <th>Status</th>
-              <th width="100">Impressions</th>
-              <th>Clicks</th>
-              <th>CTR</th>
-              <th>Conv</th>
-              <th>Revenue</th>
+              <th>Campaign Name</th>
+              <th style="text-align: right;">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+              <th style="text-align: right;">Status</th>
+              <th style="text-align: right;" width="100">Impressions</th>
+              <th style="text-align: right;">Clicks</th>
+              <th style="text-align: right;">CTR</th>
+              <th style="text-align: right;">Conv</th>
+              <th style="text-align: right;">Revenue</th>
             </tr>
           </thead>
           <tbody>
@@ -352,13 +294,13 @@
             <tr>
               <th class="campaignData-icon"></th>
               <th>Name</th>
-              <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-              <th>Status</th>
-              <th width="100">Impressions</th>
-              <th>Clicks</th>
-              <th>CTR</th>
-              <th>Conv</th>
-                <th>Revenue</th>
+              <th style="text-align: right;">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+              <th style="text-align: right;">Status</th>
+              <th style="text-align: right;" width="100">Impressions</th>
+              <th style="text-align: right;">Clicks</th>
+              <th style="text-align: right;">CTR</th>
+              <th style="text-align: right;">Conv</th>
+              <th style="text-align: right;">Revenue</th>
               </tr>
             </thead>
             <tbody>
@@ -451,13 +393,13 @@
               <tr>
                 <th class="campaignData-icon"></th>
                 <th>Name</th>
-                <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-                <th>Status</th>
-                <th width="100">Impressions</th>
-                <th>Clicks</th>
-                <th>CTR</th>
-                <th>Conv</th>
-                <th>CPA</th>
+                <th style="text-align: right;">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+                <th style="text-align: right;">Status</th>
+                <th style="text-align: right;" width="100">Impressions</th>
+                <th style="text-align: right;">Clicks</th>
+                <th style="text-align: right;">CTR</th>
+                <th style="text-align: right;">Conv</th>
+                <th style="text-align: right;">CPA</th>
               </tr>
             </thead>
             <tbody>

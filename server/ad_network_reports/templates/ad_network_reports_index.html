@@ -4,7 +4,6 @@
 {% block adNetworkTitle %}
 {% endblock %}
 
-
 {% block innerContent %}
 
   <div style="padding-top:250px; text-align:center;">
@@ -18,6 +17,17 @@
     <li> <a href="#networks"> Sort by Network </a> </li>
   </ul>
 
+  {% comment %}
+    <div class="alert-message block-message clearfix">
+      We found <strong> 4 </strong> apps in AdMob that you haven't entered on MoPub.
+      Would you like to add them automatically?
+      <br />
+      <div class="right">
+        <a class="right primary btn"> Yes, add them now </a>
+        <a class="right btn"> No, don't add </a>
+      </div>
+    </div>
+  {% endcomment %}
 
   {% comment %}
     Make the table sorted by app name. This table is active to start.
@@ -36,8 +46,8 @@
 
       <tbody>
         {% for app_name, app in apps.items %}
-          <tr class="app-row">
-            <td class="dataTable-name"><a href="{% url view_ad_network_app_report app.key %}"> {{app_name}} </a> </td>
+          <tr class="app-row" id="{{app.key}}">
+            <td class="dataTable-name"> {{app_name}} </td>
             <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
             <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
             <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
@@ -46,9 +56,15 @@
             <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
           </tr>
           {% for network in app.networks %}
-            <tr class="network-row">
-              <td class="dataTable-name">{{network.name}}</td>
-              <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
+            <tr class="network-row for-app-{{app.key}}">
+              <td class="dataTable-name">
+                 <a href="{% url ad_network_app_detail app.key %}">{{network.name}} </a>
+                 {% if network.has_potential_errors %}
+                   <br />
+                   (Couldn't collect stats. <a href="{% url ad_network_settings %}">Check the publisher id you entered for this network</a>.)
+                 {% endif %}
+              </td>
+              <td class="dataTable-data numeric"> {{ network.revenue|currency }}  </td>
               <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
               <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
               <td class="dataTable-data numeric">{{ network.fill_rate|percentage }}</td>
@@ -80,7 +96,13 @@
       <tbody>
         {% for network_name, network in networks.items %}
           <tr class="app-row">
-            <td class="dataTable-name"> {{network_name}} </td>
+            <td class="dataTable-name">
+              {% if network.has_potential_errors %}
+                <br />
+                (Couldn't collect stats. <a href="{% url ad_network_settings %}">Check the publisher id you entered for this network</a>.)
+                 {% endif %}
+              {{network_name}}
+            </td>
             <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
             <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
             <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
@@ -90,7 +112,9 @@
           </tr>
           {% for app in network.apps %}
             <tr class="network-row">
-              <td class="dataTable-name">{{app.name}}</td>
+              <td class="dataTable-name">
+                <a href="{% url ad_network_app_detail app.key %}">{{app.name}}</a>
+              </td>
               <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
               <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
               <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
@@ -104,6 +128,19 @@
     </table>
   </div>
 
+  {% if networks_without_creds %}
+    <div class="alert-message block-message warning">
+      You've entered publisher information for the following ad networks,
+      but we can't generate stats for you until you've entered your login
+      credentials for the ad network.
+      <br />
+      <ul>
+      {% for network in networks_without_creds %}
+        <li> <strong>{{ network}}</strong>  (<a class="addcreds" href="#{{network}}"> Add Login Credentials </a>) </li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
 
 
   {% comment %}
@@ -141,3 +178,78 @@
 
     <a class="right btn" href={{add_credentials_url}}>Add more network credentials</a>
 {% endblock innerContent %}
+
+
+
+{% block appendedContent %}
+
+  <div class="hidden" id="credential-form">
+    <form id="loginCredentials">
+      <div id="error"> {{error}} </div>
+      <dl class="formFields clearfix" style="width: 350px;">
+        <div class="hidden">
+        <dt> Ad Network </dt>
+        <dd>
+          <select name="ad_network_name" id="ad_network_selector">
+            {% for network in ad_network_names %}
+              <option value="{{network}}"> {{network}} </option>
+            {% endfor %}
+          </select>
+        </dd>
+        </div>
+
+          {% for form in forms %}
+
+            <div id="{{form.ad_network}}-fields" class="network_form">
+
+              {% ifequal form.ad_network "inmobi" %}
+                <dt> InMobi Access ID </dt>
+                <dd>
+                  <<input type="" name="" value="" /> type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}
+                  <a href="#" class="whatsthis" id="inmobi-access-helpLink"> What's This? </a>
+                </dd>
+
+                <dt> InMobi Secret Key </dt>
+                <dd>
+                  <<input type="" name="" value="" /> type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}
+                  <a href="#" class="whatsthis" id="inmobi-secret-helpLink"> What's This? </a>
+                </dd>
+
+              {% else %}
+                <dt> Username </dt>
+                <dd> <input type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}</dd>
+
+                <dt> Password</dt>
+                <dd> <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}</dd>
+              {% endifequal %}
+
+
+          {% if form.ad_network == "admob" %}
+            <dt> Client ID </dt>
+            <dd> {{form.client_key}} </dd>
+          {% endif %}
+
+
+          <dt><input name="email" type="checkbox" /> </dt>
+          <dd> Send me daily emails with my network stats </dd>
+
+        </div>
+      {% endfor %}
+
+      <input class="right btn" type="submit" value="Submit" />
+
+    </div>
+
+{% endblock appendedContent %}
+
+
+{% block extraScripts %}
+  {{ block.super }}
+  <script type="text/javascript" src="/js/mopub-advertiser.js?v=46"></script>
+  <script>
+    $(function () {
+        mopub.Advertiser.initializeAdReportsIndex();
+        mopub.Advertiser.initializeCredentialsPage();
+    });
+  </script>
+{% endblock extraScripts %}

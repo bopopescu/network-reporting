@@ -314,6 +314,14 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                             ad_network_name)
 
 
+    def get_networks_without_credentials(self):
+        creds = AdNetworkLoginCredentials.all().filter('account =', self.account)
+        for network in [cred.ad_network_name for cred in creds]:
+            pub_ids = list(self.get_app_publisher_ids(network))
+            if pub_ids:
+                yield network
+
+
 def get_all_login_credentials():
     """Return all AdNetworkLoginCredentials entities ordered by account."""
     return AdNetworkLoginCredentials.all().order('account')

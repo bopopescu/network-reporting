@@ -8,8 +8,43 @@ var mopub = mopub || {};
 
     var Advertiser = {
 
+        /*
+         * Initialize ajax submitting for the credentials form on the
+         * credential form page and the index.
+         */
+
         initializeNetworkPage: function () {
 
+        },
+
+        initializeAdReportsIndex: function () {
+
+            $('.addcreds').click(function(e) {
+                e.preventDefault();
+
+                var network_name = $(this).attr('href').replace('#', '');
+
+                $("#" + network_name + "-fields").show();
+
+                $("#ad_network_selector").val(network_name);
+
+                $('#credential-form').dialog({
+                    buttons: { "Close": function() { $(this).dialog('close');} },
+                    width: 500
+                });
+            });
+
+            $('.app-row').click(function () {
+                var app_key = $(this).attr('id');
+                var network_rows = $('.for-app-' + app_key);
+                $.each(network_rows, function (iter, row) {
+                    if ($(row).hasClass('hidden')) {
+                        $(row).removeClass('hidden');
+                    } else {
+                        $(row).addClass('hidden');
+                    }
+                });
+            });
         },
 
         initializeCredentialsPage: function (management_mode, account_key) {

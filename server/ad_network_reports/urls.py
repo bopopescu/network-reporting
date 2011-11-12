@@ -8,7 +8,7 @@ urlpatterns = patterns('ad_network_reports.views',
 
         url(r'^app_view/(?P<mapper_key>[-\w\.]+)/$',
             'app_detail',
-            name='view_ad_network_app_report'),
+            name='ad_network_app_detail'),
 
         # url(r'^app_view/(?P<mapper_key>[-\w\.]+)/$',
         #     'view_ad_network_app_report',

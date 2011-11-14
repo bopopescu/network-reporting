@@ -191,4 +191,8 @@ ul.adunits {
     .network-row td:not(:first-child) {
         text-align: right;
     }
+
+    .network-row:not(:last-child) {
+        border-bottom: 1px dotted #bbb;
+    }
 }

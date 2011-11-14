@@ -3153,3 +3153,5 @@ ul.adunits {
     text-align: right; }
 .ad_network_table .network-row td:not(:first-child) {
   text-align: right; }
+.ad_network_table .network-row:not(:last-child) {
+  border-bottom: 1px dotted #bbb; }

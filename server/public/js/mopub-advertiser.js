@@ -502,36 +502,37 @@ var mopub = mopub || {};
           });
 
 
-      // Creative form ajax options
-      options = {
-          data: { ajax: true },
-          dataType : 'json',
-          success: function(jsonData) {
-              $('#creativeCreateForm-loading').hide();
-              if (jsonData.success) {
-                  $('#creativeCreateForm-success').show();
-                  window.location.reload();
-              } else {
-                  $.each(jsonData.errors, function (iter, item) {
-                      $('.form-error-text', "#creativeCreateForm").remove();
-                      var name = item[0];
-                      var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+        // Creative form ajax options
+        options = {
+            data: { ajax: true },
+            dataType : 'json',
+            success: function(jsonData) {
+                console.log('success');
+                $('#creativeCreateForm-loading').hide();
+                if (jsonData.success) {
+                    $('#creativeCreateForm-success').show();
+                    window.location.reload();
+                } else {
+                    $.each(jsonData.errors, function (iter, item) {
+                        $('.form-error-text', "#creativeCreateForm").remove();
+                        var name = item[0];
+                        var error_div = $("<div>").append(item[1]).addClass('form-error-text');
 
-                      $("input[name=" + name + "]", "#creativeCreateForm")
-                          .addClass('error')
-                          .parent().append(error_div);
+                        $("input[name=" + name + "]", "#creativeCreateForm")
+                            .addClass('error')
+                            .parent().append(error_div);
 
-                  });
-                  // reimplement the onload event
-                  creativeCreateFormOnLoad();
-                  window.location.hash = '';
-                  window.location.hash = 'advertiser-creativeAddForm';
-                  $('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
-              }
-          },
-          error: function(jqXHR, textStatus, errorThrown){
-              // console.log(errorThrown);
-          }
+                    });
+                    // reimplement the onload event
+                    creativeCreateFormOnLoad();
+                    window.location.hash = '';
+                    window.location.hash = 'advertiser-creativeAddForm';
+                    $('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown){
+                // console.log(errorThrown);
+            }
       };
       $('#creativeCreateForm').ajaxForm(options);
 

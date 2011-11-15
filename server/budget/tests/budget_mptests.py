@@ -99,14 +99,12 @@ class TestBudgetUnitTests(unittest.TestCase):
                                static_slice_budget = 50.0,
                                active = True,
                                testing = True,
-                               _next_day_hour = datetime.datetime(2000,1,1,0,0,0),
                                )
         self.aao_budget = Budget(start_datetime = self.budget_start,
                                  active = True,
                                  delivery_type = 'allatonce',
                                  static_total_budget = 5000.0,
                                  testing = True,
-                                 _next_day_hour = datetime.datetime(2000,1,1,0,0,0),
                                  )
         self.e_budget.put()
         self.aao_budget.put()
@@ -1609,7 +1607,7 @@ class TestBudgetUnitTests(unittest.TestCase):
         works as expected """
         self.aao_budget.static_slice_budget = 50.0
         self.aao_budget.static_total_budget = None
-        self.aao_budget._next_day_hour = datetime.datetime(2000,1,1,0,0,0, tzinfo=Pacific)
+        self.aao_budget.day_tz = 'Pacific'
         self.aao_budget.put()
         self.e_budget.delivery_type = 'allatonce'
         self.e_budget.put()

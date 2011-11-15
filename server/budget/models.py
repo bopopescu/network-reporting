@@ -115,7 +115,7 @@ class Budget(db.Model):
     # update is a flag, the str is the next state to put it in
     update = db.BooleanProperty(default = False)
     update_str = db.StringProperty()
-    _next_day_hour = db.DateTimeProperty(default=datetime(2000,1,1,0,0,0,tzinfo = Pacific))
+    day_tz = db.StringProperty()
 
     @property
     def next_day_hour(self):

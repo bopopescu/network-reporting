@@ -84,6 +84,7 @@ class AdGroupIndexHandler(RequestHandler):
 
         # Roll up and attach various stats to adgroups
         for adgroup in adgroups:
+            adgroup.budget = adgroup.campaign.budget_obj
             try:
                 adgroup.campaign = campaigns_dict[adgroup._campaign]
             except KeyError:
@@ -185,10 +186,11 @@ def _sort_guarantee_levels(guaranteed_campaigns):
             level['display'] = False
     return gtee_levels
 
-
 def _sort_campaigns(adgroups):
+
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
 
     guaranteed_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
     guaranteed_campaigns = sorted(guaranteed_campaigns, lambda x,y: cmp(y.bid, x.bid))

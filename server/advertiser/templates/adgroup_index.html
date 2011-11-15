@@ -3,13 +3,7 @@
 {% load super_if %}
 
 {% block pageTitle %}
-  <h1>
-    {% ifequal account.status 'step4' %}
-      Step 3: Set up an ad campaign
-    {% else %}
-      Campaigns
-    {% endifequal %}
-  </h1>
+  <h1>Campaigns</h1>
 {% endblock pageTitle %}
 
 {% block navLinks %}
@@ -22,25 +16,7 @@
 
 {% block dateButtons %}{% endblock dateButtons %}
 
-{% block titleBarRight %}
-  {% ifequal account.status 'step4' %}
-    <!-- MixPanel Tracking -->
-    <script type="text/javascript">
-      mpq.push(["track", "Sign up: Campaign dashboard"]);
-    </script>
-    <div class="stepProgress">
-      <span class="stepProgress-step">Step 1: Add app</span>
-      <span class="ui-icon ui-icon-arrow-1-e"></span>
-      <span class="stepProgress-step">Step 2: Integrate</span>
-      <span class="ui-icon ui-icon-arrow-1-e"></span>
-      <span class="stepProgress-step stepProgress-active">Step 3: Add campaigns</span>
-    </div>
-  {% else %}
-    <span class="titlebar-right">
-      <a class="button test icon" id="advertisers-testAdServer" href="#">Test Campaigns</a>
-    </span>
-  {% endifequal %}
-{% endblock titleBarRight %}
+{% block titleBarRight %}{% endblock titleBarRight %}
 
 {% block content %}
 
@@ -51,45 +27,12 @@
     <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
   </div>
 
-  {# Alert messages that will display under the title bar #}
-  {% ifequal account.status "step4" %}
-    <div class="alert-message block-message">
-      You will need to set up at least one ad campaign to serve into your inventory. <br /><br />
-      <ul>
-        <li>A <strong>Guaranteed</strong> ad campaign is typically a direct sold ad campaign.</li>
-        <li><strong>Promotional</strong> campaigns are for house ads like an upsell.</li>
-        <li>A <strong>Network</strong> ad is an ad served from an ad network like AdMob.</li>
-        <ul>
-    </div>
-  {% endifequal %}
-
-  {% ifequal account.status "step3" %}
-    <div class="alert-message block-message">
-      The next step is to set up your ad networks.
-      Visit your <a href="{% url ad_network_settings %}">Ad Network Settings</a> page to enable your ad networks.
-    </div>
-  {% endifequal %}
-
   {% if not apps %}
     <div class="alert-message block-message">
       Before you set up your ad campaigns, we recommend that you set up your App inventory.
       Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
     </div>
   {% endif %}
-
-  {% if not marketplace.0.campaign.active %}
-    <div class="alert-message block-message clearfix">
-      We've just launched MoPub Marketplace, our state of the art real-time bidding exchange.
-      <a href="{% url marketplace_index %}">Activate</a>
-      MoPub Marketplace to get started, or take a look at our
-      <a href="http://www.mopub.com/in-depth/marketplace">information page</a>
-      if you want to know more about how it works.
-      <br />
-      <a class="btn right" href="{% url marketplace_index %}">Get Started</a>
-
-    </div>
-  {% endif %}
-
 
   <section id="dashboard-campaigns">
     <div id="adserverTest" style="display:none;">
@@ -177,9 +120,11 @@
           <thead>
             <tr>
               <th class="campaignData-icon"></th>
-              <th>Campaign Name</th>
+              <th> {{ level.name }} Priority </th>
               <th style="text-align: right;">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
               <th style="text-align: right;">Status</th>
+              <th style="text-align: right;">Budget</th>
+              <th style="text-align: right;">Delivered</th>
               <th style="text-align: right;" width="100">Impressions</th>
               <th style="text-align: right;">Clicks</th>
               <th style="text-align: right;">CTR</th>
@@ -244,6 +189,24 @@
                   <div class="status">--</div>
                   <div class="on_schedule muted"></div>
                 </td>
+
+                <td class="dataTable-data numeric">
+
+                  {% if adgroup.campaign.budget_type == "full_campaign" %}
+                    {{ adgroup.campaign.full_budget|currency }}
+                  {% else %}
+                    {% if adgroup.campaign.budget_type == "daily" %}
+                      {{ adgroup.campaign.budget|currency }} daily
+                    {% else %}
+                      Unlimited
+                    {% endif %}
+                  {% endif %}
+
+                </td>
+                <td class="dataTable-data numeric">
+                  {{ adgroup.budget.total_spent|currency }}
+                </td>
+
                 <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-imp imp">--</td>
                 <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-clk clk">--</td>
                 <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-ctr ctr">--</td>
@@ -507,6 +470,7 @@
     var mopub = mopub || {};
     $(function() {
         mopub.isCampaignsPage = true;
+        mopub.isDirectSoldPage = true;
         mopub.graphStartDate = Date.UTC({{start_date.year}},
             {{start_date.month|add:"-1"}},
             {{start_date.day}});

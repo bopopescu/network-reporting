@@ -5,6 +5,13 @@ var mopub = mopub || {};
 
 (function($){
 
+    function refreshAlternatingColor(){
+        $('.campaignData').removeClass('campaignData-alt');
+        $('table').each(function(){
+            $(this).find('.campaignData:visible:odd').addClass('campaignData-alt');
+        });
+    }
+
 
     var Advertiser = {
 
@@ -14,7 +21,8 @@ var mopub = mopub || {};
          */
 
         initializeNetworkPage: function () {
-
+            console.log('called');
+            refreshAlternatingColor();
         },
 
         initializeAdReportsIndex: function () {
@@ -983,60 +991,72 @@ var mopub = mopub || {};
     }
 
     function populateCampaignStats() {
-      var allCampaignIds = getCampaignIdsWithType(CampaignTypeEnum.All);
-      $.each(allCampaignIds, function(index, id) {
-        campaignsData[id] = {};
-      });
+        var allCampaignIds = getCampaignIdsWithType(CampaignTypeEnum.All);
+        $.each(allCampaignIds, function(index, id) {
+            campaignsData[id] = {};
+        });
 
-      var argsDict = {
-        days: getNumDaysToFetch() || 14,
-        startDate: getStartDate()
-      };
+        var argsDict = {
+            days: getNumDaysToFetch() || 14,
+            startDate: getStartDate()
+        };
 
-      var guaranteedIds = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
-      var promotionalIds = getCampaignIdsWithType(CampaignTypeEnum.Promotional);
-      var networkIds = getCampaignIdsWithType(CampaignTypeEnum.Network);
-      var backfillIds = getCampaignIdsWithType(CampaignTypeEnum.Backfill);
-      var marketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.Marketplace);
-      var bfMarketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.BackfillMarketplace);
+        var guaranteedIds = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
+        var promotionalIds = getCampaignIdsWithType(CampaignTypeEnum.Promotional);
+        var networkIds = getCampaignIdsWithType(CampaignTypeEnum.Network);
+        var backfillIds = getCampaignIdsWithType(CampaignTypeEnum.Backfill);
+        var marketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.Marketplace);
+        var bfMarketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.BackfillMarketplace);
 
-      gteeFetch = createCampaignStatsFetchObject(guaranteedIds, argsDict);
-      gteeFetch.campaignType = CampaignTypeEnum.Guaranteed;
+        gteeFetch = createCampaignStatsFetchObject(guaranteedIds, argsDict);
+        gteeFetch.campaignType = CampaignTypeEnum.Guaranteed;
 
-      promoFetch = createCampaignStatsFetchObject(promotionalIds, argsDict);
-      promoFetch.campaignType = CampaignTypeEnum.Promotional;
+        promoFetch = createCampaignStatsFetchObject(promotionalIds, argsDict);
+        promoFetch.campaignType = CampaignTypeEnum.Promotional;
 
-      networkFetch = createCampaignStatsFetchObject(networkIds, argsDict);
-      networkFetch.campaignType = CampaignTypeEnum.Network;
+        networkFetch = createCampaignStatsFetchObject(networkIds, argsDict);
+        networkFetch.campaignType = CampaignTypeEnum.Network;
 
-      bfillFetch = createCampaignStatsFetchObject(backfillIds, argsDict);
-      bfillFetch.campaignType = CampaignTypeEnum.Backfill;
+        bfillFetch = createCampaignStatsFetchObject(backfillIds, argsDict);
+        bfillFetch.campaignType = CampaignTypeEnum.Backfill;
 
-      marketplaceFetch = createCampaignStatsFetchObject(marketplaceIds, argsDict);
+        marketplaceFetch = createCampaignStatsFetchObject(marketplaceIds, argsDict);
       marketplaceFetch.campaignType = CampaignTypeEnum.Marketplace;
 
-      bfMarketplaceFetch = createCampaignStatsFetchObject(bfMarketplaceIds, argsDict);
-      bfMarketplaceFetch.campaignType = CampaignTypeEnum.BackfillMarketplace;
+        bfMarketplaceFetch = createCampaignStatsFetchObject(bfMarketplaceIds, argsDict);
+        bfMarketplaceFetch.campaignType = CampaignTypeEnum.BackfillMarketplace;
 
-      var fetches = [gteeFetch, promoFetch, networkFetch, bfillFetch, marketplaceFetch,
-        bfMarketplaceFetch];
-      $.each(fetches, function(index, fetch) {
-        setSectionLoadingSpinnerHidden(fetch.campaignType, false);
-        fetch.start();
-      });
+        var fetches = [gteeFetch,
+                     promoFetch,
+                       networkFetch,
+                       bfillFetch,
+                       marketplaceFetch,
+                       bfMarketplaceFetch];
+        $.each(fetches, function(index, fetch) {
+            setSectionLoadingSpinnerHidden(fetch.campaignType, false);
+            fetch.start();
+        });
     }
 
-    function getNumDaysToFetch() {
-      var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();
-      if (!daysRadioVal || daysRadioVal == "custom") {
-        var currentUrl = document.location.href;
-        var daysRegex = /r=(\d+)/g;
-        var match = daysRegex.exec(currentUrl);
-        if (!match || match.length < 2) return null;
-        else return match[1];
-      }
-      else return daysRadioVal;
-    }
+        function getNumDaysToFetch() {
+            var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();
+            if (!daysRadioVal || daysRadioVal == "custom") {
+                var currentUrl = document.location.href;
+                var daysRegex = /r=(\d+)/g;
+                var match = daysRegex.exec(currentUrl);
+
+                if (!match || match.length < 2) {
+                    if (mopub.isDirectSoldCampaign) {
+                        return 90;
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return match[1];
+                }
+            }
+            else return daysRadioVal;
+        }
 
     function getStartDate() {
       var currentUrl = document.location.href;

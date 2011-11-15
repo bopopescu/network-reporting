@@ -66,13 +66,13 @@
       <dd>
       <input id='start-date' type='text' class="input-text input-text-number" name="start_date" size="15" value="{{form.start_datetime.value|date:"m/d/Y"}}" placeholder="MM/DD/YYYY"/>
 
-         <input id='start-time' type='text' class='input-text input-text-number input-text-time' name='start_time' size=10 value="{{form.start_datetime.value|date:"g:i A"}}" placeholder='HH:MM' /> PST
+         <input id='start-time' type='text' class='input-text input-text-number input-text-time' name='start_time' size=10 value="{{form.start_datetime.value|format_time}}" placeholder='HH:MM' /> PST
         <div class='helper-text' id='fullCampaignError-date' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
       </dd>
       <dt>Stop Time:</dt>
       <dd>
         <input id='stop-date' type='text' class="input-text input-text-number" name="end_date" size="15" value="{{form.end_datetime.value|date:"m/d/Y"}}"  placeholder="MM/DD/YYYY"/>
-        <input id='stop-time' type='text' class='input-text input-text-number input-text-time' name='end_time' size=10 value="{{form.end_datetime.value|date:"g:i A"}}" placeholder='HH:MM' /> PST
+        <input id='stop-time' type='text' class='input-text input-text-number input-text-time' name='end_time' size=10 value="{{form.end_datetime.value|format_time}}" placeholder='HH:MM' /> PST
         <div class='helper-text' id='fullCampaignError-date' style="display:none; color:#cc2929;">Required when delivery type set to 'total impressions' or 'total USD'</div>
       </dd>
 

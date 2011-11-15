@@ -3,11 +3,23 @@
 {% block pageTitle %}
   <div class="breadcrumb">
     {% if not adgroup.archived %}
-      <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
+      {% if campaign.network %}
+        <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
+      {% else %}
+        <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
+      {% endif %}
     {% else %}
-      <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
+      {% if campaign.network %}
+        <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Networks</a>
+      {% else %}
+        <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
+      {% endif %}
     {% endif %}
-    <h1>Campaign: {{adgroup.name}}</h1>
+    {% if campaign.network %}
+      <h1>Network: {{adgroup.name}}</h1>
+    {% else %}
+      <h1>Campaign: {{adgroup.name}}</h1>
+    {% endif %}
   </div>
 {% endblock pageTitle %}
 {% block messageCenter %}{% endblock messageCenter %}
@@ -25,13 +37,11 @@
       <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
         <option value="play" selected="selected">Running</option>
         <option value="pause">Pause</option>
-        <option value="archive">Archive</option>
         <option value="delete">Delete</option>
       </select>
     {% else %}
       {% if adgroup.archived %}
         <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
-          <option value="archive">Archived</option>
           <option value="play">Resume</option>
           <option value="delete">Delete</option>
         </select>
@@ -39,12 +49,15 @@
         <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
           <option value="pause" selected="selected">Paused</option>
           <option value="play">Resume</option>
-          <option value="archive">Archive</option>
           <option value="delete">Delete</option>
         </select>
       {% endif %}
     {% endif %}
-    <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
+    {% if campaign.network %}
+      <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
+    {% else %}
+      <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
+    {% endif %}
   </span>
 {% endblock titleBarRight %}
 
@@ -90,20 +103,20 @@
                 <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
               </tr>
-              {% if campaign.network %}
-                <tr id="stats-breakdown-attempts">
-                  <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value all"><span class="inner">{{totals.request_count|withsep}}</span></td>
-                  <th class="stats-breakdown-name"><span class="inner">Attempts</span></th>
-                </tr>
-              {% endif %}
               <tr id="stats-breakdown-clicks">
-                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{totals.ctr|percentage}})</span> {{totals.click_count|withsep}}</span></td>
+                <td class="stats-breakdown-value today"><span class="inner"> {{today.click_count|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.click_count|withsep}}</span></td>
+                <td class="stats-breakdown-value all"><span class="inner"> {{totals.click_count|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
               </tr>
+              {% if campaign.network %}
+                <tr id="stats-breakdown-ctr">
+                  <td class="stats-breakdown-value today"><span class="inner"> {{today.ctr|percentage}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.ctr|percentage}}</span></td>
+                  <td class="stats-breakdown-value all"><span class="inner"> {{totals.ctr|percentage}}</span></td>
+                  <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+                </tr>
+              {% endif %}
               {% if campaign.promo %}
                 <tr id="stats-breakdown-conversions">
                   <td class="stats-breakdown-value today"><span class="inner">{{today.conversion_count|withsep}}</span></td>
@@ -112,12 +125,6 @@
                   <th class="stats-breakdown-name"><span class="inner">Conversions</span></th>
                 </tr>
               {% endif %}
-              <tr id="stats-breakdown-users">
-                <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner">{{totals.user_count|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -199,7 +206,11 @@
           </div>
 
           <section id="dashboard-campaign">
-            <h2>Campaign Details</h2>
+            {% if campaign.network %}
+              <h2>Network Details</h2>
+            {% else %}
+              <h2>Campaign Details</h2>
+            {% endif %}
             <div>
               {% if adgroup.active %}
               <img src="/images/active.gif" width="9" height="9"/>
@@ -234,7 +245,7 @@
                       <tr>
                         <th class="appData-icon"></th>
                         <th class="dataTable-name"></th>
-                        {% if campaign.gtee  or campaign.marketplace %}
+                        {% if campaign.gtee or campaign.marketplace %}
                         <th class="dataTable-data numeric">&nbsp;</th>
                         <th class="dataTable-data numeric">Impressions</th>
                         <th class="dataTable-data numeric">Clicks</th>
@@ -265,7 +276,7 @@
                         <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span></span></th>
 
-                        {% if campaign.gtee  or campaign.marketplace %}
+                        {% if campaign.gtee or campaign.marketplace %}
                         <td class="dataTable-data numeric">&nbsp;</td>
                         <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
@@ -295,7 +306,7 @@
                           <tr>
                             <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
 
-                            {% if campaign.gtee  or campaign.marketplace%}
+                            {% if campaign.gtee or campaign.marketplace%}
                             <td class="dataTable-data numeric">&nbsp;</td>
                             <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
@@ -376,7 +387,7 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Creative</th>
-                    {% if campaign.gtee  or campaign.marketplace %}
+                    {% if campaign.gtee or campaign.marketplace %}
                     <th class="dataTable-data numeric">&nbsp;</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>

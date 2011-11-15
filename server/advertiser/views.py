@@ -620,10 +620,15 @@ class ShowAdGroupHandler(RequestHandler):
 
     def get(self, adgroup_key):
         # Set start date if passed in, otherwise get most recent days
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range)
+        #if self.start_date and self.end_date:
+            #days = StatsModel.get_days(self.start_date, self.date_range)
+            #start_date = self.start_date
+            #end_date = self.end_date
+        #else:
+            #days = StatsModel.lastdays(self.date_range)
+            #start_date = days[0]
+            #end_date = days[-1]
+        days = StatsModel.lastdays(90)
 
         # show a flash message recommending using reports if selecting more than 30 days
         if self.date_range > 30:

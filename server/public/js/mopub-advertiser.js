@@ -21,7 +21,6 @@ var mopub = mopub || {};
          */
 
         initializeNetworkPage: function () {
-            console.log('called');
             refreshAlternatingColor();
         },
 
@@ -507,7 +506,7 @@ var mopub = mopub || {};
             data: { ajax: true },
             dataType : 'json',
             success: function(jsonData) {
-                console.log('success');
+
                 $('#creativeCreateForm-loading').hide();
                 if (jsonData.success) {
                     $('#creativeCreateForm-success').show();
@@ -531,7 +530,7 @@ var mopub = mopub || {};
                 }
             },
             error: function(jqXHR, textStatus, errorThrown){
-                // console.log(errorThrown);
+
             }
       };
       $('#creativeCreateForm').ajaxForm(options);

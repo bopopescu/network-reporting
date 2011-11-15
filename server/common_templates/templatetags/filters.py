@@ -191,3 +191,7 @@ def country_code_to_name(country_code):
 @register.filter
 def to_json(python_obj):
     return json.dumps(python_obj)
+
+@register.simple_tag
+def include_raw(path):
+    return template.loader.find_template(path)[0]

@@ -257,7 +257,6 @@ class AdGroupArchiveHandler(RequestHandler):
 
     def get(self):
         archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account, archived=True)
-        archived_adgroups = [ adgroup for adgroup in archived_adgroups if adgroup.campaign.campaign_type != 'network']
 
         for adgroup in archived_adgroups:
             adgroup.budget = adgroup.campaign.budget_obj
@@ -1381,7 +1380,8 @@ class NetworkIndexHandler(RequestHandler):
         total_revenue = sum([day.revenue for network in network_stats for day in network['stats']])
         total_clicks = sum([day.clicks for network in network_stats for day in network['stats']])
         total_impressions = sum([day.impressions for network in network_stats for day in network['stats']])
-
+        
+        """
         stats_model = StatsModelQueryManager(self.account, offline=self.offline)
         stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
 
@@ -1397,11 +1397,12 @@ class NetworkIndexHandler(RequestHandler):
         response_dict = {}
         response_dict['status'] = 200
         response_dict['all_stats'] = stats_dict
+        """
 
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
                                   {
-                                      'account_stats': simplejson.dumps(response_dict),
+                                      #'account_stats': simplejson.dumps(response_dict),
                                       'network_campaigns': network_campaigns,
                                       'network_stats': network_stats,
                                       'start_date': days[0],

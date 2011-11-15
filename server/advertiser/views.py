@@ -257,6 +257,7 @@ class AdGroupArchiveHandler(RequestHandler):
 
     def get(self):
         archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account, archived=True)
+        archived_adgroups = [ adgroup for adgroup in archived_adgroups if adgroup.campaign.campaign_type != 'network']
 
         for adgroup in archived_adgroups:
             adgroup.budget = adgroup.campaign.budget_obj
@@ -1186,36 +1187,6 @@ def campaign_export(request, *args, **kwargs):
     return CampaignExporter()(request, *args, **kwargs)
 
 
-# Network Views
-# At some point in the future, these *could* be branched into their own django app
-class NetworkIndexHandler(RequestHandler):
-    def get(self):
-
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range)
-
-        logging.warn(self.date_range)
-        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
-        network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
-        # TODO:: Optimize IO
-
-
-        return render_to_response(self.request,
-                                  "advertiser/network_index.html",
-                                  {
-                                      'networks': network_campaigns,
-                                      'start_date': days[0],
-                                      'end_date':days[-1],
-                                      'date_range': self.date_range
-                                  })
-
-@login_required
-def network_index(request, *args, **kwargs):
-    return NetworkIndexHandler()(request, *args, **kwargs)
-
-
 
 # Marketplace Views
 # At some point in the future, these should be branched into their own django app
@@ -1411,9 +1382,26 @@ class NetworkIndexHandler(RequestHandler):
         total_clicks = sum([day.clicks for network in network_stats for day in network['stats']])
         total_impressions = sum([day.impressions for network in network_stats for day in network['stats']])
 
+        stats_model = StatsModelQueryManager(self.account, offline=self.offline)
+        stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
+
+
+        key = "||"
+        stats_dict = {}
+        stats_dict[key] = {}
+        stats_dict[key]['name'] = "||"
+        stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
+        summed_stats = sum(stats, StatsModel())
+        stats_dict[key]['sum'] = summed_stats.to_dict()
+
+        response_dict = {}
+        response_dict['status'] = 200
+        response_dict['all_stats'] = stats_dict
+
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
                                   {
+                                      'account_stats': simplejson.dumps(response_dict),
                                       'network_campaigns': network_campaigns,
                                       'network_stats': network_stats,
                                       'start_date': days[0],

@@ -15,6 +15,8 @@
 
 {% block content %}
 
+  {% comment %}
+
   <h2> Ad Network Stats</h2>
 
   <div class="alert-message block-message info">
@@ -63,6 +65,8 @@
   {% else %}
     <h2> No network campaigns </h2>
   {% endif %}
+
+  {% endcomment %}
 
   <div class="clearfix">
     <section class="offset nomargin" id="dashboard-stats">
@@ -121,12 +125,16 @@
 
 
   <br />
-  <a id="add_campaign_button" class="right button add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
+  <a id="add_campaign_button" class="right button add icon"  href="{% url advertiser_campaign_create %}#network">Add a network</a>
   <br />
 
-<br />
+  <br />
   {% if network_campaigns %}
+
+  <h2>Ad Networks</h2>
+
     <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
+      <input type="hidden" name="action" id="action"/>
       <div id='network-rollups' class="campaignData-rollup">
         <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
           <thead>
@@ -153,12 +161,12 @@
           <tr>
             <th class="campaignData-icon"></th>
             <th>Name</th>
-            <th>eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-            <th>Attempts</th>
-            <th width="100">Impressions</th>
-            <th>Fillrate</th>
-            <th>Clicks</th>
-            <th>CTR</th>
+            <th style="text-align: right">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+            <th style="text-align: right">Attempts</th>
+            <th style="text-align: right" width="100">Impressions</th>
+            <th style="text-align: right">Fillrate</th>
+            <th style="text-align: right">Clicks</th>
+            <th style="text-align: right">CTR</th>
           </tr>
         </thead>
         <tbody>
@@ -213,7 +221,7 @@
           <span class="buttonWrap">
             <a class="button pause icon" id="campaignForm-pause">Pause</a>
             <a class="button play icon" id="campaignForm-resume">Resume</a>
-            <a class="button stop icon" id="campaignForm-archive">Archive</a>
+            <a class="button stop icon" id="campaignForm-archive">Delete</a>
           </span>
         </div>
       </div>
@@ -234,10 +242,7 @@
         mopub.isCampaignsPage = true;
         mopub.isNetworksPage = true;
         mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
-        mopub.accountStats = {"status": 200, "all_stats": {"||": {"daily_stats": [{"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-20 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-21 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-22 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-23 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2010-10-24 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-25 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-26 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-27 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-28 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-29 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-30 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-31 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-11-01 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-11-02 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}], "sum": {"fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-10-20 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0}, "name": "||"}}};
-//        mopub.accountStats = {{account_stats|safe}};
-
-
+        mopub.accountStats = {{account_stats|safe}};
     });
 </script>
 <script src="/js/mopub-advertiser.js?v=1"></script>

@@ -38,6 +38,7 @@ class CampaignQueryManager(QueryManager):
     @classmethod
     def get_network_campaigns(cls, account):
         networks = cls.Model.all().filter('campaign_type =', 'network')\
+                      .filter('archived =',False)\
                       .filter('deleted =',False)\
                       .filter('account =',account)
         return networks

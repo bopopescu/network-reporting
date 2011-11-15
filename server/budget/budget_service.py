@@ -303,9 +303,18 @@ def _update_budgets(budget, slice_num, last_log, spent_this_timeslice=None, test
     budget.curr_slice = slice_num
 
     next_day = budget.curr_date + ONE_DAY
+    old_next_day = next_day
+
+    # Next day doesn't necessarily start now
+    next_day = datetime(next_day.year,
+                        next_day.month,
+                        next_day.day,
+                        budget.next_day_hour.hour,
+                        budget.next_day_hour.minute,
+                        budget.next_day_hour.second)
     # Advance the day counter if it makes sense to do so
     if budget.curr_slice >= get_slice_from_datetime(next_day, testing):
-        budget.curr_date = next_day
+        budget.curr_date = next_day.date()
     budget.put()
 
     if budget.update:
@@ -331,6 +340,7 @@ def _update_budgets(budget, slice_num, last_log, spent_this_timeslice=None, test
 
     # Update memc with values from the new slice log (since it's the backup for MC anyway)
 
+    logging.warning("New spending for slice: %s is %s" % (budget.curr_slice, new_slice_log.desired_spending))
     memcache.set(ts_key, _to_memcache_int(new_slice_log.desired_spending), namespace = 'budget')
     memcache.set(brake_key, new_slice_log.prev_braking_fraction, namespace = 'budget')
 

@@ -29,12 +29,13 @@ from google.appengine.api import memcache
 from budget.models import (Budget,
                            BudgetSliceLog,
                            )
-from budget.helpers import get_slice_from_datetime, TEST_TS_PER_DAY
+from budget.helpers import get_slice_from_datetime, TEST_TS_PER_DAY, get_datetime_from_slice
 from budget.memcache_budget import (remaining_ts_budget,
                                     total_spent,
                                     braking_fraction,
                                     )
 from budget.query_managers import BudgetQueryManager
+from budget.tzinfo import utc, Pacific
 
 from google.appengine.ext import testbed
 
@@ -56,15 +57,17 @@ def build_has_budget_for_bids(budget):
 class TestBudgetUnitTests(unittest.TestCase):
 
     def test_mock_budget_advance(self, testing=False, advance_to_datetime = None):
-        budget_service._mock_budget_advance(advance_to_datetime, testing)
+        slice_num = budget_service._mock_budget_advance(advance_to_datetime, testing)
         self.e_c = Campaign.get(self.e_c.key())
         self.aao_c = Campaign.get(self.aao_c.key())
         self.e_budget = Budget.get(self.e_budget.key())
         self.aao_budget = Budget.get(self.aao_budget.key())
+        return slice_num
 
     def test_advance(self, dtetime):
-        self.test_mock_budget_advance(testing=True, advance_to_datetime = dtetime)
+        slice_num = self.test_mock_budget_advance(testing=True, advance_to_datetime = dtetime)
         logging.warning("Advancing....")
+        return slice_num
 
     def setUp(self):
         # First, create an instance of the Testbed class.
@@ -94,14 +97,16 @@ class TestBudgetUnitTests(unittest.TestCase):
         self.e_budget = Budget(start_datetime = self.budget_start,
                                delivery_type = 'evenly',
                                static_slice_budget = 50.0,
-                            active = True,
+                               active = True,
                                testing = True,
+                               _next_day_hour = datetime.datetime(2000,1,1,0,0,0),
                                )
         self.aao_budget = Budget(start_datetime = self.budget_start,
-                            active = True,
+                                 active = True,
                                  delivery_type = 'allatonce',
                                  static_total_budget = 5000.0,
                                  testing = True,
+                                 _next_day_hour = datetime.datetime(2000,1,1,0,0,0),
                                  )
         self.e_budget.put()
         self.aao_budget.put()
@@ -1597,4 +1602,93 @@ class TestBudgetUnitTests(unittest.TestCase):
                 budget_service.apply_expense(self.e_budget, bid)
         logging.warning("Total bids: %s  Applied bids: %s  %%Applied: %s" % (tot, tot_apply, tot_apply/tot))
         assert_almost_equal(round(tot_apply/tot, 1), 0.2, 2)
+
+
+    def mptest_daily_start(self):
+        """ Given that a 'day' can start at an arbitrary time, test that it actually
+        works as expected """
+        self.aao_budget.static_slice_budget = 50.0
+        self.aao_budget.static_total_budget = None
+        self.aao_budget._next_day_hour = datetime.datetime(2000,1,1,0,0,0, tzinfo=Pacific)
+        self.aao_budget.put()
+        self.e_budget.delivery_type = 'allatonce'
+        self.e_budget.put()
+        slice_num = self.test_advance(self.budget_start)
+        eq_(budget_service._apply_if_able(self.e_budget, 600), True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+
+        eq_(budget_service._apply_if_able(self.aao_budget, 600), True)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        # TS 13, e_budget should be on a new day, the other one shoudl not be
+        self.test_mock_budget_advance(testing=True)
+        logging.warning("Time1: %s" % get_datetime_from_slice(self.e_budget.curr_slice, testing=True))
+        eq_(budget_service._apply_if_able(self.e_budget, 600), True)
+        eq_(budget_service._apply_if_able(self.aao_budget, 600), False)
+
+        #Day 2 ts 2
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.aao_budget, 600), False)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+
+        #Day 2 ts 3
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.aao_budget, 600), False)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+
+        #Day 2 ts 4, 8 hours in, should be new day
+        self.test_mock_budget_advance(testing=True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
+        self.test_mock_budget_advance(testing=True)
+        logging.warning("Time2: %s" % get_datetime_from_slice(self.e_budget.curr_slice, testing=True))
+        eq_(budget_service._apply_if_able(self.aao_budget, 600), True)
+        eq_(budget_service._apply_if_able(self.e_budget, 1), False)
+        eq_(budget_service._apply_if_able(self.aao_budget, 1), False)
+
 

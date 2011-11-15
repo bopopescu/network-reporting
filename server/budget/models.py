@@ -1,5 +1,6 @@
 from google.appengine.ext import db
 from budget.helpers import get_curr_slice_num, get_slice_from_datetime, TS_PER_DAY, TEST_TS_PER_DAY
+from budget.tzinfo import utc, Pacific
 import logging
 import math
 
@@ -114,6 +115,11 @@ class Budget(db.Model):
     # update is a flag, the str is the next state to put it in
     update = db.BooleanProperty(default = False)
     update_str = db.StringProperty()
+    _next_day_hour = db.DateTimeProperty(default=datetime(2000,1,1,0,0,0,tzinfo = Pacific))
+
+    @property
+    def next_day_hour(self):
+        return self._next_day_hour.time()
 
     def __repr__(self):
         return "Budget(Start: %s, End: %s, Delivery_type: %s, Static_budget: %s, Static_slice_budget: %s, total_spent: %s, curr_slice: %s, curr_date: %s" % (self.start_datetime, self.end_datetime, self.delivery_type, self.static_total_budget, self.static_slice_budget, self.total_spent, self.curr_slice, self.curr_date)
@@ -200,18 +206,15 @@ class Budget(db.Model):
         if self.static_slice_budget:
             # This is finite
             if self.finite:
-                logging.warning("Expected: %s  Spent: %s\n%s" % (expected, self.total_spent, self))
                 return expected - self.total_spent
 
             # This is unending
             else:
                 spent_today = self.spent_today
-                logging.warning("Expected: %s  Spent today: %s\n%s" % (expected, spent_today, self))
                 return expected - spent_today
 
         # This is a total budget
         elif self.static_total_budget:
-            logging.warning("Expected: %s  Spent: %s\n%s" % (expected, self.total_spent, self))
             return expected - self.total_spent
 
         # This is a fucked up situation

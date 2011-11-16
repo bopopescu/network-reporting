@@ -618,7 +618,6 @@ class ShowAdGroupHandler(RequestHandler):
         return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}))
 
     def get(self, adgroup_key):
-
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
@@ -715,7 +714,6 @@ class ShowAdGroupHandler(RequestHandler):
                 c.html_fragment = creative_handler.get(creative=c)
         else:
             creative_fragment = None
-
         # REFACTOR
         # In order to make the edit page
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
@@ -1406,7 +1404,7 @@ class NetworkIndexHandler(RequestHandler):
 
         # grab the network campaigns and their stats
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
-        
+
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
                                   {

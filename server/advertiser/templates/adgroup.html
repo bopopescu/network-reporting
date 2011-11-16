@@ -48,11 +48,17 @@
       <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
         <option value="play" selected="selected">Running</option>
         <option value="pause">Pause</option>
+        {% if not campaign.network %}
+          <option value="archive">Archive</option>
+        {% endif %}
         <option value="delete">Delete</option>
       </select>
     {% else %}
       {% if adgroup.archived %}
         <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
+          {% if not campaign.network %}
+            <option value="archive">Archived</option>
+          {% endif %}
           <option value="play">Resume</option>
           <option value="delete">Delete</option>
         </select>
@@ -60,6 +66,9 @@
         <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
           <option value="pause" selected="selected">Paused</option>
           <option value="play">Resume</option>
+          {% if not campaign.network %}
+            <option value="archive">Archive</option>
+          {% endif %}
           <option value="delete">Delete</option>
         </select>
       {% endif %}

@@ -222,121 +222,121 @@ var mopub = mopub || {};
               }
           }).change();
 
-          // Show budget fields when they're needed
-          $("#adgroupForm-budget_type-select").change( function(e) {
-              var budget_type = $(this).val();
-              $('.budgetDependent').hide();
-              $('.'+budget_type+'.budgetDependent').show();
-              if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
-                  if (budget_type == "full_campaign") {
-                      $('#campaignAdgroupForm-budget-display_full').show();
-                  }
-                  if (budget_type == "daily"){
-                      $('#campaignAdgroupForm-budget-display').show();
-                  }
-              }
-          }).change();
+            // Show budget fields when they're needed
+            $("#adgroupForm-budget_type-select").change( function(e) {
+                var budget_type = $(this).val();
+                $('.budgetDependent').hide();
+                $('.'+budget_type+'.budgetDependent').show();
+                if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
+                    if (budget_type == "full_campaign") {
+                        $('#campaignAdgroupForm-budget-display_full').show();
+                    }
+                    if (budget_type == "daily"){
+                        $('#campaignAdgroupForm-budget-display').show();
+                    }
+                }
+            }).change();
 
-          // Show location-dependent fields when location targeting is turned on
-          $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
-              var loc_targ = $(this).val();
-              $('.locationDependent', '#campaignAdgroupForm').hide();
-              $('.' + loc_targ + '.locationDependent', '#campaignAdgroupForm').show();
-              if ($(this).val() == 'all') {
-                  $('li.token-input-city span.token-input-delete-token').each(function() {
-                      $(this).click();
-                  });
-              }
-          }).filter(':checked').click();
+            // Show location-dependent fields when location targeting is turned on
+            $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
+                var loc_targ = $(this).val();
+                $('.locationDependent', '#campaignAdgroupForm').hide();
+                $('.' + loc_targ + '.locationDependent', '#campaignAdgroupForm').show();
+                if ($(this).val() == 'all') {
+                    $('li.token-input-city span.token-input-delete-token').each(function() {
+                        $(this).click();
+                    });
+                }
+            }).filter(':checked').click();
 
-          // Toggling for advanced options
-          $('#adgroupForm-advanced-toggleButton')
-              .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
-              .click(function(e) {
-                  e.preventDefault();
-                  var buttonTextElem = $('.ui-button-text', this);
-                  if ($('.adgroupForm-advanced').is(':hidden')) {
-                      $('.adgroupForm-advanced').slideDown('fast');
-                      $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                      $('.ui-button-text', this).text('Hide Advanced Details');
-                  } else {
-                      $('.adgroupForm-advanced').slideUp('fast');
-                      $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                      $('.ui-button-text', this).text('Show Advanced Details');
-                  }
-              });
+            // Toggling for advanced options
+            $('#adgroupForm-advanced-toggleButton')
+                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
+                .click(function(e) {
+                    e.preventDefault();
+                    var buttonTextElem = $('.ui-button-text', this);
+                    if ($('.adgroupForm-advanced').is(':hidden')) {
+                        $('.adgroupForm-advanced').slideDown('fast');
+                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+                        $('.ui-button-text', this).text('Hide Advanced Details');
+                    } else {
+                        $('.adgroupForm-advanced').slideUp('fast');
+                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+                        $('.ui-button-text', this).text('Show Advanced Details');
+                    }
+                });
 
-          // Initialize impression count on form display
-          if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
-              var rate = $('#campaignAdgroupForm input[name="bid"]').val();
-              if ($("#adgroupForm-budget_type-select").val() == "daily") {
-                  var budget = $('#campaignAdgroupForm input[name="budget"]').val();
-                  var impressions = 1000 * budget / rate;
-                  if (impressions) {
-                      fixed_impressions = impressions.toFixed();
-                      $('#campaignAdgroupForm input[name="impressions"]').val(fixed_impressions);
-                      calculateAndShowBudget();
-                  }
-              } else {
-                  var budget = $('#campaignAdgroupForm input[name="full_budget"]').val();
-                  var full_impressions = 1000 * budget / rate;
-                  if (full_impressions) {
-                      fixed_full_impressions = full_impressions.toFixed();
-                      $('#campaignAdgroupForm input[name="full_impressions"]').val(fixed_full_impressions);
-                      calculateAndShowBudget();
-                  }
-              }
-          }
-
-          // Show and update budget controls when needed
-          $('#adgroupForm-bid_strategy-select').change(function() {
-              if ($(this).val() == 'cpm') {
-                  $('.campaignAdgroupForm-budget').hide();
-                  $('#campaignAdgroupForm-budget-fullimpressions').show();
-                  $('#campaignAdgroupForm-budget-impressions').show();
-                  $("#adgroupForm-budget_type-select option[value='full_campaign']").text("total impressions");
-                  $("#adgroupForm-budget_type-select option[value='daily']").text("impressions/day");
-              } else {
-                  $('.campaignAdgroupForm-budget').hide();
-                  $('#campaignAdgroupForm-budget-fullbid').show();
-                  $('#campaignAdgroupForm-budget-bid').show();
-                  $("#adgroupForm-budget_type-select option[value='full_campaign']").text("total USD");
-                  $("#adgroupForm-budget_type-select option[value='daily']").text("USD/day");
-              }
-              calculateAndShowBudget();
-          }).change();
-
-          $('#campaignAdgroupForm input[name="impressions"]').keyup(function() {
-              calculateAndShowBudget();
-          });
-
-          $('#campaignAdgroupForm input[name="full_impressions"]').keyup(function() {
-              calculateAndShowBudget();
-          });
-
-          $('#bid-max').keyup(function() {
-              calculateAndShowBudget();
-          });
-
-        $("#terms").dialog({
-            autoOpen: false,
-            height: 530,
-            buttons: {
-                "OK": function() {
-                    $(this).dialog("close");
+            // Initialize impression count on form display
+            if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
+                var rate = $('#campaignAdgroupForm input[name="bid"]').val();
+                if ($("#adgroupForm-budget_type-select").val() == "daily") {
+                    var budget = $('#campaignAdgroupForm input[name="budget"]').val();
+                    var impressions = 1000 * budget / rate;
+                    if (impressions) {
+                        var fixed_impressions = impressions.toFixed();
+                        $('#campaignAdgroupForm input[name="impressions"]').val(fixed_impressions);
+                        calculateAndShowBudget();
+                    }
+                } else {
+                    var budget = $('#campaignAdgroupForm input[name="full_budget"]').val();
+                    var full_impressions = 1000 * budget / rate;
+                    if (full_impressions) {
+                        var fixed_full_impressions = full_impressions.toFixed();
+                        $('#campaignAdgroupForm input[name="full_impressions"]').val(fixed_full_impressions);
+                        calculateAndShowBudget();
+                    }
                 }
             }
-        });
-        $("#accept_terms").click(function() {
-            $("#terms").dialog('open');
-        });
-      }
 
-      campaignAdgroupFormOnLoad();
+            // Show and update budget controls when needed
+            $('#adgroupForm-bid_strategy-select').change(function() {
+                if ($(this).val() == 'cpm') {
+                    $('.campaignAdgroupForm-budget').hide();
+                    $('#campaignAdgroupForm-budget-fullimpressions').show();
+                    $('#campaignAdgroupForm-budget-impressions').show();
+                    $("#adgroupForm-budget_type-select option[value='full_campaign']").text("total impressions");
+                    $("#adgroupForm-budget_type-select option[value='daily']").text("impressions/day");
+                } else {
+                    $('.campaignAdgroupForm-budget').hide();
+                    $('#campaignAdgroupForm-budget-fullbid').show();
+                    $('#campaignAdgroupForm-budget-bid').show();
+                    $("#adgroupForm-budget_type-select option[value='full_campaign']").text("total USD");
+                    $("#adgroupForm-budget_type-select option[value='daily']").text("USD/day");
+                }
+                calculateAndShowBudget();
+            }).change();
+
+            $('#campaignAdgroupForm input[name="impressions"]').keyup(function() {
+                calculateAndShowBudget();
+            });
+
+            $('#campaignAdgroupForm input[name="full_impressions"]').keyup(function() {
+                calculateAndShowBudget();
+            });
+
+            $('#bid-max').keyup(function() {
+                calculateAndShowBudget();
+            });
+
+            $("#terms").dialog({
+                autoOpen: false,
+                height: 530,
+                buttons: {
+                    "OK": function() {
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            $("#accept_terms").click(function() {
+                $("#terms").dialog('open');
+            });
+        }
+
+        campaignAdgroupFormOnLoad();
 
 
-      $('#campaignAdgroupForm-submit')
-          .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
+        $('#campaignAdgroupForm-submit')
+            .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
           .click(function(e){
               e.preventDefault();
               if (adgroupFormValidate($('#campaignAdgroupForm'))) {
@@ -975,68 +975,68 @@ var mopub = mopub || {};
       return results;
     }
 
-    function populateGraphWithAccountStats(stats) {
-      var dailyStats = stats["all_stats"]["||"]["daily_stats"];
+        function populateGraphWithAccountStats(stats) {
+            var dailyStats = stats["all_stats"]["||"]["daily_stats"];
 
-      mopub.dashboardStatsChartData = {
-        pointStart: mopub.graphStartDate,
-        pointInterval: 86400000,
-        impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impression_count")}],
-        revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
-        clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "click_count")}],
-        ctr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ctr")}]
-      };
+            mopub.dashboardStatsChartData = {
+                pointStart: mopub.graphStartDate,
+                pointInterval: 86400000,
+                impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impression_count")}],
+                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
+                clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "click_count")}],
+                ctr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ctr")}]
+            };
 
-      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-    }
+            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+        }
 
-    function populateCampaignStats() {
-        var allCampaignIds = getCampaignIdsWithType(CampaignTypeEnum.All);
-        $.each(allCampaignIds, function(index, id) {
-            campaignsData[id] = {};
-        });
+        function populateCampaignStats() {
+            var allCampaignIds = getCampaignIdsWithType(CampaignTypeEnum.All);
+            $.each(allCampaignIds, function(index, id) {
+                campaignsData[id] = {};
+            });
 
-        var argsDict = {
-            days: getNumDaysToFetch() || 14,
-            startDate: getStartDate()
-        };
+                var argsDict = {
+                    days: getNumDaysToFetch() || 14,
+                        startDate: getStartDate()
+                };
 
         var guaranteedIds = getCampaignIdsWithType(CampaignTypeEnum.Guaranteed);
-        var promotionalIds = getCampaignIdsWithType(CampaignTypeEnum.Promotional);
-        var networkIds = getCampaignIdsWithType(CampaignTypeEnum.Network);
-        var backfillIds = getCampaignIdsWithType(CampaignTypeEnum.Backfill);
-        var marketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.Marketplace);
-        var bfMarketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.BackfillMarketplace);
+            var promotionalIds = getCampaignIdsWithType(CampaignTypeEnum.Promotional);
+            var networkIds = getCampaignIdsWithType(CampaignTypeEnum.Network);
+            var backfillIds = getCampaignIdsWithType(CampaignTypeEnum.Backfill);
+            var marketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.Marketplace);
+            var bfMarketplaceIds = getCampaignIdsWithType(CampaignTypeEnum.BackfillMarketplace);
 
-        gteeFetch = createCampaignStatsFetchObject(guaranteedIds, argsDict);
-        gteeFetch.campaignType = CampaignTypeEnum.Guaranteed;
+            gteeFetch = createCampaignStatsFetchObject(guaranteedIds, argsDict);
+            gteeFetch.campaignType = CampaignTypeEnum.Guaranteed;
 
-        promoFetch = createCampaignStatsFetchObject(promotionalIds, argsDict);
-        promoFetch.campaignType = CampaignTypeEnum.Promotional;
+            promoFetch = createCampaignStatsFetchObject(promotionalIds, argsDict);
+            promoFetch.campaignType = CampaignTypeEnum.Promotional;
 
-        networkFetch = createCampaignStatsFetchObject(networkIds, argsDict);
-        networkFetch.campaignType = CampaignTypeEnum.Network;
+            networkFetch = createCampaignStatsFetchObject(networkIds, argsDict);
+            networkFetch.campaignType = CampaignTypeEnum.Network;
 
-        bfillFetch = createCampaignStatsFetchObject(backfillIds, argsDict);
-        bfillFetch.campaignType = CampaignTypeEnum.Backfill;
+            bfillFetch = createCampaignStatsFetchObject(backfillIds, argsDict);
+            bfillFetch.campaignType = CampaignTypeEnum.Backfill;
 
-        marketplaceFetch = createCampaignStatsFetchObject(marketplaceIds, argsDict);
-      marketplaceFetch.campaignType = CampaignTypeEnum.Marketplace;
+            marketplaceFetch = createCampaignStatsFetchObject(marketplaceIds, argsDict);
+            marketplaceFetch.campaignType = CampaignTypeEnum.Marketplace;
 
-        bfMarketplaceFetch = createCampaignStatsFetchObject(bfMarketplaceIds, argsDict);
-        bfMarketplaceFetch.campaignType = CampaignTypeEnum.BackfillMarketplace;
+            bfMarketplaceFetch = createCampaignStatsFetchObject(bfMarketplaceIds, argsDict);
+            bfMarketplaceFetch.campaignType = CampaignTypeEnum.BackfillMarketplace;
 
-        var fetches = [gteeFetch,
-                     promoFetch,
-                       networkFetch,
-                       bfillFetch,
-                       marketplaceFetch,
-                       bfMarketplaceFetch];
-        $.each(fetches, function(index, fetch) {
-            setSectionLoadingSpinnerHidden(fetch.campaignType, false);
-            fetch.start();
-        });
-    }
+            var fetches = [gteeFetch,
+                           promoFetch,
+                           networkFetch,
+                           bfillFetch,
+                           marketplaceFetch,
+                           bfMarketplaceFetch];
+            $.each(fetches, function(index, fetch) {
+                setSectionLoadingSpinnerHidden(fetch.campaignType, false);
+                fetch.start();
+            });
+        }
 
         function getNumDaysToFetch() {
             var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();
@@ -1044,9 +1044,8 @@ var mopub = mopub || {};
                 var currentUrl = document.location.href;
                 var daysRegex = /r=(\d+)/g;
                 var match = daysRegex.exec(currentUrl);
-
                 if (!match || match.length < 2) {
-                    if (mopub.isDirectSoldCampaign) {
+                    if (mopub.isDirectSoldPage) {
                         return 90;
                     } else {
                         return null;

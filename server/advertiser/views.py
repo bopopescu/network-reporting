@@ -619,25 +619,49 @@ class ShowAdGroupHandler(RequestHandler):
         return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}))
 
     def get(self, adgroup_key):
-        # Set start date if passed in, otherwise get most recent days
-        #if self.start_date and self.end_date:
-            #days = StatsModel.get_days(self.start_date, self.date_range)
-            #start_date = self.start_date
-            #end_date = self.end_date
-        #else:
-            #days = StatsModel.lastdays(self.date_range)
-            #start_date = days[0]
-            #end_date = days[-1]
-        days = StatsModel.lastdays(90)
 
-        # show a flash message recommending using reports if selecting more than 30 days
+        # Load the ad group
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+
+        # Network campaigns have their date range set by the date picker
+        # in the page
+        if adgroup.campaign.network():
+            if self.start_date and self.end_date:
+                days = date_magic.gen_days(self.end_date, self.start_date)
+            else:
+                days = date_magic.gen_date_range(self.date_range)
+
+        # Direct sold campaigns have a start date, and sometimes an end date.
+        # Use those values if they both exist, otherwise set the range from
+        # start to start + 90 days
+        else:
+            if adgroup.campaign.end_datetime:
+                days = date_magic.gen_days(adgroup.campaign.start_datetime,
+                                           adgroup.campaign.end_datetime)
+            else:
+                days = date_magic.gen_days(adgroup.campaign.start_datetime,
+                                           adgroup.campaign.start_datetime + d1atetime.timedelta(90))
+
+        # We want to limit the number of stats we have to fetch.
+        # We've determined 90 is a good max.
+        if len(days) > 90:
+            days = days[len(days) - 90:]
+
+        # We want to display at least 7 days of data
+        if len(days) < 7:
+            better_end_date = days[-1] + datetime.timedelta(7 - len(days))
+            days = date_magic.gen_days(days[0], better_end_date)
+
+        start_date = days[0]
+        end_date = days[-1]
+
+        # Show a flash message recommending using reports if selecting more than 30 days
         if self.date_range > 30:
             self.request.flash['message'] = "For showing more than 30 days we recommend using the <a href='%s'>Reports</a> page." % reverse('reports_index')
         else:
             del self.request.flash['message']
 
-        # Load the ad group itself
-        adgroup = AdGroupQueryManager.get(adgroup_key)
+        # Load stats
         adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
@@ -648,11 +672,12 @@ class ShowAdGroupHandler(RequestHandler):
         for c in creatives:
             c.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=c, days=days)
             c.stats = reduce(lambda x, y: x+y, c.all_stats, StatsModel())
+            # TODO: Should fix DB so that format is always there
             if not c.format:
-                c.format = "320x50" # TODO: Should fix DB so that format is always there
+                c.format = "320x50"
             c.size = c.format.partition('x')
 
-        # Load all adunits that this thing is targeting right now
+        # Load all adunits targeted by this adgroup/camaign
         adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
         apps = {}
         for au in adunits:
@@ -665,8 +690,6 @@ class ShowAdGroupHandler(RequestHandler):
                                                            advertiser=adgroup,
                                                            days=days)
                 app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
-                # if app.icon:
-                #     app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
                 apps[au.app_key.key()] = app
             else:
                 app.adunits += [au]
@@ -674,10 +697,10 @@ class ShowAdGroupHandler(RequestHandler):
             au.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=au,advertiser=adgroup, days=days)
             au.stats = reduce(lambda x, y: x+y, au.all_stats, StatsModel())
 
+
         # Figure out the top 4 ad units for the graph
         adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
         graph_adunits = adunits[0:4]
-
         if len(adunits) > 4:
               graph_adunits[3] = Site(name='Others')
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
@@ -694,6 +717,7 @@ class ShowAdGroupHandler(RequestHandler):
         else:
             creative_fragment = None
 
+        # REFACTOR
         # In order to make the edit page
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
 

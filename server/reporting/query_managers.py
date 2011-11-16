@@ -229,17 +229,18 @@ class StatsModelQueryManager(CachedQueryManager):
         #but it should only iterate on MULTIPLES of days_len, so ct mod days_len
 
         final_stats = []
-        for i,stat in enumerate(stats):
+        for i,(key,stat) in enumerate(zip(keys,stats)):
             if not stat:
-                stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()))
+                pub_string = key.name().split(':')[1] # k:<publisher>:<advertiser>:<date>
+                publisher = db.Key(pub_string) if pub_string else None 
+                stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()), account=account, publisher=publisher, advertiser=advertiser)
+                if not self.offline:
+                    self._patch_mongodb_stats(stat)
             stat.include_geo = self.include_geo
             final_stats.append(stat)
-        
-        #Gets latest mongo stats for today, if enabled
-        self._patch_mongodb_stats_for_today(final_stats[-1], publisher, advertiser, account, days[-1]) 
            
         return final_stats
-    
+            
     def accumulate_stats(self, stat):
         self.stats.append(stat)
     
@@ -544,39 +545,41 @@ class StatsModelQueryManager(CachedQueryManager):
             new_stats.append(new_stat)
         return new_stats
 
-    def _patch_mongodb_stats_for_today(self, stat, pub, adv, acct, day):
-        """"Patches a StatModel with MongoDB's latest data for today
+    def _patch_mongodb_stats(self, stat):
+        """"Patches a StatModel with MongoDB's latest data for stats in the last week
             Stat is the StatModel for a chosen day
-            Day is a datetime object. If day == today, we attempt to pull data, 
-            else nothing occurs
         """
         acct_str = None
-        if acct:
-            if self.account_obj and self.account_obj.use_mongodb_stats:
-                acct_str = str(account_obj.key())
+        if stat.account:
+            if stat.account.use_mongodb_stats:
+                acct_str = str(stat.account.key())
             else: 
                 return
-                
-        formatted_day = day.strftime("%y%m%d")
-        if StatsModel.today().strftime("%y%m%d") == formatted_day:
-            url = "http://mongostats.mopub.com/stats?start_date=" + formatted_day
-            url += "&end_date=" + formatted_today
-            url += "&acct=%s&pub=%s&adv=%s"%(acct_str or "", pub or "", adv or "")
-
-            today_dict = {}
-            try:
-                response = urlopen(url).read()
-                today_dict = json.loads(response)
-                key = "%s||%s||%s"%(pub or "*", adv or "*", acct_str or "*")
-                today_dict = today_dict['all_stats'][key]['daily_stats'][0]
-            except Exception, ex:
-                logging.error(ex)
         
-            #Replace StatModel properties with today's stats
-            if today_dict:
-                stat.revenue = today_dict['revenue']
-                stat.impression_count = today_dict['impression_count']
-                stat.attemp_count = today_dict['attempt_count']
-                stat.request_count = today_dict['request_count']
-                stat.click_count = today_dict['click_count']
+        date_str = stat.date.date().strftime("%y%m%d")
+        url = "http://mongostats.mopub.com/stats?start_date=" + date_str
+        url += "&end_date=" + date_str
+        
+        pub_str = adv_str = None
+        if stat.publisher:
+            pub_str = str(stat.publisher.key())
+        if stat.advertiser:
+            adv_str = str(stat.advertiser.key())  
+        url += "&acct=%s&pub=%s&adv=%s"%(acct_str or "", pub_str or "", adv_str or "")
     
+        today_dict = {}
+        try:
+            response = urlopen(url).read()
+            today_dict = json.loads(response)
+            key = "%s||%s||%s"%(pub_str or "*", adv_str or "*", acct_str or "*")
+            today_dict = today_dict['all_stats'][key]['daily_stats'][0]
+        except Exception, ex:
+            logging.error(ex)
+            
+        #Replace StatModel properties with today's stats
+        if today_dict:
+            stat.revenue = today_dict['revenue']
+            stat.impression_count = today_dict['impression_count']
+            stat.attemp_count = today_dict['attempt_count']
+            stat.request_count = today_dict['request_count']
+            stat.click_count = today_dict['click_count']

@@ -848,29 +848,10 @@ var mopub = mopub || {};
     // Entry point.
     // =====================================================================
 
-    if (mopub.isCampaignsPage) {
-      // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't
-      // disappear until all "onload" AJAX requests are complete.
-      setTimeout(initCampaignsPage, 0);
-    } else {
-      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-    }
-
-    function initCampaignsPage() {
-      showOrHideRevenueBreakdown();
-      setupAjaxStatusPopup();
-      setCampaignFilterOptionsDisabled(true);
-      populateStatsBreakdownsWithData(mopub.accountStats);
-      populateGraphWithAccountStats(mopub.accountStats);
-      populateCampaignStats();
-    }
-
     if (mopub.isNetworksPage) {
       // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't
       // disappear until all "onload" AJAX requests are complete.
       setTimeout(initNetworksPage, 0);
-    } else {
-      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
     }
 
     function initNetworksPage() {
@@ -1087,9 +1068,31 @@ var mopub = mopub || {};
     function campaignStatsChunkComplete(data, chunk, fetchObj) {
       var allStats = data["all_stats"];
 
+      if(!mopub.accountStats) {
+        mopub.accountStats = {
+          "all_stats": {
+            "||": {
+              "daily_stats": []
+            }
+          }
+        }
+      }
+
       for (var key in allStats) {
         var campaignId = key.split("||")[1];
         var sumStats = allStats[key]["sum"];
+
+        var index;
+        for(index in allStats[key]["daily_stats"]) {
+          if(mopub.accountStats['all_stats']['||']['daily_stats'].length <= index) {
+            mopub.accountStats['all_stats']['||']['daily_stats'][index] = allStats[key]["daily_stats"][index];
+          }
+          else {
+            for(stat in allStats[key]["daily_stats"][index]) {
+              mopub.accountStats['all_stats']['||']['daily_stats'][index][stat] += allStats[key]["daily_stats"][index][stat];
+            }
+          }
+        }
 
         // Store the stats so that we can build the graph later.
         campaignsData[campaignId] = allStats[key];
@@ -1157,53 +1160,24 @@ var mopub = mopub || {};
     function onCampaignsFullyUpdated() {
       setCampaignFilterOptionsDisabled(false);
       calcRollups();
-      doShit();
-      //prepareGraphFromCampaignData();
+      sumAccountStats();
+      populateStatsBreakdownsWithData(mopub.accountStats);
+      populateGraphWithAccountStats(mopub.accountStats);
+      prepareGraphFromCampaignData();
     }
 
-    function doShit() {
-      /*
-      var req, imp, clk, rev, conv, ctr, fill, ecpm;
-      req = imp = clk = rev = conv = ctr = fill = ecpm = 0;
+    function sumAccountStats() {
+      mopub.accountStats["all_stats"]["||"]["sum"] = {
+        "fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-11-03 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0
+      }
+      var index;
+      var stat;
+      for(index in mopub.accountStats["all_stats"]["||"]["daily_stats"]) {
+        for(stat in mopub.accountStats["all_stats"]["||"]["sum"]) {
+          mopub.accountStats["all_stats"]["||"]["sum"][stat] += mopub.accountStats["all_stats"]["||"]["daily_stats"][index][stat];
+        }
+      }
 
-      var classPrefix = campaignType.split('_')[0];
-
-      // Sometimes, we want a rollup to include stats for hidden campaigns. For example, the
-      // marketplace campaign is always hidden, but we still want to compute a marketplace rollup.
-      // For these cases, we won't include ":visible" as part of our campaign-finding selector.
-      var visibleSelector = includeInvisibleCampaigns ? '' : ':visible';
-
-      $('.' + classPrefix + '-req' + visibleSelector).each(function() {
-        req += parseIntFromStatText($(this).text());
-      });
-
-      $('.' + classPrefix + '-imp' + visibleSelector).each(function() {
-        imp += parseIntFromStatText($(this).text());
-      });
-
-      $('.' + classPrefix + '-clk' + visibleSelector).each(function() {
-        clk += parseIntFromStatText($(this).text());
-      });
-
-      // Revenue values may have the "display: none" attribute. When rolling up revenue values,
-      // we can't just add up the visible revenue <td>s; we need to filter out those that are
-      // a part of visible <tr>s.
-      $('.' + classPrefix + '_row' + visibleSelector + ' .' + classPrefix + '-rev').each(
-        function() { rev += parseFloatFromStatText($(this).text().replace('$', '')); });
-
-      $('.' + classPrefix + '-conv' + visibleSelector).each(function() {
-        conv += parseIntFromStatText($(this).text());
-      });
-
-      ctr = (clk === 0 || imp === 0) ? 0 : clk / imp;
-
-      fill = (imp === 0 || req === 0) ? 0 : imp / req;
-
-      ecpm = (rev === 0 || imp === 0) ? 0 : 1000 * (rev / imp);
-
-      //populateStatsBreakdownsWithData(mopub.accountStats);
-      //populateGraphWithAccountStats(mopub.accountStats);
-      */
     }
 
     function prepareGraphFromCampaignData() {
@@ -1261,14 +1235,12 @@ var mopub = mopub || {};
       var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
 
       var result = mopub.Stats.getGraphCtrStats(sortedCampaigns);
-      /*
       // Append stats for MoPub-optimized CTR.
       var accountDailyStats = mopub.accountStats["all_stats"]["||"]["daily_stats"];
       var mopubOptimized = {
         "MoPub Optimized": mopub.Stats.statArrayFromDailyStats(accountDailyStats, "ctr"),
       };
       result.push(mopubOptimized);
-      */
       return result;
     }
 

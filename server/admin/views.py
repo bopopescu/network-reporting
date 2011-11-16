@@ -6,7 +6,7 @@ from urllib import urlencode
 from urllib2 import urlopen
 import time
 
-from google.appengine.api import users, images
+from google.appengine.api import users
 from google.appengine.api.urlfetch import fetch
 from google.appengine.api import mail
 from google.appengine.api import memcache
@@ -265,6 +265,7 @@ def migrate_many_images(request, *args, **kwargs):
 def migrate_image(request, *args, **kwargs):  
     """ Migrates a text and tile image. """
     from google.appengine.api import files
+    from common.utils import helpers
     
     params = request.POST or request.GET
      
@@ -288,7 +289,7 @@ def migrate_image(request, *args, **kwargs):
         # Do not delete image yet
         # app.icon = None 
         app.icon_blob = blob_key      
-        url = images.get_serving_url(blob_key)
+        url = helpers.get_url_for_blob(blob_key)
         app.put()  
     
     return HttpResponse('(%s, %s)' % (blob_key, url))                

@@ -17,6 +17,7 @@ from common.utils import date_magic
 from common.utils import sswriter
 from common.utils.decorators import cache_page_until_post
 from common.utils.helpers import campaign_stats
+from common.utils import helpers
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
@@ -929,10 +930,10 @@ class DisplayCreativeHandler(RequestHandler):
         c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image":
 
-            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%images.get_serving_url(c.image_blob))
+            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%helpers.get_url_for_blob(c.image_blob))
             # return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "text_icon":
-            c.icon_url = images.get_serving_url(c.image_blob)
+            c.icon_url = helpers.get_url_for_blob(c.image_blob)
 
             return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
             #return HttpResponse(c.image,content_type='image/png')

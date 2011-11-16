@@ -27,7 +27,6 @@
 
     <div class="data-figure">
       <div class="figure">
-        {{ total_revenue|currency }}
       </div>
       <div class="label">
         Revenue
@@ -36,7 +35,6 @@
 
     <div class="data-figure">
       <div class="figure">
-        {{ total_impressions|withsep }}
       </div>
       <div class="label">
         Impressions
@@ -45,7 +43,6 @@
 
     <div class="data-figure">
       <div class="figure">
-        {{ total_clicks|withsep }}
       </div>
       <div class="label">
         Clicks
@@ -239,10 +236,8 @@
   <script>
     var mopub = mopub || {};
     $(function() {
-        mopub.isCampaignsPage = true;
         mopub.isNetworksPage = true;
         mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
-        //mopub.accountStats = {{account_stats|safe}};
     });
 </script>
 <script src="/js/mopub-advertiser.js?v=1"></script>

@@ -1375,42 +1375,13 @@ class NetworkIndexHandler(RequestHandler):
 
         # grab the network campaigns and their stats
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
-        network_stats = AdNetworkReportQueryManager(self.account).get_chart_stats_for_all_networks(days)
-
-        total_revenue = sum([day.revenue for network in network_stats for day in network['stats']])
-        total_clicks = sum([day.clicks for network in network_stats for day in network['stats']])
-        total_impressions = sum([day.impressions for network in network_stats for day in network['stats']])
         
-        """
-        stats_model = StatsModelQueryManager(self.account, offline=self.offline)
-        stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
-
-
-        key = "||"
-        stats_dict = {}
-        stats_dict[key] = {}
-        stats_dict[key]['name'] = "||"
-        stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
-        summed_stats = sum(stats, StatsModel())
-        stats_dict[key]['sum'] = summed_stats.to_dict()
-
-        response_dict = {}
-        response_dict['status'] = 200
-        response_dict['all_stats'] = stats_dict
-        """
-
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
                                   {
-                                      #'account_stats': simplejson.dumps(response_dict),
                                       'network_campaigns': network_campaigns,
-                                      'network_stats': network_stats,
                                       'start_date': days[0],
                                       'end_date':days[-1],
-                                      'date_range': self.date_range,
-                                      'total_revenue': total_revenue,
-                                      'total_clicks': total_clicks,
-                                      'total_impressions': total_impressions
                                   })
 
 @login_required

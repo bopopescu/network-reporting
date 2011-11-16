@@ -615,16 +615,11 @@ class ShowAdGroupHandler(RequestHandler):
 
     def get(self, adgroup_key):
         # Set start date if passed in, otherwise get most recent days
-        #if self.start_date and self.end_date:
-            #days = StatsModel.get_days(self.start_date, self.date_range)
-            #start_date = self.start_date
-            #end_date = self.end_date
-        #else:
-            #days = StatsModel.lastdays(self.date_range)
-            #start_date = days[0]
-            #end_date = days[-1]
-        days = StatsModel.lastdays(90)
-
+        if self.start_date:
+            days = StatsModel.get_days(self.start_date, self.date_range)
+        else:
+            days = StatsModel.lastdays(self.date_range)
+        
         # show a flash message recommending using reports if selecting more than 30 days
         if self.date_range > 30:
             self.request.flash['message'] = "For showing more than 30 days we recommend using the <a href='%s'>Reports</a> page." % reverse('reports_index')
@@ -688,7 +683,7 @@ class ShowAdGroupHandler(RequestHandler):
                 c.html_fragment = creative_handler.get(creative=c)
         else:
             creative_fragment = None
-
+        
         # In order to make the edit page
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
 

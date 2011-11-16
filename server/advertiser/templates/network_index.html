@@ -27,7 +27,6 @@
 
     <div class="data-figure">
       <div class="figure">
-        {{ total_revenue|currency }}
       </div>
       <div class="label">
         Revenue
@@ -36,7 +35,6 @@
 
     <div class="data-figure">
       <div class="figure">
-        {{ total_impressions|withsep }}
       </div>
       <div class="label">
         Impressions
@@ -45,7 +43,6 @@
 
     <div class="data-figure">
       <div class="figure">
-        {{ total_clicks|withsep }}
       </div>
       <div class="label">
         Clicks
@@ -221,7 +218,7 @@
           <span class="buttonWrap">
             <a class="button pause icon" id="campaignForm-pause">Pause</a>
             <a class="button play icon" id="campaignForm-resume">Resume</a>
-            <a class="button stop icon" id="campaignForm-archive">Delete</a>
+            <a class="button stop icon" id="campaignForm-delete">Delete</a>
           </span>
         </div>
       </div>
@@ -239,10 +236,8 @@
   <script>
     var mopub = mopub || {};
     $(function() {
-        mopub.isCampaignsPage = true;
         mopub.isNetworksPage = true;
         mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
-        mopub.accountStats = {{account_stats|safe}};
         mopub.Advertiser.initializeNetworkPage();
     });
 </script>

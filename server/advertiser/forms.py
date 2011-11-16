@@ -10,6 +10,7 @@ from common.constants import (  CITY_GEO,
                                 REGION_GEO,
                                 COUNTRY_GEO,
                                 )
+from common.utils import helpers
 
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
@@ -380,7 +381,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
 
         if instance:
             if instance.image_blob:
-                image_url = images.get_serving_url(instance.image_blob) #reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+                image_url = helpers.get_url_for_blob(instance.image_blob) #reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
             else:
                 image_url = ''
             if not initial:
@@ -454,7 +455,7 @@ class ImageCreativeForm(AbstractCreativeForm):
         if instance:
             if instance.image_blob:
                 try:
-                    image_url = images.get_serving_url(instance.image_blob)
+                    image_url = helpers.get_url_for_blob(instance.image_blob)
                 except:
                     image_url = None
             else:

@@ -251,7 +251,7 @@ def update_sfdc_leads(request, *args, **kwargs):
         except beatbox.SoapFaultError, errorInfo:
             mail.send_mail_to_admins(sender="olp@mopub.com",
                                      subject="SFDC upsert failed",
-                                     body="%s %s" % (results, errorInfo.faultCode, errorInfo.faultString))            
+                                     body="%s %s" % (results, errorInfo.faultString))            
             logging.error("Submit into SFDC failed for %d records" % BATCH_SIZE)
         accounts[:BATCH_SIZE] = []
 

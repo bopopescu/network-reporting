@@ -2,6 +2,8 @@
  * # Mopub Marketplace JS
  */
 var mopub = mopub || {};
+
+// depends underscore, backbone, jquery, mopub.chart, mopub.util
 (function($, Backbone) {
 
     /*
@@ -28,7 +30,10 @@ var mopub = mopub || {};
             return (this.get('revenue') / (this.get('impressions')+1)*1000);
         },
         calcFillRate: function () {
-
+            if (attempts === 0) {
+                return 0.0;
+            }
+            return (impressions/attempts)*100;
         },
         validate: function(attributes) {
             var valid_number = Number(attributes.price_floor);
@@ -436,7 +441,7 @@ var mopub = mopub || {};
                     return adunit.get("price_floor");
                 }).get("price_floor");
 
-                // Set the app's price floor to the range of the adunits
+                // Set the app's price floor cell to the range of the adunits
                 // Keep the "Edit Price Floor" button
                 var btn = $("<a href='#" + app_key +"'" +
                             " class='edit_price_floor' " +
@@ -474,7 +479,6 @@ var mopub = mopub || {};
             var adunit_classes = adunit.attr('class').split(' ');
 
             _.each(adunit_classes, function(adunit_class) {
-
                 if (adunit_class.search('for-app-') >= 0) {
                     app_id = adunit_class.replace('for-app-', '');
                 }

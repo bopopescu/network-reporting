@@ -483,7 +483,12 @@ if (typeof window.console == "undefined") {
             $(item).click(function(){
                 activate($(this), ul);
                 activate($(href), tab_sections);
+                window.location.hash = href;
             });
+
+            if (window.location.hash == href) {
+                $(item).click();
+            }
         });
     };
 
@@ -568,6 +573,18 @@ if (typeof window.console == "undefined") {
                 switcher.addClass('off');
             }
         });
+    };
+
+    $.fn.lightswitchOn = function () {
+        var light_switch = $(this);
+        var switcher = $('.switch', light_switch);
+        switcher.removeClass('off').addClass('on');
+    };
+
+    $.fn.lightswitchOff = function () {
+        var light_switch = $(this);
+        var switcher = $('.switch', light_switch);
+        switcher.removeClass('on').addClass('off');
     };
 
     mopub.Utils = mopub.Utils || {};

@@ -111,15 +111,8 @@ def gen_days(start, end, hours=False):
     Makes a list of date objects for each day in between start and end, inclusive.
     `start` and `end` are datetime.date objects.
     """
-    # dt = timedelta(days=1)
-    # temp = start
-    # days = [temp]
-    # while temp != end:
-    #     temp = temp + dt
-    #     days.append(temp)
-
     diff = (end - start).days + 1
-    days = [end - timedelta(days=i) for i in range(0, diff)]
+    days = [start + timedelta(days=i) for i in range(0, diff)]
     if hours:
         return reduce(lambda x,y: x+y, get_hours(days))
     else:

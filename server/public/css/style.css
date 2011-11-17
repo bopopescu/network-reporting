@@ -2329,7 +2329,7 @@ a.disabled {
 /*
  * Inline Labels
  */
-.label {
+.highlight {
   padding: 1px 3px 2px;
   font-weight: bold;
   color: white;
@@ -2339,13 +2339,13 @@ a.disabled {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   border-radius: 3px; }
-  .label.important {
+  .highlight.important {
     background-color: #c43c35; }
-  .label.warning {
+  .highlight.warning {
     background-color: #e63c3c; }
-  .label.success {
+  .highlight.success {
     background-color: #5d8c00; }
-  .label.notice {
+  .highlight.notice {
     background-color: #a6e1ff; }
 
 /*

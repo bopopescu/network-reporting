@@ -203,12 +203,22 @@
 
     <h2> Marketplace Settings </h2>
     <div class="well">
+
       <div class="clearfix" style="width: 380px;">
         <div class="lightswitch left" id="bottom_switch">
           <div class="switch {% if marketplace.active %}on{% else %}off{% endif %}"></div>
         </div>
-        <div class="right label">
+        <div class="right">
           Turn the Marketplace on or off for your account.
+        </div>
+      </div>
+      <br />
+      <div class="clearfix">
+        <div class="left" style="padding: 15px">
+          <input id="blindness" class="right" type="checkbox"/>
+        </div>
+        <div class="left" >
+          <p>Do not share detailed information with Marketplace bidders. <span class="warning label"> Caution </span> This may significantly reduce your marketplace revenue.</p>
         </div>
       </div>
     </div>

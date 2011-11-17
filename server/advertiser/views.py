@@ -1395,13 +1395,13 @@ def marketplace_settings_change(request, *args, **kwargs):
 # At some point in the future, these *could* be branched into their own django app
 class NetworkIndexHandler(RequestHandler):
     def get(self):
-
+        
         # form the date range
         if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
+            days = date_magic.gen_days(self.start_date, self.start_date + datetime.timedelta(self.date_range))
         else:
-            days = StatsModel.lastdays(self.date_range)
-
+            days = date_magic.gen_date_range(self.date_range)
+        
         # grab the network campaigns and their stats
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
 
@@ -1411,6 +1411,7 @@ class NetworkIndexHandler(RequestHandler):
                                       'network_campaigns': network_campaigns,
                                       'start_date': days[0],
                                       'end_date':days[-1],
+                                      'date_range':self.date_range,
                                   })
 
 @login_required

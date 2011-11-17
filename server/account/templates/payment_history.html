@@ -5,6 +5,7 @@
 {% endblock pageTitle %}
 {% block content %}
 
+<div class="content-main">
 {% if user.is_admin %}<a class="right button" href="#" id="add-scheduled-payment-button">Add period balance</a>{% endif %}
 <h2>Marketplace Balance</h2>
 <div>This is your unpaid balance from the MoPub Marketplace.  Payment will be sent 60 days after the end of the monthly payment period or according to your contract terms.  Payment is only sent for balances over $100.</div>
@@ -143,5 +144,5 @@
   </div>
 {% endif %}
 </section>
-
+</div>
 {% endblock content %}

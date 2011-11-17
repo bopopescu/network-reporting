@@ -200,6 +200,7 @@ class PaymentHistoryHandler(RequestHandler):
                 record.put()
 
         balance = 0
+        total_paid = 0
         start_date = datetime.date(2011, 9, 1)  # Earliest date that we pull stats for
         end_date = datetime.datetime.now(Pacific_tzinfo())
 

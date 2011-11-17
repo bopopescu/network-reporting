@@ -415,11 +415,10 @@ var mopub = mopub || {};
                 // being placed in?
                 $('table').trigger('update');
                 $("#" + app_key + "-img").hide();
-                console.log(marketplace_active);
                 if (!marketplace_active) {
                     $(".targeting-box").attr('disabled', true);
                 }
-                }
+            }
         });
     }
 

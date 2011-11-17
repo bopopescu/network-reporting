@@ -5,16 +5,12 @@
   <div class="breadcrumb">
     {% if not adgroup.archived %}
       {% if campaign.network %}
-        <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
+        <a class="linkIcon breadcrumb-back" href="{% url network_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
       {% else %}
         <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
       {% endif %}
     {% else %}
-      {% if campaign.network %}
-        <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Networks</a>
-      {% else %}
-        <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
-      {% endif %}
+      <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
     {% endif %}
 
     {% if campaign.network %}

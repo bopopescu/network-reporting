@@ -17,6 +17,7 @@ import logging
 from common.utils.request_handler import RequestHandler
 
 import urllib2
+import string
 from common.utils import simplejson
 import datetime
 from itertools import groupby
@@ -238,7 +239,9 @@ class PaymentHistoryHandler(RequestHandler):
             payment.account = self.account
             payment.period_start = period_start
             payment.period_end = period_end
-            payment.amount = float(self.request.POST.get("amount"))
+            # Convert dollars to float. eg. '$2,313.20' becomes '2313.20'
+            amount = ''.join([c for c in self.request.POST.get("amount") if c in string.digits+'.'])
+            payment.amount = float(amount)
             payment.status = self.request.POST.get("status")
             if self.request.POST.get("date_executed"):
                 payment.date_executed = datetime.datetime.strptime(self.request.POST.get("date_executed"),"%m/%d/%Y")

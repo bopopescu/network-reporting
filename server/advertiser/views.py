@@ -17,11 +17,12 @@ from common.utils import date_magic
 from common.utils import sswriter
 from common.utils.decorators import cache_page_until_post
 from common.utils.helpers import campaign_stats
+from common.utils import helpers
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
-from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 from common.utils.timezones import Pacific_tzinfo
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from account.query_managers import AccountQueryManager
@@ -287,7 +288,7 @@ class CreateCampaignAJAXHander(RequestHandler):
             initial.update(price_floor=self.account.network_config.price_floor)
         campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],\
+        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],\
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],['millennial_native', 'Millennial Media', False],["mobfox","MobFox",False],\
             ['custom','Custom Network', False], ['custom_native','Custom Native Network', False]]
 
@@ -537,7 +538,7 @@ class CreateAdGroupHandler(RequestHandler):
             adunit.checked = adunit.key() in adgroup.site_keys
 
         # TODO: Clean up this hacked shit
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
         for n in networks:
             if adgroup.network_type == n[0]:
                 n[2] = True
@@ -958,10 +959,10 @@ class DisplayCreativeHandler(RequestHandler):
         c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image":
 
-            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%images.get_serving_url(c.image_blob))
+            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%helpers.get_url_for_blob(c.image_blob))
             # return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "text_icon":
-            c.icon_url = images.get_serving_url(c.image_blob)
+            c.icon_url = helpers.get_url_for_blob(c.image_blob)
 
             return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
             #return HttpResponse(c.image,content_type='image/png')
@@ -1132,7 +1133,10 @@ class AJAXStatsHandler(RequestHandler):
                         # Overwrite the revenue from MPX if its marketplace
                         # TODO: overwrite clicks as well
                         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-                        mpx_stats = stats_fetcher.get_account_stats( start_date, end_date)
+                        try:
+                            mpx_stats = stats_fetcher.get_account_stats( start_date, end_date)
+                        except MPStatsAPIException, e:
+                            mpx_stats = {}
                         summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                         summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
 
@@ -1272,7 +1276,10 @@ class MarketplaceIndexHandler(RequestHandler):
             else:
                 start_date = end_date - datetime.timedelta(13)
 
-        mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
+        try:
+            mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
+        except MPStatsAPIException, e:
+            mpx_stats = {}
 
         # Get total stats for the rollup/table footer
         creative_totals = {

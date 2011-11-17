@@ -401,7 +401,6 @@ class CreateCampaignAJAXHander(RequestHandler):
                 #
 
                 budget_obj = BudgetQueryManager.update_or_create_budget_for_campaign(campaign)
-                logging.warning("%s" % budget_obj)
                 campaign.budget_obj = budget_obj
 
                 #budget_service.update_budget(campaign, save_campaign = False)
@@ -469,7 +468,6 @@ class CreateCampaignAJAXHander(RequestHandler):
                             if app_key_identifier[0] == str(app.key()):
                                 app_network_config_data[app_key_identifier[1]] = value
 
-                        # logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
                         app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
                         app_network_config = app_form.save(commit=False)
                         AppQueryManager.update_config_and_put(app, app_network_config)
@@ -638,7 +636,7 @@ class ShowAdGroupHandler(RequestHandler):
                                            adgroup.campaign.end_datetime)
             else:
                 days = date_magic.gen_days(adgroup.campaign.start_datetime,
-                                           adgroup.campaign.start_datetime + d1atetime.timedelta(90))
+                                           adgroup.campaign.start_datetime + datetime.timedelta(90))
 
         # We want to limit the number of stats we have to fetch.
         # We've determined 90 is a good max.
@@ -1143,7 +1141,6 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = adgroup.cpm
 
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
-                    logging.warning("Perecent Delivered: %s" % percent_delivered)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
 
@@ -1300,10 +1297,6 @@ class MarketplaceIndexHandler(RequestHandler):
             yesterday_stats = mpx_stats["daily"][-2];
         except:
             pass
-
-        logging.warn('asofnasildfnaklsdnfkasndfknasdkfnaskdnfkasdnfkasndfkansdkjfnjasdnfkasndkfjnasjkdfnkjsadnfkjas')
-        logging.warn(apps.values())
-
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",

@@ -486,6 +486,13 @@ span.dropdown-icon {
   text-align: center;
   margin-left: 35%; }
 
+#titlebar-center-wide {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  text-align: center;
+  margin-left: 25%; }
+
 #titlebar-right {
   position: absolute;
   top: 0;

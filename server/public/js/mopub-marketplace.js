@@ -349,306 +349,544 @@ var mopub = mopub || {};
     /*
      * ## Marketplace utility methods
      */
-    var Marketplace = {
+
 
         /*
          * Fetches and renders all apps from a list of app_keys.
          * Useful for bootstrapping table loads.
          */
-        fetchAllApps: function (app_keys) {
+    function fetchAllApps (app_keys) {
 
-            _.each(app_keys, function(app_key) {
-                var app = new App({id: app_key});
-                app.bind('change', function(current_app) {
-                    var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
-                    appView.render();
-                });
-                app.fetch({
-                    success: function(){
-                        $('table').trigger('update');
-                    }
-                });
+        _.each(app_keys, function(app_key) {
+            var app = new App({id: app_key});
+            app.bind('change', function(current_app) {
+                var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
+                appView.render();
             });
-
-        },
-
-        /*
-         * Fetches all app stats using a list of app keys and renders
-         * them into table rows that have already been created in the
-         * page. Useful for decreasing page load time along with `fetchAdunitStats`.
-         */
-        fetchAppStats: function (app_keys) {
-            _.each(app_keys, function(app_key) {
-                var app = new App({id: app_key});
-                app.bind('change', function(current_app) {
-                    var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
-                    appView.renderInline();
-                });
-                app.fetch();
-            });
-        },
-
-        /*
-         * Fetches AdUnit stats over ajax and renders them in already existing table rows.
-         * This method is useful for decreasing page load time. Uses a parent app's key
-         * to bootstrap the fetch.
-         */
-        fetchAdunitStats: function (app_key, marketplace_active) {
-            var adunits = new AdUnitCollection();
-            adunits.app_id = app_key;
-
-            // Once the adunits have been fetched from the server,
-            // render them as well as the app's price floor range
-            adunits.bind('reset', function(adunits_collection) {
-                // Create the views and render each adunit row
-                _.each(adunits_collection.models, function(adunit) {
-                    var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
-                    adunitView.renderInline();
-                });
-            });
-
-            adunits.fetch({
+            app.fetch({
                 success: function(){
-                    // Trigger any event handlers that have been attached to the table.
-                    // Shouldn't this only trigger for the table that the adunit stats are
-                    // being placed in?
                     $('table').trigger('update');
-                    $("#" + app_key + "-img").hide();
-                    console.log(marketplace_active);
-                    if (!marketplace_active) {
-                        $(".targeting-box").attr('disabled', true);
-                    }
                 }
             });
-        },
+        });
+    }
 
-        /*
-         * Fetches and renders all of the adunits from an app key.
-         * Useful for showing adunits when a user has clicked on a
-         * 'show adunits' link.
-         */
-        fetchAdunitsForApp: function (app_key) {
-            var adunits = new AdUnitCollection();
-            adunits.app_id = app_key;
 
-            // Once the adunits have been fetched from the server,
-            // render them as well as the app's price floor range
-            adunits.bind('reset', function(adunits_collection) {
 
-                // Get the max and min price floors from the adunits so
-                // we can use them for the app's price floor range
-                var high = _.max(adunits_collection.models, function(adunit){
-                    return adunit.get("price_floor");
-                }).get("price_floor");
+    /*
+     * Fetches all app stats using a list of app keys and renders
+     * them into table rows that have already been created in the
+     * page. Useful for decreasing page load time along with `fetchAdunitStats`.
+     */
+    function fetchAppStats (app_keys) {
+        _.each(app_keys, function(app_key) {
+            var app = new App({id: app_key});
+            app.bind('change', function(current_app) {
+                var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
+                appView.renderInline();
+            });
+            app.fetch();
+        });
+    }
 
-                var low = _.min(adunits_collection.models, function(adunit){
-                    return adunit.get("price_floor");
-                }).get("price_floor");
+    /*
+     * Fetches AdUnit stats over ajax and renders them in already existing table rows.
+     * This method is useful for decreasing page load time. Uses a parent app's key
+     * to bootstrap the fetch.
+     */
+    function fetchAdunitStats (app_key, marketplace_active) {
+        var adunits = new AdUnitCollection();
+        adunits.app_id = app_key;
 
-                // Set the app's price floor cell to the range of the adunits
-                // Keep the "Edit Price Floor" button
-                var btn = $("<a href='#" + app_key +"'" +
-                            " class='edit_price_floor' " +
-                            "id='" + app_key + "'> "
-                            + "Edit Price Floor</a>");
+        // Once the adunits have been fetched from the server,
+        // render them as well as the app's price floor range
+        adunits.bind('reset', function(adunits_collection) {
+            // Create the views and render each adunit row
+            _.each(adunits_collection.models, function(adunit) {
+                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
+                adunitView.renderInline();
+            });
+        });
 
-                if (high == low) {
-                    $(".app-row#app-" + app_key + " .price_floor").html("All $" + high);
+        adunits.fetch({
+            success: function(){
+                // Trigger any event handlers that have been attached to the table.
+                // Shouldn't this only trigger for the table that the adunit stats are
+                // being placed in?
+                $('table').trigger('update');
+                $("#" + app_key + "-img").hide();
+                console.log(marketplace_active);
+                if (!marketplace_active) {
+                    $(".targeting-box").attr('disabled', true);
+                }
+                }
+        });
+    }
+
+    /*
+     * Fetches and renders all of the adunits from an app key.
+     * Useful for showing adunits when a user has clicked on a
+     * 'show adunits' link.
+     */
+    function fetchAdunitsForApp (app_key) {
+        var adunits = new AdUnitCollection();
+        adunits.app_id = app_key;
+
+        // Once the adunits have been fetched from the server,
+        // render them as well as the app's price floor range
+        adunits.bind('reset', function(adunits_collection) {
+
+            // Get the max and min price floors from the adunits so
+            // we can use them for the app's price floor range
+            var high = _.max(adunits_collection.models, function(adunit){
+                 return adunit.get("price_floor");
+            }).get("price_floor");
+
+            var low = _.min(adunits_collection.models, function(adunit){
+                return adunit.get("price_floor");
+            }).get("price_floor");
+
+            // Set the app's price floor cell to the range of the adunits
+             // Keep the "Edit Price Floor" button
+            var btn = $("<a href='#" + app_key +"'" +
+                        " class='edit_price_floor' " +
+                        "id='" + app_key + "'> "
+                        + "Edit Price Floor</a>");
+
+            if (high == low) {
+                $(".app-row#app-" + app_key + " .price_floor").html("All $" + high);
+            } else {
+                $(".app-row#app-" + app_key + " .price_floor").html("$" + low + " - " + "$" + high);
+            }
+
+            // Disable the 'view' link in the app row under the targeting column
+            $(".app-row#app-" + app_key + " .view_targeting").addClass("hidden");
+
+            // Create the views and render each adunit row
+            _.each(adunits_collection.models, function(adunit) {
+                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
+                adunitView.render();
+            });
+        });
+
+         adunits.fetch();
+    }
+
+    /*
+     * If an adunit row has for-app-[app_id] as a class,
+     * strip the app_id and return it. Used for sorting
+     * adunit rows underneath their apps.
+     */
+    function getAppId (adunit) {
+
+        adunit = $(adunit);
+        var app_id = '';
+        var adunit_classes = adunit.attr('class').split(' ');
+
+        _.each(adunit_classes, function(adunit_class) {
+            if (adunit_class.search('for-app-') >= 0) {
+                app_id = adunit_class.replace('for-app-', '');
+            }
+        });
+
+        return app_id;
+    }
+
+    /*
+     * Helper method for bootstrapping the creative performance table.
+     * Call this method by passing in a list of DSP Keys (see common/constants)
+     * and this will load collections of creatives for each dsp.
+     */
+    function fetchAllCreatives (dsp_keys) {
+        _.each(dsp_keys, function(dsp_key) {
+
+            // Make creative collections for each dsp
+            var creative_collection = new CreativeCollection();
+            creative_collection.dsp_key = dsp_key;
+
+            // Render all of the creatives on fetch
+            creative_collection.bind('reset', function(creatives) {
+                _.each(creatives.models, function (creative) {
+                    var creative_view = new CreativeView({model: creative, el: "table#creatives"});
+                    creative_view.render();
+                });
+            });
+
+            // Fetch the creatives and sort the table (might need to take out the success function)
+            creative_collection.fetch({
+                success: function(){
+                    $('table#creatives').trigger('update');
+                }
+            });
+        });
+
+    }
+
+    /*
+     * Sends the AJAX request to turn ON the marketplace.
+     * This shouldn't just return true, it should return true
+     * only when no errors are returned from the server. Fix this.
+     */
+    function turnOn () {
+        $.ajax({
+            type: 'post',
+            url: '/campaigns/marketplace/activation/',
+            data: {
+                activate: 'on'
+            }
+        });
+        $(".targeting-box").removeAttr('disabled');
+        return true;
+    }
+
+    /*
+     * Sends the AJAX request to turn OFF the marketplace.
+     * This shouldn't just return true, it should return true
+     * only when no errors are returned from the server. Fix this.
+     */
+    function turnOff () {
+        $.ajax({
+            type: 'post',
+            url: '/campaigns/marketplace/activation/',
+            data: {
+                activate: 'off'
+            }
+        });
+        $(".targeting-box").attr('disabled', true);
+        return true;
+    }
+
+    /*
+     * Makes the Creatives Performance tab's datatable
+     */
+    function makeCreativePerformanceTable (pub_id, blocklist, start_date, end_date) {
+        var table = $("#report-table").dataTable({
+            bProcessing: true,
+            // Use jQueryUI to style the table
+            bJQueryUI: true,
+            // Add page numbers to the table instead of just prev/next buttons
+            sPaginationType: "full_numbers",
+            // Message that appears when the table is empty
+            oLanguage: {
+                sEmptyTable: "No creatives have been displayed for this time range."
+            },
+            // Column Width
+            aoColumns:[
+                {sWidth: "330px"}, // Creative iFrame
+                {sWidth: "190px"}, // Advertiser
+                {sWidth: "120px"}, // Revenue
+                {sWidth: "90px"},  // eCPM
+                {sWidth: "90px"}   // Impressions
+                //{"sWidth": "80px"}, // Clicks
+                //{"sWidth": "80px"}, // CTR
+            ],
+            // Don't resize table columns, we'll do it manually
+            bAutoWidth:false,
+            // Sort by revenue descending from the start
+            aaSorting: [[2,'desc']],
+            // Endpoint to fetch table data
+            sAjaxSource: "http://mpx.mopub.com/stats/creatives",
+            // Tell datatables how to fetch and parse server data
+            fnServerData: function( sUrl, aoData, fnCallback ) {
+                $.ajax({
+                    url: sUrl,
+                    data: {
+                        pub_id: pub_id,
+                        start: start_date,
+                        end: end_date,
+                        format:'jsonp'
+                    },
+                    // When the data returns from the endpoint, format it the way
+                    // datatables wants. When sort functions are called on the table,
+                    // the type of each data will be considered in sorting, so make sure
+                    // to type cast if necessary.
+                    success: function(data, textStatus, jqXHR) {
+
+                        var creative_data = _.map(data, function(creative, key) {
+                            var ecpm = (creative['stats']['pub_rev'] / (creative['stats']['imp']+1))*1000;
+                            return [
+                                creative["creative"]["url"],
+                                creative["creative"]["ad_dmn"],
+                                creative["stats"]["pub_rev"],
+                                creative["stats"]["imp"],
+                                ecpm
+                            ];
+                        });
+
+                        var response = {
+                            aaData: creative_data
+                        };
+                        fnCallback(response, textStatus, jqXHR);
+                    },
+                    dataType: "jsonp",
+                    cache: false
+                } );
+            },
+            // Callback function that takes table data and renders it
+            // as a table row. Called on each row's data right before
+            // it's rendered in the table (i.e. when a user clicks
+            // 'next'/'prev', or changes the number of displayed rows)
+            fnRowCallback: function(nRow, aData, iDisplayIndex) {
+
+                $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" +
+                                         aData[0] +
+                                         "'></iframe>");
+
+                var domain = aData[1];
+                if (_.contains(blocklist, domain)) {
+                    $("td:eq(1)", nRow).text(domain + " (Blocked)");
+                } else if (domain != null) {
+                    $("td:eq(1)", nRow).html(domain);
                 } else {
-                    $(".app-row#app-" + app_key + " .price_floor").html("$" + low + " - " + "$" + high);
+                    $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
                 }
+                $("td:eq(2)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[2]));
+                $("td:eq(3)", nRow).addClass("numeric").text(mopub.Utils.formatNumberWithCommas(aData[3]));
+                $("td:eq(4)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[4]));
+                return nRow;
+            }
+        });
 
-                // Disable the 'view' link in the app row under the targeting column
-                $(".app-row#app-" + app_key + " .view_targeting").addClass("hidden");
+        return table;
+    }
 
-                // Create the views and render each adunit row
-                _.each(adunits_collection.models, function(adunit) {
-                    var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
-                    adunitView.render();
-                });
+
+    var MarketplaceController = {
+        initializeIndex: function (bootstrapping_data) {
+
+            fetchAppStats(bootstrapping_data.app_keys);
+            _.each(bootstrapping_data.app_keys, function(app_key) {
+                fetchAdunitStats(app_key, bootstrapping_data.marketplace_active);
             });
 
-            adunits.fetch();
-        },
+            var table = makeCreativePerformanceTable(bootstrapping_data.pub_key,
+                                                     bootstrapping_data.blocklist,
+                                                     bootstrapping_data.start_date,
+                                                     bootstrapping_data.end_date);
 
-        /*
-         * If an adunit row has for-app-[app_id] as a class,
-         * strip the app_id and return it. Used for sorting
-         * adunit rows underneath their apps.
-         */
-        getAppId: function(adunit) {
-
-            adunit = $(adunit);
-            var app_id = '';
-            var adunit_classes = adunit.attr('class').split(' ');
-
-            _.each(adunit_classes, function(adunit_class) {
-                if (adunit_class.search('for-app-') >= 0) {
-                    app_id = adunit_class.replace('for-app-', '');
-                }
+            $("#blindness").click(function () {
+                alert('clicked');
             });
 
-            return app_id;
-        },
+            /*
+             * Table sorting doesn't work the way we'd like when adunits have been
+             * displayed. We'd like them to sort underneath their apps. Without
+             * this formatter function, they sort independently.
+             */
+            $.tablesorter.addWidget({
+                id: 'adunitSorting',
+                format: function(table) {
+                    var app_id_cache = {};
 
-        /*
-         * Helper method for bootstrapping the creative performance table.
-         * Call this method by passing in a list of DSP Keys (see common/constants)
-         * and this will load collections of creatives for each dsp.
-         */
-        fetchAllCreatives: function(dsp_keys) {
-            _.each(dsp_keys, function(dsp_key) {
-
-                // Make creative collections for each dsp
-                var creative_collection = new CreativeCollection();
-                creative_collection.dsp_key = dsp_key;
-
-                // Render all of the creatives on fetch
-                creative_collection.bind('reset', function(creatives) {
-                    _.each(creatives.models, function (creative) {
-                        var creative_view = new CreativeView({model: creative, el: "table#creatives"});
-                        creative_view.render();
+                    $('.adunit-row', table).each(function(iter, item) {
+                        // find the app row for the adunit
+                        var app_id = Marketplace.getAppId(item);
+                        var app;
+                        if (app_id_cache.hasOwnProperty(app_id)) {
+                            app = app_id_cache(app_id);
+                        } else {
+                            app = $('.app-row#app-' + app_id);
+                        }
+                        // remove the adunit from it's current location
+                        $(item).remove();
+                        // and place it after the app row
+                        app.after(item);
                     });
-                });
+                }
+            });
 
-                // Fetch the creatives and sort the table (might need to take out the success function)
-                creative_collection.fetch({
-                    success: function(){
-                        $('table#creatives').trigger('update');
+            /*
+             * Set up the marketplace table. By default we're going to sort by app name.
+             * Icons (header 0), price floors (header 6) and targeting (header 7) columns
+             * can't be sorted because that just doesn't make sense fool.
+             */
+            $('#marketplace_stats').tablesorter({
+                widgets: ['adunitSorting'],
+                sortList: [[1, 0]],
+                headers: { 0: { sorter: false}, 6: {sorter: false}, 7: {sorter: false} }
+            });
+
+            /*
+             * Functionality for blocking advertisers from the creatives performance table
+             */
+            $('a.block').click(function (event) {
+                event.preventDefault();
+                var block_link = $(this);
+                var domain = $(this).attr('id');
+                $.ajax({
+                    type: 'post',
+                    url: '/campaigns/marketplace/addblocklist',
+                    data: {
+                        blocklist: domain
+                    },
+                    success: function (a,b) {
+                        block_link.text("Blocked").unbind("click").click(function(){
+                            return false;
+                        });
                     }
                 });
             });
 
-        },
+            /*
+             * Make the lightswitches turn the Marketplace on and off.
+             * They're all bound to the same selector so that any time someone
+             * clicks the Marketplace On/Off switch, all of them get turned off.
+             */
+            $(".lightswitch").lightswitch(turnOn, turnOff);
 
-        /*
-         * Sends the AJAX request to turn ON the marketplace.
-         * This shouldn't just return true, it should return true
-         * only when no errors are returned from the server. Fix this.
-         */
-        turnOn: function() {
-            $.ajax({
-                type: 'post',
-                url: '/campaigns/marketplace/activation/',
-                data: {
-                    activate: 'on'
-                }
-            });
-            $(".targeting-box").removeAttr('disabled');
-            return true;
-        },
+            /*
+             * Toasts for the top and bottom lightswitches. Toasts are little flash messages
+             * that let the user know something has happened. These should be rolled up
+             * into their own library and put in mopub.js. For now they're here because
+             * this is the only place they're used.
+             */
+            $("#top_switch").click(function() {
 
-        /*
-         * Sends the AJAX request to turn OFF the marketplace.
-         * This shouldn't just return true, it should return true
-         * only when no errors are returned from the server. Fix this.
-         */
-        turnOff: function() {
-            $.ajax({
-                type: 'post',
-                url: '/campaigns/marketplace/activation/',
-                data: {
-                    activate: 'off'
-                }
-            });
-            $(".targeting-box").attr('disabled', true);
-            return true;
-        },
-
-        /*
-         * Makes the Creatives Performance tab's datatable
-         */
-        makeCreativePerformanceTable: function (pub_id, blocklist, start_date, end_date) {
-            var table = $("#report-table").dataTable({
-                bProcessing: true,
-                // Use jQueryUI to style the table
-                bJQueryUI: true,
-                // Add page numbers to the table instead of just prev/next buttons
-                sPaginationType: "full_numbers",
-                // Message that appears when the table is empty
-                oLanguage: {
-                    sEmptyTable: "No creatives have been displayed for this time range."
-                },
-                // Column Width
-                aoColumns:[
-                    {sWidth: "330px"}, // Creative iFrame
-                    {sWidth: "190px"}, // Advertiser
-                    {sWidth: "120px"}, // Revenue
-                    {sWidth: "90px"},  // eCPM
-                    {sWidth: "90px"}   // Impressions
-                    //{"sWidth": "80px"}, // Clicks
-                    //{"sWidth": "80px"}, // CTR
-                ],
-                // Don't resize table columns, we'll do it manually
-                bAutoWidth:false,
-                // Sort by revenue descending from the start
-                aaSorting: [[2,'desc']],
-                // Endpoint to fetch table data
-                sAjaxSource: "http://mpx.mopub.com/stats/creatives",
-                // Tell datatables how to fetch and parse server data
-                fnServerData: function( sUrl, aoData, fnCallback ) {
-                    $.ajax({
-                        url: sUrl,
-                        data: {
-                            pub_id: pub_id,
-                            start: start_date,
-                            end: end_date,
-                            format:'jsonp'
-                        },
-                        // When the data returns from the endpoint, format it the way
-                        // datatables wants. When sort functions are called on the table,
-                        // the type of each data will be considered in sorting, so make sure
-                        // to type cast if necessary.
-                        success: function(data, textStatus, jqXHR) {
-
-                            var creative_data = _.map(data, function(creative, key) {
-                                var ecpm = (creative['stats']['pub_rev'] / (creative['stats']['imp']+1))*1000;
-                                return [
-                                    creative["creative"]["url"],
-                                    creative["creative"]["ad_dmn"],
-                                    creative["stats"]["pub_rev"],
-                                    creative["stats"]["imp"],
-                                    ecpm
-                                ];
-                            });
-
-                            var response = {
-                                aaData: creative_data
-                            };
-                            fnCallback(response, textStatus, jqXHR);
-                        },
-                        dataType: "jsonp",
-                        cache: false
-                    } );
-                },
-                // Callback function that takes table data and renders it
-                // as a table row. Called on each row's data right before
-                // it's rendered in the table (i.e. when a user clicks
-                // 'next'/'prev', or changes the number of displayed rows)
-                fnRowCallback: function(nRow, aData, iDisplayIndex) {
-
-                    $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" +
-                                             aData[0] +
-                                             "'></iframe>");
-
-                    var domain = aData[1];
-                    if (_.contains(blocklist, domain)) {
-                        $("td:eq(1)", nRow).text(domain + " (Blocked)");
-                     } else if (domain != null) {
-                         $("td:eq(1)", nRow).html(domain);
-                    } else {
-                        $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
-                    }
-                    $("td:eq(2)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[2]));
-                    $("td:eq(3)", nRow).addClass("numeric").text(mopub.Utils.formatNumberWithCommas(aData[3]));
-                    $("td:eq(4)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[4]));
-                    return nRow;
+                if ( $("#top_switch .switch").hasClass('on') ) {
+                    $("#first_time_toast").fadeIn();
+                    setTimeout(function() {
+                        $("#first_time_toast").fadeOut();
+                    }, 3000);
                 }
             });
 
-            return table;
+            $("#bottom_switch").click(function() {
+                if ( $("#bottom_switch .switch").hasClass('off') ) {
+                    $("#settings_toast").fadeIn();
+                    setTimeout(function() {
+                        $("#settings_toast").fadeOut();
+                    }, 3000);
+                }
+            });
+
+            /*
+             * REFACTOR: Blocklist should submit over ajax
+             */
+            $('#blocklist-submit').click(function(e) {
+                e.preventDefault();
+                $("#addblocklist").submit();
+            });
+
+
+
+
+
+
+
+
+
+
+
+            /*
+             * F THIS.
+             * REFACTOR.
+             *
+             * Everything here and below needs to not exist in this file, because
+             * it already exists in two other files. Obvo refactor.
+             */
+            function getCurrentChartSeriesType() {
+                var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
+                if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ecpm') return 'line';
+                else return 'area';
+            }
+
+            $('.stats-breakdown tr').click(function(e) {
+                $('#dashboard-stats-chart').fadeOut(100, function() {
+                    mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+                    $(this).show();
+                });
+            });
+
+            var dailyStats = mopub.accountStats["daily"];
+            mopub.dashboardStatsChartData = {
+                pointStart: mopub.graphStartDate,
+                pointInterval: 86400000,
+                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue_float")}],
+                impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
+                ecpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ecpm_float")}]
+            };
+            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+
+            // set up dateOptions
+            $('#dashboard-dateOptions input').click(function() {
+                var option = $(this).val();
+                var hash = document.location.hash;
+                if(option == 'custom') {
+                    $('#dashboard-dateOptions-custom-modal').dialog({
+                        width: 570,
+                        buttons: [
+                            {
+                                text: 'Set dates',
+                                css: { fontWeight: '600' },
+                                click: function() {
+                                    var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
+                                    var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                                    var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+
+                                    var from_day=from_date.getDate();
+                                    var from_month=from_date.getMonth()+1;
+                                    var from_year=from_date.getFullYear();
+
+                                    $(this).dialog("close");
+                                    var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
+                                    document.location.href = location +
+                                        '?r=' + num_days +
+                                        '&s=' + from_year + "-" + from_month + "-" + from_day +
+                                        hash;
+                                }
+                            },
+                            {
+                                text: 'Cancel',
+                                click: function() {
+                                    $(this).dialog("close");
+                                }
+                            }
+                        ]
+                        });
+                } else {
+                    // Tell server about selected option to get new data
+                    var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
+                    document.location.href = location+'?r=' + option + hash;
+                }
+            });
+
+            // set up stats breakdown dateOptions
+            $('#stats-breakdown-dateOptions input').click(function() {
+                $('.stats-breakdown-value').hide();
+                $('.stats-breakdown-value.'+$(this).val()).show();
+            });
+
+            // set up custom dateOptions modal dialog
+            $('#dashboard-dateOptions-custom-from').datepicker({
+                defaultDate: '-15d',
+                maxDate: '0d',
+                onSelect: function(selectedDate) {
+                    var other = $('#dashboard-dateOptions-custom-to');
+                    var instance = $(this).data("datepicker");
+                    var date = $.datepicker
+                        .parseDate(instance.settings.dateFormat ||
+                                   $.datepicker._defaults.dateFormat,
+                                   selectedDate,
+                                   instance.settings);
+                    other.datepicker('option', 'minDate', date);
+                }
+            });
+            $('#dashboard-dateOptions-custom-to').datepicker({
+                defaultDate: '-1d',
+                maxDate: '0d',
+                onSelect: function(selectedDate) {
+                    var other = $('#dashboard-dateOptions-custom-from');
+                    var instance = $(this).data("datepicker");
+                    var date = $.datepicker
+                        .parseDate(instance.settings.dateFormat ||
+                                   $.datepicker._defaults.dateFormat,
+                                   selectedDate,
+                                   instance.settings);
+                    other.datepicker('option', 'maxDate', date);
+                }
+            });
+
         }
-
     };
 
     /*
@@ -660,231 +898,6 @@ var mopub = mopub || {};
     window.AppCollection = AppCollection;
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
-    window.Marketplace = Marketplace;
-
-    /*
-     * Boomslam
-     */
-    $(document).ready(function(){
-
-        /*
-         * Table sorting doesn't work the way we'd like when adunits have been
-         * displayed. We'd like them to sort underneath their apps. Without
-         * this formatter function, they sort independently.
-         */
-        $.tablesorter.addWidget({
-            id: 'adunitSorting',
-            format: function(table) {
-                var app_id_cache = {};
-
-                $('.adunit-row', table).each(function(iter, item) {
-                    // find the app row for the adunit
-                    var app_id = Marketplace.getAppId(item);
-                    var app;
-                    if (app_id_cache.hasOwnProperty(app_id)) {
-                        app = app_id_cache(app_id);
-                    } else {
-                        app = $('.app-row#app-' + app_id);
-                    }
-                    // remove the adunit from it's current location
-                    $(item).remove();
-                    // and place it after the app row
-                    app.after(item);
-                });
-            }
-        });
-
-        /*
-         * Set up the marketplace table. By default we're going to sort by app name.
-         * Icons (header 0), price floors (header 6) and targeting (header 7) columns
-         * can't be sorted because that just doesn't make sense fool.
-         */
-        $('#marketplace_stats').tablesorter({
-            widgets: ['adunitSorting'],
-            sortList: [[1, 0]],
-            headers: { 0: { sorter: false}, 6: {sorter: false}, 7: {sorter: false} }
-        });
-
-        /*
-         * Functionality for blocking advertisers from the creatives performance table
-         */
-        $('a.block').click(function (event) {
-            event.preventDefault();
-            var block_link = $(this);
-            var domain = $(this).attr('id');
-            $.ajax({
-                type: 'post',
-                url: '/campaigns/marketplace/addblocklist',
-                data: {
-                    blocklist: domain
-                },
-                success: function (a,b) {
-                    block_link.text("Blocked").unbind("click").click(function(){
-                        return false;
-                    });
-                }
-            });
-        });
-
-        /*
-         * Make the lightswitches turn the Marketplace on and off.
-         * They're all bound to the same selector so that any time someone
-         * clicks the Marketplace On/Off switch, all of them get turned off.
-         */
-        $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
-
-        /*
-         * Toasts for the top and bottom lightswitches. Toasts are little flash messages
-         * that let the user know something has happened. These should be rolled up
-         * into their own library and put in mopub.js. For now they're here because
-         * this is the only place they're used.
-         */
-        $("#top_switch").click(function() {
-
-            if ( $("#top_switch .switch").hasClass('on') ) {
-                $("#first_time_toast").fadeIn();
-                setTimeout(function() {
-                    $("#first_time_toast").fadeOut();
-                }, 3000);
-            }
-        });
-
-        $("#bottom_switch").click(function() {
-            if ( $("#bottom_switch .switch").hasClass('off') ) {
-                $("#settings_toast").fadeIn();
-                setTimeout(function() {
-                    $("#settings_toast").fadeOut();
-                }, 3000);
-            }
-        });
-
-        /*
-         * REFACTOR: Blocklist should submit over ajax
-         */
-        $('#blocklist-submit').click(function(e) {
-            e.preventDefault();
-            $("#addblocklist").submit();
-        });
-
-
-
-
-
-
-
-
-
-
-
-        /*
-         * F THIS.
-         * REFACTOR.
-         *
-         * Everything here and below needs to not exist in this file, because
-         * it already exists in two other files. Obvo refactor.
-         */
-        function getCurrentChartSeriesType() {
-            var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
-            if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ecpm') return 'line';
-            else return 'area';
-        }
-
-        $('.stats-breakdown tr').click(function(e) {
-            $('#dashboard-stats-chart').fadeOut(100, function() {
-                mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-                $(this).show();
-            });
-        });
-
-        var dailyStats = mopub.accountStats["daily"];
-        mopub.dashboardStatsChartData = {
-            pointStart: mopub.graphStartDate,
-            pointInterval: 86400000,
-            revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue_float")}],
-            impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
-            ecpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ecpm_float")}]
-        };
-        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-
-        // set up dateOptions
-        $('#dashboard-dateOptions input').click(function() {
-            var option = $(this).val();
-            var hash = document.location.hash;
-            if(option == 'custom') {
-                $('#dashboard-dateOptions-custom-modal').dialog({
-                    width: 570,
-                    buttons: [
-                        {
-                            text: 'Set dates',
-                            css: { fontWeight: '600' },
-                            click: function() {
-                                var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
-                                var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
-                                var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
-
-                                var from_day=from_date.getDate();
-                                var from_month=from_date.getMonth()+1;
-                                var from_year=from_date.getFullYear();
-
-                                $(this).dialog("close");
-                                var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
-                                document.location.href = location +
-                                    '?r=' + num_days +
-                                    '&s=' + from_year + "-" + from_month + "-" + from_day +
-                                    hash;
-                            }
-                        },
-                        {
-                            text: 'Cancel',
-                            click: function() {
-                                $(this).dialog("close");
-                            }
-                        }
-                    ]
-                });
-            } else {
-                // Tell server about selected option to get new data
-                var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
-                document.location.href = location+'?r=' + option + hash;
-            }
-        });
-
-        // set up stats breakdown dateOptions
-        $('#stats-breakdown-dateOptions input').click(function() {
-            $('.stats-breakdown-value').hide();
-            $('.stats-breakdown-value.'+$(this).val()).show();
-        });
-
-        // set up custom dateOptions modal dialog
-        $('#dashboard-dateOptions-custom-from').datepicker({
-            defaultDate: '-15d',
-            maxDate: '0d',
-            onSelect: function(selectedDate) {
-                var other = $('#dashboard-dateOptions-custom-to');
-                var instance = $(this).data("datepicker");
-                var date = $.datepicker
-                    .parseDate(instance.settings.dateFormat ||
-                               $.datepicker._defaults.dateFormat,
-                               selectedDate,
-                               instance.settings);
-                other.datepicker('option', 'minDate', date);
-            }
-        });
-        $('#dashboard-dateOptions-custom-to').datepicker({
-            defaultDate: '-1d',
-            maxDate: '0d',
-            onSelect: function(selectedDate) {
-                var other = $('#dashboard-dateOptions-custom-from');
-                var instance = $(this).data("datepicker");
-                var date = $.datepicker
-                    .parseDate(instance.settings.dateFormat ||
-                               $.datepicker._defaults.dateFormat,
-                               selectedDate,
-                               instance.settings);
-                other.datepicker('option', 'maxDate', date);
-            }
-        });
-    });
-
+    window.MarketplaceController = MarketplaceController;
 
 })(this.jQuery, this.Backbone);

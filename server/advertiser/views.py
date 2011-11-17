@@ -1382,16 +1382,28 @@ def marketplace_on_off(request, *args, **kwargs):
     return MarketplaceOnOffHandler()(request, *args, **kwargs)
 
 
-class MarketplaceSettingsChangeHandler(RequestHandler):
+class MarketplaceBlindnessChangeHandler(RequestHandler):
     def post(self):
         try:
+            marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
+            activate = self.request.POST.get('activate', None)
+            if activate == 'true':
+                marketplace_campaign.blind = True
+                marketplace_campaign.put()
+                return JSONResponse({'success': 'activated'})
+            elif activate == 'false':
+                marketplace_campaign.blind = False
+                marketplace_campaign.put()
+                return JSONResponse({'success': 'deactivated'})
+            else:
+                return JSONResponse({'error': 'Invalid activation value'})
             return JSONResponse({'success': str(self.request.POST)})
         except Exception, e:
-            return JSONResponse({'success': e})
+            return JSONResponse({'error': e})
 
 @login_required
-def marketplace_settings_change(request, *args, **kwargs):
-    return MarketplaceSettingsChangeHandler()(request, *args, **kwargs)
+def marketplace_blindness_change(request, *args, **kwargs):
+    return MarketplaceBlindnessChangeHandler()(request, *args, **kwargs)
 
 
 

@@ -663,8 +663,17 @@ var mopub = mopub || {};
                                                      bootstrapping_data.start_date,
                                                      bootstrapping_data.end_date);
 
+            /*
+             * Settings stuff
+             */
             $("#blindness").click(function () {
-                alert('clicked');
+                var blindness_xhr = $.post("/campaigns/marketplace/settings/blindness/",{
+                    activate: $(this).is(":checked")
+                });
+
+                blindness_xhr.done(function(data){
+                    console.log(data);
+                });
             });
 
             /*

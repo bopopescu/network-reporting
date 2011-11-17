@@ -46,7 +46,7 @@ class AdNetworkSettingsHandler(RequestHandler):
         apps_for_account = AppQueryManager.get_apps(account=self.account)
         user = self.account.mpuser
 
-        networks = ['admob_status','adsense_status','brightroll_status','chartboost_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
+        networks = ['admob_status','adsense_status','brightroll_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
         network_config_status = {}
 
         def _get_net_status(account,network):

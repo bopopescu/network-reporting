@@ -185,6 +185,11 @@ class AppQueryManager(QueryManager):
         app.network_config = network_config
         cls.put(app)
 
+    @classmethod
+    def get_apps_with_network_configs(cls, account):
+        return App.all().filter('account =', account).filter(
+                'network_config !=', None)
+
 class AdUnitQueryManager(QueryManager):
     Model = AdUnit
 
@@ -309,5 +314,4 @@ class AdUnitQueryManager(QueryManager):
         db.put(network_config)
         adunit.network_config = network_config
         cls.put(adunit)
-
 

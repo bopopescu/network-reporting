@@ -15,6 +15,9 @@ urlpatterns = patterns(
     url(r'^campaign/$', 'campaign_service', name='campaign_service'),
     url(r'^campaign/(?P<campaign_key>[-\w\.]+)$', 'campaign_service', name='campaign_service'),
 
+    url(r'^network_campaign/$', 'network_campaign_service', name='network_campaign_service'),
+    url(r'^campaign/network/(?P<network_campaign_key>[-\w\.]+)$', 'network_campaign_service', name='network_campaign_service'),
+
     url(r'^creatives/$', 'creative_service', name='creative_service'),
     url(r'^creatives/(?P<creative_key>[-\w\.]+)$', 'creative_service', name='creative_service'),
 

@@ -1,0 +1,198 @@
+﻿{% extends "base.html" %}
+{% load filters %}
+{% block navLinks %}
+  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li><a href="{% url marketplace_index %}">Marketplace</a></li>
+  <li class="active"><a href="{% url network_index %}">Networks</a></li>
+{% endblock navLinks %}
+{% block pageTitle %}<h1>Ad Network Reports</h1>{% endblock pageTitle %}
+{% block messageCenter %}{% endblock messageCenter %}
+{% block titleBarRight %}{% endblock titleBarRight %}
+
+{% block extraScripts %}
+  <script type="text/javascript">
+    var mopub = mopub || {};
+
+    $(function() {
+        // Use breakdown to switch charts
+        $('.stats-breakdown tr').click(function(e) {
+          $('#dashboard-stats-chart').fadeOut(100, function() {
+            mopub.Chart.setupDashboardStatsChart('line');
+            $(this).show();
+          });
+        });
+
+        mopub.graphStartDate = Date.UTC({{start_date.year}},
+            {{start_date.month|add:"-1"}},
+            {{start_date.day}});
+
+        // Populate the graph with revenue, impressions and clicks stats
+        function populateGraphWithStats(dailyStats) {
+            mopub.dashboardStatsChartData = {
+                pointStart: mopub.graphStartDate,
+                pointInterval: 86400000,
+                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
+                impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
+                clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "clicks")}],
+            };
+
+            mopub.Chart.setupDashboardStatsChart('area');
+        }
+
+        populateGraphWithStats({{daily_stats|safe}});
+
+
+        // TODO: put in shared js file with dashboard. Note: latest date allowed in range is yesterday.
+        // set up dateOptions
+        $('#dashboard-dateOptions input').click(function() {
+          var option = $(this).val();
+          if(option == 'custom') {
+            $('#dashboard-dateOptions-custom-modal').dialog({
+              width: 570,
+              buttons: [
+                {
+                  text: 'Set dates',
+                  css: { fontWeight: '600' },
+                  click: function() {
+                    var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
+                    var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                    var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+
+                    var from_day=from_date.getDate();
+                    var from_month=from_date.getMonth()+1;
+                    var from_year=from_date.getFullYear();
+
+                    $(this).dialog("close");
+                    var location = document.location.href.replace(/\?.*/,'');
+                    document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day;
+                  }
+                },
+                {
+                  text: 'Cancel',
+                  click: function() {
+                    $(this).dialog("close");
+                  }
+                }
+              ]
+            });
+          }
+          else {
+            // Tell server about selected option to get new data
+            var location = document.location.href.replace(/\?.*/,'');
+            document.location.href = location+'?r=' + option;
+          }
+        });
+
+        // set up stats breakdown dateOptions
+        $('#stats-breakdown-dateOptions input').click(function() {
+          $('.stats-breakdown-value').hide();
+          $('.stats-breakdown-value.'+$(this).val()).show();
+        });
+
+        // set up custom dateOptions modal dialog
+        $('#dashboard-dateOptions-custom-from').datepicker({
+          defaultDate: '-15d',
+          maxDate: '-1d',
+          onSelect: function(selectedDate) {
+            var other = $('#dashboard-dateOptions-custom-to');
+            var instance = $(this).data("datepicker");
+            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+            other.datepicker('option', 'minDate', date);
+          }
+        });
+        $('#dashboard-dateOptions-custom-to').datepicker({
+          defaultDate: '-1d',
+          maxDate: '-1d',
+          onSelect: function(selectedDate) {
+            var other = $('#dashboard-dateOptions-custom-from');
+            var instance = $(this).data("datepicker");
+            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+            other.datepicker('option', 'maxDate', date);
+          }
+        });
+
+    });
+  </script>
+{% endblock extraScripts %}
+
+{% block dateButtons %}
+  {% include "partials/datecontrols.html" %}
+{% endblock dateButtons %}
+
+{% block content %}
+
+  {% block adNetworkTitle %}
+    <h2>{{app_name}} on {{ad_network_name}}</h2>
+  {% endblock adNetworkTitle %}
+
+  {% block graph %}
+
+    <section class="offset nomargin" id="dashboard-stats">
+          <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <div class="stats clearfix">
+        <div class="stats-breakdown">
+          <table class="sortable">
+            <tbody>
+              <tr class="active" id="stats-breakdown-revenue">
+                <td class="stats-breakdown-value today"><span class="inner">{{ aggregates.revenue|currency }}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+              </tr>
+              <tr id="stats-breakdown-impressions">
+                <td class="stats-breakdown-value today"><span class="inner">{{aggregates.impressions|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+              </tr>
+              <tr id="stats-breakdown-clicks">
+                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+      </div>
+    </section>
+  {% endblock graph %}
+
+  {% block innerContent %}
+  {% block tableTitle %}
+    <div style="padding-top:250px; text-align:center;">
+      <h3 class="dataTable-title">Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+    </div>
+  {% endblock tableTitle %}
+
+      <table class="zebra-striped simpletable campaignData-main sortable">
+        <thead>
+          {% block tableHead %}
+            <th class="dataTable-name"> Date </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Revenue </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Attempts </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Impressions </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Fill Rate</th>
+            <th style="text-align:center;" class="dataTable-data numeric"> Clicks </th>
+            <th style="text-align:center;" class="dataTable-data numeric"> CTR </th>
+          {% endblock tableHead %}
+        </thead>
+        <tbody>
+          {% block tableData %}
+            {% for stats in stats_list %}
+              <tr>
+                <td class="dataTable-name">{{stats.date|format_date_compact}}</td>
+                <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
+                <td class="dataTable-data numeric">{{stats.attempts|withsep }}</td>
+                <td class="dataTable-data numeric">{{stats.impressions|withsep }}</td>
+                <td class="dataTable-data numeric">{{stats.fill_rate|percentage }}</td>
+                <td class="dataTable-data numeric">{{stats.clicks|withsep }}</td>
+                <td class="dataTable-data numeric">{{stats.ctr|percentage }}</td>
+              </tr>
+            {% endfor %}
+          {% endblock tableData %}
+        </tbody>
+      </table>
+
+    {% endblock innerContent %}
+
+    {% block appendedContent %}
+    {% endblock appendedContent %}
+
+{% endblock content %}

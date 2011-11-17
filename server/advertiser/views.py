@@ -49,6 +49,8 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
+from ad_network_reports.query_managers import AdNetworkReportQueryManager
+
 from common.constants import MPX_DSP_IDS
 
 from django.views.decorators.cache import cache_page
@@ -59,10 +61,12 @@ class AdGroupIndexHandler(RequestHandler):
 
     def get(self):
         # Set start date if passed in, otherwise get most recent days
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range)
+        # if self.start_date:
+        #     days = StatsModel.get_days(self.start_date, self.date_range)
+        # else:
+        #     days = StatsModel.lastdays(self.date_range)
+
+        days = StatsModel.lastdays(90)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
@@ -81,6 +85,7 @@ class AdGroupIndexHandler(RequestHandler):
 
         # Roll up and attach various stats to adgroups
         for adgroup in adgroups:
+            adgroup.budget = adgroup.campaign.budget_obj
             try:
                 adgroup.campaign = campaigns_dict[adgroup._campaign]
             except KeyError:
@@ -141,7 +146,7 @@ class AdGroupIndexHandler(RequestHandler):
 
 
         return render_to_response(self.request,
-                                 'advertiser/adgroups.html',
+                                 'advertiser/adgroup_index.html',
                                   {'adgroups':adgroups,
                                    # 'graph_adgroups': graph_adgroups,
                                    # 'graph_gtee_adgroups': graph_gtee_adgroups,
@@ -153,9 +158,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    'apps' : apps,
                                    'guarantee_levels': guarantee_levels,
                                    'guarantee_num': len(guaranteed_campaigns),
-                                   'marketplace': marketplace_campaigns,
                                    'promo': promo_campaigns,
-                                   'network': network_campaigns,
                                    'backfill_promo': backfill_promo_campaigns,
                                    'account': self.account,
                                    'helptext':help_text,
@@ -184,10 +187,11 @@ def _sort_guarantee_levels(guaranteed_campaigns):
             level['display'] = False
     return gtee_levels
 
-
 def _sort_campaigns(adgroups):
+
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+
 
     guaranteed_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
     guaranteed_campaigns = sorted(guaranteed_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -398,7 +402,6 @@ class CreateCampaignAJAXHander(RequestHandler):
                 #
 
                 budget_obj = BudgetQueryManager.update_or_create_budget_for_campaign(campaign)
-                logging.warning("%s" % budget_obj)
                 campaign.budget_obj = budget_obj
 
                 #budget_service.update_budget(campaign, save_campaign = False)
@@ -466,7 +469,6 @@ class CreateCampaignAJAXHander(RequestHandler):
                             if app_key_identifier[0] == str(app.key()):
                                 app_network_config_data[app_key_identifier[1]] = value
 
-                        # logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
                         app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
                         app_network_config = app_form.save(commit=False)
                         AppQueryManager.update_config_and_put(app, app_network_config)
@@ -615,20 +617,48 @@ class ShowAdGroupHandler(RequestHandler):
         return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}))
 
     def get(self, adgroup_key):
-        # Set start date if passed in, otherwise get most recent days
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range)
+        # Load the ad group
+        adgroup = AdGroupQueryManager.get(adgroup_key)
 
-        # show a flash message recommending using reports if selecting more than 30 days
+        # Network campaigns have their date range set by the date picker
+        # in the page
+        if adgroup.campaign.network():
+            if self.start_date and self.end_date:
+                days = date_magic.gen_days(self.end_date, self.start_date)
+            else:
+                days = date_magic.gen_date_range(self.date_range)
+
+        # Direct sold campaigns have a start date, and sometimes an end date.
+        # Use those values if they both exist, otherwise set the range from
+        # start to start + 90 days
+        else:
+            if adgroup.campaign.end_datetime:
+                days = date_magic.gen_days(adgroup.campaign.start_datetime,
+                                           adgroup.campaign.end_datetime)
+            else:
+                days = date_magic.gen_days(adgroup.campaign.start_datetime,
+                                           adgroup.campaign.start_datetime + datetime.timedelta(90))
+
+        # We want to limit the number of stats we have to fetch.
+        # We've determined 90 is a good max.
+        if len(days) > 90:
+            days = days[len(days) - 90:]
+
+        # We want to display at least 7 days of data
+        if len(days) < 7:
+            better_end_date = days[-1] + datetime.timedelta(7 - len(days))
+            days = date_magic.gen_days(days[0], better_end_date)
+
+        start_date = days[0]
+        end_date = days[-1]
+
+        # Show a flash message recommending using reports if selecting more than 30 days
         if self.date_range > 30:
             self.request.flash['message'] = "For showing more than 30 days we recommend using the <a href='%s'>Reports</a> page." % reverse('reports_index')
         else:
             del self.request.flash['message']
 
-        # Load the ad group itself
-        adgroup = AdGroupQueryManager.get(adgroup_key)
+        # Load stats
         adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
@@ -639,11 +669,12 @@ class ShowAdGroupHandler(RequestHandler):
         for c in creatives:
             c.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=c, days=days)
             c.stats = reduce(lambda x, y: x+y, c.all_stats, StatsModel())
+            # TODO: Should fix DB so that format is always there
             if not c.format:
-                c.format = "320x50" # TODO: Should fix DB so that format is always there
+                c.format = "320x50"
             c.size = c.format.partition('x')
 
-        # Load all adunits that this thing is targeting right now
+        # Load all adunits targeted by this adgroup/camaign
         adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
         apps = {}
         for au in adunits:
@@ -656,8 +687,6 @@ class ShowAdGroupHandler(RequestHandler):
                                                            advertiser=adgroup,
                                                            days=days)
                 app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
-                # if app.icon:
-                #     app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
                 apps[au.app_key.key()] = app
             else:
                 app.adunits += [au]
@@ -665,10 +694,10 @@ class ShowAdGroupHandler(RequestHandler):
             au.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=au,advertiser=adgroup, days=days)
             au.stats = reduce(lambda x, y: x+y, au.all_stats, StatsModel())
 
+
         # Figure out the top 4 ad units for the graph
         adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
         graph_adunits = adunits[0:4]
-
         if len(adunits) > 4:
               graph_adunits[3] = Site(name='Others')
               graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
@@ -684,7 +713,7 @@ class ShowAdGroupHandler(RequestHandler):
                 c.html_fragment = creative_handler.get(creative=c)
         else:
             creative_fragment = None
-
+        # REFACTOR
         # In order to make the edit page
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
 
@@ -1116,7 +1145,6 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = adgroup.cpm
 
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
-                    logging.warning("Perecent Delivered: %s" % percent_delivered)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
 
@@ -1188,10 +1216,9 @@ def campaign_export(request, *args, **kwargs):
     return CampaignExporter()(request, *args, **kwargs)
 
 
+
 # Marketplace Views
 # At some point in the future, these should be branched into their own django app
-
-
 class MPXInfoHandler(RequestHandler):
     def get(self):
         return render_to_response(self.request,
@@ -1214,11 +1241,12 @@ class MarketplaceIndexHandler(RequestHandler):
         # Only one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
 
-        # We list the app traits in the table, and then load their stats over ajax using Backbone.
-        # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
+        # Get all of the adunit keys for bootstrapping the apps
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
+        # We list the app traits in the table, and then load their stats over ajax using Backbone.
+        # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
         apps = {}
         for au in adunits:
             app = apps.get(au.app_key.key())
@@ -1232,10 +1260,8 @@ class MarketplaceIndexHandler(RequestHandler):
 
         # Set up a MarketplaceStatsFetcher with this account
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-        #stats_fetcher = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
 
         # Form the date range
-        # TODO: This should be rewritten so the JS passes a start/end date OR the number of days
         if self.start_date:
             year, month, day = str(self.start_date).split('-')
             start_date = datetime.date(int(year), int(month), int(day))
@@ -1264,21 +1290,13 @@ class MarketplaceIndexHandler(RequestHandler):
             'pub_rev': 0
         }
 
-        # for dsp in dsps:
-        #     creative_totals['imp'] += dsp['stats']['imp']
-        #     creative_totals['clk'] += dsp['stats']['clk']
-        #     creative_totals['ctr'] += dsp['stats']['ctr']
-        #     creative_totals['ecpm'] += dsp['stats']['ecpm']
-        #     creative_totals['pub_rev'] += dsp['stats']['pub_rev']
-
         # Set up the blocklist
         blocklist = []
         network_config = self.account.network_config
         if network_config:
             blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
 
-        dsp_keys =  simplejson.dumps([str(dsp_key) for dsp_key in MPX_DSP_IDS])
-
+        # Get today and yesterday's stats for the graph
         today_stats = []
         yesterday_stats = []
         try:
@@ -1291,10 +1309,9 @@ class MarketplaceIndexHandler(RequestHandler):
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
-                                      'apps': apps.values(),
+                                      'apps': sorted(apps.values(), lambda x, y: cmp(x.name, y.name)),
                                       'app_keys': app_keys,
                                       'adunit_keys': adunit_keys,
-                                      'dsp_keys':dsp_keys,
                                       'pub_key': self.account.key(),
                                       'mpx_stats': simplejson.dumps(mpx_stats),
                                       'totals': mpx_stats,
@@ -1377,3 +1394,30 @@ def marketplace_settings_change(request, *args, **kwargs):
     return MarketplaceSettingsChangeHandler()(request, *args, **kwargs)
 
 
+
+# Network Views
+# At some point in the future, these *could* be branched into their own django app
+class NetworkIndexHandler(RequestHandler):
+    def get(self):
+
+        # form the date range
+        if self.start_date:
+            days = date_magic.gen_days(self.start_date, self.start_date + datetime.timedelta(self.date_range))
+        else:
+            days = date_magic.gen_date_range(self.date_range)
+
+        # grab the network campaigns and their stats
+        network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
+
+        return render_to_response(self.request,
+                                  "advertiser/network_index.html",
+                                  {
+                                      'network_campaigns': network_campaigns,
+                                      'start_date': days[0],
+                                      'end_date':days[-1],
+                                      'date_range':self.date_range,
+                                  })
+
+@login_required
+def network_index(request, *args, **kwargs):
+    return NetworkIndexHandler()(request, *args, **kwargs)

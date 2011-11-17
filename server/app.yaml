@@ -1,5 +1,4 @@
 application: mopub-inc
-#application: mopub-experimental
 version: 38
 
 runtime: python
@@ -7,6 +6,7 @@ api_version: 1
 default_expiration: "10d"
 
 builtins:
+- remote_api: on
 - datastore_admin: on
 
 # Turn this on to debug

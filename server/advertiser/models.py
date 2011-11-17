@@ -122,6 +122,9 @@ class Campaign(db.Model):
         return self.campaign_type in ['promo', 'backfill_promo']
 
     def network(self):
+        logging.warn('dansfibasngkbdafjkgbdsfjkgbjksdfbgjksdfbgjkbsdfjkgbsdfkjgbsdfjkhgbsdfkjgbsdfkjgbsdjkfhbgsdjkfgbsdjhbg')
+        logging.warn(self.campaign_type)
+        logging.warn('dansfibasngkbdafjkgbdsfjkgbjksdfbgjksdfbgjkbsdfjkgbsdfkjgbsdfjkhgbsdfkjgbsdfkjgbsdjkfhbgsdjkfgbsdjhbg')
         return self.campaign_type in ['network']
 
     def marketplace(self):
@@ -186,7 +189,7 @@ class AdGroup(db.Model):
 
     account = db.ReferenceProperty(Account)
     t = db.DateTimeProperty(auto_now_add=True)
-    
+
     # marketplace price floor
     mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
 

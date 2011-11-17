@@ -2,8 +2,8 @@
 {% load filters %}
 {% load super_if %}
 
-{% block dateButtons %}
-{% endblock dateButtons %}
+{% block dateButtons %}{% endblock dateButtons %}
+
 {% block pageTitle %}
 <div class="breadcrumb">
   <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
@@ -20,9 +20,7 @@
 <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
 
   {% if not archived_adgroups %}
-    <h2 id="no-archived-campaigns">
-    There are currently no archived campaigns.
-    </h2>
+    <h2 id="no-archived-campaigns">There are currently no archived campaigns.</h2>
 
   {% else %}
 

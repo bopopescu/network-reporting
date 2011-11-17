@@ -70,7 +70,6 @@ class AccountQueryManager(CachedQueryManager):
     def _user_key(cls,user):
         return user.key()
 
-
     # only to be used for migrations that are manual
     @classmethod
     def migrate(cls,user_email,account_user_email=None,new_account=None):
@@ -112,6 +111,11 @@ class AccountQueryManager(CachedQueryManager):
         # delete old account as long as the accounts aren't the same
         # if not new_account.key() == old_account.key():
         #     old_account.delete()
+
+    @classmethod
+    def get_account_by_key(cls, key):
+        return Account.get(key)
+
 class UserQueryManager(QueryManager):
     @classmethod
     def get_by_email(cls,email):

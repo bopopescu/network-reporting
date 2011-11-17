@@ -2,6 +2,8 @@
  * # Mopub Marketplace JS
  */
 var mopub = mopub || {};
+
+// depends underscore, backbone, jquery, mopub.chart, mopub.util
 (function($, Backbone) {
 
     /*
@@ -20,6 +22,18 @@ var mopub = mopub || {};
             name: '',
             price_floor: 0,
             revenue: 0
+        },
+        calcCtr: function () {
+            return (this.get('clicks') / (this.get('impressions')+1));
+        },
+        calcEcpm: function () {
+            return (this.get('revenue') / (this.get('impressions')+1)*1000);
+        },
+        calcFillRate: function () {
+            if (attempts === 0) {
+                return 0.0;
+            }
+            return (impressions/attempts)*100;
         },
         validate: function(attributes) {
             var valid_number = Number(attributes.price_floor);
@@ -188,8 +202,9 @@ var mopub = mopub || {};
         }
     });
 
-
     /*
+     * ## showAdUnits/hideAdUnits
+     *
      * Utility methods for AppView that control the showing/hiding
      * of adunits underneath an app row.
      */
@@ -234,12 +249,15 @@ var mopub = mopub || {};
             $(".revenue", adunit_row).text(this.model.get("revenue"));
             $(".ecpm", adunit_row).text(this.model.get("ecpm"));
             $(".impressions", adunit_row).text(this.model.get("impressions"));
-            $(".price_floor", adunit_row).html('<input id="' +
-                                               this.model.id +
-                                               '" type="text" class="input-text input-text-number number" style="width:50px;margin: -3px 0;" value="' +
-                                               this.model.get("price_floor") +
-                                               '"> USD <img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>');
-            $(".targeting", adunit_row).html('<input class="targeting-box" type="checkbox"> <img class="loading-img hidden" ' +
+            $(".price_floor", adunit_row).html('<input id="' + this.model.id +'" '
+                                               + 'type="text" '
+                                               + 'class="input-text input-text-number number" '
+                                               + 'style="width:50px;" '
+                                               + 'value="' + this.model.get("price_floor") + '"> '
+                                               + '<img class="loading-img hidden" '
+                                               + 'src="/images/icons-custom/spinner-12.gif"></img>');
+            $(".targeting", adunit_row).html('<input class="targeting-box" type="checkbox"> '
+                                             + '<img class="loading-img hidden" ' +
                                              ' src="/images/icons-custom/spinner-12.gif"></img>');
             if (this.model.get("active")) {
                 $("input.targeting-box", adunit_row).attr('checked', 'checked');
@@ -276,9 +294,11 @@ var mopub = mopub || {};
             return this;
         },
 
-        // Render the adunit model in the template. This assumes that the table
-        // row for the app has already been rendered. This will render underneath it's
-        // app's row.
+        /*
+         * Render the adunit model in the template. This assumes that the table
+         * row for the app has already been rendered. This will render underneath
+         * it's app's row.
+         */
         render: function () {
             // render the adunit and attach it to the table after it's adunit's row
             var current_model = this.model;
@@ -353,8 +373,9 @@ var mopub = mopub || {};
         },
 
         /*
-         * Fetches all app stats using a list of app keys and renders them into table rows that have already
-         * been created in the page. Useful for decreasing page load time along with `fetchAdunitStats`.
+         * Fetches all app stats using a list of app keys and renders
+         * them into table rows that have already been created in the
+         * page. Useful for decreasing page load time along with `fetchAdunitStats`.
          */
         fetchAppStats: function (app_keys) {
             _.each(app_keys, function(app_key) {
@@ -372,29 +393,33 @@ var mopub = mopub || {};
          * This method is useful for decreasing page load time. Uses a parent app's key
          * to bootstrap the fetch.
          */
-        fetchAdunitStats: function (app_key) {
-          var adunits = new AdUnitCollection();
-          adunits.app_id = app_key;
+        fetchAdunitStats: function (app_key, marketplace_active) {
+            var adunits = new AdUnitCollection();
+            adunits.app_id = app_key;
 
-          // Once the adunits have been fetched from the server,
-          // render them as well as the app's price floor range
-          adunits.bind('reset', function(adunits_collection) {
-            // Create the views and render each adunit row
-            _.each(adunits_collection.models, function(adunit) {
-                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
-                adunitView.renderInline();
+            // Once the adunits have been fetched from the server,
+            // render them as well as the app's price floor range
+            adunits.bind('reset', function(adunits_collection) {
+                // Create the views and render each adunit row
+                _.each(adunits_collection.models, function(adunit) {
+                    var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
+                    adunitView.renderInline();
+                });
             });
-          });
 
-          adunits.fetch({
-              success: function(){
-                  // Trigger any event handlers that have been attached to the table.
-                  // Shouldn't this only trigger for the table that the adunit stats are
-                  // being placed in?
-                  $('table').trigger('update');
-                  $("#" + app_key + "-img").hide();
-              }
-          });
+            adunits.fetch({
+                success: function(){
+                    // Trigger any event handlers that have been attached to the table.
+                    // Shouldn't this only trigger for the table that the adunit stats are
+                    // being placed in?
+                    $('table').trigger('update');
+                    $("#" + app_key + "-img").hide();
+                    console.log(marketplace_active);
+                    if (!marketplace_active) {
+                        $(".targeting-box").attr('disabled', true);
+                    }
+                }
+            });
         },
 
         /*
@@ -420,9 +445,13 @@ var mopub = mopub || {};
                     return adunit.get("price_floor");
                 }).get("price_floor");
 
-                // Set the app's price floor to the range of the adunits
+                // Set the app's price floor cell to the range of the adunits
                 // Keep the "Edit Price Floor" button
-                var btn = $("<a href='#" + app_key + "' class='edit_price_floor' id='" + app_key +"'> Edit Price Floor</a>");
+                var btn = $("<a href='#" + app_key +"'" +
+                            " class='edit_price_floor' " +
+                            "id='" + app_key + "'> "
+                            + "Edit Price Floor</a>");
+
                 if (high == low) {
                     $(".app-row#app-" + app_key + " .price_floor").html("All $" + high);
                 } else {
@@ -454,7 +483,6 @@ var mopub = mopub || {};
             var adunit_classes = adunit.attr('class').split(' ');
 
             _.each(adunit_classes, function(adunit_class) {
-
                 if (adunit_class.search('for-app-') >= 0) {
                     app_id = adunit_class.replace('for-app-', '');
                 }
@@ -504,8 +532,9 @@ var mopub = mopub || {};
                 url: '/campaigns/marketplace/activation/',
                 data: {
                     activate: 'on'
-                },
+                }
             });
+            $(".targeting-box").removeAttr('disabled');
             return true;
         },
 
@@ -522,6 +551,7 @@ var mopub = mopub || {};
                     activate: 'off'
                 }
             });
+            $(".targeting-box").attr('disabled', true);
             return true;
         },
 
@@ -554,8 +584,8 @@ var mopub = mopub || {};
                 // Sort by revenue descending from the start
                 aaSorting: [[2,'desc']],
                 // Endpoint to fetch table data
-                //sAjaxSource: "http://mpx.mopub.com/stats/creatives",
                 sAjaxSource: "http://mpx.mopub.com/stats/creatives",
+                // Tell datatables how to fetch and parse server data
                 fnServerData: function( sUrl, aoData, fnCallback ) {
                     $.ajax({
                         url: sUrl,
@@ -565,7 +595,10 @@ var mopub = mopub || {};
                             end: end_date,
                             format:'jsonp'
                         },
-                        //success: fnCallback,
+                        // When the data returns from the endpoint, format it the way
+                        // datatables wants. When sort functions are called on the table,
+                        // the type of each data will be considered in sorting, so make sure
+                        // to type cast if necessary.
                         success: function(data, textStatus, jqXHR) {
 
                             var creative_data = _.map(data, function(creative, key) {
@@ -588,9 +621,15 @@ var mopub = mopub || {};
                         cache: false
                     } );
                 },
+                // Callback function that takes table data and renders it
+                // as a table row. Called on each row's data right before
+                // it's rendered in the table (i.e. when a user clicks
+                // 'next'/'prev', or changes the number of displayed rows)
                 fnRowCallback: function(nRow, aData, iDisplayIndex) {
 
-                    $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" + aData[0] + "'></iframe>");
+                    $("td:eq(0)", nRow).html("<iframe width='320px' height='50px' src='" +
+                                             aData[0] +
+                                             "'></iframe>");
 
                     var domain = aData[1];
                     if (_.contains(blocklist, domain)) {
@@ -655,6 +694,11 @@ var mopub = mopub || {};
             }
         });
 
+        /*
+         * Set up the marketplace table. By default we're going to sort by app name.
+         * Icons (header 0), price floors (header 6) and targeting (header 7) columns
+         * can't be sorted because that just doesn't make sense fool.
+         */
         $('#marketplace_stats').tablesorter({
             widgets: ['adunitSorting'],
             sortList: [[1, 0]],
@@ -682,8 +726,19 @@ var mopub = mopub || {};
             });
         });
 
+        /*
+         * Make the lightswitches turn the Marketplace on and off.
+         * They're all bound to the same selector so that any time someone
+         * clicks the Marketplace On/Off switch, all of them get turned off.
+         */
         $(".lightswitch").lightswitch(Marketplace.turnOn, Marketplace.turnOff);
 
+        /*
+         * Toasts for the top and bottom lightswitches. Toasts are little flash messages
+         * that let the user know something has happened. These should be rolled up
+         * into their own library and put in mopub.js. For now they're here because
+         * this is the only place they're used.
+         */
         $("#top_switch").click(function() {
 
             if ( $("#top_switch .switch").hasClass('on') ) {
@@ -695,7 +750,6 @@ var mopub = mopub || {};
         });
 
         $("#bottom_switch").click(function() {
-
             if ( $("#bottom_switch .switch").hasClass('off') ) {
                 $("#settings_toast").fadeIn();
                 setTimeout(function() {
@@ -704,28 +758,42 @@ var mopub = mopub || {};
             }
         });
 
-
+        /*
+         * REFACTOR: Blocklist should submit over ajax
+         */
         $('#blocklist-submit').click(function(e) {
             e.preventDefault();
             $("#addblocklist").submit();
         });
 
-        /*---------------------------------------/
-        / Marketplace Graph
-        /---------------------------------------*/
 
+
+
+
+
+
+
+
+
+
+        /*
+         * F THIS.
+         * REFACTOR.
+         *
+         * Everything here and below needs to not exist in this file, because
+         * it already exists in two other files. Obvo refactor.
+         */
         function getCurrentChartSeriesType() {
             var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
             if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ecpm') return 'line';
             else return 'area';
         }
 
-        // Use breakdown to switch charts
         $('.stats-breakdown tr').click(function(e) {
-          $('#dashboard-stats-chart').fadeOut(100, function() {
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-            $(this).show();
-          });
+            $('#dashboard-stats-chart').fadeOut(100, function() {
+                mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+                $(this).show();
+            });
         });
 
         var dailyStats = mopub.accountStats["daily"];
@@ -738,77 +806,83 @@ var mopub = mopub || {};
         };
         mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
 
-        /*---------------------------------------/
-        / UI
-        /---------------------------------------*/
-
         // set up dateOptions
         $('#dashboard-dateOptions input').click(function() {
-          var option = $(this).val();
-          var hash = document.location.hash;
-          if(option == 'custom') {
-            $('#dashboard-dateOptions-custom-modal').dialog({
-              width: 570,
-              buttons: [
-                {
-                  text: 'Set dates',
-                  css: { fontWeight: '600' },
-                  click: function() {
-                    var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
-                    var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
-                    var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+            var option = $(this).val();
+            var hash = document.location.hash;
+            if(option == 'custom') {
+                $('#dashboard-dateOptions-custom-modal').dialog({
+                    width: 570,
+                    buttons: [
+                        {
+                            text: 'Set dates',
+                            css: { fontWeight: '600' },
+                            click: function() {
+                                var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
+                                var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                                var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
 
-                    var from_day=from_date.getDate();
-                    var from_month=from_date.getMonth()+1;
-                    var from_year=from_date.getFullYear();
+                                var from_day=from_date.getDate();
+                                var from_month=from_date.getMonth()+1;
+                                var from_year=from_date.getFullYear();
 
-                    $(this).dialog("close");
-                    var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
-                    document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day + hash;
-                  }
-                },
-                {
-                  text: 'Cancel',
-                  click: function() {
-                    $(this).dialog("close");
-                  }
-                }
-              ]
-            });
-          }
-          else {
-            // Tell server about selected option to get new data
-            var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
-            document.location.href = location+'?r=' + option + hash;
-          }
+                                $(this).dialog("close");
+                                var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
+                                document.location.href = location +
+                                    '?r=' + num_days +
+                                    '&s=' + from_year + "-" + from_month + "-" + from_day +
+                                    hash;
+                            }
+                        },
+                        {
+                            text: 'Cancel',
+                            click: function() {
+                                $(this).dialog("close");
+                            }
+                        }
+                    ]
+                });
+            } else {
+                // Tell server about selected option to get new data
+                var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
+                document.location.href = location+'?r=' + option + hash;
+            }
         });
 
         // set up stats breakdown dateOptions
         $('#stats-breakdown-dateOptions input').click(function() {
-          $('.stats-breakdown-value').hide();
-          $('.stats-breakdown-value.'+$(this).val()).show();
+            $('.stats-breakdown-value').hide();
+            $('.stats-breakdown-value.'+$(this).val()).show();
         });
 
         // set up custom dateOptions modal dialog
         $('#dashboard-dateOptions-custom-from').datepicker({
-          defaultDate: '-15d',
-          maxDate: '0d',
-          onSelect: function(selectedDate) {
-            var other = $('#dashboard-dateOptions-custom-to');
-            var instance = $(this).data("datepicker");
-            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
-            other.datepicker('option', 'minDate', date);
-          }
+            defaultDate: '-15d',
+            maxDate: '0d',
+            onSelect: function(selectedDate) {
+                var other = $('#dashboard-dateOptions-custom-to');
+                var instance = $(this).data("datepicker");
+                var date = $.datepicker
+                    .parseDate(instance.settings.dateFormat ||
+                               $.datepicker._defaults.dateFormat,
+                               selectedDate,
+                               instance.settings);
+                other.datepicker('option', 'minDate', date);
+            }
         });
         $('#dashboard-dateOptions-custom-to').datepicker({
-          defaultDate: '-1d',
-          maxDate: '0d',
-          onSelect: function(selectedDate) {
-            var other = $('#dashboard-dateOptions-custom-from');
-            var instance = $(this).data("datepicker");
-            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
-            other.datepicker('option', 'maxDate', date);
-          }
+            defaultDate: '-1d',
+            maxDate: '0d',
+            onSelect: function(selectedDate) {
+                var other = $('#dashboard-dateOptions-custom-from');
+                var instance = $(this).data("datepicker");
+                var date = $.datepicker
+                    .parseDate(instance.settings.dateFormat ||
+                               $.datepicker._defaults.dateFormat,
+                               selectedDate,
+                               instance.settings);
+                other.datepicker('option', 'maxDate', date);
+            }
         });
     });
 

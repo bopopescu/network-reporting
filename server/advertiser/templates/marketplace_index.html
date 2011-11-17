@@ -301,15 +301,20 @@
       var blocklist = {{ blocklist|safe }};
       var pub_key = "{{ pub_key }}";
 
+      {% if marketplace.active %}
+      var marketplace_active = true;
+      {% else %}
+      var marketplace_active = false;
+      {% endif %}
+
       Marketplace.fetchAppStats(app_keys);
       _.each(app_keys, function(app_key) {
-           Marketplace.fetchAdunitStats(app_key);
+           Marketplace.fetchAdunitStats(app_key, marketplace_active);
       });
 
       var start_date = "{{start_date|date:"m-d-Y"}}";
       var end_date = "{{end_date|date:"m-d-Y"}}";
       var table = Marketplace.makeCreativePerformanceTable(pub_key, blocklist, start_date, end_date);
-
     });
   </script>
   <script type="text/javascript" src="/js/mopub-marketplace.js?v=105"></script>

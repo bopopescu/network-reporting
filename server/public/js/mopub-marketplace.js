@@ -393,29 +393,33 @@ var mopub = mopub || {};
          * This method is useful for decreasing page load time. Uses a parent app's key
          * to bootstrap the fetch.
          */
-        fetchAdunitStats: function (app_key) {
-          var adunits = new AdUnitCollection();
-          adunits.app_id = app_key;
+        fetchAdunitStats: function (app_key, marketplace_active) {
+            var adunits = new AdUnitCollection();
+            adunits.app_id = app_key;
 
-          // Once the adunits have been fetched from the server,
-          // render them as well as the app's price floor range
-          adunits.bind('reset', function(adunits_collection) {
-            // Create the views and render each adunit row
-            _.each(adunits_collection.models, function(adunit) {
-                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
-                adunitView.renderInline();
+            // Once the adunits have been fetched from the server,
+            // render them as well as the app's price floor range
+            adunits.bind('reset', function(adunits_collection) {
+                // Create the views and render each adunit row
+                _.each(adunits_collection.models, function(adunit) {
+                    var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
+                    adunitView.renderInline();
+                });
             });
-          });
 
-          adunits.fetch({
-              success: function(){
-                  // Trigger any event handlers that have been attached to the table.
-                  // Shouldn't this only trigger for the table that the adunit stats are
-                  // being placed in?
-                  $('table').trigger('update');
-                  $("#" + app_key + "-img").hide();
-              }
-          });
+            adunits.fetch({
+                success: function(){
+                    // Trigger any event handlers that have been attached to the table.
+                    // Shouldn't this only trigger for the table that the adunit stats are
+                    // being placed in?
+                    $('table').trigger('update');
+                    $("#" + app_key + "-img").hide();
+                    console.log(marketplace_active);
+                    if (!marketplace_active) {
+                        $(".targeting-box").attr('disabled', true);
+                    }
+                }
+            });
         },
 
         /*
@@ -530,6 +534,7 @@ var mopub = mopub || {};
                     activate: 'on'
                 }
             });
+            $(".targeting-box").removeAttr('disabled');
             return true;
         },
 
@@ -546,6 +551,7 @@ var mopub = mopub || {};
                     activate: 'off'
                 }
             });
+            $(".targeting-box").attr('disabled', true);
             return true;
         },
 

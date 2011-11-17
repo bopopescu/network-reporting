@@ -979,6 +979,9 @@ var mopub = mopub || {};
     }
 
     function populateCampaignStats() {
+      // initialize accountStats
+      mopub.accountStats = {"all_stats": {}};
+      
       var allCampaignIds = getCampaignIdsWithType(CampaignTypeEnum.All);
       $.each(allCampaignIds, function(index, id) {
         campaignsData[id] = {};
@@ -1068,31 +1071,11 @@ var mopub = mopub || {};
     function campaignStatsChunkComplete(data, chunk, fetchObj) {
       var allStats = data["all_stats"];
 
-      if(!mopub.accountStats) {
-        mopub.accountStats = {
-          "all_stats": {
-            "||": {
-              "daily_stats": []
-            }
-          }
-        }
-      }
+      $.extend(mopub.accountStats['all_stats'], allStats);
 
-      for (var key in allStats) {
+      for(var key in allStats) {
         var campaignId = key.split("||")[1];
         var sumStats = allStats[key]["sum"];
-
-        var index;
-        for(index in allStats[key]["daily_stats"]) {
-          if(mopub.accountStats['all_stats']['||']['daily_stats'].length <= index) {
-            mopub.accountStats['all_stats']['||']['daily_stats'][index] = allStats[key]["daily_stats"][index];
-          }
-          else {
-            for(stat in allStats[key]["daily_stats"][index]) {
-              mopub.accountStats['all_stats']['||']['daily_stats'][index][stat] += allStats[key]["daily_stats"][index][stat];
-            }
-          }
-        }
 
         // Store the stats so that we can build the graph later.
         campaignsData[campaignId] = allStats[key];
@@ -1160,24 +1143,52 @@ var mopub = mopub || {};
     function onCampaignsFullyUpdated() {
       setCampaignFilterOptionsDisabled(false);
       calcRollups();
-      sumAccountStats();
+      computeAccountStats();
       populateStatsBreakdownsWithData(mopub.accountStats);
       populateGraphWithAccountStats(mopub.accountStats);
       prepareGraphFromCampaignData();
     }
 
-    function sumAccountStats() {
-      mopub.accountStats["all_stats"]["||"]["sum"] = {
-        "fill_rate": 0, "impression_user_count": 0, "user_count": 0, "request_user_count": 0, "ctr": 0, "revenue": 0.0, "cpa": 0, "impression_count": 0, "conversion_count": 0, "reqs": [], "conv_rate": 0, "cpc": 0, "request_count": 0, "click_count": 0, "date": "2011-11-03 00:00:00", "click_user_count": 0, "offline": false, "cpm": 0
-      }
-      var index;
-      var stat;
-      for(index in mopub.accountStats["all_stats"]["||"]["daily_stats"]) {
-        for(stat in mopub.accountStats["all_stats"]["||"]["sum"]) {
-          mopub.accountStats["all_stats"]["||"]["sum"][stat] += mopub.accountStats["all_stats"]["||"]["daily_stats"][index][stat];
+    function computeAccountStats() {
+      // compute daily stats
+      var daily_stats;
+      for(var key in mopub.accountStats['all_stats']) {
+        if(!daily_stats) {
+          daily_stats = mopub.accountStats['all_stats'][key]['daily_stats'];
+        }
+        else {
+          for(var index in mopub.accountStats['all_stats'][key]['daily_stats']) {
+            for(var stat in mopub.accountStats['all_stats'][key]['daily_stats'][index]) {
+              daily_stats[index][stat] += mopub.accountStats['all_stats'][key]['daily_stats'][index][stat];
+            }
+          }
         }
       }
+      // stats that are not simple sums
+      for(var index in daily_stats) {
+        daily_stats[index]['ctr'] = (daily_stats[index]['impression_count'] === 0) ? 0 : daily_stats[index]['click_count']/daily_stats[index]['impression_count'];
+      }
 
+      // computer sum
+      var sum;
+      for(var key in mopub.accountStats['all_stats']) {
+        if(!sum) {
+          sum = mopub.accountStats['all_stats'][key]['sum'];
+        }
+        else {
+          for(var stat in mopub.accountStats['all_stats'][key]['sum']) {
+            sum[stat] += mopub.accountStats['all_stats'][key]['sum'][stat];
+          }
+        }
+      }
+      // stats that are not simple sums
+      sum['ctr'] = (sum['impression_count'] === 0) ? 0 : sum['click_count'] / sum['impression_count'];
+
+      mopub.accountStats['all_stats']['||'] = {
+        'daily_stats': daily_stats,
+        'sum': sum,
+        'name': '||'
+      };
     }
 
     function prepareGraphFromCampaignData() {

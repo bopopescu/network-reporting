@@ -192,42 +192,7 @@
         {#<th> Clicks </th>#}
         {#<th> CTR </th>#}
       </thead>
-      <tbody>
-        {% comment %}
-        {% for dsp in dsps %}
-          {% for creative in dsp.creatives %}
-            <tr>
-              <td> {#<img src="/images/loading2.gif" />#} <iframe src="{{ creative.creative.url }}" width="320px" height="50px"></iframe>   </td>
-              <td>
-                {% if creative.creative.advertiser_blocked %}
-                  {{ creative.creative.ad_dmn }}
-                  (Blocked)
-                {% else %} {% if creative.creative.ad_dmn %}
-                {{ creative.creative.ad_dmn }}
-                  <a href="#" id={{ creative.creative.ad_dmn }} class="block"> Block </a>
-                {% else %}
-                  --
-                {% endif %}{% endif %}
-              </td>
-              <td style="text-align:right;"> {{ creative.stats.pub_rev|currency }} </td>
-              <td style="text-align:right;"> {{ creative.stats.imp }} </td>
-              <td style="text-align:right;"> {{ creative.stats.ecpm|currency }} </td>
-              <td style="text-align:right;"> {{ creative.stats.clk }} </td>
-              <td style="text-align:right;"> {{ creative.stats.ctr|percentage }} </td>
-            </tr>
-          {% endfor %}
-        {% endfor %}
-      </tbody>
-      <tfoot>
-        <td> Totals </td>
-        <td></td>
-        <td> {{ creative_totals.pub_rev|currency }} </td>
-        <td> {{ creative_totals.imp }} </td>
-        <td> {{ creative_totals.ecpm|currency }} </td>
-        <td> {{ creative_totals.clk }} </td>
-        <td> {{ creative_totals.ctr|percentage }} </td>
-      </tfoot>
-      {% endcomment %}
+      <tbody></tbody>
     </table>
 
 

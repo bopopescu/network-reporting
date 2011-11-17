@@ -1301,11 +1301,15 @@ class MarketplaceIndexHandler(RequestHandler):
         except:
             pass
 
+        logging.warn('asofnasildfnaklsdnfkasndfknasdkfnaskdnfkasdnfkasndfkansdkjfnjasdnfkasndkfjnasjkdfnkjsadnfkjas')
+        logging.warn(apps.values())
+
+
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
-                                      'apps': apps.values(),
+                                      'apps': sorted(apps.values(), lambda x, y: cmp(x.name, y.name)),
                                       'app_keys': app_keys,
                                       'adunit_keys': adunit_keys,
                                       'pub_key': self.account.key(),
@@ -1395,13 +1399,13 @@ def marketplace_settings_change(request, *args, **kwargs):
 # At some point in the future, these *could* be branched into their own django app
 class NetworkIndexHandler(RequestHandler):
     def get(self):
-        
+
         # form the date range
         if self.start_date:
             days = date_magic.gen_days(self.start_date, self.start_date + datetime.timedelta(self.date_range))
         else:
             days = date_magic.gen_date_range(self.date_range)
-        
+
         # grab the network campaigns and their stats
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
 

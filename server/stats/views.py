@@ -50,7 +50,7 @@ MAX_PUT_SIZE = 8
 
 STATS_MODEL_QUERY_KEY = "sm"
 
-MDB_STATS_UPDATER_IP = 'http://mongostats.mopub.com'
+MDB_STATS_UPDATER_IP = 'https://mongostats.mopub.com'
 MDB_STATS_UPDATER_HANDLER_PATH = '/stats/update'
 
 

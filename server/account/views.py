@@ -17,6 +17,7 @@ import logging
 from common.utils.request_handler import RequestHandler
 
 import urllib2
+import string
 from common.utils import simplejson
 import datetime
 from itertools import groupby
@@ -45,7 +46,7 @@ class AdNetworkSettingsHandler(RequestHandler):
         apps_for_account = AppQueryManager.get_apps(account=self.account)
         user = self.account.mpuser
 
-        networks = ['admob_status','adsense_status','brightroll_status','chartboost_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
+        networks = ['admob_status','adsense_status','brightroll_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
         network_config_status = {}
 
         def _get_net_status(account,network):
@@ -200,6 +201,7 @@ class PaymentHistoryHandler(RequestHandler):
                 record.put()
 
         balance = 0
+        total_paid = 0
         start_date = datetime.date(2011, 9, 1)  # Earliest date that we pull stats for
         end_date = datetime.datetime.now(Pacific_tzinfo())
 
@@ -237,7 +239,9 @@ class PaymentHistoryHandler(RequestHandler):
             payment.account = self.account
             payment.period_start = period_start
             payment.period_end = period_end
-            payment.amount = float(self.request.POST.get("amount"))
+            # Convert dollars to float. eg. '$2,313.20' becomes '2313.20'
+            amount = ''.join([c for c in self.request.POST.get("amount") if c in string.digits+'.'])
+            payment.amount = float(amount)
             payment.status = self.request.POST.get("status")
             if self.request.POST.get("date_executed"):
                 payment.date_executed = datetime.datetime.strptime(self.request.POST.get("date_executed"),"%m/%d/%Y")

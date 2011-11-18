@@ -215,7 +215,7 @@
       <br />
       <div class="clearfix">
         <div class="left" style="padding: 5px 15px">
-          <input id="blindness" class="right" type="checkbox"/>
+          <input id="blindness" class="right" type="checkbox" {% if blind %}checked="checked"{% endif %} {% if not marketplace.active %}disabled="disabled"{% endif %}/>
         </div>
         <div class="left">
           <p>Do not share detailed information with Marketplace bidders. <span class="warning highlight"> Caution </span> This may significantly reduce your marketplace revenue.</p>

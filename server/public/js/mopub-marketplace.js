@@ -535,6 +535,7 @@ var mopub = mopub || {};
             }
         });
         $(".targeting-box").removeAttr('disabled');
+        $("#blindness").removeAttr('disabled');
         return true;
     }
 
@@ -552,6 +553,7 @@ var mopub = mopub || {};
             }
         });
         $(".targeting-box").attr('disabled', true);
+        $("#blindness").attr('disabled', true);
         return true;
     }
 
@@ -749,7 +751,6 @@ var mopub = mopub || {};
              * this is the only place they're used.
              */
             $("#top_switch").click(function() {
-
                 if ( $("#top_switch .switch").hasClass('on') ) {
                     $("#first_time_toast").fadeIn();
                     setTimeout(function() {

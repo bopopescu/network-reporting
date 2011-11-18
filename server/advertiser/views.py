@@ -1320,7 +1320,8 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'blocklist': blocklist,
                                       'start_date': start_date,
                                       'end_date': end_date,
-                                      'date_range': self.date_range
+                                      'date_range': self.date_range,
+                                      'blind': self.account.network_config.blind,
                                   })
 
 
@@ -1385,15 +1386,15 @@ def marketplace_on_off(request, *args, **kwargs):
 class MarketplaceBlindnessChangeHandler(RequestHandler):
     def post(self):
         try:
-            marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
+            network_config = self.account.network_config
             activate = self.request.POST.get('activate', None)
             if activate == 'true':
-                marketplace_campaign.blind = True
-                marketplace_campaign.put()
+                network_config.blind = True
+                network_config.put()
                 return JSONResponse({'success': 'activated'})
             elif activate == 'false':
-                marketplace_campaign.blind = False
-                marketplace_campaign.put()
+                network_config.blind = False
+                network_config.put()
                 return JSONResponse({'success': 'deactivated'})
             else:
                 return JSONResponse({'error': 'Invalid activation value'})

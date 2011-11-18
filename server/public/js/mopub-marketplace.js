@@ -527,12 +527,8 @@ var mopub = mopub || {};
      * only when no errors are returned from the server. Fix this.
      */
     function turnOn () {
-        $.ajax({
-            type: 'post',
-            url: '/campaigns/marketplace/activation/',
-            data: {
-                activate: 'on'
-            }
+        var on = $.post('/campaigns/marketplace/activation/', {
+            activate: 'on'
         });
         $(".targeting-box").removeAttr('disabled');
         $("#blindness").removeAttr('disabled');
@@ -545,12 +541,8 @@ var mopub = mopub || {};
      * only when no errors are returned from the server. Fix this.
      */
     function turnOff () {
-        $.ajax({
-            type: 'post',
-            url: '/campaigns/marketplace/activation/',
-            data: {
-                activate: 'off'
-            }
+        var off = $.post('/campaigns/marketplace/activation/', {
+            activate: 'off'
         });
         $(".targeting-box").attr('disabled', true);
         $("#blindness").attr('disabled', true);

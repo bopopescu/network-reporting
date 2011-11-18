@@ -638,7 +638,17 @@ var mopub = mopub || {};
                 if (_.contains(blocklist, domain)) {
                     $("td:eq(1)", nRow).text(domain + " (Blocked)");
                 } else if (domain != null) {
-                    $("td:eq(1)", nRow).html(domain);
+                    var anchor = $("<a href='#'> Block </a>").click(function () {
+                        var blocklist_xhr = $.post("/campaigns/marketplace/settings/blocklist/", {
+                            action: 'remove',
+                            blocklist: domain
+                        });
+                        blocklist_xhr.done(function() {
+                            $(this).parent().append(' (Blocked)');
+                            $(this).remove();
+                        });
+                    });
+                    $("td:eq(1)", nRow).html(domain).append(anchor);
                 } else {
                     $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
                 }

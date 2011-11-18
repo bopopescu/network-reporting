@@ -555,7 +555,7 @@ var mopub = mopub || {};
                 aaSorting: [[2,'desc']],
                 // Endpoint to fetch table data
                 //sAjaxSource: "http://mpx.mopub.com/stats/creatives",
-                sAjaxSource: "http://mpx.mopub.com/stats/creatives",
+                sAjaxSource: "http://mpx.mopub.com/2stats/creatives",
                 fnServerData: function( sUrl, aoData, fnCallback ) {
                     $.ajax({
                         url: sUrl,

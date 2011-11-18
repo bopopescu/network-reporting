@@ -528,8 +528,17 @@ var mopub = mopub || {};
      */
     function turnOn () {
         var on = $.post('/campaigns/marketplace/activation/', {
-            activate: 'on'
+            activate: 'true'
         });
+
+        on.error(function() {
+            Toast.error("There was an error saving your Marketplace settings. Please try again soon.");
+        });
+
+        on.done(function() {
+            //Toast.success("Foo.");
+        });
+
         $(".targeting-box").removeAttr('disabled');
         $("#blindness").removeAttr('disabled');
         return true;
@@ -542,7 +551,7 @@ var mopub = mopub || {};
      */
     function turnOff () {
         var off = $.post('/campaigns/marketplace/activation/', {
-            activate: 'off'
+            activate: 'false'
         });
         $(".targeting-box").attr('disabled', true);
         $("#blindness").attr('disabled', true);
@@ -765,7 +774,7 @@ var mopub = mopub || {};
              */
             $('#blocklist-submit').click(function(e) {
                 e.preventDefault();
-                $("#addblocklist").submit();
+                console.log($("#addblocklist").val());
             });
 
 

@@ -1330,47 +1330,66 @@ def marketplace_index(request, *args, **kwargs):
     return MarketplaceIndexHandler()(request, use_cache=False, *args, **kwargs)
 
 
-class AddBlocklistHandler(RequestHandler):
+class BlocklistHandler(RequestHandler):
+    """
+    Ajax handler for adding/removing marketplace blocklist items.
+    Required data parameters:
+    - blocklist: a comma/whitespace separated list of urls to add/remove
+    - action: 'add' or 'remove', the action to take
+    """
     def post(self):
-        add_blocklist_string = self.request.POST.get('blocklist')
-        add_blocklist = add_blocklist_string.replace(',',' ').split()
+        try:
+            # Get the blocklist urls and the action
+            blocklist_urls = self.request.POST.get('blocklist')
+            blocklist = blocklist_urls.replace(',',' ').split()
+            blocklist_action = self.request.POST.get('action')
 
-        if add_blocklist:
+            # Set the network config
             network_config = self.account.network_config
-            network_config.blocklist.extend(add_blocklist)
-            network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
-            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
-        return HttpResponseRedirect(reverse('marketplace_index'))
+
+            # Process add's (sometimes they're in bulk)
+            if blocklist_action == "add" and blocklist:
+                network_config.blocklist.extend(add_blocklist)
+                network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
+                AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+                return JSONResponse({'success': 'blocklist item(s) added'})
+
+            # Process removes (there should only be one at a time, but we could
+            # change functionality on the client side to remove multiple urls at once
+            elif blocklist_action == "remove" and blocklist:
+                for url in blocklist:
+                    if network_config.blocklist.count(url):
+                        network_config.blocklist.remove(url)
+                AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+                return JSONResponse({'success': 'blocklist item(s) removed'})
+
+            # If they didn't pass the action, it's an error.
+            else:
+                return JSONResponse({'error': 'you must provide an action (add|remove) and a blockist'})
+
+        except Exception, e:
+            logging.warn(e)
+            return JSONResponse({'error': 'server error'})
+
 
 @login_required
-def add_blocklist_handler(request,*args,**kwargs):
-    return AddBlocklistHandler()(request,*args,**kwargs)
-
-
-class RemoveBlocklistHandler(RequestHandler):
-    def get(self, url=None):
-        #url = self.request.GET.get('url')
-        network_config = self.account.network_config
-        if network_config.blocklist.count(url):
-            network_config.blocklist.remove(url)
-            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
-
-        return HttpResponseRedirect(reverse('marketplace_index'))
-
-
-@login_required
-def remove_blocklist_handler(request,*args,**kwargs):
-    return RemoveBlocklistHandler()(request, use_cache=False, *args, **kwargs)
+def marketplace_blocklist_change(request,*args,**kwargs):
+    return BlocklistHandler()(request,*args,**kwargs)
 
 
 class MarketplaceOnOffHandler(RequestHandler):
+    """
+    Ajax handler for activating/deactivating the marketplace.
+    Required data parameters:
+    - activate: 'on' or 'off', to set the marketplace on or off.
+    """
     def post(self):
         try:
-            activate = self.request.POST.get('activate', 'on')
+            activate = self.request.POST.get('activate', 'true')
             mpx = CampaignQueryManager.get_marketplace(self.account)
-            if activate == 'on':
+            if activate == 'true':
                 mpx.active = True
-            elif activate == 'off':
+            elif activate == 'false':
                 mpx.active = False
 
             CampaignQueryManager.put(mpx)
@@ -1384,6 +1403,9 @@ def marketplace_on_off(request, *args, **kwargs):
 
 
 class MarketplaceBlindnessChangeHandler(RequestHandler):
+    """
+    Ajax handler for activating/deactivating blindness
+    """
     def post(self):
         try:
             network_config = self.account.network_config

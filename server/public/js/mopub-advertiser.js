@@ -860,6 +860,8 @@ var mopub = mopub || {};
       // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't
       // disappear until all "onload" AJAX requests are complete.
       setTimeout(initNetworksPage, 0);
+    } else {
+      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
     }
 
     function initNetworksPage() {

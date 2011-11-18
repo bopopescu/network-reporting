@@ -240,7 +240,7 @@ var mopub = mopub || {};
                                                '" type="text" class="input-text input-text-number number" style="width:50px;margin: -3px 0;" value="' +
                                                this.model.get("price_floor") +
                                                '"> ');
-            $(".targeting", adunit_row).html('<img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img>' +
+            $(".targeting", adunit_row).html('<img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img> ' +
                                              '<input class="targeting-box" type="checkbox">');
             if (this.model.get("active")) {
                 $("input.targeting-box", adunit_row).attr('checked', 'checked');

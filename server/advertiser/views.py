@@ -1349,11 +1349,14 @@ class BlocklistHandler(RequestHandler):
 
             # Process add's (sometimes they're in bulk)
             if blocklist_action == "add" and blocklist:
+                new = [d for d in blocklist if not d in network_config.blocklist]
                 network_config.blocklist.extend(blocklist)
                 network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
                 AccountQueryManager().update_config_and_put(account=self.account,
                                                             network_config=network_config)
-                return JSONResponse({'success': 'blocklist item(s) added'})
+
+                return JSONResponse({'success': 'blocklist item(s) added',
+                                     'new': new})
 
             # Process removes (there should only be one at a time, but we could
             # change functionality on the client side to remove multiple urls at once
@@ -1428,6 +1431,7 @@ class MarketplaceBlindnessChangeHandler(RequestHandler):
 @login_required
 def marketplace_blindness_change(request, *args, **kwargs):
     return MarketplaceBlindnessChangeHandler()(request, *args, **kwargs)
+
 
 
 

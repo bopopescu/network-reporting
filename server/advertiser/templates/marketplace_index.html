@@ -237,8 +237,8 @@
           {% for domain in blocklist %}
             <li>
               {{domain}}
-              <a href="#"> Remove </a>
-              {#<a href="{% url remove_blocklist_handler %}?url={{ domain|escape }}">Remove</a>#}
+              <a class="blocklist_remove" id="{{domain|escape}}" href="#"> Remove </a>
+              <img id="{{domain|escape}}" class="loading-img invisible" src="/images/icons-custom/spinner-12.gif"></img>
             </li>
           {% empty %}
             <li>There are no blocked advertisers</li>

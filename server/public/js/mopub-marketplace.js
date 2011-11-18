@@ -656,10 +656,35 @@ var mopub = mopub || {};
      * Adds a domain to the in=page blocklist, along with an
      * anchor + click event to remove it over Ajax.
      */
-    function addToBlocklist(domain) {
-
+    function addToBlocklist (domain) {
+        var anchor = $("<a href='#'>Remove</a>")
+            .click(blocklistRemoveClickHandler);
+        var list_item = $("<li></li>").html(domain + " ");
+        list_item.append(anchor);
+        $("#blocked_domains").append(list_item);
     }
 
+    function blocklistRemoveClickHandler (event) {
+        event.preventDefault();
+
+        var anchor = $(this);
+        var domain = anchor.attr('id');
+        $("img", anchor.parent()).removeClass('hidden');
+        var blocklist_xhr = $.post("/campaigns/marketplace/settings/blocklist/", {
+            action: 'remove',
+            blocklist: domain
+        });
+
+        blocklist_xhr.done(function (response) {
+            $("img#" + domain).addClass('hidden');
+            anchor.parent().fadeOut();
+        });
+
+        blocklist_xhr.error(function (response) {
+            $("img#" + domain).addClass('hidden');
+            Toast.error(response);
+        });
+    }
 
     var MarketplaceController = {
         initializeIndex: function (bootstrapping_data) {
@@ -734,9 +759,10 @@ var mopub = mopub || {};
                 var domain = $(this).attr('id');
                 $.ajax({
                     type: 'post',
-                    url: '/campaigns/marketplace/addblocklist',
+                    url: '/campaigns/marketplace/settings/blocklist/',
                     data: {
-                        blocklist: domain
+                        blocklist: domain,
+                        action: "add"
                     },
                     success: function (a,b) {
                         block_link.text("Blocked").unbind("click").click(function(){
@@ -789,7 +815,12 @@ var mopub = mopub || {};
                 });
 
                 blocklist_xhr.done(function (response) {
-                    Toast.success(response);
+                    response = $.parseJSON(response);
+                    var domains = response['new'];
+                    $.each(domains, function(iter, domain) {
+                        addToBlocklist(domain);
+                    });
+                    $("textarea[name='blocklist']").val('');
                 });
 
                 blocklist_xhr.error(function (response) {
@@ -797,8 +828,10 @@ var mopub = mopub || {};
                 });
             });
 
-
-
+            /*
+             * Blocklist removal
+             */
+            $("a.blocklist_remove").click(blocklistRemoveClickHandler);
 
 
 

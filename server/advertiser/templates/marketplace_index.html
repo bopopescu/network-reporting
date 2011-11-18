@@ -233,14 +233,17 @@
       <div class="clearfix" style="width: 560px;">
         <div id="current_blocklist" class="right">
           <h3> Currently Blocked </h3>
+          <ul id="blocked_domains">
           {% for domain in blocklist %}
-            {{domain}}
-            <a href="#"> Remove </a>
-            {#<a href="{% url remove_blocklist_handler %}?url={{ domain|escape }}">Remove</a>#}
-            <br />
+            <li>
+              {{domain}}
+              <a href="#"> Remove </a>
+              {#<a href="{% url remove_blocklist_handler %}?url={{ domain|escape }}">Remove</a>#}
+            </li>
           {% empty %}
-            There are no blocked advertisers
+            <li>There are no blocked advertisers</li>
           {% endfor %}
+          </ul>
         </div>
 
 

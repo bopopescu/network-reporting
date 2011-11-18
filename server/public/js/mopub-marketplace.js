@@ -652,6 +652,14 @@ var mopub = mopub || {};
         return table;
     }
 
+    /*
+     * Adds a domain to the in=page blocklist, along with an
+     * anchor + click event to remove it over Ajax.
+     */
+    function addToBlocklist(domain) {
+
+    }
+
 
     var MarketplaceController = {
         initializeIndex: function (bootstrapping_data) {
@@ -774,7 +782,19 @@ var mopub = mopub || {};
              */
             $('#blocklist-submit').click(function(e) {
                 e.preventDefault();
-                console.log($("#addblocklist").val());
+                var blocklist = $("textarea[name='blocklist']").val();
+                var blocklist_xhr = $.post('/campaigns/marketplace/settings/blocklist/', {
+                    action: 'add',
+                    blocklist: blocklist
+                });
+
+                blocklist_xhr.done(function (response) {
+                    Toast.success(response);
+                });
+
+                blocklist_xhr.error(function (response) {
+                    Toast.warning(response);
+                });
             });
 
 

@@ -195,10 +195,10 @@
                     <div class="dataTable-data numeric">
                         {% if adgroup.budget_goal %}
                           {% if adgroup.budget_goal > 100000000 %}
-                            ${{adgroup.budget_goal|awesome_number_formatter}}
+                            {% if adgroup.cpc %}${% endif %}{{adgroup.budget_goal|awesome_number_formatter}}
                           {% else %}
-                            {{adgroup.budget_goal|currency}}
-                            {% endif %}
+                            {% if adgroup.cpc %}${% endif %}{{adgroup.budget_goal|currency}}
+                          {% endif %}
                         {% if adgroup.cpc %}
                         <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">USD</div>
                         {% else %}

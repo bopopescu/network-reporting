@@ -544,8 +544,8 @@
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
                     <td class="dataTable-data numeric">{{s.revenue|currency}}</td>
                 </tr>
-            </tbody>
             {% endfor %}
+            </tbody>
             {% endif %} {% if campaign.promo %}
             <thead>
                 <tr>
@@ -575,8 +575,8 @@
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
                     <td class="dataTable-data numeric">{{s.conversion_count|withsep}} ({{s.conv_rate|percentage}})</td>
                 </tr>
-            </tbody>
             {% endfor %}
+            </tbody>
             {% endif %} {% if campaign.network %}
             <thead>
                 <tr>
@@ -609,8 +609,8 @@
                     <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
                 </tr>
-            </tbody>
             {% endfor %}
+                        </tbody>
             {% endif %}
         </table>
         <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>

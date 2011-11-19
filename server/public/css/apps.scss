@@ -251,7 +251,9 @@
 }
 
 .dataTable .appData-id {
-  float: right;
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .appData-main th, .appData-main td {

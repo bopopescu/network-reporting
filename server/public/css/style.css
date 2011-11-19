@@ -2870,7 +2870,9 @@ a.linkIcon .ui-icon-triangle-1-w {
   width: 15px; }
 
 .dataTable .appData-id {
-  float: right; }
+  position: absolute;
+  top: 0;
+  right: 0; }
 
 .appData-main th, .appData-main td {
   padding-top: 0;

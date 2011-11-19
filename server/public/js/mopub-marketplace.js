@@ -638,14 +638,16 @@ var mopub = mopub || {};
                 if (_.contains(blocklist, domain)) {
                     $("td:eq(1)", nRow).text(domain + " (Blocked)");
                 } else if (domain != null) {
-                    var anchor = $("<a href='#'> Block </a>").click(function () {
+                    var anchor = $("<a href='#'> Block </a>").click(function (event) {
+                        var $this = $(this);
+                        event.preventDefault();
                         var blocklist_xhr = $.post("/campaigns/marketplace/settings/blocklist/", {
-                            action: 'remove',
+                            action: 'add',
                             blocklist: domain
                         });
                         blocklist_xhr.done(function() {
-                            $(this).parent().append(' (Blocked)');
-                            $(this).remove();
+                            $this.parent().append(' (Blocked)');
+                            $this.remove();
                         });
                     });
                     $("td:eq(1)", nRow).html(domain).append(anchor);

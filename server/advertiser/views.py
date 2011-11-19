@@ -1114,7 +1114,8 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
-
+                    logging.warn("PACE: %s"%budget_service.get_pace(adgroup.campaign.budget_obj))
+                    adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
                     logging.warning("Perecent Delivered: %s" % percent_delivered)
                     summed_stats.percent_delivered = percent_delivered

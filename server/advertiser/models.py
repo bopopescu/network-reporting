@@ -101,7 +101,7 @@ class Campaign(db.Model):
             return True
         else:
             return False
-
+            
     def get_owner(self):
         return None
 
@@ -159,7 +159,6 @@ class AdGroup(db.Model):
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
     archived = db.BooleanProperty(default=False)
-
 
     # percent of users to be targetted
     percent_users = db.FloatProperty(default=100.0)
@@ -336,6 +335,21 @@ class AdGroup(db.Model):
     def cpm(self):
         if self.bid_strategy == 'cpm':
             return self.bid
+        return None
+        
+    @property
+    def budget_goal(self):
+        campaign = self.campaign
+        if self.bid_strategy == 'cpm':
+            if campaign.budget_type == "daily":
+                return int((campaign.budget / self.bid) * 1000)
+            else:
+                return int((campaign.full_budget / self.bid) * 1000)
+        else:
+            if campaign.budget_type == "daily":
+                return int(campaign.budget)
+            else:
+                return int(campaign.full_budget)
         return None
 
     @property

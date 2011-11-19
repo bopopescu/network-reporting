@@ -632,12 +632,19 @@ class ShowAdGroupHandler(RequestHandler):
         # Use those values if they both exist, otherwise set the range from
         # start to start + 90 days
         else:
-            if adgroup.campaign.end_datetime:
-                days = date_magic.gen_days(adgroup.campaign.start_datetime,
-                                           adgroup.campaign.end_datetime)
+            today = datetime.datetime.now(Pacific_tzinfo()).date()
+            if adgroup.campaign.end_datetime and adgroup.campaign.end_datetime < today:
+                end_date = adgroup.campaign.end_datetime
             else:
-                days = date_magic.gen_days(adgroup.campaign.start_datetime,
-                                           adgroup.campaign.start_datetime + datetime.timedelta(90))
+                end_date = today
+
+            if adgroup.campaign.start_datetime:
+                start_date = adgroup.campaign.start_datetime
+            else:
+                start_date = end_date - datetime.timedelta(90)
+
+            days = date_magic.gen_days(start_date, end_date)
+
 
         # We want to limit the number of stats we have to fetch.
         # We've determined 90 is a good max.

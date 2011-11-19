@@ -116,6 +116,7 @@
                 </tr>
               {% endif %}
               <tr {% if not campaign.gtee and not campaign.marketplace %} class="active" {% endif %} id="stats-breakdown-impressions">
+                {% if yesterday %}
                 <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
                 {% endif %}

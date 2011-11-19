@@ -5,105 +5,152 @@ var mopub = mopub || {};
 
 (function($){
 
-    function refreshAlternatingColor(){
-        $('.campaignData').removeClass('campaignData-alt');
-        $('table').each(function(){
-            $(this).find('.campaignData:visible:odd').addClass('campaignData-alt');
-        });
-    }
+    // dom ready
+    $(document).ready(function() {
+      var Advertiser = {
+        initDirectSoldPage: function() {
+          $("a[href='#performance']").parent().click(function () {
+              $("#campaigns-control-panel").hide();
+              $(".form-submit-left").hide();
+          }).click();
 
+          $.each(["#marketplace", "#promotional","#guaranteed", "#network"], function(iter, item) {
+              $("a[href='" + item + "']").parent().click(function () {
+                  $("#campaigns-control-panel").show();
+                  $(".form-submit-left").show();
+               });
+          });
 
-    var Advertiser = {
+          $("#terms").dialog({
+              autoOpen: false,
+              buttons: {
+                  "Accept Terms": function() {
+                  },
+                  "Not right now": function() {
+                      $(this).dialog("close");
+                  }
+
+                }
+          });
+
+          $("#accept_terms").click(function() {
+              $("#terms").dialog('open');
+          });
+
+          setTimeout(doInitDirectSoldPage, 0);
+        },
+
+        initNetworkPage: function() {
+          refreshAlternatingColor();
+          setTimeout(doInitNetworkPage, 0);
+        },
+
+        initAdGroupPage: function() {
+          mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+        },
+
 
         /*
          * Initialize ajax submitting for the credentials form on the
          * credential form page and the index.
          */
-
-        initializeNetworkPage: function () {
-            refreshAlternatingColor();
-        },
-
         initializeAdReportsIndex: function () {
+          $('.addcreds').click(function(e) {
+              e.preventDefault();
 
-            $('.addcreds').click(function(e) {
-                e.preventDefault();
+              var network_name = $(this).attr('href').replace('#', '');
 
-                var network_name = $(this).attr('href').replace('#', '');
+              $("#" + network_name + "-fields").show();
 
-                $("#" + network_name + "-fields").show();
+              $("#ad_network_selector").val(network_name);
 
-                $("#ad_network_selector").val(network_name);
+              $('#credential-form').dialog({
+                  buttons: { "Close": function() { $(this).dialog('close');} },
+                  width: 500
+              });
+          });
 
-                $('#credential-form').dialog({
-                    buttons: { "Close": function() { $(this).dialog('close');} },
-                    width: 500
-                });
-            });
-
-            $('.app-row').click(function () {
-                var app_key = $(this).attr('id');
-                var network_rows = $('.for-app-' + app_key);
-                $.each(network_rows, function (iter, row) {
-                    if ($(row).hasClass('hidden')) {
-                        $(row).removeClass('hidden');
-                    } else {
-                        $(row).addClass('hidden');
-                    }
-                });
-            });
+          $('.app-row').click(function () {
+              var app_key = $(this).attr('id');
+              var network_rows = $('.for-app-' + app_key);
+              $.each(network_rows, function (iter, row) {
+                  if ($(row).hasClass('hidden')) {
+                      $(row).removeClass('hidden');
+                  } else {
+                      $(row).addClass('hidden');
+                  }
+              });
+          });
         },
 
         initializeCredentialsPage: function (management_mode, account_key) {
-            $("#loginCredentials").submit(function(event) {
-                event.preventDefault();
+          $("#loginCredentials").submit(function(event) {
+              event.preventDefault();
 
-                // Check if data submitted in the form is valid login
-                // information for the ad network
-                var data = $(this).serialize();
-                data += ("&account_key=" + account_key);
-                $.ajax({
-                    url: 'http://checklogincredentials.mopub.com',
-                    data: data,
-                    crossDomain: true,
-                    dataType: "jsonp",
-                    success: function(valid) {
-                        // Upon success update the database
-                        if (valid) {
-                            if (management_mode) {
-                                window.location = "/ad_network_reports/manage/" + account_key;
-                            } else {
-                                window.location = "/ad_network_reports/";
-                            }
-                        } else {
-                            $("#error").html("Invalid login information.");
-                        }
-                    }
-                });
-            });
+              // Check if data submitted in the form is valid login
+              // information for the ad network
+              var data = $(this).serialize();
+              data += ("&account_key=" + account_key);
+              $.ajax({
+                  url: 'http://checklogincredentials.mopub.com',
+                  data: data,
+                  crossDomain: true,
+                  dataType: "jsonp",
+                  success: function(valid) {
+                      // Upon success update the database
+                      if (valid) {
+                          if (management_mode) {
+                              window.location = "/ad_network_reports/manage/" + account_key;
+                          } else {
+                              window.location = "/ad_network_reports/";
+                          }
+                      } else {
+                          $("#error").html("Invalid login information.");
+                      }
+                  }
+              });
+          });
 
 
-
-            // Hides/shows network forms based on which was selected
-            // in the dropdown
-            $("#ad_network_selector").change(function() {
-                var network = $(this).val();
-                $('.network_form').each(function () {
-                    if ($(this).attr('id') == network + '-fields') {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            }).change();
+          // Hides/shows network forms based on which was selected
+          // in the dropdown
+          $("#ad_network_selector").change(function() {
+              var network = $(this).val();
+              $('.network_form').each(function () {
+                  if ($(this).attr('id') == network + '-fields') {
+                      $(this).show();
+                  } else {
+                      $(this).hide();
+                  }
+              });
+          }).change();
         }
-    };
+      };
 
-    window.mopub.Advertiser = Advertiser;
+      window.mopub.Advertiser = Advertiser;
 
 
-    // dom ready
-    $(document).ready(function() {
+      function refreshAlternatingColor() {
+          $('.campaignData').removeClass('campaignData-alt');
+          $('table').each(function(){
+              $(this).find('.campaignData:visible:odd').addClass('campaignData-alt');
+          });
+      }
+
+      function doInitDirectSoldPage() {
+        showOrHideRevenueBreakdown();
+        setupAjaxStatusPopup();
+        setCampaignFilterOptionsDisabled(true);
+        populateCampaignStats();
+      }
+
+      function doInitNetworkPage() {
+        showOrHideRevenueBreakdown();
+        setupAjaxStatusPopup();
+        setCampaignFilterOptionsDisabled(true);
+        populateCampaignStats();
+      }
+
 
         //get info from page
         if (typeof creatives=="undefined") {
@@ -855,21 +902,6 @@ var mopub = mopub || {};
 
     // Entry point.
     // =====================================================================
-
-    if (mopub.isNetworksPage) {
-      // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't
-      // disappear until all "onload" AJAX requests are complete.
-      setTimeout(initNetworksPage, 0);
-    } else {
-      mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-    }
-
-    function initNetworksPage() {
-      showOrHideRevenueBreakdown();
-      setupAjaxStatusPopup();
-      setCampaignFilterOptionsDisabled(true);
-      populateCampaignStats();
-    }
 
     function showOrHideRevenueBreakdown() {
       // Hide the revenue breakdown if there are no guaranteed campaigns.
@@ -1720,4 +1752,4 @@ var mopub = mopub || {};
             });
         }
     }); // End document31 onready
- })(this.jQuery);
+})(this.jQuery);

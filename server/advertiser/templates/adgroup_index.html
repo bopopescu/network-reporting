@@ -74,6 +74,7 @@
     <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
       <input type="hidden" name="action" id="action"/>
 
+      <h3 style="float: right;">Showing {{start_date|date:"n/j/y"}} to {{end_date|date:"n/j/y"}}</h3>
       {% if not guarantee_num %}
         <h2> No Guaranteed Campaigns </h2>
       {% else %}

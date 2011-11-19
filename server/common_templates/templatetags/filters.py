@@ -57,6 +57,21 @@ def label(bound_field, label):
     return bound_field
 
 @register.filter
+def awesome_number_formatter(value):
+    if value:
+        value = withsep(int(value))
+        endings = ['K', 'M', 'B', 'T', 'Q']
+        parts = value.split(',')
+        if 1 < len(parts) < 7 :
+            return parts[0] + endings[len(parts)-2]
+        elif len(parts) >= 7:
+            return value
+        else:
+            return parts[0]
+    else:
+        return "0"
+
+@register.filter
 def currency(value):
     if value:
         return "$%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])

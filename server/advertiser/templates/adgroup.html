@@ -115,8 +115,7 @@
                   <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                 </tr>
               {% endif %}
-              <tr {% if campaign.network or campaign.promo %} class="active" {% endif %} id="stats-breakdown-impressions">
-                {% if yesterday %}
+              <tr {% if not campaign.gtee and not campaign.marketplace %} class="active" {% endif %} id="stats-breakdown-impressions">
                 <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
                 {% endif %}
@@ -167,64 +166,6 @@
         <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
           <div class="chart-loading-text">Loading ...</div>
           <div class="chart-error-text">Could not load chart</div>
-          <script type="text/javascript">
-            // chart data
-            mopub.dashboardStatsChartData = {
-                //pointStart: 1294963200000,
-                pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                pointInterval: 86400000,
-                'impressions': [{% for a in graph_adunits %}
-                                { '{{a.name|safe|addslashes}}':
-                                  [
-                                      {% for stat in a.all_stats %}
-                                      {{stat.impression_count}}
-                                      {% if not forloop.last %},{% endif %}
-                                      {% endfor %}
-                                  ]
-                                }
-                                {% if not forloop.last %},{% endif %}
-                                {% empty %}
-                                { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
-                                      {% endfor %}
-                               ],
-                'clicks': [{% for a in graph_adunits %}
-                           { '{{a.name|safe|addslashes}}': [
-                               {% for stat in a.all_stats %}
-                               {y: {{stat.click_count}}, name: '{{stat.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                           {% empty %}
-                           { 'Targeting no adunits': [{y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'} ] }
-                           {% endfor %}
-                          ],
-                'users': [{% for a in graph_adunits %}
-                          { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                          {% empty %}
-                          { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
-                          {% endfor %}
-                         ],
-                {% if campaign.gtee  %}
-                'revenue': [{% for a in graph_adunits %}
-                            { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                            {% empty %}
-                            { 'Targeting no adunits': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ] }
-                            {% endfor %}
-                           ]
-                {% endif %} {% if campaign.promo %}
-                'conversions': [{% for a in graph_adunits %}
-                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                                {% empty %}
-                                { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
-                                {% endfor %}
-                               ]
-                {% endif %} {% if campaign.network %}
-                'attempts': [{% for a in graph_adunits %}
-                             { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                             {% empty %}
-                                            { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
-                             {% endfor %}
-                            ]
-                {% endif %}
-                    };
-                  </script>
                 </div>
               </div>
               <div class="clear"></div>
@@ -674,6 +615,68 @@
         <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
     </div>
 </section>
-
-
 {% endblock content %}
+
+
+{% block extraScripts %}
+  <script src="/js/mopub-advertiser.js?v=85"></script>
+  <script type="text/javascript">
+    $(function() {
+      // chart data
+      mopub.dashboardStatsChartData = {
+        pointStart: Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}}),
+        pointInterval: 86400000,
+        'impressions': [{% for a in graph_adunits %}
+                         { '{{a.name|safe|addslashes}}': [
+                           {% for stat in a.all_stats %}
+                           {{stat.impression_count}}
+                           {% if not forloop.last %},{% endif %}
+                           {% endfor %}
+                          ]
+                         }
+                         {% if not forloop.last %},{% endif %}
+                         {% empty %}
+                         { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                         {% endfor %}
+                       ],
+        'clicks': [{% for a in graph_adunits %}
+                    { '{{a.name|safe|addslashes}}': [
+                       {% for stat in a.all_stats %}
+                       {y: {{stat.click_count}}, name: '{{stat.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                    {% empty %}
+                    { 'Targeting no adunits': [{y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'} ] }
+                    {% endfor %}
+                  ],
+        'users': [{% for a in graph_adunits %}
+                   { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                   {% empty %}
+                   { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                   {% endfor %}
+                 ],
+        {% if campaign.gtee  %}
+        'revenue': [{% for a in graph_adunits %}
+                     { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                     {% empty %}
+                     { 'Targeting no adunits': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ] }
+                     {% endfor %}
+                   ]
+        {% endif %} {% if campaign.promo %}
+        'conversions': [{% for a in graph_adunits %}
+                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                         {% empty %}
+                         { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                         {% endfor %}
+                       ]
+        {% endif %} {% if campaign.network %}
+        'attempts': [{% for a in graph_adunits %}
+                      { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                      {% empty %}
+                      { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                      {% endfor %}
+                    ]
+        {% endif %}
+      };
+      mopub.Advertiser.initAdGroupPage();
+    });
+  </script>
+{% endblock %}

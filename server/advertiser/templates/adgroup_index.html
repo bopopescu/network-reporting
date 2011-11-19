@@ -456,45 +456,13 @@
 
 
 {% block extraScripts %}
+  <script src="/js/mopub-advertiser.js?v=85"></script>
   <script>
     var mopub = mopub || {};
     $(function() {
-        mopub.isCampaignsPage = true;
-        mopub.isDirectSoldPage = true;
-        mopub.graphStartDate = Date.UTC({{start_date.year}},
-            {{start_date.month|add:"-1"}},
-            {{start_date.day}});
-        mopub.accountStats = {{account_stats|safe}};
-
-        $("a[href='#performance']").parent().click(function () {
-            $("#campaigns-control-panel").hide();
-            $(".form-submit-left").hide();
-        }).click();
-
-        $.each(["#marketplace", "#promotional","#guaranteed", "#network"], function(iter, item) {
-            $("a[href='" + item + "']").parent().click(function () {
-                $("#campaigns-control-panel").show();
-                $(".form-submit-left").show();
-             });
-        });
-
-        $("#terms").dialog({
-            autoOpen: false,
-            buttons: {
-                "Accept Terms": function() {
-                },
-                "Not right now": function() {
-                    $(this).dialog("close");
-                }
-
-            }
-        });
-
-        $("#accept_terms").click(function() {
-            $("#terms").dialog('open');
-        });
-
+        //mopub.isDirectSoldPage = true; // need this for getNumDaysToFetch()
+        mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
+        mopub.Advertiser.initDirectSoldPage();
     });
   </script>
-  <script src="/js/mopub-advertiser.js?v=1"></script>
 {% endblock extraScripts %}

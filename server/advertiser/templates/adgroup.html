@@ -648,6 +648,19 @@
                     { 'Targeting no adunits': [{y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'} ] }
                     {% endfor %}
                   ],
+        'ctr': [{% for a in graph_adunits %}
+                         { '{{a.name|safe|addslashes}}': [
+                           {% for stat in a.all_stats %}
+                           {{stat.ctr}}
+                           {% if not forloop.last %},{% endif %}
+                           {% endfor %}
+                          ]
+                         }
+                         {% if not forloop.last %},{% endif %}
+                         {% empty %}
+                         { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                         {% endfor %}
+                  ],
         'users': [{% for a in graph_adunits %}
                    { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
                    {% empty %}

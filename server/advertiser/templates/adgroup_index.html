@@ -303,6 +303,7 @@
               <th class="numeric">Revenue</th>
               <th class="numeric">Status</th>
               <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+              <th class="numeric">Goal</th>
               <th class="numeric">Impressions</th>
               <th class="numeric">Clicks</th>
               <th class="numeric">Conv</th>
@@ -368,7 +369,7 @@
                 {% else %}
                   <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                 {% endif %}
-
+                <td {# style="text-align:right;" #} class="dataTable-data numeric promo-goal goal">--</td>
                 <td {# style="text-align:right;" #} class="dataTable-data numeric promo-imp imp">--</td>
                 <td class="dataTable-clk">
                     <div class="dataTable-data numeric promo-clk clk">--</div>
@@ -439,12 +440,14 @@
                 <th class="campaignData-icon"></th>
                 <th>Name</th>
 
+                <th class="numeric"></th>
                 <th class="numeric">Status</th>
-              <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
-              <th class="numeric">Impressions</th>
-              <th class="numeric">Clicks</th>
-              <th class="numeric">Conv</th>
-              <th class="numeric">CPA</th>
+                <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+                <th class="numeric">Goal</th>
+                <th class="numeric">Impressions</th>
+                <th class="numeric">Clicks</th>
+                <th class="numeric">Conv</th>
+
                 {% comment %}
                 <th style="text-align: right;">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
                 <th style="text-align: right;">Status</th>
@@ -495,6 +498,7 @@
                     </span>
                     </td>
 
+                    <td class="dataTable-data numeric"></th>
                     <td class="dataTable-data numeric">
                       <div class="status">--</div>
                       <div class="on_schedule muted"></div>
@@ -508,6 +512,7 @@
                       <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                     {% endif %}
 
+                    <td {# style="text-align:right;" #} class="dataTable-data numeric promo-goal goal">--</td>
                     <td {# style="text-align:right;" #} class="dataTable-data numeric promo-imp imp">--</td>
                     <td class="dataTable-clk">
                       <div class="dataTable-data numeric promo-clk clk">--</div>
@@ -517,7 +522,6 @@
                       <div class="dataTable-data numeric promo-conv conv">--</div>
                       <div class="dataTable-data numeric promo-conve_rate conv_rate muted">--</div>
                     </td>
-                    <td {# style="text-align:right;" #} class="dataTable-data numeric bfill-cpa cpa">--</td>
                     {% comment %}
                     {% if adgroup.cpc %}
                     <td class="dataTable-data numeric dataTable-ecpm">

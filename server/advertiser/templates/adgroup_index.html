@@ -171,7 +171,7 @@
                     {% endifequal %}
 
                     {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
-                      ${{adgroup.campaign.full_budget|awesome_number_formatter}} campaign budget.
+                      {{adgroup.campaign.full_budget|withsep}} campaign budget.
                     {% endifequal %}
                   </span>
 
@@ -195,11 +195,8 @@
                 <td class="dataTable-goals">
                     <div class="dataTable-data numeric">
                         {% if adgroup.budget_goal %}
-                          {% if adgroup.budget_goal > 100000000 %}
-                            {% if adgroup.cpc %}${% endif %}{{adgroup.budget_goal|awesome_number_formatter}}
-                          {% else %}
-                            {% if adgroup.cpc %}${% endif %}{{adgroup.budget_goal|currency}}
-                          {% endif %}
+                          {% if adgroup.cpc %}${% endif %}{{adgroup.budget_goal|withsep}}
+                        {% endif %}
                         {% if adgroup.cpc %}
                         <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">USD</div>
                         {% else %}

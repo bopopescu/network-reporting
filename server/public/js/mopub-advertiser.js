@@ -888,12 +888,14 @@ var mopub = mopub || {};
         revenue: "rev",
         impression_count: "imp",
         conversion_count: "conv",
+        conversion_rate: "conv_rate",
         request_count: "req",
         click_count: "clk",
         cpa: "cpa",
         cpc: "cpc",
         cpm: "ecpm",
         ctr: "ctr",
+        budget_goal: "budget_goal",
         fill_rate: "fill"
     };
 
@@ -977,8 +979,8 @@ var mopub = mopub || {};
     function formatStatsForDisplay(sumStats) {
       var results = $.extend(true, {}, sumStats);
       results.impression_count = mopub.Utils.formatNumberWithCommas(results.impression_count);
-      results.conversion_count = mopub.Utils.formatNumberWithCommas(results.conversion_count) +
-        " (" + mopub.Utils.formatNumberAsPercentage(results.conv_rate) + ")";
+      results.conversion_count = mopub.Utils.formatNumberWithCommas(results.conversion_count);
+      results.conversion_rate = mopub.Utils.formatNumberAsPercentage(results.conv_rate);
       results.request_count = mopub.Utils.formatNumberWithCommas(results.request_count);
       results.click_count = mopub.Utils.formatNumberWithCommas(results.click_count);
       results.cpa = "$" + results.cpa.toFixed(2);

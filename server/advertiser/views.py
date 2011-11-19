@@ -24,6 +24,7 @@ from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 from common.utils.timezones import Pacific_tzinfo
+from budget.tzinfo import Pacific, utc
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from account.query_managers import AccountQueryManager
 from account.forms import NetworkConfigForm
@@ -632,17 +633,23 @@ class ShowAdGroupHandler(RequestHandler):
         # Use those values if they both exist, otherwise set the range from
         # start to start + 90 days
         else:
-            today = datetime.datetime.now(Pacific_tzinfo()).date()
-            if adgroup.campaign.end_datetime and adgroup.campaign.end_datetime < today:
-                end_date = adgroup.campaign.end_datetime
+            today = datetime.datetime.now(Pacific_tzinfo())
+
+            if adgroup.campaign.end_datetime and adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific) < today:
+                end_date = adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific)
             else:
                 end_date = today
 
             if adgroup.campaign.start_datetime:
-                start_date = adgroup.campaign.start_datetime
+                if adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific) > today:
+                    start_date = today
+                else:
+                    start_date = adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific)
             else:
                 start_date = end_date - datetime.timedelta(90)
 
+            logging.warn(start_date)
+            logging.warn(end_date)
             days = date_magic.gen_days(start_date, end_date)
 
 
@@ -1156,7 +1163,8 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
-
+                    logging.warn("PACE: %s"%budget_service.get_pace(adgroup.campaign.budget_obj))
+                    adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered

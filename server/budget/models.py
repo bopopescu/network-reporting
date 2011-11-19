@@ -524,8 +524,29 @@ class BudgetSliceLog(db.Model):
         osi_rate = self.desired_spending * SUCCESSFUL_DELIV_PER
         osi = self.actual_spending >= osi_rate
         return osi
+    
+    def pace(self):
+        budget = self.budget
+        if not budget: return None
 
-
+        last_slice = budget.most_recent_slice_log
+        if not budget.end_datetime:
+            logging.warn("2")
+            if budget.static_slice_budget:
+                logging.warn("3")
+                return last_slice.actual_spending / budget.static_slice_budget
+            else:
+                logging.warn("HERE?")
+                return None
+        if budget.delivery_type == "allatonce":
+            logging.warn("4")
+            if budget.static_total_budget:
+                return (last_slice.actual_spending / (budget.static_total_budget / budget.total_slices)) * 100
+        logging.warn("5")
+        last_percent = last_slice.actual_spending / last_slice.desired_spending
+        expected_remaining = last_percent * self.desired_spending * budget.remaining_slices
+        return (budget.total_spent + expected_remaining) / budget.total_budget
+			
     @classmethod
     def get_key_name(cls, budget, slice_num):
         if isinstance(budget, db.Model):

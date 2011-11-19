@@ -14,9 +14,40 @@
 {% endblock navLinks %}
 
 
-{% block dateButtons %}{% endblock dateButtons %}
+{% block dateButtons %}
+<div id="titlebar-center-wide">
+    <span class="buttonset-start-disabled" id="campaigns-filterOptions">
+      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/>
+      <label for="campaigns-filterOptions-option-all">
+        All
+      </label>
+      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/>
+      <label for="campaigns-filterOptions-option-Running">
+        Running
+      </label>
+      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" />
+      <label for="campaigns-filterOptions-option-Paused">
+        Paused
+      </label>
+      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" />
+      <label for="campaigns-filterOptions-option-Scheduled">
+        Scheduled
+      </label>
+    </span>
+    <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions">
+      <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
+      {% for app in apps %}
+        <option value="campaign-targeting-{{app.key}}">{{app.name}}</option>
+      {% endfor %}
+    </select>
+</div>
+{% endblock dateButtons %}
 
-{% block titleBarRight %}{% endblock titleBarRight %}
+{% block titleBarRight %}
+<span class="titlebar-right">
+  <a id="add_campaign_button" class="button add icon" href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
+</span>
+{% endblock titleBarRight %}
 
 {% block content %}
 
@@ -34,52 +65,11 @@
     </div>
   {% endif %}
 
-  <section id="dashboard-campaigns">
+  <section>
     <div id="adserverTest" style="display:none;">
       <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no"></iframe>
       <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}</div>
     </div>
-
-
-    <a id="add_campaign_button" class="right button add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
-
-    {# Controls for showing campaigns by All/Running/Paused/Scheduled #}
-    {# These need to be restyled with our new styles to remove JQueryUI #}
-
-
-    <div id="campaigns-control-panel">
-      <div class="center-button-bank">
-
-        <span class="buttonset-start-disabled" id="campaigns-filterOptions">
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/>
-          <label for="campaigns-filterOptions-option-all">
-            All
-          </label>
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/>
-          <label for="campaigns-filterOptions-option-Running">
-            Running
-          </label>
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" />
-          <label for="campaigns-filterOptions-option-Paused">
-            Paused
-          </label>
-          <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" />
-          <label for="campaigns-filterOptions-option-Scheduled">
-            Scheduled
-          </label>
-        </span>
-        <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions">
-          <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
-          {% for app in apps %}
-            <option value="campaign-targeting-{{app.key}}">{{app.name}}</option>
-          {% endfor %}
-        </select>
-
-      </div>
-    </div>
-
-
-    <br />
 
     <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
       <input type="hidden" name="action" id="action"/>
@@ -466,45 +456,13 @@
 
 
 {% block extraScripts %}
+  <script src="/js/mopub-advertiser.js?v=85"></script>
   <script>
     var mopub = mopub || {};
     $(function() {
-        mopub.isCampaignsPage = true;
-        mopub.isDirectSoldPage = true;
-        mopub.graphStartDate = Date.UTC({{start_date.year}},
-            {{start_date.month|add:"-1"}},
-            {{start_date.day}});
-        mopub.accountStats = {{account_stats|safe}};
-
-        $("a[href='#performance']").parent().click(function () {
-            $("#campaigns-control-panel").hide();
-            $(".form-submit-left").hide();
-        }).click();
-
-        $.each(["#marketplace", "#promotional","#guaranteed", "#network"], function(iter, item) {
-            $("a[href='" + item + "']").parent().click(function () {
-                $("#campaigns-control-panel").show();
-                $(".form-submit-left").show();
-             });
-        });
-
-        $("#terms").dialog({
-            autoOpen: false,
-            buttons: {
-                "Accept Terms": function() {
-                },
-                "Not right now": function() {
-                    $(this).dialog("close");
-                }
-
-            }
-        });
-
-        $("#accept_terms").click(function() {
-            $("#terms").dialog('open');
-        });
-
+        //mopub.isDirectSoldPage = true; // need this for getNumDaysToFetch()
+        mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
+        mopub.Advertiser.initDirectSoldPage();
     });
   </script>
-  <script src="/js/mopub-advertiser.js?v=1"></script>
 {% endblock extraScripts %}

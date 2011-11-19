@@ -17,11 +17,12 @@ from common.utils import date_magic
 from common.utils import sswriter
 from common.utils.decorators import cache_page_until_post
 from common.utils.helpers import campaign_stats
+from common.utils import helpers
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
-from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 from common.utils.timezones import Pacific_tzinfo
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from account.query_managers import AccountQueryManager
@@ -287,7 +288,7 @@ class CreateCampaignAJAXHander(RequestHandler):
             initial.update(price_floor=self.account.network_config.price_floor)
         campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],\
+        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],\
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],['millennial_native', 'Millennial Media', False],["mobfox","MobFox",False],\
             ['custom','Custom Network', False], ['custom_native','Custom Native Network', False]]
 
@@ -537,7 +538,7 @@ class CreateAdGroupHandler(RequestHandler):
             adunit.checked = adunit.key() in adgroup.site_keys
 
         # TODO: Clean up this hacked shit
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["chartboost","ChartBoost",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
         for n in networks:
             if adgroup.network_type == n[0]:
                 n[2] = True
@@ -716,10 +717,16 @@ class ShowAdGroupHandler(RequestHandler):
         # In order to make the edit page
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
 
-        try:
-            yesterday = reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
-        except:
-            yesterday = StatsModel()
+        today = None
+        yesterday = None
+
+        # Only pass back today/yesterday if the last 2 days in the date range are actually today/yesterday
+        if end_date == datetime.datetime.now(Pacific_tzinfo()).date():
+            today = reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], StatsModel())
+            try:
+                yesterday = reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
+            except:
+                pass
 
         message = []
         if adgroup.network_type and not 'custom' in adgroup.network_type and adgroup.network_type!='iAd':
@@ -743,7 +750,7 @@ class ShowAdGroupHandler(RequestHandler):
                                     'adgroup': adgroup,
                                     'creatives': creatives,
                                     'totals': reduce(lambda x, y: x+y.stats, adunits, StatsModel()),
-                                    'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], StatsModel()),
+                                    'today': today,
                                     'yesterday': yesterday,
                                     'graph_adunits': graph_adunits,
                                     'start_date': days[0],
@@ -958,10 +965,10 @@ class DisplayCreativeHandler(RequestHandler):
         c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image":
 
-            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%images.get_serving_url(c.image_blob))
+            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%helpers.get_url_for_blob(c.image_blob))
             # return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "text_icon":
-            c.icon_url = images.get_serving_url(c.image_blob)
+            c.icon_url = helpers.get_url_for_blob(c.image_blob)
 
             return render_to_response(self.request, 'advertiser/text_tile.html', {'c':c})
             #return HttpResponse(c.image,content_type='image/png')
@@ -1132,7 +1139,10 @@ class AJAXStatsHandler(RequestHandler):
                         # Overwrite the revenue from MPX if its marketplace
                         # TODO: overwrite clicks as well
                         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-                        mpx_stats = stats_fetcher.get_account_stats( start_date, end_date)
+                        try:
+                            mpx_stats = stats_fetcher.get_account_stats( start_date, end_date)
+                        except MPStatsAPIException, e:
+                            mpx_stats = {}
                         summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                         summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
 
@@ -1272,7 +1282,10 @@ class MarketplaceIndexHandler(RequestHandler):
             else:
                 start_date = end_date - datetime.timedelta(13)
 
-        mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
+        try:
+            mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
+        except MPStatsAPIException, e:
+            mpx_stats = {}
 
         # Get total stats for the rollup/table footer
         creative_totals = {
@@ -1313,7 +1326,8 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'blocklist': blocklist,
                                       'start_date': start_date,
                                       'end_date': end_date,
-                                      'date_range': self.date_range
+                                      'date_range': self.date_range,
+                                      'blind': self.account.network_config.blind,
                                   })
 
 
@@ -1322,47 +1336,70 @@ def marketplace_index(request, *args, **kwargs):
     return MarketplaceIndexHandler()(request, use_cache=False, *args, **kwargs)
 
 
-class AddBlocklistHandler(RequestHandler):
+class BlocklistHandler(RequestHandler):
+    """
+    Ajax handler for adding/removing marketplace blocklist items.
+    Required data parameters:
+    - blocklist: a comma/whitespace separated list of urls to add/remove
+    - action: 'add' or 'remove', the action to take
+    """
     def post(self):
-        add_blocklist_string = self.request.POST.get('blocklist')
-        add_blocklist = add_blocklist_string.replace(',',' ').split()
+        try:
+            # Get the blocklist urls and the action
+            blocklist_urls = self.request.POST.get('blocklist')
+            blocklist = blocklist_urls.replace(',',' ').split()
+            blocklist_action = self.request.POST.get('action')
 
-        if add_blocklist:
+            # Set the network config
             network_config = self.account.network_config
-            network_config.blocklist.extend(add_blocklist)
-            network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
-            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
-        return HttpResponseRedirect(reverse('marketplace_index'))
+
+            # Process add's (sometimes they're in bulk)
+            if blocklist_action == "add" and blocklist:
+                new = [d for d in blocklist if not d in network_config.blocklist]
+                network_config.blocklist.extend(blocklist)
+                network_config.blocklist = sorted(set(network_config.blocklist))   # Removes duplicates and sorts
+                AccountQueryManager().update_config_and_put(account=self.account,
+                                                            network_config=network_config)
+
+                return JSONResponse({'success': 'blocklist item(s) added',
+                                     'new': new})
+
+            # Process removes (there should only be one at a time, but we could
+            # change functionality on the client side to remove multiple urls at once
+            elif blocklist_action == "remove" and blocklist:
+                for url in blocklist:
+                    if network_config.blocklist.count(url):
+                        network_config.blocklist.remove(url)
+                AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+                return JSONResponse({'success': 'blocklist item(s) removed'})
+
+            # If they didn't pass the action, it's an error.
+            else:
+                return JSONResponse({'error': 'you must provide an action (add|remove) and a blockist'})
+
+        except Exception, e:
+            logging.warn(e)
+            return JSONResponse({'error': 'server error'})
+
 
 @login_required
-def add_blocklist_handler(request,*args,**kwargs):
-    return AddBlocklistHandler()(request,*args,**kwargs)
-
-
-class RemoveBlocklistHandler(RequestHandler):
-    def get(self, url=None):
-        #url = self.request.GET.get('url')
-        network_config = self.account.network_config
-        if network_config.blocklist.count(url):
-            network_config.blocklist.remove(url)
-            AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
-
-        return HttpResponseRedirect(reverse('marketplace_index'))
-
-
-@login_required
-def remove_blocklist_handler(request,*args,**kwargs):
-    return RemoveBlocklistHandler()(request, use_cache=False, *args, **kwargs)
+def marketplace_blocklist_change(request,*args,**kwargs):
+    return BlocklistHandler()(request,*args,**kwargs)
 
 
 class MarketplaceOnOffHandler(RequestHandler):
+    """
+    Ajax handler for activating/deactivating the marketplace.
+    Required data parameters:
+    - activate: 'on' or 'off', to set the marketplace on or off.
+    """
     def post(self):
         try:
-            activate = self.request.POST.get('activate', 'on')
+            activate = self.request.POST.get('activate', 'true')
             mpx = CampaignQueryManager.get_marketplace(self.account)
-            if activate == 'on':
+            if activate == 'true':
                 mpx.active = True
-            elif activate == 'off':
+            elif activate == 'false':
                 mpx.active = False
 
             CampaignQueryManager.put(mpx)
@@ -1375,16 +1412,32 @@ def marketplace_on_off(request, *args, **kwargs):
     return MarketplaceOnOffHandler()(request, *args, **kwargs)
 
 
-class MarketplaceSettingsChangeHandler(RequestHandler):
+class MarketplaceBlindnessChangeHandler(RequestHandler):
+    """
+    Ajax handler for activating/deactivating blindness
+    """
     def post(self):
         try:
+            network_config = self.account.network_config
+            activate = self.request.POST.get('activate', None)
+            if activate == 'true':
+                network_config.blind = True
+                network_config.put()
+                return JSONResponse({'success': 'activated'})
+            elif activate == 'false':
+                network_config.blind = False
+                network_config.put()
+                return JSONResponse({'success': 'deactivated'})
+            else:
+                return JSONResponse({'error': 'Invalid activation value'})
             return JSONResponse({'success': str(self.request.POST)})
         except Exception, e:
-            return JSONResponse({'success': e})
+            return JSONResponse({'error': e})
 
 @login_required
-def marketplace_settings_change(request, *args, **kwargs):
-    return MarketplaceSettingsChangeHandler()(request, *args, **kwargs)
+def marketplace_blindness_change(request, *args, **kwargs):
+    return MarketplaceBlindnessChangeHandler()(request, *args, **kwargs)
+
 
 
 

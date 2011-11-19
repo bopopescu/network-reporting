@@ -215,7 +215,7 @@
       <br />
       <div class="clearfix">
         <div class="left" style="padding: 5px 15px">
-          <input id="blindness" class="right" type="checkbox"/>
+          <input id="blindness" class="right" type="checkbox" {% if blind %}checked="checked"{% endif %} {% if not marketplace.active %}disabled="disabled"{% endif %}/>
         </div>
         <div class="left">
           <p>Do not share detailed information with Marketplace bidders. <span class="warning highlight"> Caution </span> This may significantly reduce your marketplace revenue.</p>
@@ -233,17 +233,21 @@
       <div class="clearfix" style="width: 560px;">
         <div id="current_blocklist" class="right">
           <h3> Currently Blocked </h3>
+          <ul id="blocked_domains">
           {% for domain in blocklist %}
-            {{domain}}
-            <a href="{% url remove_blocklist_handler %}?url={{ domain|escape }}">Remove</a>
-            <br />
+            <li>
+              {{domain}}
+              <a class="blocklist_remove" id="{{domain|escape}}" href="#"> Remove </a>
+              <img id="{{domain|escape}}" class="loading-img invisible" src="/images/icons-custom/spinner-12.gif"></img>
+            </li>
           {% empty %}
-            There are no blocked advertisers
+            <li>There are no blocked advertisers</li>
           {% endfor %}
+          </ul>
         </div>
 
 
-        <form id="addblocklist" class="validate left">
+        <div id="addblocklist" class="left">
           <h3> Add blocked advertiser domains </h3>
           <textarea rows="10" cols="20" placeholder="Add each advertiser domain you would like to block on a separate line." name="blocklist"></textarea>
           <br />
@@ -264,6 +268,7 @@
   <script type="text/html" id="adunit-template">
     {% include "partials/adunit.html" %}
   </script>
+  <script type="text/javascript" src="/js/toast.js?v=1"></script>
   <script type="text/javascript">
     var mopub = mopub || {};
     $(document).ready(function() {

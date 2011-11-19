@@ -7,6 +7,7 @@ from django.shortcuts import redirect
 from common.ragendja.template import render_to_response
 
 from common.utils.query_managers import CachedQueryManager
+from common.utils.timezones import Pacific_tzinfo
 
 from account.models import Account, PaymentRecord
 from account.forms import AccountForm, NetworkConfigForm, PaymentInfoForm
@@ -16,6 +17,7 @@ import logging
 from common.utils.request_handler import RequestHandler
 
 import urllib2
+import string
 from common.utils import simplejson
 import datetime
 from itertools import groupby
@@ -44,7 +46,7 @@ class AdNetworkSettingsHandler(RequestHandler):
         apps_for_account = AppQueryManager.get_apps(account=self.account)
         user = self.account.mpuser
 
-        networks = ['admob_status','adsense_status','brightroll_status','chartboost_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
+        networks = ['admob_status','adsense_status','brightroll_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
         network_config_status = {}
 
         def _get_net_status(account,network):
@@ -166,7 +168,6 @@ def logout(request,*args,**kwargs):
 
 class PaymentInfoChangeHandler(RequestHandler):
     def get(self, payment_form=None, *args, **kwargs):
-
         form = payment_form or PaymentInfoForm(instance=self.account.payment_infos.get())
         return render_to_response(self.request,
                                   'account/paymentinfo_change.html',
@@ -192,26 +193,63 @@ def payment_info_change(request, *args, **kwargs):
 
 class PaymentHistoryHandler(RequestHandler):
     def get(self, *args, **kwargs):
+        # Handle scheduled payment resolution via GET parameter
+        if self.request.GET.get("resolved"):
+            record = PaymentRecordQueryManager.get(self.request.GET.get("resolved"))
+            if record:
+                record.resolved = True
+                record.put()
+
         balance = 0
+        total_paid = 0
         start_date = datetime.date(2011, 9, 1)  # Earliest date that we pull stats for
+        end_date = datetime.datetime.now(Pacific_tzinfo())
 
         payment_records = PaymentRecordQueryManager().get_payment_records(account=self.account.key())
         if payment_records:
-            payment_records = sorted(payment_records, key=lambda record: record.payment_date, reverse=True)
+            payment_records = sorted(payment_records, key=lambda record: record.period_start, reverse=True)
+            start_date = payment_records[0].period_end + datetime.timedelta(days=1)
+            total_paid = sum([payment.amount for payment in payment_records])
 
-            # For the balance, we find the last date covered by payment, then get the amount of revenue since then
-            # We assume that the last date covered by payment brings the balance back to $0
-            latest_record = max(payment_records, key=lambda record: record.payment_end)
-            start_date = latest_record.payment_end+datetime.timedelta(days=1)
+        scheduled_payments = PaymentRecordQueryManager().get_scheduled_payments(account=self.account.key())
+        if scheduled_payments:
+            scheduled_payments = sorted(scheduled_payments, key=lambda record: record.period_start)
+            start_date = scheduled_payments[-1].period_end + datetime.timedelta(days=1)
+            balance = sum([payment.amount for payment in scheduled_payments])
 
-        earnings = get_balance(self.account.key(), start_date, datetime.date.today())
-        balance = earnings['sum']['rev']
+        earnings = get_balance(self.account.key(), start_date, end_date)
+        unscheduled_balance = earnings['sum']['rev']
+        balance += unscheduled_balance
 
         return render_to_response(self.request,
                                   'account/payment_history.html',
                                   {'payment_records': payment_records,
+                                   'scheduled_payments': scheduled_payments,
                                    'balance': balance,
-                                   'start_date': start_date })
+                                   'total_paid': total_paid,
+                                   'unscheduled_balance': unscheduled_balance,
+                                   'start_date': start_date,
+                                   'end_date': end_date })
+    def post(self, *args, **kwargs):
+        payment = PaymentRecord()
+        period_start = datetime.datetime.strptime(self.request.POST.get("period_start"),"%m/%d/%Y").date()
+        period_end = datetime.datetime.strptime(self.request.POST.get("period_end"),"%m/%d/%Y").date()
+
+        if period_start and period_end:
+            payment.account = self.account
+            payment.period_start = period_start
+            payment.period_end = period_end
+            # Convert dollars to float. eg. '$2,313.20' becomes '2313.20'
+            amount = ''.join([c for c in self.request.POST.get("amount") if c in string.digits+'.'])
+            payment.amount = float(amount)
+            payment.status = self.request.POST.get("status")
+            if self.request.POST.get("date_executed"):
+                payment.date_executed = datetime.datetime.strptime(self.request.POST.get("date_executed"),"%m/%d/%Y")
+            if self.request.POST.get("form_type") == "scheduled_payment":
+                payment.scheduled_payment = True
+            payment.put()
+
+        return self.get()
 
 def get_balance(pub_id, start_date, end_date):
 

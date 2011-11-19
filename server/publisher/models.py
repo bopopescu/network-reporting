@@ -84,9 +84,9 @@ class App(db.Model):
 
     @property
     def icon_url(self):
-        from google.appengine.api import images
+        from common.utils import helpers
         if not self.icon_blob: return "/placeholders/image.gif"
-        return images.get_serving_url(self.icon_blob)
+        return helpers.get_url_for_blob(self.icon_blob)
 
 
     def get_owner(self):

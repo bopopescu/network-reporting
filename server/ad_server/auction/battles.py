@@ -289,7 +289,7 @@ class MarketplaceBattle(Battle):
                        user_agent=self.client_context.user_agent,
                        udid=self.client_context.raw_udid)
         try:
-            fetched = urlfetch.fetch(mpx_url, deadline=5)
+            fetched = urlfetch.fetch(mpx_url, deadline=2)
             # Make sure it's a good response
             trace_logging.info('MPX RESPONES CODE:%s'%fetched.status_code)
             if fetched.status_code == 200:
@@ -300,8 +300,7 @@ class MarketplaceBattle(Battle):
                     # the excluded_adgroup_keys
                     return creative
                 return None
-
-        except urlfetch.DownloadError:
+        except Exception, e: # TODO: catch real exception
             # There was no valid bid
             return None
 

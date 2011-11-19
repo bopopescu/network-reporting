@@ -6,7 +6,6 @@ import hashlib
 import datetime  
 from common.constants import (KB, MB, GB)
 
-from google.appengine.ext import blobstore
 from google.appengine.ext import db
 
 # matches sequence: space, 2 char, - or _, 2 char, 0 or more ;, followed by char that's not a char, number, - or _
@@ -125,3 +124,7 @@ def to_ascii(obj, encoding='utf-8'):
     if isinstance(obj, unicode):  
         obj = obj.encode('utf-8')
     return obj
+
+def get_url_for_blob(blob):
+    from google.appengine.api import images
+    return images.get_serving_url(blob).replace('http:', 'https:')

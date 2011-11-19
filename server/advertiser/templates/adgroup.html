@@ -107,36 +107,46 @@
             <tbody>
               {% if campaign.gtee or campaign.marketplace %}
                 <tr class="active" id="stats-breakdown-revenue">
+                  {% if yesterday %}
                   <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
                   <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
+                  {% endif %}
                   <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
                   <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                 </tr>
               {% endif %}
               <tr {% if campaign.network or campaign.promo %} class="active" {% endif %} id="stats-breakdown-impressions">
+                {% if yesterday %}
                 <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
+                {% endif %}
                 <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
               </tr>
               <tr id="stats-breakdown-clicks">
+                {% if yesterday %}
                 <td class="stats-breakdown-value today"><span class="inner"> {{today.click_count|withsep}}</span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.click_count|withsep}}</span></td>
+                {% endif %}
                 <td class="stats-breakdown-value all"><span class="inner"> {{totals.click_count|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
               </tr>
               {% if campaign.network %}
                 <tr id="stats-breakdown-ctr">
+                  {% if yesterday %}
                   <td class="stats-breakdown-value today"><span class="inner"> {{today.ctr|percentage}}</span></td>
                   <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.ctr|percentage}}</span></td>
+                  {% endif %}
                   <td class="stats-breakdown-value all"><span class="inner"> {{totals.ctr|percentage}}</span></td>
                   <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
                 </tr>
               {% endif %}
               {% if campaign.promo %}
                 <tr id="stats-breakdown-conversions">
+                  {% if yesterday %}
                   <td class="stats-breakdown-value today"><span class="inner">{{today.conversion_count|withsep}}</span></td>
                   <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.conversion_count|withsep}}</span></td>
+                  {% endif %}
                   <td class="stats-breakdown-value all"><span class="inner">{{totals.conversion_count|withsep}}</span></td>
                   <th class="stats-breakdown-name"><span class="inner">Conversions</span></th>
                 </tr>
@@ -144,13 +154,13 @@
             </tbody>
           </table>
         </div>
-        <div class="stats-breakdown-buttons">
+        <div class="stats-breakdown-buttons {% if not yesterday %}hidden{% endif %}">
           <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" {% if yesterday %}checked="checked"{% endif %}/>
             <label for="stats-breakdown-dateOptions-option-0">Today</label>
             <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
             <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2" {% if not yesterday %}checked="checked"{% endif %}/>
             <label for="stats-breakdown-dateOptions-option-2">All</label>
           </span>
         </div>

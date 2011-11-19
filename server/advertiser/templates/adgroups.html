@@ -671,7 +671,7 @@
 				
 				<td class="dataTable-goals">
 					<div class="dataTable-data numeric">
-						{% if adgroup.budget_goal %}{{adgroup.budget_goal}}
+						{% if adgroup.budget_goal %}{{adgroup.budget_goal|withsep}}
 						{% if adgroup.cpc %}
 						<div class="dataTable-data numeric gtee-goal_unit goal_unit muted">USD</div>
 						{% else %}

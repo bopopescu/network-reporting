@@ -1479,7 +1479,7 @@ var mopub = mopub || {};
     $('#stats-breakdown-dateOptions input').click(function() {
       $('.stats-breakdown-value').hide();
       $('.stats-breakdown-value.'+$(this).val()).show();
-    });
+    }).click();
 
     // set up custom dateOptions modal dialog
     $('#dashboard-dateOptions-custom-from').datepicker({

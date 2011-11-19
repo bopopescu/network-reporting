@@ -717,10 +717,16 @@ class ShowAdGroupHandler(RequestHandler):
         # In order to make the edit page
         campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
 
-        try:
-            yesterday = reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
-        except:
-            yesterday = StatsModel()
+        today = None
+        yesterday = None
+
+        # Only pass back today/yesterday if the last 2 days in the date range are actually today/yesterday
+        if end_date == datetime.datetime.now(Pacific_tzinfo()).date():
+            today = reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], StatsModel())
+            try:
+                yesterday = reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
+            except:
+                pass
 
         message = []
         if adgroup.network_type and not 'custom' in adgroup.network_type and adgroup.network_type!='iAd':
@@ -744,7 +750,7 @@ class ShowAdGroupHandler(RequestHandler):
                                     'adgroup': adgroup,
                                     'creatives': creatives,
                                     'totals': reduce(lambda x, y: x+y.stats, adunits, StatsModel()),
-                                    'today': reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], StatsModel()),
+                                    'today': today,
                                     'yesterday': yesterday,
                                     'graph_adunits': graph_adunits,
                                     'start_date': days[0],

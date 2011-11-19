@@ -196,11 +196,10 @@
                     <div class="dataTable-data numeric">
                         {% if adgroup.budget_goal %}
                           {% if adgroup.cpc %}${% endif %}{{adgroup.budget_goal|withsep}}
-                        {% endif %}
                         {% if adgroup.cpc %}
-                        <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">USD</div>
+                          <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">USD</div>
                         {% else %}
-                        <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">Impressions</div>
+                          <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">Impressions</div>
                         {% endif %}
                         {% else %}--{% endif %}
                     </div>
@@ -339,7 +338,7 @@
                         Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
                       {% endif %}
                       {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                        Ends {{adgroup.campaign.start_datetime|format_date_compact}}.
+                        Ends {{adgroup.campaign.end_datetime|format_date_compact}}.
                       {% endif %}
                       {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                         All dates.
@@ -488,7 +487,7 @@
                         {% endif %} {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                         Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
                         {% endif %} {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                        Ends {{adgroup.campaign.start_datetime|format_date_compact}}.
+                        Ends {{adgroup.campaign.end_datetime|format_date_compact}}.
                         {% endif %} {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                         All dates.
                       {% endif %}

@@ -122,7 +122,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 #"Learn more at <a href='http://mopub-experimental.appspot.com/"
 #"ad_network_reports/'>MoPub</a>"))
 
-def update_ad_networks(start_date = None, end_date = None):
+def update_ad_networks(start_date=None, end_date=None):
     """Update ad network stats.
 
     Iterate through all AdNetworkLoginCredentials. Login to the ad networks
@@ -232,7 +232,11 @@ def update_ad_networks(start_date = None, end_date = None):
                                           pub_id=stats.app_tag,
                                           ad_network=login_credentials.
                                           ad_network_name))
-                        continue
+                        AdNetworkAppMapper(ad_netowrk_name=login_credentials.
+                                                ad_network_name,
+                                           publisher_id=stats.app_tag,
+                                           ad_network_login=login_credentials,
+                                           app_in_mopub=False)
                     else:
                         aggregate.increment(login_credentials.ad_network_name +
                                 '_mapped')

@@ -7,3 +7,8 @@ backends:
   instances: 20
   options: public
   class: B2
+  
+- name: frontend-staging
+  instances: 2
+  options: public
+  class: B2 

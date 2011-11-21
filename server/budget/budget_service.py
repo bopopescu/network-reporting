@@ -132,6 +132,12 @@ def percent_delivered(budget):
         logging.warning("OMG no total budget...? %s" % budget)
         return None
 
+def get_pace(budget):
+    try:
+        return budget.last_slice_log.pace
+    except:
+        return None
+
 def remaining_daily_budget(budget):
     """ Legacy for testing, also
     for $/day allatonce campaigns maybe """

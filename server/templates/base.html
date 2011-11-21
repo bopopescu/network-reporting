@@ -1,10 +1,10 @@
 {% load filters %}{% load googletags %}<!doctype html>
-
 <!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
 <!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
 <!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
 <!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
 <!--[if (gt IE 9)|!(IE)]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+{% spaceless %}
 <head>
   <meta charset="utf-8">
 
@@ -12,46 +12,38 @@
   <meta name="description" content="">
   <meta name="author" content="">
   {% block extraMeta %}{% endblock %}
-  <!-- TypeKit -->
+
+  <script type="text/javascript" src="/js/require.min.js?v=1"></script>
+  {# TypeKit #}
   <script type="text/javascript" src="https://use.typekit.com/qhz7iwb.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <!-- CSS -->
+  {# CSS #}
   <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />
-  <link rel="stylesheet" href="/css/style.css?v=47">
+  <link rel="stylesheet" href="/css/style.css?v=48">
   {% block extraCSS %}{% endblock %}
 
-  <!-- modernizr -->
-  <script src="/js/mylibs/modernizr-1.6.min.js"></script>
-
-  <!-- Google load for jquery and jqueryui -->
+  {# Google load for jquery and jqueryui #}
   <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
   <script type="text/javascript">
       //<![CDATA[
-      google.load("jquery", "1.4.4");
+      google.load("jquery", "1.6.4");
       google.load("jqueryui", "1.8.7");
   </script>
 
-  <!--jQuery and jQuery UI Plugins. These are aggregated from all the *.min.js files in /public/js/mylibs/*-->
-  <script src="/js/mylibs/jquery.mopub.js"></script>
+  {# Plugins  aggregated from all the *.js files in /public/js/mylibs/*#}
+  <script src="/js/mopub-plugins.js?v=24"></script>
 
-   <!--jQuery UI SelectMenu Plugins TODO: Where should this go? -->
-  <script src="/js/mylibs/jquery-ui-1.8.7.custom/development-bundle/ui/jquery.ui.selectmenu.js"></script>
 
-  <!-- <script src="/js/mylibs/jquery.treeview/jquery.treeview.js"></script> -->
-  <!-- <link rel="stylesheet" href="/js/mylibs/jquery.treeview/jquery.treeview.css" /> -->
-  <script src="/js/mylibs/jquery.cookie.js"></script>
+  {# MoPub #}
+  <script src="/js/mopub.js?v=37"></script>
+  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=34"></script>{% endblock extraScripts %}
 
-  <!-- Highcharts -->
-  <script src="/js/mylibs/highcharts/highcharts.js"></script>
+  {# Mixpanel #}
 
-  <!-- Tablesorter -->
-  <script src="/js/jquery.tablesorter.min.js"></script>
-
-  <!-- Mixpanel -->
   <script type="text/javascript">
     var mpq=[];
     mpq.push(["init","2941bda924fcaaff6ec23f27b41f0129"]);
@@ -62,16 +54,7 @@
     {% endif %}
 
   </script>
-  <!-- End Mixpanel -->
-
-  <!-- MoPub -->
-  <script src="/js/mopub.js?v=40"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=34"></script>{% endblock extraScripts %}
-
-  <!--[if lt IE 7 ]>
-    <script src="/js/mylibs/dd_belatedpng.js"></script>
-    <script> DD_belatedPNG.fix('img, .png_bg'); </script>
-  <![endif]-->
+  {#  End Mixpanel #}
 
   <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -87,6 +70,7 @@
   </script>
 </head>
 <input type=hidden value="{{user.is_staff}}" id='is_admin_input'></input>
+{% endspaceless %}
 
 {% block body_content %}
 <body id="mopub-dashboard">
@@ -120,8 +104,8 @@
                 <ul>
                   <li> <a href="{% url account_index %}">General Settings</a> </li>
                   <li> <a href="{% url ad_network_settings %}">Ad Network Settings </a> </li>
-                  <li> <a href="{% url payment_history %}">Payment History </a> </li>
                   <li> <a href="{% url reports_index %}">Reports</a></li>
+                  <li> <a href="{% url payment_history %}">Payment History </a> </li>
                 </ul>
               </div>
             </li>
@@ -138,80 +122,37 @@
     <div id="main">
       <div id="titlebar">
         <div class="pageWidth">
-          {% block pageTitle %}<h1>Dashboard</h1>{% endblock pageTitle %}
+          {% block pageTitle %}
+            <h1>Dashboard</h1>
+          {% endblock pageTitle %}
+
           {% block dateButtons %}
             {% include "partials/datecontrols.html" %}
           {% endblock dateButtons %}
+
           <div id="titlebar-right">
-{% block titleBarRight %}
-<!-- Disable for now
-            <span class="titlebar-link">
-              <a class="linkIcon" href="{% url publisher_index_geo %}">Ad performance by region <span class="ui-icon ui-icon-triangle-1-e"></span></a>
-            </span>
--->
-{% endblock titleBarRight %}
+            {% block titleBarRight %}
+            {% endblock titleBarRight %}
           </div>
+
         </div>
       </div>
       <div id="content">
         <div class="pageWidth">
-{% block messageCenter %}
-          <section class="separated" id="messageCenter">
-            <table id="messageCenter-messages">
-              <tbody>
-                <tr class="messageCenter-message messageCenter-error" id="messageCenter-message-0">
-                  <td class="messageCenter-message-date">Jan 12, 2011</td>
-                  <td class="messageCenter-message-text">
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-                    <div class="messageCenter-message-moreInfo">
-                      <h3>Lorem ipsum!</h3>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                    </div>
-                  </td>
-                  <td class="messageCenter-message-links">
-                    <a class="messageCenter-message-moreInfoLink" href="#">More info</a>
-                    <span class="sep">&middot;</span>
-                    <a class="messageCenter-message-hide mutedLink" href="#">Hide this</a>
-                  </td>
-                </tr>
-                <tr class="messageCenter-message messageCenter-warning" id="messageCenter-message-1">
-                  <td class="messageCenter-message-date">Jan 11, 2011</td>
-                  <td class="messageCenter-message-text">
-                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                  </td>
-                  <td class="messageCenter-message-links">
-                    <a class="messageCenter-message-hide mutedLink" href="#">Hide this</a>
-                  </td>
-                </tr>
-                <tr class="messageCenter-message messageCenter-info" id="messageCenter-message-2">
-                  <td class="messageCenter-message-date">Jan 10, 2011</td>
-                  <td class="messageCenter-message-text">
-                    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.
-                    <div class="messageCenter-message-moreInfo">
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                    </div>
-                  </td>
-                  <td class="messageCenter-message-links">
-                    <a class="messageCenter-message-moreInfoLink" href="#">More info</a>
-                    <span class="sep">&middot;</span>
-                    <a class="messageCenter-message-hide mutedLink" href="#">Hide this</a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </section>{% endblock messageCenter %}
+          {% block messageCenter %}
+          {% endblock messageCenter %}
 
 
           {% block flash %}
             {% if flash %}
-                <!-- There's one or more flash-scoped objects -->
-                {% for key, value in flash.items %}
-                    <div class="{{ key }} alert-message block-message">
-                        {% autoescape off %}
-                        {{ value }}
-                        {% endautoescape %}
-                    </div>
-                {% endfor %}
+              {# There's one or more flash-scoped objects #}
+              {% for key, value in flash.items %}
+                <div class="{{ key }} alert-message block-message">
+                  {% autoescape off %}
+                  {{ value }}
+                  {% endautoescape %}
+                </div>
+              {% endfor %}
             {% endif %}
           {% endblock flash %}
 
@@ -242,43 +183,45 @@
           </div>
           <div id="footer-account">
             {% if user.is_authenticated %}
-            Logged in as <a href="{% url account_index %}">{{user.email}}</a>
+              Logged in as <a href="{% url account_index %}">{{user.email}}</a>
             {% endif %}
-{% block adminSelect %}
-{% if user.is_admin %}
-                  <div style="float:right;padding-left:10px">
-                    <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
-                      Sudo: <input id="user_switcher" type="text" name="user_email" placeholder="user@email.com"/>
-                    </form>
-                  </div>
-                  <script type="text/javascript">
+
+            {% block adminSelect %}
+              {% if user.is_staff %}
+                <div style="float:right;padding-left:10px">
+                  <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
+                    Sudo: <input id="user_switcher" type="text" name="user_email" placeholder="user@email.com"/>
+                  </form>
+                </div>
+
+                <script type="text/javascript">
                   function getCookie(c_name) {
-                    if (document.cookie.length>0) {
-                      c_start=document.cookie.indexOf(c_name + "=");
-                      if (c_start!=-1) {
-                        c_start=c_start + c_name.length+1;
-                        c_end=document.cookie.indexOf(";",c_start);
-                        if (c_end==-1) c_end=document.cookie.length;
-                        return unescape(document.cookie.substring(c_start,c_end));
+                      if (document.cookie.length>0) {
+                          c_start=document.cookie.indexOf(c_name + "=");
+                          if (c_start!=-1) {
+                              c_start=c_start + c_name.length+1;
+                              c_end=document.cookie.indexOf(";",c_start);
+                              if (c_end==-1) c_end=document.cookie.length;
+                              return unescape(document.cookie.substring(c_start,c_end));
+                          }
                       }
-                    }
-                    return "";
+                      return "";
                   }
                   var user_email = getCookie('account_email').slice(1,-1);
                   var $text_input = $('#user_switcher');
                   $text_input.val(user_email)
-                  </script>
-{% endif %}
-{% endblock adminSelect %}
+                </script>
+              {% endif %}
+            {% endblock adminSelect %}
             {% if user.is_authenticated %}
-            <span class="sep">&middot;</span>
-            <a href="{% url django.contrib.auth.views.logout %}">Log out</a>
+              <span class="sep">&middot;</span>
+              <a href="{% url django.contrib.auth.views.logout %}">Log out</a>
             {% endif %}
           </div>
         </div>
       </div>
     </footer>
-  </div> <!-- end of #container -->
+  </div> {# end of #container #}
 </body>
 {% endblock body_content %}
 </html>

@@ -27,43 +27,59 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 
     email = db.BooleanProperty(default = False)
 
+    is_active = db.BooleanProperty(default=True)
+
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
-                    kwargs['ad_network_name']))
+            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(), kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
-#    @classmethod
-#    def kind(self):
-#        return 'AdNetworkLoginInfo'
 
     @classmethod
     def get_by_ad_network_name(cls, account, ad_network_name):
-        return cls.get_by_key_name('k:%s:%s' % (account.key(),
-            ad_network_name))
+        return cls.get_by_key_name('k:%s:%s' % (account.key(), ad_network_name))
 
 class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
     ad_network_name = db.StringProperty(required=True)
     publisher_id = db.StringProperty(required=True)
 
     ad_network_login = db.ReferenceProperty(AdNetworkLoginCredentials,
-            collection_name='ad_network_app_mappers')
-    application = db.ReferenceProperty(App, collection_name=
-            'ad_network_app_mappers')
+                                            collection_name='ad_network_app_mappers')
+    application = db.ReferenceProperty(App, collection_name='ad_network_app_mappers')
+
+    # If a network contains information for an app that the publisher
+    # hasn't entered into mopub, mark this false
+    app_in_mopub = db.BooleanProperty(default=True)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['ad_network_name'],
-                    kwargs['publisher_id']))
+                                               kwargs['publisher_id']))
         super(AdNetworkAppMapper, self).__init__(*args, **kwargs)
 
     @classmethod
     def get_by_publisher_id(cls, publisher_id, ad_network_name):
         return cls.get_by_key_name('k:%s:%s' % (ad_network_name, publisher_id))
 
+
+
+
+    def has_potential_errors(self):
+        """
+        If the mapper doesn't have scrape stats, there may have been an error
+        collecting stats from that network. This method will return a boolean
+        True if stats exist and false if they don't, so that we can tell from
+        within the template if an error might have occured.
+        """
+
+        stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =', self).get()
+
+        return stats == None
+
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
-    ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper, required=
-            True, collection_name='ad_network_stats')
+    ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
+                                                 required=True,
+                                                 collection_name='ad_network_stats')
     date = db.DateProperty(required=True)
 
     # stats info for a specific day

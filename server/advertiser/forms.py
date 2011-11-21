@@ -10,6 +10,7 @@ from common.constants import (  CITY_GEO,
                                 REGION_GEO,
                                 COUNTRY_GEO,
                                 )
+from common.utils import helpers
 
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
@@ -321,9 +322,10 @@ class AbstractCreativeForm(mpforms.MPModelForm):
         # extracts the itunes appid from the url old phobos urls
         # http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=386584429&mt=8
         # in this case: 386584429
-        qs_dict = cgi.parse_qs(urlparse.urlparse(url).query)
-        if 'id' in qs_dict:
-            itunes_id = qs_dict['id'][0]
+        itunes_pattern = re.compile("http://phobos\.apple\.com.*id=(\d+)")
+        itunes_match = itunes_pattern.search(url)
+        if itunes_match:
+            itunes_id = itunes_match.group(1)
             return itunes_id
 
         # extracts the package from the url
@@ -379,7 +381,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
 
         if instance:
             if instance.image_blob:
-                image_url = images.get_serving_url(instance.image_blob) #reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+                image_url = helpers.get_url_for_blob(instance.image_blob) #reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
             else:
                 image_url = ''
             if not initial:
@@ -453,7 +455,7 @@ class ImageCreativeForm(AbstractCreativeForm):
         if instance:
             if instance.image_blob:
                 try:
-                    image_url = images.get_serving_url(instance.image_blob)
+                    image_url = helpers.get_url_for_blob(instance.image_blob)
                 except:
                     image_url = None
             else:

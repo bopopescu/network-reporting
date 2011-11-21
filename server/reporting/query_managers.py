@@ -3,6 +3,15 @@ import logging
 import time
 import copy
 import traceback
+from urllib import urlopen
+try:
+    import json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        from django.utils import simplejson as json
+
 
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
@@ -70,6 +79,8 @@ class StatsModelQueryManager(CachedQueryManager):
     Model = StatsModel
     
     def __init__(self, account, offline=False, include_geo=False):
+        #Hack to keep account object for mongo stats
+        self.account_obj = account
         if isinstance(account, db.Key):
             self.account = account
         elif isinstance(account, db.Model):
@@ -97,7 +108,7 @@ class StatsModelQueryManager(CachedQueryManager):
         stats = []
         for account,apps in account_app_dict.iteritems():
             stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days)
-            
+                    
         return stats    
         
     def get_stats_for_hours(self, publisher=None, advertiser=None, date_hour=None, date_hours=None, account=None, country=None, offline=False):
@@ -167,7 +178,7 @@ class StatsModelQueryManager(CachedQueryManager):
             days = days or []
         
         account = account or self.account
-
+        
         if account:
             parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=offline))
         else:
@@ -218,13 +229,18 @@ class StatsModelQueryManager(CachedQueryManager):
         #but it should only iterate on MULTIPLES of days_len, so ct mod days_len
 
         final_stats = []
-        for i,stat in enumerate(stats):
+        for i,(key,stat) in enumerate(zip(keys,stats)):
             if not stat:
-                stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()))
+                pub_string = key.name().split(':')[1] # k:<publisher>:<advertiser>:<date>
+                publisher = db.Key(pub_string) if pub_string else None 
+                stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()), account=account, publisher=publisher, advertiser=advertiser)
+                if not self.offline:
+                    self._patch_mongodb_stats(stat)
             stat.include_geo = self.include_geo
             final_stats.append(stat)
+           
         return final_stats
-    
+            
     def accumulate_stats(self, stat):
         self.stats.append(stat)
     
@@ -528,3 +544,42 @@ class StatsModelQueryManager(CachedQueryManager):
                                   **props)
             new_stats.append(new_stat)
         return new_stats
+
+    def _patch_mongodb_stats(self, stat):
+        """"Patches a StatModel with MongoDB's latest data for stats in the last week
+            Stat is the StatModel for a chosen day
+        """
+        acct_str = None
+        if stat.account:
+            if stat.account.use_mongodb_stats:
+                acct_str = str(stat.account.key())
+            else: 
+                return
+        
+        date_str = stat.date.date().strftime("%y%m%d")
+        url = "http://mongostats.mopub.com/stats?start_date=" + date_str
+        url += "&end_date=" + date_str
+        
+        pub_str = adv_str = None
+        if stat.publisher:
+            pub_str = str(stat.publisher.key())
+        if stat.advertiser:
+            adv_str = str(stat.advertiser.key())  
+        url += "&acct=%s&pub=%s&adv=%s"%(acct_str or "", pub_str or "", adv_str or "")
+    
+        today_dict = {}
+        try:
+            response = urlopen(url).read()
+            today_dict = json.loads(response)
+            key = "%s||%s||%s"%(pub_str or "*", adv_str or "*", acct_str or "*")
+            today_dict = today_dict['all_stats'][key]['daily_stats'][0]
+        except Exception, ex:
+            logging.error(ex)
+            
+        #Replace StatModel properties with today's stats
+        if today_dict:
+            stat.revenue = today_dict['revenue']
+            stat.impression_count = today_dict['impression_count']
+            stat.attemp_count = today_dict['attempt_count']
+            stat.request_count = today_dict['request_count']
+            stat.click_count = today_dict['click_count']

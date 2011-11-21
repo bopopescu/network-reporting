@@ -25,6 +25,10 @@ if (typeof window.console == "undefined") {
  */
 (function($){
 
+    var mopub = window.mopub || {};
+    var Chart = window.Chart || {};
+    var Stats = window.Stats || {};
+
     $(document).ready(function() {
 
         /*
@@ -60,6 +64,7 @@ if (typeof window.console == "undefined") {
 
             }
         }
+
 
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
@@ -116,6 +121,7 @@ if (typeof window.console == "undefined") {
 
         // Tabify tabs
         $('.tabs').tabs();
+        $('.pills').tabs();
 
         // Where is this used?
         // $(".tree").treeview();
@@ -217,7 +223,8 @@ if (typeof window.console == "undefined") {
                 animation: false,
                 backgroundColor: null,
                 borderRadius: 0,
-                margin: [30,0,30,45]
+                margin: [30,0,30,45],
+                height: 185
             },
             title: { text: null },
             lang: {
@@ -363,68 +370,6 @@ if (typeof window.console == "undefined") {
         }
     };
 
-
-    /*
-     * ## Template rendering
-     *
-     * This function lets you use data to fill in predefined template strings.
-     *
-     * Usage:
-     * `str` - A template string. Templates can include javascript logic enclosed in <% %>
-     *         brackets, similar to rails' erb templates.
-     *
-     * `data` - A javascript object which contains data to fill the template with.
-     *
-     * e.g.
-     *
-     * `var template = "<%= user %> is <%= desc %>.";`
-     *
-     * `var data1 = {user: 'John', desc: 'cool'};`
-     *
-     * `var data2 = {user: 'Nafis', desc: 'lame'};`
-     *
-     * `$.renderTemplate(template, data1); // "John is cool"`
-     *
-     * For more complex examples, see [this](http://ejohn.org/blog/javascript-micro-templating/)
-     */
-    var template_cache = {};
-    $.renderTemplate = function tmpl (str, data){
-        // Figure out if we're getting a template, or if we need to
-        // load the template - and be sure to cache the result.
-        var fn = !/\W/.test(str) ?
-            template_cache[str] = template_cache[str] || tmpl(document.getElementById(str).innerHTML) :
-
-        // Generate a reusable function that will serve as a template
-        // generator (and which will be cached).
-        new Function("obj",
-                     "var p=[],print=function(){p.push.apply(p,arguments);};" +
-
-                     // Introduce the data as local variables using with(){}
-                     "with(obj){p.push('" +
-
-                     // Convert the template into pure JavaScript
-                     str
-                     .replace(/[\r\t\n]/g, " ")
-                     .split("<%").join("\t")
-                     .replace(/((^|%>)[^\t]*)'/g, "$1\r")
-                     .replace(/\t=(.*?)%>/g, "',$1,'")
-                     .split("\t").join("');")
-                     .split("%>").join("p.push('")
-                     .split("\r").join("\\'")
-                     + "');}return p.join('');");
-
-        // Provide some basic currying to the user
-        return data ? fn( data ) : fn;
-    };
-
-    /*
-     * Alternate binding for the renderTemplate function
-     */
-    $.fn.renderTemplate = function (str, data) {
-        return $(this).html($.renderTemplate(str, data));
-    };
-
-
     /*
      * ## Dropdown Menus
      *
@@ -538,7 +483,12 @@ if (typeof window.console == "undefined") {
             $(item).click(function(){
                 activate($(this), ul);
                 activate($(href), tab_sections);
+                window.location.hash = href;
             });
+
+            if (window.location.hash == href) {
+                $(item).click();
+            }
         });
     };
 
@@ -625,19 +575,31 @@ if (typeof window.console == "undefined") {
         });
     };
 
+    $.fn.lightswitchOn = function () {
+        var light_switch = $(this);
+        var switcher = $('.switch', light_switch);
+        switcher.removeClass('off').addClass('on');
+    };
 
+    $.fn.lightswitchOff = function () {
+        var light_switch = $(this);
+        var switcher = $('.switch', light_switch);
+        switcher.removeClass('on').addClass('off');
+    };
+
+    mopub.Utils = mopub.Utils || {};
 
     /*
      * ## Mopub Utility
      */
     mopub.Utils.formatNumberWithCommas = function(string) {
         string += '';
-        x = string.split('.');
-        x1 = x[0];
-        x2 = x.length > 1 ? '.' + x[1] : '';
+        var x = string.split('.');
+        var x1 = x[0];
+        var x2 = x.length > 1 ? '.' + x[1] : '';
         var rgx = /(\d+)(\d{3})/;
         while (rgx.test(x1)) {
-            x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            var x1 = x1.replace(rgx, '$1' + ',' + '$2');
         }
         return x1 + x2;
     };
@@ -659,15 +621,7 @@ if (typeof window.console == "undefined") {
         return keys;
     };
 
-})(this.jQuery);
-
-
-/*
- * # Ajax Chunked Fetch
- */
-(function(Utils, $) {
-
-    var AjaxChunkedFetch = Utils.AjaxChunkedFetch = function(args) {
+    var AjaxChunkedFetch = mopub.Utils.AjaxChunkedFetch = function(args) {
         this.items = {};
         this.chunkComplete = function(data, chunk, fetchObj) {};
         this.chunkFailure = function(chunk, fetchObj) {};
@@ -827,7 +781,7 @@ if (typeof window.console == "undefined") {
                     self.fetchObject.markAsFailed();
                 } else {
                     // Schedule retry and extend the backoff delay.
-                    setTimeout(function() { self.execute() }, self.backoffDelay);
+                    setTimeout(function() { self.execute(); }, self.backoffDelay);
                     self.backoffDelay *= AjaxChunkedFetch.BACKOFF_MULTIPLIER;
                 }
             },
@@ -836,12 +790,7 @@ if (typeof window.console == "undefined") {
         });
     };
 
-})(mopub.Utils = mopub.Utils || {}, this.jQuery);
 
-/*
- * # Mopub Stats
- */
-(function(Stats, $) {
     /*
      * ## Stat sorting
      */
@@ -860,8 +809,9 @@ if (typeof window.console == "undefined") {
      * ## DOCUMENT THIS
      */
     Stats.statArrayFromDailyStats = function(arrayOfDailyStats, statName) {
+        console.log(arrayOfDailyStats);
         return $.map(arrayOfDailyStats, function(oneDayStats) {
-                return parseFloat(oneDayStats[statName]);
+            return parseFloat(oneDayStats[statName]);
         });
     };
 
@@ -950,15 +900,131 @@ if (typeof window.console == "undefined") {
         return ctr;
     };
 
-})(mopub.Stats = mopub.Stats || {}, this.jQuery);
-
-/*
- * # Mopub Charting
- */
-(function(Chart, $) {
     /*
      * ## Dashboard Stats Chart
      */
+
+    /*
+     * ## Y-Axis formating utility functions
+     *
+     * There are a couple of different ways to format the y-axis labels.
+     * Here are a couple of utility y-axis formatting functions.
+     */
+    Chart.moneyLabelFormatter = function() {
+        return '$' + Highcharts.numberFormat(this.value, 0);
+    };
+
+    Chart.percentageLabelFormatter = function() {
+        return Highcharts.numberFormat(this.value, 0) + '%';
+    };
+
+    Chart.numberLabelFormatter = function() {
+        if (this.value >= 1000000000) {
+            return Highcharts.numberFormat(this.value / 1000000000, 0) + "B";
+        } else if (this.value >= 1000000) {
+            return Highcharts.numberFormat(this.value / 1000000, 0) + "M";
+        } else if (this.value >= 1000) {
+            return Highcharts.numberFormat(this.value / 1000, 0) + "K";
+        } else if (this.value > 0) {
+            return Highcharts.numberFormat(this.value, 0);
+        } else {
+            return "0";
+        }
+    };
+
+    /*
+     * ## Tooltip Utility functions
+     *
+     * Like the y-axis formatting, tooltips change depending on the type
+     * of data they feature. Here are a couple of common ones.
+     */
+    Chart.defaultTooltipFormatter = function() {
+        var value = Highcharts.numberFormat(this.y, 0);
+        var total = Highcharts.numberFormat(this.total, 0);
+        var text = '<span style="font-size: 14px;">'
+            + Highcharts.dateFormat('%A, %B %e, %Y', this.x)
+            + '</span>'
+            + '<br/>'
+            + '<span style="padding: 0; '
+            + 'font-weight: 600; '
+            + 'color: ' + this.series.color
+            + '">'
+            + this.series.name
+            + '</span>'
+            + ': <strong style="font-weight: 600;">'
+            + value
+            + '</strong><br/>';
+        return text;
+    };
+
+    /*
+     * ## Chart default options
+     */
+    Chart.highChartDefaultOptions = {
+        chart: {
+            defaultSeriesType: 'line',
+            margin: [30,0,30,45]
+        },
+        legend: {
+            verticalAlign: "bottom",
+            y: -7,
+            enabled: true
+        },
+        yAxis: {
+            labels: {
+                formatter: Chart.numberLabelFormatter
+            }
+        },
+        tooltip: {
+            formatter: Chart.defaultTooltipFormatter
+        }
+    };
+
+    /*
+     * New way of setting up a stats chart. Let's use this.
+     */
+    Chart.createStatsChart = function(selector, data, extraOptions) {
+
+        // extraOptions aren't required
+        if (typeof extraOptions == 'undefined') {
+            extraOptions = {};
+        }
+
+        // If the data isn't formatted correctly, bring up a chart error
+        if (typeof data == 'undefined') {
+            Chart.chartError();
+            return;
+        }
+
+        // Each data item should have a color and a line width
+        var colors = ['#0090d9', '#e57300', '#53a600', '#444444', '#60beef'];
+        $.each(data, function(iter, item){
+            if (typeof item.color == 'undefined') {
+                item.color = colors[iter % colors.length];
+            }
+            item.lineWidth = 4;
+        });
+
+        // Create the highcharts options from the
+        var options = $.extend(Chart.highChartDefaultOptions, {
+            chart: {
+                renderTo: selector.replace('#','')
+            },
+            series: data
+        });
+
+        // setup HighCharts chart
+        var highchart = new Highcharts.Chart(options);
+     };
+
+
+    /*
+     * Old chart stuff. Depricating.
+     */
+    Chart.insertStatsChart = function(selector, seriesType, data) {
+        var metricElement = $(selector);
+    };
+
     Chart.setupDashboardStatsChart = function(seriesType) {
         // get active metric from breakdown
         var metricElement = $('#dashboard-stats .stats-breakdown .active');
@@ -1008,7 +1074,9 @@ if (typeof window.console == "undefined") {
                 renderTo: 'dashboard-stats-chart',
                 defaultSeriesType: seriesType,
                 marginTop: 0,
-                marginBottom: 55
+                marginBottom: 55,
+                height: 185
+
             },
             plotOptions: {
                 series: {
@@ -1138,6 +1206,12 @@ if (typeof window.console == "undefined") {
     };
 
 
+    window.Chart = Chart;
+    window.Stats = Stats;
+    window.mopub = mopub;
+    window.mopub.Stats = Stats;
+    window.mopub.Chart = Chart;
+    window.Mopub = mopub;
 
+})(this.jQuery);
 
-})(mopub.Chart = mopub.Chart || {}, this.jQuery);

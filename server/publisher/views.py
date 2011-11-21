@@ -58,7 +58,7 @@ from common.constants import *
 from budget import budget_service
 
 from common.utils.decorators import cache_page_until_post
-from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 
 class AppIndexHandler(RequestHandler):
@@ -416,7 +416,10 @@ class ShowAppHandler(RequestHandler):
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
             if ag.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
-                mpx_stats = stats_fetcher.get_app_stats(str(app_key), start_date, end_date)
+                try:
+                    mpx_stats = stats_fetcher.get_app_stats(str(app_key), start_date, end_date)
+                except MPStatsAPIException, e:
+                    mpx_stats = {}
                 ag.stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
@@ -606,7 +609,10 @@ class AdUnitShowHandler(RequestHandler):
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
             if ag.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
-                mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()), start_date, end_date)
+                try:
+                    mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()), start_date, end_date)
+                except MPStatsAPIException, e:
+                    mpx_stats = {}
                 ag.stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
@@ -821,7 +827,12 @@ class GenerateHandler(RequestHandler):
     def get(self,adunit_key):
         adunit = AdUnitQueryManager.get(adunit_key)
         status = self.params.get('status')
-        return render_to_response(self.request,'publisher/code.html', {'site': adunit, 'status': status, 'account': self.account})
+        return render_to_response(self.request,'publisher/code.html',
+            {'site': adunit,
+             'status': status,
+             'width': adunit.get_width(),
+             'height': adunit.get_height(),
+             'account': self.account})
 
 @login_required
 def generate(request,*args,**kwargs):

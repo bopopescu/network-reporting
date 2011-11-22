@@ -169,6 +169,8 @@ class BaseCreativeRenderer(object):
         self.header_context.imp_tracker = str(self.impression_url)
         # pass the creative height and width if they are explicity set
         trace_logging.warning("creative size:%s" % self.creative.format)
+        trace_logging.warning("creative size:%s, %s" % (self.creative.width,
+                                                        self.creative.height))
         if self.creative.width and self.creative.height \
           and not self.adunit.is_fullscreen():
             self.header_context.width = str(self.creative.width)

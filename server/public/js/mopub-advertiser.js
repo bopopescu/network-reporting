@@ -895,6 +895,7 @@ var mopub = mopub || {};
         cpc: "cpc",
         cpm: "ecpm",
         ctr: "ctr",
+        pace: "pace",
         budget_goal: "budget_goal",
         fill_rate: "fill"
     };
@@ -1003,9 +1004,31 @@ var mopub = mopub || {};
         }
       }
       results.on_schedule = onScheduleHtml;
-
+      
+      results.pace = htmlForPacing(results);
+            
       return results;
     }
+    
+        function htmlForPacing(results) {
+            if (results.pace) {
+                if (results.pace_type == "delivery") {
+                    return "<div>Delivery: " + mopub.Utils.formatNumberAsPercentage(results.pace) + "</div>";
+                } else {
+                    color = "";
+                    if (results.pace >= .95) {
+                        color = "green";
+                    } else if (results.pace >= .80) {
+                        color = "yellow";
+                    } else {
+                        color = "red";
+                    }
+                    return '<div style="color:' + color + '; font-size:9px;"">Pacing: ' +
+                                mopub.Utils.formatNumberAsPercentage(results.pace) + '</div>';
+                }
+            }
+            
+        }
 
         function populateGraphWithAccountStats(stats) {
             var dailyStats = stats["all_stats"]["||"]["daily_stats"];

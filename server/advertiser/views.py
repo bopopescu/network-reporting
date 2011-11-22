@@ -218,7 +218,7 @@ def _sort_campaigns(adgroups):
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
     # adgroup2.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
-    # adgroup3.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # adgroup3.l = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
     # all_daily_stats = [(StatsModel(day=1),StatsModel(day=1),StatsModel(day=1)),
     #                    (StatsModel(day=2),StatsModel(day=2),StatsModel(day=2)),
     #                    (StatsModel(day=3),StatsModel(day=3),StatsModel(day=3))]
@@ -1163,12 +1163,14 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
-                    logging.warn("PACE: %s"%budget_service.get_pace(adgroup.campaign.budget_obj))
-                    adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+                    pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+                    if pace:
+                        logging.warn("%s %s"%(pace[0], pace[1]))
+                        summed_stats.pace_type = pace[0]
+                        summed_stats.pace = pace[1]
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
-
                     summed_stats.status = filters.campaign_status(adgroup)
                     if adgroup.running and adgroup.campaign.budget_obj and adgroup.campaign.budget_obj.delivery_type != 'allatonce':
                         summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign.budget_obj) else "behind"

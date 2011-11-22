@@ -6,8 +6,8 @@ function checkReport(retry_num) {
     var id = $('#reportKey').val();
     $.ajax({
        url: '/reports/check/'+id+'/?retry='+retry_num,
-       success: writeReport,
-       });
+       success: writeReport
+    });
 }
 
 function writeReport(report) {

@@ -296,6 +296,9 @@ class MarketplaceBattle(Battle):
                 creative = self._process_marketplace_response(fetched.content,
                                                               creative)
                 if creative:
+                    # modify the height and width to be that of the adunit
+                    creative.width = self.client_context.adunit.get_width()
+                    creative.height = self.client_context.adunit.get_height()
                     # Do not ever add marketplace adgroups to
                     # the excluded_adgroup_keys
                     return creative

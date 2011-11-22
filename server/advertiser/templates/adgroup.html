@@ -5,12 +5,21 @@
   <div class="breadcrumb">
     {% if not adgroup.archived %}
       {% if campaign.network %}
-        <a class="linkIcon breadcrumb-back" href="{% url network_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
+        <a class="linkIcon breadcrumb-back" href="{% url network_index %}">
+          <span class="ui-icon ui-icon-arrowthick-1-w"></span>
+          Back to Networks
+        </a>
       {% else %}
-        <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
+        <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}">
+          <span class="ui-icon ui-icon-arrowthick-1-w"></span>
+          Back to Campaigns
+        </a>
       {% endif %}
     {% else %}
-      <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
+      <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}">
+        <span class="ui-icon ui-icon-arrowthick-1-w"></span>
+        Back to Archived Campaigns
+      </a>
     {% endif %}
 
     {% if campaign.network %}
@@ -224,8 +233,8 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td> {{ campaign.start_datetime }} </td>
-                        <td> {{ campaign.end_datetime|default_if_none:"None" }} </td>
+                        <td> {{ campaign.start_datetime|format_date_time }} </td>
+                        <td> {{ campaign.end_datetime|format_date_time|default_if_none:"None" }} </td>
                         <td> {{campaign.budget.total_spent|currency }} </td>
                         <td>
                           {% ifequal adgroup.campaign.budget_type 'daily' %}

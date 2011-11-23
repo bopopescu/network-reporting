@@ -3,7 +3,7 @@ from budget.helpers import get_curr_slice_num, get_slice_from_datetime, TS_PER_D
 import logging
 import math
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 
 # increase numbers by the slighest amount because floating pt errors tend to yield numbers JUST less
@@ -529,20 +529,29 @@ class BudgetSliceLog(db.Model):
     def pace(self):
         budget = self.budget
         if not budget: return None
+        if not budget.is_active_for_date(date.today()): return None
+        logging.warn("Has budget")
 
-        last_slice = budget.most_recent_slice_log            
+        last_slice = budget.most_recent_slice_log  
         if budget.end_datetime:
             if budget.delivery_type == "allatonce":
-                return ["pace", (budget.total_spent / budget.total_budget)]
+                percent_spent = budget.total_spent / budget.total_budget
+                percent_days = budget.elapsed_slices / budget.total_slices
+                logging.warn("All at once, spent: %s days: %s"%(percent_spent, percent_days))
+                return ["pace", min(1, (percent_spent / percent_days))]
             else:
                 last_percent = last_slice.actual_spending / last_slice.desired_spending
                 expected_remaining = last_percent * self.desired_spending * budget.remaining_slices
-                return ["pace", ((budget.total_spent + expected_remaining) / budget.total_budget)]
+                logging.warn("Evenly")
+                return ["pace", min(1, ((budget.total_spent + expected_remaining) / budget.total_budget))]
         else:
             if budget.static_slice_budget:
-                return ["pace", (last_slice.actual_spending / last_slice.desired_spending)]
+                logging.warn("Daily actual: %s desired: %s"%(last_slice.actual_spending, last_slice.desired_spending))
+                return ["pace", min(1, (last_slice.actual_spending / last_slice.desired_spending))]
             else:
-                return ["delivery", (budget.total_spent / budget.total_budget)]
+                logging.warn("No end date, not daily, delivery")
+                return ["delivery", min(1, (budget.total_spent / budget.total_budget))]
+        logging.warn("None")
         return None
 
     @classmethod

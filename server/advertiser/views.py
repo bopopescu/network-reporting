@@ -1163,6 +1163,8 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
+                    
+                    logging.warn("%s"%adgroup.name)
                     pace = budget_service.get_pace(adgroup.campaign.budget_obj)
                     if pace:
                         logging.warn("%s %s"%(pace[0], pace[1]))

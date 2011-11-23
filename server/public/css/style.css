@@ -1487,8 +1487,11 @@ a.disabled {
   vertical-align: top;
   padding: 8px 0 7px 0; }
 
+table.dataTable {
+  width: 100%; }
+
 .dataTable-name {
-  width: 400px; }
+  /* width: 400px; */ }
   .dataTable-name .inner {
     display: block;
     width: 500px;
@@ -1503,9 +1506,6 @@ a.disabled {
   width: 175px; }
 
 .dataTable-date-short {
-  width: 100px; }
-
-.dataTable-ecpm {
   width: 100px; }
 
 .dataTable-campaign-ecpm {

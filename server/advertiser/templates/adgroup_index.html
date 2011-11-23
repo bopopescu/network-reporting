@@ -107,30 +107,18 @@
 
     {% for level in guarantee_levels %}
       {% if level.display %}
-        <table class="{#sortable zebra-striped simpletable#}dataTable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
+        <table class="dataTable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
           <thead>
             <tr>
               <th class="campaignData-icon"></th>
-              <th> {{ level.name }} Priority </th>
-              <th class="numeric">Revenue</th>
-              <th class="numeric">Status</th>
-              <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
-              <th class="numeric">Goal</th>
-              <th class="numeric">Impressions</th>
-              <th class="numeric">Clicks</th>
-              <th class="numeric">Conv</th>
-
-              {% comment %}
-              <!-- <th style="text-align: right;">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th> -->
-              <!-- <th style="text-align: right;">Status</th> -->
-              <!-- <th style="text-align: right;">Budget</th> -->
-              <!-- <th style="text-align: right;">Delivered</th> -->
-              <!-- <th style="text-align: right;" width="100">Impressions</th> -->
-              <!-- <th style="text-align: right;">Clicks</th> -->
-              <!-- <th style="text-align: right;">CTR</th> -->
-              <!-- <th style="text-align: right;">Conv</th> -->
-              <!-- <th style="text-align: right;">Revenue</th> -->
-              {% endcomment %}
+              <th class="dataTable-name"> {{ level.name }} Priority </th>
+              <th class="dataTable-data numeric">Revenue</th>
+              <th class="dataTable-data numeric">Status</th>
+              <th class="dataTable-data numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+              <th class="dataTable-data numeric">Goal</th>
+              <th class="dataTable-data numeric">Impressions</th>
+              <th class="dataTable-data numeric">Clicks</th>
+              <th class="dataTable-data numeric">Conv</th>
             </tr>
           </thead>
           <tbody>
@@ -177,7 +165,7 @@
 
                 </td>
 
-                <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-rev rev">--</td>
+                <td class="dataTable-data numeric gtee-rev rev">--</td>
 
                 <td class="dataTable-data numeric">
                   <div class="status">--</div>
@@ -204,53 +192,15 @@
                         {% else %}--{% endif %}
                     </div>
                 </td>
-                <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-imp imp">--</td>
-                <td class="dataTable-clk">
-                    <div class="dataTable-data numeric gtee-clk clk">--</div>
-                    <div class="dataTable-data numeric gtee-ctr ctr muted">--</div>
-                </td>
-                <td class="dataTable-conv">
-                  <div class="dataTable-data numeric gtee-conv conv">--</div>
-                  <div class="dataTable-data numeric gtee-conve_rate conv_rate muted">--</div>
-                </td>
-
-                {% comment %}
-                {% if adgroup.cpc %}
-                  <td class="dataTable-data numeric dataTable-ecpm">
-                    <div class="dataTable-campaign-ecpm ecpm">--</div>
-                  </td>
-                {% else %}
-                  <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
-                {% endif %}
-
+                <td class="dataTable-data numeric gtee-imp imp">--</td>
                 <td class="dataTable-data numeric">
-                  <div class="status">--</div>
-                  <div class="on_schedule muted"></div>
-                </td>
-
-                <td class="dataTable-data numeric">
-
-                  {% if adgroup.campaign.budget_type == "full_campaign" %}
-                    {{ adgroup.campaign.full_budget|currency }}
-                  {% else %}
-                    {% if adgroup.campaign.budget_type == "daily" %}
-                      {{ adgroup.campaign.budget|currency }} daily
-                    {% else %}
-                      Unlimited
-                    {% endif %}
-                  {% endif %}
-
+                    <div class="gtee-clk clk">--</div>
+                    <div class="gtee-ctr ctr muted">--</div>
                 </td>
                 <td class="dataTable-data numeric">
-                  {{ adgroup.budget.total_spent|currency }}
+                  <div class="gtee-conv conv">--</div>
+                  <div class="gtee-conve_rate conv_rate muted">--</div>
                 </td>
-
-                <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-imp imp">--</td>
-                <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-clk clk">--</td>
-                <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-ctr ctr">--</td>
-                <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-conv conv">--</td>
-                <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-rev rev">--</td>
-                {% endcomment %}
               </tr>
             {% endfor %}
           {% endif %}
@@ -291,29 +241,18 @@
           </table>
         </div>
 
-        <table class="{#sortable zebra-striped simpletable#}dataTable campaignData-main">
+        <table class="dataTable campaignData-main">
           <thead>
             <tr>
               <th class="campaignData-icon"></th>
-              <th>Name</th>
-
-              <th class="numeric">Revenue</th>
-              <th class="numeric">Status</th>
-              <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
-              <th class="numeric">Goal</th>
-              <th class="numeric">Impressions</th>
-              <th class="numeric">Clicks</th>
-              <th class="numeric">Conv</th>
-
-              {% comment %}
-                <th style="text-align: right;">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-              <th style="text-align: right;">Status</th>
-              <th style="text-align: right;" width="100">Impressions</th>
-              <th style="text-align: right;">Clicks</th>
-              <th style="text-align: right;">CTR</th>
-              <th style="text-align: right;">Conv</th>
-              <th style="text-align: right;">Revenue</th>
-              {% endcomment %}
+              <th class="dataTable-name">Name</th>
+              <th class="dataTable-data numeric">Revenue</th>
+              <th class="dataTable-data numeric">Status</th>
+              <th class="dataTable-data numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+              <th class="dataTable-data numeric">Goal</th>
+              <th class="dataTable-data numeric">Impressions</th>
+              <th class="dataTable-data numeric">Clicks</th>
+              <th class="dataTable-data numeric">Conv</th>
               </tr>
             </thead>
             <tbody>
@@ -352,7 +291,7 @@
                   </td>
 
 
-                  <td {# style="text-align:right;" #} class="dataTable-data numeric promo-rev rev">--</td>
+                  <td class="dataTable-data numeric promo-rev rev">--</td>
 
                 <td class="dataTable-data numeric">
                   <div class="status">--</div>
@@ -360,40 +299,22 @@
                 </td>
 
                 {% if adgroup.cpc %}
-                  <td class="dataTable-data numeric dataTable-ecpm">
+                  <td class="dataTable-data numeric">
                     <div class="dataTable-campaign-ecpm ecpm">--</div>
                   </td>
                 {% else %}
-                  <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
+                  <td class="dataTable-data numeric ecpm">--</td>
                 {% endif %}
-                <td {# style="text-align:right;" #} class="dataTable-data numeric promo-goal goal">--</td>
-                <td {# style="text-align:right;" #} class="dataTable-data numeric promo-imp imp">--</td>
-                <td class="dataTable-clk">
-                    <div class="dataTable-data numeric promo-clk clk">--</div>
-                    <div class="dataTable-data numeric promo-ctr ctr muted">--</div>
+                <td class="dataTable-data numeric promo-goal goal"></td>
+                <td class="dataTable-data numeric promo-imp imp">--</td>
+                <td class="dataTable-data numeric">
+                    <div class="promo-clk clk">--</div>
+                    <div class="promo-ctr ctr muted">--</div>
                 </td>
-                <td class="dataTable-conv">
-                  <div class="dataTable-data numeric promo-conv conv">--</div>
-                  <div class="dataTable-data numeric promo-conve_rate conv_rate muted">--</div>
+                <td class="dataTable-data numeric">
+                  <div class="promo-conv conv">--</div>
+                  <div class="promo-conve_rate conv_rate muted">--</div>
                 </td>
-
-
-                  {% comment %}
-                  <td {# style="text-align:right;" #} class="dataTable-data numeric dataTable-ecpm ecpm">
-                    {% if adgroup.bid_strategy == 'cpm' %}
-                      --
-                    {% endif %}
-                    {% if adgroup.bid_strategy == 'cpc' %}
-                      <div class="dataTable-campaign-ecpm ecpm">--</div>
-                    {% endif %}
-                  </td>
-                  <td {# style="text-align:right;" #} class="dataTable-data numeric status">--</td>
-                  <td {# style="text-align:right;" #} class="dataTable-data numeric promo-imp imp">--</td>
-                  <td {# style="text-align:right;" #} class="dataTable-data numeric promo-clk clk">--</td>
-                  <td {# style="text-align:right;" #} class="dataTable-data numeric promo-ctr ctr">--</td>
-                  <td {# style="text-align:right;" #} class="dataTable-data numeric promo-conv conv">--</td>
-                  <td {# style="text-align:right;" #} class="dataTable-data numeric promo-rev rev">--</td>
-                  {% endcomment %}
                 </tr>
               {% endfor %}
             </tbody>
@@ -431,29 +352,19 @@
             </table>
           </div>
 
-          <table class="{#sortable zebra-striped simpletable#}dataTable campaignData-main">
+          <table class="dataTable campaignData-main">
             <thead>
               <tr>
                 <th class="campaignData-icon"></th>
-                <th>Name</th>
+                <th class="dataTable-name">Name</th>
 
-                <th class="numeric"></th>
-                <th class="numeric">Status</th>
-                <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
-                <th class="numeric">Goal</th>
-                <th class="numeric">Impressions</th>
-                <th class="numeric">Clicks</th>
-                <th class="numeric">Conv</th>
-
-                {% comment %}
-                <th style="text-align: right;">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-                <th style="text-align: right;">Status</th>
-                <th style="text-align: right;" width="100">Impressions</th>
-                <th style="text-align: right;">Clicks</th>
-                <th style="text-align: right;">CTR</th>
-                <th style="text-align: right;">Conv</th>
-                <th style="text-align: right;">CPA</th>
-                {% endcomment %}
+                <th class="dataTable-data numeric"></th>
+                <th class="dataTable-data numeric">Status</th>
+                <th class="dataTable-data numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+                <th class="dataTable-data numeric">Goal</th>
+                <th class="dataTable-data numeric">Impressions</th>
+                <th class="dataTable-data numeric">Clicks</th>
+                <th class="dataTable-data numeric">Conv</th>
               </tr>
             </thead>
             <tbody>
@@ -502,39 +413,23 @@
                     </td>
 
                     {% if adgroup.cpc %}
-                      <td class="dataTable-data numeric dataTable-ecpm">
+                      <td class="dataTable-data numeric">
                         <div class="dataTable-campaign-ecpm ecpm">--</div>
                       </td>
                     {% else %}
-                      <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
+                      <td class="dataTable-data numeric ecpm">--</td>
                     {% endif %}
 
-                    <td {# style="text-align:right;" #} class="dataTable-data numeric promo-goal goal">--</td>
-                    <td {# style="text-align:right;" #} class="dataTable-data numeric promo-imp imp">--</td>
-                    <td class="dataTable-clk">
-                      <div class="dataTable-data numeric promo-clk clk">--</div>
-                      <div class="dataTable-data numeric promo-ctr ctr muted">--</div>
+                    <td class="dataTable-data numeric promo-goal goal"></td>
+                    <td class="dataTable-data numeric promo-imp imp">--</td>
+                    <td class="dataTable-data numeric">
+                      <div class="promo-clk clk">--</div>
+                      <div class="promo-ctr ctr muted">--</div>
                     </td>
-                    <td class="dataTable-conv">
-                      <div class="dataTable-data numeric promo-conv conv">--</div>
-                      <div class="dataTable-data numeric promo-conve_rate conv_rate muted">--</div>
+                    <td class="dataTable-data numeric">
+                      <div class="promo-conv conv">--</div>
+                      <div class="promo-conve_rate conv_rate muted">--</div>
                     </td>
-                    {% comment %}
-                    {% if adgroup.cpc %}
-                    <td class="dataTable-data numeric dataTable-ecpm">
-                        <div class="dataTable-campaign-ecpm ecpm">--</div>
-                    </td>
-                    {% else %}
-                    <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
-                    {% endif %}
-
-                    <td {# style="text-align:right;" #} class="dataTable-data numeric status">--</td>
-                    <td {# style="text-align:right;" #} class="dataTable-data numeric bfill-imp imp">--</td>
-                    <td {# style="text-align:right;" #} class="dataTable-data numeric bfill-clk clk">--</td>
-                    <td {# style="text-align:right;" #} class="dataTable-data numeric bfill-ctr ctr">--</td>
-                    <td {# style="text-align:right;" #} class="dataTable-data numeric bfill-conv conv">--</td>
-                    <td {# style="text-align:right;" #} class="dataTable-data numeric bfill-cpa cpa">--</td>
-                    {% endcomment %}
                   </tr>
                   {% endfor %}
                 </tbody>

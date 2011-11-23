@@ -5,6 +5,7 @@ import time
 import traceback
 import urllib
 import urllib2
+import random
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -448,6 +449,7 @@ class LogTaskHandler(webapp.RequestHandler):
                                 queue_name=queue_name,
                                 method='post',
                                 url='/mdb/update_stats',
+                                countdown=random.randint(0,9), # splay out the requests so as not be so spikey
                                 payload=mdb_json)
               except taskqueue.TaskAlreadyExistsError:
                   logging.info('task %s already exists' % ('mdb-'+task_name))

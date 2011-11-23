@@ -551,7 +551,7 @@ class StatsModelQueryManager(CachedQueryManager):
         """
         acct_str = None
         if stat.account:
-            if stat.account.use_mongodb_stats and stat.account.use_mongo_only:
+            if stat.account.use_mongodb_stats and stat.account.use_only_mongo:
                 acct_str = str(stat.account.key())
             else: 
                 return

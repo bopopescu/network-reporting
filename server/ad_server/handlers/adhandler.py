@@ -207,6 +207,7 @@ class AdHandler(webapp.RequestHandler):
 
 
         if not creative:
+            # TODO: We should have a no response "Renderer"
             trace_logging.info('Auction returning None')
             self.response.headers.add_header("X-Adtype", "clear")
             self.response.headers.add_header("X-Backfill", "clear")

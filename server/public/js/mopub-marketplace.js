@@ -151,8 +151,8 @@ var mopub = mopub || {};
 
         renderInline: function () {
             var app_row = $("tr.app-row#app-" + this.model.id, this.el);
-            $(".revenue", app_row).text(this.model.get("revenue"));
-            $(".impressions", app_row).text(this.model.get("impressions"));
+            $(".revenue", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("revenue")));
+            $(".impressions", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
             $(".ecpm", app_row).text(this.model.get("ecpm"));
             // $(".clicks", app_row).text(this.model.get("clicks"));
             // $(".ctr", app_row).text(this.model.get("ctr"));
@@ -248,7 +248,7 @@ var mopub = mopub || {};
 
             $(".revenue", adunit_row).text(this.model.get("revenue"));
             $(".ecpm", adunit_row).text(this.model.get("ecpm"));
-            $(".impressions", adunit_row).text(this.model.get("impressions"));
+            $(".impressions", adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
             $(".price_floor", adunit_row).html('<img class="loading-img hidden" src="/images/icons-custom/spinner-12.gif"></img> ' +
                                                '<input id="' +
                                                this.model.id +
@@ -609,7 +609,7 @@ var mopub = mopub || {};
                             return [
                                 creative["creative"]["url"],
                                 creative["creative"]["ad_dmn"],
-                                creative["stats"]["pub_rev"],
+                                creative["stats"]["pub_rev"].toFixed(2),
                                 creative["stats"]["imp"],
                                 ecpm
                             ];
@@ -654,7 +654,7 @@ var mopub = mopub || {};
                 } else {
                     $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
                 }
-                $("td:eq(2)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[2]));
+                $("td:eq(2)", nRow).addClass("numeric").text("$" + mopub.Utils.formatNumberWithCommas(aData[2]));
                 $("td:eq(3)", nRow).addClass("numeric").text(mopub.Utils.formatNumberWithCommas(aData[3]));
                 $("td:eq(4)", nRow).addClass("numeric").text(mopub.Utils.formatCurrency(aData[4]));
                 return nRow;

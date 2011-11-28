@@ -86,8 +86,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         """
         login_credentials_list = list(AdNetworkLoginCredentials.all().filter(
                 'account =', self.account))
-        mappers = list(AdNetworkAppMapper.all().filter('ad_network_login IN',
-                login_credentials_list))
+        mappers = list(AdNetworkAppMapper.all().filter('application !=', None).
+                filter('ad_network_login IN', login_credentials_list))
         return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
             day).filter('ad_network_app_mapper IN', mappers)))
 

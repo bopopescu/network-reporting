@@ -25,7 +25,8 @@ from google.appengine.api import mail
 from datetime import date, datetime, timedelta
 
 from ad_network_reports.ad_networks import AdNetwork
-from ad_network_reports.models import AdNetworkScrapeStats, \
+from ad_network_reports.models import AdNetworkAppMapper, \
+        AdNetworkScrapeStats, \
         AdNetworkManagementStats
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
         get_all_login_credentials
@@ -232,11 +233,14 @@ def update_ad_networks(start_date=None, end_date=None):
                                           pub_id=stats.app_tag,
                                           ad_network=login_credentials.
                                           ad_network_name))
-                        AdNetworkAppMapper(ad_netowrk_name=login_credentials.
-                                                ad_network_name,
-                                           publisher_id=stats.app_tag,
-                                           ad_network_login=login_credentials,
-                                           app_in_mopub=False)
+#                        ad_network_app_mapper = AdNetworkAppMapper(
+#                                ad_network_name=login_credentials.
+#                                        ad_network_name,
+#                                publisher_id=stats.app_tag,
+#                                ad_network_login=login_credentials,
+#                                application=None)
+#                        ad_network_app_mapper.put()
+                        continue
                     else:
                         aggregate.increment(login_credentials.ad_network_name +
                                 '_mapped')

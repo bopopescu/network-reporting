@@ -528,7 +528,6 @@ class BudgetSliceLog(db.Model):
     @property
     def pace(self):
         budget = self.budget
-        if not budget: return None
         if not budget.is_active_for_date(date.today()): return None
         logging.warn("Has budget")
 
@@ -538,19 +537,19 @@ class BudgetSliceLog(db.Model):
                 percent_spent = budget.total_spent / budget.total_budget
                 percent_days = budget.elapsed_slices / budget.total_slices
                 logging.warn("All at once, spent: %s days: %s"%(percent_spent, percent_days))
-                return ["pace", min(1, (percent_spent / percent_days))]
+                return ["Pace", min(1, (percent_spent / percent_days))]
             else:
                 last_percent = last_slice.actual_spending / last_slice.desired_spending
                 expected_remaining = last_percent * self.desired_spending * budget.remaining_slices
                 logging.warn("Evenly")
-                return ["pace", min(1, ((budget.total_spent + expected_remaining) / budget.total_budget))]
+                return ["Pace", min(1, ((budget.total_spent + expected_remaining) / budget.total_budget))]
         else:
             if budget.static_slice_budget:
                 logging.warn("Daily actual: %s desired: %s"%(last_slice.actual_spending, last_slice.desired_spending))
-                return ["pace", min(1, (last_slice.actual_spending / last_slice.desired_spending))]
+                return ["Pace", min(1, (last_slice.actual_spending / last_slice.desired_spending))]
             else:
                 logging.warn("No end date, not daily, delivery")
-                return ["delivery", min(1, (budget.total_spent / budget.total_budget))]
+                return ["Delivery", min(1, (budget.total_spent / budget.total_budget))]
         logging.warn("None")
         return None
 

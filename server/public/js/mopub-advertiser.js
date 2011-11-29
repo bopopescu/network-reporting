@@ -896,6 +896,7 @@ var mopub = mopub || {};
         cpm: "ecpm",
         ctr: "ctr",
         pace: "pace",
+        pace_type: "pace_type",
         budget_goal: "budget_goal",
         fill_rate: "fill"
     };
@@ -1011,23 +1012,18 @@ var mopub = mopub || {};
     }
     
         function htmlForPacing(results) {
-            if (results.pace) {
-                if (results.pace_type == "delivery") {
-                    return "<div>Delivery: " + mopub.Utils.formatNumberAsPercentage(results.pace) + "</div>";
+            if (results.pace_type) {
+               color = "black";
+               if (results.pace >= .95) {
+                    color = "green";
+                } else if (results.pace >= .80) {
+                    color = "#F1C522";
                 } else {
-                    color = "";
-                    if (results.pace >= .95) {
-                        color = "green";
-                    } else if (results.pace >= .80) {
-                        color = "yellow";
-                    } else {
-                        color = "red";
-                    }
-                    return '<div style="color:' + color + '; font-size:9px;"">Pacing: ' +
-                                mopub.Utils.formatNumberAsPercentage(results.pace) + '</div>';
+                    color = "red";
                 }
+                return '<div style="color:' + color + '; font-size:9px;">' + results.pace_type + ': ' + 
+                    mopub.Utils.formatNumberAsPercentage(results.pace) + '</div>';
             }
-            
         }
 
         function populateGraphWithAccountStats(stats) {

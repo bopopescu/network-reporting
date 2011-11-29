@@ -76,12 +76,6 @@
         <div class="stats-breakdown">
           <table>
             <tbody>
-              <tr id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-              </tr>
               <tr class="active" id="stats-breakdown-impressions">
                 <td class="stats-breakdown-value today"><span class="inner"></span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
@@ -113,7 +107,6 @@
             <label for="stats-breakdown-dateOptions-option-2">All</label>
           </span>
         </div>
-        <div class="chart stats-chart hidden" id="revenue-chart"></div>
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
       </div>
 
@@ -233,7 +226,7 @@
 
 
 {% block extraScripts %}
-  <script src="/js/mopub-advertiser.js?v=85"></script>
+  <script src="/js/mopub-advertiser.js?v=86"></script>
   <script>
     var mopub = mopub || {};
     $(function() {

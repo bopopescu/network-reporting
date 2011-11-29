@@ -1169,7 +1169,7 @@ class AJAXStatsHandler(RequestHandler):
                     if pace:
                         logging.warn("%s %s"%(pace[0], pace[1]))
                         summed_stats.pace_type = pace[0]
-                        summed_stats.pace = pace[1]
+                        summed_stats.pace = round(pace[1], 2)
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered

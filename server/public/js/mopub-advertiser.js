@@ -1013,8 +1013,10 @@ var mopub = mopub || {};
     
         function htmlForPacing(results) {
             if (results.pace_type) {
-               color = "black";
-               if (results.pace >= .95) {
+               color = "";
+               if (results.pace_type == "Delivery") {
+                   color = "black";
+               } else if (results.pace >= .95) {
                     color = "green";
                 } else if (results.pace >= .80) {
                     color = "#F1C522";

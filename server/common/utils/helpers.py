@@ -128,3 +128,15 @@ def to_ascii(obj, encoding='utf-8'):
 def get_url_for_blob(blob):
     from google.appengine.api import images
     return images.get_serving_url(blob).replace('http:', 'https:')
+
+
+def get_all(Model, limit=300):
+    cnt = 0
+    models = Model.all().fetch(limit)
+    new_models = models
+    while new_models:
+        cnt += 1
+        print cnt, len(models)
+        new_models = Model.all().filter('__key__ >',models[-1]).fetch(limit)
+        models += new_models
+    return models

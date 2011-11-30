@@ -58,7 +58,7 @@ from common.constants import *
 from budget import budget_service
 
 from common.utils.decorators import cache_page_until_post
-from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
+from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 
 class AppIndexHandler(RequestHandler):

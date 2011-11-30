@@ -16,7 +16,7 @@ var mopub = mopub || {};
      */
     function fetchAllApps (app_keys) {
         _.each(app_keys, function(app_key) {
-            var app = new App({ id: app_key });
+            var app = new App({ id: app_key, stats_endpoint: 'mpx' });
             app.bind('change', function(current_app) {
                 var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
                 appView.render();
@@ -36,12 +36,12 @@ var mopub = mopub || {};
      */
     function fetchAppStats (app_keys) {
         _.each(app_keys, function(app_key) {
-            var app = new App({id: app_key});
+            var app = new App({id: app_key, stats_endpoint: 'mpx'});
             app.bind('change', function(current_app) {
                 var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
                 appView.renderInline();
             });
-            app.get('mpx_stats').fetch();
+            app.fetch();
         });
     }
 
@@ -53,7 +53,7 @@ var mopub = mopub || {};
     function fetchAdunitStats (app_key, marketplace_active) {
         var adunits = new AdUnitCollection();
         adunits.app_id = app_key;
-
+        adunits.stats_endpoint = 'mpx';
         // Once the adunits have been fetched from the server,
         // render them as well as the app's price floor range
         adunits.bind('reset', function(adunits_collection) {

@@ -14,10 +14,9 @@
 
         renderInline: function () {
             var app_row = $("tr.app-row#app-" + this.model.id, this.el);
-            var stats = this.model.get('mpx_stats');
-            $(".revenue", app_row).text(mopub.Utils.formatNumberWithCommas(stats.get("revenue")));
-            $(".impressions", app_row).text(mopub.Utils.formatNumberWithCommas(stats.get("impressions")));
-            $(".ecpm", app_row).text(stats.get("ecpm"));
+            $(".revenue", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("revenue")));
+            $(".impressions", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
+            $(".ecpm", app_row).text(this.model.get("ecpm"));
             // $(".clicks", app_row).text(this.model.get("clicks"));
             // $(".ctr", app_row).text(this.model.get("ctr"));
 

@@ -1,26 +1,40 @@
 /*
-    MoPub Client JS
+	MoPub Client JS
 */
 var mopub_click_url;
-function redo_tags(frame) {
-    var a_tags = frame.document.getElementsByTagName('a');
-    for (var idx = 0; idx < a_tags.length; idx++) {
-        var curr = a_tags[idx];
+function redo_tags(div) {
+    var at = div.getElementsByTagName('a');
+    for (var i=0;i<at.length;i++) {
+        var curr = at[i];
         if (curr.href != '#') {
             curr.href = mopub_click_url + '&r=' + curr.href;
         }
     }
 }
 
+function reload_scripts(div) {
+    var st = div.getElementsByTagName('script');
+    for (var i=0;i<st.length;i++)
+    {
+        var newtag = document.createElement('script');
+        newtag.type = "text/javascript";
+        newtag.innerHTML = st[i].innerHTML;
+        if (st[i].src) {
+            newtag.src = st[i].src;
+        }
+        div.removeChild(st[i]);
+        div.appendChild(newtag);
+    }
+}
+
 function mp_cb(data) {
     ufid = data.ufid;
     mopub_click_url = data.click_url;
-    var iframe = document.getElementById('mopub-iframe-'+ufid);
-    iframe = (iframe.contentWindow) ? iframe.contentWindow : (iframe.contentDocument.document);
-    iframe.document.open();
-    iframe.document.write(data.ad);
-    redo_tags(iframe);
-    iframe.document.close();
+    var div = document.getElementById('mopub-div-'+ufid);
+    var s = document.createElement("div");
+    div.innerHTML = data.ad;
+    reload_scripts(div);
+    redo_tags(div);
 }
 
 (function(){
@@ -49,12 +63,12 @@ function mp_cb(data) {
         script = scripts[scripts.length - 1];
     var mopub_url = document.createElement("a");
     mopub_url.href = script.src;
-   
+
 
     var mopub_site_url = "http://"+mopub_url.hostname;
     if (mopub_url.port != "0")
         mopub_site_url += ":"+mopub_url.port;
-    // TODO: add version    
+    // TODO: add version
     var ufid = gen_key();
     var mopub_ad_url = mopub_site_url + "/m/ad?id="+mopub_ad_unit + "&udid=MOBILEWEBCOOKIE:" + get_session() + '&ufid=' + ufid;
 
@@ -62,15 +76,10 @@ function mp_cb(data) {
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
     mopub_ad_url += '&jsonp=1&callback=mp_cb';
 
-
     //init openx cursor tracking magic
     document.write('<script type="text/javascript" src="' + mopub_site_url + '/js/clicktracker.js?v=24"></script>');
-    //iframe for ad
-    document.write('<iframe id="mopub-iframe-' + ufid + '" frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
-                   + ' width="'+window.mopub_ad_width+'"'
-                   + ' height="'+window.mopub_ad_height+'"'
-                   + ' src="about:blank">');
-    document.write('</iframe>');
+    document.write('<div id="mopub-div-' + ufid + '" style="width:'+window.mopub_ad_width+';height:'+window.mopub_ad_height+'"></div>');
+
     //init holders for variables
     document.write('<script type="text/javascript" src="'+mopub_ad_url+'"></script>');
 
@@ -86,16 +95,16 @@ function mp_cb(data) {
     function get_cookie(name) {
         var start = document.cookie.indexOf(name+"=");
         var len = start+name.length+1;
-        if ((!start) && (name != document.cookie.substring(0,name.length))) 
+        if ((!start) && (name != document.cookie.substring(0,name.length)))
             return null;
-        if (start == -1) 
+        if (start == -1)
             return null;
         var end = document.cookie.indexOf(";",len);
-        if (end == -1) 
+        if (end == -1)
             end = document.cookie.length;
         return unescape(document.cookie.substring(len,end));
     }
-    
+
     function get_session() {
         //if no session, set it
         if(!get_cookie(c_name)) {

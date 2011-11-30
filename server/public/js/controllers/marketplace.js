@@ -41,7 +41,7 @@ var mopub = mopub || {};
                 var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
                 appView.renderInline();
             });
-            app.fetch();
+            app.get('mpx_stats').fetch();
         });
     }
 
@@ -347,7 +347,7 @@ var mopub = mopub || {};
                 });
 
                 blindness_xhr.done(function(data){
-                    console.log(data);
+
                 });
             });
 

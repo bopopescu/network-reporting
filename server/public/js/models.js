@@ -4,24 +4,53 @@
      * ## Stats Models
      */
 
+    // Notes:
+    // id is the same as the object's parent (app, adunit, campaign)
     var Stats = Backbone.Model.extend({
         defaults: {
             revenue: 0,
             clicks: 0,
-            impressions: 0
+            impressions: 0,
+            attempts: 0,
+            kind: "app" // can be "campaign" or "adunit"
+        },
+        ctr: function () {
+            return (this.get('clicks') / (this.get('impressions')+1));
+        },
+        ecpm: function () {
+            return (this.get('revenue') / (this.get('impressions')+1)*1000);
+        },
+        fill_rate: function () {
+            if (attempts === 0) {
+                return 0.0;
+            }
+            return (impressions/attempts)*100;
         }
     });
 
     var MpxStats = Stats.extend({
-
+        defaults: {
+            price_floor: 0,
+            active: false
+        },
+        url: function () {
+            return '/api/'
+                + this.get('kind')
+                + '/'
+                + this.id
+                + '?'
+                + window.location.search.substring(1);
+        }
     });
 
     var DirectSoldStats = Stats.extend({
-
+        url: function () {
+        }
     });
 
     var NetworkStats = Stats.extend({
-
+        url: function () {
+        }
     });
 
 
@@ -35,7 +64,7 @@
             budget_type: '',
             start_datetime: new Date(),
             end_datetime: null,
-            active: false,
+            active: false
         }
     });
 
@@ -59,32 +88,13 @@
     /*
      * ## AdUnit
      */
-
     var AdUnit = Backbone.Model.extend({
         // If we don't set defaults, the templates will explode
         defaults : {
-            active: false,
-            attempts: 0,
-            clicks: 0,
-            ctr: 0,
-            ecpm: 0,
-            fill_rate: 0,
-            impressions: 0,
             name: '',
-            price_floor: 0,
-            revenue: 0
-        },
-        calcCtr: function () {
-            return (this.get('clicks') / (this.get('impressions')+1));
-        },
-        calcEcpm: function () {
-            return (this.get('revenue') / (this.get('impressions')+1)*1000);
-        },
-        calcFillRate: function () {
-            if (attempts === 0) {
-                return 0.0;
-            }
-            return (impressions/attempts)*100;
+            mpx_stats: new MpxStats({kind: 'app'}),
+            direct_sold_stats: new DirectSoldStats({kind: 'app'}),
+            network_stats: new NetworkStats({kind: 'app'})
         },
         url: function() {
             // window.location.search.substring(1) is used to preserve date ranges from the url
@@ -113,16 +123,11 @@
         defaults : {
             name: '',
             url:'#',
-            revenue: 0,
-            attempts: 0,
             icon_url: "/placeholders/image.gif",
-            impressions: 0,
-            fill_rate: 0,
-            clicks: 0,
-            price_floor: 0,
             app_type: 'iOS',
-            ecpm: 0,
-            ctr: 0
+            mpx_stats: new MpxStats({kind: 'app'}),
+            direct_sold_stats: new DirectSoldStats({kind: 'app'}),
+            network_stats: new NetworkStats({kind: 'app'})
         },
         url: function () {
             return '/api/app/' + this.id + "?"  + window.location.search.substring(1);
@@ -131,7 +136,11 @@
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
             return response[0];
+        },
+        initialize: function() {
+            this.get('mpx_stats').id = this.id;
         }
+
     });
 
     /*

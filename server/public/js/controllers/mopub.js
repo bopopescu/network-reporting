@@ -72,7 +72,7 @@ if (typeof window.console == "undefined") {
         }
 
         // preload images (defined below)
-        var JQUERY_UI_IMAGE_PATH = '/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/images';
+        var JQUERY_UI_IMAGE_PATH = '/js/libs/jquery-ui-1.8.7.custom/css/mopub/images';
         $.preLoadImages(
             '/images/ui/ui-button-active.png',
             '/images/ui/ui-button-default.png',

@@ -268,7 +268,9 @@
   <script type="text/html" id="adunit-template">
     {% include "partials/adunit.html" %}
   </script>
-  <script type="text/javascript" src="/js/toast.js?v=1"></script>
+  <script type="text/javascript" src="/js/utilities/toast.js?v=1"></script>
+  <script type="text/javascript" src="/js/models.js?v=1"></script>
+  <script type="text/javascript" src="/js/views.js?v=1"></script>
   <script type="text/javascript">
     var mopub = mopub || {};
     $(document).ready(function() {
@@ -290,7 +292,7 @@
       MarketplaceController.initializeIndex(bootstrapping_data);
     });
   </script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js?v=116"></script>
+  <script type="text/javascript" src="/js/controllers/marketplace.js?v=116"></script>
 {% endblock extraScripts %}
 
 {% block extraCSS %}

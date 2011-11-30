@@ -204,7 +204,7 @@ def _package_mdb_post_data(mdb_dict):
         [app, account] = _deref_adunit(adunit) or [None, None]
 
 
-        if None not in [app, account, adgroup, campaign]:
+        if None not in [app, account]:
             post_dict = {'adunit': adunit,
                          'app': app,
                          'account': account,
@@ -676,6 +676,8 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
             logging.error(err_msg)
             #respond immediately without posting any data to MongoDB
             self.response.out.write(err_msg)
+            return
+
 
         logging.info('POST TO MDB: %s' % post_data)
         post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update

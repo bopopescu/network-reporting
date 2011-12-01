@@ -31,7 +31,8 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(), kwargs['ad_network_name']))
+            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
+                kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
 

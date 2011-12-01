@@ -175,9 +175,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         Return a list of stats sorted by date.
         """
-        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(ad_network_app_mapper_key,
-                                                                     days)
-        return sorted(stats_list, key=lambda stats: stats.date)
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
+                ad_network_app_mapper_key, days)
+        return sorted(stats_list, key=lambda stats: stats.date, reverse=True)
 
     def get_ad_network_mapper(self,
                               ad_network_app_mapper_key=None,

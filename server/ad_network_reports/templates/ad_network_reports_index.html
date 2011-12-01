@@ -56,7 +56,7 @@
             <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
           </tr>
           {% for network in app.networks %}
-            <tr class="network-row for-app-{{app.key}}">
+            <tr class="network-row for-key-{{app.key}}">
               <td class="dataTable-name">
                  <a href="{% url ad_network_app_detail app.key %}">{{network.name}} </a>
                  {% if network.has_potential_errors %}
@@ -95,7 +95,7 @@
 
       <tbody>
         {% for network_name, network in networks.items %}
-          <tr class="app-row">
+          <tr class="app-row" id={{network.key}}>
             <td class="dataTable-name">
               {% if network.has_potential_errors %}
                 <br />
@@ -111,7 +111,7 @@
             <td class="dataTable-data numeric">{{ network.ctr|percentage }} </td>
           </tr>
           {% for app in network.apps %}
-            <tr class="network-row">
+          <tr class="network-row for-key-{{network.key}}">
               <td class="dataTable-name">
                 <a href="{% url ad_network_app_detail app.key %}">{{app.name}}</a>
               </td>
@@ -176,7 +176,7 @@
 
   {% endcomment %}
 
-    <a class="right btn" href={{add_credentials_url}}>Add more network credentials</a>
+    <a class="right btn" href="/ad_network_reports/add">Add more network credentials</a>
 {% endblock innerContent %}
 
 
@@ -238,7 +238,7 @@
 
       <input class="right btn" type="submit" value="Submit" />
 
-    </div>
+  </div>
 
 {% endblock appendedContent %}
 

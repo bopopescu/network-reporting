@@ -123,28 +123,25 @@
 
   <h2>Ad Networks</h2>
 
+    <div id='network-rollups' class="campaignData-rollup">
+      <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+        <thead>
+          <tr>
+            <th width=25%>Impressions</th>
+            <th width=25%>Clicks</th>
+            <th width=25%>CTR</th>
+            <th width=25%>Fill Rate (Attempts)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
       <input type="hidden" name="action" id="action"/>
-      <div id='network-rollups' class="campaignData-rollup">
-        <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-          <thead>
-            <tr>
-              <th width=25%>Impressions</th>
-              <th width=25%>Clicks</th>
-              <th width=25%>CTR</th>
-              <th width=25%>Fill Rate (Attempts)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td id='network-total-imp'>--</td>
-              <td id='network-total-clk'>--</td>
-              <td id='network-total-ctr'>--</td>
-              <td id='network-total-fill'>--</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
 
       <table class="{#zebra-striped sortable simpletable#}dataTable campaignData-main">
         <thead>
@@ -160,49 +157,6 @@
           </tr>
         </thead>
         <tbody>
-          {% for network in network_campaigns %}
-            {% for adgroup in network.adgroups %}
-              <tr class="campaignData
-                         network_row
-                         campaign-status-all
-                         campaign-targeting-all
-                         incomplete
-                         {% for app_key in adgroup.targeted_app_keys %}
-                           campaign-targeting-{{ app_key }}
-                         {% endfor %}"
-                  id="{{adgroup.key}}">
-
-              <td class="campaignData-icon">
-                <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                {% if adgroup.deleted %}
-                  <img src="/images/deleted.gif" height=9 width=9 />
-                {% endif %}
-                {% if adgroup.active and not adgroup.deleted %}
-                  <img src="/images/active.gif" height=9 width=9 />
-                {% endif %}
-                {% if not adgroup.active and not adgroup.deleted %}
-                  <img src="/images/paused.gif" height=9 width=9 />
-                {% endif %}
-              </td>
-              <td class="dataTable-name">
-                <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
-                <span class="muted">{{adgroup.network_type}}</span>
-              </td>
-              {% if adgroup.cpc %}
-                <td {# style="text-align:right;" #} class="dataTable-data numeric dataTable-ecpm">
-                  <div class="dataTable-campaign-ecpm ecpm">--</div>
-                </td>
-              {% else %}
-                <td {# style="text-align:right;" #} class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
-              {% endif %}
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-req req">--</td>
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-imp imp">--</td>
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-fill fill">--</td>
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-clk clk">--</td>
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-ctr ctr">--</td>
-            </tr>
-          {% endfor %}
-                    {% endfor %}
         </tbody>
       </table>
 
@@ -226,12 +180,28 @@
 
 
 {% block extraScripts %}
-  <script src="/js/mopub-advertiser.js?v=86"></script>
+  <script src="/js/mustache.js"></script>
+  <script src="/js/mopub-networks.js?v=0"></script>
   <script>
-    var mopub = mopub || {};
     $(function() {
-        mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
-        mopub.Advertiser.initNetworkPage();
+      var mopub = mopub || {};
+      mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
+      //mopub.Advertiser.initNetworkPage();
+      NetworksController([
+        {% for campaign in network_campaigns %}
+          {% for adgroup in campaign.adgroups %}
+            {
+              id: '{{ adgroup.key }}',
+              deleted: {% if adgroup.deleted %}true{% else %}false{% endif %},
+              active: {% if adgroup.active %}true{% else %}false{% endif %},
+              name: '{{ adgroup.name }}',
+              details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
+              network_type: '{{ adgroup.network_type }}'
+            }
+          {% endfor %}
+          {% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]);
     });
   </script>
 {% endblock extraScripts %}

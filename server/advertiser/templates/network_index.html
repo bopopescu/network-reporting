@@ -143,23 +143,22 @@
     <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
       <input type="hidden" name="action" id="action"/>
 
-      <table class="{#zebra-striped sortable simpletable#}dataTable campaignData-main">
+      <table class="dataTable campaignData-main">
         <thead>
           <tr>
             <th class="campaignData-icon"></th>
-            <th>Name</th>
-            <th style="text-align: right">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-            <th style="text-align: right">Attempts</th>
-            <th style="text-align: right" width="100">Impressions</th>
-            <th style="text-align: right">Fillrate</th>
-            <th style="text-align: right">Clicks</th>
-            <th style="text-align: right">CTR</th>
+            <th class="dataTable-name">Name</th>
+            <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+            <th class="dataTable-data numeric">Attempts</th>
+            <th class="dataTable-data numeric" width="100">Impressions</th>
+            <th class="dataTable-data numeric">Fillrate</th>
+            <th class="dataTable-data numeric">Clicks</th>
+            <th class="dataTable-data numeric">CTR</th>
           </tr>
         </thead>
         <tbody>
         </tbody>
       </table>
-
       <div class="clearfix">
         <div class="form-submit-left">
           <span class="buttonWrap">
@@ -170,8 +169,6 @@
         </div>
       </div>
     </form>
-
-
 
   {% endif %}
 

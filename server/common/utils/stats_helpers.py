@@ -20,6 +20,34 @@ except ImportError:
 ctr = lambda clicks, impressions: (clicks/float(impressions+1))
 ecpm = lambda revenue, impressions: (revenue/float(impressions+1))*1000
 
+class AbstractStatsFetcher(object):
+    _base_url = None
+
+    def __init__(self, pub_id):
+        self.pub_id = str(pub_id)
+
+    def get_app_stats(self, app_key, start, end, daily=False):
+        raise NotImplementedError('Implement this method fool')
+
+    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+        raise NotImplementedError('Implement this method fool')
+
+    def get_account_stats(self, start, end, daily=False):
+        raise NotImplementedError('Implement this method fool')
+
+
+class SummedStatsFetcher(AbstractStatsFetcher):
+    pass
+
+
+class DirectSoldStatsFetcher(AbstractStatsFetcher):
+    pass
+
+
+class NetworkStatsFetcher(AbstractStatsFetcher):
+    pass
+
+
 class MarketplaceStatsFetcher(object):
     _base_url = "http://mpx.mopub.com/2stats" # TODO: change back to stats not 2stats
     _inventory = "/inventory?"
@@ -239,6 +267,8 @@ class MarketplaceStatsFetcher(object):
 
         return {}
 
+# Helper/Utility functions
+
 def _transform_stats(stats_dict):
     return {"revenue": currency(stats_dict['rev']),
             "revenue_float": stats_dict['rev'],
@@ -262,22 +292,3 @@ def _fetch_and_decode(url):
 
 class MPStatsAPIException(Exception):
     pass
-
-
-def get_width_and_height(adunit):
-    if adunit.format == "full" and not adunit.landscape:
-        adunit_width = 320
-        adunit_height = 480
-    elif adunit.format == "full" and adunit.landscape:
-        adunit_width = 480
-        adunit_height = 320
-    elif adunit.format == "full_tablet" and not adunit.landscape:
-        adunit_width = 768
-        adunit_height = 1024
-    elif adunit.format == "full_tablet" and adunit.landscape:
-        adunit_width = 1024
-        adunit_height = 768
-    else:
-        adunit_width = adunit.get_width()
-        adunit_height = adunit.get_height()
-    return adunit_width, adunit_height

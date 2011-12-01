@@ -117,7 +117,7 @@
       <div class="clear"></div>
     </section>
 
-    <section id="dashboard-apps">
+    <section id="marketplace-apps">
     <div class="appData-columnHeaders">
       <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
         <thead>
@@ -127,7 +127,7 @@
             <th class="dataTable-data numeric">Revenue</th>
             <th class="dataTable-data numeric">Impressions</th>
             <th class="dataTable-data numeric">eCPM</th>
-            <th class="dataTable-data numeric" style="width:100px;"><a href="#" id="price-floor-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> Price Floor</th>
+            <th class="dataTable-data numeric" style="width:100px;"><a href="#" id="price-floor-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> Price Floor CPM</th>
             <th class="dataTable-data numeric">Enabled</th>
           </tr>
         </thead>
@@ -138,7 +138,9 @@
       <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
         <tbody>
           <tr class="app-row" id="app-{{a.key}}" style="border:none;">
-            <td class="appData-icon"><img src="{{ a.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" /></td>
+            <td class="appData-icon">
+              <img src="{{ a.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" />
+            </td>
             <td class="dataTable-name" style="width:475px;">
               <span class="inner" style="width:475px;">
                   <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
@@ -268,7 +270,10 @@
   <script type="text/html" id="adunit-template">
     {% include "partials/adunit.html" %}
   </script>
-  <script type="text/javascript" src="/js/toast.js?v=1"></script>
+  <script type="text/javascript" src="/js/utilities/toast.js?v=1"></script>
+  <script type="text/javascript" src="/js/models.js?v=1"></script>
+  <script type="text/javascript" src="/js/views.js?v=1"></script>
+  <script type="text/javascript" src="/js/controllers/marketplace.js?v=116"></script>
   <script type="text/javascript">
     var mopub = mopub || {};
     $(document).ready(function() {
@@ -290,8 +295,6 @@
       MarketplaceController.initializeIndex(bootstrapping_data);
     });
   </script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js?v=106"></script>
-
 {% endblock extraScripts %}
 
 {% block extraCSS %}

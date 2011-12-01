@@ -26,11 +26,11 @@
     height: 185px;
 }
 
-#dashboard-apps, #dashboard-campaign {
+#marketplace-apps, #dashboard-apps, #dashboard-campaign {
     margin: 30px 0 0 0;
 }
 
-#dashboard-apps h2 {
+#marketplace-apps h2, #dashboard-apps h2 {
     font-size: 20px;
     margin: 0;
 }
@@ -251,7 +251,9 @@
 }
 
 .dataTable .appData-id {
-  float: right;
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .appData-main th, .appData-main td {

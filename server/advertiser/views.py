@@ -22,7 +22,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
-from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
+from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 from common.utils.timezones import Pacific_tzinfo
 from budget.tzinfo import Pacific, utc
 # from common.ragendja.auth.decorators import google_login_required as login_required

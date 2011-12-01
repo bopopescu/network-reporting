@@ -15,7 +15,6 @@ builtins:
 inbound_services:
 - warmup
 
-
 handlers:
 - url: /mapreduce(/.*)?
   script: mapreduce/main.py

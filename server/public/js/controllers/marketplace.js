@@ -18,7 +18,7 @@ var mopub = mopub || {};
         _.each(app_keys, function(app_key) {
             var app = new App({ id: app_key, stats_endpoint: 'mpx' });
             app.bind('change', function(current_app) {
-                var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
+                var appView = new AppView({ model: current_app, el: 'marketplace-apps' });
                 appView.render();
             });
             app.fetch({
@@ -38,7 +38,7 @@ var mopub = mopub || {};
         _.each(app_keys, function(app_key) {
             var app = new App({id: app_key, stats_endpoint: 'mpx'});
             app.bind('change', function(current_app) {
-                var appView = new AppView({ model: current_app, el: '#marketplace_stats' });
+                var appView = new AppView({ model: current_app, el: 'marketplace-apps' });
                 appView.renderInline();
             });
             app.fetch();
@@ -59,7 +59,7 @@ var mopub = mopub || {};
         adunits.bind('reset', function(adunits_collection) {
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
-                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
+                var adunitView = new AdUnitView({ model: adunit, el: 'marketplace-apps' });
                 adunitView.renderInline();
             });
         });
@@ -119,7 +119,7 @@ var mopub = mopub || {};
 
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
-                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
+                var adunitView = new AdUnitView({ model: adunit, el: 'marketplace-apps' });
                 adunitView.render();
             });
         });
@@ -383,11 +383,11 @@ var mopub = mopub || {};
              * Icons (header 0), price floors (header 6) and targeting (header 7) columns
              * can't be sorted because that just doesn't make sense fool.
              */
-            $('#marketplace_stats').tablesorter({
-                widgets: ['adunitSorting'],
-                sortList: [[1, 0]],
-                headers: { 0: { sorter: false}, 6: {sorter: false}, 7: {sorter: false} }
-            });
+            // $('marketplace-apps').tablesorter({
+            //     widgets: ['adunitSorting'],
+            //     sortList: [[1, 0]],
+            //     headers: { 0: { sorter: false}, 6: {sorter: false}, 7: {sorter: false} }
+            // });
 
             /*
              * Functionality for blocking advertisers from the creatives performance table

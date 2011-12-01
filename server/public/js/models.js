@@ -46,6 +46,7 @@
             impressions: 0,
             name: '',
             price_floor: 0,
+            requests: 0,
             revenue: 0,
             stats_endpoint: 'all'
         },
@@ -101,6 +102,7 @@
             fill_rate: 0,
             impressions: 0,
             price_floor: 0,
+            requests: 0,
             revenue: 0,
             stats_endpoint: 'all'
         },

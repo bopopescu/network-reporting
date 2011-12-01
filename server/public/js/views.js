@@ -17,8 +17,10 @@
             $(".revenue", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("revenue")));
             $(".impressions", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
             $(".ecpm", app_row).text(this.model.get("ecpm"));
-            // $(".clicks", app_row).text(this.model.get("clicks"));
-            // $(".ctr", app_row).text(this.model.get("ctr"));
+            $(".clicks", app_row).text(this.model.get("clicks"));
+            $(".ctr", app_row).text(this.model.get("ctr"));
+            $(".fill_rate", app_row).text(this.model.get("fill_rate"));
+            $(".requests", app_row).text(this.model.get("requests"));
 
             return this;
         },
@@ -90,6 +92,12 @@
                                                '"> ');
             $(".targeting", adunit_row).html('<img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img> ' +
                                              '<input class="targeting-box" type="checkbox">');
+
+
+            $(".fill_rate", adunit_row).text(this.model.get("fill_rate"));
+            $(".ctr", adunit_row).text(this.model.get("ctr"));
+            $(".clicks", adunit_row).text(this.model.get("clicks"));
+            $(".requests", adunit_row).text(this.model.get("requests"));
 
             if (this.model.get("active")) {
                 $("input.targeting-box", adunit_row).attr('checked', 'checked');

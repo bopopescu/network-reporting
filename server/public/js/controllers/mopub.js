@@ -809,7 +809,6 @@ if (typeof window.console == "undefined") {
      * ## DOCUMENT THIS
      */
     Stats.statArrayFromDailyStats = function(arrayOfDailyStats, statName) {
-        console.log(arrayOfDailyStats);
         return $.map(arrayOfDailyStats, function(oneDayStats) {
             return parseFloat(oneDayStats[statName]);
         });

@@ -117,7 +117,7 @@
       <div class="clear"></div>
     </section>
 
-    <section id="dashboard-apps">
+    <section id="marketplace-apps">
     <div class="appData-columnHeaders">
       <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
         <thead>
@@ -138,7 +138,9 @@
       <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
         <tbody>
           <tr class="app-row" id="app-{{a.key}}" style="border:none;">
-            <td class="appData-icon"><img src="{{ a.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" /></td>
+            <td class="appData-icon">
+              <img src="{{ a.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" />
+            </td>
             <td class="dataTable-name" style="width:475px;">
               <span class="inner" style="width:475px;">
                   <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
@@ -271,6 +273,7 @@
   <script type="text/javascript" src="/js/utilities/toast.js?v=1"></script>
   <script type="text/javascript" src="/js/models.js?v=1"></script>
   <script type="text/javascript" src="/js/views.js?v=1"></script>
+  <script type="text/javascript" src="/js/controllers/marketplace.js?v=116"></script>
   <script type="text/javascript">
     var mopub = mopub || {};
     $(document).ready(function() {
@@ -292,7 +295,6 @@
       MarketplaceController.initializeIndex(bootstrapping_data);
     });
   </script>
-  <script type="text/javascript" src="/js/controllers/marketplace.js?v=116"></script>
 {% endblock extraScripts %}
 
 {% block extraCSS %}

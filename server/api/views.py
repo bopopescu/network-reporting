@@ -11,7 +11,10 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
-from common.utils.stats_helpers import MarketplaceStatsFetcher
+from common.utils.stats_helpers import MarketplaceStatsFetcher, \
+     SummedStatsFetcher, \
+     NetworkStatsFetcher, \
+     DirectSoldStatsFetcher
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 
 from django.contrib.auth.decorators import login_required
@@ -82,7 +85,7 @@ class AppService(RequestHandler):
             return JSONResponse(apps)
 
         except Exception, e:
-            logging.warn(e)
+            logging.warn("APPS FETCH ERROR "  + e)
             return JSONResponse({'error': str(e)})
 
 
@@ -178,7 +181,7 @@ class AdUnitService(RequestHandler):
             else:
                 return JSONResponse({'error':'No parameters provided'})
         except Exception, e:
-            logging.warn(e)
+            logging.warn("ADUNITS FETCH ERROR " + e)
             return JSONResponse({'error': str(e)})
 
     def post(self):

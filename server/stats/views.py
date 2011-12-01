@@ -51,7 +51,7 @@ MAX_PUT_SIZE = 8
 
 STATS_MODEL_QUERY_KEY = "sm"
 
-MDB_STATS_UPDATER_IP = 'http://mongostats.mopub.com'
+MDB_STATS_UPDATER_IP = 'http://write.mongostats.mopub.com'
 MDB_STATS_UPDATER_HANDLER_PATH = '/stats/update'
 
 
@@ -680,8 +680,8 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
 
 
         logging.info('NOT!!! POST TO MDB: %s' % post_data)
-        self.response.out.write('NOT WORKING')
-        return 
+        # self.response.out.write('NOT WORKING')
+        # return 
         
         post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update
         post_request = urllib2.Request(post_url, post_data)

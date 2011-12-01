@@ -2,7 +2,9 @@ from urllib import urlencode
 from urllib2 import urlopen
 from common.utils import date_magic
 import datetime
-from publisher.query_managers import AppQueryManager, AdUnitQueryManager, AdUnitContextQueryManager
+from publisher.query_managers import AppQueryManager,\
+     AdUnitQueryManager, \
+     AdUnitContextQueryManager
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 from common.constants import MPX_DSP_IDS
 import logging
@@ -39,24 +41,34 @@ class AbstractStatsFetcher(object):
 
 
 class SummedStatsFetcher(AbstractStatsFetcher):
+    def _get_publisher_stats(self, publisher, start, end, *args, **kwargs):
+        days = date_magic.gen_days(start, end)
+        query_manager = StatsModelQueryManager(publisher.account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=None,
+                                                 days=days)
+        stat_totals = {'revenue': sum([stat.revenue for stat in stats]),
+                       'ctr': 0.0,
+                       'ecpm': 0.0,
+                       'impressions': sum([stat.impression_count for stat in stats]),
+                       'clicks': sum([stat.click_count for stat in stats])}
+        stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
+        stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
+        return stat_totals
+
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         app = AppQueryManager.get(app_key)
-        days = date_magic.gen_days(end, start)
-        app_stats = StatsModelQueryManager(app.account).get_stats_for_days(days=days)
+        app_stats = self._get_publisher_stats(app, start, end)
         logging.warn('app_stats')
         logging.warn(app_stats)
-        return {'revenue': 0.0,
-                'ctr': 0.0,
-                'ecpm': 0.0,
-                'impressions': 0,
-                'clicks': 0}
+        return app_stats
 
     def get_adunit_stats(self, adunit_key, start, end, daily=False):
-        return {'ctr': 0.0,
-                'revenue': 0.00,
-                'ecpm': 0.0,
-                'impressions': 0,
-                'clicks': 0}
+        adunit = AdUnitQueryManager.get(adunit_key)
+        adunit_stats = self._get_publisher_stats(adunit, start, end)
+        logging.warn('adunit_stats')
+        logging.warn(adunit_stats)
+        return adunit_stats
 
 
 class DirectSoldStatsFetcher(AbstractStatsFetcher):

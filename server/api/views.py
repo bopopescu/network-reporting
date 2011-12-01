@@ -132,10 +132,6 @@ class AdUnitService(RequestHandler):
             else:
                 stats = SummedStatsFetcher(self.account.key())
 
-
-
-
-
             # formulate the date range
             if self.request.GET.get('s', None):
                 year, month, day = str(self.request.GET.get('s')).split('-')
@@ -163,9 +159,6 @@ class AdUnitService(RequestHandler):
                     adunit_stats = stats.get_adunit_stats(au['id'], start_date, end_date)
                     adunit_stats.update({'app_id':app_key})
                     au.update(adunit_stats)
-
-                    logging.warn("\n\n\n\n")
-                    logging.warn(adunit_stats)
 
                     adgroup = AdGroupQueryManager.get_marketplace_adgroup(au['id'],
                                                                           str(self.account.key()),

@@ -6,6 +6,10 @@ var mopub = mopub || {};
 (function($, Backbone, _){
 
     /*
+     * ## Helpers for DashboardController
+     */
+
+    /*
      * Refactor/remove
      */
     function getCurrentChartSeriesType() {
@@ -39,7 +43,7 @@ var mopub = mopub || {};
      */
     function fetchAppStats (app_keys) {
         _.each(app_keys, function(app_key) {
-            var app = new App({id: app_key, stats_endpoint: 'mpx'});
+            var app = new App({id: app_key, stats_endpoint: 'all'});
             app.bind('change', function(current_app) {
                 var appView = new AppView({ model: current_app, el: '#dashboard-apps' });
                 appView.renderInline();
@@ -56,7 +60,7 @@ var mopub = mopub || {};
     function fetchAdunitStats (app_key) {
         var adunits = new AdUnitCollection();
         adunits.app_id = app_key;
-        adunits.stats_endpoint = 'mpx';
+        adunits.stats_endpoint = 'all';
         // Once the adunits have been fetched from the server,
         // render them as well as the app's price floor range
         adunits.bind('reset', function(adunits_collection) {

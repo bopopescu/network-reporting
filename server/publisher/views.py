@@ -71,21 +71,6 @@ class AppIndexHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range)
 
-
-        # apps = AppQueryManager.get_apps(self.account)
-        # if len(apps) == 0:
-        #     return HttpResponseRedirect(reverse('publisher_app_create'))
-
-        # for app in apps:
-        # #     if app.icon:
-        # #         app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
-
-        #     # attaching adunits onto the app object
-        #     app.adunits = sorted(AdUnitQueryManager.get_adunits(app=app), key=lambda adunit:adunit.name)
-
-        # apps = sorted(apps, key=lambda app: app.name)
-        # app_keys = [str(app.key()) for app in apps]
-
         # Get all of the adunit keys for bootstrapping the apps
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
@@ -104,6 +89,8 @@ class AppIndexHandler(RequestHandler):
         app_keys = simplejson.dumps([str(k) for k in apps.keys()])
 
 
+        # If they don't have any apps so they should be forwarded
+        # to the form to create some.
         if len(apps) == 0:
             return HttpResponseRedirect(reverse('publisher_app_create'))
 

@@ -1,11 +1,14 @@
 from urllib import urlencode
 from urllib2 import urlopen
-
+from common.utils import date_magic
 import datetime
-
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager, AdUnitContextQueryManager
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 from common.constants import MPX_DSP_IDS
 import logging
+
+from reporting.query_managers import StatsModelQueryManager
+from reporting.models import StatsModel, GEO_COUNTS
 
 try:
     import json
@@ -21,7 +24,6 @@ ctr = lambda clicks, impressions: (clicks/float(impressions+1))
 ecpm = lambda revenue, impressions: (revenue/float(impressions+1))*1000
 
 class AbstractStatsFetcher(object):
-    _base_url = None
 
     def __init__(self, pub_id):
         self.pub_id = str(pub_id)
@@ -37,7 +39,24 @@ class AbstractStatsFetcher(object):
 
 
 class SummedStatsFetcher(AbstractStatsFetcher):
-    pass
+    def get_app_stats(self, app_key, start, end, *args, **kwargs):
+        app = AppQueryManager.get(app_key)
+        days = date_magic.gen_days(end, start)
+        app_stats = StatsModelQueryManager(app.account).get_stats_for_days(days=days)
+        logging.warn('app_stats')
+        logging.warn(app_stats)
+        return {'revenue': 0.0,
+                'ctr': 0.0,
+                'ecpm': 0.0,
+                'impressions': 0,
+                'clicks': 0}
+
+    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+        return {'ctr': 0.0,
+                'revenue': 0.00,
+                'ecpm': 0.0,
+                'impressions': 0,
+                'clicks': 0}
 
 
 class DirectSoldStatsFetcher(AbstractStatsFetcher):

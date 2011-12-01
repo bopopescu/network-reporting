@@ -64,7 +64,6 @@ class AppService(RequestHandler):
                 stats = []
             else:
                 stats = SummedStatsFetcher(self.account.key())
-                stats = []
             # If an app key is provided, return the single app
             if app_key:
                 apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
@@ -85,7 +84,7 @@ class AppService(RequestHandler):
             return JSONResponse(apps)
 
         except Exception, e:
-            logging.warn("APPS FETCH ERROR "  + e)
+            logging.warn("APPS FETCH ERROR "  + str(e))
             return JSONResponse({'error': str(e)})
 
 
@@ -132,7 +131,10 @@ class AdUnitService(RequestHandler):
                 stats = []
             else:
                 stats = SummedStatsFetcher(self.account.key())
-                stats = []
+
+
+
+
 
             # formulate the date range
             if self.request.GET.get('s', None):
@@ -162,6 +164,9 @@ class AdUnitService(RequestHandler):
                     adunit_stats.update({'app_id':app_key})
                     au.update(adunit_stats)
 
+                    logging.warn("\n\n\n\n")
+                    logging.warn(adunit_stats)
+
                     adgroup = AdGroupQueryManager.get_marketplace_adgroup(au['id'],
                                                                           str(self.account.key()),
                                                                           get_from_db=True)
@@ -181,7 +186,7 @@ class AdUnitService(RequestHandler):
             else:
                 return JSONResponse({'error':'No parameters provided'})
         except Exception, e:
-            logging.warn("ADUNITS FETCH ERROR " + e)
+            logging.warn("ADUNITS FETCH ERROR " + str(e))
             return JSONResponse({'error': str(e)})
 
     def post(self):

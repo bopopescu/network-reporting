@@ -47,7 +47,8 @@ class AdNetworkReportIndexHandler(RequestHandler):
         # Get networks for which they've entered publisher information but
         # havent given us login credentials so we can bug them about giving us
         # their creds
-        networks_without_creds = manager.get_networks_without_credentials()
+        networks_without_creds = \
+                list(manager.get_networks_without_credentials())
 
 
         # TODO: REFACTOR

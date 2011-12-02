@@ -389,7 +389,10 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
     def get_networks_without_credentials(self):
         creds = AdNetworkLoginCredentials.all().filter('account =', self.account)
-        for network in [cred.ad_network_name for cred in creds]:
+        networks_with_creds = [cred.ad_network_name for cred in creds]
+        potential_networks = list(set(AD_NETWORK_NAMES) -
+                set(networks_with_creds))
+        for network in potential_networks:
             pub_ids = list(self.get_app_publisher_ids(network))
             if pub_ids:
                 yield network

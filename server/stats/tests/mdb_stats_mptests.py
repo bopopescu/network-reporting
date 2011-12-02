@@ -23,11 +23,11 @@ AdUnit = Site
 
 
 
-def mdb_handler_endpoint_mptest():    
+def mdb_handler_endpoint_mptest():
     # start off fresh
     clear_datastore()
-    
-    # create and put model objects 
+
+    # create and put model objects
     user = users.User(email="test@example.com")
     account = Account(key_name="account",user=user).put()
 
@@ -39,7 +39,7 @@ def mdb_handler_endpoint_mptest():
     adgroup = AdGroup(key_name='adgroup', campaign=campaign,account=account).put()
     creative1 = Creative(key_name='creative1', ad_group=adgroup,account=account).put()
     creative2 = Creative(key_name='creative2', ad_group=adgroup,account=account).put()
-   
+
     # get encoded strings of keys
     adunit_id1 = str(adunit1)
     adunit_id2 = str(adunit2)
@@ -60,7 +60,7 @@ def mdb_handler_endpoint_mptest():
                campaign_id: 'campaign_id',
                '': '',
                'k': 'k'}
-           
+
 
     # date_hours: first and last hours of a day
     hour1 = datetime.datetime(2011, 03, 21, 01)
@@ -72,12 +72,12 @@ def mdb_handler_endpoint_mptest():
     a1_c1_h1_gb = [30, 47, 35, 14, 8, 10.2]
     a1_c1_h2_us = [5, 11, 8, 3, 0, 1.8]
     a1_c1_h2_gb = [80, 120, 95, 75, 20, 35.6]
-    
+
     a1_c2_h1_us = [10, 15, 9, 0, 0, 0.0]
     a1_c2_h1_gb = [30, 18, 11, 2, 1, 17.3]
     a1_c2_h2_us = [5, 9, 3, 1, 1, 3.1]
     a1_c2_h2_gb = [80, 174, 123, 34, 11, 53.4]
-    
+
     a2_c1_h1_us = [20, 31, 11, 3, 0, 8.4]
     a2_c1_h1_gb = [45, 70, 30, 10, 2, 7.2]
     a2_c1_h2_us = [50, 91, 53, 23, 10, 11.8]
@@ -87,7 +87,12 @@ def mdb_handler_endpoint_mptest():
     a2_c2_h1_gb = [45, 65, 31, 12, 1, 11.8]
     a2_c2_h2_us = [50, 87, 53, 21, 14, 43.5]
     a2_c2_h2_gb = [75, 180, 150, 15, 0, 73.2]
-    
+
+    a1_xx_h1_us = [a1_c1_h1_us[0], 0, 0, 0, 0, 0]
+    a1_xx_h1_gb = [a1_c1_h1_gb[0], 0, 0, 0, 0, 0]
+    a1_xx_h2_us = [a1_c1_h2_us[0], 0, 0, 0, 0, 0]
+    a1_xx_h2_gb = [a1_c1_h2_gb[0], 0, 0, 0, 0, 0]
+
 
     stats_to_put = []
 
@@ -96,7 +101,7 @@ def mdb_handler_endpoint_mptest():
     # note that for request_count, replacing c1 with c2 in count array's name also works
 
     # a1 x h1: REQUESTS
-    sm_a1_xx_h1_us = StatsModel(publisher=adunit1, date_hour=hour1, country='US', request_count=a1_c1_h1_us[0]) 
+    sm_a1_xx_h1_us = StatsModel(publisher=adunit1, date_hour=hour1, country='US', request_count=a1_c1_h1_us[0])
     sm_a1_xx_h1_gb = StatsModel(publisher=adunit1, date_hour=hour1, country='GB', request_count=a1_c1_h1_gb[0])
     stats_to_put.extend([sm_a1_xx_h1_us, sm_a1_xx_h1_gb])
 
@@ -104,7 +109,7 @@ def mdb_handler_endpoint_mptest():
     sm_a1_xx_h2_us = StatsModel(publisher=adunit1, date_hour=hour2, country='US', request_count=a1_c1_h2_us[0])
     sm_a1_xx_h2_gb = StatsModel(publisher=adunit1, date_hour=hour2, country='GB', request_count=a1_c1_h2_gb[0])
     stats_to_put.extend([sm_a1_xx_h2_us, sm_a1_xx_h2_gb])
-            
+
     # a2 x h1: REQUESTS
     sm_a2_xx_h1_us = StatsModel(publisher=adunit2, date_hour=hour1, country='US', request_count=a2_c1_h1_us[0])
     sm_a2_xx_h1_gb = StatsModel(publisher=adunit2, date_hour=hour1, country='GB', request_count=a2_c1_h1_gb[0])
@@ -117,68 +122,68 @@ def mdb_handler_endpoint_mptest():
 
 
     # ADUNIT 1
-    
+
     # a1 x c1 x h1
-    sm_a1_c1_h1_us = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour1, country='US', 
-                                request_count=a1_c1_h1_us[1], 
-                                impression_count=a1_c1_h1_us[2], 
-                                click_count=a1_c1_h1_us[3], 
-                                conversion_count=a1_c1_h1_us[4], 
+    sm_a1_c1_h1_us = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour1, country='US',
+                                request_count=a1_c1_h1_us[1],
+                                impression_count=a1_c1_h1_us[2],
+                                click_count=a1_c1_h1_us[3],
+                                conversion_count=a1_c1_h1_us[4],
                                 revenue=a1_c1_h1_us[5]
-                                )    
-    sm_a1_c1_h1_gb = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour1, country='GB', 
-                                request_count=a1_c1_h1_gb[1], 
-                                impression_count=a1_c1_h1_gb[2], 
-                                click_count=a1_c1_h1_gb[3],  
-                                conversion_count=a1_c1_h1_gb[4],  
+                                )
+    sm_a1_c1_h1_gb = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour1, country='GB',
+                                request_count=a1_c1_h1_gb[1],
+                                impression_count=a1_c1_h1_gb[2],
+                                click_count=a1_c1_h1_gb[3],
+                                conversion_count=a1_c1_h1_gb[4],
                                 revenue=a1_c1_h1_gb[5]
                                 )
     stats_to_put.extend([sm_a1_c1_h1_us, sm_a1_c1_h1_gb])
 
     # a1 x c1 x h2
-    sm_a1_c1_h2_us = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour2, country='US', 
-                                request_count=a1_c1_h2_us[1], 
-                                impression_count=a1_c1_h2_us[2], 
-                                click_count=a1_c1_h2_us[3], 
-                                conversion_count=a1_c1_h2_us[4], 
-                                revenue=a1_c1_h2_us[5])    
-    sm_a1_c1_h2_gb = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour2, country='GB', 
-                                request_count=a1_c1_h2_gb[1], 
-                                impression_count=a1_c1_h2_gb[2], 
-                                click_count=a1_c1_h2_gb[3], 
-                                conversion_count=a1_c1_h2_gb[4], 
+    sm_a1_c1_h2_us = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour2, country='US',
+                                request_count=a1_c1_h2_us[1],
+                                impression_count=a1_c1_h2_us[2],
+                                click_count=a1_c1_h2_us[3],
+                                conversion_count=a1_c1_h2_us[4],
+                                revenue=a1_c1_h2_us[5])
+    sm_a1_c1_h2_gb = StatsModel(publisher=adunit1, advertiser=creative1, date_hour=hour2, country='GB',
+                                request_count=a1_c1_h2_gb[1],
+                                impression_count=a1_c1_h2_gb[2],
+                                click_count=a1_c1_h2_gb[3],
+                                conversion_count=a1_c1_h2_gb[4],
                                 revenue=a1_c1_h2_gb[5])
     stats_to_put.extend([sm_a1_c1_h2_us, sm_a1_c1_h2_gb])
 
 
     # a1 x c2 x h1
-    sm_a1_c2_h1_us = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour1, country='US', 
-                                request_count=a1_c2_h1_us[1], 
-                                impression_count=a1_c2_h1_us[2], 
-                                click_count=a1_c2_h1_us[3], 
-                                conversion_count=a1_c2_h1_us[4], 
+    sm_a1_c2_h1_us = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour1, country='US',
+                                request_count=a1_c2_h1_us[1],
+                                impression_count=a1_c2_h1_us[2],
+                                click_count=a1_c2_h1_us[3],
+                                conversion_count=a1_c2_h1_us[4],
                                 revenue=a1_c2_h1_us[5]
                                 )
-    sm_a1_c2_h1_gb = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour1, country='GB', 
-                                request_count=a1_c2_h1_gb[1], 
+    sm_a1_c2_h1_gb = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour1, country='GB',
+                                request_count=a1_c2_h1_gb[1],
                                 impression_count=a1_c2_h1_gb[2],
-                                click_count=a1_c2_h1_gb[3], 
-                                conversion_count=a1_c2_h1_gb[4], 
+                                click_count=a1_c2_h1_gb[3],
+                                conversion_count=a1_c2_h1_gb[4],
                                 revenue=a1_c2_h1_gb[5])
     stats_to_put.extend([sm_a1_c2_h1_us, sm_a1_c2_h1_gb])
 
     # a1 x c2 x h2
-    sm_a1_c2_h2_us = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour2, country='US', 
-                                request_count=a1_c2_h2_us[1], 
-                                impression_count=a1_c2_h2_us[2], 
-                                click_count=a1_c2_h2_us[3], 
-                                conversion_count=a1_c2_h2_us[4], 
+    sm_a1_c2_h2_us = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour2, country='US',
+                                request_count=a1_c2_h2_us[1],
+                                impression_count=a1_c2_h2_us[2],
+                                click_count=a1_c2_h2_us[3],
+                                conversion_count=a1_c2_h2_us[4],
                                 revenue=a1_c2_h2_us[5])
-    sm_a1_c2_h2_gb = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour2, country='GB', 
-                                request_count=a1_c2_h2_gb[1], 
-                                impression_count=a1_c2_h2_gb[2], 
-                                click_count=a1_c2_h2_gb[3], 
-                                conversion_count=a1_c2_h2_gb[4], 
+    sm_a1_c2_h2_gb = StatsModel(publisher=adunit1, advertiser=creative2, date_hour=hour2, country='GB',
+                                request_count=a1_c2_h2_gb[1],
+                                impression_count=a1_c2_h2_gb[2],
+                                click_count=a1_c2_h2_gb[3],
+                                conversion_count=a1_c2_h2_gb[4],
                                 revenue=a1_c2_h2_gb[5])
     stats_to_put.extend([sm_a1_c2_h2_us, sm_a1_c2_h2_gb])
 
@@ -186,14 +191,14 @@ def mdb_handler_endpoint_mptest():
     # ADUNIT 2
 
     # a2 x c1 x h1
-    sm_a2_c1_h1_us = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour1, country='US', 
-                                request_count=a2_c1_h1_us[1], 
-                                impression_count=a2_c1_h1_us[2], 
-                                click_count=a2_c1_h1_us[3], 
-                                conversion_count=a2_c1_h1_us[4], 
+    sm_a2_c1_h1_us = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour1, country='US',
+                                request_count=a2_c1_h1_us[1],
+                                impression_count=a2_c1_h1_us[2],
+                                click_count=a2_c1_h1_us[3],
+                                conversion_count=a2_c1_h1_us[4],
                                 revenue=a2_c1_h1_us[5]
-                                )    
-    sm_a2_c1_h1_gb = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour1, country='GB', 
+                                )
+    sm_a2_c1_h1_gb = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour1, country='GB',
                                 request_count=a2_c1_h1_gb[1],
                                 impression_count=a2_c1_h1_gb[2],
                                 click_count=a2_c1_h1_gb[3],
@@ -203,55 +208,55 @@ def mdb_handler_endpoint_mptest():
     stats_to_put.extend([sm_a2_c1_h1_us, sm_a2_c1_h1_gb])
 
     # a2 x c1 x h2
-    sm_a2_c1_h2_us = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour2, country='US', 
-                                request_count=a2_c1_h2_us[1], 
-                                impression_count=a2_c1_h2_us[2], 
-                                click_count=a2_c1_h2_us[3], 
-                                conversion_count=a2_c1_h2_us[4], 
+    sm_a2_c1_h2_us = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour2, country='US',
+                                request_count=a2_c1_h2_us[1],
+                                impression_count=a2_c1_h2_us[2],
+                                click_count=a2_c1_h2_us[3],
+                                conversion_count=a2_c1_h2_us[4],
                                 revenue=a2_c1_h2_us[5]
-                                )    
-    sm_a2_c1_h2_gb = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour2, country='GB', 
-                                request_count=a2_c1_h2_gb[1], 
-                                impression_count=a2_c1_h2_gb[2], 
-                                click_count=a2_c1_h2_gb[3], 
-                                conversion_count=a2_c1_h2_gb[4], 
+                                )
+    sm_a2_c1_h2_gb = StatsModel(publisher=adunit2, advertiser=creative1, date_hour=hour2, country='GB',
+                                request_count=a2_c1_h2_gb[1],
+                                impression_count=a2_c1_h2_gb[2],
+                                click_count=a2_c1_h2_gb[3],
+                                conversion_count=a2_c1_h2_gb[4],
                                 revenue=a2_c1_h2_gb[5]
                                 )
     stats_to_put.extend([sm_a2_c1_h2_us, sm_a2_c1_h2_gb])
 
 
     # a2 x c2 x h1
-    sm_a2_c2_h1_us = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour1, country='US', 
-                                request_count=a2_c2_h1_us[1], 
-                                impression_count=a2_c2_h1_us[2], 
-                                click_count=a2_c2_h1_us[3], 
-                                conversion_count=a2_c2_h1_us[4], 
+    sm_a2_c2_h1_us = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour1, country='US',
+                                request_count=a2_c2_h1_us[1],
+                                impression_count=a2_c2_h1_us[2],
+                                click_count=a2_c2_h1_us[3],
+                                conversion_count=a2_c2_h1_us[4],
                                 revenue=a2_c2_h1_us[5])
-    sm_a2_c2_h1_gb = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour1, country='GB', 
-                                request_count=a2_c2_h1_gb[1], 
-                                impression_count=a2_c2_h1_gb[2], 
-                                click_count=a2_c2_h1_gb[3], 
-                                conversion_count=a2_c2_h1_gb[4], 
+    sm_a2_c2_h1_gb = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour1, country='GB',
+                                request_count=a2_c2_h1_gb[1],
+                                impression_count=a2_c2_h1_gb[2],
+                                click_count=a2_c2_h1_gb[3],
+                                conversion_count=a2_c2_h1_gb[4],
                                 revenue=a2_c2_h1_gb[5]
                                 )
     stats_to_put.extend([sm_a2_c2_h1_us, sm_a2_c2_h1_gb])
 
     # a2 x c2 x h2
-    sm_a2_c2_h2_us = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour2, country='US', 
-                                request_count=a2_c2_h2_us[1], 
-                                impression_count=a2_c2_h2_us[2], 
-                                click_count=a2_c2_h2_us[3], 
-                                conversion_count=a2_c2_h2_us[4], 
+    sm_a2_c2_h2_us = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour2, country='US',
+                                request_count=a2_c2_h2_us[1],
+                                impression_count=a2_c2_h2_us[2],
+                                click_count=a2_c2_h2_us[3],
+                                conversion_count=a2_c2_h2_us[4],
                                 revenue=a2_c2_h2_us[5])
-    sm_a2_c2_h2_gb = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour2, country='GB', 
-                                request_count=a2_c2_h2_gb[1], 
-                                impression_count=a2_c2_h2_gb[2], 
-                                click_count=a2_c2_h2_gb[3], 
-                                conversion_count=a2_c2_h2_gb[4], 
+    sm_a2_c2_h2_gb = StatsModel(publisher=adunit2, advertiser=creative2, date_hour=hour2, country='GB',
+                                request_count=a2_c2_h2_gb[1],
+                                impression_count=a2_c2_h2_gb[2],
+                                click_count=a2_c2_h2_gb[3],
+                                conversion_count=a2_c2_h2_gb[4],
                                 revenue=a2_c2_h2_gb[5])
     stats_to_put.extend([sm_a2_c2_h2_us, sm_a2_c2_h2_gb])
 
-    
+
     mdb_json = _create_mdb_json(stats_to_put)
     mdb_dict = simplejson.loads(mdb_json)
 
@@ -266,13 +271,13 @@ def mdb_handler_endpoint_mptest():
     expected_d['%s:%s:%s'%(adunit_id2, creative_id1, hour2.strftime('%y%m%d%H'))] = add_lists([a2_c1_h2_us, a2_c1_h2_gb])
     expected_d['%s:%s:%s'%(adunit_id2, creative_id2, hour1.strftime('%y%m%d%H'))] = add_lists([a2_c2_h1_us, a2_c2_h1_gb])
     expected_d['%s:%s:%s'%(adunit_id2, creative_id2, hour2.strftime('%y%m%d%H'))] = add_lists([a2_c2_h2_us, a2_c2_h2_gb])
-    
-    
+
+
     actual_d = {}
     for k, v in mdb_dict.iteritems():
         print debug_key_name(k, id_dict), v
         actual_d[k] = [v['request_count'], v['attempt_count'], v['impression_count'], v['click_count'], v['conversion_count'], v['revenue']]
-    
+
     # verify length of mdb_dict
     assert_equals(len(actual_d), len(expected_d))
 
@@ -281,13 +286,13 @@ def mdb_handler_endpoint_mptest():
         readable_key_name = debug_key_name(k, id_dict)
         debug_helper(readable_key_name, actual_d[k], expected_d[k])
         assert_equals(actual_d[k], expected_d[k])
-        
+
     # package mdb_dict into derefed post data for mongoDB update stats handler
     has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict)
     assert_false(has_err)
     assert(err_msg is None)
     assert(post_data is not None)
-    
+
     expected_mdb_post_list = []
     expected_mdb_post_list.append({'adunit': adunit_id1,
                                    'creative': creative_id1,
@@ -307,7 +312,7 @@ def mdb_handler_endpoint_mptest():
                                    'creative': creative_id1,
                                    'date_hour': hour2.strftime('%y%m%d%H'),
                                    'app': app_id,
-                                   'account': account_id,                                 
+                                   'account': account_id,
                                    'adgroup': adgroup_id,
                                    'campaign': campaign_id,
                                    'request_count': add_lists([a1_c1_h2_us, a1_c1_h2_gb])[0],
@@ -335,7 +340,7 @@ def mdb_handler_endpoint_mptest():
                                    'creative': creative_id2,
                                    'date_hour': hour2.strftime('%y%m%d%H'),
                                    'app': app_id,
-                                   'account': account_id,                                   
+                                   'account': account_id,
                                    'adgroup': adgroup_id,
                                    'campaign': campaign_id,
                                    'request_count': add_lists([a1_c2_h2_us, a1_c2_h2_gb])[0],
@@ -345,12 +350,12 @@ def mdb_handler_endpoint_mptest():
                                    'conversion_count': add_lists([a1_c2_h2_us, a1_c2_h2_gb])[4],
                                    'revenue': add_lists([a1_c2_h2_us, a1_c2_h2_gb])[5],
                                 })
-   
+
     expected_mdb_post_list.append({'adunit': adunit_id2,
                                    'creative': creative_id1,
                                    'date_hour': hour1.strftime('%y%m%d%H'),
                                    'app': app_id,
-                                   'account': account_id,                                   
+                                   'account': account_id,
                                    'adgroup': adgroup_id,
                                    'campaign': campaign_id,
                                    'request_count': add_lists([a2_c1_h1_us, a2_c1_h1_gb])[0],
@@ -364,7 +369,7 @@ def mdb_handler_endpoint_mptest():
                                    'creative': creative_id1,
                                    'date_hour': hour2.strftime('%y%m%d%H'),
                                    'app': app_id,
-                                   'account': account_id,                                   
+                                   'account': account_id,
                                    'adgroup': adgroup_id,
                                    'campaign': campaign_id,
                                    'request_count': add_lists([a2_c1_h2_us, a2_c1_h2_gb])[0],
@@ -378,7 +383,7 @@ def mdb_handler_endpoint_mptest():
                                    'creative': creative_id2,
                                    'date_hour': hour1.strftime('%y%m%d%H'),
                                    'app': app_id,
-                                   'account': account_id,                                   
+                                   'account': account_id,
                                    'adgroup': adgroup_id,
                                    'campaign': campaign_id,
                                    'request_count': add_lists([a2_c2_h1_us, a2_c2_h1_gb])[0],
@@ -392,7 +397,7 @@ def mdb_handler_endpoint_mptest():
                                    'creative': creative_id2,
                                    'date_hour': hour2.strftime('%y%m%d%H'),
                                    'app': app_id,
-                                   'account': account_id,                                   
+                                   'account': account_id,
                                    'adgroup': adgroup_id,
                                    'campaign': campaign_id,
                                    'request_count': add_lists([a2_c2_h2_us, a2_c2_h2_gb])[0],
@@ -402,19 +407,43 @@ def mdb_handler_endpoint_mptest():
                                    'conversion_count': add_lists([a2_c2_h2_us, a2_c2_h2_gb])[4],
                                    'revenue': add_lists([a2_c2_h2_us, a2_c2_h2_gb])[5],
                                 })
-    
+
     mdb_post_list = simplejson.loads(post_data)
     assert_equals(len(mdb_post_list), len(expected_mdb_post_list))
-    
+
     for post_dict in mdb_post_list:
         assert(post_dict in expected_mdb_post_list) # assert dict exists in expected list
         expected_mdb_post_list.remove(post_dict)    # remove found dict in expected list to avoid dups
 
     assert_equals(len(expected_mdb_post_list), 0)   # assert all dicts were found
 
+
+    # requests only
+    mdb_json = _create_mdb_json([sm_a1_xx_h1_us, sm_a1_xx_h1_gb, sm_a1_xx_h2_us, sm_a1_xx_h2_gb])
+    mdb_dict = simplejson.loads(mdb_json)
+
+    expected_d = {}
+    expected_d['%s::%s'%(adunit_id1, hour1.strftime('%y%m%d%H'))] = add_lists([a1_xx_h1_us, a1_xx_h1_gb])
+    expected_d['%s::%s'%(adunit_id1, hour2.strftime('%y%m%d%H'))] = add_lists([a1_xx_h2_us, a1_xx_h2_gb])
+
+    actual_d = {}
+    for k, v in mdb_dict.iteritems():
+        print debug_key_name(k, id_dict), v
+        actual_d[k] = [v['request_count'], v['attempt_count'], v['impression_count'], v['click_count'], v['conversion_count'], v['revenue']]
+
+    # verify length of mdb_dict
+    assert_equals(len(actual_d), len(expected_d))
+
+    # verify content of mdb_dict
+    for k in actual_d.keys():
+        readable_key_name = debug_key_name(k, id_dict)
+        debug_helper(readable_key_name, actual_d[k], expected_d[k])
+        assert_equals(actual_d[k], expected_d[k])
+
+
     # clear local datastore
     clear_datastore()
-        
+
 
 def package_mdb_post_data_bad_key_mptest():
     mdb_dict_with_bad_key = {'adunit:creative:date_hour:crap': {}}  # has extra part
@@ -428,7 +457,7 @@ def package_mdb_post_data_bad_key_mptest():
     assert_true(has_err)
     assert('Error parsing' in err_msg)
     assert(post_data is None)
-    
+
 
 def package_mdb_post_data_none_deref_mptest():
     mdb_dict_with_invalid_ids = {'adunit:creative:date_hour': {}}  # fake id's, cannot be derefed
@@ -436,4 +465,3 @@ def package_mdb_post_data_none_deref_mptest():
     assert_true(has_err)
     assert('None derefed' in err_msg)
     assert(post_data is None)
-    

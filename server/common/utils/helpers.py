@@ -125,9 +125,13 @@ def to_ascii(obj, encoding='utf-8'):
         obj = obj.encode('utf-8')
     return obj
 
-def get_url_for_blob(blob):
+def get_url_for_blob(blob, ssl=True):
     from google.appengine.api import images
-    return images.get_serving_url(blob).replace('http:', 'https:')
+    url = images.get_serving_url(blob)
+    if ssl:
+        return url.replace('http:', 'https:')
+    return url
+        
 
 
 def get_all(Model, limit=300):

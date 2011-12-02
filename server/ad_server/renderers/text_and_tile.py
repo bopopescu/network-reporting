@@ -16,7 +16,7 @@ class TextAndTileRenderer(BaseHtmlRenderer):
     def _setup_html_context(self):
         super(TextAndTileRenderer, self)._setup_html_context()
         try:
-            image_url = helpers.get_url_for_blob(self.creative.image_blob)
+            image_url = helpers.get_url_for_blob(self.creative.image_blob, ssl=False)
         except InvalidBlobKeyError:
             logging.error("Could not find blobkey. Perhaps you are on mopub-experimental.")   
             image_url = ""

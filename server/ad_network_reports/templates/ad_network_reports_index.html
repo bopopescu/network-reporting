@@ -13,8 +13,8 @@
   </div>
 
   <ul class="pills">
-    <li class="active"> <a href="#apps"> Sort by App </a> </li>
-    <li> <a href="#networks"> Sort by Network </a> </li>
+    <li class="active"> <a href="#networks"> Sort by Network </a> </li>
+    <li> <a href="#apps"> Sort by App </a> </li>
   </ul>
 
   {% comment %}
@@ -30,58 +30,9 @@
   {% endcomment %}
 
   {% comment %}
-    Make the table sorted by app name. This table is active to start.
-  {% endcomment %}
-  <div class="active tab-section" id="apps">
-    <table class="simpletable campaignData-main ad_network_table">
-      <thead>
-        <th class="dataTable-name"></th>
-        <th class="dataTable-data numeric"> Revenue </th>
-        <th class="dataTable-data numeric"> Attempts </th>
-        <th class="dataTable-data numeric"> Impressions </th>
-        <th class="dataTable-data numeric"> Fill Rate </th>
-        <th class="dataTable-data numeric"> Clicks </th>
-        <th class="dataTable-data numeric"> CTR </th>
-      </thead>
-
-      <tbody>
-        {% for app_name, app in apps.items %}
-          <tr class="app-row" id="{{app.key}}">
-            <td class="dataTable-name"> {{app_name}} </td>
-            <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
-            <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
-            <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
-            <td class="dataTable-data numeric">{{ app.fill_rate|percentage }}</td>
-            <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
-            <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
-          </tr>
-          {% for network in app.networks %}
-            <tr class="network-row for-key-{{app.key}}">
-              <td class="dataTable-name">
-                 <a href="{% url ad_network_app_detail app.key %}">{{network.name}} </a>
-                 {% if network.has_potential_errors %}
-                   <br />
-                   (Couldn't collect stats. <a href="{% url ad_network_settings %}">Check the publisher id you entered for this network</a>.)
-                 {% endif %}
-              </td>
-              <td class="dataTable-data numeric"> {{ network.revenue|currency }}  </td>
-              <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
-              <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
-              <td class="dataTable-data numeric">{{ network.fill_rate|percentage }}</td>
-              <td class="dataTable-data numeric">{{ network.clicks|withsep }}</td>
-              <td class="dataTable-data numeric">{{ network.ctr|percentage }}</td>
-            </tr>
-          {% endfor %}
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-
-  {% comment %}
     Make the table sorted by ad network. This one is hidden to start.
   {% endcomment %}
-  <div class="tab-section" id="networks">
+  <div class="tab-section active" id="networks">
     <table class="simpletable campaignData-main ad_network_table">
       <thead>
         <th class="dataTable-name"></th>
@@ -95,23 +46,27 @@
 
       <tbody>
         {% for network_name, network in networks.items %}
-          <tr class="app-row" id={{network.key}}>
-            <td class="dataTable-name">
-              {% if network.has_potential_errors %}
+          <tr class="top-row" id={{network.key}}>
+            <td class="dataTable-data">
+              <img src="/images/ad_network_logos/{{network_name}}-transparent.png"
+              alt="{{network_name}}" width="75" height="25" />
+            </td>
+            {% if network.has_potential_errors %}
+              <td class="dataTable-name">
                 <br />
                 (Couldn't collect stats. <a href="{% url ad_network_settings %}">Check the publisher id you entered for this network</a>.)
-                 {% endif %}
-              {{network_name}}
-            </td>
-            <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
-            <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
-            <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
-            <td class="dataTable-data numeric">{{ network.fill_rate|percentage }} </td>
-            <td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
-            <td class="dataTable-data numeric">{{ network.ctr|percentage }} </td>
+              </td>
+            {% else %}
+              <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
+              <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
+              <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
+              <td class="dataTable-data numeric">{{ network.fill_rate|percentage }} </td>
+              <td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
+              <td class="dataTable-data numeric">{{ network.ctr|percentage }} </td>
+            {% endif %}
           </tr>
           {% for app in network.apps %}
-          <tr class="network-row for-key-{{network.key}}">
+          <tr class="sub-rows {% if app != network.apps|last %} add-border {% endif %} for-key-{{network.key}}">
               <td class="dataTable-name">
                 <a href="{% url ad_network_app_detail app.key %}">{{app.name}}</a>
               </td>
@@ -127,6 +82,58 @@
       </tbody>
     </table>
   </div>
+
+
+  {% comment %}
+    Make the table sorted by app name. This table is active to start.
+  {% endcomment %}
+  <div class="tab-section" id="apps">
+    <table class="simpletable campaignData-main ad_network_table">
+      <thead>
+        <th class="dataTable-name"></th>
+        <th class="dataTable-data numeric"> Revenue </th>
+        <th class="dataTable-data numeric"> Attempts </th>
+        <th class="dataTable-data numeric"> Impressions </th>
+        <th class="dataTable-data numeric"> Fill Rate </th>
+        <th class="dataTable-data numeric"> Clicks </th>
+        <th class="dataTable-data numeric"> CTR </th>
+      </thead>
+
+      <tbody>
+        {% for app_name, app in apps.items %}
+        <div class="section">
+          <tr class="top-row" id="{{app.key}}">
+            <td class="dataTable-name"> {{app_name}} </td>
+            <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
+            <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
+            <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
+            <td class="dataTable-data numeric">{{ app.fill_rate|percentage }}</td>
+            <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
+            <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
+          </tr>
+          {% for network in app.networks %}
+          <tr class="sub-rows {% if network != app.networks|last %} add-border {% endif %} for-key-{{app.key}}">
+              <td class="dataTable-name">
+                 <a href="{% url ad_network_app_detail app.key %}">{{network.name}} </a>
+                 {% if network.has_potential_errors %}
+                   <br />
+                   (Couldn't collect stats. <a href="{% url ad_network_settings %}">Check the publisher id you entered for this network</a>.)
+                 {% endif %}
+              </td>
+              <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
+              <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
+              <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
+              <td class="dataTable-data numeric">{{ network.fill_rate|percentage }}</td>
+              <td class="dataTable-data numeric">{{ network.clicks|withsep }}</td>
+              <td class="dataTable-data numeric">{{ network.ctr|percentage }}</td>
+            </tr>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
 
   {% if networks_without_creds %}
     <div class="alert-message block-message warning">

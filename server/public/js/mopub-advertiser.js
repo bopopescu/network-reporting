@@ -70,7 +70,8 @@ var mopub = mopub || {};
               });
           });
 
-          $('.app-row').click(function () {
+          /*
+          $('.top-row').click(function () {
               var key = $(this).attr('id');
               var rows = $('.for-key-' + key);
               $.each(rows, function (iter, row) {
@@ -81,6 +82,7 @@ var mopub = mopub || {};
                   }
               });
           });
+          */
         },
 
         initializeCredentialsPage: function (management_mode, account_key) {

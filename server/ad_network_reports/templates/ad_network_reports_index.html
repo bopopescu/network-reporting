@@ -4,6 +4,12 @@
 {% block adNetworkTitle %}
 {% endblock %}
 
+{% block titleBarRight %}
+<span class="titlebar-link">
+  <a class="linkIcon" href="/campaigns/networks/">View network campaigns  <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+</span>
+{% endblock titleBarRight %}
+
 {% block innerContent %}
 
   <div style="padding-top:250px; text-align:center;">
@@ -45,37 +51,38 @@
       </thead>
 
       <tbody>
-        {% for network_name, network in networks.items %}
+        {% for network_name, network in networks %}
           <tr class="top-row" id={{network.key}}>
             <td class="dataTable-data">
               <img src="/images/ad_network_logos/{{network_name}}-transparent.png"
               alt="{{network_name}}" width="75" height="25" />
             </td>
+  {% comment %}
             {% if network.has_potential_errors %}
               <td class="dataTable-name">
                 <br />
                 (Couldn't collect stats. <a href="{% url ad_network_settings %}">Check the publisher id you entered for this network</a>.)
               </td>
             {% else %}
+  {% endcomment %}
               <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
               <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
               <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
-              <td class="dataTable-data numeric">{{ network.fill_rate|percentage }} </td>
+              <td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}% </td>
               <td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
-              <td class="dataTable-data numeric">{{ network.ctr|percentage }} </td>
-            {% endif %}
+              <td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}% </td>
           </tr>
-          {% for app in network.apps %}
-          <tr class="sub-rows {% if app != network.apps|last %} add-border {% endif %} for-key-{{network.key}}">
+          {% for app in network.sub_data_list %}
+          <tr class="sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{network.key}}">
               <td class="dataTable-name">
                 <a href="{% url ad_network_app_detail app.key %}">{{app.name}}</a>
               </td>
               <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
               <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
               <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
-              <td class="dataTable-data numeric">{{ app.fill_rate|percentage }}</td>
+              <td class="dataTable-data numeric">{{ app.fill_rate|floatformat:2 }}%</td>
               <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
-              <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
+              <td class="dataTable-data numeric">{{ app.ctr|floatformat:2 }}%</td>
             </tr>
           {% endfor %}
         {% endfor %}
@@ -100,21 +107,21 @@
       </thead>
 
       <tbody>
-        {% for app_name, app in apps.items %}
+        {% for app_name, app in apps %}
         <div class="section">
           <tr class="top-row" id="{{app.key}}">
             <td class="dataTable-name"> {{app_name}} </td>
             <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
             <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
             <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
-            <td class="dataTable-data numeric">{{ app.fill_rate|percentage }}</td>
+            <td class="dataTable-data numeric">{{ app.fill_rate|floatformat:2 }}%</td>
             <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
-            <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
+            <td class="dataTable-data numeric">{{ app.ctr|floatformat:2 }}%</td>
           </tr>
-          {% for network in app.networks %}
-          <tr class="sub-rows {% if network != app.networks|last %} add-border {% endif %} for-key-{{app.key}}">
+          {% for network in app.sub_data_list %}
+          <tr class="sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{app.key}}">
               <td class="dataTable-name">
-                 <a href="{% url ad_network_app_detail app.key %}">{{network.name}} </a>
+                 <a href="{% url ad_network_app_detail network.key %}">{{network.name}} </a>
                  {% if network.has_potential_errors %}
                    <br />
                    (Couldn't collect stats. <a href="{% url ad_network_settings %}">Check the publisher id you entered for this network</a>.)
@@ -123,9 +130,9 @@
               <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
               <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
               <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
-              <td class="dataTable-data numeric">{{ network.fill_rate|percentage }}</td>
+              <td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}%</td>
               <td class="dataTable-data numeric">{{ network.clicks|withsep }}</td>
-              <td class="dataTable-data numeric">{{ network.ctr|percentage }}</td>
+              <td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}%</td>
             </tr>
           {% endfor %}
         </div>
@@ -146,8 +153,9 @@
         <li> <strong>{{ network}}</strong>  (<a class="addcreds" href="#{{network}}"> Add Login Credentials </a>) </li>
       {% endfor %}
       </ul>
-    {% endif %}
   </div>
+  {% endif %}
+  <a class="right btn" href="/ad_network_reports/add">Add / Change network credentials</a>
 
 
   {% comment %}
@@ -183,7 +191,6 @@
 
   {% endcomment %}
 
-    <a class="right btn" href="/ad_network_reports/add">Add more network credentials</a>
 {% endblock innerContent %}
 
 

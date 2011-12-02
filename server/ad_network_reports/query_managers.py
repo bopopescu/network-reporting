@@ -73,11 +73,89 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         daily_stats = [self._get_stats_for_day(date).__dict__ for
                 date in days]
 
-        # Sort alphabetically by application name then by ad network name
-        aggregate_stats_list = sorted(aggregate_stats_list, key = lambda s:
-                s[1].application.name + s[1].ad_network_name)
 
-        return (aggregates, daily_stats, aggregate_stats_list)
+        networks = self._roll_up_unique_stats(aggregate_stats_list, True)
+        apps = self._roll_up_unique_stats(aggregate_stats_list, False)
+
+        return (aggregates, daily_stats, networks, apps)
+
+    def _roll_up_unique_stats(self, aggregate_stats_list, networks=True):
+        """
+         Put the apps into an intuitive data structure
+         Apps are mapped to their stats, as well as to a list of
+         their individual network stats. E.g. :
+         {
+             'app1' : {
+                 'networks': [ {network1_stats ... networkn_stats],
+                 'revenue': 0,
+                 'attempts': 0,
+                 'impressions': 0,
+                 'fill_rate': 0,
+                 'clicks': 0,
+                 'ctr': 0,
+             }
+             ...
+         }
+        """
+        data_dict = {}
+        for key, mapper, stats in aggregate_stats_list:
+            if networks:
+                attr = mapper.ad_network_name
+                name = mapper.application.name
+            else:
+                attr = mapper.application.name
+                name = mapper.ad_network_name
+            sub_data = {
+                'name': name,
+                'key': mapper.key(),
+                'revenue': stats.revenue,
+                'attempts': stats.attempts,
+                'impressions': stats.impressions,
+                'fill_rate': stats.fill_rate,
+                'clicks': stats.clicks,
+                'ctr': stats.ctr,
+                'has_potential_errors': mapper.has_potential_errors()
+            }
+            if not data_dict.has_key(attr):
+                data_dict[attr] = {
+                    'sub_data_list': [],
+                    'revenue': 0,
+                    'attempts': 0,
+                    'fill_rate_impressions': 0,
+                    'impressions': 0,
+                    'fill_rate': 0,
+                    'clicks': 0,
+                    'ctr': 0,
+                    'key': str(key)
+                }
+            data_dict[attr]['sub_data_list'].append(sub_data)
+            data_dict[attr]['revenue'] += sub_data['revenue']
+            data_dict[attr]['attempts'] += sub_data['attempts']
+            if sub_data['attempts']:
+                data_dict[attr]['fill_rate_impressions'] += \
+                        sub_data['impressions']
+            data_dict[attr]['impressions'] += sub_data['impressions']
+            data_dict[attr]['fill_rate'] += sub_data['fill_rate']
+            data_dict[attr]['clicks'] += sub_data['clicks']
+
+        for data in data_dict.values():
+            # Sort sub_data list.
+            data['sub_data_list'] = sorted(data['sub_data_list'], key=lambda \
+                    sub_data: sub_data['name'])
+            if data['attempts']:
+                data['fill_rate'] = data[
+                        'fill_rate_impressions'] / float(
+                                data['attempts']) * 100
+            if data['impressions']:
+                data['ctr'] = (data['clicks'] /
+                        float(data['impressions'])) * 100
+                #network_data['ecpm'] /= float(network_data['impressions'])
+
+        # Sort alphabetically
+        data_list = sorted(data_dict.items(), key=lambda data_tuple:
+                data_tuple[0])
+
+        return data_list
 
     def _get_stats_for_day(self, day):
         """Get rolled up stats for the given date (include all ad networks).
@@ -148,18 +226,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             aggregate_stats.impressions += stats.impressions
             aggregate_stats.clicks += stats.clicks
 
-            if stats.attempts != 0:
+            if stats.attempts:
                 aggregate_stats.fill_rate_impressions += stats.impressions
 
-            if aggregate_stats.impressions != 0:
+            if aggregate_stats.impressions:
                 aggregate_stats.ecpm += stats.ecpm * stats.impressions
 
-        if aggregate_stats.attempts != 0:
+        if aggregate_stats.attempts:
             aggregate_stats.fill_rate = (aggregate_stats.fill_rate_impressions /
                     float(aggregate_stats.attempts)) * 100
         else:
             aggregate_stats.fill_rate = 0
-        if aggregate_stats.impressions != 0:
+        if aggregate_stats.impressions:
             aggregate_stats.ctr = (aggregate_stats.clicks /
                     float(aggregate_stats.impressions)) * 100
             aggregate_stats.ecpm /= float(aggregate_stats.impressions)
@@ -316,7 +394,10 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
     def get_networks_without_credentials(self):
         creds = AdNetworkLoginCredentials.all().filter('account =', self.account)
-        for network in [cred.ad_network_name for cred in creds]:
+        networks_with_creds = [cred.ad_network_name for cred in creds]
+        potential_networks = list(set(AD_NETWORK_NAMES) -
+                set(networks_with_creds))
+        for network in potential_networks:
             pub_ids = list(self.get_app_publisher_ids(network))
             if pub_ids:
                 yield network

@@ -143,7 +143,7 @@
                 <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
               </tr>
               <tr id="stats-breakdown-clicks">
-                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
+                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{aggregates.ctr|floatformat:2}}%)</span> {{aggregates.clicks|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
               </tr>
             </tbody>
@@ -181,9 +181,9 @@
                 <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
                 <td class="dataTable-data numeric">{{stats.attempts|withsep }}</td>
                 <td class="dataTable-data numeric">{{stats.impressions|withsep }}</td>
-                <td class="dataTable-data numeric">{{stats.fill_rate|percentage }}</td>
+                <td class="dataTable-data numeric">{{stats.fill_rate|floatformat:2 }}%</td>
                 <td class="dataTable-data numeric">{{stats.clicks|withsep }}</td>
-                <td class="dataTable-data numeric">{{stats.ctr|percentage }}</td>
+                <td class="dataTable-data numeric">{{stats.ctr|floatformat:2 }}%</td>
               </tr>
             {% endfor %}
           {% endblock tableData %}

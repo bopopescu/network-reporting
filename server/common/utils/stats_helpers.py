@@ -1,11 +1,16 @@
 from urllib import urlencode
 from urllib2 import urlopen
-
+from common.utils import date_magic
 import datetime
-
+from publisher.query_managers import AppQueryManager,\
+     AdUnitQueryManager, \
+     AdUnitContextQueryManager
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 from common.constants import MPX_DSP_IDS
 import logging
+
+from reporting.query_managers import StatsModelQueryManager
+from reporting.models import StatsModel, GEO_COUNTS
 
 try:
     import json
@@ -19,6 +24,60 @@ except ImportError:
 # +1 to ensure no division by 0
 ctr = lambda clicks, impressions: (clicks/float(impressions+1))
 ecpm = lambda revenue, impressions: (revenue/float(impressions+1))*1000
+
+class AbstractStatsFetcher(object):
+
+    def __init__(self, pub_id):
+        self.pub_id = str(pub_id)
+
+    def get_app_stats(self, app_key, start, end, daily=False):
+        raise NotImplementedError('Implement this method fool')
+
+    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+        raise NotImplementedError('Implement this method fool')
+
+    def get_account_stats(self, start, end, daily=False):
+        raise NotImplementedError('Implement this method fool')
+
+
+class SummedStatsFetcher(AbstractStatsFetcher):
+    def _get_publisher_stats(self, publisher, start, end, *args, **kwargs):
+        days = date_magic.gen_days(start, end)
+        query_manager = StatsModelQueryManager(publisher.account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=None,
+                                                 days=days)
+        stat_totals = {'revenue': sum([stat.revenue for stat in stats]),
+                       'ctr': 0.0,
+                       'ecpm': 0.0,
+                       'impressions': sum([stat.impression_count for stat in stats]),
+                       'clicks': sum([stat.click_count for stat in stats])}
+        stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
+        stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
+        return stat_totals
+
+    def get_app_stats(self, app_key, start, end, *args, **kwargs):
+        app = AppQueryManager.get(app_key)
+        app_stats = self._get_publisher_stats(app, start, end)
+        logging.warn('app_stats')
+        logging.warn(app_stats)
+        return app_stats
+
+    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+        adunit = AdUnitQueryManager.get(adunit_key)
+        adunit_stats = self._get_publisher_stats(adunit, start, end)
+        logging.warn('adunit_stats')
+        logging.warn(adunit_stats)
+        return adunit_stats
+
+
+class DirectSoldStatsFetcher(AbstractStatsFetcher):
+    pass
+
+
+class NetworkStatsFetcher(AbstractStatsFetcher):
+    pass
+
 
 class MarketplaceStatsFetcher(object):
     _base_url = "http://mpx.mopub.com/2stats" # TODO: change back to stats not 2stats
@@ -239,6 +298,8 @@ class MarketplaceStatsFetcher(object):
 
         return {}
 
+# Helper/Utility functions
+
 def _transform_stats(stats_dict):
     return {"revenue": currency(stats_dict['rev']),
             "revenue_float": stats_dict['rev'],
@@ -262,22 +323,3 @@ def _fetch_and_decode(url):
 
 class MPStatsAPIException(Exception):
     pass
-
-
-def get_width_and_height(adunit):
-    if adunit.format == "full" and not adunit.landscape:
-        adunit_width = 320
-        adunit_height = 480
-    elif adunit.format == "full" and adunit.landscape:
-        adunit_width = 480
-        adunit_height = 320
-    elif adunit.format == "full_tablet" and not adunit.landscape:
-        adunit_width = 768
-        adunit_height = 1024
-    elif adunit.format == "full_tablet" and adunit.landscape:
-        adunit_width = 1024
-        adunit_height = 768
-    else:
-        adunit_width = adunit.get_width()
-        adunit_height = adunit.get_height()
-    return adunit_width, adunit_height

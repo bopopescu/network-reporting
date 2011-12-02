@@ -129,7 +129,10 @@ class Account(db.Model):
 
     # use MongoDB for realtime stats
     # ex: Outblaze and Mobipeak have too many apps for GAE realtime stats to handle
-    use_mongodb_stats = db.BooleanProperty(default=False)
+    use_mongodb_stats = db.BooleanProperty(default=True)
+
+    # use only mongo, not datastore for real time stats
+    use_only_mongo = db.BooleanProperty(default=False)
 
     def is_admin(self):
         return users.is_current_user_admin()

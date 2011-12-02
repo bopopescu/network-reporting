@@ -11,7 +11,10 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
-from common.utils.marketplace_helpers import MarketplaceStatsFetcher
+from common.utils.stats_helpers import MarketplaceStatsFetcher, \
+     SummedStatsFetcher, \
+     NetworkStatsFetcher, \
+     DirectSoldStatsFetcher
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 
 from django.contrib.auth.decorators import login_required
@@ -30,20 +33,10 @@ class AppService(RequestHandler):
     """
     def get(self, app_key=None):
         try:
-            logging.warn(self.request.GET)
-            # if settings.DEBUG:
-            #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
-            # else:
-            mpxstats = MarketplaceStatsFetcher(self.account.key())
-            # If an app key is provided, return the single app
-            if app_key:
-                apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
 
-
-            # If no app key is provided, return a list of all apps for the account
-            else:
-                apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
-
+            # where are we getting stats from?
+            # choices are 'mpx', 'direct', 'networks', or 'all'
+            stats_endpoint = self.request.GET.get('endpoint', 'all')
 
             # formulate the date range
             if self.request.GET.get('s', None):
@@ -57,17 +50,41 @@ class AppService(RequestHandler):
             else:
                 start_date = end_date - datetime.timedelta(13)
 
+
+            # if settings.DEBUG:
+            #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
+            # else:
+            if stats_endpoint == 'mpx':
+                stats = MarketplaceStatsFetcher(self.account.key())
+            elif stats_endpoint == 'direct':
+                stats = DirectSoldStatsFetcher(self.account.key())
+                stats = []
+            elif stats_endpoint == 'networks':
+                stats = NetworkStatsFetcher(self.account.key())
+                stats = []
+            else:
+                stats = SummedStatsFetcher(self.account.key())
+            # If an app key is provided, return the single app
+            if app_key:
+                apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
+
+
+            # If no app key is provided, return a list of all apps for the account
+            else:
+                apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
+
+
             # get stats for each app
             for app in apps:
                 # if settings.DEBUG:
-                #     app.update(mpxstats.get_app_stats("agltb3B1Yi1pbmNyDAsSA0FwcBiLo_8DDA", start_date, end_date))
+                #     app.update(stats.get_app_stats("agltb3B1Yi1pbmNyDAsSA0FwcBiLo_8DDA", start_date, end_date))
                 # else:
-                app.update(mpxstats.get_app_stats(str(app['id']), start_date, end_date))
+                app.update(stats.get_app_stats(str(app['id']), start_date, end_date))
 
             return JSONResponse(apps)
 
         except Exception, e:
-            logging.warn(e)
+            logging.warn("APPS FETCH ERROR "  + str(e))
             return JSONResponse({'error': str(e)})
 
 
@@ -99,7 +116,21 @@ class AdUnitService(RequestHandler):
             # if settings.DEBUG:
             #     mpxstats = MarketplaceStatsFetcher("agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww")
             # else:
-            mpxstats = MarketplaceStatsFetcher(self.account.key())
+
+            # where are we getting stats from?
+            # choices are 'mpx', 'direct', 'networks', or 'all'
+            stats_endpoint = self.request.GET.get('endpoint', 'all')
+
+            if stats_endpoint == 'mpx':
+                stats = MarketplaceStatsFetcher(self.account.key())
+            elif stats_endpoint == 'direct':
+                stats = DirectSoldStatsFetcher(self.account.key())
+                stats = []
+            elif stats_endpoint == 'networks':
+                stats = NetworkStatsFetcher(self.account.key())
+                stats = []
+            else:
+                stats = SummedStatsFetcher(self.account.key())
 
             # formulate the date range
             if self.request.GET.get('s', None):
@@ -114,11 +145,6 @@ class AdUnitService(RequestHandler):
                 start_date = end_date - datetime.timedelta(13)
 
 
-
-            logging.warn(start_date)
-            logging.warn(end_date)
-
-
             if app_key:
 
                 app = AppQueryManager.get_app_by_key(app_key)
@@ -128,9 +154,9 @@ class AdUnitService(RequestHandler):
 
                 for au in response:
                     # if settings.DEBUG:
-                    #     adunit_stats = mpxstats.get_adunit_stats("agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw", start_date, end_date)
+                    #     adunit_stats = stats.get_adunit_stats("agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw", start_date, end_date)
                     # else:
-                    adunit_stats = mpxstats.get_adunit_stats(au['id'], start_date, end_date)
+                    adunit_stats = stats.get_adunit_stats(au['id'], start_date, end_date)
                     adunit_stats.update({'app_id':app_key})
                     au.update(adunit_stats)
 
@@ -153,7 +179,7 @@ class AdUnitService(RequestHandler):
             else:
                 return JSONResponse({'error':'No parameters provided'})
         except Exception, e:
-            logging.warn(e)
+            logging.warn("ADUNITS FETCH ERROR " + str(e))
             return JSONResponse({'error': str(e)})
 
     def post(self):
@@ -162,8 +188,7 @@ class AdUnitService(RequestHandler):
     def put(self, app_key = None, adunit_key = None):
 
         put_data = simplejson.loads(self.request.raw_post_data)
-        logging.warn(put_data)
-#        try:
+
         new_price_floor = put_data['price_floor']
         activity = put_data['active']
 
@@ -173,10 +198,6 @@ class AdUnitService(RequestHandler):
         adgroup.mktplace_price_floor = float(new_price_floor)
         adgroup.active = activity
         AdGroupQueryManager.put(adgroup)
-
-#        except KeyError, e:
- #           logging.warn(e)
-  #          return JSONResponse({'error':str(e)})
 
         return JSONResponse({'success':'success'})
 
@@ -231,80 +252,6 @@ class AdGroupService(RequestHandler):
 @login_required
 def adgroup_service(request, *args, **kwargs):
     return AdGroupService()(request, use_cache=False, *args, **kwargs)
-
-
-class CreativeService(RequestHandler):
-    """
-    API Service for delivering serialized Creative data
-    """
-    def get(self, creative_key=None):
-
-        logging.warn(self.request.GET)
-
-        mpxstats = MarketplaceStatsFetcher(self.account.key())
-
-        end_date = datetime.datetime.today()
-        start_date = end_date - datetime.timedelta(13)
-        # url = "http://mpx.mopub.com/stats/creatives?pub_id=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw&dsp_id=4e8d03fb71729f4a1d000000"
-        # response = urllib2.urlopen(url).read()
-        # data = simplejson.loads(response)
-
-        creative_data = mpxstats.get_all_creatives(start_date, end_date)
-
-        creatives = []
-        for creative in creative_data:
-            creatives.append([
-                creative["creative"]["url"],
-                creative["creative"]["ad_dmn"],
-                creative["stats"]["pub_rev"],
-                currency(creative['stats']['ecpm']),
-                creative["stats"]["imp"],
-                #creative["stats"]["clk"],
-                #percentage_rounded(creative['stats']['ctr']),
-            ])
-
-        return JSONResponse({
-            'aaData': creatives
-        })
-
-
-    def post(self):
-        pass
-
-    def put(self):
-        pass
-
-    def delete(self):
-        pass
-
-
-@login_required
-def creative_service(request, *args, **kwargs):
-    return CreativeService()(request, use_cache=False, *args, **kwargs)
-
-
-class DspService(RequestHandler):
-    """
-    API Service for delivering serialized Dsp data
-    """
-    def get(self, dsp_key=None):
-        return JSONResponse({'error':'No parameters provided'})
-
-    def post(self):
-        pass
-
-    def put(self):
-        pass
-
-    def delete(self):
-        pass
-
-
-@login_required
-def dsp_service(request, *args, **kwargs):
-    return DspService()(request, use_cache=False, *args, **kwargs)
-
-
 
 class NetworkCampaignService(RequestHandler):
     """

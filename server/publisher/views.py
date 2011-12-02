@@ -58,7 +58,7 @@ from common.constants import *
 from budget import budget_service
 
 from common.utils.decorators import cache_page_until_post
-from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
+from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 
 class AppIndexHandler(RequestHandler):
@@ -71,19 +71,28 @@ class AppIndexHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range)
 
+        # Get all of the adunit keys for bootstrapping the apps
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
-        apps = AppQueryManager.get_apps(self.account)
+        # We list the app traits in the table, and then load their stats over ajax using Backbone.
+        # Fetch the apps for the template load, and then create a list of keys for ajax bootstrapping.
+        apps = {}
+        for au in adunits:
+            app = apps.get(au.app_key.key())
+            if not app:
+                app = AppQueryManager.get(au.app_key.key())
+                app.adunits = [au]
+                apps[au.app_key.key()] = app
+            else:
+                app.adunits += [au]
+        app_keys = simplejson.dumps([str(k) for k in apps.keys()])
+
+
+        # If they don't have any apps so they should be forwarded
+        # to the form to create some.
         if len(apps) == 0:
             return HttpResponseRedirect(reverse('publisher_app_create'))
-
-        for app in apps:
-        #     if app.icon:
-        #         app.icon_url = "data:image/png;base64,%s" % binascii.b2a_base64(app.icon)
-
-            # attaching adunits onto the app object
-            app.adunits = sorted(AdUnitQueryManager.get_adunits(app=app), key=lambda adunit:adunit.name)
-
-        apps = sorted(apps, key=lambda app: app.name)
 
         totals_list = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(days=days)
 
@@ -110,14 +119,11 @@ class AppIndexHandler(RequestHandler):
         response_dict['status'] = 200
         response_dict['all_stats'] = stats_dict
 
-        logging.warning("ACCOUNT: %s"%self.account.key())
-        logging.warning("YESTERDAY: %s"%yesterday.key())
-        logging.warning("TODAY: %s"%today.key())
-
         return render_to_response(self.request,
                                   'publisher/index.html',
                                   {
-                                      'apps': apps,
+                                      'apps': sorted(apps.values(), lambda x, y: cmp(x.name, y.name)),
+                                      'app_keys': app_keys,
                                       'account_stats': simplejson.dumps(response_dict),
                                       'start_date': days[0],
                                       'end_date': days[-1],

@@ -73,9 +73,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         daily_stats = [self._get_stats_for_day(date).__dict__ for
                 date in days]
 
-        # Sort alphabetically by application name then by ad network name
-        aggregate_stats_list = sorted(aggregate_stats_list, key = lambda s:
-                s[1].application.name + s[1].ad_network_name)
 
         networks = self._roll_up_unique_stats(aggregate_stats_list, True)
         apps = self._roll_up_unique_stats(aggregate_stats_list, False)
@@ -100,7 +97,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
              ...
          }
         """
-        data = {}
+        data_dict = {}
         for key, mapper, stats in aggregate_stats_list:
             if networks:
                 attr = mapper.ad_network_name
@@ -108,7 +105,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             else:
                 attr = mapper.application.name
                 name = mapper.ad_network_name
-            network_data = {
+            sub_data = {
                 'name': name,
                 'key': mapper.key(),
                 'revenue': stats.revenue,
@@ -119,9 +116,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 'ctr': stats.ctr,
                 'has_potential_errors': mapper.has_potential_errors()
             }
-            if not data.has_key(attr):
-                data[attr] = {
-                    'data': [],
+            if not data_dict.has_key(attr):
+                data_dict[attr] = {
+                    'sub_data_list': [],
                     'revenue': 0,
                     'attempts': 0,
                     'fill_rate_impressions': 0,
@@ -131,26 +128,34 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     'ctr': 0,
                     'key': str(key)
                 }
-            data[attr]['data'].append(network_data)
-            data[attr]['revenue'] += network_data['revenue']
-            data[attr]['attempts'] += network_data['attempts']
-            if network_data['attempts']:
-                data[attr]['fill_rate_impressions'] += \
-                        network_data['impressions']
-            data[attr]['impressions'] += network_data['impressions']
-            data[attr]['fill_rate'] += network_data['fill_rate']
-            data[attr]['clicks'] += network_data['clicks']
+            data_dict[attr]['sub_data_list'].append(sub_data)
+            data_dict[attr]['revenue'] += sub_data['revenue']
+            data_dict[attr]['attempts'] += sub_data['attempts']
+            if sub_data['attempts']:
+                data_dict[attr]['fill_rate_impressions'] += \
+                        sub_data['impressions']
+            data_dict[attr]['impressions'] += sub_data['impressions']
+            data_dict[attr]['fill_rate'] += sub_data['fill_rate']
+            data_dict[attr]['clicks'] += sub_data['clicks']
 
-        for network_data in data.values():
-            if network_data['attempts']:
-                network_data['fill_rate'] = network_data[
+        for data in data_dict.values():
+            # Sort sub_data list.
+            data['sub_data_list'] = sorted(data['sub_data_list'], key=lambda \
+                    sub_data: sub_data['name'])
+            if data['attempts']:
+                data['fill_rate'] = data[
                         'fill_rate_impressions'] / float(
-                                network_data['attempts']) * 100
-            if network_data['impressions']:
-                network_data['ctr'] = (network_data['clicks'] /
-                        float(network_data['impressions'])) * 100
+                                data['attempts']) * 100
+            if data['impressions']:
+                data['ctr'] = (data['clicks'] /
+                        float(data['impressions'])) * 100
                 #network_data['ecpm'] /= float(network_data['impressions'])
-        return data
+
+        # Sort alphabetically
+        data_list = sorted(data_dict.items(), key=lambda data_tuple:
+                data_tuple[0])
+
+        return data_list
 
     def _get_stats_for_day(self, day):
         """Get rolled up stats for the given date (include all ad networks).

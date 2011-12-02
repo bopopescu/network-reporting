@@ -53,12 +53,6 @@ class AdNetworkReportIndexHandler(RequestHandler):
 
         # TODO: REFACTOR
         # Each view should return one template only.
-        logging.warning(networks.items())
-        for network_name, network in networks.items():
-            for app in network['data']:
-                logging.warning(app['name'])
-
-        logging.warning(apps.items())
 
         if networks:
             return render_to_response(self.request,
@@ -69,8 +63,8 @@ class AdNetworkReportIndexHandler(RequestHandler):
                                           'date_range' : self.date_range,
                                           'aggregates' : aggregates,
                                           'daily_stats' : simplejson.dumps(daily_stats),
-                                          'apps': apps.items(),
-                                          'networks': networks.items(),
+                                          'apps': apps,
+                                          'networks': networks,
                                           'networks_without_creds': networks_without_creds,
                                           'forms': forms
                                       })

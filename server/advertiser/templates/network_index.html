@@ -135,6 +135,10 @@
         </thead>
         <tbody>
           <tr>
+            <td id="network-total-imp">--</td>
+            <td id="network-total-clk">--</td>
+            <td id="network-total-ctr">--</td>
+            <td id="network-total-fill">--</td>
           </tr>
         </tbody>
       </table>
@@ -177,13 +181,16 @@
 
 
 {% block extraScripts %}
-  <script src="/js/mustache.js"></script>
-  <script src="/js/mopub-networks.js?v=0"></script>
+  <script type="text/javascript" src="/js/models.js"></script>
+  <script type="text/javascript" src="/js/views.js"></script>
+  <script type="text/javascript" src="/js/controllers/networks.js?v=0"></script>
   <script>
     $(function() {
+      // TODO: get rid of these three lines
       var mopub = mopub || {};
       mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
       //mopub.Advertiser.initNetworkPage();
+
       NetworksController([
         {% for campaign in network_campaigns %}
           {% for adgroup in campaign.adgroups %}

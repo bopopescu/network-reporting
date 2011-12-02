@@ -61,14 +61,9 @@ from ad_server.optimizer.optimizer import DEFAULT_CTR
 class AdGroupIndexHandler(RequestHandler):
 
     def get(self):
-        # Set start date if passed in, otherwise get most recent days
-        # if self.start_date:
-        #     days = StatsModel.get_days(self.start_date, self.date_range)
-        # else:
-        #     days = StatsModel.lastdays(self.date_range)
-
         days = StatsModel.lastdays(90)
 
+        """
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
         # memoize
@@ -96,24 +91,6 @@ class AdGroupIndexHandler(RequestHandler):
         # memoize
         adunits_dict = {}
         apps_dict = {}
-
-        # gets account level stats
-
-        stats_model = StatsModelQueryManager(self.account, offline=self.offline)
-        stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
-
-
-        key = "||"
-        stats_dict = {}
-        stats_dict[key] = {}
-        stats_dict[key]['name'] = "||"
-        stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
-        summed_stats = sum(stats, StatsModel())
-        stats_dict[key]['sum'] = summed_stats.to_dict()
-
-        response_dict = {}
-        response_dict['status'] = 200
-        response_dict['all_stats'] = stats_dict
 
         for adgroup in adgroups:
             adunits = []
@@ -144,8 +121,19 @@ class AdGroupIndexHandler(RequestHandler):
 
 
         help_text = None
+        """
 
+        campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo'])
+        
+        adgroups = []
+        for campaign in campaigns:
+            for adgroup in campaign.adgroups:
+                if not adgroup.archived:
+                    adgroups.append(adgroup)
 
+        promo_adgroups, gtee_adgroups, marketplace_adgroups, network_adgroups, backfill_promo_adgroups = _sort_campaigns(adgroups)
+
+        """
         return render_to_response(self.request,
                                  'advertiser/adgroup_index.html',
                                   {'adgroups':adgroups,
@@ -164,6 +152,16 @@ class AdGroupIndexHandler(RequestHandler):
                                    'account': self.account,
                                    'helptext':help_text,
                                })
+        """
+
+        return render_to_response(self.request,
+                                  'advertiser/adgroup_index.html', {
+                                      'gtee_adgroups': gtee_adgroups,
+                                      'promo_adgroups': promo_adgroups,
+                                      'backfill_promo_adgroups': backfill_promo_adgroups,
+                                      'start_date': days[0],
+                                      'end_date': days[-1],
+                                  })
 
 ####### Helpers for campaign page #######
 
@@ -1502,8 +1500,7 @@ class NetworkIndexHandler(RequestHandler):
                                   {
                                       'network_campaigns': network_campaigns,
                                       'start_date': days[0],
-                                      'end_date':days[-1],
-                                      'date_range':self.date_range,
+                                      'end_date': days[-1],
                                   })
 
 @login_required

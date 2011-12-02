@@ -36,6 +36,13 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
+    def get_campaigns_by_types(cls, account, types):
+        campaigns = cls.Model.all().filter('account =', account)\
+                                   .filter('campaign_type IN', types)\
+                                   .filter('deleted =', False)
+        return campaigns
+
+    @classmethod
     def get_network_campaigns(cls, account):
         networks = cls.Model.all().filter('campaign_type =', 'network')\
                       .filter('deleted =',False)\

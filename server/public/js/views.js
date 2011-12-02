@@ -1,4 +1,155 @@
 (function($, Backbone) {
+    AdGroupTableView = Backbone.View.extend({
+        initialize: function() {
+            this.model.bind('change', this.render, this);
+        },
+        template: _.template('\
+            <td class="campaignData-icon">\
+                <input type="checkbox" name="id" value="<%= id %>"/>\
+                <% if(deleted) %>\
+                    <img src="/images/deleted.gif" height=9 width=9 />\
+                <% else { %>\
+                    <% if(active) %>\
+                        <img src="/images/active.gif" height=9 width=9 />\
+                    <% else %>\
+                        <img src="/images/paused.gif" height=9 width=9 />\
+                    <% %>\
+                <% } %>\
+            </td>\
+            <td class="dataTable-name">\
+                <a href="<%= details_url %>"><%= name %></a><br/>\
+                <span class="muted"><%= network_type %></span>\
+            </td>\
+            <td {# style="text-align:right;" #} class="dataTable-data numeric dataTable-ecpm ecpm">\
+                <% if(typeof cpm === "undefined") print("--"); else print(cpm); %>\
+            </td>\
+            <td {# style="text-align:right;" #} class="dataTable-data numeric network-req req">\
+                <% if(typeof request_count === "undefined") print("--"); else print(request_count); %>\
+            </td>\
+            <td {# style="text-align:right;" #} class="dataTable-data numeric network-imp imp">\
+                <% if(typeof impression_count === "undefined") print("--"); else print(impression_count); %>\
+            </td>\
+            <td {# style="text-align:right;" #} class="dataTable-data numeric network-fill fill">\
+                <% if(typeof fill_rate === "undefined") print("--"); else print(fill_rate); %>\
+            </td>\
+            <td {# style="text-align:right;" #} class="dataTable-data numeric network-clk clk">\
+                <% if(typeof click_count === "undefined") print("--"); else print(click_count); %>\
+            </td>\
+            <td {# style="text-align:right;" #} class="dataTable-data numeric network-ctr ctr">\
+                <% if(typeof ctr === "undefined") print("--"); else print(ctr); %>\
+            </td>'),
+        tagName: 'tr',
+        className: 'campaignData network_row campaign-status-all campaign-targeting-all incomplete',
+        render: function() {
+            var context = this.model.toJSON();
+            if('impression_count' in context) context.impression_count = mopub.Utils.formatNumberWithCommas(context.impression_count);
+            if('request_count' in context) context.request_count = mopub.Utils.formatNumberWithCommas(context.request_count);
+            if('click_count' in context) context.click_count = mopub.Utils.formatNumberWithCommas(context.click_count);
+            if('cpm' in context) context.cpm = "$" + context.cpm.toFixed(2);
+            if('ctr' in context) context.ctr = mopub.Utils.formatNumberAsPercentage(context.ctr);
+            if('fill_rate' in context) context.fill_rate = mopub.Utils.formatNumberAsPercentage(context.fill_rate);
+            $(this.el).html(this.template(context));
+            return this;
+        }
+    });
+
+    AdGroupsRollupView = Backbone.View.extend({
+        initialize: function() {
+            this.collection.bind('change', this.render, this);
+        },
+
+        template: _.template('\
+            <td id="network-total-imp">\
+                <% if(typeof impression_count === "undefined") print("--"); else print(impression_count); %>\
+            </td>\
+            <td id="network-total-clk">\
+                <% if(typeof click_count === "undefined") print("--"); else print(click_count); %>\
+            </td>\
+            <td id="network-total-ctr">\
+                <% if(typeof ctr === "undefined") print("--"); else print(ctr); %>\
+            </td>\
+            <td id="network-total-fill">\
+                <% if(typeof fill_rate === "undefined") print("--"); else print(fill_rate); %>\
+            </td>'),
+
+        render: function() {
+            var impression_count, click_count, ctr, fill_rate = "--";
+            if(this.collection.isFullyLoaded()) {
+                impression_count = this.collection.getSum('impression_count');
+                click_count = this.collection.getSum('click_count');
+                ctr = mopub.Utils.formatNumberAsPercentage((impression_count === 0) ? 0 : click_count / impression_count);
+                fill_rate = mopub.Utils.formatNumberAsPercentage(this.collection.getSum('fill_rate'));
+                impression_count = mopub.Utils.formatNumberWithCommas(impression_count);
+                click_count = mopub.Utils.formatNumberWithCommas(click_count);
+            }
+            $(this.el).find('#network-total-imp').html(impression_count);
+            $(this.el).find('#network-total-clk').html(click_count);
+            $(this.el).find('#network-total-ctr').html(ctr);
+            $(this.el).find('#network-total-fill').html(fill_rate);
+            return this;
+        }
+    });
+
+    function getCurrentChartSeriesType() {
+        var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
+        if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
+        else return 'area';
+    }
+
+
+    function getGraphImpressionStats() {
+      var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
+      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("impression_count", sortedCampaigns);
+    }
+
+    function getGraphClickStats() {
+      var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
+      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
+      return mopub.Stats.getGraphSummedStatsForStatName("click_count", sortedCampaigns);
+    }
+
+    function getGraphCtrStats() {
+      var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
+      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
+
+      var result = mopub.Stats.getGraphCtrStats(sortedCampaigns);
+      // Append stats for MoPub-optimized CTR.
+      var accountDailyStats = mopub.accountStats["all_stats"]["||"]["daily_stats"];
+      var mopubOptimized = {
+        "MoPub Optimized": mopub.Stats.statArrayFromDailyStats(accountDailyStats, "ctr"),
+      };
+      result.push(mopubOptimized);
+      return result;
+    }
+
+    AdGroupsGraphView = Backbone.View.extend({
+        initialize: function() {
+            this.collection.bind('change', this.render, this);
+        },
+        
+        render: function() {
+            impression_counts = [];
+            click_counts = [];
+            ctrs = [];
+            this.collection.each(function(adgroup) {
+                if(adgroup.has('history')) {
+                    var dict = {};
+                    dict[adgroup.get('name')] = Stats.statArrayFromDailyStats(adgroup.get('history'), 'impression_count');
+                    impression_counts[impression_counts.length] = dict;
+                }
+            });
+            mopub.dashboardStatsChartData = {
+                pointStart: mopub.graphStartDate,
+                pointInterval: 86400000,
+                impressions: impression_counts,
+                clicks: click_counts,
+                ctr: ctrs
+            };
+            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+        }
+    })
+
     /*
      * ## AppView
      *

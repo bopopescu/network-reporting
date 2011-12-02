@@ -32,6 +32,25 @@
 
 
     /*
+     * ## AdGroups
+     */
+    AdGroup = Backbone.Model.extend({});
+
+
+    AdGroups = Backbone.Collection.extend({
+        model: AdGroup,
+
+        getSum: function(stat) {
+            return this.reduce(function(memo, adgroup) { return memo + adgroup.get(stat) }, 0);
+        },
+
+        isFullyLoaded: function() {
+            return this.reduce(function(memo, adgroup) { return memo && adgroup.has('impression_count') }, true);
+        }
+    });
+
+
+    /*
      * ## AdUnit
      */
     var AdUnit = Backbone.Model.extend({

@@ -1,15 +1,34 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
-{% block pageTitle %}
+
+  {% block pageTitle %}
   <div class="breadcrumb">
     {% if not adgroup.archived %}
-      <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
+      {% if campaign.network %}
+        <a class="linkIcon breadcrumb-back" href="{% url network_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
+      {% else %}
+        <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
+      {% endif %}
     {% else %}
       <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
     {% endif %}
-    <h1>Campaign: {{adgroup.name}}</h1>
+
+    {% if campaign.network %}
+      <h1>Network: {{adgroup.name}}</h1>
+    {% else %}
+      <h1>Campaign: {{adgroup.name}}</h1>
+    {% endif %}
+
   </div>
 {% endblock pageTitle %}
+
+
+{% block dateButtons %}
+  {% if campaign.network %}
+    {% include "partials/datecontrols.html" %}
+  {% endif %}
+{% endblock dateButtons %}
+
 {% block messageCenter %}{% endblock messageCenter %}
 
 {% block titleBarRight %}
@@ -25,13 +44,17 @@
       <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
         <option value="play" selected="selected">Running</option>
         <option value="pause">Pause</option>
-        <option value="archive">Archive</option>
+        {% if not campaign.network %}
+          <option value="archive">Archive</option>
+        {% endif %}
         <option value="delete">Delete</option>
       </select>
     {% else %}
       {% if adgroup.archived %}
         <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
-          <option value="archive">Archived</option>
+          {% if not campaign.network %}
+            <option value="archive">Archived</option>
+          {% endif %}
           <option value="play">Resume</option>
           <option value="delete">Delete</option>
         </select>
@@ -39,12 +62,18 @@
         <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
           <option value="pause" selected="selected">Paused</option>
           <option value="play">Resume</option>
-          <option value="archive">Archive</option>
+          {% if not campaign.network %}
+            <option value="archive">Archive</option>
+          {% endif %}
           <option value="delete">Delete</option>
         </select>
       {% endif %}
     {% endif %}
-    <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
+    {% if campaign.network %}
+      <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
+    {% else %}
+      <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
+    {% endif %}
   </span>
 {% endblock titleBarRight %}
 
@@ -78,120 +107,66 @@
             <tbody>
               {% if campaign.gtee or campaign.marketplace %}
                 <tr class="active" id="stats-breakdown-revenue">
+                  {% if yesterday %}
                   <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
                   <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.revenue|currency}}</span></td>
+                  {% endif %}
                   <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|currency}}</span></td>
                   <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                 </tr>
               {% endif %}
-              <tr {% if campaign.network or campaign.promo %} class="active" {% endif %} id="stats-breakdown-impressions">
+              <tr {% if not campaign.gtee and not campaign.marketplace %} class="active" {% endif %} id="stats-breakdown-impressions">
+                {% if yesterday %}
                 <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
+                {% endif %}
                 <td class="stats-breakdown-value all"><span class="inner">{{totals.impression_count|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
               </tr>
-              {% if campaign.network %}
-                <tr id="stats-breakdown-attempts">
-                  <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
-                  <td class="stats-breakdown-value all"><span class="inner">{{totals.request_count|withsep}}</span></td>
-                  <th class="stats-breakdown-name"><span class="inner">Attempts</span></th>
-                </tr>
-              {% endif %}
               <tr id="stats-breakdown-clicks">
-                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{totals.ctr|percentage}})</span> {{totals.click_count|withsep}}</span></td>
+                {% if yesterday %}
+                <td class="stats-breakdown-value today"><span class="inner"> {{today.click_count|withsep}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.click_count|withsep}}</span></td>
+                {% endif %}
+                <td class="stats-breakdown-value all"><span class="inner"> {{totals.click_count|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
               </tr>
+              {% if campaign.network %}
+                <tr id="stats-breakdown-ctr">
+                  {% if yesterday %}
+                  <td class="stats-breakdown-value today"><span class="inner"> {{today.ctr|percentage}}</span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.ctr|percentage}}</span></td>
+                  {% endif %}
+                  <td class="stats-breakdown-value all"><span class="inner"> {{totals.ctr|percentage}}</span></td>
+                  <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+                </tr>
+              {% endif %}
               {% if campaign.promo %}
                 <tr id="stats-breakdown-conversions">
+                  {% if yesterday %}
                   <td class="stats-breakdown-value today"><span class="inner">{{today.conversion_count|withsep}}</span></td>
                   <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.conversion_count|withsep}}</span></td>
+                  {% endif %}
                   <td class="stats-breakdown-value all"><span class="inner">{{totals.conversion_count|withsep}}</span></td>
                   <th class="stats-breakdown-name"><span class="inner">Conversions</span></th>
                 </tr>
               {% endif %}
-              <tr id="stats-breakdown-users">
-                <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner">{{totals.user_count|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-              </tr>
             </tbody>
           </table>
         </div>
-        <div class="stats-breakdown-buttons">
+        <div class="stats-breakdown-buttons {% if not yesterday %}hidden{% endif %}">
           <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" {% if yesterday %}checked="checked"{% endif %}/>
             <label for="stats-breakdown-dateOptions-option-0">Today</label>
             <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
             <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2" {% if not yesterday %}checked="checked"{% endif %}/>
             <label for="stats-breakdown-dateOptions-option-2">All</label>
           </span>
         </div>
         <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
           <div class="chart-loading-text">Loading ...</div>
           <div class="chart-error-text">Could not load chart</div>
-          <script type="text/javascript">
-            // chart data
-            mopub.dashboardStatsChartData = {
-                //pointStart: 1294963200000,
-                pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                      pointInterval: 86400000,
-                      'impressions': [{% for a in graph_adunits %}
-                                      { '{{a.name|safe|addslashes}}':
-                                        [
-                                            {% for stat in a.all_stats %}
-                                            {{stat.impression_count}}
-                                            {% if not forloop.last %},{% endif %}
-                                            {% endfor %}
-                                        ]
-                                      }
-                                      {% if not forloop.last %},{% endif %}
-                                      {% empty %}
-                                      'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
-                                      {% endfor %}
-                      ],
-                      'clicks': [{% for a in graph_adunits %}
-                        { '{{a.name|safe|addslashes}}': [
-                            {% for stat in a.all_stats %}
-                            {y: {{stat.click_count}}, name: '{{stat.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                                 {% empty %}
-                                 'Targeting no adunits': [{y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'} ]
-                                 {% endfor %}
-                      ],
-                      'users': [{% for a in graph_adunits %}
-                        { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                                {% empty %}
-                                'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
-                                {% endfor %}
-                      ],
-                      {% if campaign.gtee  %}
-                            'revenue': [{% for a in graph_adunits %}
-                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                                        {% empty %}
-                                        'Targeting no adunits': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-                                        {% endfor %}
-                              ]
-                        {% endif %} {% if campaign.promo %}
-                            'conversions': [{% for a in graph_adunits %}
-                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                                            {% empty %}
-                                            'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
-                                            {% endfor %}
-                              ]
-                        {% endif %} {% if campaign.network %}
-                            'attempts': [{% for a in graph_adunits %}
-                                { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
-                                         {% empty %}
-                                            'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
-                                         {% endfor %}
-                              ]
-                        {% endif %}
-                    };
-                  </script>
                 </div>
               </div>
               <div class="clear"></div>
@@ -199,30 +174,81 @@
           </div>
 
           <section id="dashboard-campaign">
-            <h2>Campaign Details</h2>
+            {% if campaign.network %}
+              <h2>Network Details</h2>
+            {% else %}
+              <h2>Campaign Details</h2>
+            {% endif %}
+
             <div>
-              {% if adgroup.active %}
-              <img src="/images/active.gif" width="9" height="9"/>
-              {% else %}
-              <img src="/images/paused.gif" width="9" height="9"/>
-              {% endif %}
-                {{ adgroup|campaign_status }} -
-                {% if campaign.start_datetime and campaign.end_datetime %}
-                From {{campaign.start_datetime|format_date_time}} to {{campaign.end_datetime|format_date_time}}.
-                {% endif %} {% if campaign.start_datetime and not campaign.end_datetime %}
-                Starts {{campaign.start_datetime|format_date_time}}.
-                {% endif %} {% if not campaign.start_datetime and campaign.end_datetime %}
-                Ends {{campaign.start_datetime|format_date_time}}.
-                {% endif %} {% if not campaign.start_datetime and not campaign.end_datetime %}
-                All dates.
-                {% endif %}&nbsp;
-                {% if campaign.gtee or campaign.marketplace %}{% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
-                {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}{% endif %}
+              {% if campaign.network %}
 
-
-                {% if user.is_admin %}
-                  <br><br><a href="/budget/view/{{adgroup.key}}"> Admin Budget View</a>
+                {% if adgroup.active %}
+                  <img src="/images/active.gif" width="9" height="9"/>
+                {% else %}
+                  <img src="/images/paused.gif" width="9" height="9"/>
                 {% endif %}
+
+                {{ adgroup|campaign_status }} -
+
+                {% if campaign.start_datetime and campaign.end_datetime %}
+                  From {{campaign.start_datetime|format_date_time}} to {{campaign.end_datetime|format_date_time}}.
+                {% endif %}
+
+                {% if campaign.start_datetime and not campaign.end_datetime %}
+                  Starts {{campaign.start_datetime|format_date_time}}.
+                {% endif %}
+
+                {% if not campaign.start_datetime and campaign.end_datetime %}
+                  Ends {{campaign.start_datetime|format_date_time}}.
+                {% endif %}
+
+                {% if not campaign.start_datetime and not campaign.end_datetime %}
+                  All dates.
+                {% endif %}&nbsp;
+
+                {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
+
+
+              {% else %}
+
+                <div class="campaignData-rollup">
+                  <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+                    <thead>
+                      <tr>
+                        <th width=25%>Start Date</th>
+                        <th width=25%>End Date</th>
+                        <th width=25%>Delivered</th>
+                        <th width=25%>Budget</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td> {{ campaign.start_datetime }} </td>
+                        <td> {{ campaign.end_datetime|default_if_none:"None" }} </td>
+                        <td> {{campaign.budget.total_spent|currency }} </td>
+                        <td>
+                          {% ifequal adgroup.campaign.budget_type 'daily' %}
+                            {% if adgroup.campaign.budget %}
+                              {{adgroup.campaign.budget|currency}} (daily)
+                            {% else %}
+                              Unlimited
+                            {% endif %}
+                          {% endifequal %}
+
+                          {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
+                            {{adgroup.campaign.full_budget|currency}} (total)
+                          {% endifequal %}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                {% endif %}
+
+              {% if user.is_admin %}
+                <a href="/budget/view/{{adgroup.key}}"> Admin Budget View</a>
+              {% endif %}
             </div>
            </section>
 
@@ -234,7 +260,7 @@
                       <tr>
                         <th class="appData-icon"></th>
                         <th class="dataTable-name"></th>
-                        {% if campaign.gtee  or campaign.marketplace %}
+                        {% if campaign.gtee or campaign.marketplace %}
                         <th class="dataTable-data numeric">&nbsp;</th>
                         <th class="dataTable-data numeric">Impressions</th>
                         <th class="dataTable-data numeric">Clicks</th>
@@ -265,7 +291,7 @@
                         <td class="appData-icon"><a href="{% url publisher_app_show app_key=a.key %}"><img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
                         <th class="dataTable-name"><span class="inner"><a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a> <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span></span></th>
 
-                        {% if campaign.gtee  or campaign.marketplace %}
+                        {% if campaign.gtee or campaign.marketplace %}
                         <td class="dataTable-data numeric">&nbsp;</td>
                         <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
@@ -295,7 +321,7 @@
                           <tr>
                             <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
 
-                            {% if campaign.gtee  or campaign.marketplace%}
+                            {% if campaign.gtee or campaign.marketplace%}
                             <td class="dataTable-data numeric">&nbsp;</td>
                             <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
                             <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
@@ -376,7 +402,7 @@
                   <tr>
                     <th class="campaignData-icon"></th>
                     <th class="dataTable-name">Creative</th>
-                    {% if campaign.gtee  or campaign.marketplace %}
+                    {% if campaign.gtee or campaign.marketplace %}
                     <th class="dataTable-data numeric">&nbsp;</th>
                     <th class="dataTable-data numeric">Impressions</th>
                     <th class="dataTable-data numeric">Clicks</th>
@@ -510,7 +536,7 @@
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.revenue|currency}}</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
-                <tr class="appData-details-inner hide">
+                <tr class="appData-details-inner show">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
                     <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
@@ -518,8 +544,8 @@
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
                     <td class="dataTable-data numeric">{{s.revenue|currency}}</td>
                 </tr>
-            </tbody>
             {% endfor %}
+            </tbody>
             {% endif %} {% if campaign.promo %}
             <thead>
                 <tr>
@@ -541,7 +567,7 @@
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
-                <tr class="appData-details-inner hide">
+                <tr class="appData-details-inner show">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
                     <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
@@ -549,8 +575,8 @@
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
                     <td class="dataTable-data numeric">{{s.conversion_count|withsep}} ({{s.conv_rate|percentage}})</td>
                 </tr>
-            </tbody>
             {% endfor %}
+            </tbody>
             {% endif %} {% if campaign.network %}
             <thead>
                 <tr>
@@ -574,7 +600,7 @@
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
                 </tr>
                 {% for s in adgroup.all_stats reversed %}
-                <tr class="appData-details-inner hide">
+                <tr class="appData-details-inner show">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
                     <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
@@ -583,13 +609,88 @@
                     <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
                 </tr>
-            </tbody>
             {% endfor %}
+                        </tbody>
             {% endif %}
         </table>
         <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
     </div>
 </section>
-
-
 {% endblock content %}
+
+
+{% block extraScripts %}
+  <script src="/js/mopub-advertiser.js?v=85"></script>
+  <script type="text/javascript">
+    $(function() {
+      // chart data
+      mopub.dashboardStatsChartData = {
+        pointStart: Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}}),
+        pointInterval: 86400000,
+        'impressions': [{% for a in graph_adunits %}
+                         { '{{a.name|safe|addslashes}}': [
+                           {% for stat in a.all_stats %}
+                           {{stat.impression_count}}
+                           {% if not forloop.last %},{% endif %}
+                           {% endfor %}
+                          ]
+                         }
+                         {% if not forloop.last %},{% endif %}
+                         {% empty %}
+                         { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                         {% endfor %}
+                       ],
+        'clicks': [{% for a in graph_adunits %}
+                    { '{{a.name|safe|addslashes}}': [
+                       {% for stat in a.all_stats %}
+                       {y: {{stat.click_count}}, name: '{{stat.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                    {% empty %}
+                    { 'Targeting no adunits': [{y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'}, {y: 0, name: '0.00%'} ] }
+                    {% endfor %}
+                  ],
+        'ctr': [{% for a in graph_adunits %}
+                         { '{{a.name|safe|addslashes}}': [
+                           {% for stat in a.all_stats %}
+                           {{stat.ctr}}
+                           {% if not forloop.last %},{% endif %}
+                           {% endfor %}
+                          ]
+                         }
+                         {% if not forloop.last %},{% endif %}
+                         {% empty %}
+                         { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                         {% endfor %}
+                  ],
+        'users': [{% for a in graph_adunits %}
+                   { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                   {% empty %}
+                   { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                   {% endfor %}
+                 ],
+        {% if campaign.gtee  %}
+        'revenue': [{% for a in graph_adunits %}
+                     { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.revenue}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                     {% empty %}
+                     { 'Targeting no adunits': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ] }
+                     {% endfor %}
+                   ]
+        {% endif %} {% if campaign.promo %}
+        'conversions': [{% for a in graph_adunits %}
+                         { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.conversion_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                         {% empty %}
+                         { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                         {% endfor %}
+                       ]
+        {% endif %} {% if campaign.network %}
+        'attempts': [{% for a in graph_adunits %}
+                      { '{{a.name|safe|addslashes}}': [{% for stat in a.all_stats %}{{stat.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}
+                      {% empty %}
+                      { 'Targeting no adunits': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] }
+                      {% endfor %}
+                    ]
+        {% endif %}
+      };
+      mopub.Advertiser.initAdGroupPage();
+    });
+  </script>
+{% endblock %}

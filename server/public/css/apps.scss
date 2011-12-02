@@ -17,6 +17,15 @@
     height: 185px;
 }
 
+#revenue-chart {
+    height: 185px;
+}
+
+
+.stats-chart {
+    height: 185px;
+}
+
 #dashboard-apps, #dashboard-campaign {
     margin: 30px 0 0 0;
 }
@@ -242,7 +251,9 @@
 }
 
 .dataTable .appData-id {
-  float: right;
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .appData-main th, .appData-main td {

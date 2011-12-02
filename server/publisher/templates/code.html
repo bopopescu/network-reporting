@@ -117,8 +117,8 @@ mpv.loadAd();</pre>
     var mopub_ad_unit='<b>{{site.key}}</b>';
 
     //Be sure to set these to the size of your adunit
-    var mopub_ad_width=320; //optional
-    var mopub_ad_height=50; //optional
+    var mopub_ad_width={{width}}; //optional
+    var mopub_ad_height={{height}}; //optional
 
     //Use custom keywords appropriate for your mobile webpage
     //var mopub_keywords= "custom keywords"; //optional
@@ -135,6 +135,11 @@ mpv.loadAd();</pre>
               </li>
             </ol>
             <div class="form-submit">
-              <span class="buttonWrap">{% ifequal status 'welcome' %}<a href="{% url advertiser_campaign %}" class="button">Continue to Step 3</a>{% else %}<a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>{% endifequal %}</span>
+              <span class="buttonWrap">
+              {% ifequal status 'welcome' %}
+                <a href="{% url publisher_index %}" class="button">Continue to Step 3</a>
+              {% else %}
+                <a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>
+              {% endifequal %}</span>
             </div>
           </section>{% endblock content %}

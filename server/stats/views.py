@@ -51,7 +51,7 @@ MAX_PUT_SIZE = 8
 STATS_MODEL_QUERY_KEY = "sm"
 
 MDB_STATS_UPDATER_IP = 'http://mongostats.mopub.com'
-MDB_STATS_UPDATER_HANDLER_PATH = '/update'
+MDB_STATS_UPDATER_HANDLER_PATH = '/stats/update'
 
 
 # DEREF_CACHE description:
@@ -451,7 +451,8 @@ class LogTaskHandler(webapp.RequestHandler):
                                 payload=mdb_json)
               except taskqueue.TaskAlreadyExistsError:
                   logging.info('task %s already exists' % ('mdb-'+task_name))
-              return    # don't move on to traditional realtime stats put below
+              if account.use_only_mongo:
+                  return    # don't move on to traditional realtime stats put below
 
 
           # traditional put to GAE datastore

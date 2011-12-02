@@ -67,16 +67,21 @@ class AdMobScraper(Scraper):
         pass
 
     def get_sites(self):
-        req = urllib2.Request(self.SITE_SEARCH_URL + '?' +
-                urllib.urlencode(self.auth_dict))
+        page = 1
+        page_total = 999
         sites = []
-        site_data = json.load(urllib2.urlopen(req))
-        #TODO pagination stuff with the 'page' part
-        for site in site_data['data']:
-            new_dict = {}
-            for key, value in site.iteritems():
-                new_dict[str(key)] = value
-            sites.append(ScraperSite(**new_dict))
+        while page < page_total:
+            self.auth_dict['page'] = page
+            req = urllib2.Request(self.SITE_SEARCH_URL + '?' +
+                    urllib.urlencode(self.auth_dict))
+            site_data = json.load(urllib2.urlopen(req))
+            page_total = site_data['page']['total']
+            for site in site_data['data']:
+                new_dict = {}
+                for key, value in site.iteritems():
+                    new_dict[str(key)] = value
+                sites.append(ScraperSite(**new_dict))
+            page += 1
         return sites
 
     def get_site_stats(self, start_date):
@@ -96,27 +101,32 @@ class AdMobScraper(Scraper):
                           end_date = end_date.strftime("%Y-%m-%d"),
                           object_dimension = 'site')
         query_dict.update(self.auth_dict)
-        req = urllib2.Request(str(self.SITE_STAT_URL + '?' + query_string + '&'
-            + urllib.urlencode(query_dict)))
-
-        #TODO pagination stuff with the 'page' part
-        site_stats = json.load(urllib2.urlopen(req))
 
         records = []
-        for stats in site_stats['data']:
-            nsr = NetworkScrapeRecord(revenue = stats['revenue'],
-                                      attempts = stats['requests'],
-                                      impressions = stats['impressions'],
-                                      fill_rate = stats['fill_rate'] * 100,
-                                      clicks = stats['clicks'],
-                                      ctr = stats['ctr'] * 100,
-                                      ecpm = stats['ecpm'])
+        page = 1
+        page_total = 999
+        while page < page_total:
+            query_dict['page'] = page
+            req = urllib2.Request(str(self.SITE_STAT_URL + '?' + query_string +
+                '&' + urllib.urlencode(query_dict)))
 
-            if 'site_id' in stats:
-                nsr.app_tag = stats['site_id']
-            else:
-                nsr.app_tag = ids[0]
-            records.append(nsr)
+            site_stats = json.load(urllib2.urlopen(req))
+            page_total = site_stats['page']['total']
+            for stats in site_stats['data']:
+                nsr = NetworkScrapeRecord(revenue = stats['revenue'],
+                                          attempts = stats['requests'],
+                                          impressions = stats['impressions'],
+                                          fill_rate = stats['fill_rate'] * 100,
+                                          clicks = stats['clicks'],
+                                          ctr = stats['ctr'] * 100,
+                                          ecpm = stats['ecpm'])
+
+                if 'site_id' in stats:
+                    nsr.app_tag = stats['site_id']
+                else:
+                    nsr.app_tag = ids[0]
+                records.append(nsr)
+            page += 1
 
         return records
 

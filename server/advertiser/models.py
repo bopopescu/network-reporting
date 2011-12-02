@@ -84,6 +84,8 @@ class Campaign(db.Model):
 
     budget_obj = db.ReferenceProperty(Budget, collection_name = 'campaign')
 
+    blind = db.BooleanProperty(default=False)
+
     def __repr__(self):
         return "Camp(start:(%s,%s) end:(%s,%s) active:%s daily:%s total:%s spread:%s type:%s)" % (self.start_date, self.start_datetime, self.end_date, self.end_datetime, self.active, self.budget, self.full_budget, self.budget_strategy, self.budget_type)
 
@@ -101,7 +103,7 @@ class Campaign(db.Model):
             return True
         else:
             return False
-
+            
     def get_owner(self):
         return None
 
@@ -122,6 +124,9 @@ class Campaign(db.Model):
         return self.campaign_type in ['promo', 'backfill_promo']
 
     def network(self):
+        logging.warn('dansfibasngkbdafjkgbdsfjkgbjksdfbgjksdfbgjkbsdfjkgbsdfkjgbsdfjkhgbsdfkjgbsdfkjgbsdjkfhbgsdjkfgbsdjhbg')
+        logging.warn(self.campaign_type)
+        logging.warn('dansfibasngkbdafjkgbdsfjkgbjksdfbgjksdfbgjkbsdfjkgbsdfkjgbsdfjkhgbsdfkjgbsdfkjgbsdjkfhbgsdjkfgbsdjhbg')
         return self.campaign_type in ['network']
 
     def marketplace(self):
@@ -160,7 +165,6 @@ class AdGroup(db.Model):
     deleted = db.BooleanProperty(default=False)
     archived = db.BooleanProperty(default=False)
 
-
     # percent of users to be targetted
     percent_users = db.FloatProperty(default=100.0)
     allocation_percentage = db.FloatProperty(default=100.0)
@@ -186,7 +190,7 @@ class AdGroup(db.Model):
 
     account = db.ReferenceProperty(Account)
     t = db.DateTimeProperty(auto_now_add=True)
-    
+
     # marketplace price floor
     mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
 
@@ -336,6 +340,24 @@ class AdGroup(db.Model):
     def cpm(self):
         if self.bid_strategy == 'cpm':
             return self.bid
+        return None
+        
+    @property
+    def budget_goal(self):
+        campaign = self.campaign
+        if self.bid_strategy == 'cpm':
+            if campaign.budget_type == "daily":
+                try:
+                    return int((campaign.budget / self.bid) * 1000)
+                except:
+                    return int((campaign.full_budget / self.bid) * 1000)
+            else:
+                return int((campaign.full_budget / self.bid) * 1000)
+        else:
+            if campaign.budget_type == "daily":
+                return int(campaign.budget)
+            else:
+                return int(campaign.full_budget)
         return None
 
     @property

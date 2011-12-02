@@ -57,6 +57,21 @@ def label(bound_field, label):
     return bound_field
 
 @register.filter
+def awesome_number_formatter(value):
+    if value:
+        value = withsep(int(value))
+        endings = ['K', 'M', 'B', 'T', 'Q']
+        parts = value.split(',')
+        if 1 < len(parts) < 7 :
+            return parts[0] + endings[len(parts)-2]
+        elif len(parts) >= 7:
+            return value
+        else:
+            return parts[0]
+    else:
+        return "0"
+
+@register.filter
 def currency(value):
     if value:
         return "$%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
@@ -115,6 +130,13 @@ def format_date_compact(value):
 def format_date_time(value):
     if value:
         return value.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d/%Y %I:%M %p")
+    else:
+        return ""
+
+@register.filter
+def format_time(value):
+    if value:
+        return value.strftime("%I:%M %p")
     else:
         return ""
 
@@ -187,3 +209,11 @@ def country_code_to_name(country_code):
     else:
         logging.warning("No country name for code: %s"%country_code)
         return None
+
+@register.filter
+def to_json(python_obj):
+    return json.dumps(python_obj)
+
+@register.simple_tag
+def include_raw(path):
+    return template.loader.find_template(path)[0]

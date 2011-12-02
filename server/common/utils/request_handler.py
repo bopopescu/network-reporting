@@ -4,7 +4,6 @@ from datetime import date,datetime
 from account.query_managers import AccountQueryManager
 from account.models import Account
 
-from google.appengine.api import users
 from google.appengine.ext import db
 
 from inspect import getargspec
@@ -123,9 +122,9 @@ class RequestHandler(object):
 
     def _set_account(self):
         self.account = None
-        user = users.get_current_user()
+        user = self.request.user
         if user:
-          if users.is_current_user_admin():
+          if user.is_staff:
             account_key = self.request.COOKIES.get("account_impersonation",None)
             if account_key:
               self.account = AccountQueryManager.get(account_key)

@@ -57,6 +57,7 @@ class StatsModel(db.Expando):
     click_count = db.IntegerProperty(default=0)
     conversion_count = db.IntegerProperty(default=0)
     
+    
     # uniq user counts
     user_count = db.IntegerProperty(default=0) # NOTE: name change
     request_user_count = db.IntegerProperty(default=0)
@@ -378,8 +379,6 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
         self._cpm = value
     
     cpm = property(get_cpm, set_cpm)   
-    
-
 
     def get_percent_delivered(self):         
         if hasattr(self, '_percent_delivered'): return self._percent_delivered
@@ -407,7 +406,7 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
         self._on_schedule = value
         
     on_schedule = property(get_on_schedule, set_on_schedule)        
-
+        
     @property   
     def cpc(self):
         if self.click_count > 0:

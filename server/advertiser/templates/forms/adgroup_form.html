@@ -8,7 +8,7 @@
     var geo_s = 'http://ws.geonames.org/searchJSON?';
     $(document).ready( function () {
             var priors = {% if form.geo.value %}{{form.geo.value|safe}}{% else %}[]{% endif %};
-            var city_priors = {% if form.cities.value %}{{form.cities.value|safe}}{% else %}[]{% endif %};
+            var city_priors = {{form.cities.value|to_json|safe}};
             var pre = {type: 'country', data: []};
             var city_pre = {type: 'city', data: []};
             //Not being used right now
@@ -157,6 +157,7 @@
             {% endif %}
           </div>
 
+{% comment %}
           <div class="networkDependent chartboost hidden">
             <div class="adgroupForm-editNetwork {% if adunit.app.network_config.chartboost_pub_id %}hidden{% endif %}">
               ChartBoost ID:
@@ -168,6 +169,7 @@
               </div>
             {% endif %}
           </div>
+{% endcomment %}
 
           <div class="networkDependent ejam hidden">
             <div class="adgroupForm-editNetwork {% if adunit.app.network_config.ejam_pub_id %}hidden{% endif %}">

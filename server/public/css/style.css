@@ -486,6 +486,13 @@ span.dropdown-icon {
   text-align: center;
   margin-left: 35%; }
 
+#titlebar-center-wide {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  text-align: center;
+  margin-left: 25%; }
+
 #titlebar-right {
   position: absolute;
   top: 0;
@@ -1481,7 +1488,7 @@ a.disabled {
   padding: 8px 0 7px 0; }
 
 .dataTable-name {
-  width: 500px; }
+  width: 400px; }
   .dataTable-name .inner {
     display: block;
     width: 500px;
@@ -1748,36 +1755,14 @@ a.disabled {
 /*
  * Tabs
  */
-.pills {
-  margin: 0;
-  padding: 0;
-  line-height: 1em;
-  list-style: none; }
-  .pills > li {
-    display: inline-block;
-    width: auto; }
-  .pills > li.active a {
-    color: white;
-    text-shadow: #1B83B8 0 1px 0;
-    background: #22A4E6;
-    -webkit-border-radius: 5px;
-    -mox-border-radius: 5px;
-    border-radius: 5px;
-    text-decoration: none; }
-  .pills > li a {
-    display: block;
-    padding: 8px 10px 0 10px;
-    height: 26px;
-    font-size: 15px; }
-
-.tabs {
+.tabs, .pills {
   padding: 0px 10px;
   margin: 0 -10px 10px -10px;
   border-bottom: 1px solid #dddddd;
   font-size: 15px; }
-  .tabs > ul {
+  .tabs > ul, .pills > ul {
     list-style-type: none; }
-  .tabs > li {
+  .tabs > li, .pills > li {
     -webkit-border-radius: 3px 3px 0 0;
     -moz-border-radius: 3px 3px 0 0;
     border-radius: 3px 3px 0 0;
@@ -1799,23 +1784,23 @@ a.disabled {
     display: inline-block;
     padding: 10px 15px;
     margin-bottom: -1px; }
-    .tabs > li:hover {
+    .tabs > li:hover, .pills > li:hover {
       background-position: 0 -15px;
       color: #e57300;
       text-decoration: none; }
-      .tabs > li:hover a {
+      .tabs > li:hover a, .pills > li:hover a {
         text-decoration: none; }
-    .tabs > li:active {
+    .tabs > li:active, .pills > li:active {
       -webkit-box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
       -moz-box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
       box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25); }
-    .tabs > li:focus {
+    .tabs > li:focus, .pills > li:focus {
       outline: 1px dotted #666; }
-    .tabs > li.active {
+    .tabs > li.active, .pills > li.active {
       border: 1px solid #dddddd;
       border-bottom: 1px solid white;
       background: white; }
-      .tabs > li.active a, .tabs > li.active a:hover {
+      .tabs > li.active a, .tabs > li.active a:hover, .pills > li.active a, .pills > li.active a:hover {
         text-decoration: none;
         color: #999999;
         background: white;
@@ -1824,6 +1809,11 @@ a.disabled {
 .tab-section {
   display: none; }
   .tab-section.active {
+    display: block; }
+
+.pill-section {
+  display: none; }
+  .pill-section.active {
     display: block; }
 
 /*
@@ -2195,17 +2185,13 @@ a.disabled {
   -moz-border-radius: 5px;
   border-radius: 5px;
   background-color: #eeeeee;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(white), to(#eeeeee));
-  background-image: -moz-linear-gradient(top, white, #eeeeee);
-  background-image: -ms-linear-gradient(top, white, #eeeeee);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, white), color-stop(100%, #eeeeee));
-  background-image: -webkit-linear-gradient(top, white, #eeeeee);
-  background-image: -o-linear-gradient(top, white, #eeeeee);
-  background-image: linear-gradient(top, white, #eeeeee);
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-  border-color: #eeeeee #eeeeee #c8c8c8;
-  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
+  background-repeat: no-repeat;
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(white), color-stop(10%, #f8f8f8), to(#eeeeee));
+  background-image: -webkit-linear-gradient(white, #f8f8f8 10%, #eeeeee);
+  background-image: -moz-linear-gradient(white, #f8f8f8 10%, #eeeeee);
+  background-image: -ms-linear-gradient(white, #f8f8f8 10%, #eeeeee);
+  background-image: -o-linear-gradient(white, #f8f8f8 10%, #eeeeee);
+  background-image: linear-gradient(white, #f8f8f8 10%, #eeeeee);
   width: 947px;
   border: 1px solid #E8E8E8;
   border-bottom: 1px solid #DDD;
@@ -2224,7 +2210,7 @@ a.disabled {
     padding: 0;
     text-align: center; }
   .rollup h2 {
-    font-size: 24px;
+    font-size: 30px;
     font-weight: 400; }
   .rollup h4 {
     font-weight: 200;
@@ -2347,117 +2333,27 @@ a.disabled {
   border-bottom: 8px solid transparent;
   border-right: 8px solid #dddddd; }
 
-.tipsy {
-  position: absolute;
-  padding: 5px;
-  z-index: 100000; }
-
-.tipsy-inner {
-  background-color: #000;
-  color: #FFF;
-  max-width: 200px;
-  padding: 5px 8px 4px 8px;
-  text-align: center; }
-
-/* Rounded corners */
-.tipsy-inner {
-  border-radius: 3px;
+/*
+ * Inline Labels
+ */
+.highlight {
+  padding: 1px 3px 2px;
+  font-weight: bold;
+  color: white;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background-color: #dddddd;
+  -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
-  -webkit-border-radius: 3px; }
-
-/* Uncomment for shadow */
-.tipsy-inner {
-  box-shadow: 0 0 5px #000000;
-  -webkit-box-shadow: 0 0 5px #000000;
-  -moz-box-shadow: 0 0 5px #000000; }
-
-.tipsy-arrow {
-  position: absolute;
-  width: 0;
-  height: 0;
-  line-height: 0;
-  border: 5px dashed #000; }
-
-/* Rules to colour arrows */
-.tipsy-arrow-n {
-  border-bottom-color: #000; }
-
-.tipsy-arrow-s {
-  border-top-color: #000; }
-
-.tipsy-arrow-e {
-  border-left-color: #000; }
-
-.tipsy-arrow-w {
-  border-right-color: #000; }
-
-.tipsy-n .tipsy-arrow {
-  top: 0px;
-  left: 50%;
-  margin-left: -5px;
-  border-bottom-style: solid;
-  border-top: none;
-  border-left-color: transparent;
-  border-right-color: transparent; }
-
-.tipsy-nw .tipsy-arrow {
-  top: 0;
-  left: 10px;
-  border-bottom-style: solid;
-  border-top: none;
-  border-left-color: transparent;
-  border-right-color: transparent; }
-
-.tipsy-ne .tipsy-arrow {
-  top: 0;
-  right: 10px;
-  border-bottom-style: solid;
-  border-top: none;
-  border-left-color: transparent;
-  border-right-color: transparent; }
-
-.tipsy-s .tipsy-arrow {
-  bottom: 0;
-  left: 50%;
-  margin-left: -5px;
-  border-top-style: solid;
-  border-bottom: none;
-  border-left-color: transparent;
-  border-right-color: transparent; }
-
-.tipsy-sw .tipsy-arrow {
-  bottom: 0;
-  left: 10px;
-  border-top-style: solid;
-  border-bottom: none;
-  border-left-color: transparent;
-  border-right-color: transparent; }
-
-.tipsy-se .tipsy-arrow {
-  bottom: 0;
-  right: 10px;
-  border-top-style: solid;
-  border-bottom: none;
-  border-left-color: transparent;
-  border-right-color: transparent; }
-
-.tipsy-e .tipsy-arrow {
-  right: 0;
-  top: 50%;
-  margin-top: -5px;
-  border-left-style: solid;
-  border-right: none;
-  border-top-color: transparent;
-  border-bottom-color: transparent; }
-
-.tipsy-w .tipsy-arrow {
-  left: 0;
-  top: 50%;
-  margin-top: -5px;
-  border-right-style: solid;
-  border-left: none;
-  border-top-color: transparent;
-  border-bottom-color: transparent; }
+  border-radius: 3px; }
+  .highlight.important {
+    background-color: #c43c35; }
+  .highlight.warning {
+    background-color: #e63c3c; }
+  .highlight.success {
+    background-color: #5d8c00; }
+  .highlight.notice {
+    background-color: #a6e1ff; }
 
 /*
  * Plugins
@@ -2786,6 +2682,12 @@ a.linkIcon .ui-icon-triangle-1-w {
 #dashboard-stats-chart {
   height: 185px; }
 
+#revenue-chart {
+  height: 185px; }
+
+.stats-chart {
+  height: 185px; }
+
 #dashboard-apps, #dashboard-campaign {
   margin: 30px 0 0 0; }
 
@@ -2968,7 +2870,9 @@ a.linkIcon .ui-icon-triangle-1-w {
   width: 15px; }
 
 .dataTable .appData-id {
-  float: right; }
+  position: absolute;
+  top: 0;
+  right: 0; }
 
 .appData-main th, .appData-main td {
   padding-top: 0;
@@ -3089,9 +2993,6 @@ table.campaignData-main, table.reportData-table {
   border-radius: 10px;
   padding: 5px 40px; }
 
-#dashboard-campaigns {
-  margin: 20px 0 0 0; }
-
 .osi-success {
   color: #53a600; }
 
@@ -3160,3 +3061,16 @@ ul.adunits {
 .app-detail {
   float: left;
   margin: 0px 5px; }
+
+.ad_network_table th:not(:first-child) {
+  text-align: center; }
+.ad_network_table .top-row td {
+  font-size: 18px;
+  text-align: left;
+  background: #f9f9f9; }
+  .ad_network_table .top-row td:not(:first-child) {
+    text-align: right; }
+.ad_network_table .sub-rows td:not(:first-child) {
+  text-align: right; }
+.ad_network_table .add-border td {
+  border-bottom: 1px dotted #ddd; }

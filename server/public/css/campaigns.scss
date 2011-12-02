@@ -88,10 +88,6 @@ table.campaignData-main, table.reportData-table {
   padding:5px 40px;
 }
 
-#dashboard-campaigns {
-  margin: 20px 0 0 0;
-}
-
 .osi-success {
   color: #53a600;
 }
@@ -178,4 +174,25 @@ ul.adunits {
 .app-detail {
     float: left;
     margin: 0px 5px;
+}
+
+.ad_network_table {
+    th:not(:first-child) {
+        text-align: center;
+    }
+    .top-row td {
+        font-size: 18px;
+        text-align: left;
+        background: #f9f9f9;
+        &:not(:first-child) {
+            text-align: right;
+        }
+    }
+    .sub-rows td:not(:first-child) {
+        text-align: right;
+    }
+
+    .add-border td {
+        border-bottom: 1px dotted #ddd;
+    }
 }

@@ -6,15 +6,15 @@ import cgi
 import urllib
 import urllib2
 import string
-import logging 
-from ad_server.networks.server_side import ServerSideException  
+import logging
+from ad_server.networks.server_side import ServerSideException
 
 class JumptapServerSide(ServerSide):
     base_url = "http://a.jumptap.com/a/ads" # live
     pub_id_attr = 'jumptap_pub_id'
     no_pub_id_warning = 'Warning: no %s Publisher Alias has been specified'
     network_name = 'Jumptap'
-   
+
     @property
     def payload(self):
         return None
@@ -25,12 +25,14 @@ class JumptapServerSide(ServerSide):
                       'hid_sha1': self.client_context.mopub_id,
                       'client-ip': self.client_context.client_ip, # Test value: 'client-ip': '208.54.5.50'
                       'ua': self.client_context.user_agent,
-                      'v': 'v29',}
-        
+                      'v': 'v29',
+                      'mt-jtlib': 'mopub' # Parameter passed to distinguish our traffic
+                      }
+
         language = self.get_language()
         if language:
             key_values.update(l=language)
-        
+
         # Jumptap uses all levels of pub_ids
         # 'pub' -- Account Level
         # 'site' -- App Level
@@ -45,16 +47,16 @@ class JumptapServerSide(ServerSide):
         if spot_id:
             key_values['spot'] = spot_id
         return key_values
-    
+
     @property
     def url(self):
         return self.base_url + '?' + urllib.urlencode(self.key_values)
-    
-    @property 
+
+    @property
     def headers(self):
         return { 'User-Agent': self.get_user_agent() }
      #'Accept-Language': 'en-us' }  # TODO: Accept language from web request
-       
+
     def get_language(self):
         LANGUAGE_PAT = re.compile(r' (?P<language>[a-zA-Z][a-zA-Z])[-_][a-zA-Z][a-zA-Z];*[^a-zA-Z0-9-_]')
         m = LANGUAGE_PAT.search(self.client_context.user_agent)
@@ -62,17 +64,17 @@ class JumptapServerSide(ServerSide):
             return m.group('language')
         else:
             return None
-    
+
     def get_response(self):
         req = urllib2.Request(self.url)
         response = urllib2.urlopen(req)
         return response.read()
-   
+
     def html_for_response(self, response):
         trace_logging.warning("Jumptap response: %s"%cgi.escape(response.content))
         if len(response.content) == 0 or response.status_code != 200:
             trace_logging.info("Jumptap ad is empty")
             raise ServerSideException("Jumptap ad is empty")
-       
+
         self.creative_width, self.creative_height = self._get_size(response.content)
         return "<div style='text-align:center'>"+response.content+"</div>"

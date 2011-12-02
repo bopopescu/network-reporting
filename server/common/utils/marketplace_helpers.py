@@ -21,7 +21,7 @@ ctr = lambda clicks, impressions: (clicks/float(impressions+1))
 ecpm = lambda revenue, impressions: (revenue/float(impressions+1))*1000
 
 class MarketplaceStatsFetcher(object):
-    _base_url = "http://mpx.mopub.com/stats"
+    _base_url = "http://mpx.mopub.com/2stats" # TODO: change back to stats not 2stats
     _inventory = "/inventory?"
     _dsp = "/dsps?"
     _creative = "/creatives?"

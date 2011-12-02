@@ -114,7 +114,7 @@
         <div class="stats-breakdown">
           <table>
             <tbody>
-              {% if campaign.gtee or campaign.marketplace %}
+              {% if campaign.gtee %}
                 <tr class="active" id="stats-breakdown-revenue">
                   {% if yesterday %}
                   <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
@@ -124,7 +124,7 @@
                   <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                 </tr>
               {% endif %}
-              <tr {% if not campaign.gtee and not campaign.marketplace %} class="active" {% endif %} id="stats-breakdown-impressions">
+              <tr {% if not campaign.gtee %} class="active" {% endif %} id="stats-breakdown-impressions">
                 {% if yesterday %}
                 <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
@@ -140,16 +140,14 @@
                 <td class="stats-breakdown-value all"><span class="inner"> {{totals.click_count|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
               </tr>
-              {% if campaign.network %}
-                <tr id="stats-breakdown-ctr">
-                  {% if yesterday %}
-                  <td class="stats-breakdown-value today"><span class="inner"> {{today.ctr|percentage}}</span></td>
-                  <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.ctr|percentage}}</span></td>
-                  {% endif %}
-                  <td class="stats-breakdown-value all"><span class="inner"> {{totals.ctr|percentage}}</span></td>
-                  <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
-                </tr>
-              {% endif %}
+              <tr id="stats-breakdown-ctr">
+                {% if yesterday %}
+                <td class="stats-breakdown-value today"><span class="inner"> {{today.ctr|percentage}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.ctr|percentage}}</span></td>
+                {% endif %}
+                <td class="stats-breakdown-value all"><span class="inner"> {{totals.ctr|percentage}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+              </tr>
               {% if campaign.promo %}
                 <tr id="stats-breakdown-conversions">
                   {% if yesterday %}

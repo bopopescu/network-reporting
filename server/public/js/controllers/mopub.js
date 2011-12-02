@@ -894,7 +894,7 @@ if (typeof window.console == "undefined") {
         var impressions = Stats.sumDailyStatsAcrossStatsObjects(objects, "impression_count");
 
         for (var i = 0, len = clicks.length; i < len; i++) {
-            ctr[i] = (clicks[i] / impressions[i]) || 0;
+            ctr[i] = (impressions[i] === 0) ? 0 : clicks[i] / impressions[i];
         }
         return ctr;
     };

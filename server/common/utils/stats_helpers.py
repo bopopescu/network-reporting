@@ -24,6 +24,7 @@ except ImportError:
 # +1 to ensure no division by 0
 ctr = lambda clicks, impressions: (clicks/float(impressions+1))
 ecpm = lambda revenue, impressions: (revenue/float(impressions+1))*1000
+fill_rate = lambda requests, impressions: (impressions/float(requests+1))
 
 class AbstractStatsFetcher(object):
 
@@ -51,9 +52,12 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                        'ctr': 0.0,
                        'ecpm': 0.0,
                        'impressions': sum([stat.impression_count for stat in stats]),
-                       'clicks': sum([stat.click_count for stat in stats])}
+                       'clicks': sum([stat.click_count for stat in stats]),
+                       'requests': sum([stat.request_count for stat in stats]),}
         stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
         stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
+        stat_totals['fill_rate'] = fill_rate(stat_totals['requests'], stat_totals['impressions'])
+
         return stat_totals
 
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
@@ -301,13 +305,11 @@ class MarketplaceStatsFetcher(object):
 # Helper/Utility functions
 
 def _transform_stats(stats_dict):
-    return {"revenue": currency(stats_dict['rev']),
-            "revenue_float": stats_dict['rev'],
+    return {"revenue": stats_dict['rev'],
             "impressions": int(stats_dict['imp']),
             "clicks": stats_dict.get('clk', 0), # no clk currently from /stats/pub
-            "ecpm": currency(ecpm(stats_dict['rev'], stats_dict['imp'])),
-            "ecpm_float": ecpm(stats_dict['rev'], stats_dict['imp']),
-            "ctr": percentage(ctr(stats_dict.get('clk', 0), stats_dict['imp']))}
+            "ecpm": ecpm(stats_dict['rev'], stats_dict['imp']),
+            "ctr": ctr(stats_dict.get('clk', 0), stats_dict['imp'])}
 
 
 def _fetch_and_decode(url):

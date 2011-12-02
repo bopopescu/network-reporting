@@ -14,13 +14,13 @@
 
         renderInline: function () {
             var app_row = $("tr.app-row#app-" + this.model.id, this.el);
-            $(".revenue", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("revenue")));
+            $(".revenue", app_row).text(mopub.Utils.formatCurrency(this.model.get("revenue")));
             $(".impressions", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
-            $(".ecpm", app_row).text(this.model.get("ecpm"));
-            $(".clicks", app_row).text(this.model.get("clicks"));
-            $(".ctr", app_row).text(this.model.get("ctr"));
-            $(".fill_rate", app_row).text(this.model.get("fill_rate"));
-            $(".requests", app_row).text(this.model.get("requests"));
+            $(".ecpm", app_row).text(mopub.Utils.formatCurrency(this.model.get("ecpm")));
+            $(".clicks", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("clicks")));
+            $(".ctr", app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get("ctr")));
+            $(".fill_rate", app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get("fill_rate")));
+            $(".requests", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("requests")));
 
             return this;
         },
@@ -80,9 +80,8 @@
         renderInline: function () {
             var current_model = this.model;
             var adunit_row = $("tr.adunit-row#adunit-" + this.model.id, this.el);
-
-            $(".revenue", adunit_row).text(this.model.get("revenue"));
-            $(".ecpm", adunit_row).text(this.model.get("ecpm"));
+            $(".revenue", adunit_row).text(mopub.Utils.formatCurrency(this.model.get("revenue")));
+            $(".ecpm", adunit_row).text(mopub.Utils.formatCurrency(this.model.get("ecpm")));
             $(".impressions", adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
             $(".price_floor", adunit_row).html('<img class="loading-img hidden" src="/images/icons-custom/spinner-12.gif"></img> ' +
                                                '<input id="' +
@@ -93,11 +92,10 @@
             $(".targeting", adunit_row).html('<img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img> ' +
                                              '<input class="targeting-box" type="checkbox">');
 
-
-            $(".fill_rate", adunit_row).text(this.model.get("fill_rate"));
-            $(".ctr", adunit_row).text(this.model.get("ctr"));
-            $(".clicks", adunit_row).text(this.model.get("clicks"));
-            $(".requests", adunit_row).text(this.model.get("requests"));
+            $(".fill_rate", adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get("fill_rate")));
+            $(".ctr", adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get("ctr")));
+            $(".clicks", adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("clicks")));
+            $(".requests", adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("requests")));
 
             if (this.model.get("active")) {
                 $("input.targeting-box", adunit_row).attr('checked', 'checked');

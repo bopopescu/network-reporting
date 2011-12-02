@@ -66,6 +66,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 scraper = AdNetwork(login_credentials).create_scraper()
                 # Password and username aren't encrypted yet so we don't need
                 # to call append_extra info like in update_ad_networks.
+                # They're sent through ssl so this is fine.
                 scraper.test_login_info()
                 logging.info("Returning true.")
                 self.write(callback + '(true)')
@@ -86,6 +87,6 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                         send_email=wants_email)
                 return
 
-        logging.info("Returning true.")
+        logging.info("Returning false.")
         self.write(callback + '(false)')
 

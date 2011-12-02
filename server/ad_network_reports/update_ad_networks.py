@@ -81,13 +81,13 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                       to='report-monitoring@mopub.com',
-                       cc='tiago@mopub.com',
+                       to=emails,
+                       cc='tiago@mopub.com, report-monitoring@mopub.com',
                        subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
                        body=("Learn more at http://mopub-experimental.appspot."
                                 "com/ad_network_reports/"),
-                       html=(emails +
+                       html=(
                        """
 <table width=100%%>
     <thead>
@@ -122,7 +122,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 #"Learn more at <a href='http://mopub-experimental.appspot.com/"
 #"ad_network_reports/'>MoPub</a>"))
 
-def update_ad_networks(start_date = None, end_date = None):
+def update_ad_networks(start_date=None, end_date=None, only_these_credentials=None):
     """Update ad network stats.
 
     Iterate through all AdNetworkLoginCredentials. Login to the ad networks
@@ -134,6 +134,8 @@ def update_ad_networks(start_date = None, end_date = None):
     # Standardize the date (required since something messes with it)
     pacific = timezone('US/Pacific')
     yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
+
+    login_credentials_list = [only_these_credentials] and get_all_login_credentials()
 
     if not start_date and not end_date:
         start_date = yesterday
@@ -147,7 +149,7 @@ def update_ad_networks(start_date = None, end_date = None):
         valid_stats_list = []
         login_credentials = None
         # log in to ad networks and update stats for each user 
-        for login_credentials in get_all_login_credentials():
+        for login_credentials in login_credentials_list:
             account_key = login_credentials.account.key()
             ad_network_name = login_credentials.ad_network_name
             # Only email account once for all their apps amd ad networks if they
@@ -275,6 +277,13 @@ def update_ad_networks(start_date = None, end_date = None):
                 login_credentials.email:
             send_stats_mail(login_credentials.account, manager, test_date,
                     valid_stats_list)
+        
+       if only_these_credentials:
+            mail.send_mail(sender='olp@mopub.com',
+                           to='tiago@mopub.com',
+                           subject=("Ad Network Scrape Error on %s" %
+                               test_date.strftime("%m/%d/%y")),
+                           body="Couldn't get get stats for %s network "
 
 if __name__ == "__main__":
     setup_remote_api()

@@ -1,4 +1,26 @@
 (function($, Backbone) {
+    /*
+     * collection: AdGroups
+     */
+    AdGroupsView = Backbone.View.extend({
+        initialize: function() {
+            this.collection.bind('change', this.render, this);
+        },
+        render: function() {
+            var html = _.template($('#adgroups-rollup-template').html(), {
+                adgroups: this.collection,
+                title: this.options.title,
+                type: this.options.type
+            });
+            html += _.template($('#adgroups-table-template').html(), {
+                adgroups: this.collection,
+                type: this.options.type
+            });
+            $(this.el).html(html);
+        }
+    });
+
+    /*
     AdGroupTableView = Backbone.View.extend({
         initialize: function() {
             this.model.bind('change', this.render, this);
@@ -149,6 +171,7 @@
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
         }
     })
+    */
 
     /*
      * ## AppView

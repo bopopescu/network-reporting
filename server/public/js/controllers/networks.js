@@ -1,7 +1,15 @@
 $(function() {
 	NetworksController = function(adgroups_data) {
-		var adgroups = new AdGroups(adgroups_data);
+		var adgroups = new AdGroups();
+		var adgroups_view = new AdGroupsView({
+			collection: adgroups,
+			el: '#adgroups',
+			title: 'Ad Networks',
+			type: 'network'
+		});
+		adgroups.reset(adgroups_data);
 
+		/*
 		adgroups.each(function(adgroup) {
 			var adgroup_table_view = new AdGroupTableView({
 				model: adgroup
@@ -18,6 +26,7 @@ $(function() {
 		var adgroups_graph_view = new AdGroupsGraphView({
 			collection: adgroups
 		});
+		*/
 
 		//adgroups.fetch();
 		// for testing:

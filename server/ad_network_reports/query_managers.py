@@ -77,7 +77,80 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         aggregate_stats_list = sorted(aggregate_stats_list, key = lambda s:
                 s[1].application.name + s[1].ad_network_name)
 
-        return (aggregates, daily_stats, aggregate_stats_list)
+        networks = self._roll_up_unique_stats(aggregate_stats_list, True)
+        apps = self._roll_up_unique_stats(aggregate_stats_list, False)
+
+        return (aggregates, daily_stats, networks, apps)
+
+    def _roll_up_unique_stats(self, aggregate_stats_list, networks=True):
+        """
+         Put the apps into an intuitive data structure
+         Apps are mapped to their stats, as well as to a list of
+         their individual network stats. E.g. :
+         {
+             'app1' : {
+                 'networks': [ {network1_stats ... networkn_stats],
+                 'revenue': 0,
+                 'attempts': 0,
+                 'impressions': 0,
+                 'fill_rate': 0,
+                 'clicks': 0,
+                 'ctr': 0,
+             }
+             ...
+         }
+        """
+        data = {}
+        for key, mapper, stats in aggregate_stats_list:
+            if networks:
+                attr = mapper.ad_network_name
+                name = mapper.application.name
+            else:
+                attr = mapper.application.name
+                name = mapper.ad_network_name
+            network_data = {
+                'name': name,
+                'key': mapper.key(),
+                'revenue': stats.revenue,
+                'attempts': stats.attempts,
+                'impressions': stats.impressions,
+                'fill_rate': stats.fill_rate,
+                'clicks': stats.clicks,
+                'ctr': stats.ctr,
+                'has_potential_errors': mapper.has_potential_errors()
+            }
+            if not data.has_key(attr):
+                data[attr] = {
+                    'data': [],
+                    'revenue': 0,
+                    'attempts': 0,
+                    'fill_rate_impressions': 0,
+                    'impressions': 0,
+                    'fill_rate': 0,
+                    'clicks': 0,
+                    'ctr': 0,
+                    'key': str(key)
+                }
+            data[attr]['data'].append(network_data)
+            data[attr]['revenue'] += network_data['revenue']
+            data[attr]['attempts'] += network_data['attempts']
+            if network_data['attempts']:
+                data[attr]['fill_rate_impressions'] += \
+                        network_data['impressions']
+            data[attr]['impressions'] += network_data['impressions']
+            data[attr]['fill_rate'] += network_data['fill_rate']
+            data[attr]['clicks'] += network_data['clicks']
+
+        for network_data in data.values():
+            if network_data['attempts']:
+                network_data['fill_rate'] = network_data[
+                        'fill_rate_impressions'] / float(
+                                network_data['attempts']) * 100
+            if network_data['impressions']:
+                network_data['ctr'] = (network_data['clicks'] /
+                        float(network_data['impressions'])) * 100
+                #network_data['ecpm'] /= float(network_data['impressions'])
+        return data
 
     def _get_stats_for_day(self, day):
         """Get rolled up stats for the given date (include all ad networks).
@@ -148,18 +221,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             aggregate_stats.impressions += stats.impressions
             aggregate_stats.clicks += stats.clicks
 
-            if stats.attempts != 0:
+            if stats.attempts:
                 aggregate_stats.fill_rate_impressions += stats.impressions
 
-            if aggregate_stats.impressions != 0:
+            if aggregate_stats.impressions:
                 aggregate_stats.ecpm += stats.ecpm * stats.impressions
 
-        if aggregate_stats.attempts != 0:
+        if aggregate_stats.attempts:
             aggregate_stats.fill_rate = (aggregate_stats.fill_rate_impressions /
                     float(aggregate_stats.attempts)) * 100
         else:
             aggregate_stats.fill_rate = 0
-        if aggregate_stats.impressions != 0:
+        if aggregate_stats.impressions:
             aggregate_stats.ctr = (aggregate_stats.clicks /
                     float(aggregate_stats.impressions)) * 100
             aggregate_stats.ecpm /= float(aggregate_stats.impressions)

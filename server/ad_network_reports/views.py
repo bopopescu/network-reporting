@@ -26,104 +26,8 @@ class AdNetworkReportIndexHandler(RequestHandler):
             days = StatsModel.lastdays(self.date_range, 1)
 
         manager = AdNetworkReportQueryManager(self.account)
-        aggregates, daily_stats, aggregate_stats_list = manager. \
+        aggregates, daily_stats, networks, apps = manager. \
                 get_index_data(days)
-
-
-        # Put the apps into an intuitive data structure
-        # Apps are mapped to their stats, as well as to a list of
-        # their individual network stats. E.g. :
-        # {
-        #     'app1' : {
-        #         'networks': [ {network1_stats ... networkn_stats],
-        #         'revenue': 0,
-        #         'attempts': 0,
-        #         'impressions': 0,
-        #         'fill_rate': 0,
-        #         'clicks': 0,
-        #         'ctr': 0,
-        #     }
-        # }
-        #
-        # lol so tarded, sry
-        apps = {}
-        for key, mapper, stats in aggregate_stats_list:
-            network_data_for_app = {
-                'name': mapper.ad_network_name,
-                'revenue': stats.revenue,
-                'attempts': stats.attempts,
-                'impressions': stats.impressions,
-                'fill_rate': stats.fill_rate,
-                'clicks': stats.clicks,
-                'ctr': stats.ctr,
-                'has_potential_errors': mapper.has_potential_errors()
-            }
-            if not apps.has_key(mapper.application.name):
-                apps[mapper.application.name] = {
-                    'networks': [],
-                    'revenue': 0,
-                    'attempts': 0,
-                    'impressions': 0,
-                    'fill_rate': 0,
-                    'clicks': 0,
-                    'ctr': 0,
-                    'key': str(key)
-                }
-            apps[mapper.application.name]['networks']. \
-                    append(network_data_for_app)
-            apps[mapper.application.name]['revenue'] += \
-                    network_data_for_app['revenue']
-            apps[mapper.application.name]['attempts'] += \
-                    network_data_for_app['attempts']
-            apps[mapper.application.name]['impressions'] += \
-                    network_data_for_app['impressions']
-            apps[mapper.application.name]['fill_rate'] += \
-                    network_data_for_app['fill_rate']
-            apps[mapper.application.name]['clicks'] += \
-                    network_data_for_app['clicks']
-            apps[mapper.application.name]['ctr'] += network_data_for_app['ctr']
-
-
-        # Do the same for networks
-        networks = {}
-        for key, mapper, stats in aggregate_stats_list:
-            app_data_for_network = {
-                'name': mapper.application.name,
-                'revenue': stats.revenue,
-                'attempts': stats.attempts,
-                'impressions': stats.impressions,
-                'fill_rate': stats.fill_rate,
-                'clicks': stats.clicks,
-                'ctr': stats.ctr,
-                'key': str(key),
-                'has_potential_errors': mapper.has_potential_errors()
-            }
-            if not networks.has_key(mapper.ad_network_name):
-                networks[mapper.ad_network_name] = {
-                    'apps': [],
-                    'revenue': 0,
-                    'attempts': 0,
-                    'impressions': 0,
-                    'fill_rate': 0,
-                    'clicks': 0,
-                    'ctr': 0,
-                    'key': str(key)
-                }
-            networks[mapper.ad_network_name]['apps']. \
-                    append(app_data_for_network)
-            networks[mapper.ad_network_name]['revenue'] += \
-                    app_data_for_network['revenue']
-            networks[mapper.ad_network_name]['attempts'] += \
-                    app_data_for_network['attempts']
-            networks[mapper.ad_network_name]['impressions'] += \
-                    app_data_for_network['impressions']
-            networks[mapper.ad_network_name]['fill_rate'] += \
-                    app_data_for_network['fill_rate']
-            networks[mapper.ad_network_name]['clicks'] += \
-                    app_data_for_network['clicks']
-            networks[mapper.ad_network_name]['ctr'] += \
-                    app_data_for_network['ctr']
-
 
 
         forms = []
@@ -146,10 +50,16 @@ class AdNetworkReportIndexHandler(RequestHandler):
         networks_without_creds = manager.get_networks_without_credentials()
 
 
-        # REFACTOR
+        # TODO: REFACTOR
         # Each view should return one template only.
+        logging.warning(networks.items())
+        for network_name, network in networks.items():
+            for app in network['data']:
+                logging.warning(app['name'])
 
-        if aggregate_stats_list:
+        logging.warning(apps.items())
+
+        if networks:
             return render_to_response(self.request,
                                       'ad_network_reports/ad_network_reports_index.html',
                                       {
@@ -158,18 +68,14 @@ class AdNetworkReportIndexHandler(RequestHandler):
                                           'date_range' : self.date_range,
                                           'aggregates' : aggregates,
                                           'daily_stats' : simplejson.dumps(daily_stats),
-                                          'aggregate_stats_list' : aggregate_stats_list,
-                                          'apps': apps,
-                                          'networks': networks,
+                                          'apps': apps.items(),
+                                          'networks': networks.items(),
                                           'networks_without_creds': networks_without_creds,
                                           'forms': forms
                                       })
         else:
             return render_to_response(self.request,
-                                      'ad_network_reports/ad_network_setup.html',
-                                      {
-                                          'add_credentials_url': add_credentials_url,
-                                      })
+                    'ad_network_reports/ad_network_setup.html')
 
 @login_required
 def ad_network_reports_index(request, *args, **kwargs):

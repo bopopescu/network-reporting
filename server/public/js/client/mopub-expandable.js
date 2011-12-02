@@ -76,8 +76,6 @@ function mp_cb(data) {
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
     mopub_ad_url += '&jsonp=1&callback=mp_cb';
 
-    //init openx cursor tracking magic
-    document.write('<script type="text/javascript" src="' + mopub_site_url + '/js/clicktracker.js?v=24"></script>');
     document.write('<div id="mopub-div-' + ufid + '" style="width:'+window.mopub_ad_width+';height:'+window.mopub_ad_height+'"></div>');
 
     //init holders for variables

@@ -6,17 +6,11 @@
 
 {% block titleBarRight %}
 <span class="titlebar-link">
-  <a class="linkIcon" href="/campaigns/networks/">View network campaigns  <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+  <a class="linkIcon" href="/campaigns/networks/">Back to Networks  <span class="ui-icon ui-icon-triangle-1-e"></span></a>
 </span>
 {% endblock titleBarRight %}
 
 {% block innerContent %}
-
-  <div style="padding-top:250px; text-align:center;">
-    <h3 class="dataTable-title">
-      Aggregate Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
-    </h3>
-  </div>
 
   <ul class="pills">
     <li class="active"> <a href="#networks"> Sort by Network </a> </li>
@@ -29,8 +23,8 @@
       Would you like to add them automatically?
       <br />
       <div class="right">
-        <a class="right primary btn"> Yes, add them now </a>
-        <a class="right btn"> No, don't add </a>
+        <a class="right primary button"> Yes, add them now </a>
+        <a class="right button"> No, don't add </a>
       </div>
     </div>
   {% endcomment %}
@@ -155,7 +149,7 @@
       </ul>
   </div>
   {% endif %}
-  <a class="right btn" href="/ad_network_reports/add">Add / Change network credentials</a>
+  <a class="right button" href="/ad_network_reports/add">Add / Change network credentials</a>
 
 
   {% comment %}
@@ -250,7 +244,7 @@
         </div>
       {% endfor %}
 
-      <input class="right btn" type="submit" value="Submit" />
+      <input class="right button" type="submit" value="Submit" />
 
   </div>
 

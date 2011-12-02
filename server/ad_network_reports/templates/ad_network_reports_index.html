@@ -147,8 +147,9 @@
         <li> <strong>{{ network}}</strong>  (<a class="addcreds" href="#{{network}}"> Add Login Credentials </a>) </li>
       {% endfor %}
       </ul>
-    {% endif %}
   </div>
+  {% endif %}
+  <a class="right btn" href="/ad_network_reports/add">Add / Change network credentials</a>
 
 
   {% comment %}
@@ -184,7 +185,6 @@
 
   {% endcomment %}
 
-    <a class="right btn" href="/ad_network_reports/add">Add more network credentials</a>
 {% endblock innerContent %}
 
 

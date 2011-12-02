@@ -86,8 +86,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         """
         login_credentials_list = list(AdNetworkLoginCredentials.all().filter(
                 'account =', self.account))
-        mappers = list(AdNetworkAppMapper.all().filter('ad_network_login IN',
-                login_credentials_list))
+        mappers = list(AdNetworkAppMapper.all().filter('application !=', None).
+                filter('ad_network_login IN', login_credentials_list))
         return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
             day).filter('ad_network_app_mapper IN', mappers)))
 
@@ -175,9 +175,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         Return a list of stats sorted by date.
         """
-        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(ad_network_app_mapper_key,
-                                                                     days)
-        return sorted(stats_list, key=lambda stats: stats.date)
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
+                ad_network_app_mapper_key, days)
+        return sorted(stats_list, key=lambda stats: stats.date, reverse=True)
 
     def get_ad_network_mapper(self,
                               ad_network_app_mapper_key=None,

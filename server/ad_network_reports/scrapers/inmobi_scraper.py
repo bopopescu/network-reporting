@@ -107,5 +107,4 @@ if __name__ == '__main__':
     NC.password = '0588884947763'
     NC.ad_network_name = 'inmobi'
     SCRAPER = InMobiScraper(NC)
-    logging.info(date.today() - timedelta(days=1))
     print SCRAPER.get_site_stats(date.today() - timedelta(days=1))

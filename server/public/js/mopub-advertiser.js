@@ -70,10 +70,11 @@ var mopub = mopub || {};
               });
           });
 
-          $('.app-row').click(function () {
-              var app_key = $(this).attr('id');
-              var network_rows = $('.for-app-' + app_key);
-              $.each(network_rows, function (iter, row) {
+          /*
+          $('.top-row').click(function () {
+              var key = $(this).attr('id');
+              var rows = $('.for-key-' + key);
+              $.each(rows, function (iter, row) {
                   if ($(row).hasClass('hidden')) {
                       $(row).removeClass('hidden');
                   } else {
@@ -81,6 +82,7 @@ var mopub = mopub || {};
                   }
               });
           });
+          */
         },
 
         initializeCredentialsPage: function (management_mode, account_key) {

@@ -31,7 +31,8 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(), kwargs['ad_network_name']))
+            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
+                kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
 
@@ -44,12 +45,9 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
     publisher_id = db.StringProperty(required=True)
 
     ad_network_login = db.ReferenceProperty(AdNetworkLoginCredentials,
-                                            collection_name='ad_network_app_mappers')
-    application = db.ReferenceProperty(App, collection_name='ad_network_app_mappers')
-
-    # If a network contains information for an app that the publisher
-    # hasn't entered into mopub, mark this false
-    app_in_mopub = db.BooleanProperty(default=True)
+            collection_name='ad_network_app_mappers')
+    application = db.ReferenceProperty(App, collection_name=
+            'ad_network_app_mappers')
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):

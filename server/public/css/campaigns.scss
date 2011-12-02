@@ -180,7 +180,7 @@ ul.adunits {
     th:not(:first-child) {
         text-align: center;
     }
-    .app-row td {
+    .top-row td {
         font-size: 18px;
         text-align: left;
         background: #f9f9f9;
@@ -188,11 +188,11 @@ ul.adunits {
             text-align: right;
         }
     }
-    .network-row td:not(:first-child) {
+    .sub-rows td:not(:first-child) {
         text-align: right;
     }
 
-    .network-row:not(:last-child) {
-        border-bottom: 1px dotted #bbb;
+    .add-border td {
+        border-bottom: 1px dotted #ddd;
     }
 }

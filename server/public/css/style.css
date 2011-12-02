@@ -3064,13 +3064,13 @@ ul.adunits {
 
 .ad_network_table th:not(:first-child) {
   text-align: center; }
-.ad_network_table .app-row td {
+.ad_network_table .top-row td {
   font-size: 18px;
   text-align: left;
   background: #f9f9f9; }
-  .ad_network_table .app-row td:not(:first-child) {
+  .ad_network_table .top-row td:not(:first-child) {
     text-align: right; }
-.ad_network_table .network-row td:not(:first-child) {
+.ad_network_table .sub-rows td:not(:first-child) {
   text-align: right; }
-.ad_network_table .network-row:not(:last-child) {
-  border-bottom: 1px dotted #bbb; }
+.ad_network_table .add-border td {
+  border-bottom: 1px dotted #ddd; }

@@ -27,6 +27,7 @@ from publisher.query_managers import AppQueryManager
 
 AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
 
+# Don't touch or everything is fucked
 KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
 class Stats(object):
@@ -393,7 +394,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
 
     def get_networks_without_credentials(self):
-        creds = AdNetworkLoginCredentials.all().filter('account =', self.account)
+        creds = AdNetworkLoginCredentials.all().filter('account =',
+                self.account)
         networks_with_creds = [cred.ad_network_name for cred in creds]
         potential_networks = list(set(AD_NETWORK_NAMES) -
                 set(networks_with_creds))

@@ -27,8 +27,6 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 
     email = db.BooleanProperty(default = False)
 
-    is_active = db.BooleanProperty(default=True)
-
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
@@ -70,7 +68,8 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
         within the template if an error might have occured.
         """
 
-        stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =', self).get()
+        stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =',
+                self).get()
 
         return stats == None
 

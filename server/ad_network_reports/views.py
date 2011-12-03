@@ -62,10 +62,12 @@ class AdNetworkReportIndexHandler(RequestHandler):
                                           'end_date' : days[-1],
                                           'date_range' : self.date_range,
                                           'aggregates' : aggregates,
-                                          'daily_stats' : simplejson.dumps(daily_stats),
+                                          'daily_stats' : simplejson.dumps(
+                                              daily_stats),
                                           'apps': apps,
                                           'networks': networks,
-                                          'networks_without_creds': networks_without_creds,
+                                          'networks_without_creds': \
+                                                  networks_without_creds,
                                           'forms': forms
                                       })
         else:

@@ -5,6 +5,8 @@ import sys
 
 import tornado.web
 
+from datetime import date, timedelta
+
 sys.path.append('/home/ubuntu/mopub/server')
 from ad_network_reports.ad_networks import AD_NETWORKS, AdNetwork
 from ad_network_reports.forms import LoginInfoForm
@@ -25,10 +27,10 @@ class AdNetworkLoginCredentials(object):
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
-    app_id = 'mopub-experimental'
-    host = '38.latest.mopub-experimental.appspot.com'
-    #app_id = 'mopub-inc'
-    #host = '38.latest.mopub-inc.appspot.com'
+    #app_id = 'mopub-experimental'
+    #host = '38.latest.mopub-experimental.appspot.com'
+    app_id = 'mopub-inc'
+    host = '38.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func,
             host)
 
@@ -70,6 +72,8 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 scraper.test_login_info()
                 logging.info("Returning true.")
                 self.write(callback + '(true)')
+                # Write out response and close connection.
+                self.finish()
             except Exception as e:
                 # We don't want Tornado to stop running if something breaks
                 # somewhere.
@@ -79,12 +83,19 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 account_key = self.get_argument('account_key')
                 manager = AdNetworkReportQueryManager(db.get(account_key))
                 wants_email = self.get_argument('email', False) and True
-                manager.create_login_credentials_and_mappers(ad_network_name=
+                login_credentials = manager. \
+                        create_login_credentials_and_mappers(ad_network_name=
                         login_credentials.ad_network_name,
                         username=login_credentials.username,
                         password=login_credentials.password,
                         client_key=login_credentials.client_key,
                         send_email=wants_email)
+
+                # Collect the last two weeks of data for these credentials and
+                # add it to the database.
+                two_weeks_ago = date.today() - timedelta(days=14)
+                update_ad_networks(start_date=two_weeks_ago,
+                        only_these_credentials=login_credentials)
                 return
 
         logging.info("Returning false.")

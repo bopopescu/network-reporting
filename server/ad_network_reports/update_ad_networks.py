@@ -24,6 +24,7 @@ from google.appengine.api import mail
 
 from datetime import date, datetime, timedelta
 
+from account.query_managers import AccountQueryManager
 from ad_network_reports.ad_networks import AdNetwork
 from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkScrapeStats, \
@@ -53,11 +54,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
     """Send email with scrape stats data for the test date organized in a
     table.
     """
-    emails = False
-    if account and account.user:
-        emails = account.user.email()
-    elif account.all_mpusers:
-        emails = ', '.join([db.get(user).email for user in account.all_mpusers])
+    emails = ', '.join(AccountQueryManager.get_emails(account))
 
     if emails:
         aggregate_stats = manager.roll_up_stats([stats for app_name,
@@ -82,14 +79,15 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                       to=emails,
-                       cc='tiago@mopub.com, report-monitoring@mopub.com',
-                       subject=("Ad Network Revenue Reporting for %s" %
+                to='tiago@mopub.com',
+                #to=emails,
+                #cc='tiago@mopub.com, report-monitoring@mopub.com',
+                subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
-                       body=("Learn more at http://mopub-experimental.appspot."
-                                "com/ad_network_reports/"),
-                       html=(
-                       """
+                body=("Learn more at http://mopub-experimental.appspot."
+                    "com/ad_network_reports/"),
+                html=(
+                """
 <table width=100%%>
     <thead>
         <th>APP NAME</th>
@@ -123,7 +121,10 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 #"Learn more at <a href='http://mopub-experimental.appspot.com/"
 #"ad_network_reports/'>MoPub</a>"))
 
-def update_ad_networks(start_date=None, end_date=None, only_these_credentials=None):
+def get_account_emails(account):
+
+def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
+        None):
     """Update ad network stats.
 
     Iterate through all AdNetworkLoginCredentials. Login to the ad networks
@@ -136,11 +137,11 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=No
     pacific = timezone('US/Pacific')
     yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
-    login_credentials_list = [only_these_credentials] and get_all_login_credentials()
+    login_credentials_list = [only_these_credentials] and \
+            get_all_login_credentials()
 
-    if not start_date and not end_date:
-        start_date = yesterday
-        end_date = yesterday
+    start_date = start_date and yesterday
+    end_date = end_date and yesterday
 
     for test_date in date_magic.gen_days(start_date, end_date):
         logging.info("TEST DATE: %s" % test_date.strftime("%Y %m %d"))
@@ -285,13 +286,15 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=No
                 login_credentials.email:
             send_stats_mail(login_credentials.account, manager, test_date,
                     valid_stats_list)
-        
-       if only_these_credentials:
-            mail.send_mail(sender='olp@mopub.com',
-                           to='tiago@mopub.com',
-                           subject=("Ad Network Scrape Error on %s" %
-                               test_date.strftime("%m/%d/%y")),
-                           body="Couldn't get get stats for %s network "
+
+    if only_these_credentials:
+        emails = ', '.join(AccountQueryManager.get_emails(
+            only_these_credentials.account))
+        mail.send_mail(sender='olp@mopub.com',
+                       to='tiago@mopub.com',#emails,
+                       subject="Finished Collecting Stats",
+                       body="Check out http://frontend-0.mopub-inc." \
+                               "appspot.com/ad_network_reports.")
 
 if __name__ == "__main__":
     setup_remote_api()

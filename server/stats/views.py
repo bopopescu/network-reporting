@@ -680,8 +680,8 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
 
 
         logging.info('NOT!!! POST TO MDB: %s' % post_data)
-        # self.response.out.write('NOT WORKING')
-        # return 
+        self.response.out.write('NOT WORKING')
+        return 
         
         post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update
         post_request = urllib2.Request(post_url, post_data)

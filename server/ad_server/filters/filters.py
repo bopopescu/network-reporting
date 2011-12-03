@@ -308,8 +308,11 @@ def lat_lon_filter(ll=None):
         for lat, lon in latlons:
             #Check all lat, lon pairs.  If any one of them is too far, return False
             # since all filters are inclusion filters (False means don't keep it)
-            if ll_dist((lat,lon),ll_p) < CAPTURE_DIST:
-                return True
+            try:
+                if ll_dist((lat,lon),ll_p) < CAPTURE_DIST:
+                    return True
+            except:
+                return False        
         return False
     return (real_filter, log_mesg, [])
 

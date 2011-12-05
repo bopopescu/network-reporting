@@ -128,15 +128,3 @@ def to_ascii(obj, encoding='utf-8'):
 def get_url_for_blob(blob):
     from google.appengine.api import images
     return images.get_serving_url(blob).replace('http:', 'https:')
-    
-
-import os
-
-STATIC_PATH="/js/"
-version_cache = {}
-
-rx = re.compile(r"(.*)\.(.*?)$")
-def version(path_string):
-    try:
-        
-    

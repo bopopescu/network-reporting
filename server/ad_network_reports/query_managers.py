@@ -4,6 +4,7 @@ import sys
 import urllib
 
 # Are we on EC2 (Note can't use django.settings_module since it's not defined)
+# TODO: Add this stuff to my path on EC2
 if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
@@ -33,6 +34,7 @@ KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 class Stats(object):
     pass
 
+#TODO: Break up query manager into a query manager for each model
 class AdNetworkReportQueryManager(CachedQueryManager):
 
     def __init__(self, account=None):
@@ -341,6 +343,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             application=app) for app, publisher_id in
             apps_with_publisher_ids])
 
+        return login_credentials
+
 
 
     def find_app_for_stats(self, publisher_id, login_credentials):
@@ -404,6 +408,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             if pub_ids:
                 yield network
 
+    def get_login_credentials(self):
+        """Return AdNetworkLoginCredentials entities for the given account."""
+        return AdNetworkLoginCredentials.all().filter('account =', self.account)
 
 def get_all_login_credentials():
     """Return all AdNetworkLoginCredentials entities ordered by account."""

@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import logging
 import os
 import sys
@@ -121,8 +123,6 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 #"Learn more at <a href='http://mopub-experimental.appspot.com/"
 #"ad_network_reports/'>MoPub</a>"))
 
-def get_account_emails(account):
-
 def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         None):
     """Update ad network stats.
@@ -140,8 +140,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     login_credentials_list = [only_these_credentials] and \
             get_all_login_credentials()
 
-    start_date = start_date and yesterday
-    end_date = end_date and yesterday
+    start_date = start_date or yesterday
+    end_date = end_date or yesterday
 
     for test_date in date_magic.gen_days(start_date, end_date):
         logging.info("TEST DATE: %s" % test_date.strftime("%Y %m %d"))
@@ -297,6 +297,11 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                "appspot.com/ad_network_reports.")
 
 if __name__ == "__main__":
-    setup_remote_api()
-    update_ad_networks()
+    if(len(sys.argv) > 1):
+        two_weeks_ago = date.today() - timedelta(days=14)
+        update_ad_networks(start_date=two_weeks_ago,
+                only_these_credentials=db.get(sys.argv[1]))
+    else:
+        setup_remote_api()
+        update_ad_networks()
 

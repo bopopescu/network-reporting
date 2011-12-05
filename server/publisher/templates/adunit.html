@@ -254,10 +254,10 @@
                           {% if adgroup.deleted %}
                             <img title="Deleted" alt="Deleted" src="/images/deleted.gif" height=9 width=9 />
                           {% endif %}
-                          {% if adgroup.active and not adgroup.deleted and marketplace.0.active %}
+                          {% if adgroup.active and not adgroup.deleted and marketplace_activated %}
                             <img title="Active" alt="Active" src="/images/active.gif" height=9 width=9 />
                           {% endif %}
-                          {% if adgroup.active and not adgroup.deleted and not marketplace.0.active %}
+                          {% if adgroup.active and not adgroup.deleted and not marketplace_activated %}
                             <img title="Inactive" alt="Inactive" src="/images/inactive.gif" height=9 width=9 />
                           {% endif %}
                           {% if not adgroup.active and not adgroup.deleted %}

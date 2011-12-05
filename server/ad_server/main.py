@@ -141,8 +141,8 @@ class AppOpenHandler(webapp.RequestHandler):
         udid = self.request.get('udid')
         mobile_appid = self.request.get('id')
 
-        # bail early if udid or mobile_appid is not provided
-        if not (udid or mobile_appid):
+        # bail early if udid AND mobile_appid is not provided
+        if not (udid and mobile_appid):
             return
 
         aoe_manager = AppOpenEventManager()

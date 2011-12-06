@@ -34,16 +34,73 @@
     /*
      * ## AdGroups
      */
-    AdGroup = Backbone.Model.extend({});
 
+    /*
+     * Helper Functions
+     */
+    // TODO: finish adding cases for all stats
+    format_stat = function(stat, value) {
+        if(value === null) return '--';
+        switch(stat) {
+            case 'click_count':
+            case 'impression_count':
+            case 'conversion_count':
+            case 'request_count':
+                return mopub.Utils.formatNumberWithCommas(value);
+            case 'revenue':
+                return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
+            case 'fill_rate':
+                return mopub.Utils.formatNumberAsPercentage(value);
+            case 'ctr':
+                return mopub.Utils.formatNumberAsPercentage(value);
+            case 'ecpm':
+            case 'attempts':
+            default:
+                return value;
+        }
+    }
 
+    /*
+     *
+     */
+    AdGroup = Backbone.Model.extend({
+        get_stat: function(stat) {
+            if(!this.has(stat)) return null;
+            return this.get(stat);
+        },
+
+        get_formatted_stat: function(stat) {
+            return format_stat(stat, this.get_stat(stat));
+        }
+    });
+
+    /*
+     *  
+     */
     AdGroups = Backbone.Collection.extend({
         model: AdGroup,
 
-        getSum: function(stat) {
-            return this.reduce(function(memo, adgroup) { return memo + adgroup.get(stat) }, 0);
+        get_stat_sum: function(stat) {
+            return this.reduce(function(memo, adgroup) {
+                if(memo === null || !adgroup.has(stat)) return null;
+                return memo + adgroup.get(stat);
+            }, 0);
         },
 
+        // TODO: add cases for calculated stats (ctr, fill_rate, etc.)
+        get_stat: function(stat) {
+            switch(stat) {
+                default:
+                    return this.get_stat_sum(stat);
+            }
+        },
+
+        get_formatted_stat: function(stat) {
+            //alert('' + stat + ': ' + this.get_stat(stat));
+            return format_stat(stat, this.get_stat(stat));
+        },
+
+        // TODO: make this less hacky
         isFullyLoaded: function() {
             return this.reduce(function(memo, adgroup) { return memo && adgroup.has('impression_count') }, true);
         }

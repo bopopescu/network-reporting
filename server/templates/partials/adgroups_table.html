@@ -1,0 +1,78 @@
+<table class="dataTable campaignData-main">
+    <thead>
+        <tr>
+            <th class="campaignData-icon"></th>
+            <th class="dataTable-name">Name</th>
+            <% if(type == 'gtee' || type == 'promo') { %>
+                <th class="dataTable-data numeric">Revenue</th>
+            <% } %>
+            <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+                <th class="dataTable-data numeric">Status</th>
+            <% } %>
+            <th class="dataTable-data numeric"><a href="#" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
+            <% if(type == 'network') { %>
+                <th class="dataTable-data numeric">Attempts</th>
+            <% } %>
+            <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+                <th class="dataTable-data numeric">Goal</th>
+            <% } %>
+            <th class="dataTable-data numeric">Impressions</th>
+            <% if(type == 'network') { %>
+                <th class="dataTable-data numeric">Fill Rate (Attempts)</th>
+            <% } %>
+            <th class="dataTable-data numeric">Clicks</th>
+            <% if(type == 'network') { %>
+                <th class="dataTable-data numeric">CTR</th>
+            <% }  %>
+            <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+                <th class="dataTable-data numeric">Conversions</th>
+            <% } %>
+        </tr>
+    </thead>
+    <tbody>
+        <% adgroups.each(function(adgroup) { %>
+            <tr>
+                <td class="campaignData-icon">
+                    <input type="checkbox" name="id" value="<%= adgroup.id %>"/>
+                    <% if(adgroup.get('deleted')) %>
+                        <img src="/images/deleted.gif" height=9 width=9 />
+                    <% else { %>
+                        <% if(adgroup.get('active')) %>
+                            <img src="/images/active.gif" height=9 width=9 />
+                        <% else %>
+                            <img src="/images/paused.gif" height=9 width=9 />
+                        <% %>
+                    <% } %>
+                </td>
+                <td class="dataTable-name">
+                    <a href="<%= adgroup.get('details_url') %>"><%= adgroup.get('name') %></a><br/>
+                    <span class="muted"><%= adgroup.get('network_type') %></span>
+                </td>
+                <% if(type == 'gtee' || type == 'promo') { %>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('revenue') %></td>
+                <% } %>
+                <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('status') %></td>
+                <% } %>
+                <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('ecpm') %></td>
+                <% if(type == 'network') { %>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('attempts') %></td>
+                <% } %>
+                <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('goal') %></td>
+                <% } %>
+                <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('impression_count') %></td>
+                <% if(type == 'network') { %>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('fill_rate') %></td>
+                <% } %>
+                <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('click_count') %></td>
+                <% if(type == 'network') { %>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('ctr') %></td>
+                <% }  %>
+                <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('conversion_count') %></td>
+                <% } %>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>

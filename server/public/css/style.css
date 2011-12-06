@@ -3066,11 +3066,18 @@ ul.adunits {
   text-align: center; }
 .ad_network_table .top-row td {
   font-size: 18px;
-  text-align: left;
+  text-align: right;
   background: #f9f9f9; }
-  .ad_network_table .top-row td:not(:first-child) {
-    text-align: right; }
+.ad_network_table .top-row td:nth-child(2) {
+  text-align: left; }
+.ad_network_table .top-row td:first-child {
+  width: 10%;
+  text-align: left; }
 .ad_network_table .sub-rows td:not(:first-child) {
   text-align: right; }
 .ad_network_table .add-border td {
   border-bottom: 1px dotted #ddd; }
+
+span.muted {
+  font-size: 13px;
+}

@@ -31,7 +31,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
 
 
         forms = []
-        for name in AD_NETWORK_NAMES:
+        for name in sorted(AD_NETWORK_NAMES.keys()):
             try:
                 instance = AdNetworkLoginCredentials. \
                         get_by_ad_network_name(self.account, name)
@@ -50,29 +50,23 @@ class AdNetworkReportIndexHandler(RequestHandler):
         networks_without_creds = \
                 list(manager.get_networks_without_credentials())
 
-
-        # TODO: REFACTOR
-        # Each view should return one template only.
-
-        if networks:
-            return render_to_response(self.request,
-                                      'ad_network_reports/ad_network_reports_index.html',
-                                      {
-                                          'start_date' : days[0],
-                                          'end_date' : days[-1],
-                                          'date_range' : self.date_range,
-                                          'aggregates' : aggregates,
-                                          'daily_stats' : simplejson.dumps(
-                                              daily_stats),
-                                          'apps': apps,
-                                          'networks': networks,
-                                          'networks_without_creds': \
-                                                  networks_without_creds,
-                                          'forms': forms
-                                      })
-        else:
-            return render_to_response(self.request,
-                    'ad_network_reports/ad_network_setup.html')
+        network_names, networks = zip(*networks)
+        return render_to_response(self.request,
+                          'ad_network_reports/ad_network_reports_index.html',
+                          {
+                              'start_date' : days[0],
+                              'end_date' : days[-1],
+                              'date_range' : self.date_range,
+                              'aggregates' : aggregates,
+                              'daily_stats' : simplejson.dumps(
+                                  daily_stats),
+                              'apps': apps,
+                              'show_graph': apps != [],
+                              'networks': zip(network_names, networks, forms),
+                              'networks_without_creds': \
+                                      networks_without_creds,
+                              'forms': forms
+                          })
 
 @login_required
 def ad_network_reports_index(request, *args, **kwargs):
@@ -115,7 +109,8 @@ class AppDetailHandler(RequestHandler):
                                       'aggregates' : aggregates,
                                       'daily_stats' :
                                         simplejson.dumps(daily_stats),
-                                      'stats_list' : stats_list
+                                      'stats_list' : stats_list,
+                                      'show_graph': True
                                   })
 
 @login_required
@@ -187,7 +182,7 @@ class AddLoginCredentialsHandler(RequestHandler):
             management_mode = False
 
         forms = []
-        for name in AD_NETWORK_NAMES:
+        for name in AD_NETWORK_NAMES.keys():
             try:
                 instance = AdNetworkLoginCredentials.get_by_ad_network_name(account, name)
                 form = LoginInfoForm(instance=instance, prefix=name)
@@ -202,7 +197,8 @@ class AddLoginCredentialsHandler(RequestHandler):
                                   {
                                       'management_mode' : management_mode,
                                       'account_key' : str(account_key),
-                                      'ad_network_names' : AD_NETWORK_NAMES,
+                                      'ad_network_names' :
+                                        AD_NETWORK_NAMES.keys(),
                                       'forms' : forms,
                                       'error' : "",
                                   })

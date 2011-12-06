@@ -18,24 +18,12 @@
   </ul>
 
   {% comment %}
-    <div class="alert-message block-message clearfix">
-      We found <strong> 4 </strong> apps in AdMob that you haven't entered on MoPub.
-      Would you like to add them automatically?
-      <br />
-      <div class="right">
-        <a class="right primary button"> Yes, add them now </a>
-        <a class="right button"> No, don't add </a>
-      </div>
-    </div>
-  {% endcomment %}
-
-  {% comment %}
-    Make the table sorted by ad network. This one is hidden to start.
+    Make the table sorted by ad network.
   {% endcomment %}
   <div class="tab-section active" id="networks">
-    <table class="simpletable campaignData-main ad_network_table">
+    <table class="dataTable ad_network_table">
       <thead>
-        <th class="dataTable-name"></th>
+        <th class="dataTable-name" colspan="2"></th>
         <th class="dataTable-data numeric"> Revenue </th>
         <th class="dataTable-data numeric"> Attempts </th>
         <th class="dataTable-data numeric"> Impressions </th>
@@ -45,30 +33,77 @@
       </thead>
 
       <tbody>
-        {% for network_name, network in networks %}
-          <tr class="top-row" id={{network.key}}>
-            <td class="dataTable-data">
-              <img src="/images/ad_network_logos/{{network_name}}-transparent.png"
+        {% for network_name, network, form in networks %}
+          <tr class="top-row">
+            <td class="appData-icon">
+              <img src="/images/{{network_name|lower}}-transparent.png"
               alt="{{network_name}}" width="75" height="25" />
             </td>
-  {% comment %}
-            {% if network.has_potential_errors %}
-              <td class="dataTable-name">
-                <br />
-                (Couldn't collect stats. <a href="{% url ad_network_settings %}">Check the publisher id you entered for this network</a>.)
-              </td>
-            {% else %}
-  {% endcomment %}
-              <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
-              <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
-              <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
-              <td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}% </td>
-              <td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
-              <td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}% </td>
+			{% if network %}
+						<td class="dataTable-name">
+							<span class="muted">Last synced: {{ network.sync_date|date }}</span>
+							<div>
+								<a class="show-hide button button-small" id={{network.key}}>Hide Apps</a>
+								<a class="button button-small">Status</a>
+				  		</div>
+				  	</td>
+						<td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
+						<td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
+						<td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
+						<td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}% </td>
+						<td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
+						<td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}% </td>
+				{% else %}
+						<td class="dataTable-name" colspan="7">
+							<div>
+                                <a class="show-status button button-small" id="{{network_name}}-status">Enable Reporting</a>
+				  		</div>
+				  	</td>
+				{% endif %}
           </tr>
+          <tr class="{{network_name}}-status hidden">
+              <td class="dataTable-name" colspan="8">
+                  <div>
+                      {% if network %}
+                      <dl class="formFields" style="margin:0">
+                          {% if network.sync_error %}
+                          <dt>Status:</dt>
+                          <dd>Last synchronization failed.  Check that your credentials are correct.
+                          If this error persists, please contact support@mopub.com.</dd>
+                          {% endif %}
+                          <dt>Notes:</dt>
+                          <dd> MoPub received a response for the following ad networks IDs.
+                          Make sure these apps are properly set up in MoPub to view the reports.
+                          <br/><br/>
+                          abcdefg, abcdefg, abcdefg
+                          </dd>
+                      </dl>
+                      {% endif %}
+                      <form id="loginCredentials">
+                          <fieldset>
+                              <h2>{{network_name}} Credentials</h2>
+                              <dl class="formFields" style="margin:0">
+                                  <dt>Username:</dt>
+                                  <dd><input type="text" class="input-text"></dd>
+                                  <dt>Password:</dt>
+                                  <dd><input type="text" class="input-text"></dd>
+                                  <dt><input name="email" type="checkbox" /> </dt>
+                                  <dd> Send me daily emails with my network stats </dd>
+                                  <dt></dt>
+                                  <dd>
+                                  <a class="button">Update</a>
+                                  <a class="show-status button" id="{{network_name}}-status">Cancel</a>
+                                  </dd>
+                              </dl>
+                          </fieldset>
+                      </form>
+                  </div>
+              </td>
+          </tr>
+		  {% if network %}
           {% for app in network.sub_data_list %}
           <tr class="sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{network.key}}">
-              <td class="dataTable-name">
+              <td class="dataTable-name" colspan="2">
                 <a href="{% url ad_network_app_detail app.key %}">{{app.name}}</a>
               </td>
               <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
@@ -79,6 +114,7 @@
               <td class="dataTable-data numeric">{{ app.ctr|floatformat:2 }}%</td>
             </tr>
           {% endfor %}
+		  {% endif %}
         {% endfor %}
       </tbody>
     </table>
@@ -86,7 +122,7 @@
 
 
   {% comment %}
-    Make the table sorted by app name. This table is active to start.
+    Make the table sorted by app name. This table is hidden to start.
   {% endcomment %}
   <div class="tab-section" id="apps">
     <table class="simpletable campaignData-main ad_network_table">
@@ -104,7 +140,7 @@
         {% for app_name, app in apps %}
         <div class="section">
           <tr class="top-row" id="{{app.key}}">
-            <td class="dataTable-name"> {{app_name}} </td>
+            <td class="dataTable-name" colspan="2"> {{app_name}} </td>
             <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
             <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
             <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
@@ -213,13 +249,13 @@
               {% ifequal form.ad_network "inmobi" %}
                 <dt> InMobi Access ID </dt>
                 <dd>
-                  <<input type="" name="" value="" /> type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}
+                  <input type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}
                   <a href="#" class="whatsthis" id="inmobi-access-helpLink"> What's This? </a>
                 </dd>
 
                 <dt> InMobi Secret Key </dt>
                 <dd>
-                  <<input type="" name="" value="" /> type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}
+                  <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}
                   <a href="#" class="whatsthis" id="inmobi-secret-helpLink"> What's This? </a>
                 </dd>
 

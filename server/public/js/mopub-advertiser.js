@@ -69,20 +69,31 @@ var mopub = mopub || {};
                   width: 500
               });
           });
+          
+          $('.show-status').click(function () {
+              var key = $(this).attr('id');
+              var row = $('.' + key);
+              if ($(row).hasClass('hidden')) {
+                  $(row).removeClass('hidden');
+              } else {
+                  $(row).addClass('hidden');
+              }
+          });
 
-          /*
-          $('.top-row').click(function () {
+          $('.show-hide').click(function () {
               var key = $(this).attr('id');
               var rows = $('.for-key-' + key);
+              var button = $(this).children('span')
               $.each(rows, function (iter, row) {
                   if ($(row).hasClass('hidden')) {
                       $(row).removeClass('hidden');
+                      $(button).text('Hide Apps')
                   } else {
                       $(row).addClass('hidden');
+                      $(button).text('Show Apps')
                   }
               });
           });
-          */
         },
 
         initializeCredentialsPage: function (management_mode, account_key) {

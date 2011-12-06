@@ -1,3 +1,6 @@
+"""
+Views that handle pages for Apps and AdUnits.
+"""
 import base64
 import binascii
 import hashlib
@@ -81,14 +84,15 @@ class AppIndexHandler(RequestHandler):
         # stats over ajax using Backbone. Fetch the apps for the template load,
         # and then create a list of keys for ajax bootstrapping.
         apps = {}
-        for au in adunits:
-            app = apps.get(au.app_key.key())
+        for adunit in adunits:
+            app = apps.get(adunit.app_key.key())
             if not app:
-                app = AppQueryManager.get(au.app_key.key())
-                app.adunits = [au]
-                apps[au.app_key.key()] = app
+                app = AppQueryManager.get(adunit.app_key.key())
+                app.adunits = [adunit]
+                apps[adunit.app_key.key()] = app
             else:
-                app.adunits += [au]
+                app.adunits += [adunit]
+
         app_keys = simplejson.dumps([str(k) for k in apps.keys()])
         app_values = sorted(apps.values(), lambda x, y: cmp(x.name, y.name))
 
@@ -461,13 +465,14 @@ class ShowAppHandler(RequestHandler):
                              key=lambda adunit: adunit.stats.request_count,
                              reverse=True)
 
-        app_stats = stats_manager.get_stats_for_days(publisher=app, days=days)
-        app.all_stats = app_stats
+
+        app.all_stats = stats_manager.get_stats_for_days(publisher=app, days=days)
 
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
 
 
-        # In the graph, only show the top 3 ad units and bundle the rest if there are more than 4
+        # In the graph, only show the top 3 ad units and
+        # bundle the rest if there are more than 4
         app.graph_adunits = app.adunits[0:4]
         if len(app.adunits) > 4:
             app.graph_adunits[3] = Site(name='Others')
@@ -483,15 +488,15 @@ class ShowAppHandler(RequestHandler):
         # in order to have a creat adunit form
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
 
-        today = app_stats[-1]
+        today = app.all_stats[-1]
         try:
-            yesterday = app_stats[-2]
+            yesterday = [-2]
         except IndexError:
             yesterday = StatsModel()
-        app.stats = reduce(lambda x, y: x+y, app_stats, StatsModel())
+        app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
         # this is the max active users over the date range
         # NOT total unique users
-        app.stats.user_count = max([sm.user_count for sm in app_stats])
+        app.stats.user_count = max([sm.user_count for sm in app.all_stats])
 
         # get adgroups targeting this app
         app.adgroups = AdGroupQueryManager.get_adgroups(app=app)
@@ -509,7 +514,7 @@ class ShowAppHandler(RequestHandler):
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
-            if ag.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+            if ag.campaign.campaign_type in ['marketplace']:
                 try:
                     mpx_stats = stats_fetcher.get_app_stats(str(app_key),
                                                             start_date,
@@ -540,37 +545,37 @@ class ShowAppHandler(RequestHandler):
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, adgroups = level_camps))
 
-        marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace'], app.adgroups)
-        marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+        marketplace_campaigns = filter(lambda x: x.campaign_type, app.adgroups)
+        marketplace_campaigns = sorted(marketplace_campaigns,
+                                       lambda x,y: cmp(x.bid, y.bid))
 
-        network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], app.adgroups)
+        network_campaigns = filter(lambda x: x.campaign_type in ['network'], app.adgroups)
         network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
-        backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], app.adgroups)
-        backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        backfill_promo_campaigns = filter(lambda x: x.campaign_type in ['backfill_promo'],
+                                          app.adgroups)
+        backfill_promo_campaigns = sorted(backfill_promo_campaigns,
+                                          lambda x,y: cmp(y.bid, x.bid))
 
-        backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], app.adgroups)
-        backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
-
-
-
-        return render_to_response(self.request,'publisher/app.html',
-            {'app': app,
-             'app_form_fragment':app_form_fragment,
-             'adunit_form_fragment':adunit_form_fragment,
-             'start_date': days[0],
-             'end_date': days[-1],
-             'date_range': self.date_range,
-             'today': today,
-             'yesterday': yesterday,
-             'account': self.account,
-             'helptext': help_text,
-             'gtee': gtee_levels,
-             'promo': promo_campaigns,
-             'marketplace': marketplace_campaigns,
-             'network': network_campaigns,
-             'backfill_promo': backfill_promo_campaigns,
-             'backfill_marketplace': backfill_marketplace_campaigns})
+        return render_to_response(self.request,
+                                  'publisher/app.html',
+                                  {
+                                      'app': app,
+                                      'app_form_fragment':app_form_fragment,
+                                      'adunit_form_fragment':adunit_form_fragment,
+                                      'start_date': days[0],
+                                      'end_date': days[-1],
+                                      'date_range': self.date_range,
+                                      'today': today,
+                                      'yesterday': yesterday,
+                                      'account': self.account,
+                                      'helptext': help_text,
+                                      'gtee': gtee_levels,
+                                      'promo': promo_campaigns,
+                                      'marketplace': marketplace_campaigns,
+                                      'network': network_campaigns,
+                                      'backfill_promo': backfill_promo_campaigns,
+                                  })
 
 
 @login_required
@@ -578,19 +583,25 @@ def app_show(request,*args,**kwargs):
     return ShowAppHandler()(request,*args,**kwargs)
 
 
-class ExportFileHandler( RequestHandler ):
+class ExportFileHandler(RequestHandler):
     def get( self, key, key_type, f_type ):
-            #XXX make sure this is the right way to do it
+        # TODO make sure this is the right way to do it
         spec = self.params.get('spec')
         if self.start_date:
-            days = StatsModel.get_days( self.start_date, self.date_range )
+            days = StatsModel.get_days( self.start_date, self.date_range)
         else:
             days = StatsModel.lastdays( self.date_range )
 
-        stat_names, stat_models = self.get_desired_stats(key, key_type, days, spec=spec)
-        logging.warning(stat_models)
-        logging.warning("\n\nDays len:%s\nStats len:%s\n\n" % (len(days),len(stat_models)))
-        return sswriter.write_stats( f_type, stat_names, stat_models, site=key, days=days, key_type=key_type )
+        stat_names, stat_models = self.get_desired_stats(key,
+                                                         key_type,
+                                                         days,
+                                                         spec=spec)
+        return sswriter.write_stats(f_type,
+                                    stat_names,
+                                    stat_models,
+                                    site=key,
+                                    days=days,
+                                    key_type=key_type)
 
 
     def get_desired_stats(self, key, key_type, days, spec=None):
@@ -607,7 +618,9 @@ class ExportFileHandler( RequestHandler ):
 
 
         #Set up attr getters/names
-        if key_type == 'app' or (key_type == 'account' and spec == 'apps') or (key_type == 'adunit' and spec == 'days'):
+        if key_type == 'app' or \
+           (key_type == 'account' and spec == 'apps') or \
+           (key_type == 'adunit' and spec == 'days'):
             stat_names = (REQ_STAT,) + stat_names
             if spec == 'days':
                 stat_names = (DTE_STAT,) + stat_names
@@ -629,33 +642,47 @@ class ExportFileHandler( RequestHandler ):
                 if len(apps) == 0:
                     #should probably handle this more gracefully
                     logging.warning("Apps for account is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in apps])
+                return (stat_names,
+                        [manager.get_stat_rollup_for_days(publisher=a,
+                                                          days=days) for a in apps])
             elif spec == 'campaigns':
                 camps = CampaignQueryManager.get_campaigns(account=self.account)
                 if len(camps) == 0:
                     logging.warning("Campaigns for account is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in camps])
+                return (stat_names,
+                        [manager.get_stat_rollup_for_days(advertiser=c,
+                                                          days=days) for c in camps])
         #Rollups for adgroup data
         elif key_type == 'adgroup':
             if spec == 'creatives':
                 creatives = list(CreativeQueryManager.get_creatives(adgroup=key))
                 if len(creatives) == 0:
                     logging.warning("Creatives for adgroup is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in creatives])
+                return (stat_names,
+                        [manager.get_stat_rollup_for_days(advertiser=c,
+                                                          days=days) for c in creatives])
             if spec == 'adunits':
-                adunits = map(lambda x: Site.get(x), AdGroupQueryManager.get(key).site_keys)
+                adunits = map(lambda x: Site.get(x),
+                              AdGroupQueryManager.get(key).site_keys)
                 if len(adunits) == 0:
                     logging.warning("Adunits for adgroup is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=days) for a in adunits])
+                return (stat_names,
+                        [manager.get_stat_rollup_for_days(advertiser=key,
+                                                          publisher=a,
+                                                          days=days) for a in adunits])
             if spec == 'days':
-                return (stat_names, manager.get_stats_for_days(advertiser=key, days=days))
+                return (stat_names,
+                        manager.get_stats_for_days(advertiser=key, days=days))
         #Rollups + not-rollup for adunit data
         elif key_type == 'adunit':
             if spec == 'campaigns':
                 adgroups = AdGroupQueryManager.get_adgroups(adunit=key)
                 if len(adgroups) == 0:
                     logging.warning("Campaigns for adunit is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(publisher=key, advertiser=a, days=days) for a in adgroups])
+                return (stat_names,
+                        [manager.get_stat_rollup_for_days(publisher=key,
+                                                          advertiser=a,
+                                                          days=days) for a in adgroups])
             if spec == 'days':
                 return (stat_names, manager.get_stats_for_days(publisher=key, days=days))
         #App adunit rollup data
@@ -663,7 +690,9 @@ class ExportFileHandler( RequestHandler ):
             adunits = AdUnitQueryManager.get_adunits(app=key)
             if len(adunits) == 0:
                 logging.warning("Apps is empty")
-            return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits])
+            return (stat_name,
+                    [manager.get_stat_rollup_for_days(publisher=a,
+                                                      days=days) for a in adunits])
 
 
 @login_required
@@ -688,14 +717,19 @@ class AdUnitShowHandler(RequestHandler):
             end_date = date.today()
             start_date = end_date - timedelta(int(self.date_range) - 1)
 
-        days = [day if type(day) == datetime else datetime.combine(day, time()) for day in days]
+        days = [day if type(day) == datetime \
+                else datetime.combine(day, time()) for day in days]
 
-        adunit.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,days=days)
-        #XXX Wat?
-        for i in range(len(days)):
+        stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
+        adunit.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                                                            days=days)
+        # TODO WTF is this?
+        for i in xrange(len(days)):
             adunit.all_stats[i].date = days[i]
 
-        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
+        adunit.stats = reduce(lambda x, y: x+y,
+                              adunit.all_stats,
+                              StatsModel())
 
         # used the get marketplace stats from mpx servers
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
@@ -704,18 +738,23 @@ class AdUnitShowHandler(RequestHandler):
         adunit.adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
         adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
         for ag in adunit.adgroups:
-            ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=adunit,advertiser=ag,days=days)
+            ag.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                                                            advertiser=ag,
+                                                            days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            ag.percent_delivered = budget_service.percent_delivered(ag.campaign.budget_obj)
+            budget_object = ag.campaign.budget_obj
+            ag.percent_delivered = budget_service.percent_delivered(budget_object)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
-            if ag.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+            if ag.campaign.campaign_type in ['marketplace']:
                 try:
-                    mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()), start_date, end_date)
+                    mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()),
+                                                               start_date,
+                                                               end_date)
                 except MPStatsAPIException, e:
                     mpx_stats = {}
-                ag.stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
+                ag.stats.revenue = float(mpx_stats.get('revenue'))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
 
@@ -723,10 +762,12 @@ class AdUnitShowHandler(RequestHandler):
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
 
 
-        promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adunit.adgroups)
+        promo_campaigns = filter(lambda x: x.campaign_type in ['promo'], adunit.adgroups)
         promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
-        guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adunit.adgroups)
+        gtee_types = ['gtee_high', 'gtee_low', 'gtee']
+        guarantee_campaigns = filter(lambda x: x.campaign_type in gtee_types,
+                                     adunit.adgroups)
         guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
         levels = ('high', '', 'low')
         gtee_str = "gtee_%s"
@@ -734,20 +775,24 @@ class AdUnitShowHandler(RequestHandler):
         for level in levels:
             this_level = gtee_str % level if level else "gtee"
             name = level if level else 'normal'
-            level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guarantee_campaigns)
+            level_camps = filter(lambda x:x.campaign_type == this_level,
+                                 guarantee_campaigns)
             gtee_levels.append(dict(name = name, adgroups = level_camps))
 
-        marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace'], adunit.adgroups)
-        marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+        marketplace_campaigns = filter(lambda x: x.campaign_type in ['marketplace'],
+                                       adunit.adgroups)
+        marketplace_campaigns = sorted(marketplace_campaigns,
+                                       lambda x,y: cmp(x.bid, y.bid))
 
-        network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adunit.adgroups)
-        network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        network_campaigns = filter(lambda x: x.campaign_type in ['network'],
+                                   adunit.adgroups)
+        network_campaigns = sorted(network_campaigns,
+                                   lambda x,y: cmp(y.bid, x.bid))
 
-        backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adunit.adgroups)
-        backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-
-        backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adunit.adgroups)
-        backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
+        backfill_promo_campaigns = filter(lambda x: x.campaign_type in ['backfill_promo'],
+                                          adunit.adgroups)
+        backfill_promo_campaigns = sorted(backfill_promo_campaigns,
+                                          lambda x,y: cmp(y.bid, x.bid))
 
 
         today = adunit.all_stats[-1]
@@ -757,23 +802,25 @@ class AdUnitShowHandler(RequestHandler):
             yesterday = StatsModel()
 
         # write response
-        return render_to_response(self.request,'publisher/adunit.html',
-            {'site': adunit,
-             'adunit': adunit,
-             'today': today,
-             'yesterday': yesterday,
-             'start_date': days[0],
-             'end_date': days[-1],
-             'date_range': self.date_range,
-             'account': self.account,
-             'days': days,
-             'adunit_form_fragment': adunit_form_fragment,
-             'gtee': gtee_levels,
-             'promo': promo_campaigns,
-             'marketplace': marketplace_campaigns,
-             'network': network_campaigns,
-             'backfill_promo': backfill_promo_campaigns,
-             'backfill_marketplace': backfill_marketplace_campaigns})
+        return render_to_response(self.request,
+                                  'publisher/adunit.html',
+                                  {
+                                      'site': adunit,
+                                      'adunit': adunit,
+                                      'today': today,
+                                      'yesterday': yesterday,
+                                      'start_date': days[0],
+                                      'end_date': days[-1],
+                                      'date_range': self.date_range,
+                                      'account': self.account,
+                                      'days': days,
+                                      'adunit_form_fragment': adunit_form_fragment,
+                                      'gtee': gtee_levels,
+                                      'promo': promo_campaigns,
+                                      'marketplace': marketplace_campaigns,
+                                      'network': network_campaigns,
+                                      'backfill_promo': backfill_promo_campaigns,
+                                  })
 
 @login_required
 def adunit_show(request,*args,**kwargs):
@@ -837,12 +884,16 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
         initial = {}
         if app:
             initial.update(app_key=app.key())
-        adunit_form = adunit_form or AdUnitForm(instance=adunit,initial=initial, prefix="adunit")
+        adunit_form = adunit_form or AdUnitForm(instance=adunit,
+                                                initial=initial,
+                                                prefix="adunit")
         return self.render(form=adunit_form)
 
     def render(self,template=None,**kwargs):
         template_name = template or self.TEMPLATE
-        return render_to_string(self.request,template_name=template_name,data=kwargs)
+        return render_to_string(self.request,
+                                template_name=template_name,
+                                data=kwargs)
 
     def json_response(self,json_dict):
         return JSONResponse(json_dict)
@@ -850,15 +901,19 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
     def post(self,adunit_key=None):
         adunit_key = adunit_key or self.request.POST.get('adunit_key')
         if adunit_key:
-            adunit = AdUnitQueryManager.get(adunit_key) # Note this gets things from the cache ?
+            # Note this gets things from the cache ?
+            adunit = AdUnitQueryManager.get(adunit_key)
         else:
             adunit = None
 
-        adunit_form = AdUnitForm(data=self.request.POST,instance=adunit, prefix="adunit")
+        adunit_form = AdUnitForm(data=self.request.POST,
+                                 instance=adunit,
+                                 prefix="adunit")
         json_dict = {'success':False, 'errors': []}
 
         if adunit_form.is_valid():
-            if not adunit_form.instance: #ensure form posts do not change ownership
+            #ensure form posts do not change ownership
+            if not adunit_form.instance:
                 account = self.account
             else:
                 account = adunit_form.instance.account
@@ -900,7 +955,8 @@ class RemoveAdUnitHandler(RequestHandler):
             a.deleted = True
             AdUnitQueryManager.put(a)
 
-        return HttpResponseRedirect(reverse('publisher_app_show', kwargs={'app_key': a.app.key()}))
+        return HttpResponseRedirect(reverse('publisher_app_show',
+                                            kwargs={'app_key': a.app.key()}))
 
 @login_required
 def publisher_adunit_delete(request,*args,**kwargs):
@@ -947,7 +1003,9 @@ class AppExportHandler(RequestHandler):
         days = date_magic.gen_days(start, end)
 
         app = AppQueryManager.get(app_key)
-        all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(publisher=app, days=days)
+
+        stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
+        all_stats = stats_manager.get_stats_for_days(publisher=app, days=days)
         f_name_dict = dict(app_title = app.name,
                            start = start.strftime('%b %d'),
                            end   = end.strftime('%b %d, %Y'),
@@ -955,7 +1013,9 @@ class AppExportHandler(RequestHandler):
 
         f_name = "%(app_title)s AppStats,  %(start)s - %(end)s" % f_name_dict
         f_name = f_name.encode('ascii', 'ignore')
-        data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [app_stats(stat) for stat in all_stats]))
+        data = map(lambda x: [x[0]] + x[1],
+                   zip([day.strftime('%a, %b %d, %Y') for day in days],
+                       [app_stats(stat) for stat in all_stats]))
         titles = ['Date', 'Requests', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
         return sswriter.export_writer(file_type, f_name, titles, data)
 

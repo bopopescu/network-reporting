@@ -103,7 +103,7 @@ class Campaign(db.Model):
             return True
         else:
             return False
-            
+
     def get_owner(self):
         return None
 
@@ -152,7 +152,23 @@ class AdGroup(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
 
     # the priority level at which this ad group should be auctioned
-    network_type = db.StringProperty(choices=["dummy","adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
+    network_type = db.StringProperty(choices=["dummy",
+                                              "adsense",
+                                              "iAd",
+                                              "admob",
+                                              "millennial",
+                                              "ejam",
+                                              "chartboost",
+                                              "appnexus",
+                                              "inmobi",
+                                              "mobfox",
+                                              "jumptap",
+                                              "brightroll",
+                                              "greystripe",
+                                              "custom",
+                                              "custom_native",
+                                              "admob_native",
+                                              "millennial_native"])
 
     # Note that bid has different meaning depending on the bidding strategy.
     # if CPM: bid = cost per 1000 impressions
@@ -341,7 +357,7 @@ class AdGroup(db.Model):
         if self.bid_strategy == 'cpm':
             return self.bid
         return None
-        
+
     @property
     def budget_goal(self):
         campaign = self.campaign
@@ -383,6 +399,10 @@ class AdGroup(db.Model):
     @property
     def created_date(self):
         return self.created.date()
+
+    @property
+    def campaign_type(self):
+        return self.campaign.campaign_type
 
 
 class Creative(polymodel.PolyModel):

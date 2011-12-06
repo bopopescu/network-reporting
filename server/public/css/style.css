@@ -2671,11 +2671,6 @@ a.linkIcon .ui-icon-triangle-1-w {
  * Modules
  */
 /* Dashboard */
-#mopub-dashboard #messageCenter {
-  padding-bottom: 0;
-  border-bottom: none;
-  margin-bottom: 25px; }
-
 #dashboard-stats {
   padding: 20px 20px 10px 20px; }
 

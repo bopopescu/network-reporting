@@ -173,40 +173,6 @@ if (typeof window.console == "undefined") {
         $('a[title]').qtip({ style: { name: 'mopub', tip: true } });
         $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
 
-
-        // Message Center
-        // hide message center when page loads if there are no messages
-        function hideMessageCenterIfNoMessages() {
-            if($('.messageCenter-message').length === 0) {
-                $('#messageCenter').hide();
-            }
-        }
-        hideMessageCenterIfNoMessages();
-
-        // Set up "More info" links
-        $('.messageCenter-message-moreInfoLink').click(function(e) {
-            e.preventDefault();
-            var link = $(this);
-            var info = $('.messageCenter-message-moreInfo', link.parents('.messageCenter-message'));
-            // clone info (so the original doesn't get moved around) and make the dialog
-            info.clone().dialog({
-                buttons: { "Close": function() { $(this).dialog("close"); } },
-                close: function(e, u) { $(this).remove(); } // remove clone
-            });
-        });
-
-        // Set up "Hide this" links
-        $('.messageCenter-message-hide').click(function(e) {
-            e.preventDefault();
-            var link = $(this);
-            var message = link.parents('.messageCenter-message');
-            message.fadeOut('fast', function() {
-                message.remove();
-                hideMessageCenterIfNoMessages();
-            });
-            // TODO: tell server that message.attr('id') has been hidden
-        });
-
         // Set up stats breakdown
         $('.stats-breakdown tr').click(function(e) {
             var row = $(this);

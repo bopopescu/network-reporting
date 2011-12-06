@@ -13,21 +13,21 @@
         var device_to_user_agent = {{device_to_user_agent|safe}};
         var country_to_locale_ip = {{country_to_locale_ip|safe}};
         var user_to_udid = {"user1":"asdf1","user2":"asdf2","user3":"asdf3"};
-        var adunit, device, country, keywords, udid, user_agent, locale, ip; 
+        var adunit, device, country, keywords, udid, user_agent, locale, ip;
         var adunit_id = getQueryVariable("id");
-        
-        function getQueryVariable(variable) { 
-            var query = document.location.search.substring(1); 
-            var vars = query.split("&"); 
-            for (var i=0; i<vars.length; i++) { 
-                var pair = vars[i].split("="); 
-                if (pair[0] == variable) { 
-                    return pair[1]; 
-                } 
-            } 
+
+        function getQueryVariable(variable) {
+            var query = document.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i=0; i<vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] == variable) {
+                    return pair[1];
+                }
+            }
             return null;
         }
-        
+
         $(document).ready(function() {
             // selects the appropriate adunit if specified
             if (adunit_id) {
@@ -38,31 +38,31 @@
                      }
                  });
              }
-            
+
             $("#run").button('option', {icons: { secondary: 'ui-icon-circle-triangle-e' }}).click(function(e) {
                 $("#adunit option:selected").each(function(){
                     adunit = $(this).val();
                 });
                 $("#device option:selected").each(function(){
-                    device = $(this).val(); 
+                    device = $(this).val();
                 });
                 $("#country option:selected").each(function(){
-                    country = $(this).val(); 
+                    country = $(this).val();
                 });
                 $("#user option:selected").each(function(){
-                    user = $(this).val(); 
+                    user = $(this).val();
                 });
                 $("#keywords").each(function(){
-                   keywords = $(this).val(); 
+                   keywords = $(this).val();
                 });
                 $("#exclude").each(function(){
-                   exclude = $(this).val(); 
+                   exclude = $(this).val();
                 });
-                
+
                 var locale_ip = country_to_locale_ip[country]
                 locale = locale_ip[0];
-                ip = locale_ip[1]; 
-                udid = user_to_udid[user]; 
+                ip = locale_ip[1];
+                udid = user_to_udid[user];
                 user_agent = device_to_user_agent[device].replace('%s',locale);
                 var url = base_url + '&id=' + adunit +'&ua=' + escape(user_agent) + '&ip=' + ip + '&q=' + escape(keywords) + '&udid=' + udid + '&exclude=' + exclude + '&country=' + country;
                 if (admin){
@@ -70,11 +70,11 @@
                 }
                 $("#frame").attr("src",url);
             }).click(); // initial run
-            
+
             function pageY(elem) {
                 return elem.offsetParent ? (elem.offsetTop + pageY(elem.offsetParent)) : elem.offsetTop;
             }
-            
+
             var buffer = 20; //scroll bar buffer
             function resizeIframe() {
                 var height = document.documentElement.clientHeight;
@@ -82,15 +82,14 @@
                 height = (height < 0) ? 0 : height;
                 document.getElementById('frame').style.height = height + 'px';
             }
-      
+
             window.onresize = resizeIframe;
             resizeIframe();
-        });        
+        });
     </script>
 {% endblock extraScripts %}
-{% block messageCenter %}{% endblock messageCenter %}
-    
-{% block body_content %}    
+
+{% block body_content %}
 <body>
     <br/>
     <dl class="formFields thin">
@@ -99,17 +98,17 @@
             <select id="adunit">
                 {% for adunit in adunits %}
                     <option value="{{adunit.key}}">{{adunit.app.name}} &gt; {{adunit.name}}</option>
-                {% endfor %}    
-            </select>        
+                {% endfor %}
+            </select>
         </dd>
-        
+
         <dt><label>Device:</label></dt>
         <dd>
             <select id="device">
                 {% for device in devices %}
                     <option value="{{device.0}}">{{device.1}}</option>
-                {% endfor %}    
-            </select>  
+                {% endfor %}
+            </select>
         </dd>
         <dt><label>Country:</label></dt>
         <dd>
@@ -117,8 +116,8 @@
                 {% for country in countries %}
                 <option value="{{country}}" {% ifequal country "US"%}selected="selected"{% endifequal %}>{{country}}</option>
                 {% endfor %}
-            </select>   
-        </dd>        
+            </select>
+        </dd>
         <dt {% if not user.is_admin %}style="display:none;"{% endif %}>
             <label>Keywords:</label>
         </dt>
@@ -127,20 +126,20 @@
         </dd>
         <dt {% if not user.is_admin %}style="display:none;"{% endif %}>
             <label>User:</label>
-        </dt>    
+        </dt>
         <dd {% if not user.is_admin %}style="display:none;"{% endif %}>
             <select id="user">
                 <option value="user1">User 1</option>
                 <option value="user2">User 2</option>
-                <option value="user3">User 3</option>        
+                <option value="user3">User 3</option>
                 <option value="user4">User 4</option>
                 <option value="user5">User 5</option>
-                <option value="user6">User 6</option>        
+                <option value="user6">User 6</option>
                 <option value="user7">User 7</option>
                 <option value="user8">User 8</option>
-                <option value="user9">User 9</option>        
+                <option value="user9">User 9</option>
                 <option value="user10">User 10</option>
-            </select>    
+            </select>
         </dd>
         <dt {% if not user.is_admin %}style="display:none;"{% endif %}>
             <label>Exclude:</label>
@@ -148,15 +147,15 @@
         <dd {% if not user.is_admin %}style="display:none;"{% endif %}>
             <input id="exclude" type="text"/>
         </dd>
-    </dl>        
+    </dl>
     <div class="clear"></div>
-    <div class="form-submit-left"> 
+    <div class="form-submit-left">
         <span class="buttonWrap"><a class="button" id="run">Run Again</a></span>
-    </div> 
-    <div style="height:10px"></div>
-    <div> 
-        <iframe id="frame" src="" style="width:100%;" frameBorder="0" scrolling="yes">    
-        </iframe>    
     </div>
-</body>    
-{% endblock body_content %}    
+    <div style="height:10px"></div>
+    <div>
+        <iframe id="frame" src="" style="width:100%;" frameBorder="0" scrolling="yes">
+        </iframe>
+    </div>
+</body>
+{% endblock body_content %}

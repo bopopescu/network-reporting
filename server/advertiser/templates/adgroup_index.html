@@ -7,7 +7,7 @@
 {% endblock pageTitle %}
 
 {% block navLinks %}
-  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url app_index %}">Dashboard</a></li>
   <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li><a href="{% url network_index %}">Networks</a></li>
@@ -61,7 +61,7 @@
   {% if not apps %}
     <div class="alert-message block-message">
       Before you set up your ad campaigns, we recommend that you set up your App inventory.
-      Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
+      Visit the <a href="{% url app_index %}">Dashboard</a> to add your Apps.
     </div>
   {% endif %}
 

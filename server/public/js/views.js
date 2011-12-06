@@ -149,7 +149,7 @@
         initialize: function() {
             this.collection.bind('change', this.render, this);
         },
-        
+
         render: function() {
             impression_counts = [];
             click_counts = [];
@@ -322,18 +322,18 @@
                     current_model.set({'price_floor': $(this).val()});
                     // Save when they click the save button in the price floor cell
                     var save_link = $(".save", $(this).parent());
-                        save_link.click(function(e) {
-                            e.preventDefault();
-                            save_link.addClass('disabled').text('Saving...');
-                            current_model.save({}, {
-                                success: function () {
-                                    setTimeout(function() {
-                                        save_link.removeClass('disabled').text('Saved');
-                                        save_link.text("Save");
-                                    }, 2000);
-                                }
-                            });
+                    save_link.click(function(e) {
+                        e.preventDefault();
+                        save_link.addClass('disabled').text('Saving...');
+                        current_model.save({}, {
+                            success: function () {
+                                setTimeout(function() {
+                                    save_link.removeClass('disabled').text('Saved');
+                                    save_link.text("Save");
+                                }, 2000);
+                            }
                         });
+                    });
                 });
 
             // Add the event handler to submit targeting changes over ajax.

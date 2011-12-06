@@ -67,6 +67,9 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIExcept
 
 
 class AppIndexHandler(RequestHandler):
+    """
+    A list of apps and their real-time stats.
+    """
     def get(self):
         report = self.request.POST.get('report')
 
@@ -110,6 +113,7 @@ class AppIndexHandler(RequestHandler):
         except IndexError:
             yesterday = StatsModel()
         totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
+
         # this is the max active users over the date range
         # NOT total unique users
         totals.user_count = max([t.user_count for t in totals_list])
@@ -128,7 +132,7 @@ class AppIndexHandler(RequestHandler):
         response_dict['all_stats'] = stats_dict
 
         return render_to_response(self.request,
-                                  'publisher/index.html',
+                                  'publisher/app_index.html',
                                   {
                                       'apps': app_values,
                                       'app_keys': app_keys,
@@ -143,10 +147,14 @@ class AppIndexHandler(RequestHandler):
                                   })
 
 @login_required
-def index(request,*args,**kwargs):
+def app_index(request,*args,**kwargs):
     return AppIndexHandler()(request,*args,**kwargs)
 
-class AppIndexGeoHandler(RequestHandler):
+
+class GeoPerformanceHandler(RequestHandler):
+    """
+    App performance stats broken down by geography.
+    """
     def get(self):
         # compute start times; start day before today so
         # incomplete days don't mess up graphs
@@ -212,10 +220,9 @@ class AppIndexGeoHandler(RequestHandler):
                                          date = now)
 
         return render_to_response(self.request,
-                                  'publisher/index_geo.html',
+                                  'publisher/geo_performance.html',
                                   {
                                       'geo_dict': geo_dict,
-                                      'geo_log_dict': geo_log_dict,
                                       'geo_table': geo_table,
                                       'totals' : totals,
                                       'date_range': self.date_range,
@@ -223,12 +230,12 @@ class AppIndexGeoHandler(RequestHandler):
                                   })
 
 @login_required
-def index_geo(request,*args,**kwargs):
-    return AppIndexGeoHandler()(request,*args,**kwargs)
+def geo_performance(request,*args,**kwargs):
+    return GeoPerformanceHandler()(request,*args,**kwargs)
 
 
 class AppCreateHandler(RequestHandler):
-    def get(self, app_form=None,adunit_form=None,reg_complete=None):
+    def get(self, app_form=None, adunit_form=None, reg_complete=None):
         app_form = app_form or AppForm()
         adunit_form = adunit_form or AdUnitForm(prefix="adunit")
 
@@ -975,7 +982,7 @@ class RemoveAppHandler(RequestHandler):
             AdUnitQueryManager.put(adunits)
 
 
-        return HttpResponseRedirect(reverse('publisher_index'))
+        return HttpResponseRedirect(reverse('app_index'))
 
 @login_required
 def app_delete(request,*args,**kwargs):

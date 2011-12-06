@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block pageTitle %}<h1>Whoops!</h1>{% endblock %} 
+{% block pageTitle %}<h1>Whoops!</h1>{% endblock %}
 {% block messageCenter %}{% endblock %}
 {% block dateButtons %}{% endblock %}
 {% block titleBarRight %}{% endblock %}
- 
-{% block content %} 
-Sorry, this page doesn't exist.  Try going back to the <a href="{% url publisher_index %}">Dashboard</a>
-{% endblock %} 
+
+{% block content %}
+  Sorry, this page doesn't exist.  Try going back to the <a href="{% url app_index %}">Dashboard</a>
+{% endblock %}

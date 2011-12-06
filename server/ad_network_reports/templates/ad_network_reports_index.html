@@ -79,20 +79,48 @@
                           </dd>
                       </dl>
                       {% endif %}
-                      <form id="loginCredentials">
+                      <form class="loginCredentials" id="{{form.ad_network}}-form">
+                          <div class="{{form.ad_network}}-form-message hidden alert-message block-message warning">
+                          </div>
                           <fieldset>
                               <h2>{{network_name}} Credentials</h2>
                               <dl class="formFields" style="margin:0">
-                                  <dt>Username:</dt>
-                                  <dd><input type="text" class="input-text"></dd>
-                                  <dt>Password:</dt>
-                                  <dd><input type="text" class="input-text"></dd>
+                                  {% ifequal form.ad_network "inmobi" %}
+                                    <dt> Access ID: </dt>
+                                    <dd>
+                                      <input type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}
+                                      <a href="#" class="whatsthis" id="inmobi-access-helpLink"> What's This? </a>
+                                    </dd>
+
+                                    <dt> Secret Key: </dt>
+                                    <dd>
+                                      <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}
+                                      <a href="#" class="whatsthis" id="inmobi-secret-helpLink"> What's This? </a>
+                                    </dd>
+
+                                  {% else %}
+                                      {% ifequal form.ad_network "mobfox" %}
+                                      {% else %}
+                                        <dt> Username: </dt>
+                                        <dd> <input type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}</dd>
+
+                                        <dt> Password: </dt>
+                                        <dd> <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}</dd>
+                                      {% endifequal %}
+                                  {% endifequal %}
+
+
+                                  {% if form.ad_network == "admob" %}
+                                    <dt> Client ID </dt>
+                                    <dd> {{form.client_key}} </dd>
+                                  {% endif %}
+
                                   <dt><input name="email" type="checkbox" /> </dt>
                                   <dd> Send me daily emails with my network stats </dd>
                                   <dt></dt>
                                   <dd>
-                                  <a class="button">Update</a>
-                                  <a class="show-status button" id="{{network_name}}-status">Cancel</a>
+                                  <input class="button" type="submit" value="Update" />
+                                  <input class="show-status button" id="{{network_name}}-status" value="Cancel" style="width:50px" />
                                   </dd>
                               </dl>
                           </fieldset>
@@ -171,121 +199,7 @@
     </table>
   </div>
 
-
-  {% if networks_without_creds %}
-    <div class="alert-message block-message warning">
-      You've entered publisher information for the following ad networks,
-      but we can't generate stats for you until you've entered your login
-      credentials for the ad network.
-      <br />
-      <ul>
-      {% for network in networks_without_creds %}
-        <li> <strong>{{ network}}</strong>  (<a class="addcreds" href="#{{network}}"> Add Login Credentials </a>) </li>
-      {% endfor %}
-      </ul>
-  </div>
-  {% endif %}
-  <a class="right button" href="/ad_network_reports/add">Add / Change network credentials</a>
-
-
-  {% comment %}
-  <div class="tab-section" id="networks">
-    <table class="zebra-striped simpletable campaignData-main sortable">
-      <thead>
-        <th class="dataTable-name"> App </th>
-        <th class="dataTable-name"> Ad Network </th>
-        <th class="dataTable-data numeric"> Revenue </th>
-        <th class="dataTable-data numeric"> Attempts </th>
-        <th class="dataTable-data numeric"> Impressions </th>
-        <th class="dataTable-data numeric"> Fill Rate</th>
-        <th class="dataTable-data numeric"> Clicks </th>
-        <th class="dataTable-data numeric"> CTR </th>
-      </thead>
-
-      <tbody>
-        {% for key, mapper, stats in aggregate_stats_list %}
-          <tr>
-            <td class="dataTable-name"><a href='/ad_network_reports/app_view/{{key}}'>{{mapper.application.name}}</a></td>
-            <td class="dataTable-name">{{mapper.ad_network_name}}</td>
-            <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
-            <td class="dataTable-data numeric">{{stats.attempts|withsep }}</td>
-            <td class="dataTable-data numeric">{{stats.impressions|withsep }}</td>
-            <td class="dataTable-data numeric">{{stats.fill_rate|percentage }}</td>
-            <td class="dataTable-data numeric">{{stats.clicks|withsep }}</td>
-            <td class="dataTable-data numeric">{{stats.ctr|percentage }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  {% endcomment %}
-
 {% endblock innerContent %}
-
-
-
-{% block appendedContent %}
-
-  <div class="hidden" id="credential-form">
-    <form id="loginCredentials">
-      <div id="error"> {{error}} </div>
-      <dl class="formFields clearfix" style="width: 350px;">
-        <div class="hidden">
-        <dt> Ad Network </dt>
-        <dd>
-          <select name="ad_network_name" id="ad_network_selector">
-            {% for network in ad_network_names %}
-              <option value="{{network}}"> {{network}} </option>
-            {% endfor %}
-          </select>
-        </dd>
-        </div>
-
-          {% for form in forms %}
-
-            <div id="{{form.ad_network}}-fields" class="network_form">
-
-              {% ifequal form.ad_network "inmobi" %}
-                <dt> InMobi Access ID </dt>
-                <dd>
-                  <input type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}
-                  <a href="#" class="whatsthis" id="inmobi-access-helpLink"> What's This? </a>
-                </dd>
-
-                <dt> InMobi Secret Key </dt>
-                <dd>
-                  <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}
-                  <a href="#" class="whatsthis" id="inmobi-secret-helpLink"> What's This? </a>
-                </dd>
-
-              {% else %}
-                <dt> Username </dt>
-                <dd> <input type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}</dd>
-
-                <dt> Password</dt>
-                <dd> <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}</dd>
-              {% endifequal %}
-
-
-          {% if form.ad_network == "admob" %}
-            <dt> Client ID </dt>
-            <dd> {{form.client_key}} </dd>
-          {% endif %}
-
-
-          <dt><input name="email" type="checkbox" /> </dt>
-          <dd> Send me daily emails with my network stats </dd>
-
-        </div>
-      {% endfor %}
-
-      <input class="right button" type="submit" value="Submit" />
-
-  </div>
-
-{% endblock appendedContent %}
-
 
 {% block extraScripts %}
   {{ block.super }}
@@ -293,7 +207,8 @@
   <script>
     $(function () {
         mopub.Advertiser.initializeAdReportsIndex();
-        mopub.Advertiser.initializeCredentialsPage();
+        account_key = '{{ account_key }}';
+        mopub.Advertiser.initializeCredentialsPage(account_key);
     });
   </script>
 {% endblock extraScripts %}

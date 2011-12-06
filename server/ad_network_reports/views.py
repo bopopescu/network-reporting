@@ -57,6 +57,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
                               'start_date' : days[0],
                               'end_date' : days[-1],
                               'date_range' : self.date_range,
+                              'account_key' : str(self.account.key()),
                               'aggregates' : aggregates,
                               'daily_stats' : simplejson.dumps(
                                   daily_stats),

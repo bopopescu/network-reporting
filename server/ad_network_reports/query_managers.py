@@ -111,8 +111,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
              ...
          }
         """
-        # Can't get timezone (pytz) on app engine without jumping through some large
-        # hoops so we do a rough check.
+        # Can't get timezone (pytz) on app engine without jumping through some
+        # large hoops so we do a rough check.
         yesterday = (datetime.now() - timedelta(days=1)).date()
 
         data_dict = {}
@@ -161,7 +161,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         for data in data_dict.values():
             # Sort sub_data list.
             data['sub_data_list'] = sorted(data['sub_data_list'], key=lambda \
-                    sub_data: sub_data['name'])
+                    sub_data: sub_data['name'].lower())
             if data['attempts']:
                 data['fill_rate'] = data[
                         'fill_rate_impressions'] / float(
@@ -179,7 +179,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         # Sort alphabetically
         data_list = sorted(data_dict.items(), key=lambda data_tuple:
-                data_tuple[0])
+                data_tuple[0].lower())
 
         return data_list
 

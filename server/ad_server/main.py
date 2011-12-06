@@ -138,8 +138,9 @@ class AdClickHandler(webapp.RequestHandler):
 class AppOpenHandler(webapp.RequestHandler):
     # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA
     def get(self):
-        udid = self.request.get('udid')
-        mobile_appid = self.request.get('id')
+        from common.utils.helpers import get_udid_appid
+        
+        udid, mobile_appid = get_udid_appid(self.request)
 
         # bail early if udid AND mobile_appid is not provided
         if not (udid and mobile_appid):

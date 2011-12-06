@@ -261,7 +261,7 @@
                                     <img title="Paused" alt="Paused" src="/images/paused.gif" height=9 width=9 />
                                   {% endif %}
                                   <a href="{% url marketplace_index %}">{{adgroup.name}}</a>
-                                  <span class="muted">MoPub Marketplace Beta</span>
+                                  <span class="muted">MoPub Marketplace </span>
                                 </th>
                                 <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
                                 <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
@@ -387,7 +387,7 @@
                       {% if adgroup.deleted %}<img title="Deleted" alt="Deleted" src="/images/deleted.gif" height=9 width=9 />{% endif %}
                       {% if adgroup.active and not adgroup.deleted %}<img title="Active" alt="Active" src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img title="Paused" alt="Paused" src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <span class="muted">MoPub Marketplace Beta</span>
+                      <span class="muted">MoPub Marketplace</span>
                     </th>
 
                     <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>

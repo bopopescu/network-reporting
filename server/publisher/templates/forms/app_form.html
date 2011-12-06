@@ -1,8 +1,8 @@
 {% load filters %}
-<dl class="formFields">
-  <dt>Platform:</dt>
-  <dd>
-    <span class="radios">
+  <dl class="formFields">
+    <dt>Platform:</dt>
+    <dd>
+      <span class="radios">
         <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="iphone" id="appForm-platform-iphone" {% ifequal form.app_type.value 'iphone' %}checked="checked"{% endifequal %}{% if not form.app_type.value %}checked="checked"{% endif %} />
         <label for="appForm-platform-iphone">iOS</label>
         <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="android" id="appForm-platform-android" {% ifequal form.app_type.value 'android' %}checked="checked"{% endifequal %}/>

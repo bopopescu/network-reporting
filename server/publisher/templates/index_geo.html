@@ -1,7 +1,6 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
 {% block pageTitle %}<div class="breadcrumb"><a class="linkIcon breadcrumb-back" href="/inventory/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Dashboard</a> <h1>Region Performance</h1></div>{% endblock pageTitle %}
-{% block messageCenter %}{% endblock %}
 {% block titleBarRight %}{% endblock %}
 {% block extraScripts %}
 <script src="/js/mopub-dashboard.js?v=34"></script>
@@ -10,8 +9,8 @@
   google.load('visualization', '1', {'packages': ['geomap']});
   google.setOnLoadCallback(initMap);
 
-  function initMap() {	
-	// request count data 
+  function initMap() {
+    // request count data
     var data_req = new google.visualization.DataTable();
     data_req.addRows({{ geo_dict|length }});
     data_req.addColumn('string', 'Country');
@@ -22,9 +21,9 @@
     data_req.setValue({{ forloop.counter0 }}, 1, {{ value.request_count }});
     data_req.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
     {% endfor %}
-	
-	// impression count data 
-	var data_imp = new google.visualization.DataTable();
+
+    // impression count data
+    var data_imp = new google.visualization.DataTable();
     data_imp.addRows({{ geo_dict|length }});
     data_imp.addColumn('string', 'Country');
     data_imp.addColumn('number', 'Impressions');
@@ -34,9 +33,9 @@
     data_imp.setValue({{ forloop.counter0 }}, 1, {{ value.impression_count }});
     data_imp.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
     {% endfor %}
-	
-	// click count data 
-	var data_clk = new google.visualization.DataTable();
+
+    // click count data
+    var data_clk = new google.visualization.DataTable();
     data_clk.addRows({{ geo_dict|length }});
     data_clk.addColumn('string', 'Country');
     data_clk.addColumn('number', 'Clicks');
@@ -46,41 +45,41 @@
     data_clk.setValue({{ forloop.counter0 }}, 1, {{ value.click_count }});
     data_clk.setValue({{ forloop.counter0 }}, 2, '{{ key }}');
     {% endfor %}
-	
-	// set options
+
+    // set options
     var options = {'width':'693px','height':'353px','colors':[0xFFD78F, 0xFFC352, 0xFFAF02, 0xFF9A01]};
-	options['dataMode'] = 'regions';
+    options['dataMode'] = 'regions';
 
-	// draw maps
-	var geomap_req = new google.visualization.GeoMap(document.getElementById('map_canvas_req'));
-	geomap_req.draw(data_req, options);
+    // draw maps
+    var geomap_req = new google.visualization.GeoMap(document.getElementById('map_canvas_req'));
+    geomap_req.draw(data_req, options);
 
-	var geomap_imp = new google.visualization.GeoMap(document.getElementById('map_canvas_imp'));
-	geomap_imp.draw(data_imp, options);
+    var geomap_imp = new google.visualization.GeoMap(document.getElementById('map_canvas_imp'));
+    geomap_imp.draw(data_imp, options);
 
-	var geomap_clk = new google.visualization.GeoMap(document.getElementById('map_canvas_clk'));
-	geomap_clk.draw(data_clk, options);
-	
-	$(function() {
-	  // Dom is set up
-	  $("#stats-breakdown-requests").click(function() {
-		$(".map-image").hide();
-		$(".map-requests").show();
-	  });
+    var geomap_clk = new google.visualization.GeoMap(document.getElementById('map_canvas_clk'));
+    geomap_clk.draw(data_clk, options);
 
-	  $("#stats-breakdown-impressions").click(function() {
-		$(".map-image").hide();
-		$(".map-impressions").show();
-	  });
+    $(function() {
+      // Dom is set up
+      $("#stats-breakdown-requests").click(function() {
+        $(".map-image").hide();
+        $(".map-requests").show();
+      });
 
-	  $("#stats-breakdown-clicks").click(function() {
-		$(".map-image").hide();
-		$(".map-clicks").show();
-	  });
+      $("#stats-breakdown-impressions").click(function() {
+        $(".map-image").hide();
+        $(".map-impressions").show();
+      });
 
-	  // Trigger requests
-	  $("#stats-breakdown-requests").click();
-	});
+      $("#stats-breakdown-clicks").click(function() {
+        $(".map-image").hide();
+        $(".map-clicks").show();
+      });
+
+      // Trigger requests
+      $("#stats-breakdown-requests").click();
+    });
   }
 </script>
 {% endblock %}
@@ -103,82 +102,82 @@
                   </tr>
                 </tbody>
               </table>
-			        <div id="allMaps">
-	              <div class="map-requests map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
-	                <div id="map_canvas_req"></div>
-	              </div>
-				        <div class="map-impressions map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
-	                <div id="map_canvas_imp" ></div>
-	              </div>
-				        <div class="map-clicks map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
-	                <div id="map_canvas_clk"></div>
-	              </div>
-			        </div>
+                    <div id="allMaps">
+                  <div class="map-requests map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
+                    <div id="map_canvas_req"></div>
+                  </div>
+                        <div class="map-impressions map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
+                    <div id="map_canvas_imp" ></div>
+                  </div>
+                        <div class="map-clicks map-image" style="margin-left:205px;height:355px;border:1px solid #EBF2F7;">
+                    <div id="map_canvas_clk"></div>
+                  </div>
+                    </div>
             </div>
             <div class="clear"></div>
           </section>
 
           <div class="clear"></div>
 
-          <section id="dashboard-apps"> 
-            <h2>Country Counts</h2>            
-            <div class="appData-columnHeaders"> 
-              <table class="dataTable appData-main" id="dashboard-apps-columnHeaders"> 
-                <thead> 
-                  <tr> 
-                    <th class="appData-icon-none"></th> 
-                    <th class="dataTable-name">&nbsp;</th> 
-                    <th class="dataTable-data numeric">Requests</th> 
-                    <th class="dataTable-data numeric">Impressions</th> 
-					          <th class="dataTable-data numeric">Fillrate</th> 
-                    <th class="dataTable-data numeric">Clicks</th> 
-                    <th class="dataTable-data numeric">CTR</th> 
-                  </tr> 
-                </thead> 
-              </table> 
-            </div> 
-            <div class="appData" id="dashboard-app-0"> 
-              <table class="dataTable appData-main" id="dashboard-app-0-main"> 
-                <tbody> 
-                  <tr> 
-                    <th class="appData-icon-none"></th> 
-                    <th class="dataTable-name">Totals</th> 
-                    <td class="dataTable-data numeric">{{totals.request_count|withsep}}</td> 
-                    <td class="dataTable-data numeric">{{totals.impression_count|withsep}}</td> 
-                    <td class="dataTable-data numeric">{{totals.fill_rate|percentage_rounded}}</td> 
-                    <td class="dataTable-data numeric">{{totals.click_count|withsep}}</td> 
-					          <td class="dataTable-data numeric">{{totals.ctr|percentage|withsep}}</td> 
-                  </tr> 
-                </tbody> 
-              </table>             
-              
-              <div class="appData-details noneg" id="dashboard-app-0-details"> 
-                <div class="appData-details-inner show"> 
-                  <table class="dataTable"> 
-                    <tbody> 
+          <section id="dashboard-apps">
+            <h2>Country Counts</h2>
+            <div class="appData-columnHeaders">
+              <table class="dataTable appData-main" id="dashboard-apps-columnHeaders">
+                <thead>
+                  <tr>
+                    <th class="appData-icon-none"></th>
+                    <th class="dataTable-name">&nbsp;</th>
+                    <th class="dataTable-data numeric">Requests</th>
+                    <th class="dataTable-data numeric">Impressions</th>
+                              <th class="dataTable-data numeric">Fillrate</th>
+                    <th class="dataTable-data numeric">Clicks</th>
+                    <th class="dataTable-data numeric">CTR</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            <div class="appData" id="dashboard-app-0">
+              <table class="dataTable appData-main" id="dashboard-app-0-main">
+                <tbody>
+                  <tr>
+                    <th class="appData-icon-none"></th>
+                    <th class="dataTable-name">Totals</th>
+                    <td class="dataTable-data numeric">{{totals.request_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{totals.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">{{totals.fill_rate|percentage_rounded}}</td>
+                    <td class="dataTable-data numeric">{{totals.click_count|withsep}}</td>
+                              <td class="dataTable-data numeric">{{totals.ctr|percentage|withsep}}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="appData-details noneg" id="dashboard-app-0-details">
+                <div class="appData-details-inner show">
+                  <table class="dataTable">
+                    <tbody>
                     {% for pair in geo_table %}
                     {% if pair.0|country_code_to_name %}
-                      <tr> 
-                        <th class="appData-icon-none"></th> 
-                        <th class="dataTable-name">{{pair.0|country_code_to_name}}</th> 
-                        <td class="dataTable-data numeric">{{pair.1.request_count|withsep}}</td> 
-                        <td class="dataTable-data numeric">{{pair.1.impression_count|withsep}}</td> 
-                        <td class="dataTable-data numeric">{{pair.1.fill_rate|percentage_rounded}}</td> 
-                        <td class="dataTable-data numeric">{{pair.1.click_count|withsep}}</td> 
+                      <tr>
+                        <th class="appData-icon-none"></th>
+                        <th class="dataTable-name">{{pair.0|country_code_to_name}}</th>
+                        <td class="dataTable-data numeric">{{pair.1.request_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{pair.1.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">{{pair.1.fill_rate|percentage_rounded}}</td>
+                        <td class="dataTable-data numeric">{{pair.1.click_count|withsep}}</td>
                         <td class="dataTable-data numeric">{{pair.1.ctr|percentage|withsep}}</td>
-                      </tr> 
+                      </tr>
                     {% endif %}
                     {% endfor %}
-                    </tbody> 
-                  </table> 
-                </div> 
-              </div> 
-            </div> 
-          </section> 
-                    
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <div>
-            <a class="button button-small appData-details-toggleButton" href="#">Hide details</a> 
-            <a class="button button-small" href="/inventory/export/csv/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export CSV</a> 
-            <a class="button button-small" href="/inventory/export/xls/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export XLS</a> 
+            <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
+            <a class="button button-small" href="/inventory/export/csv/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export CSV</a>
+            <a class="button button-small" href="/inventory/export/xls/agltb3B1Yi1pbmNyDAsSBFNpdGUYwZ0LDA">Export XLS</a>
           </div>
 {% endblock content %}

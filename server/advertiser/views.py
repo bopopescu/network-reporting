@@ -63,9 +63,9 @@ class AdGroupIndexHandler(RequestHandler):
     def get(self):
         days = StatsModel.lastdays(90)
 
-        """
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
+        """
         # memoize
         campaigns_dict = {}
 
@@ -156,11 +156,13 @@ class AdGroupIndexHandler(RequestHandler):
 
         return render_to_response(self.request,
                                   'advertiser/adgroup_index.html', {
+                                      'apps': apps,
                                       'gtee_adgroups': gtee_adgroups,
                                       'promo_adgroups': promo_adgroups,
                                       'backfill_promo_adgroups': backfill_promo_adgroups,
                                       'start_date': days[0],
                                       'end_date': days[-1],
+                                      'date_range': self.date_range,
                                   })
 
 ####### Helpers for campaign page #######
@@ -1458,49 +1460,23 @@ def marketplace_blindness_change(request, *args, **kwargs):
 # At some point in the future, these *could* be branched into their own django app
 class NetworkIndexHandler(RequestHandler):
     def get(self):
-
-        # form the date range
         if self.start_date:
             days = date_magic.gen_days(self.start_date, self.start_date + datetime.timedelta(self.date_range))
         else:
             days = date_magic.gen_date_range(self.date_range)
 
-        # grab the network campaigns and their stats
-        network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
-
-        network_campaigns = [
-            {'adgroups': [AdGroup(
-                key='agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY2cCsBAw',
-                name="eJam",
-                network_type="ejam"),],},
-            {'adgroups': [AdGroup(
-                key='agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYlca3BAw',
-                name="Android Admob",
-                network_type="admob"),],},
-            {'adgroups': [AdGroup(
-                key='agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY6PjgBAw',
-                name="iOS Office Jerk Admob",
-                network_type="admob_native"),],},
-            {'adgroups': [AdGroup(
-                key='agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYw5TmBAw',
-                name="OfficeJerk iOS iAd",
-                network_type="iAd"),],},
-            {'adgroups': [AdGroup(
-                key='agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYq5uXBgw',
-                name="InMobi",
-                network_type="inmobi"),],},
-            {'adgroups': [AdGroup(
-                key='agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY7q_6Dgw',
-                name="OfficeZombie iAd",
-                network_type="iAd"),],},
-        ]
+        network_adgroups = []
+        for campaign in CampaignQueryManager.get_network_campaigns(account=self.account):
+            for adgroup in campaign.adgroups:
+                network_adgroups.append(adgroup)
 
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
                                   {
-                                      'network_campaigns': network_campaigns,
+                                      'network_adgroups': network_adgroups,
                                       'start_date': days[0],
                                       'end_date': days[-1],
+                                      'date_range': self.date_range,
                                   })
 
 @login_required

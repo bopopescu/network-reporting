@@ -7,107 +7,22 @@
             this.collection.bind('change', this.render, this);
         },
         render: function() {
-            var html = _.template($('#adgroups-rollup-template').html(), {
-                adgroups: this.collection,
-                title: this.options.title,
-                type: this.options.type
-            });
-            html += _.template($('#adgroups-table-template').html(), {
-                adgroups: this.collection,
-                type: this.options.type
-            });
-            $(this.el).html(html);
-        }
-    });
-
-    /*
-    AdGroupTableView = Backbone.View.extend({
-        initialize: function() {
-            this.model.bind('change', this.render, this);
-        },
-        template: _.template('\
-            <td class="campaignData-icon">\
-                <input type="checkbox" name="id" value="<%= id %>"/>\
-                <% if(deleted) %>\
-                    <img src="/images/deleted.gif" height=9 width=9 />\
-                <% else { %>\
-                    <% if(active) %>\
-                        <img src="/images/active.gif" height=9 width=9 />\
-                    <% else %>\
-                        <img src="/images/paused.gif" height=9 width=9 />\
-                    <% %>\
-                <% } %>\
-            </td>\
-            <td class="dataTable-name">\
-                <a href="<%= details_url %>"><%= name %></a><br/>\
-                <span class="muted"><%= network_type %></span>\
-            </td>\
-            <td {# style="text-align:right;" #} class="dataTable-data numeric dataTable-ecpm ecpm">\
-                <% if(typeof cpm === "undefined") print("--"); else print(cpm); %>\
-            </td>\
-            <td {# style="text-align:right;" #} class="dataTable-data numeric network-req req">\
-                <% if(typeof request_count === "undefined") print("--"); else print(request_count); %>\
-            </td>\
-            <td {# style="text-align:right;" #} class="dataTable-data numeric network-imp imp">\
-                <% if(typeof impression_count === "undefined") print("--"); else print(impression_count); %>\
-            </td>\
-            <td {# style="text-align:right;" #} class="dataTable-data numeric network-fill fill">\
-                <% if(typeof fill_rate === "undefined") print("--"); else print(fill_rate); %>\
-            </td>\
-            <td {# style="text-align:right;" #} class="dataTable-data numeric network-clk clk">\
-                <% if(typeof click_count === "undefined") print("--"); else print(click_count); %>\
-            </td>\
-            <td {# style="text-align:right;" #} class="dataTable-data numeric network-ctr ctr">\
-                <% if(typeof ctr === "undefined") print("--"); else print(ctr); %>\
-            </td>'),
-        tagName: 'tr',
-        className: 'campaignData network_row campaign-status-all campaign-targeting-all incomplete',
-        render: function() {
-            var context = this.model.toJSON();
-            if('impression_count' in context) context.impression_count = mopub.Utils.formatNumberWithCommas(context.impression_count);
-            if('request_count' in context) context.request_count = mopub.Utils.formatNumberWithCommas(context.request_count);
-            if('click_count' in context) context.click_count = mopub.Utils.formatNumberWithCommas(context.click_count);
-            if('cpm' in context) context.cpm = "$" + context.cpm.toFixed(2);
-            if('ctr' in context) context.ctr = mopub.Utils.formatNumberAsPercentage(context.ctr);
-            if('fill_rate' in context) context.fill_rate = mopub.Utils.formatNumberAsPercentage(context.fill_rate);
-            $(this.el).html(this.template(context));
-            return this;
-        }
-    });
-
-    AdGroupsRollupView = Backbone.View.extend({
-        initialize: function() {
-            this.collection.bind('change', this.render, this);
-        },
-
-        template: _.template('\
-            <td id="network-total-imp">\
-                <% if(typeof impression_count === "undefined") print("--"); else print(impression_count); %>\
-            </td>\
-            <td id="network-total-clk">\
-                <% if(typeof click_count === "undefined") print("--"); else print(click_count); %>\
-            </td>\
-            <td id="network-total-ctr">\
-                <% if(typeof ctr === "undefined") print("--"); else print(ctr); %>\
-            </td>\
-            <td id="network-total-fill">\
-                <% if(typeof fill_rate === "undefined") print("--"); else print(fill_rate); %>\
-            </td>'),
-
-        render: function() {
-            var impression_count, click_count, ctr, fill_rate = "--";
-            if(this.collection.isFullyLoaded()) {
-                impression_count = this.collection.getSum('impression_count');
-                click_count = this.collection.getSum('click_count');
-                ctr = mopub.Utils.formatNumberAsPercentage((impression_count === 0) ? 0 : click_count / impression_count);
-                fill_rate = mopub.Utils.formatNumberAsPercentage(this.collection.getSum('fill_rate'));
-                impression_count = mopub.Utils.formatNumberWithCommas(impression_count);
-                click_count = mopub.Utils.formatNumberWithCommas(click_count);
+            var html;
+            if(this.collection.size() === 0) {
+                html = "<h2>No " + this.options.title + "</h2>";
             }
-            $(this.el).find('#network-total-imp').html(impression_count);
-            $(this.el).find('#network-total-clk').html(click_count);
-            $(this.el).find('#network-total-ctr').html(ctr);
-            $(this.el).find('#network-total-fill').html(fill_rate);
+            else {
+                html = _.template($('#adgroups-rollup-template').html(), {
+                    adgroups: this.collection,
+                    title: this.options.title,
+                    type: this.options.type
+                });
+                html += _.template($('#adgroups-table-template').html(), {
+                    adgroups: this.collection,
+                    type: this.options.type
+                });
+            }
+            $(this.el).html(html);
             return this;
         }
     });
@@ -136,42 +51,126 @@
       var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
 
       var result = mopub.Stats.getGraphCtrStats(sortedCampaigns);
-      // Append stats for MoPub-optimized CTR.
-      var accountDailyStats = mopub.accountStats["all_stats"]["||"]["daily_stats"];
-      var mopubOptimized = {
-        "MoPub Optimized": mopub.Stats.statArrayFromDailyStats(accountDailyStats, "ctr"),
-      };
-      result.push(mopubOptimized);
-      return result;
     }
 
-    AdGroupsGraphView = Backbone.View.extend({
+    CollectionGraphView = Backbone.View.extend({
         initialize: function() {
             this.collection.bind('change', this.render, this);
+
+            // date picker
+            // set up dateOptions
+            $('#dashboard-dateOptions input').click(function() {
+                var option = $(this).val();
+                var hash = document.location.hash;
+                if(option == 'custom') {
+                    $('#dashboard-dateOptions-custom-modal').dialog({
+                    width: 570,
+                    buttons: [
+                    {
+                    text: 'Set dates',
+                    css: { fontWeight: '600' },
+                    click: function() {
+                    var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
+                    var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                    var num_days=Math.round((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+
+                    var from_day=from_date.getDate();
+                    var from_month=from_date.getMonth()+1;
+                    var from_year=from_date.getFullYear();
+
+                    $(this).dialog("close");
+                    var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
+                    document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day + hash;
+                    }
+                    },
+                    {
+                    text: 'Cancel',
+                    click: function() {
+                    $(this).dialog("close");
+                    }
+                    }
+                    ]
+                    });
+                }
+                else {
+                    // Tell server about selected option to get new data
+                    var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
+                    document.location.href = location+'?r=' + option + hash;
+                }
+            });
+
+            // set up custom dateOptions modal dialog
+            $('#dashboard-dateOptions-custom-from').datepicker({
+                defaultDate: '-15d',
+                maxDate: '0d',
+                onSelect: function(selectedDate) {
+                    var other = $('#dashboard-dateOptions-custom-to');
+                    var instance = $(this).data("datepicker");
+                    var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+                    other.datepicker('option', 'minDate', date);
+                }
+            });
+            $('#dashboard-dateOptions-custom-to').datepicker({
+                defaultDate: '-1d',
+                maxDate: '0d',
+                onSelect: function(selectedDate) {
+                    var other = $('#dashboard-dateOptions-custom-from');
+                    var instance = $(this).data("datepicker");
+                    var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+                    other.datepicker('option', 'maxDate', date);
+                }
+            });
+
+
+            // stats breakdown
+            $('.stats-breakdown tr').click(function(e) {
+                var row = $(this);
+                if(!row.hasClass('active')) {
+                    row.siblings().removeClass('active');
+                    row.addClass('active');
+                    $('#dashboard-stats-chart').fadeOut(100, function() {
+                        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+                        $(this).show();
+                    });
+                }
+            });
+
+            $('#stats-breakdown-dateOptions input').click(function() {
+                $('.stats-breakdown-value').hide();
+                $('.stats-breakdown-value.'+$(this).val()).show();
+            }).click();
         },
         
         render: function() {
-            impression_counts = [];
-            click_counts = [];
-            ctrs = [];
-            this.collection.each(function(adgroup) {
-                if(adgroup.has('history')) {
-                    var dict = {};
-                    dict[adgroup.get('name')] = Stats.statArrayFromDailyStats(adgroup.get('history'), 'impression_count');
-                    impression_counts[impression_counts.length] = dict;
-                }
-            });
+            // Breakdown
+            $("#stats-breakdown-impression_count .all .inner").html(this.collection.get_formatted_stat('impression_count'));
+            $("#stats-breakdown-revenue .all .inner").html(this.collection.get_formatted_stat('revenue'));
+            $("#stats-breakdown-click_count .all .inner").html(this.collection.get_formatted_stat('click_count'));
+            $("#stats-breakdown-ctr .all .inner").html(this.collection.get_formatted_stat('ctr'));
+            if(this.options.today != null) {
+                $("#stats-breakdown-impression_count .today .inner").html(this.collection.get_formatted_stat_for_day('impression_count', this.options.today));
+                $("#stats-breakdown-revenue .today .inner").html(this.collection.get_formatted_stat_for_day('revenue', this.options.today));
+                $("#stats-breakdown-click_count .today .inner").html(this.collection.get_formatted_stat_for_day('click_count', this.options.today));
+                $("#stats-breakdown-ctr .today .inner").html(this.collection.get_formatted_stat_for_day('ctr', this.options.today));
+            }
+            if(this.options.yesterday != null) {
+                $("#stats-breakdown-impression_count .yesterday .inner").html(this.collection.get_formatted_stat_for_day('impression_count', this.options.yesterday));
+                $("#stats-breakdown-revenue .yesterday .inner").html(this.collection.get_formatted_stat_for_day('revenue', this.options.yesterday));
+                $("#stats-breakdown-click_count .yesterday .inner").html(this.collection.get_formatted_stat_for_day('click_count', this.options.yesterday));
+                $("#stats-breakdown-ctr .yesterday .inner").html(this.collection.get_formatted_stat_for_day('ctr', this.options.yesterday));
+            }
+            // Chart
             mopub.dashboardStatsChartData = {
-                pointStart: mopub.graphStartDate,
+                pointStart: this.options.start_date,
                 pointInterval: 86400000,
-                impressions: impression_counts,
-                clicks: click_counts,
-                ctr: ctrs
+                impression_count: this.collection.get_chart_data('impression_count'),
+                revenue: this.collection.get_chart_data('revenue'),
+                click_count: this.collection.get_chart_data('click_count'),
+                ctr: this.collection.get_chart_data('ctr')
             };
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
         }
     })
-    */
 
     /*
      * ## AppView

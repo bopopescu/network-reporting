@@ -17,4 +17,7 @@ urlpatterns = patterns(
 
     url(r'^network_campaign/$', 'network_campaign_service', name='network_campaign_service'),
     url(r'^campaign/network/(?P<network_campaign_key>[-\w\.]+)$', 'network_campaign_service', name='network_campaign_service'),
+
+    url(r'^adgroup/$', 'adgroup_service', name='adgroup_service'),
+    url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)$', 'adgroup_service', name='adgroup_serivce'),
 )

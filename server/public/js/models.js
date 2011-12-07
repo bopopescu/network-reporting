@@ -36,27 +36,41 @@
      */
 
     /*
-     * Helper Functions
+     * Helper functions for individual stats
      */
-    // TODO: finish adding cases for all stats
+    calculate_ctr = function(impression_count, click_count) {
+        if(impression_count === null || click_count === null) return null;
+        return (impression_count === 0) ? 0 : click_count / impression_count;
+    }
+
+    calculate_fill_rate = function(request_count, impression_count) {
+        if(request_count === null || impression_count === null) return null;
+        return (request_count === 0) ? 0 : impression_count / request_count;
+    }
+
+    calculate_ecpm = function(impression_count, revenue) {
+        if(impression_count === null || revenue === null) return null;
+        return (impression_count === 0) ? 0 : 1000 * revenue / impression_count;
+    }
+
     format_stat = function(stat, value) {
         if(value === null) return '--';
         switch(stat) {
             case 'click_count':
-            case 'impression_count':
             case 'conversion_count':
+            case 'impression_count':
             case 'request_count':
                 return mopub.Utils.formatNumberWithCommas(value);
+            case 'ecpm':
             case 'revenue':
                 return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
+            case 'ctr':
             case 'fill_rate':
                 return mopub.Utils.formatNumberAsPercentage(value);
-            case 'ctr':
-                return mopub.Utils.formatNumberAsPercentage(value);
-            case 'ecpm':
-            case 'attempts':
-            default:
+            case 'status':
                 return value;
+            default:
+                throw 'Unsupported stat "' + stat + '".';
         }
     }
 
@@ -65,14 +79,73 @@
      */
     AdGroup = Backbone.Model.extend({
         get_stat: function(stat) {
+            if(stat == 'ecpm') return calculate_ecpm(this.get_stat('impression_count'), this.get_stat('revenue'));
             if(!this.has(stat)) return null;
             return this.get(stat);
         },
 
         get_formatted_stat: function(stat) {
             return format_stat(stat, this.get_stat(stat));
+        },
+
+        get_stat_for_day: function(stat, day) {
+            if(!this.has(daily_stats)) return null;
+            var daily_stats = this.get(daily_stats);
+            if(day >= daily_stats.length) return null;
+            var day_stats = daily_stats[day];
+            if(!stat in day_stats) return null;
+            return day_stats[stat];
+        },
+
+        url: function() {
+            return '/api/adgroup/' + this.id;
         }
     });
+
+    /*
+     * Helper functions for AdGroups daily stats
+     */
+    get_stat_sum_for_day = function(adgroups, stat, day) {
+        return _.reduce(adgroups, function(memo, adgroup) {
+            if(memo === null ||
+               !adgroup.has('daily_stats') ||
+               day >= adgroup.get('daily_stats').length ||
+               !(stat in adgroup.get('daily_stats')[day]))
+                return null;
+            return memo + adgroup.get('daily_stats')[day][stat];
+        }, 0);
+    }
+
+    get_stat_for_day = function(adgroups, stat, day) {
+        switch(stat) {
+            case 'ctr':
+                return calculate_ctr(get_stat_for_day(adgroups, 'impression_count', day), get_stat_for_day(adgroups, 'click_count', day));
+            case 'fill_rate':
+                return calculate_fill_rate(get_stat_for_day(adgroups, 'request_count', day), get_stat_for_day(adgroups, 'impression_count', day));
+            case 'ecpm':
+                return calculate_ecpm(get_stat_for_day(adgroups, 'impression_count', day), get_stat_for_day(adgroups, 'revenue', day));
+            case 'click_count':
+            case 'conversion_count':
+            case 'impression_count':
+            case 'request_count':
+            case 'revenue':
+                return get_stat_sum_for_day(adgroups, stat, day);
+            default:
+                throw 'Unsupported stat "' + stat + '".';
+        }
+    }
+
+    get_formatted_stat_for_day = function(adgroups, stat, day) {
+        return format_stat(stat, get_stat_for_day(adgroups, stat, day));
+    }
+
+    get_total_daily_stats = function(adgroups, stat) {
+        var total_daily_stats = [];
+        for(var day in adgroups[0].get('daily_stats')) {
+            total_daily_stats.push(get_stat_for_day(adgroups, stat, day));
+        }
+        return total_daily_stats;
+    }
 
     /*
      *  
@@ -87,21 +160,67 @@
             }, 0);
         },
 
-        // TODO: add cases for calculated stats (ctr, fill_rate, etc.)
         get_stat: function(stat) {
             switch(stat) {
-                default:
+                case 'ctr':
+                    return calculate_ctr(this.get_stat('impression_count'), this.get_stat('click_count'));
+                case 'fill_rate':
+                    return calculate_fill_rate(this.get_stat('request_count'), this.get_stat('impression_count'));
+                case 'ecpm':
+                    return calculate_ecpm(this.get_stat('impression_count'), this.get_stat('revenue'));
+                case 'click_count':
+                case 'conversion_count':
+                case 'impression_count':
+                case 'request_count':
+                case 'revenue':
                     return this.get_stat_sum(stat);
+                default:
+                    throw 'Unsupported stat "' + stat + '".';
             }
         },
 
         get_formatted_stat: function(stat) {
-            //alert('' + stat + ': ' + this.get_stat(stat));
             return format_stat(stat, this.get_stat(stat));
         },
 
-        // TODO: make this less hacky
+        get_formatted_stat_for_day: function(stat, day) {
+            return get_formatted_stat_for_day(this, stat, day);
+        },
+
+        get_chart_data: function(stat) {
+            var adgroups = this.filter(function(adgroup) { return adgroup.has(stat) && adgroup.has('daily_stats'); });
+            var sorted_adgroups = _.sortBy(adgroups, function(adgroup) { return -adgroup.get(stat); });
+            var top_three_adgroups = sorted_adgroups.splice(0, 3);
+            var other_adgroups = sorted_adgroups;
+            var chart_data = top_three_adgroups.map(function(adgroup) {
+                var adgroup_data = {};
+                adgroup_data[adgroup.get('name')] = _.map(adgroup.get('daily_stats'), function(day) { return day[stat]; });
+                return adgroup_data;
+            });
+            // TODO: CTR stuff
+            /*
+            // Append stats for MoPub-optimized CTR.
+            var accountDailyStats = mopub.accountStats["all_stats"]["||"]["daily_stats"];
+            var mopubOptimized = {
+            "MoPub Optimized": mopub.Stats.statArrayFromDailyStats(accountDailyStats, "ctr"),
+            };
+            result.push(mopubOptimized);
+            return result;
+            */
+            if(other_adgroups.length) {
+                var other_adgroups_data = get_total_daily_stats(other_adgroups, stat);
+                chart_data.push({ 'Others': other_adgroups_data });
+            }
+            return chart_data;
+        },
+
+        get_days: function() {
+            // TODO: make this less hacky
+            return this.reduce(function(memo, adgroup) { return (adgroup.has('daily_stats') && adgroup.get('daily_stats').length > memo) ? adgroup.get('daily_stats').length : memo; }, 0);
+        },
+
         isFullyLoaded: function() {
+            // TODO: make this less hacky
             return this.reduce(function(memo, adgroup) { return memo && adgroup.has('impression_count') }, true);
         }
     });

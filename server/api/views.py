@@ -8,6 +8,12 @@ from advertiser.query_managers import CampaignQueryManager, \
      TextAndTileCreativeQueryManager, \
      HtmlCreativeQueryManager
 from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnitContextQueryManager
+from reporting.models import StatsModel
+from reporting.query_managers import StatsModelQueryManager
+
+from ad_server.optimizer.optimizer import DEFAULT_CTR
+
+from budget import budget_service
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
@@ -15,6 +21,7 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      SummedStatsFetcher, \
      NetworkStatsFetcher, \
      DirectSoldStatsFetcher
+from common.utils import date_magic
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 
 from django.contrib.auth.decorators import login_required
@@ -238,22 +245,73 @@ class AdGroupService(RequestHandler):
     """
     API Service for delivering serialized AdGroup data
     """
-    def get(self):
-        return JSONResponse({'error':'No parameters provided'})
+    def get(self, adgroup_key):
+        try:
+            from common_templates.templatetags import filters
 
-    def post(self):
-        pass
+            # TODO: get actual dates
+            if self.start_date:
+                days = date_magic.gen_days(self.start_date, self.start_date + datetime.timedelta(self.date_range))
+            else:
+                days = date_magic.gen_date_range(self.date_range)
 
-    def put(self):
-        pass
+            adgroup = AdGroupQueryManager.get(adgroup_key)
+            stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
 
-    def delete(self):
-        pass
+            summed_stats = sum(stats, StatsModel())
+
+            # adds ECPM if the adgroup is a CPC adgroup
+            if adgroup.cpc:
+                e_ctr = summed_stats.ctr or DEFAULT_CTR
+                summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
+            elif 'marketplace' in adgroup.campaign.campaign_type:
+                # Overwrite the revenue from MPX if its marketplace
+                # TODO: overwrite clicks as well
+                stats_fetcher = MarketplaceStatsFetcher(self.account.key())
+                try:
+                    mpx_stats = stats_fetcher.get_account_stats( start_date, end_date)
+                except MPStatsAPIException, e:
+                    mpx_stats = {}
+                summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
+                summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
+
+                summed_stats.cpm = summed_stats.cpm # no-op
+            else:
+                summed_stats.cpm = adgroup.cpm
+            logging.warn("PACE: %s"%budget_service.get_pace(adgroup.campaign.budget_obj))
+            adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+            percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
+            summed_stats.percent_delivered = percent_delivered
+            adgroup.percent_delivered = percent_delivered
+
+            summed_stats.status = filters.campaign_status(adgroup)
+            if adgroup.running and adgroup.campaign.budget_obj and adgroup.campaign.budget_obj.delivery_type != 'allatonce':
+                summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign.budget_obj) else "behind"
+            else:
+                summed_stats.on_schedule = "none"
+            
+            stats_dict = summed_stats.to_dict()
+
+            stats_dict['daily_stats'] = [s.to_dict() for s in stats]
+
+            return JSONResponse(stats_dict)
+        except Exception, exception:
+            return JSONResponse({'error': str(exception)})
+
+    def post(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+    def put(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+    def delete(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
 
 
 @login_required
 def adgroup_service(request, *args, **kwargs):
     return AdGroupService()(request, use_cache=False, *args, **kwargs)
+
 
 class NetworkCampaignService(RequestHandler):
     """
@@ -297,4 +355,3 @@ class NetworkCampaignService(RequestHandler):
 @login_required
 def network_campaign_service(request, *args, **kwargs):
     return NetworkCampaignService()(request, use_cache=False, *args, **kwargs)
-

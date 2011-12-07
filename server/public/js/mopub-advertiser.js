@@ -1208,46 +1208,55 @@ var mopub = mopub || {};
 
     function onCampaignsFullyUpdated() {
       setCampaignFilterOptionsDisabled(false);
+
+      // TODO: combine these two functions as they both do some of the same calculations
       calcRollups();
       computeAccountStats();
+
       populateStatsBreakdownsWithData(mopub.accountStats);
-      populateGraphWithAccountStats(mopub.accountStats);
       prepareGraphFromCampaignData();
     }
 
     function computeAccountStats() {
+      var allStats = mopub.accountStats['all_stats'];
+
       // compute daily stats
-      var daily_stats;
-      for(var key in mopub.accountStats['all_stats']) {
-        if(!daily_stats) {
-          daily_stats = mopub.accountStats['all_stats'][key]['daily_stats'];
-        }
-        else {
-          for(var index in mopub.accountStats['all_stats'][key]['daily_stats']) {
-            for(var stat in mopub.accountStats['all_stats'][key]['daily_stats'][index]) {
-              daily_stats[index][stat] += mopub.accountStats['all_stats'][key]['daily_stats'][index][stat];
+      // TODO: only need to compute revenue, impression_count, click_count, ctr, conversions for today and yesterday
+      var daily_stats = [];
+      for(var key in allStats) {
+        for(var index in allStats[key]['daily_stats']) {
+          if(index == daily_stats.length) {
+            daily_stats[index] = {};
+          }
+          for(var stat in allStats[key]['daily_stats'][index]) {
+            if(!(stat in daily_stats[index])) {
+              daily_stats[index][stat] = allStats[key]['daily_stats'][index][stat];
+            }
+            else {
+              daily_stats[index][stat] += allStats[key]['daily_stats'][index][stat];
             }
           }
         }
       }
-      // stats that are not simple sums
+      // compute daily stats CTRs
       for(var index in daily_stats) {
-        daily_stats[index]['ctr'] = (daily_stats[index]['impression_count'] === 0) ? 0 : daily_stats[index]['click_count']/daily_stats[index]['impression_count'];
+        daily_stats[index]['ctr'] = (daily_stats[index]['impression_count'] === 0) ? 0 : daily_stats[index]['click_count'] / daily_stats[index]['impression_count'];
       }
 
-      // computer sum
-      var sum;
-      for(var key in mopub.accountStats['all_stats']) {
-        if(!sum) {
-          sum = mopub.accountStats['all_stats'][key]['sum'];
-        }
-        else {
-          for(var stat in mopub.accountStats['all_stats'][key]['sum']) {
-            sum[stat] += mopub.accountStats['all_stats'][key]['sum'][stat];
+      // compute sum
+      // TODO: only need to compute revenue, impression_count, click_count, ctr, conversions
+      var sum = {};
+      for(var key in allStats) {
+        for(var stat in allStats[key]['sum']) {
+          if(!(stat in sum)) {
+            sum[stat] = allStats[key]['sum'][stat];
+          }
+          else {
+            sum[stat] += allStats[key]['sum'][stat];
           }
         }
       }
-      // stats that are not simple sums
+      // compute sum CTR
       sum['ctr'] = (sum['impression_count'] === 0) ? 0 : sum['click_count'] / sum['impression_count'];
 
       mopub.accountStats['all_stats']['||'] = {

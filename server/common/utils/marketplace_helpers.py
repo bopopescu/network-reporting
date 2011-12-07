@@ -64,6 +64,12 @@ class MarketplaceStatsFetcher(object):
                       "clicks": stats['clk'],
                       "ecpm": currency(ecpm(stats['pub_rev'], stats['imp'])),
                       "ctr": percentage(ctr(stats['clk'], stats['imp']))}
+            # hack, this is fixed in origin/backboning, take this out on merge
+            if counts['revenue'] == "---":
+                counts['revenue'] = "$0.00"
+            if counts['ecpm'] == "---":
+                counts['ecpm'] = "$0.00"
+
             stats_dict[id] = counts
         return stats_dict
 
@@ -240,13 +246,21 @@ class MarketplaceStatsFetcher(object):
         return {}
 
 def _transform_stats(stats_dict):
-    return {"revenue": currency(stats_dict['rev']),
-            "revenue_float": stats_dict['rev'],
-            "impressions": int(stats_dict['imp']),
-            "clicks": stats_dict.get('clk', 0), # no clk currently from /stats/pub
-            "ecpm": currency(ecpm(stats_dict['rev'], stats_dict['imp'])),
-            "ecpm_float": ecpm(stats_dict['rev'], stats_dict['imp']),
-            "ctr": percentage(ctr(stats_dict.get('clk', 0), stats_dict['imp']))}
+    counts = {
+        "revenue": currency(stats_dict['rev']),
+        "revenue_float": stats_dict['rev'],
+        "impressions": int(stats_dict['imp']),
+        "clicks": stats_dict.get('clk', 0), # no clk currently from /stats/pub
+        "ecpm": currency(ecpm(stats_dict['rev'], stats_dict['imp'])),
+        "ecpm_float": ecpm(stats_dict['rev'], stats_dict['imp']),
+        "ctr": percentage(ctr(stats_dict.get('clk', 0), stats_dict['imp']))
+    }
+    # hack, this is fixed in origin/backboning, take this out on merge
+    if counts['revenue'] == "---":
+        counts['revenue'] = "$0.00"
+    if counts['ecpm'] == "---":
+        counts['ecpm'] = "$0.00"
+    return counts
 
 
 def _fetch_and_decode(url):

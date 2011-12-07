@@ -74,28 +74,40 @@ def awesome_number_formatter(value):
 @register.filter
 def currency(value):
     if value:
-        return "$%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
+        try:
+            return "$%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
+        except Exception:
+            return "---" # "$0.00"
     else:
-        return "$0.00"
+        return "---" # "$0.00"
 
 @register.filter
 def currency_no_symbol(value):
     if value:
-        return "%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
+        try:
+            return "---" # "%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
+        except Exception:
+            return "---" # "0.00"
     else:
-        return "0.00"
+        return "---" # "0.00"
 
 @register.filter
 def percentage(value):
     if value:
-        return "%1.2f%%" % ((value or 0) * 100)
+        try:
+            return "%1.2f%%" % ((value or 0) * 100)
+        except Exception:
+            return "0.00%"
     else:
         return "0.00%"
 
 @register.filter
 def percentage_rounded(value):
     if value:
-        return "%1.0f%%" % ((value or 0) * 100)
+        try:
+            return "%1.0f%%" % ((value or 0) * 100)
+        except Exception:
+            return "0%"
     else:
         return "0%"
 
@@ -106,44 +118,62 @@ def upper(s):
 
 
 @register.filter
-def withsep(x):
-    if x:
-        return re.sub(r'(\d{3})(?=\d)', r'\1,', str(x)[::-1])[::-1]
+def withsep(value):
+    if value:
+        try:
+            return re.sub(r'(\d{3})(?=\d)', r'\1,', str(value)[::-1])[::-1]
+        except Exception:
+            return "0"
     else:
         return "0"
 
 @register.filter
 def format_date(value):
     if value:
-        return value.strftime("%a, %b %d, %Y")
+        try:
+            return value.strftime("%a, %b %d, %Y")
+        except Exception:
+            return ""
     else:
         return ""
 
 @register.filter
 def format_date_compact(value):
     if value:
-        return "%d/%d" % (value.month, value.day)
+        try:
+            return "%d/%d" % (value.month, value.day)
+        except Exception:
+            return ""
     else:
         return ""
 
 @register.filter
 def format_date_time(value):
     if value:
-        return value.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d/%Y %I:%M %p")
+        try:
+            return value.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d/%Y %I:%M %p")
+        except Exception:
+            return ""
     else:
         return ""
 
 @register.filter
 def format_time(value):
     if value:
-        return value.strftime("%I:%M %p")
+        try:
+            return value.strftime("%I:%M %p")
+        except Exception:
+            return ""
     else:
         return ""
 
 @register.filter
 def truncate(value, arg):
     if len(value) > arg:
-        return "%s..." % value[:(arg-3)]
+        try:
+            return "%s..." % value[:(arg-3)]
+        except Exception:
+            return value
     else:
         return value
 

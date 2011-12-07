@@ -125,6 +125,39 @@ def to_ascii(obj, encoding='utf-8'):
         obj = obj.encode('utf-8')
     return obj
 
-def get_url_for_blob(blob):
+def get_url_for_blob(blob, ssl=True):
     from google.appengine.api import images
-    return images.get_serving_url(blob).replace('http:', 'https:')
+    url = images.get_serving_url(blob)
+    if ssl:
+        return url.replace('http:', 'https:')
+    return url
+        
+
+
+def get_all(Model, limit=300):
+    cnt = 0
+    models = Model.all().fetch(limit)
+    new_models = models
+    while new_models:
+        cnt += 1
+        print cnt, len(models)
+        new_models = Model.all().filter('__key__ >',models[-1]).fetch(limit)
+        models += new_models
+    return models
+    
+def get_udid_appid(request):
+    udid = request.get('udid')
+    mobile_appid = request.get('id')
+    
+    if not udid:
+        query_string = request.query_string
+        result = re.search('id=(?P<id>.*?)(?P<ampersand>&?)udid=(?P<udid>.*?)$', query_string)
+        
+        if (result):
+            return result.group('udid'), result.group('id')
+            # note: if result.group('ampersand') is empty string, we have a broken url
+            # though the return groups are the same regardless
+        else:
+            return None, None
+    
+    return udid, mobile_appid

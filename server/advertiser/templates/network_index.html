@@ -81,12 +81,6 @@
         <div class="stats-breakdown">
           <table>
             <tbody>
-              <tr id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-              </tr>
               <tr class="active" id="stats-breakdown-impressions">
                 <td class="stats-breakdown-value today"><span class="inner"></span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
@@ -118,7 +112,6 @@
             <label for="stats-breakdown-dateOptions-option-2">All</label>
           </span>
         </div>
-        <div class="chart stats-chart hidden" id="revenue-chart"></div>
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
       </div>
 
@@ -158,17 +151,17 @@
         </table>
       </div>
 
-      <table class="{#zebra-striped sortable simpletable#}dataTable campaignData-main">
+      <table class="dataTable campaignData-main">
         <thead>
           <tr>
             <th class="campaignData-icon"></th>
-            <th>Name</th>
-            <th style="text-align: right">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-            <th style="text-align: right">Attempts</th>
-            <th style="text-align: right" width="100">Impressions</th>
-            <th style="text-align: right">Fillrate</th>
-            <th style="text-align: right">Clicks</th>
-            <th style="text-align: right">CTR</th>
+            <th class="dataTable-name">Name</th>
+            <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
+            <th class="dataTable-data numeric">Attempts</th>
+            <th class="dataTable-data numeric" width="100">Impressions</th>
+            <th class="dataTable-data numeric">Fillrate</th>
+            <th class="dataTable-data numeric">Clicks</th>
+            <th class="dataTable-data numeric">CTR</th>
           </tr>
         </thead>
         <tbody>
@@ -201,23 +194,22 @@
                 <span class="muted">{{adgroup.network_type}}</span>
               </td>
               {% if adgroup.cpc %}
-                <td {# style="text-align:right;" #} class="dataTable-data numeric dataTable-ecpm">
+                <td class="dataTable-data numeric">
                   <div class="dataTable-campaign-ecpm ecpm">--</div>
                 </td>
               {% else %}
-                <td {# style="text-align:right;" #} class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
+                <td class="dataTable-data numeric ecpm">--</td>
               {% endif %}
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-req req">--</td>
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-imp imp">--</td>
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-fill fill">--</td>
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-clk clk">--</td>
-              <td {# style="text-align:right;" #} class="dataTable-data numeric network-ctr ctr">--</td>
+              <td class="dataTable-data numeric network-req req">--</td>
+              <td class="dataTable-data numeric network-imp imp">--</td>
+              <td class="dataTable-data numeric network-fill fill">--</td>
+              <td class="dataTable-data numeric network-clk clk">--</td>
+              <td class="dataTable-data numeric network-ctr ctr">--</td>
             </tr>
           {% endfor %}
                     {% endfor %}
         </tbody>
       </table>
-
       <div class="clearfix">
         <div class="form-submit-left">
           <span class="buttonWrap">
@@ -229,8 +221,6 @@
       </div>
     </form>
 
-
-
   {% endif %}
 
 
@@ -238,7 +228,7 @@
 
 
 {% block extraScripts %}
-  <script src="/js/mopub-advertiser.js?v=85"></script>
+  <script src="/js/mopub-advertiser.js?v=86"></script>
   <script>
     var mopub = mopub || {};
     $(function() {

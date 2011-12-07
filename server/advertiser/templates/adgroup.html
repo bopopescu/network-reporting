@@ -5,12 +5,21 @@
   <div class="breadcrumb">
     {% if not adgroup.archived %}
       {% if campaign.network %}
-        <a class="linkIcon breadcrumb-back" href="{% url network_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
+        <a class="linkIcon breadcrumb-back" href="{% url network_index %}">
+          <span class="ui-icon ui-icon-arrowthick-1-w"></span>
+          Back to Networks
+        </a>
       {% else %}
-        <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Campaigns</a>
+        <a class="linkIcon breadcrumb-back" href="{% url advertiser_campaign %}">
+          <span class="ui-icon ui-icon-arrowthick-1-w"></span>
+          Back to Campaigns
+        </a>
       {% endif %}
     {% else %}
-      <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Archived Campaigns</a>
+      <a class="linkIcon breadcrumb-back" href="{% url advertiser_archive %}">
+        <span class="ui-icon ui-icon-arrowthick-1-w"></span>
+        Back to Archived Campaigns
+      </a>
     {% endif %}
 
     {% if campaign.network %}
@@ -28,8 +37,6 @@
     {% include "partials/datecontrols.html" %}
   {% endif %}
 {% endblock dateButtons %}
-
-{% block messageCenter %}{% endblock messageCenter %}
 
 {% block titleBarRight %}
   {% if not account.status %}
@@ -105,7 +112,7 @@
         <div class="stats-breakdown">
           <table>
             <tbody>
-              {% if campaign.gtee or campaign.marketplace %}
+              {% if campaign.gtee %}
                 <tr class="active" id="stats-breakdown-revenue">
                   {% if yesterday %}
                   <td class="stats-breakdown-value today"><span class="inner">{{today.revenue|currency}}</span></td>
@@ -115,7 +122,7 @@
                   <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                 </tr>
               {% endif %}
-              <tr {% if not campaign.gtee and not campaign.marketplace %} class="active" {% endif %} id="stats-breakdown-impressions">
+              <tr {% if not campaign.gtee %} class="active" {% endif %} id="stats-breakdown-impressions">
                 {% if yesterday %}
                 <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
@@ -131,16 +138,14 @@
                 <td class="stats-breakdown-value all"><span class="inner"> {{totals.click_count|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
               </tr>
-              {% if campaign.network %}
-                <tr id="stats-breakdown-ctr">
-                  {% if yesterday %}
-                  <td class="stats-breakdown-value today"><span class="inner"> {{today.ctr|percentage}}</span></td>
-                  <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.ctr|percentage}}</span></td>
-                  {% endif %}
-                  <td class="stats-breakdown-value all"><span class="inner"> {{totals.ctr|percentage}}</span></td>
-                  <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
-                </tr>
-              {% endif %}
+              <tr id="stats-breakdown-ctr">
+                {% if yesterday %}
+                <td class="stats-breakdown-value today"><span class="inner"> {{today.ctr|percentage}}</span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"> {{yesterday.ctr|percentage}}</span></td>
+                {% endif %}
+                <td class="stats-breakdown-value all"><span class="inner"> {{totals.ctr|percentage}}</span></td>
+                <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+              </tr>
               {% if campaign.promo %}
                 <tr id="stats-breakdown-conversions">
                   {% if yesterday %}
@@ -224,8 +229,8 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td> {{ campaign.start_datetime }} </td>
-                        <td> {{ campaign.end_datetime|default_if_none:"None" }} </td>
+                        <td> {{ campaign.start_datetime|format_date_time }} </td>
+                        <td> {{ campaign.end_datetime|format_date_time|default:"None" }} </td>
                         <td> {{campaign.budget.total_spent|currency }} </td>
                         <td>
                           {% ifequal adgroup.campaign.budget_type 'daily' %}
@@ -519,7 +524,6 @@
             <thead>
                 <tr>
                     <th class="dataTable-name big">&nbsp;</th>
-                    <th class="dataTable-name big">&nbsp;</th>
                     <th class="dataTable-data numeric special">Impressions</th>
                     <th class="dataTable-data numeric special">Clicks</th>
                     <th class="dataTable-data numeric special">CTR</th>
@@ -529,7 +533,6 @@
             <tbody>
                 <tr>
                     <th class="dataTable-name big">Totals</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
@@ -538,7 +541,6 @@
                 {% for s in adgroup.all_stats reversed %}
                 <tr class="appData-details-inner show">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
@@ -550,7 +552,6 @@
             <thead>
                 <tr>
                     <th class="dataTable-name big">&nbsp;</th>
-                    <th class="dataTable-name big">&nbsp;</th>
                     <th class="dataTable-data numeric special">Impressions</th>
                     <th class="dataTable-data numeric special">Clicks</th>
                     <th class="dataTable-data numeric special">CTR</th>
@@ -560,7 +561,6 @@
             <tbody>
                 <tr>
                     <th class="dataTable-name big">Totals</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
@@ -569,7 +569,6 @@
                 {% for s in adgroup.all_stats reversed %}
                 <tr class="appData-details-inner show">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
@@ -581,7 +580,6 @@
             <thead>
                 <tr>
                     <th class="dataTable-name big">&nbsp;</th>
-                    <th class="dataTable-name big">&nbsp;</th>
                     <th class="dataTable-data numeric special">Attempts</th>
                     <th class="dataTable-data numeric special">Impressions</th>
                     <th class="dataTable-data numeric special">Fillrate</th>
@@ -592,7 +590,6 @@
             <tbody>
                 <tr>
                     <th class="dataTable-name big">Totals</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.request_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
                     <td class="dataTable-data numeric"><b>{{adgroup.stats.fill_rate|percentage}}</b></td>
@@ -602,7 +599,6 @@
                 {% for s in adgroup.all_stats reversed %}
                 <tr class="appData-details-inner show">
                     <th class="dataTable-name">{{s.date|format_date}}</th>
-                    <td class="dataTable-data numeric">&nbsp;</td>
                     <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{s.fill_rate|percentage}}</td>

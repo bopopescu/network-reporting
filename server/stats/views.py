@@ -5,6 +5,7 @@ import time
 import traceback
 import urllib
 import urllib2
+import random
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -50,7 +51,7 @@ MAX_PUT_SIZE = 8
 
 STATS_MODEL_QUERY_KEY = "sm"
 
-MDB_STATS_UPDATER_IP = 'http://mongostats.mopub.com'
+MDB_STATS_UPDATER_IP = 'http://write.mongostats.mopub.com'
 MDB_STATS_UPDATER_HANDLER_PATH = '/stats/update'
 
 
@@ -157,9 +158,27 @@ def _create_mdb_json(stats_to_put):
     #   {'request_count': int, 'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
     # }
     json_d = {}
+    request_d_keys = request_d.keys()
     for (adunit, creative, date_hour), counts in d.iteritems():
         k = '%s:%s:%s' % (adunit, creative, date_hour)
         json_d[k] = d[(adunit, creative, date_hour)]
+        json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
+        if (adunit, date_hour) in request_d_keys:
+            request_d_keys.remove((adunit, date_hour))
+
+    # these are request counts only; insert them into json_d
+    for (adunit, date_hour) in request_d_keys:
+        k = '%s::%s' % (adunit, date_hour)
+    
+        # all other counts are 0
+        counts = {}
+        counts['attempt_count'] = 0
+        counts['impression_count'] = 0
+        counts['click_count'] = 0
+        counts['conversion_count'] = 0
+        counts['revenue'] = 0
+    
+        json_d[k] = counts
         json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
 
     return simplejson.dumps(json_d)
@@ -185,7 +204,7 @@ def _package_mdb_post_data(mdb_dict):
         [app, account] = _deref_adunit(adunit) or [None, None]
 
 
-        if None not in [app, account, adgroup, campaign]:
+        if None not in [app, account]:
             post_dict = {'adunit': adunit,
                          'app': app,
                          'account': account,
@@ -448,6 +467,7 @@ class LogTaskHandler(webapp.RequestHandler):
                                 queue_name=queue_name,
                                 method='post',
                                 url='/mdb/update_stats',
+                                countdown=random.uniform(0,9), # splay out the requests so as not be so spikey
                                 payload=mdb_json)
               except taskqueue.TaskAlreadyExistsError:
                   logging.info('task %s already exists' % ('mdb-'+task_name))
@@ -656,9 +676,14 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
             logging.error(err_msg)
             #respond immediately without posting any data to MongoDB
             self.response.out.write(err_msg)
+            return
 
-        logging.info('POST TO MDB: %s' % post_data)
-        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update
+
+        logging.info('NOT!!! POST TO MDB: %s' % post_data)
+        # self.response.out.write('NOT WORKING')
+        # return 
+        
+        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://write.mongostats.mopub.com/update
         post_request = urllib2.Request(post_url, post_data)
         post_response = urllib2.urlopen(post_request)
         status_code = post_response.code

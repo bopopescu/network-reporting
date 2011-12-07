@@ -207,9 +207,16 @@ class AdHandler(webapp.RequestHandler):
 
 
         if not creative:
+            # TODO: We should have a no response "Renderer"
             trace_logging.info('Auction returning None')
             self.response.headers.add_header("X-Adtype", "clear")
             self.response.headers.add_header("X-Backfill", "clear")
+            # We must add refresh always because if one given request
+            # does not return an ad, the client should continue trying 
+            # again.
+            refresh = adunit.refresh_interval
+            if refresh:
+                self.response.headers.add_header("X-Refreshtime",str(refresh))
             track_url = None
             ad_click_url = None
             rendered_creative = None

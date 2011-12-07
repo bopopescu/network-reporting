@@ -1,3 +1,4 @@
+import logging
 from google.appengine.ext import db
 
 from appengine_django import InstallAppengineHelperForDjango
@@ -78,23 +79,23 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
-                                                 required=True,
                                                  collection_name='ad_network_stats')
     date = db.DateProperty(required=True)
 
     # stats info for a specific day
-    revenue = db.FloatProperty()
-    attempts = db.IntegerProperty()
-    impressions = db.IntegerProperty()
-    fill_rate = db.FloatProperty()
-    clicks = db.IntegerProperty()
-    ctr = db.FloatProperty()
-    ecpm = db.FloatProperty()
+    revenue = db.FloatProperty(default=0.0)
+    attempts = db.IntegerProperty(default=0)
+    impressions = db.IntegerProperty(default=0)
+    fill_rate = db.FloatProperty(default=0.0)
+    clicks = db.IntegerProperty(default=0)
+    ctr = db.FloatProperty(default=0.0)
+    ecpm = db.FloatProperty(default=0.0)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            kwargs['key_name'] = ('k:%s:%s' % (kwargs[
-                    'ad_network_app_mapper'].key(), kwargs['date'].
+            mapper = kwargs.get('ad_network_app_mapper', None)
+            mapper = mapper.key() if mapper else '*'
+            kwargs['key_name'] = ('k:%s:%s' % (mapper, kwargs['date'].
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
@@ -105,9 +106,14 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
 
     @classmethod
     def get_by_app_mapper_and_days(cls, app_mapper_key, days):
-        return [stats for stats in cls.get_by_key_name(['k:%s:%s' % (
-            app_mapper_key, day.strftime('%Y-%m-%d')) for day in days]) if stats
-            != None]
+        stats_list = cls.get_by_key_name(['k:%s:%s' % (app_mapper_key,
+            day.strftime('%Y-%m-%d')) for day in days])
+        final_stats_list = []
+        for stats, day in zip(stats_list, days):
+            if not stats:
+                stats = AdNetworkScrapeStats(date=day)
+            final_stats_list.append(stats)
+        return final_stats_list
 
 class AdNetworkManagementStats(db.Model): #(date)
     date = db.DateProperty(required=True)

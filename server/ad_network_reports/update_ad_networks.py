@@ -150,7 +150,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         previous_account_key = None
         valid_stats_list = []
         login_credentials = None
-        # log in to ad networks and update stats for each user 
+        # log in to ad networks and update stats for each user
         for login_credentials in login_credentials_list:
             account_key = login_credentials.account.key()
             ad_network_name = login_credentials.ad_network_name
@@ -236,6 +236,9 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                           pub_id=stats.app_tag,
                                           ad_network=login_credentials.
                                           ad_network_name))
+                        login_credentials.app_pub_ids.append(stats.app_tag)
+                        login_credentials.put()
+                        continue
 #                        ad_network_app_mapper = AdNetworkAppMapper(
 #                                ad_network_name=login_credentials.
 #                                        ad_network_name,
@@ -243,7 +246,6 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
 #                                ad_network_login=login_credentials,
 #                                application=None)
 #                        ad_network_app_mapper.put()
-                        continue
                     else:
                         aggregate.increment(login_credentials.ad_network_name +
                                 '_mapped')

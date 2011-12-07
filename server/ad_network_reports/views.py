@@ -95,9 +95,15 @@ class AppDetailHandler(RequestHandler):
         daily_stats = []
         for stats in stats_list:
             stats_dict = stats.__dict__['_entity']
-            del(stats_dict['ad_network_app_mapper'])
+            if not stats_dict:
+                stats_dict = stats.__dict__
+                stats_dict = dict([(key.replace('_', '', 1), val) for key, val
+                    in stats_dict.iteritems()])
+            else:
+                del(stats_dict['ad_network_app_mapper'])
             del(stats_dict['date'])
             daily_stats.append(stats_dict)
+        daily_stats.reverse()
         aggregates = manager.roll_up_stats(stats_list)
         return render_to_response(self.request,
                                   'ad_network_reports/ad_network_base.html',

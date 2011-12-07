@@ -106,7 +106,7 @@ class AppDetailHandler(RequestHandler):
                                       'end_date' : days[-1],
                                       'date_range' : self.date_range,
                                       'ad_network_name' :
-                                        ad_network_app_mapper.ad_network_name,
+                                        AD_NETWORK_NAMES[ad_network_app_mapper.ad_network_name],
                                       'app_name' :
                                         ad_network_app_mapper.application.name,
                                       'aggregates' : aggregates,

@@ -1,9 +1,12 @@
 {% extends "advertiser/base.html" %}
+
 {% load filters %}
+
 
 {% block pageTitle %}
   <h1> Networks </h1>
 {% endblock pageTitle %}
+
 
 {% block navLinks %}
   <li><a href="{% url app_index %}">Dashboard</a></li>
@@ -14,59 +17,9 @@
 
 
 {% block content %}
-
-  {% comment %}
-
-  <h2> Ad Network Stats</h2>
-
-  <div class="alert-message block-message info">
-    MoPub is now collecting ad network performance data directly from ad networks you use. Below is the data we've collected from the ad networks for which you've given us login credentials. For more information, like network-specific performance, visit our new <a href="{% url ad_network_reports_index %}"> ad network reports dashboard</a>.
-  </div>
-
-  <div class="rollup fig3">
-
-    <div class="data-figure">
-      <div class="figure">
-      </div>
-      <div class="label">
-        Revenue
-      </div>
-    </div>
-
-    <div class="data-figure">
-      <div class="figure">
-      </div>
-      <div class="label">
-        Impressions
-      </div>
-    </div>
-
-    <div class="data-figure">
-      <div class="figure">
-      </div>
-      <div class="label">
-        Clicks
-      </div>
-    </div>
-
-    <div class="right"> <a href="{% url ad_network_reports_index %}"> Ad Network Reports </a> </div>
-  </div>
-
-  <br />
-
-  {% if network_campaigns %}
-    <h2>
-      Network Performance
-      <img id="network-loading-img" class="loading-img" style="display:none" src="../../images/icons-custom/spinner-16.gif"></img>
-    </h2>
-  {% else %}
-    <h2> No network campaigns </h2>
-  {% endif %}
-
-  {% endcomment %}
-
   <div class="clearfix">
     <section class="offset nomargin" id="dashboard-stats">
+
       <h3 class="stats-chart-title">
         Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
       </h3>
@@ -76,13 +29,13 @@
         <div class="stats-breakdown">
           <table>
             <tbody>
-              <tr class="active" id="stats-breakdown-impressions">
+              <tr class="active" id="stats-breakdown-impression_count">
                 <td class="stats-breakdown-value today"><span class="inner"></span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
                 <td class="stats-breakdown-value all"><span class="inner"></span></td>
                 <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
               </tr>
-              <tr id="stats-breakdown-clicks">
+              <tr id="stats-breakdown-click_count">
                 <td class="stats-breakdown-value today"><span class="inner"></span></td>
                 <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
                 <td class="stats-breakdown-value all"><span class="inner"></span></td>
@@ -113,74 +66,23 @@
     </section>
   </div>
 
-
   <br />
   <a id="add_campaign_button" class="right button add icon"  href="{% url advertiser_campaign_create %}#network">Add a network</a>
   <br />
-
   <br />
 
-  <div id="adgroups"></div>
-
-  {% comment %}
-    {% if network_campaigns %}
-
-    <h2>Ad Networks</h2>
-
-      <div id='network-rollups' class="campaignData-rollup">
-        <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-          <thead>
-            <tr>
-              <th width=25%>Impressions</th>
-              <th width=25%>Clicks</th>
-              <th width=25%>CTR</th>
-              <th width=25%>Fill Rate (Attempts)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td id="network-total-imp">--</td>
-              <td id="network-total-clk">--</td>
-              <td id="network-total-ctr">--</td>
-              <td id="network-total-fill">--</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
-        <input type="hidden" name="action" id="action"/>
-
-        <table class="dataTable campaignData-main">
-          <thead>
-            <tr>
-              <th class="campaignData-icon"></th>
-              <th class="dataTable-name">Name</th>
-              <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-              <th class="dataTable-data numeric">Attempts</th>
-              <th class="dataTable-data numeric" width="100">Impressions</th>
-              <th class="dataTable-data numeric">Fillrate</th>
-              <th class="dataTable-data numeric">Clicks</th>
-              <th class="dataTable-data numeric">CTR</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-        <div class="clearfix">
-          <div class="form-submit-left">
-            <span class="buttonWrap">
-              <a class="button pause icon" id="campaignForm-pause">Pause</a>
-              <a class="button play icon" id="campaignForm-resume">Resume</a>
-              <a class="button stop icon" id="campaignForm-delete">Delete</a>
-            </span>
-          </div>
-        </div>
-      </form>
-
-    {% endif %}
-  {% endcomment %}
-
+  <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
+    <input type="hidden" name="action" id="action"/>
+    <div id="adgroups">
+    </div>
+    <div class="form-submit-left">
+        <span class="buttonWrap">
+            <a class="button pause icon" id="campaignForm-pause">Pause</a>
+            <a class="button play icon" id="campaignForm-resume">Resume</a>
+            <a class="button stop icon" id="campaignForm-delete">Delete</a>
+        </span>
+    </div>
+  </form>
 {% endblock content %}
 
 
@@ -191,31 +93,23 @@
   <script type="text/html" id="adgroups-table-template">
     {% include "partials/adgroups_table.html" %}
   </script>
-  <script type="text/javascript" src="/js/models.js"></script>
-  <script type="text/javascript" src="/js/views.js"></script>
-  <script type="text/javascript" src="/js/controllers/networks.js?v=0"></script>
+  <script type="text/javascript" src="/js/models.js?v=5"></script>
+  <script type="text/javascript" src="/js/views.js?v=5"></script>
+  <script type="text/javascript" src="/js/controllers/networks.js?v=5"></script>
   <script>
     $(function() {
-      // TODO: get rid of these three lines
-      var mopub = mopub || {};
-      mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
-      //mopub.Advertiser.initNetworkPage();
-
-      NetworksController([
-        {% for campaign in network_campaigns %}
-          {% for adgroup in campaign.adgroups %}
-            {
-              id: '{{ adgroup.key }}',
-              deleted: {% if adgroup.deleted %}true{% else %}false{% endif %},
-              active: {% if adgroup.active %}true{% else %}false{% endif %},
-              name: '{{ adgroup.name }}',
-              details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
-              network_type: '{{ adgroup.network_type }}'
-            }
-          {% endfor %}
-          {% if not forloop.last %},{% endif %}
-        {% endfor %}
-      ]);
+      NetworksController(
+        [{% for adgroup in network_adgroups %}{
+          id: '{{ adgroup.key }}',
+          active: {% if adgroup.active %}true{% else %}false{% endif %},
+          name: '{{ adgroup.name }}',
+          details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
+          network_type: '{{ adgroup.network_type }}'}{% if not forloop.last %},{% endif %}{% endfor %}],
+        Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }}),
+        {{ days|add:"-1" }},
+        {{ days|add:"-2" }},
+        's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'
+      );
     });
   </script>
 {% endblock extraScripts %}

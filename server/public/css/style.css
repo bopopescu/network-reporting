@@ -2688,10 +2688,10 @@ a.linkIcon .ui-icon-triangle-1-w {
 .stats-chart {
   height: 185px; }
 
-#dashboard-apps, #dashboard-campaign {
+#marketplace-apps, #dashboard-apps, #dashboard-campaign {
   margin: 30px 0 0 0; }
 
-#dashboard-apps h2 {
+#marketplace-apps h2, #dashboard-apps h2 {
   font-size: 20px;
   margin: 0; }
 
@@ -2925,7 +2925,7 @@ th.numeric, td.numeric {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7; }
 
-.campaignData-alt, .reportData-alt {
+.campaignData:nth-child(even), .campaignData-alt, .reportData-alt {
   background: #fff; }
 
 .creativeData {

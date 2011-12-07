@@ -18,35 +18,59 @@
             <% } %>
             <th class="dataTable-data numeric">Impressions</th>
             <% if(type == 'network') { %>
-                <th class="dataTable-data numeric">Fill Rate (Attempts)</th>
+                <th class="dataTable-data numeric">Fill Rate</th>
             <% } %>
             <th class="dataTable-data numeric">Clicks</th>
             <% if(type == 'network') { %>
                 <th class="dataTable-data numeric">CTR</th>
             <% }  %>
             <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
-                <th class="dataTable-data numeric">Conversions</th>
+                <th class="dataTable-data numeric">Conv</th>
             <% } %>
         </tr>
     </thead>
     <tbody>
         <% adgroups.each(function(adgroup) { %>
-            <tr>
+            <tr class="campaignData network_row campaign-status-all campaign-targeting-all complete campaign-status-Running">
                 <td class="campaignData-icon">
                     <input type="checkbox" name="id" value="<%= adgroup.id %>"/>
-                    <% if(adgroup.get('deleted')) %>
-                        <img src="/images/deleted.gif" height=9 width=9 />
-                    <% else { %>
-                        <% if(adgroup.get('active')) %>
-                            <img src="/images/active.gif" height=9 width=9 />
-                        <% else %>
-                            <img src="/images/paused.gif" height=9 width=9 />
-                        <% %>
-                    <% } %>
+                    <% if(adgroup.get('active')) %>
+                        <img src="/images/active.gif" height="9" width="9" />
+                    <% else %>
+                        <img src="/images/paused.gif" height="9" width="9" />
+                    <% %>
                 </td>
                 <td class="dataTable-name">
                     <a href="<%= adgroup.get('details_url') %>"><%= adgroup.get('name') %></a><br/>
-                    <span class="muted"><%= adgroup.get('network_type') %></span>
+                    <span class="muted"><%
+                        if(type == 'network') {
+                            print(adgroup.get('network_type'));
+                        }
+                        else if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') {
+                            if(adgroup.start_date != null) {
+                                if(adgroup.end_date != null) {
+                                    print(adgroup.start_date + '-' + adgroup.end_date + '. ');
+                                }
+                                else {
+                                    print('Starts ' + adgroup.start_date + '. ');
+                                } 
+                            }
+                            else {
+                                if(adgroup.end_date != null) {
+                                    print('Ends ' + adgroup.end_date + '. ');
+                                }
+                                else {
+                                    print('All dates. ');
+                                }
+                            }
+                            if(adgroup.budget) {
+                                print(adgroup.budget + ' daily budget.');
+                            }
+                            else {
+                                print('Unlimited budget.');
+                            }
+                        }
+                    %></span>
                 </td>
                 <% if(type == 'gtee' || type == 'promo') { %>
                     <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('revenue') %></td>
@@ -54,9 +78,9 @@
                 <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
                     <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('status') %></td>
                 <% } %>
-                <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('ecpm') %></td>
+                <td class="dataTable-data numeric ecpm"><%= adgroup.get_formatted_stat('ecpm') %></td>
                 <% if(type == 'network') { %>
-                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('attempts') %></td>
+                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('request_count') %></td>
                 <% } %>
                 <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
                     <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('goal') %></td>

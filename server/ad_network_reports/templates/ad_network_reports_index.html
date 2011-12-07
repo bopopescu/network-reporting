@@ -179,7 +179,7 @@
             <td class="dataTable-data numeric">{{ app.ctr|floatformat:2 }}%</td>
           </tr>
           {% for network in app.sub_data_list %}
-          <tr class="sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{app.key}}">
+          <tr class="sub-rows {% if not forloop.last %} add-border {% endif %}">
               <td class="dataTable-name">
                  <a href="{% url ad_network_app_detail network.key %}">{{network.name}} </a>
               </td>

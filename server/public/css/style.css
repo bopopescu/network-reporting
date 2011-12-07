@@ -3064,20 +3064,20 @@ ul.adunits {
 
 .ad_network_table th:not(:first-child) {
   text-align: center; }
+.ad_network_table .shaded {
+  background: #f9f9f9; }
 .ad_network_table .top-row td {
   font-size: 18px;
-  text-align: right;
-  background: #f9f9f9; }
-.ad_network_table .top-row td:nth-child(2) {
-  text-align: left; }
+  text-align: right; }
 .ad_network_table .top-row td:first-child {
-  width: 10%;
   text-align: left; }
+.ad_network_table .top-row td.network-status {
+  text-align: left; }
+.ad_network_table .top-row td.network-icon {
+  width: 10%; }
+.ad_network_table .top-row span.muted {
+  font-size: 13px; }
 .ad_network_table .sub-rows td:not(:first-child) {
   text-align: right; }
 .ad_network_table .add-border td {
   border-bottom: 1px dotted #ddd; }
-
-span.muted {
-  font-size: 13px;
-}

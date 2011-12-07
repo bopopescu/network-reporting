@@ -7,7 +7,7 @@ from account.models import Account
 from publisher.models import App
 
 class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
-    account = db.ReferenceProperty(Account, required = True,
+    account = db.ReferenceProperty(Account, required=True,
             collection_name='login_credentials')
     ad_network_name = db.StringProperty(required=True)
 
@@ -25,7 +25,10 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     # Needed for admob
     client_key = db.StringProperty()
 
-    email = db.BooleanProperty(default = False)
+    email = db.BooleanProperty(default=False)
+
+    # List of application publisher ids that aren't tracked in MoPub.
+    app_pub_ids = db.StringListProperty(default=[])
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):

@@ -132,7 +132,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 'fill_rate': stats.fill_rate,
                 'clicks': stats.clicks,
                 'ctr': stats.ctr,
-                'has_potential_errors': mapper.has_potential_errors()
             }
             if not data_dict.has_key(attr):
                 data_dict[attr] = {
@@ -144,10 +143,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     'fill_rate': 0,
                     'clicks': 0,
                     'ctr': 0,
-                    'sync_date': sync_date,
-                    'sync_error': sync_date - yesterday <= timedelta(days=1),
                     'key': str(key)
                 }
+                if networks:
+                    login_credentials = AdNetworkLoginCredentials.all(). \
+                            filter('ad_network_name =', mapper. \
+                            ad_network_name).filter('account =',
+                                    self.account).get()
+                    data_dict[attr]['sync_date'] = sync_date
+                    data_dict[attr]['sync_error'] = sync_date - yesterday >= \
+                            timedelta(days=1)
+                    data_dict[attr]['app_pub_ids'] = ', '.join(
+                            login_credentials.app_pub_ids)
             data_dict[attr]['sub_data_list'].append(sub_data)
             data_dict[attr]['revenue'] += sub_data['revenue']
             data_dict[attr]['attempts'] += sub_data['attempts']

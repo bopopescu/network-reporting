@@ -20,6 +20,8 @@ class AdNetworkReportIndexHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
+        #create_fake_data(self.account)
+
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
@@ -173,7 +175,6 @@ class AddLoginCredentialsHandler(RequestHandler):
         Return form with ad network login info.
         """
 
-        #create_fake_data(self.account)
         if account_key:
             account = Account.get(account_key)
             management_mode = True

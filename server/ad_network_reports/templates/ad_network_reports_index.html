@@ -34,34 +34,34 @@
 
       <tbody>
         {% for network_name, network, form in networks %}
-          <tr class="top-row">
-            <td class="appData-icon">
+          <tr class="shaded top-row">
+            <td class="network-icon">
               <img src="/images/{{network_name|lower}}-transparent.png"
               alt="{{network_name}}" width="75" height="25" />
             </td>
 			{% if network %}
-						<td class="dataTable-name">
-							<span class="muted">Last synced: {{ network.sync_date|date }}</span>
-							<div>
-								<a class="show-hide button button-small" id={{network.key}}>Hide Apps</a>
-								<a class="button button-small">Status</a>
-				  		</div>
-				  	</td>
-						<td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
-						<td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
-						<td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
-						<td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}% </td>
-						<td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
-						<td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}% </td>
-				{% else %}
-						<td class="dataTable-name" colspan="7">
-							<div>
-                                <a class="show-status button button-small" id="{{network_name}}-status">Enable Reporting</a>
-				  		</div>
-				  	</td>
-				{% endif %}
+            <td class="network-status dataTable-name">
+                <span class="muted">Last synced: {{ network.sync_date|date }}</span>
+                <div>
+                    <a class="show-hide button button-small" id={{network.key}}>Hide Apps</a>
+                    <a class="show-status button button-small" id="{{network_name}}-status">Status</a>
+                </div>
+            </td>
+            <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
+            <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
+            <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
+            <td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}% </td>
+            <td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
+            <td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}% </td>
+		    {% else %}
+            <td class="network-status dataTable-name" colspan="7">
+               <div>
+                   <a class="show-status button button-small" id="{{network_name}}-status">Enable Reporting</a>
+               </div>
+            </td>
+		    {% endif %}
           </tr>
-          <tr class="{{network_name}}-status hidden">
+          <tr class="shaded {{network_name}}-status hidden">
               <td class="dataTable-name" colspan="8">
                   <div>
                       {% if network %}
@@ -71,12 +71,14 @@
                           <dd>Last synchronization failed.  Check that your credentials are correct.
                           If this error persists, please contact support@mopub.com.</dd>
                           {% endif %}
+                          {% if network.app_pub_ids %}
                           <dt>Notes:</dt>
                           <dd> MoPub received a response for the following ad networks IDs.
                           Make sure these apps are properly set up in MoPub to view the reports.
                           <br/><br/>
-                          abcdefg, abcdefg, abcdefg
+                          {{ network.app_pub_ids }}
                           </dd>
+                          {% endif %}
                       </dl>
                       {% endif %}
                       <form class="loginCredentials" id="{{form.ad_network}}-form">
@@ -111,7 +113,7 @@
 
 
                                   {% if form.ad_network == "admob" %}
-                                    <dt> Client ID </dt>
+                                    <dt> Client ID: </dt>
                                     <dd> {{form.client_key}} </dd>
                                   {% endif %}
 
@@ -167,8 +169,8 @@
       <tbody>
         {% for app_name, app in apps %}
         <div class="section">
-          <tr class="top-row" id="{{app.key}}">
-            <td class="dataTable-name" colspan="2"> {{app_name}} </td>
+          <tr class="shaded top-row" id="{{app.key}}">
+            <td class="dataTable-name"> {{app_name}} </td>
             <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
             <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
             <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
@@ -180,10 +182,6 @@
           <tr class="sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{app.key}}">
               <td class="dataTable-name">
                  <a href="{% url ad_network_app_detail network.key %}">{{network.name}} </a>
-                 {% if network.has_potential_errors %}
-                   <br />
-                   (Couldn't collect stats. <a href="{% url ad_network_settings %}">Check the publisher id you entered for this network</a>.)
-                 {% endif %}
               </td>
               <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
               <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
@@ -197,6 +195,25 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+
+
+  {# What's This? content #}
+
+  <div class="hidden" id="inmobi-access-helpContent">
+    To access publisher reports from InMobi, you will need to request an Access ID
+    and a Secret Key from their help desk. To do this, send a request to
+    <a href="mailto:helpdesk@inmobi.com"> helpdesk@inmobi.com </a> with "Enable Publisher
+    Reports" as the subject line along with your username/email. InMobi will then assign
+    you a new Access ID and Secret Key, which you can enter here.
+  </div>
+
+  <div class="hidden" id="inmobi-secret-helpContent">
+        To access publisher reports from InMobi, you will need to request an Access ID
+    and a Secret Key from their help desk. To do this, send a request to
+    <a href="mailto:helpdesk@inmobi.com"> helpdesk@inmobi.com </a> with "Enable Publisher
+    Reports" as the subject line along with your username/email. InMobi will then assign
+    you a new Access ID and Secret Key, which you can enter here.
   </div>
 
 {% endblock innerContent %}

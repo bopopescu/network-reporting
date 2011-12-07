@@ -234,8 +234,8 @@ class StatsModelQueryManager(CachedQueryManager):
                 pub_string = key.name().split(':')[1] # k:<publisher>:<advertiser>:<date>
                 publisher = db.Key(pub_string) if pub_string else None 
                 stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()), account=account, publisher=publisher, advertiser=advertiser)
-                if not self.offline:
-                    self._patch_mongodb_stats(stat)
+                # if not self.offline:
+                #     self._patch_mongodb_stats(stat)
             stat.include_geo = self.include_geo
             final_stats.append(stat)
            

@@ -71,12 +71,15 @@ class AppIndexHandler(RequestHandler):
     A list of apps and their real-time stats.
     """
     def get(self):
+
         report = self.request.POST.get('report')
 
         # Set start date if passed in, otherwise get most recent days
         if self.start_date:
+            # REFACTOR -- replace with date_magic functions
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
+            # REFACTOR -- replace with date_magic functions
             days = StatsModel.lastdays(self.date_range)
 
         # Get all of the adunit keys for bootstrapping the apps
@@ -102,7 +105,7 @@ class AppIndexHandler(RequestHandler):
         # If they don't have any apps so they should be forwarded
         # to the form to create some.
         if len(apps) == 0:
-            return HttpResponseRedirect(reverse('publisher_app_create'))
+            return HttpResponseRedirect(reverse('publisher_create_app'))
 
         account_stats_mgr = StatsModelQueryManager(self.account, offline=self.offline)
         totals_list = account_stats_mgr.get_stats_for_days(days=days)
@@ -168,7 +171,7 @@ class GeoPerformanceHandler(RequestHandler):
         apps = AppQueryManager.get_apps(self.account)
 
         if len(apps) == 0:
-            return HttpResponseRedirect(reverse('publisher_app_create'))
+            return HttpResponseRedirect(reverse('publisher_create_app'))
 
         geo_dict = {}
         totals = StatsModel(date=now) # sum across all days and countries
@@ -204,21 +207,6 @@ class GeoPerformanceHandler(RequestHandler):
         for k in keys:
             geo_table.append((k, geo_dict[k]))
 
-        # create copy of geo_dict with counts on log scale
-        geo_log_dict = {}
-        for c, stats in geo_dict.iteritems():
-            # check to see if count is 0 since log 0 is invalid
-            # +0.5 at the end for rounding
-            rounder = lambda item: int(math.log10(item if item > 0 else 1) + 0.5)
-            request_count = rounder(stats.request_count)
-            impression_count = rounder(stats.impression_count)
-            click_count = rounder(stats.click_count)
-            geo_log_dict[c] = StatsModel(country=c,
-                                         request_count = request_count,
-                                         impression_count = impression_count,
-                                         click_count = click_count,
-                                         date = now)
-
         return render_to_response(self.request,
                                   'publisher/geo_performance.html',
                                   {
@@ -234,17 +222,24 @@ def geo_performance(request,*args,**kwargs):
     return GeoPerformanceHandler()(request,*args,**kwargs)
 
 
-class AppCreateHandler(RequestHandler):
+class CreateAppHandler(RequestHandler):
+    """
+    Handles the creation of apps from form data.
+    """
+    # REFACTOR
     def get(self, app_form=None, adunit_form=None, reg_complete=None):
+
+        # create the forms
         app_form = app_form or AppForm()
         adunit_form = adunit_form or AdUnitForm(prefix="adunit")
 
+        # REFACTOR
         # attach on registration related parameters to the account for template
         if reg_complete:
             self.account.reg_complete = 1
 
         return render_to_response(self.request,
-                                  'publisher/new_app.html',
+                                  'publisher/create_app.html',
                                   {
                                       "app_form": app_form,
                                       "adunit_form":adunit_form,
@@ -259,9 +254,9 @@ class AppCreateHandler(RequestHandler):
                                files = self.request.FILES,
                                instance=app)
         else:
-            app_form = AppForm(data=self.request.POST, files = self.request.FILES )
+            app_form = AppForm(data = self.request.POST, files = self.request.FILES)
 
-        adunit_form = AdUnitForm(data=self.request.POST, prefix="adunit")
+        adunit_form = AdUnitForm(data = self.request.POST, prefix = "adunit")
         if app_form.is_valid():
             if not app_form.instance: #ensure form posts do not change ownership
                 account = self.account  # attach account info
@@ -287,7 +282,7 @@ class AppCreateHandler(RequestHandler):
             enable_marketplace(adunit, self.account)
 
             # Check if this is the first ad unit for this account
-            if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:
+            if len(AdUnitQueryManager.get_adunits(account=self.account, limit=2)) == 1:
                 add_demo_campaign(adunit)
             # Check if this is the first app for this account
             status = "success"
@@ -306,130 +301,67 @@ class AppCreateHandler(RequestHandler):
                 status = "welcome"
 
             # Redirect to the code snippet page
-            publisher_generate_url = reverse('publisher_generate',
-                                             kwargs = {
-                                                 'adunit_key': adunit.key()
-                                             })
-            publisher_generate_url = publisher_generate_url + '?status=' + status
-            return HttpResponseRedirect(publisher_generate_url)
+            publisher_integration_url = reverse('publisher_integration_help',
+                                                kwargs = {
+                                                    'adunit_key': adunit.key()
+                                                })
+            publisher_integration_url = publisher_integration_url + '?status=' + status
+            return HttpResponseRedirect(publisher_integration_url)
 
-        return self.get(app_form,adunit_form)
+        return self.get(app_form, adunit_form)
 
 @login_required
-def app_create(request,*args,**kwargs):
+def create_app(request,*args,**kwargs):
     return AppCreateHandler()(request,*args,**kwargs)
 
 
 class CreateAdUnitHandler(RequestHandler):
+    """
+    Handles the creation of adunits from form data.
+    """
     def post(self):
-        f = AdUnitForm(data=self.request.POST)
-        a = AppQueryManager.get(self.request.POST.get('id'))
-        if f.is_valid():
-            if not f.instance: #ensure form posts do not change ownership
+        form = AdUnitForm(data=self.request.POST)
+        app = AppQueryManager.get(self.request.POST.get('id'))
+        if form.is_valid():
+
+            # Ensure form posts do not change ownership
+            if not form.instance:
                 account = self.account
             else:
-                acccount = f.instance.account
-            adunit = f.save(commit=False)
-            acunit.account = account
-            adunit.app_key = a
+                account = form.instance.account
 
-            # update the database
+            # Add in the extra required fields before saving
+            adunit = form.save(commit=False)
+            adunit.account = account
+            adunit.app_key = app
+
+            # Save the adunit
             AdUnitQueryManager.put(adunit)
 
-            # update the cache as necessary
+            # Update the cache as necessary
             # replace=True means don't do anything if not already in the cache
             AdUnitContextQueryManager.cache_delete_from_adunits(adunit)
 
-            # Check if this is the first ad unit for this account
-            # if Site.gql("where account = :1 limit 2", self.account).count() == 1:
-            if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:
+            # Check if this is the first ad unit for this account.
+            # If so, create a demo campaign.
+            if len(AdUnitQueryManager.get_adunits(account=self.account, limit=2)) == 1:
                 add_demo_campaign(adunit)
 
             # Redirect to the code snippet page
-            publisher_generate_url = reverse('publisher_generate',
+            publisher_integration_url = reverse('publisher_integration_help',
                                              kwargs = {
                                                  'adunit_key': adunit.key()
                                              })
-            publisher_generate_url = publisher_generate_url + '?status=' + status
-            return HttpResponseRedirect(publisher_generate_url)
+            publisher_integration_url = publisher_integration_url + '?status=' + status
+            return HttpResponseRedirect(publisher_integration_url)
 
         else:
-            print f.errors
+            # REFACTOR -- these errors should go somewhere.
+            print form.errors
 
 @login_required
-def adunit_create(request,*args,**kwargs):
+def create_adunit(request,*args,**kwargs):
     return CreateAdUnitHandler()(request,*args,**kwargs)
-
-def add_demo_campaign(site):
-    # Set up a test campaign that returns a demo ad
-    demo_description = "Demo campaign for checking that MoPub works for your application"
-    c = Campaign(name="MoPub Demo Campaign",
-                 u=site.account.user,
-                 account=site.account,
-                 campaign_type="backfill_promo",
-                 description=demo_description)
-    CampaignQueryManager.put(c)
-
-    # Set up a test ad group for this campaign
-    ag = AdGroup(name="MoPub Demo Campaign",
-                 campaign=c,
-                 account=site.account,
-                 priority_level=3,
-                 bid=1.0,
-                 bid_strategy="cpm",
-                 site_keys=[site.key()])
-    AdGroupQueryManager.put(ag)
-
-    # And set up a default creative
-    default_creative_html = """
-    <style type="text/css">
-    body {
-      font-size: 12px;
-      font-family: helvetica,arial,sans-serif;
-      margin:0;
-      padding:0;
-      text-align:center;
-      background:white
-    }
-    .creative_headline {
-      font-size: 18px;
-    }
-    .creative_promo {
-      color: green;
-      text-decoration: none;
-    }
-    </style>
-    <div class="creative_headline">
-      Welcome to mopub!
-    </div>
-    <div class="creative_promo">
-      <a href="http://www.mopub.com">
-        Click here to test ad
-      </a>
-    </div>
-    <div>
-      You can now set up a new campaign to serve other ads.
-    </div>
-    """
-
-    if site.format == "custom":
-        h = HtmlCreative(ad_type="html",
-                         ad_group=ag,
-                         account=site.account,
-                         custom_height = site.custom_height,
-                         custom_width = site.custom_width,
-                         format=site.format,
-                         name="Demo HTML Creative",
-                         html_data=default_creative_html)
-
-    else:
-        h = HtmlCreative(ad_type="html",
-                         ad_group=ag,
-                         account=site.account,
-                         format=site.format,
-                         name="Demo HTML Creative",
-                         html_data=default_creative_html)
-    CreativeQueryManager.put(h)
 
 
 class ShowAppHandler(RequestHandler):
@@ -955,7 +887,7 @@ class AppIconHandler(RequestHandler):
 def app_icon(request,*args,**kwargs):
     return AppIconHandler()(request,*args,**kwargs)
 
-class RemoveAdUnitHandler(RequestHandler):
+class DeleteAdUnitHandler(RequestHandler):
     def post(self, adunit_key):
         a = AdUnitQueryManager.get(adunit_key)
         if a != None and a.app_key.account == self.account:
@@ -963,13 +895,16 @@ class RemoveAdUnitHandler(RequestHandler):
             AdUnitQueryManager.put(a)
 
         return HttpResponseRedirect(reverse('publisher_app_show',
-                                            kwargs={'app_key': a.app.key()}))
+                                            kwargs = {
+                                                'app_key': a.app.key()
+                                            }))
 
 @login_required
-def publisher_adunit_delete(request,*args,**kwargs):
-    return RemoveAdUnitHandler()(request,*args,**kwargs)
+def delete_adunit(request,*args,**kwargs):
+    return DeleteAdUnitHandler()(request,*args,**kwargs)
 
-class RemoveAppHandler(RequestHandler):
+
+class DeleteAppHandler(RequestHandler):
     def post(self, app_key):
         app = AppQueryManager.get(app_key)
         adunits = AdUnitQueryManager.get_adunits(app=app)
@@ -981,27 +916,30 @@ class RemoveAppHandler(RequestHandler):
             AppQueryManager.put(app)
             AdUnitQueryManager.put(adunits)
 
-
         return HttpResponseRedirect(reverse('app_index'))
 
 @login_required
-def app_delete(request,*args,**kwargs):
-    return RemoveAppHandler()(request,*args,**kwargs)
+def delete_app(request,*args,**kwargs):
+    return DeleteAppHandler()(request,*args,**kwargs)
 
-class GenerateHandler(RequestHandler):
+class IntegrationHelpHandler(RequestHandler):
     def get(self,adunit_key):
         adunit = AdUnitQueryManager.get(adunit_key)
         status = self.params.get('status')
-        return render_to_response(self.request,'publisher/code.html',
-            {'site': adunit,
-             'status': status,
-             'width': adunit.get_width(),
-             'height': adunit.get_height(),
-             'account': self.account})
+        return render_to_response(self.request,
+                                  'publisher/integration_help.html',
+                                  {
+                                      'site': adunit,
+                                      'status': status,
+                                      'width': adunit.get_width(),
+                                      'height': adunit.get_height(),
+                                      'account': self.account
+                                  })
 
 @login_required
-def generate(request,*args,**kwargs):
-    return GenerateHandler()(request,*args,**kwargs)
+def integration_help(request,*args,**kwargs):
+    return IntegrationHelpHandler()(request,*args,**kwargs)
+
 
 class AppExportHandler(RequestHandler):
     def post(self, app_key, file_type, start, end):
@@ -1027,12 +965,18 @@ class AppExportHandler(RequestHandler):
         return sswriter.export_writer(file_type, f_name, titles, data)
 
 
-
+@login_required
 def app_export(request, *args, **kwargs):
     return AppExportHandler()(request, *args, **kwargs)
 
 
+# Helper methods
+
 def enable_marketplace(adunit, account):
+    """
+    Gets/creates an adgroup and a default mpx creative for an adunit.
+    Use this to enable marketplace on an adunit.
+    """
     # create marketplace adgroup for this adunit
     mpx_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), account.key())
     AdGroupQueryManager.put(mpx_adgroup)
@@ -1042,3 +986,79 @@ def enable_marketplace(adunit, account):
     mpx_creative.adgroup = mpx_adgroup
     mpx_creative.account = account
     CreativeQueryManager.put(mpx_creative)
+
+
+def add_demo_campaign(site):
+    """
+    Helper method that creates a demo campaign.
+    Use this to create a default campaign when a user just signed up.
+    """
+    # Set up a test campaign that returns a demo ad
+    demo_description = "Demo campaign for checking that MoPub works for your application"
+    c = Campaign(name="MoPub Demo Campaign",
+                 u=site.account.user,
+                 account=site.account,
+                 campaign_type="backfill_promo",
+                 description=demo_description)
+    CampaignQueryManager.put(c)
+
+    # Set up a test ad group for this campaign
+    ag = AdGroup(name="MoPub Demo Campaign",
+                 campaign=c,
+                 account=site.account,
+                 priority_level=3,
+                 bid=1.0,
+                 bid_strategy="cpm",
+                 site_keys=[site.key()])
+    AdGroupQueryManager.put(ag)
+
+    # And set up a default creative
+    default_creative_html = """
+    <style type="text/css">
+    body {
+      font-size: 12px;
+      font-family: helvetica,arial,sans-serif;
+      margin:0;
+      padding:0;
+      text-align:center;
+      background:white
+    }
+    .creative_headline {
+      font-size: 18px;
+    }
+    .creative_promo {
+      color: green;
+      text-decoration: none;
+    }
+    </style>
+    <div class="creative_headline">
+      Welcome to mopub!
+    </div>
+    <div class="creative_promo">
+      <a href="http://www.mopub.com">
+        Click here to test ad
+      </a>
+    </div>
+    <div>
+      You can now set up a new campaign to serve other ads.
+    </div>
+    """
+
+    if site.format == "custom":
+        h = HtmlCreative(ad_type="html",
+                         ad_group=ag,
+                         account=site.account,
+                         custom_height = site.custom_height,
+                         custom_width = site.custom_width,
+                         format=site.format,
+                         name="Demo HTML Creative",
+                         html_data=default_creative_html)
+
+    else:
+        h = HtmlCreative(ad_type="html",
+                         ad_group=ag,
+                         account=site.account,
+                         format=site.format,
+                         name="Demo HTML Creative",
+                         html_data=default_creative_html)
+    CreativeQueryManager.put(h)

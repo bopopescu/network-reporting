@@ -474,7 +474,7 @@
             </div>
           </section>
 
-<form id='appExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url app_export %}'>
+<form id='appExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url publisher_app_export %}'>
     <input name='app_key' type='text' value='{{app.key}}' />
     <input name='file_type' id='appExportType' type='text' value='' />
     <input name='start' value={{start_date|date:"mdy"}} />
@@ -530,7 +530,7 @@
 
           <div style="margin-top: 1em">
               <div class="buttonBank buttonBank-right">
-                  <form method="post" id="dashboard-deleteForm" action="{% url publisher_app_delete app_key=app.key %}"><a href="#" id="dashboard-delete-link">Remove app from dashboard</a></form>
+                  <form method="post" id="dashboard-deleteForm" action="{% url publisher_delete_app app_key=app.key %}"><a href="#" id="dashboard-delete-link">Remove app from dashboard</a></form>
                   <div id="dashboard-delete-modal" class="hidden">
                     <h2>Remove confirmation</h2>
                     <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>

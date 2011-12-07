@@ -167,7 +167,7 @@ The MoPub Team"""%(new_user.first_name))
                 login_user = authenticate(username=form.cleaned_data['email'],
                                           password=form.cleaned_data['password1'])
                 auth_login(request, login_user)
-            return HttpResponseRedirect(success_url or reverse('publisher_app_create')+'?reg_complete=1')
+            return HttpResponseRedirect(success_url or reverse('publisher_create_app')+'?reg_complete=1')
     else:
         form = form_class(request=request)
 

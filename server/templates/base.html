@@ -111,7 +111,7 @@
 
             <li><a href="http://help.mopub.com/" target="_blank">Help</a></li>
             {% if user.is_authenticated %}
-            <li><a href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
+            <li><a id="logout-link" href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
             {% endif %}
           </ul>
         </nav>

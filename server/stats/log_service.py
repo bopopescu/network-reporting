@@ -88,7 +88,7 @@ class LogService(object):
                               payload=post_data_serialized)
 
         # get the appropriate queue shard
-        queue_num = random.randint(0, NUM_FILE_QUEUES-1)
+        queue_num = random.randint(1, NUM_FILE_QUEUES-1)
         queue_name = FILE_QUEUE_NAME % queue_num
 
         try:

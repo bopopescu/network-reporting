@@ -103,9 +103,11 @@ var mopub = mopub || {};
               // Check if data submitted in the form is valid login
               // information for the ad network
               var data = $(this).serialize();
-              data += ("&account_key=" + account_key);
               var key = $(this).attr('id');
+              data += ("&account_key=" + account_key + "&ad_network_name=" + key.substr("form-".length));
               var message = $('.' + key + '-message');
+              $(message).removeClass('hidden');
+              $(message).html("Verifying login credentials...");
               $.ajax({
                   url: 'http://checklogincredentials.mopub.com',
                   data: data,
@@ -113,9 +115,8 @@ var mopub = mopub || {};
                   dataType: "jsonp",
                   success: function(valid) {
                       // Upon success notify the user
-                      $(message).removeClass('hidden');
                       if (valid) {
-                          $(message).html("Check back in a couple minutes to see your ad network revenue report. You will receive an email when it is ready");
+                          $(message).html("Check back in a couple minutes to see your ad network revenue report. You will receive an email when it is ready.");
                       } else {
                           $(message).html("Invalid login information.");
                       }

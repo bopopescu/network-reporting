@@ -137,14 +137,23 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     pacific = timezone('US/Pacific')
     yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
-    login_credentials_list = [only_these_credentials] and \
-            get_all_login_credentials()
+    login_credentials_list = (only_these_credentials,) if \
+            only_these_credentials else get_all_login_credentials()
+
+    # Create the log file.
+    logger = logging.getLogger('update_log')
+    hdlr = logging.FileHandler('/var/tmp/update.log')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s'
+            ' %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.DEBUG)
 
     start_date = start_date or yesterday
     end_date = end_date or yesterday
 
     for test_date in date_magic.gen_days(start_date, end_date):
-        logging.info("TEST DATE: %s" % test_date.strftime("%Y %m %d"))
+        logger.info("TEST DATE: %s" % test_date.strftime("%Y %m %d"))
         aggregate = AdNetworkManagementStats(date=test_date)
 
         previous_account_key = None
@@ -152,6 +161,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         login_credentials = None
         # log in to ad networks and update stats for each user
         for login_credentials in login_credentials_list:
+            login_credentials.app_pub_ids = []
+
             account_key = login_credentials.account.key()
             ad_network_name = login_credentials.ad_network_name
             # Only email account once for all their apps amd ad networks if they
@@ -182,13 +193,16 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                 # TODO: Send user email that we can't get their stats
                 # because their login doesn't work. (Most likely they changed
                 # it since we last verified)
+                logger.info("Unauthorized login attempted by account:%s on %s."
+                        % (login_credentials.account,
+                            login_credentials.ad_network_name))
                 continue
             except Exception as e:
                 # This should catch ANY exception because we don't want to stop
                 # updating stats if something minor breaks somewhere.
                 aggregate.increment(login_credentials.ad_network_name +
                         '_login_failed')
-                logging.error(("Couldn't get get stats for %s network for "
+                logger.error(("Couldn't get get stats for %s network for "
                         "\"%s\" account.  Can try again later or perhaps %s "
                         "changed it's API or site.") %
                         (login_credentials.ad_network_name,
@@ -229,7 +243,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                     if not ad_network_app_mapper:
                         # App is not registered in MoPub but is still in the ad
                         # network.
-                        logging.info("%(account)s has pub id %(pub_id)s on "
+                        logger.info("%(account)s has pub id %(pub_id)s on "
                                 "%(ad_network)s that\'s NOT in MoPub" %
                                      dict(account=login_credentials.account.
                                          key(),
@@ -237,7 +251,6 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                           ad_network=login_credentials.
                                           ad_network_name))
                         login_credentials.app_pub_ids.append(stats.app_tag)
-                        login_credentials.put()
                         continue
 #                        ad_network_app_mapper = AdNetworkAppMapper(
 #                                ad_network_name=login_credentials.
@@ -249,7 +262,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                     else:
                         aggregate.increment(login_credentials.ad_network_name +
                                 '_mapped')
-                        logging.info("%(account)s has pub id %(pub_id)s on "
+                        logger.info("%(account)s has pub id %(pub_id)s on "
                                 "%(ad_network)s that was FOUND in MoPub and "
                                 "mapped" %
                                      dict(account = login_credentials.account.
@@ -258,7 +271,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                           ad_network = login_credentials.
                                           ad_network_name))
                 else:
-                    logging.info("%(account)s has pub id %(pub_id)s on "
+                    logger.info("%(account)s has pub id %(pub_id)s on "
                             "%(ad_network)s that\'s in MoPub" %
                             dict(account = login_credentials.account.key(),
                                 pub_id = stats.app_tag,
@@ -282,6 +295,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                         login_credentials.email:
                     valid_stats_list.append((ad_network_app_mapper.application.
                         name, ad_network_app_mapper.ad_network_name, stats))
+            login_credentials.put()
 
         aggregate.put()
         if test_date == yesterday and login_credentials and \
@@ -299,11 +313,6 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                "appspot.com/ad_network_reports.")
 
 if __name__ == "__main__":
-    if(len(sys.argv) > 1):
-        two_weeks_ago = date.today() - timedelta(days=14)
-        update_ad_networks(start_date=two_weeks_ago,
-                only_these_credentials=db.get(sys.argv[1]))
-    else:
-        setup_remote_api()
-        update_ad_networks()
+    setup_remote_api()
+    update_ad_networks()
 

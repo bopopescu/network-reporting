@@ -3,9 +3,10 @@ import sys
 import os
 
 import tornado.web
+import multiprocessing
 
-from datetime import date, timedelta
-from subprocess import call
+from datetime import datetime, date, timedelta
+from pytz import timezone
 
 #TODO: fix path stuff
 if os.path.exists('/home/ubuntu/'):
@@ -59,17 +60,27 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
         args.update(initial)
 
         # Can't have the same name as the model. Fixes unicode bug.
-        args[ad_network + '-username_str'] = args[ad_network + '-username']
-        args[ad_network + '-password_str'] = args[ad_network + '-password']
+        if ad_network + '-username' in args:
+            args[ad_network + '-username_str'] = args[ad_network + '-username']
+        else:
+            args[ad_network + '-username_str'] = '-'
+        if ad_network + '-password' in args:
+            args[ad_network + '-password_str'] = args[ad_network + '-password']
+        else:
+            args[ad_network + '-password_str'] = '-'
         form = LoginInfoForm(args, prefix=ad_network)
 
+        # TODO: Verify that mobfox form is valid.
         if form.is_valid():
             login_credentials = AdNetworkLoginCredentials()
             login_credentials.ad_network_name = form.cleaned_data[
                     'ad_network_name']
-            login_credentials.username = form.cleaned_data['username_str']
-            login_credentials.password = form.cleaned_data['password_str']
-            login_credentials.client_key = form.cleaned_data['client_key']
+            login_credentials.username = form.cleaned_data.get('username_str',
+                    '')
+            login_credentials.password = form.cleaned_data.get('password_str',
+                    '')
+            login_credentials.client_key = form.cleaned_data.get('client_key',
+                    '')
 
             try:
                 account_key = self.get_argument('account_key')
@@ -104,79 +115,26 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 # Collect the last two weeks of data for these credentials and
                 # add it to the database if the login credentials for the
                 # network are new.
-                logging.warning([creds.ad_network_name for creds in
-                    accounts_login_credentials])
                 if login_credentials.ad_network_name not in \
                         [creds.ad_network_name for creds in
                                 accounts_login_credentials]:
-                    logging.warning("HERE")
-                    # spawnDaemon('/Users/tiagobandeira/Documents/mopub/server/' \
-                    #         'ad_network_reports/update_ad_networks.py',
-                    #         str(login_credentials.key()))
-                    call(['/Users/tiagobandeira/Documents/mopub/server/' \
-                            'ad_network_reports/update_ad_networks.py',
-                            str(login_credentials.key())])
-#                    two_weeks_ago = date.today() - timedelta(days=14)
-#                    update_ad_networks(start_date=two_weeks_ago,
-#                            only_these_credentials=login_credentials)
+                    pacific = timezone('US/Pacific')
+                    two_weeks_ago = (datetime.now(pacific) -
+                            timedelta(days=2)).date()
+                    p = multiprocessing.Process(target=update_ad_networks,
+                            args=(two_weeks_ago, None,
+                                login_credentials))
+                    logging.info(p.daemon)
+                    p.daemon = True
+                    p.start()
+                    logging.info(p.daemon)
+
+                    children = multiprocessing.active_children()
+                    logging.info(children)
+                    logging.info(children[0].pid)
                 return
+        else:
+            logging.info("Invalid form.")
 
         logging.info("Returning false.")
         self.write(callback + '(false)')
-
-def spawnDaemon(path_to_executable, *args):
-    """Spawn a completely detached subprocess (i.e., a daemon).
-
-    E.g. for mark:
-    spawnDaemon("../bin/producenotify.py", "producenotify.py", "xx")
-    """
-    logging.warning('1')
-    # fork the first time (to make a non-session-leader child process)
-    try:
-        pid = os.fork()
-    except OSError, e:
-        raise RuntimeError("1st fork failed: %s [%d]" % (e.strerror, e.errno))
-    if pid == 0:
-        # detach from controlling terminal (to make child a session-leader)
-        os.setsid()
-        # logging.warning('return')
-        # # parent (calling) process is all done
-        # return
-
-    logging.warning('2')
-    try:
-        pid = os.fork()
-    except OSError, e:
-        raise RuntimeError("2nd fork failed: %s [%d]" % (e.strerror, e.errno))
-        raise Exception, "%s [%d]" % (e.strerror, e.errno)
-    if pid != 0:
-        # child process is all done
-        os._exit(0)
-
-    logging.warning('3')
-    # grandchild process now non-session-leader, detached from parent
-    # grandchild process must now close all open files
-    try:
-        maxfd = os.sysconf("SC_OPEN_MAX")
-    except (AttributeError, ValueError):
-        maxfd = 1024
-
-    for fd in range(maxfd):
-        try:
-           os.close(fd)
-        except OSError: # ERROR, fd wasn't open to begin with (ignored)
-           pass
-
-    logging.warning('4')
-    # redirect stdin, stdout and stderr to /dev/null
-    # os.open(REDIRECT_TO, os.O_RDWR) # standard input (0)
-    # os.dup2(0, 1)
-    # os.dup2(0, 2)
-
-    # and finally let's execute the executable for the daemon!
-    try:
-      logging.warning('EXECUTING NEW PROCESS')
-      os.execv(path_to_executable, args)
-    except Exception, e:
-      # oops, we're cut off from the world, let's just give up
-      os._exit(255)

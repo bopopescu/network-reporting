@@ -66,8 +66,6 @@ class AdNetworkReportIndexHandler(RequestHandler):
                               'apps': apps,
                               'show_graph': apps != [],
                               'networks': zip(network_names, networks, forms),
-                              'networks_without_creds': \
-                                      networks_without_creds,
                               'forms': forms
                           })
 

@@ -178,9 +178,17 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                         float(data['impressions'])) * 100
                 #network_data['ecpm'] /= float(network_data['impressions'])
 
-        # Add networks that aren't included and set them their data to None.
+
+        # Add networks that aren't included but still relevant to the account
+        # and set their data to None.
         if networks:
-            for network in AD_NETWORK_NAMES.values():
+            # Get networks for which they've entered publisher information but
+            # havent given us login credentials so we can bug them about giving us
+            # their creds.
+            networks_without_creds = \
+                    list(self.get_networks_without_credentials())
+
+            for network in networks_without_creds:
                 if not data_dict.has_key(network):
                     data_dict[network] = None
 

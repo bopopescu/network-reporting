@@ -46,7 +46,9 @@ class App(db.Model):
     admob_bgcolor = db.StringProperty()
     admob_textcolor = db.StringProperty()
 
-    app_type = db.StringProperty(required=True, default='iphone', choices=['iphone', 'android', 'ipad', 'mweb'])
+    app_type = db.StringProperty(required=True,
+                                 default='iphone',
+                                 choices=['iphone', 'android', 'ipad', 'mweb'])
     description = db.TextProperty()
     url = db.StringProperty()
     package = db.StringProperty()
@@ -142,14 +144,17 @@ class Site(db.Model):
     custom_height = db.IntegerProperty()
 
     device_format = db.StringProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
-    format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width
+    #TODO: we should use this w/o explicity using height, width
+    format = db.StringProperty(choices=FORMAT_CHOICES)
     resizable = db.BooleanProperty(default=False)
     landscape = db.BooleanProperty(default=False)
 
     deleted = db.BooleanProperty(default=False)
 
     # what kind of ad is preferred here
-    ad_type = db.StringProperty(choices=['text', 'image'], default='image',required=False)
+    ad_type = db.StringProperty(choices=['text', 'image'],
+                                default='image',
+                                required=False)
 
     # Ad network overrides
     jumptap_site_id = db.StringProperty()
@@ -160,7 +165,8 @@ class Site(db.Model):
     # keywords = db.StringListProperty()
 
     refresh_interval = db.IntegerProperty(default=0)
-    animation_type = db.StringProperty(default='0') # NOTE: this is a string in case we don't want enumeration later
+    # XXX: this is a string in case we don't want enumeration later
+    animation_type = db.StringProperty(default='0')
 
     # color scheme
     color_border = db.StringProperty(required=True, default='336699')

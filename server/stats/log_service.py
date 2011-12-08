@@ -12,6 +12,7 @@ from google.appengine.api import files
 from google.appengine.api import taskqueue
 from google.appengine.runtime import apiproxy_errors
 
+from common.utils.helpers import to_uni, to_ascii
 from common.utils.timezones import Pacific_tzinfo
 
 
@@ -38,7 +39,7 @@ class LogService(object):
 
 
     def log(self, line):
-        self.lines.append(line)
+        self.lines.append(to_ascii(line))
         if self._should_flush():
             try:
                 self.schedule_flush()
@@ -78,20 +79,20 @@ class LogService(object):
         Schedule the flushing of lines to file and then finalize it at the beginning of the next hour (with a buffer)
         """
 
-        # post data is a dict containing the file name in blobstore and its content: the log lines
-        post_data = {'blob_file_name': blob_file_name, 'log_lines': self.lines}
-        post_data_serialized = simplejson.dumps(post_data)
-
-        task = taskqueue.Task(name=None,
-                              method='POST',
-                              url='/files/finalize',
-                              payload=post_data_serialized)
-
-        # get the appropriate queue shard
-        queue_num = random.randint(0, NUM_FILE_QUEUES-1)
-        queue_name = FILE_QUEUE_NAME % queue_num
-
         try:
+            # post data is a dict containing the file name in blobstore and its content: the log lines
+            post_data = {'blob_file_name': blob_file_name, 'log_lines': self.lines}
+            post_data_serialized = simplejson.dumps(post_data, ensure_ascii=False)
+
+            task = taskqueue.Task(name=None,
+                                  method='POST',
+                                  url='/files/finalize',
+                                  payload=post_data_serialized)
+
+            # get the appropriate queue shard
+            queue_num = random.randint(0, NUM_FILE_QUEUES-1)
+            queue_name = FILE_QUEUE_NAME % queue_num
+
             # put task on queue
             task.add(queue_name)
 
@@ -102,7 +103,7 @@ class LogService(object):
         except taskqueue.TaskAlreadyExistsError:
             logging.info("task %s already exists"%task_name)
         except Exception, e:
-            logging.warning(e)
+            logging.error(e)
 
 
 def get_blob_name_for_time(t, blob_file_name="apache"):

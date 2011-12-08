@@ -272,6 +272,9 @@ def deref_adgroup(adgroup_str):
 
 # returns [adgroup_str, campaign_str, account_str] or None
 def _deref_creative(creative_str):
+    if not creative_str:    # None or ''
+        return None
+
     if creative_str in DEREF_CACHE:
         return DEREF_CACHE[creative_str]
 

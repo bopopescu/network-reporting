@@ -72,12 +72,16 @@ var mopub = mopub || {};
           
           $('.show-status').click(function () {
               var key = $(this).attr('id');
-              var row = $('.' + key);
-              if ($(row).hasClass('hidden')) {
-                  $(row).removeClass('hidden');
-              } else {
-                  $(row).addClass('hidden');
-              }
+              var div = $('.' + key);
+              div.dialog({
+                  buttons: { "Update": function() { $('form.loginCredentials',div).submit(); },
+                             "Close": function() { $(this).dialog('close');} }
+              });
+          });
+
+          $('#dashboard-sort input').click(function() {
+            $('.tab-section').hide();
+            $('.tab-section.'+$(this).val()).show();
           });
 
           $('.show-hide').click(function () {

@@ -11,41 +11,46 @@
 {% endblock titleBarRight %}
 
 {% block innerContent %}
-
-  <ul class="pills">
-    <li class="active"> <a href="#networks"> Sort by Network </a> </li>
-    <li> <a href="#apps"> Sort by App </a> </li>
-  </ul>
+  <section id="dashboard-apps">
+  <span class="buttonset" id="dashboard-sort">
+    <input type="radio" name="dashboard-sort-option" value="networks" checked="checked" id="dashboard-sort-network"/>
+    <label for="dashboard-sort-network">Sort by Network</label>
+    <input type="radio" name="dashboard-sort-option" value="apps" id="dashboard-sort-app"/>
+    <label for="dashboard-sort-app">Sort by App</label>
+  </span>
 
   {% comment %}
     Make the table sorted by ad network.
   {% endcomment %}
-  <div class="tab-section active" id="networks">
-    <table class="dataTable ad_network_table">
-      <thead>
-        <th class="dataTable-name" colspan="2"></th>
-        <th class="dataTable-data numeric"> Revenue </th>
-        <th class="dataTable-data numeric"> Attempts </th>
-        <th class="dataTable-data numeric"> Impressions </th>
-        <th class="dataTable-data numeric"> Fill Rate</th>
-        <th class="dataTable-data numeric"> Clicks </th>
-        <th class="dataTable-data numeric"> CTR </th>
-      </thead>
-
-      <tbody>
-        {% for network_name, network, form in networks %}
-          <tr class="shaded top-row">
-            <td class="network-icon">
+  <div class="tab-section networks active">
+    <div class="appData-columnHeaders">
+      <table class="dataTable" width=100%>
+        <thead>
+          <th class="networkData-icon" style="width:75px"></th>
+          <th class="dataTable-name"></th>
+          <th class="dataTable-data numeric"> Revenue </th>
+          <th class="dataTable-data numeric"> Attempts </th>
+          <th class="dataTable-data numeric"> Impressions </th>
+          <th class="dataTable-data numeric"> Fill Rate</th>
+          <th class="dataTable-data numeric"> Clicks </th>
+          <th class="dataTable-data numeric"> CTR </th>
+        </thead>
+      </table>
+    </div>
+    {% for network_name, network, form in networks %}
+    <div class="{% cycle 'appData' 'appData appData-alt' %}">
+      <table class="dataTable appData-main">
+        <tbody>
+          <tr>
+            <td class="networkData-icon">
               <img src="/images/{{network_name|lower}}-transparent.png"
               alt="{{network_name}}" width="75" height="25" />
             </td>
 			{% if network %}
             <td class="network-status dataTable-name">
+                
                 <span class="muted">Last synced: {{ network.sync_date|date }}</span>
-                <div>
-                    <a class="show-hide button button-small" id={{network.key}} style="width:75px;">Hide Apps</a>
-                    <a class="show-status button button-small" id="{{network_name}}-status">Status</a>
-                </div>
+                <a class="show-status" id="{{network_name}}-status">Status</a>
             </td>
             <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
             <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
@@ -61,140 +66,156 @@
             </td>
 		    {% endif %}
           </tr>
-          <tr class="shaded {{network_name}}-status hidden">
-              <td class="dataTable-name" colspan="8">
-                  <div>
-                      {% if network %}
-                      <dl class="formFields" style="margin:0">
-                          {% if network.sync_error %}
-                          <dt>Status:</dt>
-                          <dd>Last synchronization failed.  Check that your credentials are correct.
-                          If this error persists, please contact support@mopub.com.</dd>
-                          {% endif %}
-                          {% if network.app_pub_ids %}
-                          <dt>Notes:</dt>
-                          <dd> MoPub received a response for the following ad networks IDs.
-                          Make sure these apps are properly set up in MoPub to view the reports.
-                          <br/><br/>
-                          {{ network.app_pub_ids }}
-                          </dd>
-                          {% endif %}
-                      </dl>
-                      {% endif %}
-                      <form class="loginCredentials" id="form-{{form.ad_network}}">
-                          <div class="form-{{form.ad_network}}-message hidden alert-message block-message warning">
-                          </div>
-                          <fieldset>
-                              <h2>{{network_name}} Credentials</h2>
-                              <dl class="formFields" style="margin:0">
-                                  {% ifequal form.ad_network "inmobi" %}
-                                    <dt> Access ID: </dt>
-                                    <dd>
-                                      <input type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}
-                                      <a href="#" class="whatsthis" id="inmobi-access-helpLink"> What's This? </a>
-                                    </dd>
+        </tbody>
+      </table>
+      <div class="{{network_name}}-status hidden">
+        {% if network %}
+        <dl class="formFields" style="margin:0">
+          {% if network.sync_error %}
+          <dt>Status:</dt>
+          <dd>Last synchronization failed.  Check that your credentials are correct.
+          If this error persists, please contact support@mopub.com.</dd>
+          {% endif %}
+          {% if network.app_pub_ids %}
+          <dt>Notes:</dt>
+          <dd> MoPub received a response for the following ad networks IDs.
+          Make sure these apps are properly set up in MoPub to view the reports.
+          <br/><br/>
+          {{ network.app_pub_ids }}
+          </dd>
+          {% endif %}
+        </dl>
+        {% endif %}
+        <form class="loginCredentials" id="form-{{form.ad_network}}">
+          <div class="form-{{form.ad_network}}-message hidden alert-message block-message warning">
+          </div>
+          <fieldset>
+              <h2>{{network_name}} Credentials</h2>
+              <dl class="formFields thin" style="margin:0">
+                  {% ifequal form.ad_network "inmobi" %}
+                    <dt> Access ID: </dt>
+                    <dd>
+                      <input type="text" name="{{form.ad_network}}-username" id="id_username" class="input-text input-text-half-width" value=""> {{form.username.errors}}
+                      <a href="#" class="whatsthis" id="inmobi-access-helpLink"> What's This? </a>
+                    </dd>
 
-                                    <dt> Secret Key: </dt>
-                                    <dd>
-                                      <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}
-                                      <a href="#" class="whatsthis" id="inmobi-secret-helpLink"> What's This? </a>
-                                    </dd>
+                    <dt> Secret Key: </dt>
+                    <dd>
+                      <input type="password" name="{{form.ad_network}}-password"  id="id_password" class="input-text input-text-half-width" value="">  {{form.password.errors}}
+                      <a href="#" class="whatsthis" id="inmobi-secret-helpLink"> What's This? </a>
+                    </dd>
 
-                                  {% else %}
-                                      {% ifequal form.ad_network "mobfox" %}
-                                      {% else %}
-                                        <dt> Username: </dt>
-                                        <dd> <input type="text" name="{{form.ad_network}}-username" id="id_username" class=" input-text" value=""> {{form.username.errors}}</dd>
+                  {% else %}
+                      {% ifequal form.ad_network "mobfox" %}
+                      {% else %}
+                        <dt> Username: </dt>
+                        <dd> <input type="text" name="{{form.ad_network}}-username" id="id_username" class="input-text input-text-half-width" value=""> {{form.username.errors}}</dd>
 
-                                        <dt> Password: </dt>
-                                        <dd> <input type="password" name="{{form.ad_network}}-password"  id="id_password" class=" input-text" value="">  {{form.password.errors}}</dd>
-                                      {% endifequal %}
-                                  {% endifequal %}
+                        <dt> Password: </dt>
+                        <dd> <input type="password" name="{{form.ad_network}}-password"  id="id_password" class="input-text input-text-half-width" value="">  {{form.password.errors}}</dd>
+                      {% endifequal %}
+                  {% endifequal %}
 
 
-                                  {% if form.ad_network == "admob" %}
-                                    <dt> Client ID: </dt>
-                                    <dd> {{form.client_key}} </dd>
-                                  {% endif %}
+                  {% if form.ad_network == "admob" %}
+                    <dt> Client ID: </dt>
+                    <dd> <input type="text" name="admob-client_key"  id="id_admob-client_key" class="input-text input-text-half-width" value=""></dd>
+                  {% endif %}
 
-                                  <dt><input name="email" type="checkbox" /> </dt>
-                                  <dd> Send me daily emails with my network stats </dd>
-                                  <dt></dt>
-                                  <dd>
-                                  <input class="button" type="submit" value="Update" />
-                                  <input class="show-status button" id="{{network_name}}-status" value="Cancel" style="width:50px" />
-                                  </dd>
-                              </dl>
-                          </fieldset>
-                      </form>
-                  </div>
-              </td>
-          </tr>
+                  <dt><input name="email" type="checkbox" /> </dt>
+                  <dd> Send me daily emails with my network stats </dd>
+              </dl>
+          </fieldset>
+        </form>
+      </div>
 		  {% if network %}
-          {% for app in network.sub_data_list %}
-          <tr class="sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{network.key}}">
-              <td class="dataTable-name" colspan="2">
-                <a href="{% url ad_network_app_detail app.key %}">{{app.name}}</a>
-              </td>
-              <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
-              <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
-              <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
-              <td class="dataTable-data numeric">{{ app.fill_rate|floatformat:2 }}%</td>
-              <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
-              <td class="dataTable-data numeric">{{ app.ctr|floatformat:2 }}%</td>
-            </tr>
-          {% endfor %}
+      <div class="appData-details" style="margin: -10px 0 0 86px">
+        <div class="appData-details-inner show">
+          <table class="dataTable">
+            <tbody>
+              {% for app in network.sub_data_list %}
+              <tr class="sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{network.key}}">
+                  <td class="dataTable-name">
+                    {{app.name}} <a href="{% url ad_network_app_detail app.key %}">Details</a>
+                  </td>
+                  <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
+                  <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
+                  <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
+                  <td class="dataTable-data numeric">{{ app.fill_rate|floatformat:2 }}%</td>
+                  <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
+                  <td class="dataTable-data numeric">{{ app.ctr|floatformat:2 }}%</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
 		  {% endif %}
-        {% endfor %}
-      </tbody>
-    </table>
+    </div>
+  {% endfor %}
   </div>
-
 
   {% comment %}
     Make the table sorted by app name. This table is hidden to start.
   {% endcomment %}
-  <div class="tab-section" id="apps">
-    <table class="simpletable campaignData-main ad_network_table">
-      <thead>
-        <th class="dataTable-name"></th>
-        <th class="dataTable-data numeric"> Revenue </th>
-        <th class="dataTable-data numeric"> Attempts </th>
-        <th class="dataTable-data numeric"> Impressions </th>
-        <th class="dataTable-data numeric"> Fill Rate </th>
-        <th class="dataTable-data numeric"> Clicks </th>
-        <th class="dataTable-data numeric"> CTR </th>
-      </thead>
-
-      <tbody>
-        {% for app_name, app in apps %}
-        <div class="section">
-          <tr class="shaded top-row" id="{{app.key}}">
-            <td class="dataTable-name"> {{app_name}} </td>
-            <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
-            <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
-            <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
-            <td class="dataTable-data numeric">{{ app.fill_rate|floatformat:2 }}%</td>
-            <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
-            <td class="dataTable-data numeric">{{ app.ctr|floatformat:2 }}%</td>
+  <div class="tab-section apps">
+    <div class="appData-columnHeaders">
+      <table class="dataTable" width=100%>
+        <thead>
+          <th class="networkData-icon" style="width:75px"></th>
+          <th class="dataTable-name"></th>
+          <th class="dataTable-data numeric"> Revenue </th>
+          <th class="dataTable-data numeric"> Attempts </th>
+          <th class="dataTable-data numeric"> Impressions </th>
+          <th class="dataTable-data numeric"> Fill Rate</th>
+          <th class="dataTable-data numeric"> Clicks </th>
+          <th class="dataTable-data numeric"> CTR </th>
+        </thead>
+      </table>
+    </div>
+    {% for app_name, app in apps %}
+    <div class="{% cycle 'appData' 'appData appData-alt' %}">
+      <table class="dataTable appData-main">
+        <tbody>
+          <tr class="app-row" id="{{app.key}}">
+            <td class="appData-icon"><a href="{% url publisher_app_show app_key=app.key %}"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
+            <td class="dataTable-name">
+                <a href="{% url publisher_app_show app_key=app.key %}">{{app_name}}</a>
+                <span class="muted unbold">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                <img id="{{app.key}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
+            </td>
+            <td class="dataTable-data numeric">{{app.revenue|currency}}</td>
+            <td class="dataTable-data numeric">{{app.attempts|withsep}}</td>
+            <td class="dataTable-data numeric">{{app.impressions|withsep}}</td>
+            <td class="dataTable-data numeric">{{app.fill_rate|floatformat:2}}</td>
+            <td class="dataTable-data numeric">{{app.clicks|withsep}}</td>
+            <td class="dataTable-data numeric">{{app.ctr|floatformat:2}}</td>
           </tr>
-          {% for network in app.sub_data_list %}
-          <tr class="sub-rows {% if not forloop.last %} add-border {% endif %}">
-              <td class="dataTable-name">
-                 <a href="{% url ad_network_app_detail network.key %}">{{network.name}} </a>
-              </td>
-              <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
-              <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
-              <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
-              <td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}%</td>
-              <td class="dataTable-data numeric">{{ network.clicks|withsep }}</td>
-              <td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}%</td>
-            </tr>
-          {% endfor %}
+        </tbody>
+      </table>
+      <div class="appData-details">
+        <div class="appData-details-inner show">
+          <table class="dataTable">
+            <tbody>
+              {% for network in app.sub_data_list %}
+              <tr>
+                <td class="dataTable-name">
+                   {{network.name}} <a href="{% url ad_network_app_detail network.key %}">Details</a>
+                </td>
+                <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
+                <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
+                <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
+                <td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}%</td>
+                <td class="dataTable-data numeric">{{ network.clicks|withsep }}</td>
+                <td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}%</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-        {% endfor %}
-      </tbody>
-    </table>
+      </div>
+    </div>
+  {% endfor %}
   </div>
 
 
@@ -215,6 +236,7 @@
     Reports" as the subject line along with your username/email. InMobi will then assign
     you a new Access ID and Secret Key, which you can enter here.
   </div>
+  </section>
 
 {% endblock innerContent %}
 

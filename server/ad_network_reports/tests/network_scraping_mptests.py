@@ -81,13 +81,13 @@ class TestAccountQueryManager(unittest.TestCase):
         scraper = JumpTapScraper((nc, publisher_ids, adunit_publisher_ids))
         scraper.get_site_stats(date.today() - timedelta(days = 1))
 
-#    def iad_mptest(self):
-#        nc = NetworkConfidential()
-#        nc.username = 'chesscom'
-#        nc.password = 'Faisal1Chess'
-#        nc.ad_network_name = 'iad'
-#        scraper = IAdScraper(nc)
-#        scraper.get_site_stats(date.today() - timedelta(days = 1))
+    def iad_mptest(self):
+        nc = NetworkConfidential()
+        nc.username = 'chesscom'
+        nc.password = 'Faisal1Chess'
+        nc.ad_network_name = 'iad'
+        scraper = IAdScraper(nc)
+        scraper.get_site_stats(date.today() - timedelta(days = 1))
 
     def inmobi_mptest(self):
         nc = NetworkConfidential()

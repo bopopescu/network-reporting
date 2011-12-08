@@ -102,8 +102,8 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 if os.path.exists('/home/ubuntu/'):
                     setup_remote_api()
                 wants_email = self.get_argument('email', False) and True
-                accounts_login_credentials = \
-                        list(manager.get_login_credentials())
+                accounts_login_credentials = set([creds.ad_network_name for
+                    creds in manager.get_login_credentials()])
                 login_credentials = manager. \
                         create_login_credentials_and_mappers(ad_network_name=
                         login_credentials.ad_network_name,
@@ -116,8 +116,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 # add it to the database if the login credentials for the
                 # network are new.
                 if login_credentials.ad_network_name not in \
-                        [creds.ad_network_name for creds in
-                                accounts_login_credentials]:
+                        accounts_login_credentials:
                     pacific = timezone('US/Pacific')
                     two_weeks_ago = (datetime.now(pacific) -
                             timedelta(days=2)).date()

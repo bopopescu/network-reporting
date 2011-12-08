@@ -28,33 +28,100 @@ $(function() {
 
 		adgroups.each(function(adgroup) { adgroup.fetch({ data: ajax_query_string }); });
 
-		// TODO: put this random stuff in the correct place
+		// TODO: move to views
+        // date picker
+        // set up dateOptions
+        $('#dashboard-dateOptions input').click(function() {
+            var option = $(this).val();
+            var hash = document.location.hash;
+            if(option == 'custom') {
+                $('#dashboard-dateOptions-custom-modal').dialog({
+	                width: 570,
+	                buttons: [
+		                {
+			                text: 'Set dates',
+			                css: { fontWeight: '600' },
+			                click: function() {
+				                var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
+				                var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+				                var num_days=Math.round((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
 
+				                var from_day=from_date.getDate();
+				                var from_month=from_date.getMonth()+1;
+				                var from_year=from_date.getFullYear();
+
+				                $(this).dialog("close");
+				                var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
+				                document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day + hash;
+				            }
+			            },
+		                {
+			                text: 'Cancel',
+			                click: function() {
+			                	$(this).dialog("close");
+		                	}
+		                }
+                	]
+                });
+            }
+            else {
+                // Tell server about selected option to get new data
+                var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
+                document.location.href = location+'?r=' + option + hash;
+            }
+        });
+
+        // set up custom dateOptions modal dialog
+        $('#dashboard-dateOptions-custom-from').datepicker({
+            defaultDate: '-15d',
+            maxDate: '0d',
+            onSelect: function(selectedDate) {
+                var other = $('#dashboard-dateOptions-custom-to');
+                var instance = $(this).data("datepicker");
+                var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+                other.datepicker('option', 'minDate', date);
+            }
+        });
+        $('#dashboard-dateOptions-custom-to').datepicker({
+            defaultDate: '-1d',
+            maxDate: '0d',
+            onSelect: function(selectedDate) {
+                var other = $('#dashboard-dateOptions-custom-from');
+                var instance = $(this).data("datepicker");
+                var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+                other.datepicker('option', 'maxDate', date);
+            }
+        });
+
+        var self = this;
+        // stats breakdown
+        $('.stats-breakdown tr').click(function(e) {
+            var row = $(this);
+            if(!row.hasClass('active')) {
+                row.siblings().removeClass('active');
+                row.addClass('active');
+                $('#dashboard-stats-chart').fadeOut(100, function() {
+                    adgroups_view.render();
+                    $(this).show();
+                });
+            }
+        });
+
+        $('#stats-breakdown-dateOptions input').click(function() {
+            $('.stats-breakdown-value').hide();
+            $('.stats-breakdown-value.'+$(this).val()).show();
+        }).click();
+
+	    // Ad Campaign button
         $("#add_campaign_button").button({ icons : { primary : 'ui-icon-circle-plus'} });
 
+
+        // AdGroups form
 		$.each(['pause', 'resume', 'activate', 'archive', 'delete'], function(iter, action) {
-			$('#campaignForm-' + action)
-			.click(function(e) {
+			$('#campaignForm-' + action).click(function(e) {
 				e.preventDefault();
 				$('#campaignForm').find("#action").attr("value", action).end().submit();
 			});
-		});
-
-		$.each(['type', 'priority', 'promo-priority', 'bid', 'keyword'], function(iter, link_type) {
-		  $('#campaignForm-' + link_type + '-helpLink').click(function(e) {
-		      e.preventDefault();
-		      $('#campaignForm-' + link_type + '-helpContent').dialog({
-		          buttons: { "Close": function() { $(this).dialog("close"); } }
-		      });
-		  });
-		});
-
-		$('#campaignForm-customHtml-helpLink').click(function(e) {
-		  e.preventDefault();
-		  $('#campaignForm-customHtml-helpContent').dialog({
-		      buttons: { "Close": function() { $(this).dialog("close"); }},
-		      width: 700
-		  });
 		});
 	};
 });

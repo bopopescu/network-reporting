@@ -4,7 +4,7 @@
 
 
 {% block pageTitle %}
-  <h1> Networks </h1>
+  <h1>Networks</h1>
 {% endblock pageTitle %}
 
 
@@ -68,8 +68,6 @@
 
   <br />
   <a id="add_campaign_button" class="right button add icon"  href="{% url advertiser_campaign_create %}#network">Add a network</a>
-  <br />
-  <br />
 
   <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
     <input type="hidden" name="action" id="action"/>
@@ -93,9 +91,9 @@
   <script type="text/html" id="adgroups-table-template">
     {% include "partials/adgroups_table.html" %}
   </script>
-  <script type="text/javascript" src="/js/models.js?v=5"></script>
-  <script type="text/javascript" src="/js/views.js?v=5"></script>
-  <script type="text/javascript" src="/js/controllers/networks.js?v=5"></script>
+  <script type="text/javascript" src="/js/models.js?v=11"></script>
+  <script type="text/javascript" src="/js/views.js?v=11"></script>
+  <script type="text/javascript" src="/js/controllers/networks.js?v=11"></script>
   <script>
     $(function() {
       NetworksController(

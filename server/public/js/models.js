@@ -36,7 +36,7 @@
      */
 
     /*
-     * Helper functions for individual stats
+     * Helper functions for single stats
      */
     calculate_ctr = function(impression_count, click_count) {
         if(impression_count === null || click_count === null) return null;

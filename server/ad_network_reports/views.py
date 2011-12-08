@@ -31,9 +31,15 @@ class AdNetworkReportIndexHandler(RequestHandler):
         aggregates, daily_stats, networks, apps = manager. \
                 get_index_data(days)
 
+        if networks:
+            network_names, networks = zip(*networks)
+        else:
+            network_names = []
+            networks = []
 
         forms = []
-        for name in sorted(AD_NETWORK_NAMES.keys()):
+        for name in network_names:
+            name = name.lower()
             try:
                 instance = AdNetworkLoginCredentials. \
                         get_by_ad_network_name(self.account, name)
@@ -44,15 +50,6 @@ class AdNetworkReportIndexHandler(RequestHandler):
             form.ad_network = name
             forms.append(form)
 
-
-
-        # Get networks for which they've entered publisher information but
-        # havent given us login credentials so we can bug them about giving us
-        # their creds
-        networks_without_creds = \
-                list(manager.get_networks_without_credentials())
-
-        network_names, networks = zip(*networks)
         return render_to_response(self.request,
                           'ad_network_reports/ad_network_reports_index.html',
                           {

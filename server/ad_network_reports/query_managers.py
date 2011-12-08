@@ -189,8 +189,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     list(self.get_networks_without_credentials())
 
             for network in networks_without_creds:
-                if not data_dict.has_key(network):
-                    data_dict[network] = None
+                if AD_NETWORK_NAMES[network] not in data_dict:
+                    data_dict[AD_NETWORK_NAMES[network]] = None
 
         # Sort alphabetically
         data_list = sorted(data_dict.items(), key=lambda data_tuple:

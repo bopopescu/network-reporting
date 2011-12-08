@@ -20,14 +20,13 @@ def load_test_data():
 
 
     network_config = NetworkConfig(jumptap_pub_id=TEST_JUMPTAP_PUB_ID,
-            admob_pub_id=TEST_ADMOB_PUB_ID, iad_pub_id=TEST_IAD_PUB_ID,
-            inmobi_pub_id=TEST_INMOBI_PUB_ID,
+            admob_pub_id=TEST_ADMOB_PUB_ID, inmobi_pub_id=TEST_INMOBI_PUB_ID,
             mobfox_pub_id=TEST_MOBFOX_PUB_ID)
     network_config.put()
 
-    # name corresponds to jumptap login info
-    app = App(account = account, name = "BET WAP Site", network_config =
-            network_config)
+    app = App(account=account, name="Crazy Shit", network_config=
+            network_config, url='http://itunes.apple.com/us/app/106-park/id'
+            + TEST_IAD_PUB_ID + '?mt=8&uo=4')
     app.put()
 
     # Test adding adunit pub id for jumptap
@@ -51,12 +50,10 @@ def load_test_data():
     manager.create_login_credentials_and_mappers(ad_network_name='jumptap',
                                             username='zaphrox',
                                             password='JR.7x89re0')
-    # iAd login info                                  
-#    iad_login_credentials = AdNetworkLoginCredentials(account=account,
-#                                        ad_network_name='iad',
-#                                        username='chesscom',
-#                                        password='Faisal1Chess')
-#    iad_login_credentials.put()
+    # iAd login info
+    manager.create_login_credentials_and_mappers(ad_network_name='iad',
+                                        username='chesscom',
+                                        password='Faisal1Chess')
 
     # InMobi login info
     manager.create_login_credentials_and_mappers(ad_network_name='inmobi',
@@ -80,3 +77,4 @@ def load_test_data():
 
     db.put(entities)
     return account
+

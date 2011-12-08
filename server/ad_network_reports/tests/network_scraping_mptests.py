@@ -81,13 +81,13 @@ class TestAccountQueryManager(unittest.TestCase):
         scraper = JumpTapScraper((nc, publisher_ids, adunit_publisher_ids))
         scraper.get_site_stats(date.today() - timedelta(days = 1))
 
-    def iad_mptest(self):
-        nc = NetworkConfidential()
-        nc.username = 'chesscom'
-        nc.password = 'Faisal1Chess'
-        nc.ad_network_name = 'iad'
-        scraper = IAdScraper(nc)
-        scraper.get_site_stats(date.today() - timedelta(days = 1))
+#    def iad_mptest(self):
+#        nc = NetworkConfidential()
+#        nc.username = 'chesscom'
+#        nc.password = 'Faisal1Chess'
+#        nc.ad_network_name = 'iad'
+#        scraper = IAdScraper(nc)
+#        scraper.get_site_stats(date.today() - timedelta(days = 1))
 
     def inmobi_mptest(self):
         nc = NetworkConfidential()
@@ -117,6 +117,7 @@ class TestAccountQueryManager(unittest.TestCase):
         manager = AdNetworkReportQueryManager(account)
 
         test_network_app_mappers = list(manager.get_ad_network_mappers())
+        logging.info('App Mapper\'s len: %d' % len(test_network_app_mappers))
         assert len(test_network_app_mappers) > 0
         #assert len(test_network_app_mappers) == len(entities)
 
@@ -144,3 +145,4 @@ class TestAccountQueryManager(unittest.TestCase):
                     date.today() - timedelta(days=1)))
         logging.info(manager.get_chart_stats_for_all_networks(date_magic.gen_days(
             date.today() - timedelta(days=8), date.today() - timedelta(days=1))))
+

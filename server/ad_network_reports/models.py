@@ -1,3 +1,4 @@
+import logging
 from google.appengine.ext import db
 
 from appengine_django import InstallAppengineHelperForDjango
@@ -7,7 +8,7 @@ from account.models import Account
 from publisher.models import App
 
 class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
-    account = db.ReferenceProperty(Account, required = True,
+    account = db.ReferenceProperty(Account, required=True,
             collection_name='login_credentials')
     ad_network_name = db.StringProperty(required=True)
 
@@ -25,9 +26,10 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     # Needed for admob
     client_key = db.StringProperty()
 
-    email = db.BooleanProperty(default = False)
+    email = db.BooleanProperty(default=False)
 
-    is_active = db.BooleanProperty(default=True)
+    # List of application publisher ids that aren't tracked in MoPub.
+    app_pub_ids = db.StringListProperty(default=[])
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
@@ -70,29 +72,30 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
         within the template if an error might have occured.
         """
 
-        stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =', self).get()
+        stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =',
+                self).get()
 
         return stats == None
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
-                                                 required=True,
                                                  collection_name='ad_network_stats')
     date = db.DateProperty(required=True)
 
     # stats info for a specific day
-    revenue = db.FloatProperty()
-    attempts = db.IntegerProperty()
-    impressions = db.IntegerProperty()
-    fill_rate = db.FloatProperty()
-    clicks = db.IntegerProperty()
-    ctr = db.FloatProperty()
-    ecpm = db.FloatProperty()
+    revenue = db.FloatProperty(default=0.0)
+    attempts = db.IntegerProperty(default=0)
+    impressions = db.IntegerProperty(default=0)
+    fill_rate = db.FloatProperty(default=0.0)
+    clicks = db.IntegerProperty(default=0)
+    ctr = db.FloatProperty(default=0.0)
+    ecpm = db.FloatProperty(default=0.0)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            kwargs['key_name'] = ('k:%s:%s' % (kwargs[
-                    'ad_network_app_mapper'].key(), kwargs['date'].
+            mapper = kwargs.get('ad_network_app_mapper', None)
+            mapper = mapper.key() if mapper else '*'
+            kwargs['key_name'] = ('k:%s:%s' % (mapper, kwargs['date'].
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
@@ -103,9 +106,14 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
 
     @classmethod
     def get_by_app_mapper_and_days(cls, app_mapper_key, days):
-        return [stats for stats in cls.get_by_key_name(['k:%s:%s' % (
-            app_mapper_key, day.strftime('%Y-%m-%d')) for day in days]) if stats
-            != None]
+        stats_list = cls.get_by_key_name(['k:%s:%s' % (app_mapper_key,
+            day.strftime('%Y-%m-%d')) for day in days])
+        final_stats_list = []
+        for stats, day in zip(stats_list, days):
+            if not stats:
+                stats = AdNetworkScrapeStats(date=day)
+            final_stats_list.append(stats)
+        return final_stats_list
 
 class AdNetworkManagementStats(db.Model): #(date)
     date = db.DateProperty(required=True)

@@ -2671,11 +2671,6 @@ a.linkIcon .ui-icon-triangle-1-w {
  * Modules
  */
 /* Dashboard */
-#mopub-dashboard #messageCenter {
-  padding-bottom: 0;
-  border-bottom: none;
-  margin-bottom: 25px; }
-
 #dashboard-stats {
   padding: 20px 20px 10px 20px; }
 
@@ -3064,12 +3059,19 @@ ul.adunits {
 
 .ad_network_table th:not(:first-child) {
   text-align: center; }
+.ad_network_table .shaded {
+  background: #f9f9f9; }
 .ad_network_table .top-row td {
   font-size: 18px;
-  text-align: left;
-  background: #f9f9f9; }
-  .ad_network_table .top-row td:not(:first-child) {
-    text-align: right; }
+  text-align: right; }
+.ad_network_table .top-row td:first-child {
+  text-align: left; }
+.ad_network_table .top-row td.network-status {
+  text-align: left; }
+.ad_network_table .top-row td.network-icon {
+  width: 10%; }
+.ad_network_table .top-row span.muted {
+  font-size: 13px; }
 .ad_network_table .sub-rows td:not(:first-child) {
   text-align: right; }
 .ad_network_table .add-border td {

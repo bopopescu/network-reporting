@@ -4,6 +4,7 @@ import sys
 import urllib
 
 # Are we on EC2 (Note can't use django.settings_module since it's not defined)
+# TODO: Add this stuff to my path on EC2
 if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
     sys.path.append('/home/ubuntu/google_appengine')
@@ -16,6 +17,8 @@ if os.path.exists('/home/ubuntu/'):
 
     import common.utils.test.setup
 
+from datetime import datetime, timedelta
+
 from account.query_managers import AccountQueryManager
 from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppMapper, \
@@ -25,13 +28,19 @@ from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager
 
-AD_NETWORK_NAMES = ['admob', 'jumptap', 'iad', 'inmobi', 'mobfox']
+AD_NETWORK_NAMES = {'admob': 'AdMob',
+                    'jumptap': 'JumpTap',
+                    'iad': 'iAd',
+                    'inmobi': 'InMobi',
+                    'mobfox': 'MobFox'}
 
+# Don't touch or everything is fucked
 KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
 class Stats(object):
     pass
 
+#TODO: Break up query manager into a query manager for each model
 class AdNetworkReportQueryManager(CachedQueryManager):
 
     def __init__(self, account=None):
@@ -64,9 +73,14 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         keys = [s.key() for s in mappers]
         # Get aggregate stats for all the different ad network mappers for the
         # account between the selected date range
-        aggregates_list = [self._get_stats_for_mapper_and_days(n, days) for n in
-                mappers]
-        aggregate_stats_list = zip(keys, mappers, aggregates_list)
+        aggregates_with_dates = [self._get_stats_for_mapper_and_days(n, days)
+                for n in mappers]
+        if aggregates_with_dates:
+            aggregates_list, sync_dates = zip(*aggregates_with_dates)
+        else:
+            aggregates_list = []
+            sync_dates = []
+        aggregate_stats_list = zip(keys, mappers, aggregates_list, sync_dates)
         aggregates = self.roll_up_stats(aggregates_list)
 
         # Get the daily stats list.
@@ -97,14 +111,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
              ...
          }
         """
+        # Can't get timezone (pytz) on app engine without jumping through some
+        # large hoops so we do a rough check.
+        yesterday = (datetime.now() - timedelta(days=1)).date()
+
         data_dict = {}
-        for key, mapper, stats in aggregate_stats_list:
+        for key, mapper, stats, sync_date in aggregate_stats_list:
             if networks:
-                attr = mapper.ad_network_name
+                attr = AD_NETWORK_NAMES[mapper.ad_network_name]
                 name = mapper.application.name
             else:
                 attr = mapper.application.name
-                name = mapper.ad_network_name
+                name = AD_NETWORK_NAMES[mapper.ad_network_name]
             sub_data = {
                 'name': name,
                 'key': mapper.key(),
@@ -114,7 +132,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 'fill_rate': stats.fill_rate,
                 'clicks': stats.clicks,
                 'ctr': stats.ctr,
-                'has_potential_errors': mapper.has_potential_errors()
             }
             if not data_dict.has_key(attr):
                 data_dict[attr] = {
@@ -128,6 +145,16 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     'ctr': 0,
                     'key': str(key)
                 }
+                if networks:
+                    login_credentials = AdNetworkLoginCredentials.all(). \
+                            filter('ad_network_name =', mapper. \
+                            ad_network_name).filter('account =',
+                                    self.account).get()
+                    data_dict[attr]['sync_date'] = sync_date
+                    data_dict[attr]['sync_error'] = sync_date - yesterday >= \
+                            timedelta(days=1)
+                    data_dict[attr]['app_pub_ids'] = ', '.join(
+                            login_credentials.app_pub_ids)
             data_dict[attr]['sub_data_list'].append(sub_data)
             data_dict[attr]['revenue'] += sub_data['revenue']
             data_dict[attr]['attempts'] += sub_data['attempts']
@@ -141,7 +168,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         for data in data_dict.values():
             # Sort sub_data list.
             data['sub_data_list'] = sorted(data['sub_data_list'], key=lambda \
-                    sub_data: sub_data['name'])
+                    sub_data: sub_data['name'].lower())
             if data['attempts']:
                 data['fill_rate'] = data[
                         'fill_rate_impressions'] / float(
@@ -151,9 +178,23 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                         float(data['impressions'])) * 100
                 #network_data['ecpm'] /= float(network_data['impressions'])
 
+
+        # Add networks that aren't included but still relevant to the account
+        # and set their data to None.
+        if networks:
+            # Get networks for which they've entered publisher information but
+            # havent given us login credentials so we can bug them about giving us
+            # their creds.
+            networks_without_creds = \
+                    list(self.get_networks_without_credentials())
+
+            for network in networks_without_creds:
+                if AD_NETWORK_NAMES[network] not in data_dict:
+                    data_dict[AD_NETWORK_NAMES[network]] = None
+
         # Sort alphabetically
         data_list = sorted(data_dict.items(), key=lambda data_tuple:
-                data_tuple[0])
+                data_tuple[0].lower())
 
         return data_list
 
@@ -171,7 +212,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
     def get_chart_stats_for_all_networks(self, days):
         daily_stats = []
-        for ad_network_name in AD_NETWORK_NAMES:
+        for ad_network_name in AD_NETWORK_NAMES.keys():
             login = AdNetworkLoginCredentials.get_by_ad_network_name(
                     self.account, ad_network_name)
             mappers = list(AdNetworkAppMapper.all().filter('ad_network_login =',
@@ -201,7 +242,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         """
         stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
                 ad_network_app_mapper.key(), days)
-        return self.roll_up_stats(stats_list)
+        return (self.roll_up_stats(stats_list), stats_list[-1].date if
+                stats_list else None)
 
     def roll_up_stats(self, stats_iterable):
         """Roll up (aggregate) stats in the stats iterable.
@@ -340,6 +382,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             application=app) for app, publisher_id in
             apps_with_publisher_ids])
 
+        return login_credentials
+
 
 
     def find_app_for_stats(self, publisher_id, login_credentials):
@@ -393,15 +437,19 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
 
     def get_networks_without_credentials(self):
-        creds = AdNetworkLoginCredentials.all().filter('account =', self.account)
+        creds = AdNetworkLoginCredentials.all().filter('account =',
+                self.account)
         networks_with_creds = [cred.ad_network_name for cred in creds]
-        potential_networks = list(set(AD_NETWORK_NAMES) -
+        potential_networks = list(set(AD_NETWORK_NAMES.keys()) -
                 set(networks_with_creds))
         for network in potential_networks:
             pub_ids = list(self.get_app_publisher_ids(network))
             if pub_ids:
                 yield network
 
+    def get_login_credentials(self):
+        """Return AdNetworkLoginCredentials entities for the given account."""
+        return AdNetworkLoginCredentials.all().filter('account =', self.account)
 
 def get_all_login_credentials():
     """Return all AdNetworkLoginCredentials entities ordered by account."""
@@ -463,6 +511,11 @@ def load_test_data(account=None):
     officejerk_app.put()
 
 
+def clear_data():
+    db.delete(AdNetworkScrapeStats.all())
+    db.delete(AdNetworkAppMapper.all())
+    db.delete(AdNetworkLoginCredentials.all())
+    db.delete(Accounts.all())
 
 def create_fake_data(account=None):
     """
@@ -470,7 +523,6 @@ def create_fake_data(account=None):
     so we can debug the views and templates.
     """
     import random
-    import datetime
     from common.utils import date_magic
 
     load_test_data(account)
@@ -479,7 +531,7 @@ def create_fake_data(account=None):
 
     last_90_days = date_magic.gen_date_range(90)
 
-    for network in AD_NETWORK_NAMES:
+    for network in AD_NETWORK_NAMES.keys():
         a.create_login_credentials_and_mappers(network,
                                                username='bullshit',
                                                password='bullshit',

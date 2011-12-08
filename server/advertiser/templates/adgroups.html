@@ -33,8 +33,6 @@
   {% endifequal %}
 {% endblock titleBarRight %}
 
-
-{% block messageCenter %}{% endblock messageCenter %}
 {% block dateButtons %}
 
   {% ifnotequal account.status 'step4' %}
@@ -177,7 +175,7 @@
 
         {% comment %}
         <div class="clearfix">
-	      <div class="pie chart" id="revenue-pie-chart"></div>
+          <div class="pie chart" id="revenue-pie-chart"></div>
           <div class="pie chart" id="impressions-pie-chart"></div>
           <div class="pie chart" id="clicks-pie-chart"></div>
         </div>
@@ -187,7 +185,7 @@
         <a class="right button add icon"  href="{% url advertiser_campaign_create %}#gtee">Add a campaign</a>
         <h2> Guaranteed Campaign Totals </h2>
         <div id="gtee-rollups" class="rollup fig4">
-	      <div class="data-figure">
+          <div class="data-figure">
             <div class="figure" id="gtee-total-rev">
               --
             </div>
@@ -195,7 +193,7 @@
               Revenue
             </div>
           </div>
-    
+
           <div class="data-figure">
             <div class="figure" id="gtee-total-imp">
               --
@@ -234,7 +232,7 @@
           <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
             <thead>
               <tr>
-	            <th width=25%>Revenue</th>
+                <th width=25%>Revenue</th>
                 <th width=25%>Impressions</th>
                 <th width=25%>Clicks</th>
                 <th width=25%>CTR</th>
@@ -242,7 +240,7 @@
             </thead>
             <tbody>
               <tr>
-	            <td id='gtee-total-rev'>--</td>
+                <td id='gtee-total-rev'>--</td>
                 <td id='gtee-total-imp'>--</td>
                 <td id='gtee-total-clk'>--</td>
                 <td id='gtee-total-ctr'>--</td>
@@ -255,7 +253,7 @@
         {% comment %}
         <h2> Promotional Campaign Totals </h2>
         <div id="promo-rollups" class="rollup fig4">
-	      <div class="data-figure">
+          <div class="data-figure">
             <div class="figure" id="promo-total-rev">
               --
             </div>
@@ -263,7 +261,7 @@
               Revenue
             </div>
           </div>
-    
+
           <div class="data-figure">
             <div class="figure" id="promo-total-imp">
               --
@@ -326,7 +324,7 @@
 
           <h2> Network Campaign Totals </h2>
         <div id="network-rollups" class="rollup fig4">
-	      <div class="data-figure">
+          <div class="data-figure">
             <div class="figure" id="network-total-rev">
               --
             </div>
@@ -334,7 +332,7 @@
               Revenue
             </div>
           </div>
-    
+
           <div class="data-figure">
             <div class="figure" id="network-total-imp">
               --
@@ -404,7 +402,7 @@
               Revenue
             </div>
           </div>
-	
+
           <div class="data-figure">
             <div class="figure" id="bfill-total-imp">
               --
@@ -533,7 +531,7 @@
               {% comment %}
               {# Guaranteed Total Rollups #}
               <div id="gtee-rollups" class="rollup fig4">
-	            <div class="data-figure">
+                <div class="data-figure">
                   <div class="figure" id="gtee-total-rev">
                     --
                   </div>
@@ -541,7 +539,7 @@
                     Revenue
                   </div>
                 </div>
-    
+
                 <div class="data-figure">
                   <div class="figure" id="gtee-total-imp">
                     --
@@ -576,7 +574,7 @@
       <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
         <thead>
           <tr>
-	        <th width=25%>Revenue</th>
+            <th width=25%>Revenue</th>
             <th width=25%>Impressions</th>
             <th width=25%>Clicks</th>
             <th width=25%>CTR</th>
@@ -584,7 +582,7 @@
         </thead>
         <tbody>
           <tr>
-	        <td id='gtee-total-rev'>--</td>
+            <td id='gtee-total-rev'>--</td>
             <td id='gtee-total-imp'>--</td>
             <td id='gtee-total-clk'>--</td>
             <td id='gtee-total-ctr'>--</td>
@@ -604,7 +602,7 @@
               <th class="numeric">Revenue</th>
               <th class="numeric">Status</th>
               <th class="numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
-			  <th class="numeric">Goal</th>
+              <th class="numeric">Goal</th>
               <th class="numeric">Impressions</th>
               <th class="numeric">Clicks</th>
               <th class="numeric">Conv</th>
@@ -655,7 +653,7 @@
                 </td>
 
                 <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-rev rev">--</td>
-				
+
                 <td class="dataTable-data numeric">
                   <div class="status">--</div>
                   <div class="on_schedule muted"></div>
@@ -668,27 +666,27 @@
                 {% else %}
                   <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
                 {% endif %}
-				
-				<td class="dataTable-goals">
-					<div class="dataTable-data numeric">
-						{% if adgroup.budget_goal %}{{adgroup.budget_goal|withsep}}
-						{% if adgroup.cpc %}
-						<div class="dataTable-data numeric gtee-goal_unit goal_unit muted">USD</div>
-						{% else %}
-						<div class="dataTable-data numeric gtee-goal_unit goal_unit muted">Impressions</div> 
-						{% endif %}
-						{% else %}--{% endif %}
-					</div>
-				</td>
+
+                <td class="dataTable-goals">
+                    <div class="dataTable-data numeric">
+                        {% if adgroup.budget_goal %}{{adgroup.budget_goal|withsep}}
+                        {% if adgroup.cpc %}
+                        <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">USD</div>
+                        {% else %}
+                        <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">Impressions</div>
+                        {% endif %}
+                        {% else %}--{% endif %}
+                    </div>
+                </td>
                 <td {# style="text-align:right;" #} class="dataTable-data numeric gtee-imp imp">--</td>
-				<td class="dataTable-clk">
-					<div class="dataTable-data numeric gtee-clk clk">--</div>
-					<div class="dataTable-data numeric gtee-ctr ctr muted">--</div>
-				</td>
-				<td class="dataTable-conv">
-					<div class="dataTable-data numeric gtee-conv conv">--</div>
-					<div class="dataTable-data numeric gtee-conve_rate conv_rate muted">--</div>
-				</td>
+                <td class="dataTable-clk">
+                    <div class="dataTable-data numeric gtee-clk clk">--</div>
+                    <div class="dataTable-data numeric gtee-ctr ctr muted">--</div>
+                </td>
+                <td class="dataTable-conv">
+                    <div class="dataTable-data numeric gtee-conv conv">--</div>
+                    <div class="dataTable-data numeric gtee-conve_rate conv_rate muted">--</div>
+                </td>
               </tr>
             {% endfor %}
           {% endif %}
@@ -718,7 +716,7 @@
 
           {% comment %}
           <div id="promo-rollups" class="rollup fig4">
-	        <div class="data-figure">
+            <div class="data-figure">
               <div class="figure" id="promo-total-rev">
                 --
               </div>
@@ -726,7 +724,7 @@
                 Revenue
               </div>
             </div>
-    
+
             <div class="data-figure">
               <div class="figure" id="promo-total-imp">
                 --
@@ -950,14 +948,14 @@
 
                   {% comment %}
                   <div id="network-rollups" class="rollup fig4">
-	                <div class="data-figure">
-	                  <div class="figure" id="network-total-rev">
-	                    --
-	                  </div>
-	                  <div class="label">
-	                    Revenue
-	                  </div>
-	                </div>
+                    <div class="data-figure">
+                      <div class="figure" id="network-total-rev">
+                        --
+                      </div>
+                      <div class="label">
+                        Revenue
+                      </div>
+                    </div>
 
                 <div class="data-figure">
                   <div class="figure" id="network-total-imp">
@@ -1078,14 +1076,14 @@
 
           {% comment %}
           <div id="bfill-rollups" class="rollup fig4">
-	          <div class="data-figure">
-	            <div class="figure" id="bfill-total-rev">
-	              --
-	            </div>
-	            <div class="label">
-	              Revenue
-	            </div>
-	          </div>
+              <div class="data-figure">
+                <div class="figure" id="bfill-total-rev">
+                  --
+                </div>
+                <div class="label">
+                  Revenue
+                </div>
+              </div>
 
                 <div class="data-figure">
                   <div class="figure" id="bfill-total-imp">

@@ -5,7 +5,7 @@
             <h1>{{app.name}}</h1>
           </div>
 {% endblock pageTitle %}
-{% block messageCenter %}{% endblock messageCenter %}
+
 {% block titleBarRight %}
 <span class="titlebar-right">
   <a class="button" id="dashboard-apps-editAppButton" href="#">Edit app settings</a>
@@ -21,16 +21,16 @@
                   <div id="appForm-fragment">
 {{app_form_fragment}}
                   </div>
-                  <div class="form-submit"> 
+                  <div class="form-submit">
                     <span class="hidden" id="appEditForm-loading"><img src="/images/loading2.gif"/></span>
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span> 
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span> 
-                  </div> 
+                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span>
+                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span>
+                  </div>
                 </fieldset>
               </form>
             </div>
           </section>
-          
+
           <section class="offset nomargin" id="dashboard-stats">
             <div class="stats">
               <div class="stats-breakdown">
@@ -100,15 +100,15 @@
             </div>
             <div class="clear"></div>
           </section>
-          
+
           <div class="clear"></div>
-          
+
           <section id="dashboard-apps">
             <div class="buttonBank buttonBank-right">
               <a class="button" id="dashboard-apps-addAdUnitButton" href="#">Add an ad unit</a>
             </div>
             <h2>Ad Units</h2>
-            
+
             <section id="dashboard-adunitAddForm" class="hidden">
               <div>
                 <a name="adunitForm" class="hidden">anchor</a>
@@ -117,16 +117,16 @@
                     <div id="adunitForm-fragment">
                       {{adunit_form_fragment}}
                     </div>
-                    <div class="form-submit"> 
+                    <div class="form-submit">
                       <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span> 
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-cancel">Cancel</a></span> 
-                    </div> 
+                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span>
+                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-cancel">Cancel</a></span>
+                    </div>
                   </fieldset>
                 </form>
               </div>
             </section>
-            
+
             <div class="appData-columnHeaders">
               <table class="dataTable" id="dashboard-apps-columnHeaders">
                 <thead>

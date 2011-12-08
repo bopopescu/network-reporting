@@ -1,4 +1,5 @@
 import logging
+from copy import copy
 
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
         KEY
@@ -16,7 +17,7 @@ class AdNetwork(object):
             ad_network_name], login_credentials)
 
     def __init__(cls, login_credentials):
-        cls.login_credentials = login_credentials
+        cls.login_credentials = copy(login_credentials)
 
     def create_scraper(cls):
         return cls.scraper(cls.login_credentials)

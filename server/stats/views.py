@@ -167,19 +167,19 @@ def _create_mdb_json(stats_to_put):
             request_d_keys.remove((adunit, date_hour))
 
     # these are request counts only; insert them into json_d
-    # for (adunit, date_hour) in request_d_keys:
-    #     k = '%s::%s' % (adunit, date_hour)
-    # 
-    #     # all other counts are 0
-    #     counts = {}
-    #     counts['attempt_count'] = 0
-    #     counts['impression_count'] = 0
-    #     counts['click_count'] = 0
-    #     counts['conversion_count'] = 0
-    #     counts['revenue'] = 0
-    # 
-    #     json_d[k] = counts
-    #     json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
+    for (adunit, date_hour) in request_d_keys:
+        k = '%s::%s' % (adunit, date_hour)
+    
+        # all other counts are 0
+        counts = {}
+        counts['attempt_count'] = 0
+        counts['impression_count'] = 0
+        counts['click_count'] = 0
+        counts['conversion_count'] = 0
+        counts['revenue'] = 0
+    
+        json_d[k] = counts
+        json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
 
     return simplejson.dumps(json_d)
 
@@ -683,7 +683,7 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
         # self.response.out.write('NOT WORKING')
         # return 
         
-        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update
+        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://write.mongostats.mopub.com/update
         post_request = urllib2.Request(post_url, post_data)
         post_response = urllib2.urlopen(post_request)
         status_code = post_response.code

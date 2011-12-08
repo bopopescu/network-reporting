@@ -20,6 +20,8 @@ class AdNetworkReportIndexHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
+        #create_fake_data(self.account)
+
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
@@ -29,9 +31,15 @@ class AdNetworkReportIndexHandler(RequestHandler):
         aggregates, daily_stats, networks, apps = manager. \
                 get_index_data(days)
 
+        if networks:
+            network_names, networks = zip(*networks)
+        else:
+            network_names = []
+            networks = []
 
         forms = []
-        for name in AD_NETWORK_NAMES:
+        for name in network_names:
+            name = name.lower()
             try:
                 instance = AdNetworkLoginCredentials. \
                         get_by_ad_network_name(self.account, name)
@@ -42,35 +50,21 @@ class AdNetworkReportIndexHandler(RequestHandler):
             form.ad_network = name
             forms.append(form)
 
-
-
-        # Get networks for which they've entered publisher information but
-        # havent given us login credentials so we can bug them about giving us
-        # their creds
-        networks_without_creds = \
-                list(manager.get_networks_without_credentials())
-
-
-        # TODO: REFACTOR
-        # Each view should return one template only.
-
-        if networks:
-            return render_to_response(self.request,
-                                      'ad_network_reports/ad_network_reports_index.html',
-                                      {
-                                          'start_date' : days[0],
-                                          'end_date' : days[-1],
-                                          'date_range' : self.date_range,
-                                          'aggregates' : aggregates,
-                                          'daily_stats' : simplejson.dumps(daily_stats),
-                                          'apps': apps,
-                                          'networks': networks,
-                                          'networks_without_creds': networks_without_creds,
-                                          'forms': forms
-                                      })
-        else:
-            return render_to_response(self.request,
-                    'ad_network_reports/ad_network_setup.html')
+        return render_to_response(self.request,
+                          'ad_network_reports/ad_network_reports_index.html',
+                          {
+                              'start_date' : days[0],
+                              'end_date' : days[-1],
+                              'date_range' : self.date_range,
+                              'account_key' : str(self.account.key()),
+                              'aggregates' : aggregates,
+                              'daily_stats' : simplejson.dumps(
+                                  daily_stats),
+                              'apps': apps,
+                              'show_graph': apps != [],
+                              'networks': zip(network_names, networks, forms),
+                              'forms': forms
+                          })
 
 @login_required
 def ad_network_reports_index(request, *args, **kwargs):
@@ -96,9 +90,15 @@ class AppDetailHandler(RequestHandler):
         daily_stats = []
         for stats in stats_list:
             stats_dict = stats.__dict__['_entity']
-            del(stats_dict['ad_network_app_mapper'])
+            if not stats_dict:
+                stats_dict = stats.__dict__
+                stats_dict = dict([(key.replace('_', '', 1), val) for key, val
+                    in stats_dict.iteritems()])
+            else:
+                del(stats_dict['ad_network_app_mapper'])
             del(stats_dict['date'])
             daily_stats.append(stats_dict)
+        daily_stats.reverse()
         aggregates = manager.roll_up_stats(stats_list)
         return render_to_response(self.request,
                                   'ad_network_reports/ad_network_base.html',
@@ -107,13 +107,14 @@ class AppDetailHandler(RequestHandler):
                                       'end_date' : days[-1],
                                       'date_range' : self.date_range,
                                       'ad_network_name' :
-                                        ad_network_app_mapper.ad_network_name,
+                                        AD_NETWORK_NAMES[ad_network_app_mapper.ad_network_name],
                                       'app_name' :
                                         ad_network_app_mapper.application.name,
                                       'aggregates' : aggregates,
                                       'daily_stats' :
                                         simplejson.dumps(daily_stats),
-                                      'stats_list' : stats_list
+                                      'stats_list' : stats_list,
+                                      'show_graph': True
                                   })
 
 @login_required
@@ -175,7 +176,6 @@ class AddLoginCredentialsHandler(RequestHandler):
         Return form with ad network login info.
         """
 
-        #create_fake_data(self.account)
         if account_key:
             account = Account.get(account_key)
             management_mode = True
@@ -185,7 +185,7 @@ class AddLoginCredentialsHandler(RequestHandler):
             management_mode = False
 
         forms = []
-        for name in AD_NETWORK_NAMES:
+        for name in AD_NETWORK_NAMES.keys():
             try:
                 instance = AdNetworkLoginCredentials.get_by_ad_network_name(account, name)
                 form = LoginInfoForm(instance=instance, prefix=name)
@@ -200,7 +200,8 @@ class AddLoginCredentialsHandler(RequestHandler):
                                   {
                                       'management_mode' : management_mode,
                                       'account_key' : str(account_key),
-                                      'ad_network_names' : AD_NETWORK_NAMES,
+                                      'ad_network_names' :
+                                        AD_NETWORK_NAMES.keys(),
                                       'forms' : forms,
                                       'error' : "",
                                   })

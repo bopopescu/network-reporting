@@ -647,6 +647,7 @@ class AdUnitShowHandler(RequestHandler):
         backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], adunit.adgroups)
         backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
 
+        marketplace_activated = marketplace_campaigns[0].campaign.active
 
         today = adunit.all_stats[-1]
         try:
@@ -671,7 +672,10 @@ class AdUnitShowHandler(RequestHandler):
              'marketplace': marketplace_campaigns,
              'network': network_campaigns,
              'backfill_promo': backfill_promo_campaigns,
-             'backfill_marketplace': backfill_marketplace_campaigns})
+             'backfill_marketplace': backfill_marketplace_campaigns,
+             'marketplace_activated': marketplace_activated
+
+         })
 
 @login_required
 def adunit_show(request,*args,**kwargs):

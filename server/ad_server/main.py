@@ -12,7 +12,7 @@ import hashlib
 import urllib
 import datetime
 
-urllib.getproxies_macosx_sysconf = lambda: {}        
+urllib.getproxies_macosx_sysconf = lambda: {}
 
 from google.appengine.api import users, urlfetch, memcache
 from google.appengine.api import taskqueue
@@ -20,7 +20,7 @@ from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import images
-from ad_server import frequency_capping   
+from ad_server import frequency_capping
 from publisher.models import *
 from advertiser.models import *
 
@@ -66,7 +66,7 @@ class AdRequestHandler(webapp.RequestHandler):
 # /m/imp?id=agltb3B1Yi1pbmNyDAsSBFNpdGUY1NsgDA&cid=agltb3B1Yi1pbmNyEAsSCENyZWF0aXZlGJvEIAw&udid=4863585ad8c80749
 class AdImpressionHandler(webapp.RequestHandler):
     def get(self):
-        
+
         # Update budgeting
         # TODO: cache this
         adunit_key = self.request.get('id')
@@ -75,16 +75,16 @@ class AdImpressionHandler(webapp.RequestHandler):
         creative = adunit_context.get_creative_by_key(creative_id)
         if creative.ad_group.bid_strategy == 'cpm':
             budget_service.apply_expense(creative.ad_group.campaign.budget_obj, creative.ad_group.bid/1000)
-       
-        raw_udid = self.request.get("udid")  
+
+        raw_udid = self.request.get("udid")
         AdImpressionHandler.increment_frequency_counts(creative=creative,
                                    raw_udid=raw_udid)
-        
+
         if not self.request.get('testing') == TEST_MODE:
-            stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)  
-            
+            stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)
+
         self.response.out.write("OK")
-    
+
     @classmethod
     def increment_frequency_counts(cls, creative=None,
                                    raw_udid=None,
@@ -93,15 +93,15 @@ class AdImpressionHandler(webapp.RequestHandler):
           user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(raw_udid, now, creative.ad_group.key())
           trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
           trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
-          memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)      
-             
+          memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
+
 class AdClickHandler(webapp.RequestHandler):
     # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
     def get(self):
-        
+
         if not self.request.get('testing') == TEST_MODE:
-            stats_accumulator.log(self.request, event=stats_accumulator.CLK_EVENT)  
-  
+            stats_accumulator.log(self.request, event=stats_accumulator.CLK_EVENT)
+
         udid = self.request.get('udid')
         mobile_app_id = self.request.get('appid')
         time = datetime.datetime.now()
@@ -121,7 +121,7 @@ class AdClickHandler(webapp.RequestHandler):
             ce = ce_manager.log_click_event(udid, mobile_app_id, time, adunit_id, creative_id)
 
         id = self.request.get("id")
-        q = self.request.get("q")    
+        q = self.request.get("q")
         # BROKEN
         # url = self.request.get("r")
         sz = self.request.query_string
@@ -134,25 +134,31 @@ class AdClickHandler(webapp.RequestHandler):
         else:
             self.response.out.write("ClickEvent:OK:")
 
-# TODO: Process this on the logs processor 
+# TODO: Process this on the logs processor
 class AppOpenHandler(webapp.RequestHandler):
     # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA
     def get(self):
-        udid = self.request.get('udid')
-        mobile_appid = self.request.get('id')
+        from common.utils.helpers import get_udid_appid
+        
+        udid, mobile_appid = get_udid_appid(self.request)
+
+        # bail early if udid AND mobile_appid is not provided
+        if not (udid and mobile_appid):
+            return
+
         aoe_manager = AppOpenEventManager()
         aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())
 
         if aoe and conversion_logged:
             stats_accumulator.log(self.request, event=stats_accumulator.CONV_EVENT, adunit_id=aoe.conversion_adunit, creative_id=aoe.conversion_creative, udid=udid)
-            self.response.out.write("ConversionLogged:"+str(conversion_logged)+":"+str(aoe.key())) 
+            self.response.out.write("ConversionLogged:"+str(conversion_logged)+":"+str(aoe.key()))
         else:
-            self.response.out.write("ConversionLogged:"+str(conversion_logged)) 
-        
+            self.response.out.write("ConversionLogged:"+str(conversion_logged))
+
 class PurchaseHandler(webapp.RequestHandler):
     def get(self):
         return self.post()
-    
+
     def post(self):
         from google.appengine.api import taskqueue
         trace_logging.info(self.request.get("receipt"))
@@ -162,8 +168,8 @@ class PurchaseHandler(webapp.RequestHandler):
                                       udid=self.request.get('udid'),
                                       receipt=self.request.get('receipt'),
                                       mobile_appid=self.request.get('appid'),)
-        self.response.out.write("OK")    
-        
+        self.response.out.write("OK")
+
 class PurchaseHandlerTxn(webapp.RequestHandler):
     def post(self):
         import base64
@@ -171,7 +177,7 @@ class PurchaseHandlerTxn(webapp.RequestHandler):
         from common.utils import simplejson
         from userstore.query_managers import InAppPurchaseEventManager
         # verify the receipt with apple
-        
+
         url = "https://buy.itunes.apple.com/verifyReceipt"
         # sandbox
         # url = "https://sandbox.itunes.apple.com/verifyReceipt"
@@ -189,7 +195,7 @@ class PurchaseHandlerTxn(webapp.RequestHandler):
             receipt_dict = json_response.get('receipt')
             logging.info('receipt dict: %s'%receipt_dict)
             # user either the transaction id or the hash of the purchase date
-            transaction_id = receipt_dict.get('transaction_id', 
+            transaction_id = receipt_dict.get('transaction_id',
                 hashlib.sha1(receipt_dict['original_purchase_date']).hexdigest())
 
             InAppPurchaseEventManager().log_inapp_purchase_event(transaction_id=transaction_id,
@@ -198,11 +204,11 @@ class PurchaseHandlerTxn(webapp.RequestHandler):
                                                         time=datetime.datetime.fromtimestamp(float(self.request.get('time'))),
                                                         mobile_appid=self.request.get('mobile_appid'))
         else:
-            logging.error("invalid receipt")                                                
-                                                        
+            logging.error("invalid receipt")
+
 
 def main():
-    application = mp_webapp.MPLoggingWSGIApplication([('/m/ad', adhandler.AdHandler), 
+    application = mp_webapp.MPLoggingWSGIApplication([('/m/ad', adhandler.AdHandler),
                                                   ('/m/imp', AdImpressionHandler),
                                                   ('/m/aclk', AdClickHandler),
                                                   ('/m/open', AppOpenHandler),
@@ -214,10 +220,10 @@ def main():
                                                   ('/m/memshow', memcache_mangler.ShowHandler),
                                                   ('/m/purchase', PurchaseHandler),
                                                   ('/m/purchase_txn', PurchaseHandlerTxn),
-                                                  ('/m/req',AdRequestHandler),], 
+                                                  ('/m/req',AdRequestHandler),],
                                                   debug=DEBUG)
     run_wsgi_app(application)
     # wsgiref.handlers.CGIHandler().run(application)
-    
+
 if __name__ == '__main__':
     main()

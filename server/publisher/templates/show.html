@@ -1,16 +1,15 @@
 {% extends 'publisher/base.html' %}{% load filters %}
 {% block pageTitle %}
-          <div class="breadcrumb">
-            <a class="linkIcon breadcrumb-back" href="{% url publisher_app_show app_key=adunit.app_key.key %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to App</a>
-            <h1>{{adunit.name}}</h1>
-          </div>{% endblock pageTitle %}
-{% block titleBarRight %}
-            <span class="titlebar-right">
-              <a class="button" id="dashboard-apps-editAdUnitButton" href="#">Edit ad unit settings</a>
-              <a class="linkIcon" href="{% url publisher_generate adunit_key=adunit.key %}">Get code snippet <span class="ui-icon ui-icon-triangle-1-e"></span></a>
-            </span>
+  <div class="breadcrumb">
+    <a class="linkIcon breadcrumb-back" href="{% url publisher_app_show app_key=adunit.app_key.key %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to App</a>
+    <h1>{{adunit.name}}</h1>
+  </div>{% endblock pageTitle %}
+  {% block titleBarRight %}
+    <span class="titlebar-right">
+      <a class="button" id="dashboard-apps-editAdUnitButton" href="#">Edit ad unit settings</a>
+      <a class="linkIcon" href="{% url publisher_generate adunit_key=adunit.key %}">Get code snippet <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+    </span>
 {% endblock titleBarRight %}
-{% block messageCenter %}{% endblock messageCenter %}
 
 {% block content %}{% if not adunit.adgroups %}
           <div class="alert-message block-message">

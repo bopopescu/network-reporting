@@ -180,12 +180,25 @@ ul.adunits {
     th:not(:first-child) {
         text-align: center;
     }
-    .top-row td {
-        font-size: 18px;
-        text-align: left;
-        background: #f9f9f9;
-        &:not(:first-child) {
+    .shaded {
+        background: #f9f9f9; 
+    }
+    .top-row {
+        td {
+            font-size: 18px;
             text-align: right;
+        }
+        td:first-child {
+            text-align: left;
+        }
+        td.network-status {
+            text-align: left;
+        }
+        td.network-icon {
+            width: 10%;
+        }
+        span.muted {
+            font-size: 13px; 
         }
     }
     .sub-rows td:not(:first-child) {
@@ -196,3 +209,4 @@ ul.adunits {
         border-bottom: 1px dotted #ddd;
     }
 }
+

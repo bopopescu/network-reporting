@@ -7,7 +7,6 @@
   <li class="active"><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
 {% block pageTitle %}<h1>Ad Network Revenue Report</h1>{% endblock pageTitle %}
-{% block messageCenter %}{% endblock messageCenter %}
 {% block titleBarRight %}{% endblock titleBarRight %}
 
 {% block extraScripts %}
@@ -128,6 +127,7 @@
 
   {% block graph %}
 
+  {% if show_graph %}
     <section class="offset nomargin" id="dashboard-stats">
           <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
       <div class="stats clearfix">
@@ -152,6 +152,13 @@
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
       </div>
     </section>
+  {% else %}
+    <div class="alert-message block-message info">
+      Ad network revenue reporting can be set up to see statistics from any of
+      the big ad networks. Click 'Enable Reporting' for any ad network to get
+      started using ad network reports.
+    </div>
+  {% endif %}
   {% endblock graph %}
 
   {% block innerContent %}
@@ -191,8 +198,5 @@
       </table>
 
     {% endblock innerContent %}
-
-    {% block appendedContent %}
-    {% endblock appendedContent %}
 
 {% endblock content %}

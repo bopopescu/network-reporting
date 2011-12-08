@@ -111,8 +111,8 @@ class BaseCreativeRenderer(object):
             CACHEBUSTER_MAX = 0
 
         macro_tuples = ((CACHEBUSTER, str(random.randint(0,CACHEBUSTER_MAX))),
-                            (CLK_URL, self.click_url),
-                            (CLK_URL_ESC, urllib.quote(self.click_url)),
+                            (CLK_URL, self.click_url+"&r="),
+                            (CLK_URL_ESC, urllib.quote(self.click_url+"&r=")),
                             (CLK_THRU, dest_url),
                             (CLK_THRU_ESC, urllib.quote(dest_url)),
                             (CLK_THRU_2ESC, urllib.quote(urllib.quote(dest_url))),

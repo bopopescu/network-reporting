@@ -419,6 +419,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return generator of publisher ids at the application level for the
         account on the ad_network.
         """
+        # iad is special (it's pub id is located in it's app url)
         if ad_network_name == 'iad':
             yield AppQueryManager.get_iad_pub_ids(account=self.account,
                     include_apps=False).next()
@@ -450,8 +451,11 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         potential_networks = list(set(AD_NETWORK_NAMES.keys()) -
                 set(networks_with_creds))
         for network in potential_networks:
-            pub_ids = list(self.get_app_publisher_ids(network))
-            if pub_ids:
+            try:
+                self.get_app_publisher_ids(network).next()
+            except StopIteration:
+                pass
+            else:
                 yield network
 
     def get_login_credentials(self):

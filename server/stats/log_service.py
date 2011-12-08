@@ -82,7 +82,7 @@ class LogService(object):
         try:
             # post data is a dict containing the file name in blobstore and its content: the log lines
             post_data = {'blob_file_name': blob_file_name, 'log_lines': self.lines}
-            post_data_serialized = simplejson.dumps(post_data, ensure_ascii=False)
+            post_data_serialized = simplejson.dumps(post_data)
 
             task = taskqueue.Task(name=None,
                                   method='POST',
@@ -103,7 +103,8 @@ class LogService(object):
         except taskqueue.TaskAlreadyExistsError:
             logging.info("task %s already exists"%task_name)
         except Exception, e:
-            logging.error(e)
+            exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+            logging.error(exception_traceback)
 
 
 def get_blob_name_for_time(t, blob_file_name="apache"):

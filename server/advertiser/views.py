@@ -65,95 +65,38 @@ class AdGroupIndexHandler(RequestHandler):
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
-        """
-        # memoize
-        campaigns_dict = {}
-
-        campaigns = CampaignQueryManager.get_campaigns(account=self.account)
-        for campaign in campaigns:
-            campaigns_dict[campaign.key()] = campaign
-
-
-        if campaigns:
-            adgroups = AdGroupQueryManager().get_adgroups(account=self.account)
-        else:
-            adgroups = []
-
-        # Roll up and attach various stats to adgroups
-        for adgroup in adgroups:
-            adgroup.budget = adgroup.campaign.budget_obj
-            try:
-                adgroup.campaign = campaigns_dict[adgroup._campaign]
-            except KeyError:
-                pass
-
-
-        # memoize
-        adunits_dict = {}
-        apps_dict = {}
-
-        for adgroup in adgroups:
-            adunits = []
-            adunit_keys_to_fetch = []
-            # get targeted apps
-            adgroup.targeted_app_keys = []
-            adunit_keys = [adunit_key for adunit_key in adgroup.site_keys]
-            for adunit_key in adunit_keys:
-                if adunit_key in adunits_dict:
-                    adunits.append(adunits_dict[adunit_key])
-                else:
-                    adunit_keys_to_fetch.append(adunit_key)
-
-            if adunit_keys_to_fetch:
-                adunits += AdUnitQueryManager.get(adunit_keys_to_fetch)
-
-            for adunit in adunits:
-                adunits_dict[adunit.key()] = adunit
-                if adunit:
-                    adgroup.targeted_app_keys.append(adunit._app_key)
-                # apps.append(adunit.app_key)
-
-        # Due to weirdness, network_campaigns and backfill_promo_campaigns are actually lists of adgroups
-        sorted_campaign_groups = _sort_campaigns(adgroups)
-        promo_campaigns, guaranteed_campaigns, marketplace_campaigns, network_campaigns, backfill_promo_campaigns = sorted_campaign_groups
-
-        guarantee_levels = _sort_guarantee_levels(guaranteed_campaigns)
-
-
-        help_text = None
-        """
-
         campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo'])
         
         adgroups = []
+        adunits_dict = {}
+        apps_dict = {}
         for campaign in campaigns:
             for adgroup in campaign.adgroups:
                 if not adgroup.archived:
+                    adunits = []
+                    adunit_keys_to_fetch = []
+                    
+                    adgroup.targeted_app_keys = []
+                    adunit_keys = [adunit_key for adunit_key in adgroup.site_keys]
+                    for adunit_key in adunit_keys:
+                        if adunit_key in adunits_dict:
+                            adunits.append(adunits_dict[adunit_key])
+                        else:
+                            adunit_keys_to_fetch.append(adunit_key)
+
+                    if adunit_keys_to_fetch:
+                        adunits += AdUnitQueryManager.get(adunit_keys_to_fetch)
+
+                    for adunit in adunits:
+                        adunits_dict[adunit.key()] = adunit
+                        if adunit:
+                            adgroup.targeted_app_keys.append(adunit._app_key)
+
                     adgroups.append(adgroup)
 
         promo_adgroups, gtee_adgroups, marketplace_adgroups, network_adgroups, backfill_promo_adgroups = _sort_campaigns(adgroups)
 
-        """
-        return render_to_response(self.request,
-                                 'advertiser/adgroup_index.html',
-                                  {'adgroups':adgroups,
-                                   # 'graph_adgroups': graph_adgroups,
-                                   # 'graph_gtee_adgroups': graph_gtee_adgroups,
-                                   # 'graph_totals': account_level_stats,
-                                   'account_stats': simplejson.dumps(response_dict),
-                                   'start_date': days[0],
-                                   'end_date':days[-1],
-                                   'date_range': self.date_range,
-                                   'apps' : apps,
-                                   'guarantee_levels': guarantee_levels,
-                                   'guarantee_num': len(guaranteed_campaigns),
-                                   'promo': promo_campaigns,
-                                   'backfill_promo': backfill_promo_campaigns,
-                                   'account': self.account,
-                                   'helptext':help_text,
-                               })
-        """
-
+        # TODO: do I need to add 'account': self.account,?
         return render_to_response(self.request,
                                   'advertiser/adgroup_index.html', {
                                       'apps': apps,

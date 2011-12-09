@@ -17,27 +17,27 @@
 {% block dateButtons %}
 <div id="titlebar-center-wide">
     <span class="buttonset-start-disabled" id="campaigns-filterOptions">
-      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/>
+      <input type="radio" name="campaigns-filterOptions-option" value="" checked="checked" id="campaigns-filterOptions-option-all"/>
       <label for="campaigns-filterOptions-option-all">
         All
       </label>
-      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/>
+      <input type="radio" name="campaigns-filterOptions-option" value="Running" id="campaigns-filterOptions-option-Running"/>
       <label for="campaigns-filterOptions-option-Running">
         Running
       </label>
-      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" />
+      <input type="radio" name="campaigns-filterOptions-option" value="Paused" id="campaigns-filterOptions-option-Paused" />
       <label for="campaigns-filterOptions-option-Paused">
         Paused
       </label>
-      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" />
+      <input type="radio" name="campaigns-filterOptions-option" value="Scheduled" id="campaigns-filterOptions-option-Scheduled" />
       <label for="campaigns-filterOptions-option-Scheduled">
         Scheduled
       </label>
     </span>
     <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions">
-      <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
+      <option id="campaigns-appFilterOptions-option-all" value="">All Apps</option>
       {% for app in apps %}
-        <option value="campaign-targeting-{{app.key}}">{{app.name}}</option>
+        <option value="{{app.key}}">{{app.name}}</option>
       {% endfor %}
     </select>
 </div>
@@ -131,9 +131,9 @@
   <script type="text/html" id="adgroups-table-template">
     {% include "partials/adgroups_table.html" %}
   </script>
-  <script type="text/javascript" src="/js/models.js?v=1"></script>
-  <script type="text/javascript" src="/js/views.js?v=1"></script>
-  <script type="text/javascript" src="/js/controllers/campaigns.js?v=1"></script>
+  <script type="text/javascript" src="/js/models.js?v=11"></script>
+  <script type="text/javascript" src="/js/views.js?v=11"></script>
+  <script type="text/javascript" src="/js/controllers/campaigns.js?v=11"></script>
   <script>
     $(function() {
       CampaignsController(
@@ -145,7 +145,8 @@
           details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
           start_time: {% if adgroup.campaign.start_datetime %}new Date({{ adgroup.campaign.start_datetime.year }}, {{ adgroup.campaign.start_datetime.month|add:"-1" }}, {{ adgroup.campaign.start_datetime.day }}){% else %}null{% endif %},
           end_time: {% if adgroup.campaign.end_datetime %}new Date({{ adgroup.campaign.end_datetime.year }}, {{ adgroup.campaign.end_datetime.month|add:"-1" }}, {{ adgroup.campaign.end_datetime.day }}){% else %}null{% endif %},
-          budget: {% if adgroup.campaign.budget %}{{ adgroup.campaign.budget }}{% else %}null{% endif %}}{% if not forloop.last %},{% endif %}{% endfor %}],
+          budget: {% if adgroup.campaign.budget %}{{ adgroup.campaign.budget }}{% else %}null{% endif %},
+          apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}],
         [{% for adgroup in promo_adgroups %}{
           id: '{{ adgroup.key }}',
           active: {% if adgroup.active %}true{% else %}false{% endif %},
@@ -153,7 +154,8 @@
           details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
           start_time: {% if adgroup.campaign.start_datetime %}new Date({{ adgroup.campaign.start_datetime.year }}, {{ adgroup.campaign.start_datetime.month|add:"-1" }}, {{ adgroup.campaign.start_datetime.day }}){% else %}null{% endif %},
           end_time: {% if adgroup.campaign.end_datetime %}new Date({{ adgroup.campaign.end_datetime.year }}, {{ adgroup.campaign.end_datetime.month|add:"-1" }}, {{ adgroup.campaign.end_datetime.day }}){% else %}null{% endif %},
-          budget: {% if adgroup.campaign.budget %}{{ adgroup.campaign.budget }}{% else %}null{% endif %}}{% if not forloop.last %},{% endif %}{% endfor %}],
+          budget: {% if adgroup.campaign.budget %}{{ adgroup.campaign.budget }}{% else %}null{% endif %},
+          apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}],
         [{% for adgroup in backfill_promo_adgroups %}{
           id: '{{ adgroup.key }}',
           deleted: {% if adgroup.deleted %}true{% else %}false{% endif %},
@@ -162,7 +164,8 @@
           details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
           start_time: {% if adgroup.campaign.start_datetime %}new Date({{ adgroup.campaign.start_datetime.year }}, {{ adgroup.campaign.start_datetime.month|add:"-1" }}, {{ adgroup.campaign.start_datetime.day }}){% else %}null{% endif %},
           end_time: {% if adgroup.campaign.end_datetime %}new Date({{ adgroup.campaign.end_datetime.year }}, {{ adgroup.campaign.end_datetime.month|add:"-1" }}, {{ adgroup.campaign.end_datetime.day }}){% else %}null{% endif %},
-          budget: {% if adgroup.campaign.budget %}{{ adgroup.campaign.budget }}{% else %}null{% endif %}}{% if not forloop.last %},{% endif %}{% endfor %}
+          budget: {% if adgroup.campaign.budget %}{{ adgroup.campaign.budget }}{% else %}null{% endif %},
+          apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}
         ],
         's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'
       );

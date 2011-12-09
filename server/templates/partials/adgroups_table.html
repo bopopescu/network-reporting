@@ -2,7 +2,7 @@
     <thead>
         <tr>
             <th class="campaignData-icon"></th>
-            <th class="dataTable-name">Name</th>
+            <th class="dataTable-name"><%= title %></th>
             <% if(type == 'gtee' || type == 'promo') { %>
                 <th class="dataTable-data numeric">Revenue</th>
             <% } %>
@@ -43,32 +43,25 @@
                 <td class="dataTable-name">
                     <a href="<%= adgroup.get('details_url') %>"><%= adgroup.get('name') %></a><br/>
                     <span class="muted"><%
-                        if(type == 'network') {
+                        if(type == 'network')
                             print(adgroup.get('network_type'));
-                        }
                         else if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') {
                             if(adgroup.start_date != null) {
-                                if(adgroup.end_date != null) {
+                                if(adgroup.end_date != null)
                                     print(adgroup.start_date + '-' + adgroup.end_date + '. ');
-                                }
-                                else {
+                                else
                                     print('Starts ' + adgroup.start_date + '. ');
-                                } 
                             }
                             else {
-                                if(adgroup.end_date != null) {
+                                if(adgroup.end_date != null)
                                     print('Ends ' + adgroup.end_date + '. ');
-                                }
-                                else {
+                                else
                                     print('All dates. ');
-                                }
                             }
-                            if(adgroup.budget) {
+                            if(adgroup.budget)
                                 print(adgroup.budget + ' daily budget.');
-                            }
-                            else {
+                            else
                                 print('Unlimited budget.');
-                            }
                         }
                     %></span>
                 </td>
@@ -83,7 +76,7 @@
                     <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('request_count') %></td>
                 <% } %>
                 <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
-                    <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('goal') %></td>
+                    <td class="dataTable-data numeric"><%= adgroup.get('goal') %></td>
                 <% } %>
                 <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('impression_count') %></td>
                 <% if(type == 'network') { %>

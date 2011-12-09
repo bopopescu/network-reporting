@@ -1,144 +1,73 @@
 (function($, Backbone) {
     /*
      * collection: AdGroups
+     * el: element that will hold the content
+     * title: title that will be an h2 at the top of the content
+     * type: 'network', 'gtee', 'promo', or 'backfill_promo' -- affects which fields are shown
+     * tables: mapping of
      */
     AdGroupsView = Backbone.View.extend({
         initialize: function() {
             this.collection.bind('change', this.render, this);
         },
+        filtered_collection: function() {
+            // TODO: uses elements not in this view
+            var status = $("#campaigns-filterOptions").find(':checked').val();
+            var app = $('#campaigns-appFilterOptions').val();
+            return new AdGroups(this.collection.reject(function(adgroup) {
+                return (status && status != adgroup.get('status')) ||
+                       (app && adgroup.get('apps').indexOf(app) == -1);
+            }));
+        },
         render: function() {
+            var adgroups = this.filtered_collection();
+
+            // TODO: uses elements not in this view, with multiple views there are conflicts
+            $("#campaigns-filterOptions").buttonset({"disabled": !adgroups.isFullyLoaded()});
+
             var html;
-            if(this.collection.size() === 0) {
+            if(adgroups.size() === 0) {
                 html = "<h2>No " + this.options.title + "</h2>";
             }
             else {
                 html = _.template($('#adgroups-rollup-template').html(), {
-                    adgroups: this.collection,
+                    adgroups: adgroups,
                     title: this.options.title,
                     type: this.options.type
                 });
-                html += _.template($('#adgroups-table-template').html(), {
-                    adgroups: this.collection,
-                    type: this.options.type
-                });
+                if(this.options.tables) {
+                    var type = this.options.type;
+                    _.each(this.options.tables, function(filter, title) {
+                        var filtered_adgroups = new AdGroups(adgroups.filter(filter));
+                        if(filtered_adgroups.length) {
+                            html += _.template($('#adgroups-table-template').html(), {
+                                adgroups: filtered_adgroups,
+                                title: title,
+                                type: type
+                            });
+                        }
+                    });
+                }
+                else {
+                    html += _.template($('#adgroups-table-template').html(), {
+                        adgroups: adgroups,
+                        title: 'Name',
+                        type: this.options.type
+                    });
+                }
             }
             $(this.el).html(html);
             return this;
         }
     });
 
-    function getCurrentChartSeriesType() {
-        var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
-        if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ctr') return 'line';
-        else return 'area';
-    }
-
-
-    function getGraphImpressionStats() {
-      var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
-      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
-      return mopub.Stats.getGraphSummedStatsForStatName("impression_count", sortedCampaigns);
-    }
-
-    function getGraphClickStats() {
-      var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
-      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
-      return mopub.Stats.getGraphSummedStatsForStatName("click_count", sortedCampaigns);
-    }
-
-    function getGraphCtrStats() {
-      var allCampaigns = getFetchedCampaignsWithType(CampaignTypeEnum.All);
-      var sortedCampaigns = mopub.Stats.sortStatsObjectsByStat(allCampaigns, "impression_count");
-
-      var result = mopub.Stats.getGraphCtrStats(sortedCampaigns);
-    }
-
     CollectionGraphView = Backbone.View.extend({
         initialize: function() {
             this.collection.bind('change', this.render, this);
+        },
 
-            // date picker
-            // set up dateOptions
-            $('#dashboard-dateOptions input').click(function() {
-                var option = $(this).val();
-                var hash = document.location.hash;
-                if(option == 'custom') {
-                    $('#dashboard-dateOptions-custom-modal').dialog({
-                    width: 570,
-                    buttons: [
-                    {
-                    text: 'Set dates',
-                    css: { fontWeight: '600' },
-                    click: function() {
-                    var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
-                    var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
-                    var num_days=Math.round((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
-
-                    var from_day=from_date.getDate();
-                    var from_month=from_date.getMonth()+1;
-                    var from_year=from_date.getFullYear();
-
-                    $(this).dialog("close");
-                    var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
-                    document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day + hash;
-                    }
-                    },
-                    {
-                    text: 'Cancel',
-                    click: function() {
-                    $(this).dialog("close");
-                    }
-                    }
-                    ]
-                    });
-                }
-                else {
-                    // Tell server about selected option to get new data
-                    var location = document.location.href.replace(hash,'').replace(/\?.*/,'');
-                    document.location.href = location+'?r=' + option + hash;
-                }
-            });
-
-            // set up custom dateOptions modal dialog
-            $('#dashboard-dateOptions-custom-from').datepicker({
-                defaultDate: '-15d',
-                maxDate: '0d',
-                onSelect: function(selectedDate) {
-                    var other = $('#dashboard-dateOptions-custom-to');
-                    var instance = $(this).data("datepicker");
-                    var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
-                    other.datepicker('option', 'minDate', date);
-                }
-            });
-            $('#dashboard-dateOptions-custom-to').datepicker({
-                defaultDate: '-1d',
-                maxDate: '0d',
-                onSelect: function(selectedDate) {
-                    var other = $('#dashboard-dateOptions-custom-from');
-                    var instance = $(this).data("datepicker");
-                    var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
-                    other.datepicker('option', 'maxDate', date);
-                }
-            });
-
-
-            // stats breakdown
-            $('.stats-breakdown tr').click(function(e) {
-                var row = $(this);
-                if(!row.hasClass('active')) {
-                    row.siblings().removeClass('active');
-                    row.addClass('active');
-                    $('#dashboard-stats-chart').fadeOut(100, function() {
-                        mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-                        $(this).show();
-                    });
-                }
-            });
-
-            $('#stats-breakdown-dateOptions input').click(function() {
-                $('.stats-breakdown-value').hide();
-                $('.stats-breakdown-value.'+$(this).val()).show();
-            }).click();
+        show_chart: function() {
+            mopub.Chart.setupDashboardStatsChart( ($('#dashboard-stats .stats-breakdown .active').attr('id') == 'stats-breakdown-ctr') ? 'line' : 'area');
         },
 
         render: function() {
@@ -168,7 +97,7 @@
                 click_count: this.collection.get_chart_data('click_count'),
                 ctr: this.collection.get_chart_data('ctr')
             };
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+            this.show_chart();
         }
     })
 

@@ -11,7 +11,6 @@ have to have firefox installed.
 import unittest
 import random
 from selenium import webdriver
-from time import sleep
 
 BROWSER = None
 
@@ -122,13 +121,13 @@ class AccountInteractionTestCase(InteractionTestCase):
     Selenium tests for the account and registration apps, as
     well as for the sign up process.
     """
+    # REFACTOR use the shortcuts
     def testRegisterAccount(self):
         """
         Tests the creation of a new account (uses random variables).
         Doesn't test the whole sign up process, just the actual
         registration part.
         """
-        # REFACTOR use the shortcuts
         # go to register new account
         self.logout()
         self.get('/account/login/')
@@ -160,7 +159,7 @@ class AccountInteractionTestCase(InteractionTestCase):
         page_h1 = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
         self.assertTrue(page_h1.text.find("Step 1") > -1)
 
-
+    # REFACTOR use the shortcuts
     def testSignUpProcess(self):
         """
         Goes through the entire sign up process (registration, create an app,
@@ -213,21 +212,25 @@ class DirectSoldInteractionTestCase(InteractionTestCase):
         page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
         self.assertTrue(page_title.text.find("Campaigns") > -1)
 
+    #TODO
     def testFilterByRunning(self):
         """
         """
         pass
 
+    #TODO
     def testFilterByScheduled(self):
         """
         """
         pass
 
+    #TODO
     def testFilterByPaused(self):
         """
         """
         pass
 
+    #TODO
     def testFilterByApp(self):
         """
         """
@@ -317,7 +320,7 @@ class DirectSoldInteractionTestCase(InteractionTestCase):
         page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
         self.assertTrue(page_title.text.find("Campaign:") > -1)
 
-
+    #TODO
     def testCampaignDetail(self):
         """
         Navigate to the campaign detail page and make sure it loads.
@@ -327,6 +330,7 @@ class DirectSoldInteractionTestCase(InteractionTestCase):
     # TODO test detail load for different types of campaigns
     # TODO test detail load for campaigns with a ton of adunits/apps
 
+    #TODO
     def testEditCampaign(self):
         """
         Change the details of a campaign that already exists.
@@ -342,12 +346,14 @@ class MarketplaceInteractionTestCase(InteractionTestCase):
     Interaction tests for the marketplace dashboard and marketplace settings.
     """
 
+    #TODO
     def testMarketplaceLoad(self):
         """
         Makes sure the marketplace page can load.
         """
         pass
 
+    #TODO
     def testChangePriceFloor(self):
         """
         Changes the price floor for an app and refreshes the page,
@@ -355,6 +361,7 @@ class MarketplaceInteractionTestCase(InteractionTestCase):
         """
         pass
 
+    #TODO
     def testChangeEnabled(self):
         """
         Changes the enabled-ness of a marketplace adunit and refreshes
@@ -362,6 +369,7 @@ class MarketplaceInteractionTestCase(InteractionTestCase):
         """
         pass
 
+    #TODO
     def testChangeMarketplaceOnOffSetting(self):
         """
         Goes to the settings page and turns the marketplace on or off,
@@ -369,6 +377,7 @@ class MarketplaceInteractionTestCase(InteractionTestCase):
         """
         pass
 
+    #TODO
     def testTurnBlindnessOnOff(self):
         """
         Goes to the settings page and turns blindness on/off and refreshes
@@ -376,12 +385,14 @@ class MarketplaceInteractionTestCase(InteractionTestCase):
         """
         pass
 
+    #TODO
     def testAddToBlocklist(self):
         """
         Goes to the settings page and makes sure items can be added to the blocklist.
         """
         pass
 
+    #TODO
     def testRemoveFromBlocklist(self):
         """
         Goes to the settings page and makes sure items can be removed from
@@ -397,6 +408,7 @@ class NetworkInteractionTestCase(InteractionTestCase):
 
     def testNetworksLoad(self):
         """
+        Navigates to the networks page and asserts that it loaded.
         """
         self.login()
         self.get('/campaigns/networks/')
@@ -405,6 +417,8 @@ class NetworkInteractionTestCase(InteractionTestCase):
 
     def testAddNewNetwork(self):
         """
+        Navigates to the add campaign form from the networks page
+        and creates a new network campaign.
         """
         self.login()
 
@@ -421,30 +435,36 @@ class NetworkInteractionTestCase(InteractionTestCase):
         # campaign detail again
         page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
         self.assertTrue(page_title.text.find("Network:") > -1)
-        pass
 
     def testAddNewNetworkWithAdvancedTargeting(self):
         """
+        Navigates to the add campaign form from the networks page
+        and creates a new network campaign with advanced targeting settings.
         """
         pass
 
     def testEditNetwork(self):
         """
+        Navigates to the edit campaign form for an existing network campaign
+        and edits some of its values..
         """
         pass
 
     def testPauseNetwork(self):
         """
+        Navigates to the networks campaigns page and pauses a network.
         """
         pass
 
     def testResumeNetwork(self):
         """
+        Navigates to the networks campaigns page and resumes a paused network.
         """
         pass
 
     def testDeleteNetwork(self):
         """
+        Navigates to the networks campaigns page and deletes a paused network.
         """
         pass
 
@@ -452,8 +472,7 @@ class NetworkInteractionTestCase(InteractionTestCase):
 class PublisherInteractionTestCase(InteractionTestCase):
     """
     Interaction tests for the app inventory dashboard, app detail page, adunit
-    detail page,
-
+    detail page.
     """
 
     def testInventoryLoad(self):
@@ -466,32 +485,38 @@ class PublisherInteractionTestCase(InteractionTestCase):
         page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
         self.assertTrue(page_title.text.find("Dashboard") > -1)
 
+    #TODO
     def testGeoPerformance(self):
         """
         Navigate to the geo performance page and make sure it loads.
         """
-        pass
+        self.login()
+        self.get('/inventory')
 
+    #TODO
     def testAppDetailLoad(self):
         """
         Navigate to an app detail page and make sure it loads.
         """
         pass
 
+    #TODO
     def testAdUnitDetailLoad(self):
         """
         Navigate to an adunit detail page and make sure it loads.
         """
         pass
 
+    #TODO
     def testCreateNewApp(self):
         """
         Create a new app with default options.
         """
         pass
 
-    # TODO test all kinds of apps
+    #TODO test all kinds of apps
 
+    #TODO
     def testCreateNewAdUnit(self):
         """
         Creates a new adunit with default options.
@@ -500,12 +525,14 @@ class PublisherInteractionTestCase(InteractionTestCase):
 
     # TODO test all kinds of adunits
 
+    #TODO
     def testEditExistingApp(self):
         """
         Change the details of an existing app.
         """
         pass
 
+    #TODO
     def testEditExistingAdUnit(self):
         """
         Change the details of an existing adunit.
@@ -516,6 +543,7 @@ class PublisherInteractionTestCase(InteractionTestCase):
 if __name__ == '__main__':
     unittest.main()
 
+    #TODO
     # need to figure out a better way to close the browser process
     # once the tests are over. this doesnt work.
     # global BROWSER

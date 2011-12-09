@@ -4,11 +4,12 @@
 {% block adNetworkTitle %}
 {% endblock %}
 
-{% block titleBarRight %}
-<span class="titlebar-link">
-  <a class="linkIcon" href="/campaigns/networks/">Back to Networks  <span class="ui-icon ui-icon-triangle-1-e"></span></a>
-</span>
-{% endblock titleBarRight %}
+{% block pageTitle %}
+  <div class="breadcrumb">
+    <a class="linkIcon breadcrumb-back" href="/campaigns/networks/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
+    <h1>Ad Network Revenue Report</h1>
+  </div>
+{% endblock pageTitle %}
 
 {% block innerContent %}
   <section id="dashboard-apps">
@@ -50,7 +51,7 @@
             <td class="network-status dataTable-name">
                 
                 <span class="muted">Last synced: {{ network.sync_date|date }}</span>
-                <a class="show-status" id="{{network_name}}-status">Status</a>
+                <a class="show-status" style="cursor:pointer;" id="{{network_name}}-status">Status</a>
             </td>
             <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
             <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
@@ -181,7 +182,7 @@
             <td class="appData-icon"><a href="{% url publisher_app_show app_key=app.key %}"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
             <td class="dataTable-name">
                 <a href="{% url publisher_app_show app_key=app.key %}">{{app_name}}</a>
-                <span class="muted unbold">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                <span class="muted unbold">({{app.type}})</span>
                 <img id="{{app.key}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
             </td>
             <td class="dataTable-data numeric">{{app.revenue|currency}}</td>

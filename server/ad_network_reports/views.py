@@ -51,20 +51,20 @@ class AdNetworkReportIndexHandler(RequestHandler):
             forms.append(form)
 
         return render_to_response(self.request,
-                          'ad_network_reports/ad_network_reports_index.html',
-                          {
-                              'start_date' : days[0],
-                              'end_date' : days[-1],
-                              'date_range' : self.date_range,
-                              'account_key' : str(self.account.key()),
-                              'aggregates' : aggregates,
-                              'daily_stats' : simplejson.dumps(
-                                  daily_stats),
-                              'apps': apps,
-                              'show_graph': apps != [],
-                              'networks': zip(network_names, networks, forms),
-                              'forms': forms
-                          })
+                  'ad_network_reports/ad_network_reports_index.html',
+                  {
+                      'start_date' : days[0],
+                      'end_date' : days[-1],
+                      'date_range' : self.date_range,
+                      'account_key' : str(self.account.key()),
+                      'aggregates' : aggregates,
+                      'daily_stats' : simplejson.dumps(
+                          daily_stats),
+                      'apps': apps,
+                      'show_graph': apps != [],
+                      'networks': zip(network_names, networks, forms),
+                      'forms': forms
+                  })
 
 @login_required
 def ad_network_reports_index(request, *args, **kwargs):

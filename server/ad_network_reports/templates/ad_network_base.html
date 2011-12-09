@@ -6,7 +6,12 @@
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li class="active"><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
-{% block pageTitle %}<h1>Ad Network Revenue Report</h1>{% endblock pageTitle %}
+{% block pageTitle %}
+  <div class="breadcrumb">
+    <a class="linkIcon breadcrumb-back" href="/ad_network_reports/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Ad Network Revenue Report</a>
+    <h1>{{app_name}} on {{ad_network_name}}</h1>
+  </div>
+{% endblock pageTitle %}
 {% block titleBarRight %}{% endblock titleBarRight %}
 
 {% block extraScripts %}
@@ -120,10 +125,6 @@
 {% endblock dateButtons %}
 
 {% block content %}
-
-  {% block adNetworkTitle %}
-    <h2>{{app_name}} on {{ad_network_name}}</h2>
-  {% endblock adNetworkTitle %}
 
   {% block graph %}
 

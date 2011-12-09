@@ -70,17 +70,19 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         """
         mappers = list(self.get_ad_network_mappers())
 
-        keys = [s.key() for s in mappers]
         # Get aggregate stats for all the different ad network mappers for the
         # account between the selected date range
         aggregates_with_dates = [self._get_stats_for_mapper_and_days(n, days)
                 for n in mappers]
         if aggregates_with_dates:
-            aggregates_list, sync_dates = zip(*aggregates_with_dates)
+            aggregates_list, applications, sync_dates = \
+                    zip(*aggregates_with_dates)
         else:
             aggregates_list = []
             sync_dates = []
-        aggregate_stats_list = zip(keys, mappers, aggregates_list, sync_dates)
+            applications = []
+        aggregate_stats_list = zip(mappers, aggregates_list, applications,
+                sync_dates)
         aggregates = self.roll_up_stats(aggregates_list)
 
         # Get the daily stats list.
@@ -116,13 +118,15 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         yesterday = (datetime.now() - timedelta(days=1)).date()
 
         data_dict = {}
-        for key, mapper, stats, sync_date in aggregate_stats_list:
+        for mapper, stats, application, sync_date in aggregate_stats_list:
             if networks:
                 attr = AD_NETWORK_NAMES[mapper.ad_network_name]
                 name = mapper.application.name
+                key = mapper.key()
             else:
                 attr = mapper.application.name
                 name = AD_NETWORK_NAMES[mapper.ad_network_name]
+                key = application.key()
             sub_data = {
                 'name': name,
                 'key': mapper.key(),
@@ -155,6 +159,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                             timedelta(days=1)
                     data_dict[attr]['app_pub_ids'] = ', '.join(
                             login_credentials.app_pub_ids)
+                else:
+                    data_dict[attr]['icon_url'] = application.icon_url
+                    data_dict[attr]['type'] = application.app_type_text()
             data_dict[attr]['sub_data_list'].append(sub_data)
             data_dict[attr]['revenue'] += sub_data['revenue']
             data_dict[attr]['attempts'] += sub_data['attempts']
@@ -185,8 +192,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             # Get networks for which they've entered publisher information but
             # havent given us login credentials so we can bug them about giving us
             # their creds.
-            networks_without_creds = \
-                    list(self.get_networks_without_credentials())
+#            networks_without_creds = \
+#                    list(self.get_networks_without_credentials())
+            networks_without_creds = AD_NETWORK_NAMES.keys()
 
             for network in networks_without_creds:
                 if AD_NETWORK_NAMES[network] not in data_dict:
@@ -242,8 +250,9 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         """
         stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
                 ad_network_app_mapper.key(), days)
-        return (self.roll_up_stats(stats_list), stats_list[-1].date if
-                stats_list else None)
+        if stats_list:
+            return (self.roll_up_stats(stats_list), ad_network_app_mapper.
+                    application, stats_list[-1].date)
 
     def roll_up_stats(self, stats_iterable):
         """Roll up (aggregate) stats in the stats iterable.
@@ -387,9 +396,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         return login_credentials
 
-
-
-    def find_app_for_stats(self, publisher_id, login_credentials):
         """Attempt to link the publisher id with an App stored in MoPub's db.
 
         Check if the publisher id is in MoPub. If it is create an
@@ -429,7 +435,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             if pub_id:
                 yield pub_id
 
-
     def get_adunit_publisher_ids(self, ad_network_name):
         """Get the ad unit publisher ids with the ad network from the generator
         of apps.
@@ -442,7 +447,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                         network_config, '%s_pub_id' % ad_network_name, None):
                     yield getattr(adunit.network_config, '%s_pub_id' %
                             ad_network_name)
-
 
     def get_networks_without_credentials(self):
         creds = AdNetworkLoginCredentials.all().filter('account =',

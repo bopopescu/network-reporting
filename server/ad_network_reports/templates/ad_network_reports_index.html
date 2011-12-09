@@ -53,7 +53,7 @@
                 <span class="muted">Last synced: {{ network.sync_date|date }}</span>
                 <a class="show-status" style="cursor:pointer;" id="{{network_name}}-status">Status</a>
             </td>
-            <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
+            <td class="dataTable-data numeric">${{ network.revenue|floatformat:2 }} </td>
             <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
             <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
             <td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}% </td>
@@ -146,7 +146,7 @@
                   <td class="dataTable-name">
                     {{app.name}} <a href="{% url ad_network_app_detail app.key %}">Details</a>
                   </td>
-                  <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
+                  <td class="dataTable-data numeric">${{ app.revenue|floatformat:2 }}</td>
                   <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
                   <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
                   <td class="dataTable-data numeric">{{ app.fill_rate|floatformat:2 }}%</td>

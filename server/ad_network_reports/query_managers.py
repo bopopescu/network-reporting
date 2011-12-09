@@ -552,7 +552,7 @@ def create_fake_data(account=None):
                                                password='bullshit',
                                                client_key='asdfasf',
                                                send_email=False,
-                                               use_crypto=False)
+                                               use_crypto=True)
 
 
     for day in last_90_days:

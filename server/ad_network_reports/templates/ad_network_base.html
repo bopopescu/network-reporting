@@ -120,13 +120,7 @@
 {% endblock dateButtons %}
 
 {% block content %}
-
-  {% block adNetworkTitle %}
-    <h2>{{app_name}} on {{ad_network_name}}</h2>
-  {% endblock adNetworkTitle %}
-
   {% block graph %}
-
   {% if show_graph %}
     <section class="offset nomargin" id="dashboard-stats">
           <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
@@ -162,29 +156,23 @@
   {% endblock graph %}
 
   {% block innerContent %}
-  {% block tableTitle %}
-    <div style="padding-top:250px; text-align:center;">
-      <h3 class="dataTable-title">Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-    </div>
-  {% endblock tableTitle %}
-
-      <table class="zebra-striped simpletable campaignData-main sortable">
-        <thead>
-          {% block tableHead %}
-            <th class="dataTable-name"> Date </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Revenue </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Attempts </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Impressions </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Fill Rate</th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Clicks </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> CTR </th>
-          {% endblock tableHead %}
-        </thead>
-        <tbody>
-          {% block tableData %}
-            {% for stats in stats_list %}
+    <section id="dashboard-apps">
+      <h2>{{app_name}} on {{ad_network_name}}</h2>
+      <div class="appData-details noneg">
+        <table class="dataTable appData-main">
+          <thead>
+            <th class="dataTable-name big"></th>
+            <th class="dataTable-data numeric special"> Revenue </th>
+            <th class="dataTable-data numeric special"> Attempts </th>
+            <th class="dataTable-data numeric special"> Impressions </th>
+            <th class="dataTable-data numeric special"> Fill Rate</th>
+            <th class="dataTable-data numeric special"> Clicks </th>
+            <th class="dataTable-data numeric special"> CTR </th>
+          </thead>
+          <tbody>
+              {% for stats in stats_list %}
               <tr>
-                <td class="dataTable-name">{{stats.date|format_date_compact}}</td>
+                <td class="dataTable-name">{{stats.date}}</td>
                 <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
                 <td class="dataTable-data numeric">{{stats.attempts|withsep }}</td>
                 <td class="dataTable-data numeric">{{stats.impressions|withsep }}</td>
@@ -192,10 +180,11 @@
                 <td class="dataTable-data numeric">{{stats.clicks|withsep }}</td>
                 <td class="dataTable-data numeric">{{stats.ctr|floatformat:2 }}%</td>
               </tr>
-            {% endfor %}
-          {% endblock tableData %}
-        </tbody>
-      </table>
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
 
     {% endblock innerContent %}
 

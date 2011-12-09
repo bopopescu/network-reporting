@@ -396,6 +396,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         return login_credentials
 
+    def find_app_for_stats(self, publisher_id, login_credentials):
         """Attempt to link the publisher id with an App stored in MoPub's db.
 
         Check if the publisher id is in MoPub. If it is create an

@@ -134,7 +134,7 @@
           <table class="sortable">
             <tbody>
               <tr class="active" id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner">{{ aggregates.revenue|currency }}</span></td>
+                <td class="stats-breakdown-value today"><span class="inner">${{ aggregates.revenue|floatformat:2 }}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
               </tr>
               <tr id="stats-breakdown-impressions">
@@ -178,7 +178,7 @@
               {% for stats in stats_list %}
               <tr>
                 <td class="dataTable-name">{{stats.date}}</td>
-                <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
+                <td class="dataTable-data numeric">${{ stats.revenue|floatformat:2 }}</td>
                 <td class="dataTable-data numeric">{{stats.attempts|withsep }}</td>
                 <td class="dataTable-data numeric">{{stats.impressions|withsep }}</td>
                 <td class="dataTable-data numeric">{{stats.fill_rate|floatformat:2 }}%</td>

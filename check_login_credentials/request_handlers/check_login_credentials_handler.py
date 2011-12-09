@@ -73,8 +73,8 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
         # TODO: Verify that mobfox form is valid.
         if form.is_valid():
             login_credentials = AdNetworkLoginCredentials()
-            login_credentials.ad_network_name = form.cleaned_data[
-                    'ad_network_name']
+            logging.warning(form.cleaned_data)
+            login_credentials.ad_network_name = ad_network
             login_credentials.username = form.cleaned_data.get('username_str',
                     '')
             login_credentials.password = form.cleaned_data.get('password_str',

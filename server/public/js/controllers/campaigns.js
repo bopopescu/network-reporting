@@ -32,7 +32,7 @@ $(function() {
 		var backfill_promo_adgroups_view = new AdGroupsView({
 			collection: backfill_promo_adgroups,
 			el: '#backfill-promo-adgroups',
-			title: 'Backfill Promotional Campagins',
+			title: 'Backfill Promotional Campaigns',
 			type: 'backfill_promo'
 		});
 		backfill_promo_adgroups_view.render();

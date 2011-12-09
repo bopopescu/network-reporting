@@ -155,8 +155,9 @@ class AdGroup(db.Model):
     network_type = db.StringProperty(choices=["dummy","adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
 
     # Note that bid has different meaning depending on the bidding strategy.
-    # if CPM: bid = cost per 1000 impressions
     # if CPC: bid = cost per 1 click
+    # if CPM: bid = cost per 1000 impressions
+    # if CPA: bid = cost per 1000 conversions
     bid = db.FloatProperty(default=0.05, required=False)
     bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
 

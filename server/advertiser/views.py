@@ -1408,6 +1408,11 @@ class NetworkIndexHandler(RequestHandler):
         else:
             days = date_magic.gen_date_range(self.date_range)
 
+        today_date = datetime.datetime.now(Pacific_tzinfo()).date()
+        today = days.index(today_date) if today_date in days else None
+        yesterday_date = datetime.datetime.now(Pacific_tzinfo()).date() - datetime.timedelta(days=1)
+        yesterday = days.index(yesterday_date) if yesterday_date in days else None
+
         network_adgroups = []
         for campaign in CampaignQueryManager.get_network_campaigns(account=self.account):
             for adgroup in campaign.adgroups:
@@ -1420,6 +1425,8 @@ class NetworkIndexHandler(RequestHandler):
                                       'start_date': days[0],
                                       'end_date': days[-1],
                                       'date_range': self.date_range,
+                                      'today': today,
+                                      'yesterday': yesterday
                                   })
 
 @login_required

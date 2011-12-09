@@ -332,7 +332,7 @@ if (typeof window.console == "undefined") {
         });
 
         // Set up 'What's This?' dialogs
-        $('.whatsthis').click(function(e) {
+        $('.whatsthis').live('click', function(e) {
             e.preventDefault();
             $('#'+$(this).attr('id').replace('helpLink', 'helpContent')).dialog({
                 buttons: { "Close": function() { $(this).dialog('close');} }

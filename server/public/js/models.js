@@ -48,22 +48,19 @@
         return (request_count === 0) ? 0 : impression_count / request_count;
     }
 
-    calculate_ecpm = function(impression_count, revenue) {
-        if(impression_count === null || revenue === null) return null;
-        return (impression_count === 0) ? 0 : 1000 * revenue / impression_count;
-    }
-
     format_stat = function(stat, value) {
         if(value === null) return '--';
         switch(stat) {
             case 'click_count':
             case 'conversion_count':
+            case 'goal':
             case 'impression_count':
             case 'request_count':
                 return mopub.Utils.formatNumberWithCommas(value);
-            case 'ecpm':
+            case 'cpm':
             case 'revenue':
                 return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
+            case 'conv_rate':
             case 'ctr':
             case 'fill_rate':
                 return mopub.Utils.formatNumberAsPercentage(value);
@@ -79,7 +76,6 @@
      */
     AdGroup = Backbone.Model.extend({
         get_stat: function(stat) {
-            if(stat == 'ecpm') return calculate_ecpm(this.get_stat('impression_count'), this.get_stat('revenue'));
             if(!this.has(stat)) return null;
             return this.get(stat);
         },
@@ -122,8 +118,6 @@
                 return calculate_ctr(get_stat_for_day(adgroups, 'impression_count', day), get_stat_for_day(adgroups, 'click_count', day));
             case 'fill_rate':
                 return calculate_fill_rate(get_stat_for_day(adgroups, 'request_count', day), get_stat_for_day(adgroups, 'impression_count', day));
-            case 'ecpm':
-                return calculate_ecpm(get_stat_for_day(adgroups, 'impression_count', day), get_stat_for_day(adgroups, 'revenue', day));
             case 'click_count':
             case 'conversion_count':
             case 'impression_count':
@@ -166,8 +160,6 @@
                     return calculate_ctr(this.get_stat('impression_count'), this.get_stat('click_count'));
                 case 'fill_rate':
                     return calculate_fill_rate(this.get_stat('request_count'), this.get_stat('impression_count'));
-                case 'ecpm':
-                    return calculate_ecpm(this.get_stat('impression_count'), this.get_stat('revenue'));
                 case 'click_count':
                 case 'conversion_count':
                 case 'impression_count':
@@ -189,6 +181,9 @@
 
         get_chart_data: function(stat) {
             var adgroups = this.filter(function(adgroup) { return adgroup.has(stat) && adgroup.has('daily_stats'); });
+            if(adgroups.length == 0) {
+                return [];
+            }
             var sorted_adgroups = _.sortBy(adgroups, function(adgroup) { return -adgroup.get(stat); });
             var top_three_adgroups = sorted_adgroups.splice(0, 3);
             var other_adgroups = sorted_adgroups;
@@ -197,16 +192,9 @@
                 adgroup_data[adgroup.get('name')] = _.map(adgroup.get('daily_stats'), function(day) { return day[stat]; });
                 return adgroup_data;
             });
-            // TODO: CTR stuff
-            /*
-            // Append stats for MoPub-optimized CTR.
-            var accountDailyStats = mopub.accountStats["all_stats"]["||"]["daily_stats"];
-            var mopubOptimized = {
-            "MoPub Optimized": mopub.Stats.statArrayFromDailyStats(accountDailyStats, "ctr"),
-            };
-            result.push(mopubOptimized);
-            return result;
-            */
+            if(stat == 'ctr') {
+                chart_data.push({ 'MoPub Optimized': get_total_daily_stats(adgroups, 'ctr') });
+            }
             if(other_adgroups.length) {
                 var other_adgroups_data = get_total_daily_stats(other_adgroups, stat);
                 chart_data.push({ 'Others': other_adgroups_data });

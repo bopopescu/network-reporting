@@ -1,9 +1,9 @@
 import logging
-import re       
-import hashlib  
+import re
+import hashlib
 
 
-import datetime  
+import datetime
 from common.constants import (KB, MB, GB)
 
 from google.appengine.ext import db
@@ -12,13 +12,13 @@ from google.appengine.ext import db
 COUNTRY_PAT = re.compile(r' [a-zA-Z][a-zA-Z][-_](?P<ccode>[a-zA-Z][a-zA-Z]);*[^a-zA-Z0-9-_]')
 
 MB_PER_SHARD = 10
-    
+
 def get_country_code(headers, default='XX'):
     return headers.get('X-AppEngine-country', default)
-    
+
 def get_user_agent(request):
-    return request.get('ua') or request.headers['User-Agent']    
-    
+    return request.get('ua') or request.headers['User-Agent']
+
 def get_client_ip(request):
     return request.get('ip') or request.remote_addr
 
@@ -81,14 +81,14 @@ def make_mopub_id(raw_udid):
     md5:MD5(mopub-<RAW_UDID>)
     sha1:SHA1(mopub-<RAW_UDID>)
     sha:SHA(<RAW_UDID>)
-    
+
     moput_id is the part after the semicolon
-    """                      
+    """
     return raw_udid.split(':')[-1]
 
 def build_key(template, template_dict):
     """ I got tired of not knowing what's what when building a key.
-    This takes a dictionary and turns all db.Models into str(db.Model.key()), and all 
+    This takes a dictionary and turns all db.Models into str(db.Model.key()), and all
     db.Key()s into str(db.Key())s
     """
     new_vals = {}
@@ -117,12 +117,12 @@ def app_stats(stat):
 def to_uni(obj, encoding='utf-8'):
     if isinstance(obj, basestring):
         if not isinstance(obj, unicode):
-            obj = unicode(obj, encoding)
+            obj = unicode(obj, encoding=encoding, errors='replace')
     return obj
 
-def to_ascii(obj, encoding='utf-8'):  
-    if isinstance(obj, unicode):  
-        obj = obj.encode('utf-8')
+def to_ascii(obj, encoding='utf-8'):
+    if isinstance(obj, unicode):
+        obj = obj.encode(encoding=encoding, errors='replace')
     return obj
 
 def get_url_for_blob(blob, ssl=True):
@@ -131,7 +131,7 @@ def get_url_for_blob(blob, ssl=True):
     if ssl:
         return url.replace('http:', 'https:')
     return url
-        
+
 
 
 def get_all(Model, limit=300):
@@ -144,20 +144,20 @@ def get_all(Model, limit=300):
         new_models = Model.all().filter('__key__ >',models[-1]).fetch(limit)
         models += new_models
     return models
-    
+
 def get_udid_appid(request):
     udid = request.get('udid')
     mobile_appid = request.get('id')
-    
+
     if not udid:
         query_string = request.query_string
         result = re.search('id=(?P<id>.*?)(?P<ampersand>&?)udid=(?P<udid>.*?)$', query_string)
-        
+
         if (result):
             return result.group('udid'), result.group('id')
             # note: if result.group('ampersand') is empty string, we have a broken url
             # though the return groups are the same regardless
         else:
             return None, None
-    
+
     return udid, mobile_appid

@@ -1,55 +1,83 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
-{% block pageTitle %}<h1>{% ifequal status 'welcome' %}Step 2: Integrate the code{% else %}<a href="{% url publisher_adunit_show adunit_key=site.key %}">{{site.name}}</a> code snippet{% endifequal %}</h1>{% endblock pageTitle %}{% block dateButtons %}{% endblock dateButtons %}
-{% block titleBarRight %}{% ifequal status 'welcome' %}            <div class="stepProgress">
-              <span class="stepProgress-step">Step 1: Add app</span>
-              <span class="ui-icon ui-icon-arrow-1-e"></span>
-              <span class="stepProgress-step stepProgress-active">Step 2: Integrate</span>
-              <span class="ui-icon ui-icon-arrow-1-e"></span>
-              <span class="stepProgress-step">Step 3: Add campaigns</span>
-            </div>{% endifequal %}{% endblock titleBarRight %}
-{% block messageCenter %}{% endblock messageCenter %}
+{% block pageTitle %}
+  <h1>
+    {% ifequal status 'welcome' %}
+      Step 2: Integrate the code
+    {% else %}
+      <a href="{% url publisher_adunit_show adunit_key=site.key %}">
+        {{site.name}}
+      </a>
+      code snippet
+    {% endifequal %}
+  </h1>
+{% endblock pageTitle %}
+
+{% block dateButtons %}{% endblock dateButtons %}
+
+{% block titleBarRight %}
+  {% ifequal status 'welcome' %}
+    <div class="stepProgress">
+      <span class="stepProgress-step">Step 1: Add app</span>
+      <span class="ui-icon ui-icon-arrow-1-e"></span>
+      <span class="stepProgress-step stepProgress-active">Step 2: Integrate</span>
+      <span class="ui-icon ui-icon-arrow-1-e"></span>
+      <span class="stepProgress-step">Step 3: Add campaigns</span>
+    </div>
+  {% endifequal %}
+{% endblock titleBarRight %}
 
 {% block content %}
-          <section>
-{% ifequal status 'welcome' %}
-            <div class="alert-message block-message">
-              Your first app is now set up.  The next step is to add the SDK to your code and test that ads are serving correctly.  A sample ad campaign <strong>MoPub Demo Campaign</strong> has been created and you should be able to see the test ad after you add the MoPub code snippet and run the emulator.
-            </div>{% endifequal %}
-{% ifequal status 'success' %}
-            <div class="alert-message success block-message">
-              The ad unit was created successfully.  To serve ads to this ad unit, you'll need to add the snippet of code below to your app.
-            </div>{% endifequal %}
-            <h2>Ad Unit ID</h2>
+  <section>
+    {% ifequal status 'welcome' %}
+      <div class="alert-message block-message">
+        Your first app is now set up.  The next step is to add the SDK to your
+        code and test that ads are serving correctly.  A sample ad campaign
+        <strong>MoPub Demo Campaign</strong> has been created and you should be
+        able to see the test ad after you add the MoPub code snippet and run the
+        emulator.
+      </div>
+    {% endifequal %}
+    {% ifequal status 'success' %}
+      <div class="alert-message success block-message">
+        The ad unit was created successfully.  To serve ads to this ad unit, you'll
+        need to add the snippet of code below to your app.
+      </div>
+    {% endifequal %}
+    <h2>Ad Unit ID</h2>
+    <div class="alert-message block-message">
+      <code>
+        <pre>{{site.key}}</pre>
+      </code>
+    </div>
+    <h2>Code Integration</h2>
+    <ol>
+      {% ifnotequal site.app_key.app_type "mweb" %}
+        <li>
+          <p>
+            You will need to install the MoPub SDK first. If you have not done so,
+            see the <a href="https://github.com/mopub/mopub-client/wiki/GettingStarted">MoPub Getting Started instructions</a>
+            at the MoPub GitHub repository.
+          </p>
+        </li>
+      {% endifnotequal %}
+      {% ifequal site.app_key.app_type "iphone" %}
+        {% ifequal site.format "full" %}
+          <li>
+            <p>
+              Follow the <a href="https://github.com/mopub/mopub-client/wiki/IntegrationHowToInterstitialsIOS">Interstitial Integration for iOS</a>
+              instructions in the code repository.
+            </p>
+          </li>
+        {% else %}
+          <li>
+            <p>
+              Add the following code to your view's <code>viewDidLoad</code> method
+              (or another suitable place):
+            </p>
             <div class="alert-message block-message">
               <code>
-                <pre>{{site.key}}</pre>
-              </code>
-            </div>
-            <h2>Code Integration</h2>
-            <ol>
-              {% ifnotequal site.app_key.app_type "mweb" %}
-              <li>
-                <p>
-                  You will need to install the MoPub SDK first. If you have not done so, see the <a href="https://github.com/mopub/mopub-client/wiki/GettingStarted">MoPub Getting Started instructions</a> at the MoPub GitHub repository.
-                </p>
-              </li>
-              {% endifnotequal %}
-              {% ifequal site.app_key.app_type "iphone" %}
-              {% ifequal site.format "full" %}
-              <li>
-                <p>
-                  Follow the <a href="https://github.com/mopub/mopub-client/wiki/IntegrationHowToInterstitialsIOS">Interstitial Integration for iOS</a> instructions in the code repository.
-                </p>
-              </li>
-              {% else %}
-              <li>
-                <p>
-                  Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):
-                </p>
-                <div class="alert-message block-message">
-                  <code>
-                    <pre>
+                <pre>
 #import "MPAdView.h"
 
 ...
@@ -68,17 +96,20 @@ adView.delegate = self;
 - (UIViewController *)viewControllerForPresentingModalView
 {
   return self;
-}
-                  </code>
-                </div>
-              </li>{% endifequal %}{% endifequal %}
-              {% ifequal site.app_key.app_type "android" %}
-              {% ifequal site.format "full" %}
-              <li>
-                <p>
-                  Follow the <a href="https://github.com/mopub/mopub-client/wiki/IntegrationHowToInterstitialsAndroid">Interstitial Integration for Android</a> instructions in the code repository.
-                </p>
-              </li>{% else %}
+}</pre>
+              </code>
+            </div>
+          </li>
+        {% endifequal %}
+      {% endifequal %}
+      {% ifequal site.app_key.app_type "android" %}
+        {% ifequal site.format "full" %}
+          <li>
+            <p>
+              Follow the <a href="https://github.com/mopub/mopub-client/wiki/IntegrationHowToInterstitialsAndroid">Interstitial Integration for Android</a>
+              instructions in the code repository.
+            </p>
+            </li>{% else %}
               <li>
                 <p>
                   Add the following XML block to your layout definition (eg. main.xml):
@@ -139,7 +170,8 @@ mpv.loadAd();</pre>
               {% ifequal status 'welcome' %}
                 <a href="{% url app_index %}" class="button" id="integration-continue">Continue to Step 3</a>
               {% else %}
-                <a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>
+                <a href="{% url publisher_app_show app_key=site.app_key.key %}" id="integration-continue" class="button">Continue</a>
               {% endifequal %}</span>
             </div>
-          </section>{% endblock content %}
+  </section>
+{% endblock content %}

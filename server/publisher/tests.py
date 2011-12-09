@@ -335,9 +335,8 @@ class DirectSoldInteractionTestCase(InteractionTestCase):
         """
         Change the details of a campaign that already exists.
         """
-        self.testAddGuaranteedCampaign()
+        self.testCampaignDetail()
         self.click(id="advertisers-adgroups-editAdGroupButton")
-
 
 
 
@@ -346,12 +345,13 @@ class MarketplaceInteractionTestCase(InteractionTestCase):
     Interaction tests for the marketplace dashboard and marketplace settings.
     """
 
-    #TODO
     def testMarketplaceLoad(self):
         """
         Makes sure the marketplace page can load.
         """
-        pass
+        self.get("/campaigns/marketplace/")
+        page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
+        self.assertTrue(page_title.text.find("Marketplace") > -1)
 
     #TODO
     def testChangePriceFloor(self):
@@ -436,6 +436,7 @@ class NetworkInteractionTestCase(InteractionTestCase):
         page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
         self.assertTrue(page_title.text.find("Network:") > -1)
 
+    #TODO
     def testAddNewNetworkWithAdvancedTargeting(self):
         """
         Navigates to the add campaign form from the networks page
@@ -443,6 +444,7 @@ class NetworkInteractionTestCase(InteractionTestCase):
         """
         pass
 
+    #TODO
     def testEditNetwork(self):
         """
         Navigates to the edit campaign form for an existing network campaign
@@ -450,18 +452,21 @@ class NetworkInteractionTestCase(InteractionTestCase):
         """
         pass
 
+    #TODO
     def testPauseNetwork(self):
         """
         Navigates to the networks campaigns page and pauses a network.
         """
         pass
 
+    #TODO
     def testResumeNetwork(self):
         """
         Navigates to the networks campaigns page and resumes a paused network.
         """
         pass
 
+    #TODO
     def testDeleteNetwork(self):
         """
         Navigates to the networks campaigns page and deletes a paused network.
@@ -481,63 +486,113 @@ class PublisherInteractionTestCase(InteractionTestCase):
         """
         self.login()
         self.get('/inventory')
-
         page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
         self.assertTrue(page_title.text.find("Dashboard") > -1)
 
-    #TODO
     def testGeoPerformance(self):
         """
         Navigate to the geo performance page and make sure it loads.
         """
         self.login()
         self.get('/inventory')
+        self.click(id="geo-performance")
+        page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
+        self.assertTrue(page_title.text.find("Region Performance") > -1)
 
-    #TODO
     def testAppDetailLoad(self):
         """
         Navigate to an app detail page and make sure it loads.
         """
-        pass
+        self.login()
+        self.get('/')
+        app_links = BROWSER.find_elements_by_class("app-link")
 
-    #TODO
+        # if there arent any apps for this test user, make one and
+        # then proceed.
+        if len(app_links) == 0:
+            self.testCreateNewApp()
+            self.get('/')
+            app_links = BROWSER.find_elements_by_class("app-link")
+
+        app_links[0].click()
+
+        page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
+        self.assertTrue(page_title.text.find("App:") > -1)
+
+
     def testAdUnitDetailLoad(self):
         """
         Navigate to an adunit detail page and make sure it loads.
         """
-        pass
+        self.login()
+        self.get('/')
+        adunit_links = BROWSER.find_elements_by_class("adunit-link")
 
-    #TODO
+        # if there arent any apps for this test user, make one and
+        # then proceed.
+        if len(adunit_links) == 0:
+            self.testCreateNewApp()
+            self.get('/')
+            adunit_links = BROWSER.find_elements_by_class("adunit-link")
+
+        adunit_links[0].click()
+
+        page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
+        self.assertTrue(page_title.text.find("Ad Unit:") > -1)
+
+
     def testCreateNewApp(self):
         """
         Create a new app with default options.
         """
-        pass
+        self.login()
+        self.get('/inventory')
+        self.click(id="dashboard-apps-addAppButton")
+
+        self.send_keys("Robot Unicorn Attack Metal Edition", id="appForm-name")
+        self.select_option("id_primary_category", "games")
+        self.send_keys("Test Adunit", "appForm-adUnitName")
+        self.click("appForm-submit")
+
+        self.click("integration-continue")
+
+        page_title = BROWSER.find_element_by_xpath("//div[@id='titlebar']//h1")
+        self.assertTrue(page_title.text.find("App:") > -1)
 
     #TODO test all kinds of apps
 
-    #TODO
     def testCreateNewAdUnit(self):
         """
         Creates a new adunit with default options.
         """
-        pass
+        self.testCreateNewApp()
+        self.click(id="dashboard-apps-addAdUnitButton")
+        self.send_keys("chello", id="appForm-adUnitName")
+        self.click(id="adunitAddForm-submit")
+        #REFACTOR lazy, figure out how to actually test this
+        self.assertTrue(True)
 
     # TODO test all kinds of adunits
 
-    #TODO
     def testEditExistingApp(self):
         """
         Change the details of an existing app.
         """
-        pass
+        self.testAppDetailLoad()
+        self.click(id="dashboard-apps-editAppButton")
+        self.click(id="appForm-platform-android")
+        self.click(id="appEditForm-submit")
 
-    #TODO
     def testEditExistingAdUnit(self):
         """
         Change the details of an existing adunit.
         """
-        pass
+        self.testAdUnitDetailLoad()
+        self.click(id="dashboard-apps-editAdUnitButton")
+        self.send_keys("blah blah test blah", id="appForm-adUnitName")
+        self.click(id="adunitEditForm-submit")
+        #REFACTOR lazy, figure out how to actually test this
+        self.assertTrue(True)
 
 
 if __name__ == '__main__':

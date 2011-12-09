@@ -70,8 +70,9 @@
         </tbody>
       </table>
       <div class="{{network_name}}-status hidden">
+        <div class="form-{{form.ad_network}}-message hidden alert-message block-message warning"></div>
         {% if network %}
-        <dl class="formFields" style="margin:0">
+        <dl class="formFields thin" style="margin:0">
           {% if network.sync_error %}
           <dt>Status:</dt>
           <dd>Last synchronization failed.  Check that your credentials are correct.
@@ -88,8 +89,6 @@
         </dl>
         {% endif %}
         <form class="loginCredentials" id="form-{{form.ad_network}}">
-          <div class="form-{{form.ad_network}}-message hidden alert-message block-message warning">
-          </div>
           <fieldset>
               <h2>{{network_name}} Credentials</h2>
               <dl class="formFields thin" style="margin:0">

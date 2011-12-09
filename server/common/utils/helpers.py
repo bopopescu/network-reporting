@@ -122,7 +122,7 @@ def to_uni(obj, encoding='utf-8'):
 
 def to_ascii(obj, encoding='utf-8'):
     if isinstance(obj, unicode):
-        obj = obj.encode(encoding=encoding, errors='replace')
+        obj = obj.encode(encoding, 'replace')
     return obj
 
 def get_url_for_blob(blob, ssl=True):

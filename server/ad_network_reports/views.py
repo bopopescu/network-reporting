@@ -38,15 +38,21 @@ class AdNetworkReportIndexHandler(RequestHandler):
             networks = []
 
         forms = []
+        from ad_network_reports.models import AdNetworkLoginCredentials
         for name in network_names:
             name = name.lower()
+            logging.info("Attempting to create form for: %s" % name)
             try:
                 instance = AdNetworkLoginCredentials. \
                         get_by_ad_network_name(self.account, name)
                 form = LoginInfoForm(instance=instance, prefix=name)
+                form.initial['password'] = instance.decoded_password
+                form.initial['username'] = instance.decoded_password
+                logging.info("Created form %s" % form.__dict__)
             except Exception, error:
                 instance = None
                 form = LoginInfoForm(prefix=name)
+                logging.info("Error creating form %s" % error)
             form.ad_network = name
             forms.append(form)
 

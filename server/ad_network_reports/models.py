@@ -7,6 +7,8 @@ InstallAppengineHelperForDjango()
 from account.models import Account
 from publisher.models import App
 
+KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
+
 class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     account = db.ReferenceProperty(Account, required=True,
             collection_name='login_credentials')
@@ -37,6 +39,20 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
                 kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
+    @property
+    def decoded_password(self):
+        # Note: Crypto.Cipher cannot be imported in app engine.
+        from Crypto.Cipher import AES
+        password_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.password_iv)
+        return password_aes_cfb.decrypt(self.password)
+
+    @property
+    def decoded_username(self):
+        # Note: Crypto.Cipher cannot be imported in app engine.
+        from Crypto.Cipher import AES
+        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.
+                login_credentials.username_iv)
+        return username_aes_cfb.decrypt(self.login_credentials.username)
 
     @classmethod
     def get_by_ad_network_name(cls, account, ad_network_name):

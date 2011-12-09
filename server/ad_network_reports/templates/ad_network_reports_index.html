@@ -110,20 +110,28 @@
                       {% ifequal form.ad_network "mobfox" %}
                       {% else %}
                         <dt> Username: </dt>
-                        <dd> <input type="text" name="{{form.ad_network}}-username" id="id_username" class="input-text input-text-half-width" value=""> {{form.username.errors}}</dd>
+                        <dd> <input type="text"
+                        name="{{form.ad_network}}-username" id="id_username"
+                        class="input-text input-text-half-width"
+                        value="{{form.initial.username}}"> {{form.username.errors}}</dd>
 
                         <dt> Password: </dt>
-                        <dd> <input type="password" name="{{form.ad_network}}-password"  id="id_password" class="input-text input-text-half-width" value="">  {{form.password.errors}}</dd>
+                        <dd> <input type="password"
+                        name="{{form.ad_network}}-password"  id="id_password"
+                        class="input-text input-text-half-width"
+                        value="{{form.initial.password}}">  {{form.password.errors}}</dd>
                       {% endifequal %}
                   {% endifequal %}
 
 
                   {% if form.ad_network == "admob" %}
                     <dt> Client ID: </dt>
-                    <dd> <input type="text" name="admob-client_key"  id="id_admob-client_key" class="input-text input-text-half-width" value=""></dd>
+                    <dd> <input type="text" name="admob-client_key"
+                    id="id_admob-client_key" class="input-text
+                    input-text-half-width" value="{{form.initial.client_key}}"></dd>
                   {% endif %}
 
-                  <dt><input name="email" type="checkbox" /> </dt>
+                  <dt><input name="email" type="checkbox" {% if form.initial.email %} checked="{{form.initial.email}}" {% endif %} /> </dt>
                   <dd> Send me daily emails with my network stats </dd>
               </dl>
           </fieldset>

@@ -66,19 +66,22 @@
         </tbody>
       </table>
       <div class="{{network_name}}-status hidden">
-          <div class="form-{{form.ad_network}}-message hidden alert-message block-message warning">
-          </div>
+        <div class="form-{{form.ad_network}}-message hidden alert-message block-message warning"></div>
         {% if network %}
         <dl class="formFields thin" style="margin:0">
+          {% if network.sync_error %}
           <dt>Status:</dt>
           <dd>Last synchronization failed.  Check that your credentials are correct.
           If this error persists, please contact support@mopub.com.</dd>
+          {% endif %}
+          {% if network.app_pub_ids %}
           <dt>Notes:</dt>
           <dd> MoPub received a response for the following ad networks IDs.
           Make sure these apps are properly set up in MoPub to view the reports.
           <br/><br/>
-          oh hai!
+          {{ network.app_pub_ids }}
           </dd>
+          {% endif %}
         </dl>
         {% endif %}
         <form class="loginCredentials" id="form-{{form.ad_network}}">

@@ -474,7 +474,7 @@ class NetworkInteractionTestCase(InteractionTestCase):
         pass
 
 
-class PublisherInteractionTestCase(InteractionTestCase):
+class InventoryInteractionTestCase(InteractionTestCase):
     """
     Interaction tests for the app inventory dashboard, app detail page, adunit
     detail page.
@@ -505,14 +505,14 @@ class PublisherInteractionTestCase(InteractionTestCase):
         """
         self.login()
         self.get('/')
-        app_links = BROWSER.find_elements_by_class("app-link")
+        app_links = BROWSER.find_elements_by_class_name("app-link")
 
         # if there arent any apps for this test user, make one and
         # then proceed.
         if len(app_links) == 0:
             self.testCreateNewApp()
             self.get('/')
-            app_links = BROWSER.find_elements_by_class("app-link")
+            app_links = BROWSER.find_elements_by_class_name("app-link")
 
         app_links[0].click()
 
@@ -526,14 +526,14 @@ class PublisherInteractionTestCase(InteractionTestCase):
         """
         self.login()
         self.get('/')
-        adunit_links = BROWSER.find_elements_by_class("adunit-link")
+        adunit_links = BROWSER.find_elements_by_class_name("adunit-link")
 
         # if there arent any apps for this test user, make one and
         # then proceed.
         if len(adunit_links) == 0:
             self.testCreateNewApp()
             self.get('/')
-            adunit_links = BROWSER.find_elements_by_class("adunit-link")
+            adunit_links = BROWSER.find_elements_by_class_name("adunit-link")
 
         adunit_links[0].click()
 
@@ -597,10 +597,3 @@ class PublisherInteractionTestCase(InteractionTestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-    #TODO
-    # need to figure out a better way to close the browser process
-    # once the tests are over. this doesnt work.
-    # global BROWSER
-    # if BROWSER:
-    #     BROWSER.quit()

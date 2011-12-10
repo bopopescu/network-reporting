@@ -32,8 +32,10 @@
           <th class="dataTable-data numeric"> Revenue </th>
           <th class="dataTable-data numeric"> Attempts </th>
           <th class="dataTable-data numeric"> Impressions </th>
+          <th class="dataTable-data numeric"> CPM </th>
           <th class="dataTable-data numeric"> Fill Rate</th>
           <th class="dataTable-data numeric"> Clicks </th>
+          <th class="dataTable-data numeric"> CPC </th>
           <th class="dataTable-data numeric"> CTR </th>
         </thead>
       </table>
@@ -56,9 +58,11 @@
             <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
             <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
             <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
-            <td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}% </td>
+            <td class="dataTable-data numeric">{{ network.cpm|currency }} </td>
+            <td class="dataTable-data numeric">{{ network.fill_rate|percentage }} </td>
             <td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
-            <td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}% </td>
+            <td class="dataTable-data numeric">{{ network.cpc|currency }} </td>
+            <td class="dataTable-data numeric">{{ network.ctr|percentage }} </td>
 		    {% else %}
             <td class="network-status dataTable-name" colspan="7">
                <div>
@@ -142,16 +146,18 @@
           <table class="dataTable">
             <tbody>
               {% for app in network.sub_data_list %}
-              <tr class="sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{network.key}}">
+              <tr class="show-details sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{network.key}}" id="{{app.key}}">
                   <td class="dataTable-name">
-                    {{app.name}} <a href="{% url ad_network_app_detail app.key %}">Details</a>
+                    {{app.name}} <a class="hidden details-{{app.key}}" href="{% url ad_network_app_detail app.key %}">Details</a>
                   </td>
                   <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
                   <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
                   <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
-                  <td class="dataTable-data numeric">{{ app.fill_rate|floatformat:2 }}%</td>
+                  <td class="dataTable-data numeric">{{ app.cpm|currency }}</td>
+                  <td class="dataTable-data numeric">{{ app.fill_rate|percentage }}</td>
                   <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
-                  <td class="dataTable-data numeric">{{ app.ctr|floatformat:2 }}%</td>
+                  <td class="dataTable-data numeric">{{ app.cpc|currency }}</td>
+                  <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -175,8 +181,10 @@
           <th class="dataTable-data numeric"> Revenue </th>
           <th class="dataTable-data numeric"> Attempts </th>
           <th class="dataTable-data numeric"> Impressions </th>
+          <th class="dataTable-data numeric"> CPM </th>
           <th class="dataTable-data numeric"> Fill Rate</th>
           <th class="dataTable-data numeric"> Clicks </th>
+          <th class="dataTable-data numeric"> CPC </th>
           <th class="dataTable-data numeric"> CTR </th>
         </thead>
       </table>
@@ -195,9 +203,11 @@
             <td class="dataTable-data numeric">{{app.revenue|currency}}</td>
             <td class="dataTable-data numeric">{{app.attempts|withsep}}</td>
             <td class="dataTable-data numeric">{{app.impressions|withsep}}</td>
-            <td class="dataTable-data numeric">{{app.fill_rate|floatformat:2}}</td>
+            <td class="dataTable-data numeric">{{app.cpm|currency}}</td>
+            <td class="dataTable-data numeric">{{app.fill_rate|percentage}}</td>
             <td class="dataTable-data numeric">{{app.clicks|withsep}}</td>
-            <td class="dataTable-data numeric">{{app.ctr|floatformat:2}}</td>
+            <td class="dataTable-data numeric">{{app.cpc|currency}}</td>
+            <td class="dataTable-data numeric">{{app.ctr|percentage}}</td>
           </tr>
         </tbody>
       </table>
@@ -206,16 +216,18 @@
           <table class="dataTable">
             <tbody>
               {% for network in app.sub_data_list %}
-              <tr>
+              <tr class="show-details" id="{{network.key}}">
                 <td class="dataTable-name">
-                   {{network.name}} <a href="{% url ad_network_app_detail network.key %}">Details</a>
+                   {{network.name}} <a class="hidden details-{{network.key}}" href="{% url ad_network_app_detail network.key %}">Details</a>
                 </td>
                 <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
                 <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
                 <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
-                <td class="dataTable-data numeric">{{ network.fill_rate|floatformat:2 }}%</td>
+                <td class="dataTable-data numeric">{{ network.cpm|currency }}</td>
+                <td class="dataTable-data numeric">{{ network.fill_rate|percentage }}</td>
                 <td class="dataTable-data numeric">{{ network.clicks|withsep }}</td>
-                <td class="dataTable-data numeric">{{ network.ctr|floatformat:2 }}%</td>
+                <td class="dataTable-data numeric">{{ network.cpc|currency }}</td>
+                <td class="dataTable-data numeric">{{ network.ctr|percentage }}</td>
               </tr>
               {% endfor %}
             </tbody>

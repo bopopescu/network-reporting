@@ -133,21 +133,25 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 'revenue': stats.revenue,
                 'attempts': stats.attempts,
                 'impressions': stats.impressions,
+                'cpm': stats.cpm,
                 'fill_rate': stats.fill_rate,
                 'clicks': stats.clicks,
                 'ctr': stats.ctr,
+                'cpc': stats.cpc,
             }
             if not data_dict.has_key(attr):
                 data_dict[attr] = {
                     'sub_data_list': [],
-                    'revenue': 0,
+                    'revenue': 0.0,
                     'attempts': 0,
                     'fill_rate_impressions': 0,
                     'impressions': 0,
-                    'fill_rate': 0,
+                    'cpm': 0.0,
+                    'fill_rate': 0.0,
                     'clicks': 0,
-                    'ctr': 0,
-                    'key': str(key)
+                    'ctr': 0.0,
+                    'cpc': 0.0,
+                    'key': str(key),
                 }
                 if networks:
                     login_credentials = AdNetworkLoginCredentials.all(). \
@@ -169,7 +173,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 data_dict[attr]['fill_rate_impressions'] += \
                         sub_data['impressions']
             data_dict[attr]['impressions'] += sub_data['impressions']
-            data_dict[attr]['fill_rate'] += sub_data['fill_rate']
             data_dict[attr]['clicks'] += sub_data['clicks']
 
         for data in data_dict.values():
@@ -179,11 +182,12 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             if data['attempts']:
                 data['fill_rate'] = data[
                         'fill_rate_impressions'] / float(
-                                data['attempts']) * 100
+                                data['attempts'])
             if data['impressions']:
-                data['ctr'] = (data['clicks'] /
-                        float(data['impressions'])) * 100
-                #network_data['ecpm'] /= float(network_data['impressions'])
+#                data['ctr'] = (data['clicks'] /
+#                        float(data['impressions']))
+                data['cpm'] = data['impressions'] / data['revenue'] * 1000
+                data['cpc'] = data['revenue'] / data['clicks']
 
 
         # Add networks that aren't included but still relevant to the account
@@ -262,11 +266,10 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return a stats object.
         """
         aggregate_stats = Stats()
-        aggregate_stats.revenue = 0
+        aggregate_stats.revenue = 0.0
         aggregate_stats.attempts = 0
         aggregate_stats.impressions = 0
         aggregate_stats.clicks = 0
-        aggregate_stats.ecpm = 1
 
         aggregate_stats.fill_rate_impressions = 0
         for stats in stats_iterable:
@@ -280,18 +283,18 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             if stats.attempts:
                 aggregate_stats.fill_rate_impressions += stats.impressions
 
-            if aggregate_stats.impressions:
-                aggregate_stats.ecpm += stats.ecpm * stats.impressions
-
         if aggregate_stats.attempts:
             aggregate_stats.fill_rate = (aggregate_stats.fill_rate_impressions /
-                    float(aggregate_stats.attempts)) * 100
+                    float(aggregate_stats.attempts))
         else:
             aggregate_stats.fill_rate = 0
         if aggregate_stats.impressions:
             aggregate_stats.ctr = (aggregate_stats.clicks /
-                    float(aggregate_stats.impressions)) * 100
-            aggregate_stats.ecpm /= float(aggregate_stats.impressions)
+                    float(aggregate_stats.impressions))
+            aggregate_stats.cpc = aggregate_stats.revenue / \
+                    aggregate_stats.clicks
+            aggregate_stats.cpm = aggregate_stats.revenue / \
+                    aggregate_stats.impressions * 1000
         else:
             aggregate_stats.ctr = 0
 
@@ -562,10 +565,7 @@ def create_fake_data(account=None):
             stats = AdNetworkScrapeStats(revenue = random.random()*100000,
                                          attempts = random.randint(1, 100000),
                                          impressions = random.randint(1, 100000),
-                                         fill_rate = random.random()*100,
                                          clicks = random.randint(1, 1000),
-                                         ctr = random.random()*100,
-                                         ecpm = random.random()*100,
                                          date = day,
                                          ad_network_app_mapper=mapper)
             stats.put()

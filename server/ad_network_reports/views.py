@@ -105,21 +105,21 @@ class AppDetailHandler(RequestHandler):
         daily_stats.reverse()
         aggregates = manager.roll_up_stats(stats_list)
         return render_to_response(self.request,
-                                  'ad_network_reports/ad_network_base.html',
-                                  {
-                                      'start_date' : days[0],
-                                      'end_date' : days[-1],
-                                      'date_range' : self.date_range,
-                                      'ad_network_name' :
-                                        AD_NETWORK_NAMES[ad_network_app_mapper.ad_network_name],
-                                      'app_name' :
-                                        ad_network_app_mapper.application.name,
-                                      'aggregates' : aggregates,
-                                      'daily_stats' :
-                                        simplejson.dumps(daily_stats),
-                                      'stats_list' : stats_list,
-                                      'show_graph': True
-                                  })
+                  'ad_network_reports/ad_network_base.html',
+                  {
+                      'start_date' : days[0],
+                      'end_date' : days[-1],
+                      'date_range' : self.date_range,
+                      'ad_network_name' :
+                        AD_NETWORK_NAMES[ad_network_app_mapper.ad_network_name],
+                      'app_name' :
+                        ad_network_app_mapper.application.name,
+                      'aggregates' : aggregates,
+                      'daily_stats' :
+                        simplejson.dumps(daily_stats),
+                      'stats_list' : stats_list,
+                      'show_graph': True
+                  })
 
 @login_required
 def app_detail(request, *args, **kwargs):

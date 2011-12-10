@@ -134,8 +134,7 @@
           <table class="sortable">
             <tbody>
               <tr class="active" id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner">{{
-                        aggregates.revenue|currency }}</span></td>
+                <td class="stats-breakdown-value today"><span class="inner">{{ aggregates.revenue|currency }}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
               </tr>
               <tr id="stats-breakdown-impressions">
@@ -143,7 +142,9 @@
                 <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
               </tr>
               <tr id="stats-breakdown-clicks">
-                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{aggregates.ctr|floatformat:2}}%)</span> {{aggregates.clicks|withsep}}</span></td>
+                <td class="stats-breakdown-value today"><span
+                        class="inner"><span class="muted
+                            unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
               </tr>
             </tbody>
@@ -171,8 +172,10 @@
             <th class="dataTable-data numeric special"> Revenue </th>
             <th class="dataTable-data numeric special"> Attempts </th>
             <th class="dataTable-data numeric special"> Impressions </th>
+            <th class="dataTable-data numeric special"> CPM </th>
             <th class="dataTable-data numeric special"> Fill Rate</th>
             <th class="dataTable-data numeric special"> Clicks </th>
+            <th class="dataTable-data numeric special"> CPC </th>
             <th class="dataTable-data numeric special"> CTR </th>
           </thead>
           <tbody>
@@ -180,11 +183,13 @@
               <tr>
                 <td class="dataTable-name">{{stats.date}}</td>
                 <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
-                <td class="dataTable-data numeric">{{stats.attempts|withsep }}</td>
-                <td class="dataTable-data numeric">{{stats.impressions|withsep }}</td>
-                <td class="dataTable-data numeric">{{stats.fill_rate|floatformat:2 }}%</td>
-                <td class="dataTable-data numeric">{{stats.clicks|withsep }}</td>
-                <td class="dataTable-data numeric">{{stats.ctr|floatformat:2 }}%</td>
+                <td class="dataTable-data numeric">{{ stats.attempts|withsep }}</td>
+                <td class="dataTable-data numeric">{{ stats.impressions|withsep }}</td>
+                <td class="dataTable-data numeric">{{ stats.cpm|currency }}</td>
+                <td class="dataTable-data numeric">{{ stats.fill_rate|percentage }}</td>
+                <td class="dataTable-data numeric">{{ stats.clicks|withsep }}</td>
+                <td class="dataTable-data numeric">{{ stats.cpc|currency }}</td>
+                <td class="dataTable-data numeric">{{ stats.ctr|percentage }}</td>
               </tr>
               {% endfor %}
           </tbody>

@@ -95,17 +95,14 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
-                                                 collection_name='ad_network_stats')
+                                             collection_name='ad_network_stats')
     date = db.DateProperty(required=True)
 
     # stats info for a specific day
     revenue = db.FloatProperty(default=0.0)
     attempts = db.IntegerProperty(default=0)
     impressions = db.IntegerProperty(default=0)
-    fill_rate = db.FloatProperty(default=0.0)
     clicks = db.IntegerProperty(default=0)
-    ctr = db.FloatProperty(default=0.0)
-    ecpm = db.FloatProperty(default=0.0)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
@@ -114,6 +111,22 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
             kwargs['key_name'] = ('k:%s:%s' % (mapper, kwargs['date'].
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
+
+    @property
+    def cpm(self):
+        return self.revenue / self.impressions * 1000
+
+    @property
+    def fill_rate(self):
+        return self.impressions / float(self.attempts)
+
+    @property
+    def cpc(self):
+        return self.revenue / self.clicks
+
+    @property
+    def ctr(self):
+        return self.clicks / float(self.impressions)
 
     @classmethod
     def get_by_app_mapper_and_day(cls, app_mapper, day):
@@ -130,6 +143,7 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
                 stats = AdNetworkScrapeStats(date=day)
             final_stats_list.append(stats)
         return final_stats_list
+
 
 class AdNetworkManagementStats(db.Model): #(date)
     date = db.DateProperty(required=True)

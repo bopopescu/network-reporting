@@ -66,7 +66,7 @@ class AdGroupIndexHandler(RequestHandler):
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
         campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo'])
-        
+
         adgroups = []
         adunits_dict = {}
         apps_dict = {}
@@ -75,7 +75,7 @@ class AdGroupIndexHandler(RequestHandler):
                 if not adgroup.archived:
                     adunits = []
                     adunit_keys_to_fetch = []
-                    
+
                     adgroup.targeted_app_keys = []
                     adunit_keys = [adunit_key for adunit_key in adgroup.site_keys]
                     for adunit_key in adunit_keys:
@@ -701,21 +701,48 @@ class ShowAdGroupHandler(RequestHandler):
             message = None
         else:
             message = "<br/>".join(message)
-        return render_to_response(self.request, 'advertiser/adgroup.html',
-                                    {'campaign': adgroup.campaign,
-                                    'apps': apps.values(),
-                                    'adgroup': adgroup,
-                                    'creatives': creatives,
-                                    'totals': reduce(lambda x, y: x+y.stats, adunits, StatsModel()),
-                                    'today': today,
-                                    'yesterday': yesterday,
-                                    'graph_adunits': graph_adunits,
-                                    'start_date': days[0],
-                                    'end_date': days[-1],
-                                    'date_range': self.date_range,
-                                    'creative_fragment':creative_fragment,
-                                    'campaign_create_form_fragment':campaign_create_form_fragment,
-                                    'message': message})
+
+
+        totals = reduce(lambda x, y: x+y.stats, adunits, StatsModel())
+
+        stats = {
+            'revenue': {
+                'today': today.revenue,
+                'yesterday': yesterday.revenue,
+                'total': totals.revenue
+            },
+            'impressions': {
+                'today': today.impressions,
+                'yesterday': yesterday.impressions,
+                'total': totals.impressions
+            },
+            'conversions': {
+                'today': today.conversions,
+                'yesterday': yesterday.conversions,
+                'total': totals.conversions
+            },
+            'ctr': {
+                'today': today.ctr,
+                'yesterday': yesterday.ctr,
+                'total': totals.ctr
+            },
+        }
+        return render_to_response(self.request,
+                                  'advertiser/adgroup.html',
+                                  {
+                                      'campaign': adgroup.campaign,
+                                      'apps': apps.values(),
+                                      'adgroup': adgroup,
+                                      'creatives': creatives,
+                                      'stats': stats,
+                                      'graph_adunits': graph_adunits,
+                                      'start_date': days[0],
+                                      'end_date': days[-1],
+                                      'date_range': self.date_range,
+                                      'creative_fragment':creative_fragment,
+                                      'campaign_create_form_fragment':campaign_create_form_fragment,
+                                      'message': message
+                                  })
 
 @login_required
 def campaign_adgroup_show(request,*args,**kwargs):
@@ -1278,6 +1305,7 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'adunit_keys': adunit_keys,
                                       'pub_key': self.account.key(),
                                       'mpx_stats': simplejson.dumps(mpx_stats),
+                                      'stats_breakdown_includes': ['revenue','impressions','ecpm'],
                                       'totals': mpx_stats,
                                       'today_stats': today_stats,
                                       'yesterday_stats': yesterday_stats,
@@ -1420,6 +1448,7 @@ class NetworkIndexHandler(RequestHandler):
                                       'start_date': days[0],
                                       'end_date': days[-1],
                                       'date_range': self.date_range,
+                                      'stats_breakdown_includes': ['impressions', 'clicks', 'ctr']
                                   })
 
 @login_required

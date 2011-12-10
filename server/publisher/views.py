@@ -132,6 +132,29 @@ class AppIndexHandler(RequestHandler):
         response_dict['status'] = 200
         response_dict['all_stats'] = stats_dict
 
+        stats = {
+            'requests': {
+                'today': today.request_count,
+                'yesterday': yesterday.request_count,
+                'total': totals.request_count,
+            },
+            'impressions': {
+                'today': today.impression_count,
+                'yesterday': yesterday.impression_count,
+                'total': totals.impression_count,
+            },
+            'users': {
+                'today': today.user_count,
+                'yesterday': yesterday.user_count,
+                'total': totals.user_count
+            },
+            'ctr': {
+                'today': today.ctr,
+                'yesterday': yesterday.ctr,
+                'total': totals.ctr
+            },
+        }
+
         return render_to_response(self.request,
                                   'publisher/app_index.html',
                                   {
@@ -141,9 +164,7 @@ class AppIndexHandler(RequestHandler):
                                       'start_date': days[0],
                                       'end_date': days[-1],
                                       'date_range': self.date_range,
-                                      'today': today,
-                                      'yesterday': yesterday,
-                                      'totals': totals,
+                                      'stats': stats,
                                       'account': self.account
                                   })
 
@@ -505,6 +526,7 @@ class ShowAppHandler(RequestHandler):
                                       'date_range': self.date_range,
                                       'today': today,
                                       'yesterday': yesterday,
+                                      'stats_breakdown_includes': ['requests', 'impressions', 'clicks', 'users'],
                                       'account': self.account,
                                       'helptext': help_text,
                                       'gtee': gtee_levels,
@@ -746,6 +768,7 @@ class AdUnitShowHandler(RequestHandler):
                                       'adunit': adunit,
                                       'today': today,
                                       'yesterday': yesterday,
+                                      'stats_breakdown_includes': ['requests', 'impressions', 'ctr'],
                                       'start_date': days[0],
                                       'end_date': days[-1],
                                       'date_range': self.date_range,

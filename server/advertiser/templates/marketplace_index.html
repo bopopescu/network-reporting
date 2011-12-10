@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load filters %}
+{% load elements %}
 
 {% block pageTitle %}
   <h1>Marketplace</h1>
@@ -75,42 +76,11 @@
 
   <div class="active tab-section" id="performance">
     <section class="offset nomargin" id="dashboard-stats">
-      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <h3 class="stats-chart-title">
+        Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+      </h3>
       <div class="stats">
-        <div class="stats-breakdown">
-          <table>
-            <tbody>
-              <tr class="active" id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.revenue|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.revenue|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-              </tr>
-              <tr id="stats-breakdown-impressions">
-                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.impressions|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.impressions|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner">{{totals.impressions|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-              </tr>
-              <tr id="stats-breakdown-ecpm">
-                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.ecpm|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.ecpm|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner">{{totals.ecpm|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">eCPM</span></th>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="stats-breakdown-buttons">
-          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-            <label for="stats-breakdown-dateOptions-option-0">Today</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-            <label for="stats-breakdown-dateOptions-option-2">All</label>
-          </span>
-        </div>
+        {% stats_breakdown today_stats yesterday_stats totals stats_breakdown_includes %}
         <div class="chart stats-chart" id="dashboard-stats-chart">
         </div>
       </div>
@@ -300,4 +270,3 @@
 {% block extraCSS %}
 <link rel="stylesheet" href="/css/dt_jui.css?v=8"></link>
 {% endblock extraCSS %}
-

@@ -1,0 +1,144 @@
+{% load filters %}
+
+<div class="stats-breakdown">
+  <table>
+    <tbody>
+      {% if stats.revenue %}
+        <tr class="active" id="stats-breakdown-revenue">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.revenue.today|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value yesterday">
+            <span class="inner">{{stats.revenue.yesterday|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value all">
+          <span class="inner">{{stats.revenue.yesterday|withsep}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Revenue</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.requests %}
+        <tr class="active" id="stats-breakdown-requests">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.requests.today|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value yesterday">
+            <span class="inner">{{stats.requests.yesterday|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value all">
+          <span class="inner">{{stats.requests.yesterday|withsep}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Requests</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.impressions %}
+        <tr id="stats-breakdown-impressions">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.impressions.today|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value yesterday">
+            <span class="inner">{{stats.impressions.yesterday|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value all">
+          <span class="inner">{{stats.impressions.yesterday|withsep}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Impressions</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.clicks %}
+        <tr id="stats-breakdown-clicks">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.clicks.today|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value yesterday">
+            <span class="inner">{{stats.clicks.yesterday|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value all">
+          <span class="inner">{{stats.clicks.yesterday|withsep}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Clicks</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.ecpm %}
+        <tr id="stats-breakdown-ecpm">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.ecpm.today|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value yesterday">
+            <span class="inner">{{stats.ecpm.yesterday|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value all">
+          <span class="inner">{{stats.ecpm.yesterday|withsep}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">eCPM</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.ctr %}
+        <tr id="stats-breakdown-ctr">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.ctr.today|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value yesterday">
+            <span class="inner">{{stats.ctr.yesterday|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value all">
+          <span class="inner">{{stats.ctr.yesterday|withsep}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">CTR</span>
+          </th>
+        </tr>
+      {% endif %}
+
+      {% if stats.users %}
+        <tr id="stats-breakdown-users">
+          <td class="stats-breakdown-value today">
+            <span class="inner">{{stats.users.today|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value yesterday">
+            <span class="inner">{{stats.users.yesterday|withsep}}</span>
+          </td>
+          <td class="stats-breakdown-value all">
+          <span class="inner">{{stats.users.yesterday|withsep}}</span>
+          </td>
+          <th class="stats-breakdown-name">
+            <span class="inner">Users</span>
+          </th>
+        </tr>
+      {% endif %}
+
+    </tbody>
+  </table>
+</div>
+
+<div class="stats-breakdown-buttons">
+  <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+    <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+    <label for="stats-breakdown-dateOptions-option-0">
+      Today
+    </label>
+    <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+    <label for="stats-breakdown-dateOptions-option-1">
+      Yesterday
+    </label>
+    <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+    <label for="stats-breakdown-dateOptions-option-2">
+      All
+    </label>
+  </span>
+</div>

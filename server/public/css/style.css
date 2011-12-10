@@ -1494,7 +1494,11 @@ a.disabled {
     text-transform: uppercase;
     color: #555;
     vertical-align: bottom; }
-  .iconTable tbody.alt {
+    .iconTable thead th.title, .iconTable thead td.title {
+      font-size: 15px;
+      font-weight: 600;
+      text-transform: none; }
+  .iconTable tbody.alt, .iconTable tbody tr.alt {
     background: #F7F7F7; }
   .iconTable tbody tr.main td {
     font-weight: 600;
@@ -1505,6 +1509,8 @@ a.disabled {
     padding: 4px 10px 4px 0; }
     .iconTable tbody tr.sub td.name, .iconTable tbody tr.sub td.stat {
       border-top: 1px solid #EEE; }
+  .iconTable tbody tr.thick td {
+    padding: 8px 10px 7px 0; }
   .iconTable td.stat, .iconTable th.stat {
     text-align: right;
     width: 65px; }
@@ -1513,15 +1519,23 @@ a.disabled {
     width: 45px; }
     .iconTable td.icon > div, .iconTable th.icon > div {
       position: relative; }
-      .iconTable td.icon > div > img, .iconTable th.icon > div > img {
+      .iconTable td.icon > div img, .iconTable th.icon > div img {
         position: absolute;
         top: 0px;
         left: 10px;
         -webkit-border-radius: 6px;
         -moz-border-radius: 6px;
         border-radius: 6px; }
+  .iconTable td.controls, .iconTable th.controls {
+    padding-left: 5px !important;
+    padding-right: 11px !important;
+    width: 39px !important; }
+  .iconTable td.spacer, .iconTable th.spacer {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 10px !important; }
   .iconTable tbody tr.sub:last-child td {
-    padding-bottom: 17px; }
+    padding-bottom: 24px; }
   .iconTable tbody tr:only-child td {
     padding-bottom: 37px; }
 

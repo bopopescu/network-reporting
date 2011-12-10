@@ -34,72 +34,17 @@
   {% endifequal %}
 
   <section class="offset nomargin" id="dashboard-stats">
+
     <h3 class="stats-chart-title">
       Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
     </h3>
-    <div class="stats">
-      <div class="stats-breakdown">
-        <table>
-          <tbody>
-            <tr class="active" id="stats-breakdown-requests">
-              <td class="stats-breakdown-value today">
-                <span class="inner">{{today.request_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value yesterday">
-                <span class="inner">{{yesterday.request_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value all">
-                <span class="inner">{{totals.request_count|withsep}}</span>
-              </td>
-              <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-            </tr>
-            <tr id="stats-breakdown-impressions">
-              <td class="stats-breakdown-value today">
-                <span class="inner">{{today.impression_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value yesterday">
-                <span class="inner">{{yesterday.impression_count|withsep}}</span>
-              </td>
-              <td class="stats-breakdown-value all">
-                <span class="inner">{{totals.impression_count|withsep}}</span>
-              </td>
-              <th class="stats-breakdown-name">
-                <span class="inner">Impressions</span>
-              </th>
-            </tr>
-            <tr id="stats-breakdown-clicks">
-              <td class="stats-breakdown-value today">
-                <span class="inner">
-                  <span class="muted unbold">({{today.ctr|percentage}})</span>
-                  {{today.click_count|withsep}}
-                </span>
-              </td>
-              <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
-              <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{totals.ctr|percentage}})</span> {{totals.click_count|withsep}}</span></td>
-              <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-            </tr>
-            <tr id="stats-breakdown-users">
-              <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
-              <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
-              <td class="stats-breakdown-value all"><span class="inner">{{totals.user_count|withsep}}</span></td>
-              <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-            </tr>
-          </tbody>
-        </table>
-      </div>
 
-      <div class="stats-breakdown-buttons">
-        <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-          <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-          <label for="stats-breakdown-dateOptions-option-0">Today</label>
-          <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-          <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-          <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-          <label for="stats-breakdown-dateOptions-option-2">All</label>
-        </span>
-      </div>
-      <div class="chart stats-chart" id="dashboard-stats-chart">
-      </div>
+    <div class="stats">
+
+      {% stats_breakdown stats %}
+
+      <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+
     </div>
     <div class="clear"></div>
   </section>
@@ -111,74 +56,6 @@
       <a class="button" id="dashboard-apps-addAppButton" href='{% url publisher_create_app %}'>Add an app</a>
     </div>
     <h2>Apps and sites</h2>
-
-    {% comment %}
-    <div class="appData-columnHeaders">
-      <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
-        <thead>
-          <tr>
-            <th class="appData-icon"></th>
-            <th class="dataTable-name"></th>
-            <th class="dataTable-data numeric">Requests</th>
-            <th class="dataTable-data numeric">Impressions</th>
-            <th class="dataTable-data numeric">Fillrate</th>
-            <th class="dataTable-data numeric">Clicks</th>
-            <th class="dataTable-data numeric">CTR</th>
-          </tr>
-        </thead>
-      </table>
-    </div>
-    {% for app in apps %}
-      <div class="{% cycle 'appData' 'appData appData-alt' %}" id="appData-{{ app.key }}">
-        <table class="dataTable appData-main" id="dashboard-app-{{ forloop.counter0 }}-main">
-          <tbody>
-            <tr class="app-row" id="app-{{ app.key }}">
-              <td class="appData-icon">
-                <a href="{% url publisher_app_show app_key=app.key %}">
-              <img src="{% if app.icon_url %}{{ app.icon_url }}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
-              <th class="dataTable-name">
-                <span class="inner">
-                  <a class="app-link" href="{% url publisher_app_show app_key=app.key %}">{{ app.name }}</a>
-                  <span class="muted unbold">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
-                  <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
-                </span>
-              </th>
-              <td class="dataTable-data numeric requests">--</td>
-              <td class="dataTable-data numeric impressions">--</td>
-              <td class="dataTable-data numeric fill_rate">--</td>
-              <td class="dataTable-data numeric clicks">--</td>
-              <td class="dataTable-data numeric ctr">--</td>
-            </tr>
-        </tbody>
-        </table>
-        <div class="appData-details" id="dashboard-app-{{ forloop.counter0 }}-details">
-          <div class="appData-details-inner show">
-            <table class="dataTable">
-              <tbody>
-                {% for adunit in app.adunits %}
-                  <tr class="adunit-row incomplete" id="adunit-{{ adunit.key }}">
-                    <th class="dataTable-name">
-                      <div style="position:relative">
-                        <span class="inner">
-                          <a class="adunit-link" href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
-                          <div class="appData-id muted hidden">Ad Unit ID: {{ adunit.key }}</div>
-                        </span>
-                      </div>
-                    </th>
-                    <td class="dataTable-data numeric requests">--</td>
-                    <td class="dataTable-data numeric impressions">--</td>
-                    <td class="dataTable-data numeric fill_rate">--</td>
-                    <td class="dataTable-data numeric clicks">--</td>
-                    <td class="dataTable-data numeric ctr">--</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    {% endfor %}
-    {% endcomment %}
 
     {% inventory_table apps %}
 

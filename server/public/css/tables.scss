@@ -26,10 +26,15 @@
             text-transform: uppercase;
             color: #555;
             vertical-align: bottom;
+            &.title {
+                font-size: 15px;
+                font-weight: 600;
+                text-transform: none;
+            }
         }
     }
     tbody {
-        &.alt {
+        &.alt, tr.alt {
             background: #F7F7F7;
         }
         tr.main td {
@@ -45,6 +50,9 @@
                 border-top: 1px solid #EEE;
             }
         }
+        tr.thick td {
+           padding: 8px 10px 7px 0;
+        }
     }
     td.stat, th.stat {
         text-align: right;
@@ -55,17 +63,23 @@
         width: 45px;
         > div {
             position: relative;
-            > img {
-                position:absolute;
-                top:0px;
-                left:10px;
-                @include border-radius(6px)}
+            img { position:absolute; top:0px; left:10px; @include border-radius(6px)}
         }
+    }
+    td.controls, th.controls {
+       padding-left: 5px !important;
+       padding-right: 11px !important;
+       width: 39px !important;
+    }
+    td.spacer, th.spacer {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        width: 10px !important;
     }
 
     // Padding between sections if there are sub rows
     tbody tr.sub:last-child td {
-        padding-bottom: 17px;
+        padding-bottom: 24px;
     }
 
     // Padding between sections if there arent any sub rows
@@ -73,7 +87,6 @@
         padding-bottom: 37px;
     }
 }
-
 
 /* Data table */
 

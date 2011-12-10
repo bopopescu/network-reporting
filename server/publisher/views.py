@@ -639,7 +639,7 @@ def export_file( request, *args, **kwargs ):
 
 
 class AdUnitShowHandler(RequestHandler):
-    def get(self,adunit_key):
+    def get(self, adunit_key):
     # load the site
         adunit = AdUnitQueryManager.get(adunit_key)
         if adunit.account.key() != self.account.key():

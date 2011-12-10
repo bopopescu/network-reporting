@@ -1,5 +1,6 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
+{% load elements %}
 
 {% block messageCenter %}{% endblock messageCenter %}
 
@@ -107,10 +108,11 @@
 
   <section id="dashboard-apps">
     <div class="buttonBank buttonBank-right">
-      <a class="button" id="dashboard-apps-addAppButton" href="{% url publisher_create_app %}">Add an app</a>
+      <a class="button" id="dashboard-apps-addAppButton" href='{% url publisher_create_app %}'>Add an app</a>
     </div>
     <h2>Apps and sites</h2>
 
+    {% comment %}
     <div class="appData-columnHeaders">
       <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
         <thead>
@@ -176,6 +178,10 @@
         </div>
       </div>
     {% endfor %}
+    {% endcomment %}
+
+    {% inventory_table apps %}
+
   </section>
 {% endblock content %}
 

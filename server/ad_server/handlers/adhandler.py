@@ -86,6 +86,9 @@ class AdHandler(webapp.RequestHandler):
             self._get()
 
     def _get(self):
+        self.response.headers.add_header("X-Adtype", "clear")
+        self.response.headers.add_header("X-Backfill", "clear")
+        return
         ufid = self.request.get('ufid', None)
 
         # Do we need json padding?

@@ -39,6 +39,7 @@ class LogService(object):
 
 
     def log(self, line):
+        pass
         # some lines contain non-UTF-8 encoded chars or have invalid bytes
         # clean those by converting all non-unicode lines into unicode with UTF-8 encoding and with invalid bytes replaced
         try:

@@ -44,7 +44,8 @@ class LogService(object):
         try:
             line = to_uni(line)
         except Exception, e:
-            logging.error('%s: %s' % (e, line))
+            pass
+            # logging.error('%s: %s' % (e, line))
 
         self.lines.append(line)
         if self._should_flush():
@@ -54,7 +55,7 @@ class LogService(object):
                 logging.error("Over quota a bit")
             except:
                 exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-                logging.error(exception_traceback)
+                # logging.error(exception_traceback)
 
 
     def _should_flush(self):
@@ -113,7 +114,7 @@ class LogService(object):
             logging.warning(e)
         except Exception, e:
             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-            logging.error(exception_traceback)
+            # logging.error(exception_traceback)
 
 
 def get_blob_name_for_time(t, blob_file_name="apache"):

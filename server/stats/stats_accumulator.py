@@ -100,6 +100,7 @@ def log(request,
         queue_num = random.randint(0,NUM_REQ_QUEUES-1)                      
         queue_name = REQ_QUEUE_NAME%queue_num
         try:
+            #pass
             task.add(queue_name)
         except Exception, e:
             trace_logging.warning(e)

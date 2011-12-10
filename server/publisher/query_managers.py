@@ -19,7 +19,7 @@ from google.appengine.api import memcache
 from ad_server.debug_console import trace_logging
 from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 from common.constants import MAX_OBJECTS
-CACHE_TIME = 60*60
+CACHE_TIME = 0
 
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.

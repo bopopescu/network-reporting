@@ -39,12 +39,14 @@ class LogService(object):
 
 
     def log(self, line):
+        pass
         # some lines contain non-UTF-8 encoded chars or have invalid bytes
         # clean those by converting all non-unicode lines into unicode with UTF-8 encoding and with invalid bytes replaced
         try:
             line = to_uni(line)
         except Exception, e:
-            logging.error('%s: %s' % (e, line))
+            pass
+            # logging.error('%s: %s' % (e, line))
 
         self.lines.append(line)
         if self._should_flush():
@@ -54,7 +56,7 @@ class LogService(object):
                 logging.error("Over quota a bit")
             except:
                 exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-                logging.error(exception_traceback)
+                # logging.error(exception_traceback)
 
 
     def _should_flush(self):
@@ -113,7 +115,7 @@ class LogService(object):
             logging.warning(e)
         except Exception, e:
             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-            logging.error(exception_traceback)
+            # logging.error(exception_traceback)
 
 
 def get_blob_name_for_time(t, blob_file_name="apache"):

@@ -46,24 +46,30 @@
                         if(type == 'network')
                             print(adgroup.get('network_type'));
                         else if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') {
-                            if(adgroup.get('start_date') != null) {
-                                if(adgroup.get('end_date') != null)
-                                    print(adgroup.get('start_date') + '-' + adgroup.get('end_date') + '. ');
+                            var start_date = adgroup.get('start_date');
+                            var end_date = adgroup.get('end_date');
+                            if(start_date != null) {
+                                if(end_date != null)
+                                    print((start_date.getMonth() + 1) + '/' + start_date.getDate() + ' - ' + (end_date.getMonth() + 1) + '/' + end_date.getDate() + '.');
                                 else
-                                    print('Starts ' + adgroup.get('start_date') + '. ');
+                                    print('Starts ' + (start_date.getMonth() + 1) + '/' + start_date.getDate() + '.');
                             }
                             else {
-                                if(adgroup.get('end_date') != null)
-                                    print('Ends ' + adgroup.get('end_date') + '. ');
+                                if(end_date != null)
+                                    print('Ends ' + (end_date.getMonth() + 1) + '/' + end_date.getDate() + '.');
                                 else
-                                    print('All dates. ');
+                                    print('All dates.');
                             }
-                            if(adgroup.get('budget_type') == 'daily') {
-                                if(adgroup.get(''))
-                                print(adgroup.budget + ' daily budget.');
+                            var budget_type = adgroup.get('budget_type');
+                            var budget = adgroup.get('budget');
+                            if(budget_type == 'daily') {
+                                if(budget != null)
+                                    print(' $' + mopub.Utils.formatNumberWithCommas(budget.toFixed(2)) + ' daily budget.');
+                                else
+                                    print(' Unlimited budget.');
                             }
-                            else if(adgroup.get('budget_type') == 'full_campaign') {
-                                print('Unlimited budget.');
+                            else if(budget_type == 'full_campaign') {
+                                print(' ' + mopub.Utils.formatNumberWithCommas(budget) + ' campaign budget.');
                             }
                         }
                     %></span>

@@ -61,7 +61,10 @@ from ad_server.optimizer.optimizer import DEFAULT_CTR
 class AdGroupIndexHandler(RequestHandler):
 
     def get(self):
-        days = StatsModel.lastdays(90)
+        num_days = 90
+
+        today = datetime.datetime.now(Pacific_tzinfo()).date()
+        days = date_magic.gen_days(today - datetime.timedelta(days=num_days), today)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
@@ -105,7 +108,7 @@ class AdGroupIndexHandler(RequestHandler):
                                       'backfill_promo_adgroups': backfill_promo_adgroups,
                                       'start_date': days[0],
                                       'end_date': days[-1],
-                                      'date_range': self.date_range,
+                                      'date_range': num_days,
                                   })
 
 ####### Helpers for campaign page #######
@@ -1403,15 +1406,24 @@ def marketplace_blindness_change(request, *args, **kwargs):
 # At some point in the future, these *could* be branched into their own django app
 class NetworkIndexHandler(RequestHandler):
     def get(self):
+        today = datetime.datetime.now(Pacific_tzinfo()).date()
+        yesterday = today - datetime.timedelta(days=1)
+
+        logging.warn(today)
+        logging.warn(yesterday)
+
+        logging.warn(self.start_date)
+        logging.warn(self.date_range)
+
         if self.start_date:
             days = date_magic.gen_days(self.start_date, self.start_date + datetime.timedelta(self.date_range))
         else:
-            days = date_magic.gen_date_range(self.date_range)
+            days = date_magic.gen_days(today - datetime.timedelta(days=self.date_range), today)
 
-        today_date = datetime.datetime.now(Pacific_tzinfo()).date()
-        today = days.index(today_date) if today_date in days else None
-        yesterday_date = datetime.datetime.now(Pacific_tzinfo()).date() - datetime.timedelta(days=1)
-        yesterday = days.index(yesterday_date) if yesterday_date in days else None
+        today = days.index(today) if today in days else None
+        yesterday = days.index(yesterday) if yesterday in days else None
+
+        logging.warn(days)
 
         network_adgroups = []
         for campaign in CampaignQueryManager.get_network_campaigns(account=self.account):

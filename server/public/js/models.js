@@ -36,7 +36,7 @@
      */
 
     /*
-     * Helper functions for single stats
+     * Helper functions for stats
      */
     calculate_ctr = function(impression_count, click_count) {
         if(impression_count === null || click_count === null) return null;
@@ -98,48 +98,6 @@
         }
     });
 
-    /*
-     * Helper functions for AdGroups daily stats
-     */
-    get_stat_sum_for_day = function(adgroups, stat, day) {
-        return _.reduce(adgroups, function(memo, adgroup) {
-            if(memo === null ||
-               !adgroup.has('daily_stats') ||
-               day >= adgroup.get('daily_stats').length ||
-               !(stat in adgroup.get('daily_stats')[day]))
-                return null;
-            return memo + adgroup.get('daily_stats')[day][stat];
-        }, 0);
-    }
-
-    get_stat_for_day = function(adgroups, stat, day) {
-        switch(stat) {
-            case 'ctr':
-                return calculate_ctr(get_stat_for_day(adgroups, 'impression_count', day), get_stat_for_day(adgroups, 'click_count', day));
-            case 'fill_rate':
-                return calculate_fill_rate(get_stat_for_day(adgroups, 'request_count', day), get_stat_for_day(adgroups, 'impression_count', day));
-            case 'click_count':
-            case 'conversion_count':
-            case 'impression_count':
-            case 'request_count':
-            case 'revenue':
-                return get_stat_sum_for_day(adgroups, stat, day);
-            default:
-                throw 'Unsupported stat "' + stat + '".';
-        }
-    }
-
-    get_formatted_stat_for_day = function(adgroups, stat, day) {
-        return format_stat(stat, get_stat_for_day(adgroups, stat, day));
-    }
-
-    get_total_daily_stats = function(adgroups, stat) {
-        var total_daily_stats = [];
-        for(var day in adgroups[0].get('daily_stats')) {
-            total_daily_stats.push(get_stat_for_day(adgroups, stat, day));
-        }
-        return total_daily_stats;
-    }
 
     /*
      *  
@@ -175,8 +133,44 @@
             return format_stat(stat, this.get_stat(stat));
         },
 
+        get_stat_sum_for_day: function(stat, day) {
+            return this.reduce(function(memo, adgroup) {
+                if(memo === null ||
+                   !adgroup.has('daily_stats') ||
+                   day >= adgroup.get('daily_stats').length ||
+                   !(stat in adgroup.get('daily_stats')[day]))
+                    return null;
+                return memo + adgroup.get('daily_stats')[day][stat];
+            }, 0);
+        },
+
+        get_stat_for_day: function(stat, day) {
+            switch(stat) {
+                case 'ctr':
+                    return calculate_ctr(this.get_stat_for_day('impression_count', day), this.get_stat_for_day('click_count', day));
+                case 'fill_rate':
+                    return calculate_fill_rate(this.get_stat_for_day('request_count', day), this.get_stat_for_day('impression_count', day));
+                case 'click_count':
+                case 'conversion_count':
+                case 'impression_count':
+                case 'request_count':
+                case 'revenue':
+                    return this.get_stat_sum_for_day(stat, day);
+                default:
+                    throw 'Unsupported stat "' + stat + '".';
+            }
+        },
+
         get_formatted_stat_for_day: function(stat, day) {
-            return get_formatted_stat_for_day(this, stat, day);
+            return format_stat(stat, this.get_stat_for_day(stat, day));
+        },
+
+        get_total_daily_stats: function(stat) {
+            var total_daily_stats = [];
+            for(var day in this.at(0).get('daily_stats')) {
+                total_daily_stats.push(this.get_stat_for_day(stat, day));
+            }
+            return total_daily_stats;
         },
 
         get_chart_data: function(stat) {
@@ -184,20 +178,19 @@
             if(adgroups.length == 0) {
                 return [];
             }
-            var sorted_adgroups = _.sortBy(adgroups, function(adgroup) { return -adgroup.get(stat); });
+            var sorted_adgroups = _.sortBy(adgroups, function(adgroup) { return -adgroup.get('impression_count'); });
             var top_three_adgroups = sorted_adgroups.splice(0, 3);
-            var other_adgroups = sorted_adgroups;
+            var other_adgroups = new AdGroups(sorted_adgroups);
             var chart_data = top_three_adgroups.map(function(adgroup) {
                 var adgroup_data = {};
                 adgroup_data[adgroup.get('name')] = _.map(adgroup.get('daily_stats'), function(day) { return day[stat]; });
                 return adgroup_data;
             });
-            if(stat == 'ctr') {
-                chart_data.push({ 'MoPub Optimized': get_total_daily_stats(adgroups, 'ctr') });
+            if(other_adgroups.size()) {
+                chart_data.push({ 'Others': other_adgroups.get_total_daily_stats(stat) });
             }
-            if(other_adgroups.length) {
-                var other_adgroups_data = get_total_daily_stats(other_adgroups, stat);
-                chart_data.push({ 'Others': other_adgroups_data });
+            if(stat == 'ctr') {
+                chart_data.push({ 'MoPub Optimized': this.get_total_daily_stats('ctr') });
             }
             return chart_data;
         },

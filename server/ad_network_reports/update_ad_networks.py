@@ -285,10 +285,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                         revenue=float(stats.revenue),
                         attempts=stats.attempts,
                         impressions=stats.impressions,
-                        fill_rate=float(stats.fill_rate),
                         clicks=stats.clicks,
-                        ctr=float(stats.ctr),
-                        ecpm=float(stats.ecpm)
                         ).put()
 
                 if test_date == yesterday and login_credentials and \

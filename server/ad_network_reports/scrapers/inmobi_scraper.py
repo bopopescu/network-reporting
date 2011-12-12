@@ -73,8 +73,11 @@ class InMobiScraper(Scraper):
             logging.error("Day range (%s to %s) selected for InMobi doesn\'t "
                     "have any data. %s" % (start_date.strftime("%Y %m %d"),
                         end_date.strftime("%Y %m %d"), line))
-            raise InMobiError(line[line.find('<error>') + len('<error>') :
-                line.find('</error>')])
+            # InMobi Error's when there is no data to show ie other networks
+            # return 0's so in this case we will just return an nsr with 0's
+            return [NetworkScrapeRecord()]
+#            raise InMobiError(line[line.find('<error>') + len('<error>') :
+#                line.find('</error>')])
 
         dictionary = json.loads(line)
 
@@ -84,10 +87,7 @@ class InMobiScraper(Scraper):
             nsr = NetworkScrapeRecord(revenue=float(report_dict['earn']),
                     attempts=int(report_dict['req']),
                     impressions=int(report_dict['imp']),
-                    fill_rate=float(report_dict['fr']),
                     clicks=int(report_dict['clk']),
-                    ctr=float(report_dict['ctr']),
-                    ecpm=float(report_dict['ecpm']),
                     app_tag=str(report_dict['excol']))
             reports.append(nsr)
 

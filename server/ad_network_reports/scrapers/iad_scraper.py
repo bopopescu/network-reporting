@@ -13,7 +13,7 @@ from ad_network_reports.scrapers.network_scrape_record import \
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
-from BeautifulSoup import BeautifulSoup
+from common.utils.BeautifulSoup import BeautifulSoup
 from datetime import date, datetime
 from pyvirtualdisplay import Display
 from selenium import webdriver
@@ -25,10 +25,10 @@ class IAdScraper(Scraper):
     STATS_PAGE = 'https://iad.apple.com/itcportal/#app_homepage'
     LOGIN_TITLE = 'iTunes Connect - iAd Network Sign In'
     SITE_ID_IDENTIFIER = '&siteid='
-    APP_STATS = ('revenue', 'ecpm', 'requests', 'impressions', 'fill_rate',
-            'ctr')
-    MONEY_STATS = ['revenue', 'ecpm']
-    PCT_STATS = ['fill_rate', 'ctr']
+    # We have to collect the ctr in order to calculate the number of clicks
+    APP_STATS = ('revenue', 'requests', 'impressions', 'ctr')
+    MONEY_STATS = ['revenue']
+    PCT_STATS = ['ctr']
 
     def __init__(self, credentials):
         super(IAdScraper, self).__init__(credentials)
@@ -193,11 +193,8 @@ class IAdScraper(Scraper):
             nsr = NetworkScrapeRecord(revenue = app_dict['revenue'],
                                       attempts = app_dict['requests'],
                                       impressions = app_dict['impressions'],
-                                      fill_rate = app_dict['fill_rate'],
                                       clicks = int(app_dict['ctr'] * app_dict[
                                           'impressions']),
-                                      ctr = app_dict['ctr'] * 100,
-                                      ecpm = app_dict['ecpm'],
                                       app_tag = app_dict['apple_id'])
             records.append(nsr)
         return records

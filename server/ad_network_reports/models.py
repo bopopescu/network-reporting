@@ -15,12 +15,12 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     ad_network_name = db.StringProperty(required=True)
 
     # Needed for all networks but mobfox
-    username = db.ByteStringProperty()
+    _username = db.ByteStringProperty()
 
     # Needed to store the username securely
     username_iv = db.ByteStringProperty()
 
-    password = db.ByteStringProperty()
+    _password = db.ByteStringProperty()
 
     # Needed to store the password securely
     password_iv = db.ByteStringProperty()
@@ -34,25 +34,54 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     app_pub_ids = db.StringListProperty(default=[])
 
     def __init__(self, *args, **kwargs):
+        self.password = kwargs['password']
+        self.username = kwargs['username']
+        kwargs['password'] = self.password
+        kwargs['username'] = self.username
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
                 kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
 
     @property
-    def decoded_password(self):
+    def password(self):
         # Note: Crypto.Cipher cannot be imported in app engine.
         from Crypto.Cipher import AES
         password_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.password_iv)
-        return password_aes_cfb.decrypt(self.password)
+        return password_aes_cfb.decrypt(self._password)
+
+    @password.setter
+    def password(self, password):
+        from Crypto.Cipher import AES
+        from Crypto.Util import randpool
+        rp = randpool.RandomPool()
+
+        self.password_iv = rp.get_bytes(16)
+        logging.info("Setting password %s" % self.password_iv)
+
+        password_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.password_iv)
+        self._password = password_aes_cfb.encrypt(password)
 
     @property
-    def decoded_username(self):
+    def username(self):
         # Note: Crypto.Cipher cannot be imported in app engine.
         from Crypto.Cipher import AES
-        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.
-                login_credentials.username_iv)
-        return username_aes_cfb.decrypt(self.login_credentials.username)
+        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
+        return username_aes_cfb.decrypt(self._username)
+
+    @username.setter
+    def username(self, username):
+        from Crypto.Cipher import AES
+        from Crypto.Util import randpool
+        rp = randpool.RandomPool()
+
+        self.username_iv = rp.get_bytes(16)
+        logging.info("Setting username %s" % self.username_iv)
+        logging.warning("3")
+        logging.warning(self.__dict__)
+
+        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
+        self._username = username_aes_cfb.encrypt(username)
 
     @classmethod
     def get_by_ad_network_name(cls, account, ad_network_name):

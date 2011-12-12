@@ -17,4 +17,4 @@ def inventory_table(inventory):
 
 @register.inclusion_tag("partials/stats_breakdown.html")
 def stats_breakdown(stats):
-    return {'stats': stats } #redundo
+    return {'stats': stats }

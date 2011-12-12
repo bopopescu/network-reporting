@@ -387,7 +387,7 @@ class ShowAppHandler(RequestHandler):
     """
     I can't wait to rip this shit apart once we're on backbone.
     """
-    def get(self,app_key):
+    def get(self, app_key):
     # Set start date if passed in, otherwise get most recent days
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)

@@ -101,7 +101,7 @@ $(function() {
                 row.siblings().removeClass('active');
                 row.addClass('active');
                 $('#dashboard-stats-chart').fadeOut(100, function() {
-                    adgroups_view.render();
+                    graph_view.show_chart();
                     $(this).show();
                 });
             }
@@ -110,7 +110,9 @@ $(function() {
         $('#stats-breakdown-dateOptions input').click(function() {
             $('.stats-breakdown-value').hide();
             $('.stats-breakdown-value.'+$(this).val()).show();
-        }).click();
+        });
+        $('.stats-breakdown-value').hide();
+        $('.stats-breakdown-value.all').show();
 
 	    // Ad Campaign button
         $("#add_campaign_button").button({ icons : { primary : 'ui-icon-circle-plus'} });

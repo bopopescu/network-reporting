@@ -1290,11 +1290,37 @@ class MarketplaceIndexHandler(RequestHandler):
         # Get today and yesterday's stats for the graph
         today_stats = []
         yesterday_stats = []
+        stats = {}
         try:
-            today_stats = mpx_stats["daily"][-1];
-            yesterday_stats = mpx_stats["daily"][-2];
-        except:
-            pass
+            today_stats = mpx_stats["daily"][-1]
+            yesterday_stats = mpx_stats["daily"][-2]
+            logging.warn(today_stats)
+            stats = {
+                'revenue': {
+                    'today': today_stats['revenue'],
+                    'yesterday': yesterday_stats['revenue'],
+                    'total': mpx_stats['revenue']
+                },
+                'impressions': {
+                    'today': today_stats['impressions'],
+                    'yesterday': yesterday_stats['impressions'],
+                    'total': mpx_stats['impressions'],
+                },
+                'ecpm': {
+                    'today': today_stats['ecpm'],
+                    'yesterday': yesterday_stats['ecpm'],
+                    'total': mpx_stats['ecpm']
+                },
+            }
+
+            logging.warn('\n\n\n\n\n\n\n\n\n\n\n')
+            logging.warn(stats)
+
+        except Exception, e:
+            logging.warn('\n\n\n\n\n\n\n\n\n\n\n')
+            logging.warn(e)
+
+
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
@@ -1309,6 +1335,7 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'totals': mpx_stats,
                                       'today_stats': today_stats,
                                       'yesterday_stats': yesterday_stats,
+                                      'stats': stats,
                                       'blocklist': blocklist,
                                       'start_date': start_date,
                                       'end_date': end_date,
@@ -1436,10 +1463,34 @@ class NetworkIndexHandler(RequestHandler):
         else:
             days = date_magic.gen_date_range(self.date_range)
 
+        today_date = datetime.datetime.now(Pacific_tzinfo()).date()
+        today = days.index(today_date) if today_date in days else None
+        yesterday_date = datetime.datetime.now(Pacific_tzinfo()).date() - datetime.timedelta(days=1)
+        yesterday = days.index(yesterday_date) if yesterday_date in days else None
+
         network_adgroups = []
         for campaign in CampaignQueryManager.get_network_campaigns(account=self.account):
             for adgroup in campaign.adgroups:
                 network_adgroups.append(adgroup)
+
+        # Today might be None
+        stats = {
+            'impressions': {
+                'today': "---", #today.impression_count,
+                'yesterday': "---", #yesterday.impression_count,
+                'total': "---" #totals.impression_count,
+            },
+            'clicks': {
+                'today': "---", #today.click_count,
+                'yesterday': "---", #yesterday.click_count,
+                'total': "---" #totals.click_count
+            },
+            'ctr': {
+                'today': "---", #today.ctr,
+                'yesterday': "---", #yesterday.ctr,
+                'total': "---" #totals.ctr
+            },
+        }
 
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
@@ -1448,7 +1499,9 @@ class NetworkIndexHandler(RequestHandler):
                                       'start_date': days[0],
                                       'end_date': days[-1],
                                       'date_range': self.date_range,
-                                      'stats_breakdown_includes': ['impressions', 'clicks', 'ctr']
+                                      'stats': stats,
+                                      'today': today,
+                                      'yesterday': yesterday
                                   })
 
 @login_required

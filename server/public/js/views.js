@@ -76,17 +76,17 @@
             $("#stats-breakdown-revenue .all .inner").html(this.collection.get_formatted_stat('revenue'));
             $("#stats-breakdown-click_count .all .inner").html(this.collection.get_formatted_stat('click_count'));
             $("#stats-breakdown-ctr .all .inner").html(this.collection.get_formatted_stat('ctr'));
-            if(this.options.today != null) {
-                $("#stats-breakdown-impression_count .today .inner").html(this.collection.get_formatted_stat_for_day('impression_count', this.options.today));
-                $("#stats-breakdown-revenue .today .inner").html(this.collection.get_formatted_stat_for_day('revenue', this.options.today));
-                $("#stats-breakdown-click_count .today .inner").html(this.collection.get_formatted_stat_for_day('click_count', this.options.today));
-                $("#stats-breakdown-ctr .today .inner").html(this.collection.get_formatted_stat_for_day('ctr', this.options.today));
-            }
-            if(this.options.yesterday != null) {
+            if(this.options.yesterday != null && this.options.today != null) {
+                // yesterday
                 $("#stats-breakdown-impression_count .yesterday .inner").html(this.collection.get_formatted_stat_for_day('impression_count', this.options.yesterday));
                 $("#stats-breakdown-revenue .yesterday .inner").html(this.collection.get_formatted_stat_for_day('revenue', this.options.yesterday));
                 $("#stats-breakdown-click_count .yesterday .inner").html(this.collection.get_formatted_stat_for_day('click_count', this.options.yesterday));
                 $("#stats-breakdown-ctr .yesterday .inner").html(this.collection.get_formatted_stat_for_day('ctr', this.options.yesterday));
+                // today
+                $("#stats-breakdown-impression_count .today .inner").html(this.collection.get_formatted_stat_for_day('impression_count', this.options.today));
+                $("#stats-breakdown-revenue .today .inner").html(this.collection.get_formatted_stat_for_day('revenue', this.options.today));
+                $("#stats-breakdown-click_count .today .inner").html(this.collection.get_formatted_stat_for_day('click_count', this.options.today));
+                $("#stats-breakdown-ctr .today .inner").html(this.collection.get_formatted_stat_for_day('ctr', this.options.today));
             }
             // Chart
             mopub.dashboardStatsChartData = {

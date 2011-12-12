@@ -26,7 +26,7 @@
 
       {# Controls and stats breakdown for the top realtime stats #}
       <div class="stats">
-        {% stats_breakdown '' '' '' stats_breakdown_includes %}
+        {% stats_breakdown stats %}
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
       </div>
 
@@ -48,6 +48,14 @@
         </span>
     </div>
   </form>
+
+  {# Help Content #}
+  <div id="campaign-ecpm-helpContent" class="hidden">
+    <h3>Revenue Optimized Campaign eCPM</h3>
+    <p>We calculate the <strong>eCPM</strong> for CPC campaigns by combining the CPC of the campaign with our CTR calculated in real time.</p>
+    <p>This number may vary over time. This is perfectly natural and our system will adjust to these fluctuations in real time.</p>
+    <p>Campaigns that have not yet begun use the average CTR of the entire app to calculate eCPM.</p>
+  </div>
 {% endblock content %}
 
 
@@ -58,9 +66,9 @@
   <script type="text/html" id="adgroups-table-template">
     {% include "partials/adgroups_table.html" %}
   </script>
-  <script type="text/javascript" src="/js/models.js?v=11"></script>
-  <script type="text/javascript" src="/js/views.js?v=11"></script>
-  <script type="text/javascript" src="/js/controllers/networks.js?v=11"></script>
+  <script type="text/javascript" src="/js/models.js?v=0"></script>
+  <script type="text/javascript" src="/js/views.js?v=0"></script>
+  <script type="text/javascript" src="/js/controllers/networks.js?v=0"></script>
   <script>
     $(function() {
       NetworksController(
@@ -71,8 +79,8 @@
           details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
           network_type: '{{ adgroup.network_type }}'}{% if not forloop.last %},{% endif %}{% endfor %}],
         Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }}),
-        {{ days|add:"-1" }},
-        {{ days|add:"-2" }},
+        {% if today != None %}{{ today }}{% else %}null{% endif %},
+        {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %},
         's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'
       );
     });

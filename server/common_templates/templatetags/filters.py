@@ -107,8 +107,12 @@ def upper(s):
 
 @register.filter
 def withsep(x):
+    """ 1000000 --> 1,000,000 """
     if x:
-        return re.sub(r'(\d{3})(?=\d)', r'\1,', str(x)[::-1])[::-1]
+        try:
+            return re.sub(r'(\d{3})(?=\d)', r'\1,', str(x)[::-1])[::-1]
+        except:
+            return "0"
     else:
         return "0"
 

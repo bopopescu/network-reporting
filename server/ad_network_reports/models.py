@@ -114,19 +114,27 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
 
     @property
     def cpm(self):
-        return self.revenue / self.impressions * 1000
+        if self.impressions:
+            return self.revenue / self.impressions * 1000
+        return 0.0
 
     @property
     def fill_rate(self):
-        return self.impressions / float(self.attempts)
+        if self.attempts:
+            return self.impressions / float(self.attempts)
+        return 0.0
 
     @property
     def cpc(self):
-        return self.revenue / self.clicks
+        if self.clicks:
+            return self.revenue / self.clicks
+        return 0.0
 
     @property
     def ctr(self):
-        return self.clicks / float(self.impressions)
+        if self.impressions:
+            return self.clicks / float(self.impressions)
+        return 0.0
 
     @classmethod
     def get_by_app_mapper_and_day(cls, app_mapper, day):

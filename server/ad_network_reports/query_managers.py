@@ -184,8 +184,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                         'fill_rate_impressions'] / float(
                                 data['attempts'])
             if data['impressions']:
-#                data['ctr'] = (data['clicks'] /
-#                        float(data['impressions']))
+                data['ctr'] = (data['clicks'] /
+                        float(data['impressions']))
                 data['cpm'] = data['impressions'] / data['revenue'] * 1000
                 data['cpc'] = data['revenue'] / data['clicks']
 

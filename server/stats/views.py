@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import datetime
 import logging
 import sys
@@ -169,7 +171,7 @@ def _create_mdb_json(stats_to_put):
     # these are request counts only; insert them into json_d
     for (adunit, date_hour) in request_d_keys:
         k = '%s::%s' % (adunit, date_hour)
-    
+
         # all other counts are 0
         counts = {}
         counts['attempt_count'] = 0
@@ -177,7 +179,7 @@ def _create_mdb_json(stats_to_put):
         counts['click_count'] = 0
         counts['conversion_count'] = 0
         counts['revenue'] = 0
-    
+
         json_d[k] = counts
         json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
 
@@ -270,6 +272,9 @@ def deref_adgroup(adgroup_str):
 
 # returns [adgroup_str, campaign_str, account_str] or None
 def _deref_creative(creative_str):
+    if not creative_str:    # None or ''
+        return None
+
     if creative_str in DEREF_CACHE:
         return DEREF_CACHE[creative_str]
 
@@ -591,11 +596,30 @@ def async_put_models(account_name,stats_models,bucket_size):
 
 class FinalizeHandler(webapp.RequestHandler):
     def post(self):
-        return self.get(self)
+        post_data = simplejson.loads(self.request.body)
+
+        try:
+            blob_file_name = post_data['blob_file_name']
+            log_lines = post_data['log_lines']
+
+            # create new file in blobstore (file name is GAE internal)
+            internal_file_name = files.blobstore.create(
+                                mime_type="text/plain",
+                                _blobinfo_uploaded_filename=blob_file_name+'.log')
+
+            # open the file and write lines
+            with files.open(internal_file_name, 'a') as f:
+                f.write('\n'.join(log_lines)+'\n')
+
+            # finalize this file
+            files.finalize(internal_file_name)
+        except:
+            exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+            logging.error(exception_traceback)
 
     def get(self):
-        file_name = self.request.get('file_name')
         try:
+            file_name = self.request.get('file_name')
             files.finalize(file_name)
         except (files.ExistenceError, files.FinalizationError):
             pass # no-opp file is already finalized
@@ -669,7 +693,6 @@ class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
 class MongoUpdateStatsHandler(webapp.RequestHandler):
     def post(self):
         mdb_dict = simplejson.loads(self.request.body)  # mdb_dict is json_d in _create_mdb_json()
-        logging.info('POST_BODY: %s' % mdb_dict)
 
         has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict)
         if has_err:
@@ -678,11 +701,6 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
             self.response.out.write(err_msg)
             return
 
-
-        logging.info('NOT!!! POST TO MDB: %s' % post_data)
-        # self.response.out.write('NOT WORKING')
-        # return 
-        
         post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://write.mongostats.mopub.com/update
         post_request = urllib2.Request(post_url, post_data)
         post_response = urllib2.urlopen(post_request)

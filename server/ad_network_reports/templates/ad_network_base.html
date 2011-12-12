@@ -128,7 +128,7 @@
   {% block graph %}
   {% if show_graph %}
     <section class="offset nomargin" id="dashboard-stats">
-          <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
       <div class="stats clearfix">
         <div class="stats-breakdown">
           <table class="sortable">
@@ -153,6 +153,10 @@
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
       </div>
     </section>
+      <div style="float:right">Data shown is from the ad networks and may change. <a class="learn-more" style="cursor:pointer;">Learn more</a></div>
+      <div class="learn-more-text hidden">The data shown is this page was retrieved from the ad networks given the credentials you provided and is to be used for estimation purposes only.  This data may be changed by the network at any time and you should use your publisher dashboard with each network to verify the final numbers.
+      
+      Reach out to us at support@mopub.com if you have any questions.</div>
   {% else %}
     <div class="alert-message block-message">
       MoPub can automatically pull ad network revenue data from most ad networks that are supported. To enable reporting for each network, enter your login credentials for the ad networks below.  MoPub will pull data each morning for the previous day.<br/>

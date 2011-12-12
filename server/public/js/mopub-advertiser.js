@@ -70,6 +70,13 @@ var mopub = mopub || {};
               });
           });
           
+          $('.learn-more').click(function () {
+              var div = $('.learn-more-text');
+              div.dialog({
+                  buttons: { "Close": function() { $(this).dialog('close');} }
+              });
+          });
+
           $('.show-status').click(function () {
               var key = $(this).attr('id');
               var div = $('.' + key);

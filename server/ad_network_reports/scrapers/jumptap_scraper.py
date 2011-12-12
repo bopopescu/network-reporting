@@ -37,13 +37,10 @@ class JumpTapScraper(Scraper):
         level publisher ids and adunit level publisher ids for the account.
         """
         if isinstance(login_info, tuple):
-            credentials, self.publisher_ids, self.adunit_publisher_ids = login_info
-            logging.info("JUMPTAP INFO:")
-            self.publisher_ids = list(self.publisher_ids)
-            self.adunit_publisher_ids = list(self.adunit_publisher_ids)
-            logging.info(list(self.publisher_ids))
-            logging.info(list(self.adunit_publisher_ids))
-            self.adunit_publisher_ids = set(list(self.adunit_publisher_ids))
+            credentials, self.publisher_ids, self.adunit_publisher_ids = \
+                    login_info
+            self.publisher_ids = set(self.publisher_ids)
+            self.adunit_publisher_ids = set(self.adunit_publisher_ids)
         else:
             credentials = login_info
             self.publisher_ids = ['']

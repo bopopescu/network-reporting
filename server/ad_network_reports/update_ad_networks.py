@@ -154,7 +154,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
 
     for test_date in date_magic.gen_days(start_date, end_date):
         logger.info("TEST DATE: %s" % test_date.strftime("%Y %m %d"))
-        aggregate = AdNetworkManagementStats(date=test_date)
+        if not only_these_credentials:
+            aggregate = AdNetworkManagementStats(date=test_date)
 
         previous_account_key = None
         valid_stats_list = []
@@ -200,8 +201,9 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
             except Exception as e:
                 # This should catch ANY exception because we don't want to stop
                 # updating stats if something minor breaks somewhere.
-                aggregate.increment(login_credentials.ad_network_name +
-                        '_login_failed')
+                if not only_these_credentials:
+                    aggregate.increment(login_credentials.ad_network_name +
+                            '_login_failed')
                 logger.error(("Couldn't get get stats for %s network for "
                         "\"%s\" account.  Can try again later or perhaps %s "
                         "changed it's API or site.") %
@@ -222,8 +224,9 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                 continue
 
             for stats in stats_list:
-                aggregate.increment(login_credentials.ad_network_name +
-                        '_found')
+                if not only_these_credentials:
+                    aggregate.increment(login_credentials.ad_network_name +
+                            '_found')
 
                 # Add the current day to the db.
 
@@ -260,8 +263,9 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
 #                                application=None)
 #                        ad_network_app_mapper.put()
                     else:
-                        aggregate.increment(login_credentials.ad_network_name +
-                                '_mapped')
+                        if not only_these_credentials:
+                            aggregate.increment(login_credentials.ad_network_name +
+                                    '_mapped')
                         logger.info("%(account)s has pub id %(pub_id)s on "
                                 "%(ad_network)s that was FOUND in MoPub and "
                                 "mapped" %
@@ -277,8 +281,9 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                 pub_id = stats.app_tag,
                                 ad_network = login_credentials.ad_network_name))
 
-                aggregate.increment(login_credentials.ad_network_name +
-                        '_updated')
+                if not only_these_credentials:
+                    aggregate.increment(login_credentials.ad_network_name +
+                            '_updated')
                 AdNetworkScrapeStats(ad_network_app_mapper=
                         ad_network_app_mapper,
                         date=test_date,
@@ -294,7 +299,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                         name, ad_network_app_mapper.ad_network_name, stats))
             login_credentials.put()
 
-        aggregate.put()
+        if not only_these_credentials:
+            aggregate.put()
         if test_date == yesterday and login_credentials and \
                 login_credentials.email:
             send_stats_mail(login_credentials.account, manager, test_date,

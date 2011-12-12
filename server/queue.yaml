@@ -4,11 +4,11 @@ queue:
 
 - name: admin-dashboard-queue
   rate: 10/s
-    
+
 - name: bulk-log-processor
   rate: 100/s
-  bucket_size: 100    
-    
+  bucket_size: 100
+
 - name: bulk-log-processor-00
   rate: 100/s
   bucket_size: 100
@@ -20,7 +20,7 @@ queue:
 - name: bulk-log-processor-02
   rate: 100/s
   bucket_size: 100
-  
+
 - name: bulk-log-processor-03
   rate: 100/s
   bucket_size: 100
@@ -48,18 +48,18 @@ queue:
 - name: bulk-log-processor-09
   rate: 100/s
   bucket_size: 100
-  
+
 - name: bulk-log-processor-overflow-00
   rate: 100/s
-  bucket_size: 100 
-  
+  bucket_size: 100
+
 - name: bulk-log-processor-overflow-01
   rate: 100/s
-  bucket_size: 100 
-  
+  bucket_size: 100
+
 - name: bulk-log-processor-overflow-02
   rate: 100/s
-  bucket_size: 100 
+  bucket_size: 100
 
 - name: network-request-00
   rate: 100/s
@@ -180,15 +180,15 @@ queue:
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
-    
-- name: gen-rep-00 
+
+- name: gen-rep-00
   rate: 100/s
-  bucket_size: 100    
+  bucket_size: 100
 
 - name: budget-advance
   rate: 100/s
   bucket_size: 100
-  
+
 - name: daily-budget-advance
   rate: 100/s
   bucket_size: 100
@@ -202,7 +202,44 @@ queue:
   bucket_size: 10
   retry_parameters:
     task_retry_limit: 1
-  
+
+
 - name: file-finalizer-00
   rate: 100/s
-  bucket_size: 100  
+  bucket_size: 100
+
+- name: file-finalizer-01
+  rate: 100/s
+  bucket_size: 100
+
+- name: file-finalizer-02
+  rate: 100/s
+  bucket_size: 100
+
+- name: file-finalizer-03
+  rate: 100/s
+  bucket_size: 100
+
+- name: file-finalizer-04
+  rate: 100/s
+  bucket_size: 100
+
+- name: file-finalizer-05
+  rate: 100/s
+  bucket_size: 100
+
+- name: file-finalizer-06
+  rate: 100/s
+  bucket_size: 100
+
+- name: file-finalizer-07
+  rate: 100/s
+  bucket_size: 100
+
+- name: file-finalizer-08
+  rate: 100/s
+  bucket_size: 100
+
+- name: file-finalizer-09
+  rate: 100/s
+  bucket_size: 100

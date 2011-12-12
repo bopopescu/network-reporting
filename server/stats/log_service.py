@@ -3,12 +3,16 @@ from __future__ import with_statement
 import datetime
 import logging
 import random
+import simplejson
+import sys
+import traceback
 import uuid
 
 from google.appengine.api import files
 from google.appengine.api import taskqueue
 from google.appengine.runtime import apiproxy_errors
 
+from common.utils.helpers import to_uni, to_ascii
 from common.utils.timezones import Pacific_tzinfo
 
 
@@ -18,11 +22,12 @@ INSTANCE_ID = str(uuid.uuid1())
 # MAX_TIME_BEFORE_FLUSH has elapsed since last flush
 # whichever is the first
 
-MAX_LINES_BEFORE_FLUSH = 10000
-MAX_TIME_BEFORE_FLUSH = 600 # seconds
+MAX_LINES_BEFORE_FLUSH = 100
+MAX_TIME_BEFORE_FLUSH = 60 # seconds
 
 FILE_QUEUE_NAME = 'file-finalizer-%02d'
-NUM_FILE_QUEUES = 1
+NUM_FILE_QUEUES = 10
+
 
 class LogService(object):
     def __init__(self, blob_file_name="apache", flush_lines=MAX_LINES_BEFORE_FLUSH, flush_time=MAX_TIME_BEFORE_FLUSH):
@@ -32,16 +37,18 @@ class LogService(object):
         self.lines = []
         self.last_flush = datetime.datetime.now()
 
-    def log(self, line):
-        self.lines.append(line)
 
+    def log(self, line):
+        self.lines.append(to_ascii(line))
         if self._should_flush():
             try:
-                self.flush()
+                self.schedule_flush()
             except apiproxy_errors.OverQuotaError:
                 logging.error("Over quota a bit")
             except:
-                logging.error("wtf")
+                exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+                logging.error(exception_traceback)
+
 
     def _should_flush(self):
         """
@@ -54,100 +61,51 @@ class LogService(object):
         enough_time_elapsed =  now > next_flush # bool
         return enough_lines or enough_time_elapsed
 
-    def flush(self):
-        """Flushes the log lines to a file"""
-        file_name, blob_file_name, current_time = _get_file_names_and_time(self.blob_file_name)
 
-        # open the file and append all new lines together
-        with files.open(file_name, 'a') as f:
-            f.write('\n'.join(self.lines)+'\n')
+    def schedule_flush(self):
+        """Schedules the flushing of log lines to a blobstore file via task queue"""
 
-        self._did_flush(file_name, blob_file_name, current_time)
+        # creates the current time in PST
+        current_time = datetime.datetime.now(Pacific_tzinfo())
 
-    def _did_flush(self, file_name, blob_file_name, current_time):
-        """
-        Hook for all post flush behavior
-        """
-        # clear cache of lines
-        self.lines = []
-        # update last flush
-        self.last_flush = datetime.datetime.now()
-        # finalize the file so that it can be readable
-        # this is an appengine specific problem
-        # because files start as writeable then
-        # go on to be reable, but first must be finalized
-        self._finalize_when_appriorate(file_name,
-                                       blob_file_name,
-                                       current_time)
+        # create human-readable file name in blobstore based on current time
+        blob_file_name = get_blob_name_for_time(current_time, self.blob_file_name)
 
-    def _finalize_when_appriorate(self, file_name, blob_file_name, current_time):
+        self._put_flush_task_on_q(blob_file_name, current_time)
+
+
+    def _put_flush_task_on_q(self, blob_file_name, current_time):
         """
-        Schedule the file to be finalized at the beginning of the next hour (with a buffer)
+        Schedule the flushing of lines to file and then finalize it at the beginning of the next hour (with a buffer)
         """
-        # by using task_names we ensure that each file is only finalized once
-        task_name = ('t-'+blob_file_name+'-'+INSTANCE_ID).replace('_','1X--X1') # must escape '_' because not allowed in task names
-        execution_time = self._get_execution_time(current_time)
-        task = taskqueue.Task(name=task_name,
-                              params=dict(file_name=file_name),
-                              method='GET',
-                              url='/files/finalize',
-                              eta=execution_time,)
-        # get the appropriate queue shard
-        queue_num = random.randint(0,NUM_FILE_QUEUES-1)
-        queue_name = FILE_QUEUE_NAME%queue_num
+
         try:
+            # post data is a dict containing the file name in blobstore and its content: the log lines
+            post_data = {'blob_file_name': blob_file_name, 'log_lines': self.lines}
+            post_data_serialized = simplejson.dumps(post_data)
+
+            task = taskqueue.Task(name=None,
+                                  method='POST',
+                                  url='/files/finalize',
+                                  payload=post_data_serialized)
+
+            # get the appropriate queue shard
+            queue_num = random.randint(0, NUM_FILE_QUEUES-1)
+            queue_name = FILE_QUEUE_NAME % queue_num
+
+            # put task on queue
             task.add(queue_name)
+
+            # clear cache of lines
+            self.lines = []
+            # update last flush
+            self.last_flush = datetime.datetime.now()
         except taskqueue.TaskAlreadyExistsError:
             logging.info("task %s already exists"%task_name)
         except Exception, e:
-            logging.warning(e)
+            exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
+            logging.error(exception_traceback)
 
-    def _get_execution_time(self, current_time):
-        """
-        Get's the execution time which is just the next hour
-        (e.g. for both 13:03, 13:43 the execution time is 14:00)
-        """
-        current_hour = datetime.datetime(year=current_time.year,
-                                         month=current_time.month,
-                                         day=current_time.day,
-                                         hour=current_time.hour,
-                                         tzinfo=Pacific_tzinfo())
-
-        execution_time = current_hour + datetime.timedelta(hours=1,minutes=15)
-        return execution_time
-
-def _get_file_names_and_time(blob_file_name):
-    """
-    Returns the filename based on the current hour
-    and the current instance ID
-    """
-    # creates the current time in PST
-    current_time = datetime.datetime.now(Pacific_tzinfo())
-    file_name, blob_file_name = _get_file_names_for_time(current_time, blob_file_name)
-
-    return file_name, blob_file_name, current_time
-
-# mapping of human reable file names to
-# to appengine file names
-FILE_NAME_FROM_TIME_DICT = {}
-
-def _get_file_names_for_time(t, blob_file_name):
-    """
-    Returns appengine internal file name and the human
-    readable file name for the input time.
-    """
-
-    blob_file_name = get_blob_name_for_time(t, blob_file_name)
-
-    # if not in the cache put it in there
-    if not blob_file_name in FILE_NAME_FROM_TIME_DICT:
-        # appengine internal file name
-        file_name = files.blobstore.create(
-                            mime_type="text/plain",
-                            _blobinfo_uploaded_filename=blob_file_name+'.log')
-        FILE_NAME_FROM_TIME_DICT[blob_file_name] = file_name
-
-    return FILE_NAME_FROM_TIME_DICT[blob_file_name], blob_file_name
 
 def get_blob_name_for_time(t, blob_file_name="apache"):
     # 2011050215 for 3pm May 2, 2011 PST

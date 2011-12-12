@@ -77,9 +77,9 @@ def currency(value):
         try:
             return "$%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
         except Exception:
-            return "---" # "$0.00"
+            return "$0.00"
     else:
-        return "---" # "$0.00"
+        return "$0.00"
 
 @register.filter
 def currency_no_symbol(value):

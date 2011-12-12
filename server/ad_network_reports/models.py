@@ -95,17 +95,14 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
-                                                 collection_name='ad_network_stats')
+                                             collection_name='ad_network_stats')
     date = db.DateProperty(required=True)
 
     # stats info for a specific day
     revenue = db.FloatProperty(default=0.0)
     attempts = db.IntegerProperty(default=0)
     impressions = db.IntegerProperty(default=0)
-    fill_rate = db.FloatProperty(default=0.0)
     clicks = db.IntegerProperty(default=0)
-    ctr = db.FloatProperty(default=0.0)
-    ecpm = db.FloatProperty(default=0.0)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
@@ -115,13 +112,38 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
+    @property
+    def cpm(self):
+        if self.impressions:
+            return self.revenue / self.impressions * 1000
+        return 0.0
+
+    @property
+    def fill_rate(self):
+        if self.attempts:
+            return self.impressions / float(self.attempts)
+        return 0.0
+
+    @property
+    def cpc(self):
+        if self.clicks:
+            return self.revenue / self.clicks
+        return 0.0
+
+    @property
+    def ctr(self):
+        if self.impressions:
+            return self.clicks / float(self.impressions)
+        return 0.0
+
     @classmethod
     def get_by_app_mapper_and_day(cls, app_mapper, day):
         return cls.get_by_key_name('k:%s:%s' % (app_mapper.key(),
             day.strftime('%Y-%m-%d')))
 
     @classmethod
-    def get_by_app_mapper_and_days(cls, app_mapper_key, days):
+    def get_by_app_mapper_and_days(cls, app_mapper_key, days,
+            include_last_day=False):
         stats_list = cls.get_by_key_name(['k:%s:%s' % (app_mapper_key,
             day.strftime('%Y-%m-%d')) for day in days])
         final_stats_list = []
@@ -129,7 +151,14 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
             if not stats:
                 stats = AdNetworkScrapeStats(date=day)
             final_stats_list.append(stats)
+        if include_last_day:
+            filtered_stats = [stats for stats in stats_list if stats != None]
+            if filtered_stats:
+                return final_stats_list, max(filtered_stats, key=lambda stats:
+                        stats.date).date
+            return final_stats_list, None
         return final_stats_list
+
 
 class AdNetworkManagementStats(db.Model): #(date)
     date = db.DateProperty(required=True)

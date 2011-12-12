@@ -116,6 +116,12 @@
           }
         });
 
+        $('.learn-more').click(function () {
+          var div = $('.learn-more-text');
+          div.dialog({
+              buttons: { "Close": function() { $(this).dialog('close');} }
+          });
+        });
     });
   </script>
 {% endblock extraScripts %}

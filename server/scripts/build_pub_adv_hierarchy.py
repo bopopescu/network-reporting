@@ -129,7 +129,6 @@ def main():
             print 'fetched %i adunits so far' % (total)
             last_key = adunits[-1].key()
             adunits = AdUnit.all().filter('__key__ >', last_key).fetch(LIMIT)
-            break
 
         # process last batch < LIMIT
         process_adunits(adunits)
@@ -153,7 +152,6 @@ def main():
             print 'fetched %i creatives so far' % (total)
             last_key = creatives[-1].key()
             creatives = Creative.all().filter('__key__ >', last_key).fetch(LIMIT)
-            break
 
         # process last batch < LIMIT
         process_creatives(creatives)

@@ -45,16 +45,15 @@ class TestModels(unittest.TestCase):
                                           username=USERNAME,
                                           password=PASSWORD,
                                           client_key='key1')
-        logging.warning("1")
-        logging.warning(creds.__dict__)
         creds.put()
 
         # Make sure iv's have been set.
-        username_iv = getattr(creds, 'username_iv', None)
-        password_iv = getattr(creds, 'password_iv', None)
+        assert getattr(creds, 'username_iv', None)
+        assert getattr(creds, 'password_iv', None)
 
-        logging.warning("2")
-        logging.warning(creds.__dict__)
+        # Verify that username and password have been encrypted.
+        assert creds._username != USERNAME
+        assert creds._password != PASSWORD
 
         # Verify that decryption works.
         assert creds.username == USERNAME

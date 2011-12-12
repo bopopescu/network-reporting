@@ -57,8 +57,6 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
         rp = randpool.RandomPool()
 
         self.password_iv = rp.get_bytes(16)
-        logging.info("Setting password %s" % self.password_iv)
-
         password_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.password_iv)
         self._password = password_aes_cfb.encrypt(password)
 
@@ -76,10 +74,6 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
         rp = randpool.RandomPool()
 
         self.username_iv = rp.get_bytes(16)
-        logging.info("Setting username %s" % self.username_iv)
-        logging.warning("3")
-        logging.warning(self.__dict__)
-
         username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
         self._username = username_aes_cfb.encrypt(username)
 

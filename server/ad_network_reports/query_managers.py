@@ -436,7 +436,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     include_apps=False).next()
 
         for app in AppQueryManager.get_apps_with_network_configs(self.account):
-            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name, None)
+            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
+                    None)
             if pub_id:
                 yield pub_id
 

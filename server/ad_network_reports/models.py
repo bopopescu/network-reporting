@@ -142,7 +142,8 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
             day.strftime('%Y-%m-%d')))
 
     @classmethod
-    def get_by_app_mapper_and_days(cls, app_mapper_key, days):
+    def get_by_app_mapper_and_days(cls, app_mapper_key, days,
+            include_last_day=False):
         stats_list = cls.get_by_key_name(['k:%s:%s' % (app_mapper_key,
             day.strftime('%Y-%m-%d')) for day in days])
         final_stats_list = []
@@ -150,6 +151,12 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
             if not stats:
                 stats = AdNetworkScrapeStats(date=day)
             final_stats_list.append(stats)
+        if include_last_day:
+            filtered_stats = [stats for stats in stats_list if stats != None]
+            if filtered_stats:
+                return final_stats_list, max(filtered_stats, key=lambda stats:
+                        stats.date).date
+            return final_stats_list, None
         return final_stats_list
 
 

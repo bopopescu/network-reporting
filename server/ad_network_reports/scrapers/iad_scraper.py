@@ -13,7 +13,7 @@ from ad_network_reports.scrapers.network_scrape_record import \
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
-from BeautifulSoup import BeautifulSoup
+from common.utils.BeautifulSoup import BeautifulSoup
 from datetime import date, datetime
 from pyvirtualdisplay import Display
 from selenium import webdriver

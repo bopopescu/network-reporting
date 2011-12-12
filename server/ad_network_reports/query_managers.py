@@ -159,8 +159,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                             ad_network_name).filter('account =',
                                     self.account).get()
                     data_dict[attr]['sync_date'] = sync_date
-                    data_dict[attr]['sync_error'] = sync_date - yesterday >= \
-                            timedelta(days=1)
+                    data_dict[attr]['sync_error'] = not sync_date or sync_date - \
+                        yesterday >= timedelta(days=1)
                     data_dict[attr]['app_pub_ids'] = ', '.join(
                             login_credentials.app_pub_ids)
                 else:
@@ -183,12 +183,12 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 data['fill_rate'] = data[
                         'fill_rate_impressions'] / float(
                                 data['attempts'])
+            if data['clicks']:
+                data['cpc'] = data['revenue'] / data['clicks']
             if data['impressions']:
+                data['cpm'] = data['revenue'] / data['impressions'] * 1000
                 data['ctr'] = (data['clicks'] /
                         float(data['impressions']))
-                data['cpm'] = data['impressions'] / data['revenue'] * 1000
-                data['cpc'] = data['revenue'] / data['clicks']
-
 
         # Add networks that aren't included but still relevant to the account
         # and set their data to None.
@@ -252,11 +252,11 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         Return the aggregate stats.
         """
-        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
-                ad_network_app_mapper.key(), days)
+        stats_list, last_day = AdNetworkScrapeStats.get_by_app_mapper_and_days(
+                ad_network_app_mapper.key(), days, include_last_day=True)
         if stats_list:
             return (self.roll_up_stats(stats_list), ad_network_app_mapper.
-                    application, stats_list[-1].date)
+                    application, last_day)
 
     def roll_up_stats(self, stats_iterable):
         """Roll up (aggregate) stats in the stats iterable.
@@ -269,7 +269,11 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         aggregate_stats.revenue = 0.0
         aggregate_stats.attempts = 0
         aggregate_stats.impressions = 0
+        aggregate_stats.cpm = 0.0
+        aggregate_stats.fill_rate = 0
         aggregate_stats.clicks = 0
+        aggregate_stats.cpc = 0.0
+        aggregate_stats.ctr = 0.0
 
         aggregate_stats.fill_rate_impressions = 0
         for stats in stats_iterable:
@@ -286,17 +290,14 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         if aggregate_stats.attempts:
             aggregate_stats.fill_rate = (aggregate_stats.fill_rate_impressions /
                     float(aggregate_stats.attempts))
-        else:
-            aggregate_stats.fill_rate = 0
         if aggregate_stats.impressions:
             aggregate_stats.ctr = (aggregate_stats.clicks /
                     float(aggregate_stats.impressions))
-            aggregate_stats.cpc = aggregate_stats.revenue / \
-                    aggregate_stats.clicks
             aggregate_stats.cpm = aggregate_stats.revenue / \
                     aggregate_stats.impressions * 1000
-        else:
-            aggregate_stats.ctr = 0
+        if aggregate_stats.clicks:
+            aggregate_stats.cpc = aggregate_stats.revenue / \
+                    aggregate_stats.clicks
 
         return aggregate_stats
 

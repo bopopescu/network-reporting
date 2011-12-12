@@ -34,14 +34,14 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     app_pub_ids = db.StringListProperty(default=[])
 
     def __init__(self, *args, **kwargs):
-        self.password = kwargs['password']
-        self.username = kwargs['username']
-        kwargs['password'] = self.password
-        kwargs['username'] = self.username
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
                 kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
+        if 'username' in kwargs:
+            self.username = kwargs['username']
+        if 'password' in kwargs:
+            self.password = kwargs['password']
 
     @property
     def password(self):

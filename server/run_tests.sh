@@ -20,8 +20,10 @@ then
    echo "Account tests"
    nosetests ./account/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
 
-   # echo "Network Scraping tests"
-   nosetests ./ad_network_reports/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
+   echo "Network Scraping tests"
+   nosetests ./ad_network_reports/scrapers/mptests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
+   echo "Network Models and Update tests"
+   nosetests ./ad_network_reports/mptests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
    
    # Adserver Tests
    echo "Ad Server Optimizer tests"

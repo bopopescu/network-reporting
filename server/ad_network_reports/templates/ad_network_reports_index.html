@@ -118,7 +118,7 @@
                         class="input-text input-text-half-width"
                         value="{{form.initial.username}}"> {{form.username.errors}}</dd>
 
-                        <dt> Password: </dt>
+                        <dt>{% ifequal form.ad_network "admob" %} API {% endif %}Password: </dt>
                         <dd> <input type="password"
                         name="{{form.ad_network}}-password"  id="id_password"
                         class="input-text input-text-half-width"
@@ -128,7 +128,7 @@
 
 
                   {% if form.ad_network == "admob" %}
-                    <dt> Client ID: </dt>
+                    <dt> API Key: </dt>
                     <dd> <input type="text" name="admob-client_key"
                     id="id_admob-client_key" class="input-text
                     input-text-half-width" value="{{form.initial.client_key}}"></dd>

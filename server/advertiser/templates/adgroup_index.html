@@ -416,15 +416,15 @@
                       <td class="dataTable-data numeric ecpm">--</td>
                     {% endif %}
 
-                    <td class="dataTable-data numeric promo-goal goal"></td>
-                    <td class="dataTable-data numeric promo-imp imp">--</td>
+                    <td class="dataTable-data numeric bfill-goal goal"></td>
+                    <td class="dataTable-data numeric bfill-imp imp">--</td>
                     <td class="dataTable-data numeric">
-                      <div class="promo-clk clk">--</div>
-                      <div class="promo-ctr ctr muted">--</div>
+                      <div class="bfill-clk clk">--</div>
+                      <div class="bfill-ctr ctr muted">--</div>
                     </td>
                     <td class="dataTable-data numeric">
-                      <div class="promo-conv conv">--</div>
-                      <div class="promo-conve_rate conv_rate muted">--</div>
+                      <div class="bfill-conv conv">--</div>
+                      <div class="bfill-conve_rate conv_rate muted">--</div>
                     </td>
                   </tr>
                   {% endfor %}
@@ -479,7 +479,7 @@
   <script>
     var mopub = mopub || {};
     $(function() {
-        //mopub.isDirectSoldPage = true; // need this for getNumDaysToFetch()
+        mopub.isDirectSoldPage = true; // need this for getNumDaysToFetch()
         mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
         mopub.Advertiser.initDirectSoldPage();
     });

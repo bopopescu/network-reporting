@@ -449,10 +449,10 @@ if (typeof window.console == "undefined") {
             $(item).click(function(){
                 activate($(this), ul);
                 activate($(href), tab_sections);
-                window.location.hash = href;
+                window.location.hash = href + "-tab";
             });
 
-            if (window.location.hash == href) {
+            if (window.location.hash == href + "-tab") {
                 $(item).click();
             }
         });

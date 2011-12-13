@@ -3,7 +3,6 @@ from __future__ import with_statement
 import datetime
 import logging
 import random
-from django.utils import simplejson
 import sys
 import traceback
 import uuid
@@ -12,6 +11,7 @@ from google.appengine.api import files
 from google.appengine.api import taskqueue
 from google.appengine.runtime import apiproxy_errors
 
+from common.utils import simplejson
 from common.utils.helpers import to_uni, to_ascii
 from common.utils.timezones import Pacific_tzinfo
 
@@ -39,7 +39,6 @@ class LogService(object):
 
 
     def log(self, line):
-        pass
         # some lines contain non-UTF-8 encoded chars or have invalid bytes
         # clean those by converting all non-unicode lines into unicode with UTF-8 encoding and with invalid bytes replaced
         try:

@@ -118,7 +118,7 @@
                         class="input-text input-text-half-width"
                         value="{{form.initial.username}}"> {{form.username.errors}}</dd>
 
-                        <dt>{% ifequal form.ad_network "admob" %} API {% endif %}Password: </dt>
+                        <dt>{% ifequal form.ad_network "admob" %} API {% endifequal %}Password: </dt>
                         <dd> <input type="password"
                         name="{{form.ad_network}}-password"  id="id_password"
                         class="input-text input-text-half-width"

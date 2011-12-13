@@ -1,5 +1,6 @@
 import logging
 import hashlib
+import re
 
 from hypercache import hypercache
 import datetime
@@ -111,9 +112,12 @@ class AppQueryManager(QueryManager):
         return cls.get_apps(account, deleted, limit, alphabetize, offset, keys_only = True)
 
     @classmethod
-    def get_all_apps(cls, account=None, deleted=False, alphabetize=False):
+    def get_all_apps(cls, **kwargs):
+        """
+        kwargs: account=None, deleted=False, alphabetize=False
+        """
         num_apps = 0
-        apps = cls.get_apps(limit=1000)
+        apps = cls.get_apps(limit=1000, **kwargs)
         while len(apps) > num_apps:
             num_apps = len(apps)
             apps.extend(cls.get_apps(limit=1000, offset=apps[-1].key()))
@@ -188,6 +192,21 @@ class AppQueryManager(QueryManager):
     def get_apps_with_network_configs(cls, account):
         return App.all().filter('account =', account).filter(
                 'network_config !=', None)
+
+    @classmethod
+    def get_iad_pub_ids(cls, account, include_apps=True):
+        """ Get the iAd pub id from the app's url field.
+
+        Return the pub ids and potentialy apps as a generator.
+        """
+        for app in App.all().filter('account =', account):
+            if getattr(app, 'url', None) and re.match(
+                    'http://itunes.apple.com.*', app.url):
+                pub_id = re.findall('/id[0-9]*\?', app.url)[0][len('/id'):-1]
+                if include_apps:
+                    yield app, pub_id
+                else:
+                    yield pub_id
 
 class AdUnitQueryManager(QueryManager):
     Model = AdUnit

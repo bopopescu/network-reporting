@@ -4,6 +4,10 @@ function checkReport(retry_num) {
     //If exists returns data, otherwise returns False
     //
     var id = $('#reportKey').val();
+    console.log($('#reportKey'));
+    console.log($('#reportKey').val());
+    console.log(id);
+
     $.ajax({
        url: '/reports/check/'+id+'/?retry='+retry_num,
        success: writeReport

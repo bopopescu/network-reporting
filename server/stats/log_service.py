@@ -3,7 +3,7 @@ from __future__ import with_statement
 import datetime
 import logging
 import random
-import simplejson
+from django.utils import simplejson
 import sys
 import traceback
 import uuid

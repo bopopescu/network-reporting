@@ -9,35 +9,35 @@ from django.utils.html import conditional_escape
 
 class MPWidget(Widget):
     DEFAULT_CLASSES = ""
-    def __init__(self,required=False):
+    def __init__(self,required=False,**kwargs):
            # The 'rows' and 'cols' attributes are required for HTML correctness.
            self.required = required
-           super(MPWidget, self).__init__()
+           super(MPWidget, self).__init__(**kwargs)
 
     def render(self, name, value, attrs=None,errors=False):
         if value is None:
             value = ''
-        
+
         classes = attrs.get('class') or ""
         if errors:
              classes += " form-error"
-        
+
         if self.DEFAULT_CLASSES:
             classes += " " + self.DEFAULT_CLASSES
 
         attrs['class'] = classes
-        
-        
+
+
         suffix_html = mark_safe(attrs.pop(u'suffix',''))
 
         flat_attrs = mark_safe(self.flatatt(attrs))
 
-        context_dict = dict(widget = self, name = name, value = value, 
+        context_dict = dict(widget = self, name = name, value = value,
                             flat_attrs = flat_attrs, suffix_html = suffix_html)
         c = Context(context_dict)
         t = loader.get_template(self.TEMPLATE)
         return t.render(c)
-  
+
     def flatatt(self, attrs):
         """
         Convert a dictionary of attributes to a single string.
@@ -46,7 +46,7 @@ class MPWidget(Widget):
         If the passed dictionary is empty, then return an empty string.
         """
         return u''.join([u' %s="%s"' % (k, conditional_escape(v)) for k, v in attrs.items()])
-    
+
     def build_attrs(self, extra_attrs=None, **kwargs):
         "Helper function for building an attribute dictionary."
         attrs = dict(self.attrs, **kwargs)
@@ -66,50 +66,50 @@ class MPTextarea(MPWidget):
 class MPTextInput(MPWidget):
     TEMPLATE = 'widgets/text_input.html'
     DEFAULT_CLASSES = "input-text"
-    
+
 class MPPasswordInput(MPTextInput):
-    TEMPLATE = 'widgets/password_input.html'    
+    TEMPLATE = 'widgets/password_input.html'
 
 class MPDeviceFormatRadioInput(MPWidget):
     TEMPLATE = 'widgets/adunit_device_format.html'
     DEFAULT_CLASSES = "input-text"
-     
+
 class MPSelectWidget(MPWidget):
     TEMPLATE = 'widgets/select.html'
     DEFAULT_CLASSES = ''
-    
+
     def __init__(self, attrs=None, choices=()):
         super(MPSelectWidget, self).__init__(attrs)
         # choices can be any iterable, but we may need to render this widget
         # multiple times. Thus, collapse it into a list so it can be consumed
         # more than once.
         self.choices = list(choices)
-    
+
     def render(self, name, value, attrs=None,errors=False,choices=()):
         if value is None:
             value = ''
-        
+
         classes = attrs.get('class') or ""
         if errors:
              classes += " form-error"
-        
+
         if self.DEFAULT_CLASSES:
             classes += " " + self.DEFAULT_CLASSES
 
         attrs['class'] = classes
-        
+
         suffix_html = mark_safe(attrs.pop('suffix',''))
-        
+
 
         flat_attrs = mark_safe(self.flatatt(attrs))
 
-        context_dict = dict(widget = self, name = name, value = value, 
+        context_dict = dict(widget = self, name = name, value = value,
                             flat_attrs = flat_attrs, choices = self.choices,
                             suffix_html = suffix_html )
         c = Context(context_dict)
         t = loader.get_template(self.TEMPLATE)
         return t.render(c)
-        
+
 class MPRadioWidget(MPSelectWidget):
     TEMPLATE = 'widgets/radio.html'
     DEFAULT_CLASSES = "input-text"

@@ -1,34 +1,44 @@
-import copy
-import json
 import logging
 import sys
+import os
 
 import tornado.web
+import multiprocessing
 
-sys.path.append('/home/ubuntu/mopub/server')
+from datetime import datetime, date, timedelta
+from pytz import timezone
+
+#TODO: fix path stuff
+if os.path.exists('/home/ubuntu/'):
+    sys.path.append('/home/ubuntu/mopub/server')
+    # For google.appengine.ext
+    sys.path.append('/home/ubuntu/google_appengine')
+    sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+    sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+    sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+    sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+    sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+    sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
+
+sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+import common.utils.test.setup
+from google.appengine.ext import db
+
 from ad_network_reports.ad_networks import AD_NETWORKS, AdNetwork
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AdNetworkReportQueryManager
+from ad_network_reports.update_ad_networks import update_ad_networks
 
-# For google.appengine.ext
-sys.path.append('/home/ubuntu/google_appengine')
-sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
-sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
-sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
-sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
-sys.path.append('/home/ubuntu/google_appengine/lib/webob')
-sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
-from google.appengine.ext import db
 
 class AdNetworkLoginCredentials(object):
     pass
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
-    app_id = 'mopub-experimental'
-    host = '38.latest.mopub-experimental.appspot.com'
-    #app_id = 'mopub-inc'
-    #host = '38.latest.mopub-inc.appspot.com'
+    #app_id = 'mopub-experimental'
+    #host = '38.latest.mopub-experimental.appspot.com'
+    app_id = 'mopub-inc'
+    host = '38.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func,
             host)
 
@@ -50,42 +60,80 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
         args.update(initial)
 
         # Can't have the same name as the model. Fixes unicode bug.
-        args[ad_network + '-password_str'] = args[ad_network + '-password']
-        args[ad_network + '-username_str'] = args[ad_network + '-username']
+        if ad_network + '-username' in args:
+            args[ad_network + '-username_str'] = args[ad_network + '-username']
+        else:
+            args[ad_network + '-username_str'] = '-'
+        if ad_network + '-password' in args:
+            args[ad_network + '-password_str'] = args[ad_network + '-password']
+        else:
+            args[ad_network + '-password_str'] = '-'
         form = LoginInfoForm(args, prefix=ad_network)
 
+        # TODO: Verify that mobfox form is valid.
         if form.is_valid():
             login_credentials = AdNetworkLoginCredentials()
-            login_credentials.ad_network_name = form.cleaned_data[
-                    'ad_network_name']
-            login_credentials.username = form.cleaned_data['username_str']
-            login_credentials.password = form.cleaned_data['password_str']
-            login_credentials.client_key = form.cleaned_data['client_key']
+            logging.warning(form.cleaned_data)
+            login_credentials.ad_network_name = ad_network
+            login_credentials.username = form.cleaned_data.get('username_str',
+                    '')
+            login_credentials.password = form.cleaned_data.get('password_str',
+                    '')
+            login_credentials.client_key = form.cleaned_data.get('client_key',
+                    '')
 
             try:
+                account_key = self.get_argument('account_key')
+                manager = AdNetworkReportQueryManager(db.get(account_key))
                 scraper = AdNetwork(login_credentials).create_scraper()
                 # Password and username aren't encrypted yet so we don't need
                 # to call append_extra info like in update_ad_networks.
+                # They're sent through ssl so this is fine.
                 scraper.test_login_info()
                 logging.info("Returning true.")
                 self.write(callback + '(true)')
+                # Write out response and close connection.
+                self.finish()
             except Exception as e:
                 # We don't want Tornado to stop running if something breaks
                 # somewhere.
                 logging.error(e)
             else:
-                setup_remote_api()
-                account_key = self.get_argument('account_key')
-                manager = AdNetworkReportQueryManager(db.get(account_key))
+                if os.path.exists('/home/ubuntu/'):
+                    setup_remote_api()
                 wants_email = self.get_argument('email', False) and True
-                manager.create_login_credentials_and_mappers(ad_network_name=
+                accounts_login_credentials = set([creds.ad_network_name for
+                    creds in manager.get_login_credentials()])
+                login_credentials = manager. \
+                        create_login_credentials_and_mappers(ad_network_name=
                         login_credentials.ad_network_name,
                         username=login_credentials.username,
                         password=login_credentials.password,
                         client_key=login_credentials.client_key,
                         send_email=wants_email)
+
+                # Collect the last two weeks of data for these credentials and
+                # add it to the database if the login credentials for the
+                # network are new.
+                if login_credentials.ad_network_name not in \
+                        accounts_login_credentials:
+                    pacific = timezone('US/Pacific')
+                    two_weeks_ago = (datetime.now(pacific) -
+                            timedelta(days=2)).date()
+                    p = multiprocessing.Process(target=update_ad_networks,
+                            args=(two_weeks_ago, None,
+                                login_credentials))
+                    logging.info(p.daemon)
+                    p.daemon = True
+                    p.start()
+                    logging.info(p.daemon)
+
+                    children = multiprocessing.active_children()
+                    logging.info(children)
+                    logging.info(children[0].pid)
                 return
+        else:
+            logging.info("Invalid form.")
 
-        logging.info("Returning true.")
+        logging.info("Returning false.")
         self.write(callback + '(false)')
-

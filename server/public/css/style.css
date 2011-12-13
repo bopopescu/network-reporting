@@ -2853,6 +2853,10 @@ a.linkIcon .ui-icon-triangle-1-w {
   padding-right: 11px;
   width: 45px; }
 
+.dataTable .networkData-icon {
+  padding-right: 11px;
+  width: 75px; }
+
 .dataTable .appData-icon a img,
 .dataTable .campaignData-icon a img,
 #appForm-icon img,
@@ -3059,13 +3063,20 @@ ul.adunits {
 
 .ad_network_table th:not(:first-child) {
   text-align: center; }
-.ad_network_table .app-row td {
-  font-size: 18px;
-  text-align: left;
+.ad_network_table .shaded {
   background: #f9f9f9; }
-  .ad_network_table .app-row td:not(:first-child) {
-    text-align: right; }
-.ad_network_table .network-row td:not(:first-child) {
+.ad_network_table .top-row td {
+  font-size: 18px;
   text-align: right; }
-.ad_network_table .network-row:not(:last-child) {
-  border-bottom: 1px dotted #bbb; }
+.ad_network_table .top-row td:first-child {
+  text-align: left; }
+.ad_network_table .top-row td.network-status {
+  text-align: left; }
+.ad_network_table .top-row td.network-icon {
+  width: 10%; }
+.ad_network_table .top-row span.muted {
+  font-size: 13px; }
+.ad_network_table .sub-rows td:not(:first-child) {
+  text-align: right; }
+.ad_network_table .add-border td {
+  border-bottom: 1px dotted #ddd; }

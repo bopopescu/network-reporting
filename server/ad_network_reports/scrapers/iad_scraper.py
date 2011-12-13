@@ -13,7 +13,7 @@ from ad_network_reports.scrapers.network_scrape_record import \
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
-from BeautifulSoup import BeautifulSoup
+from common.utils.BeautifulSoup import BeautifulSoup
 from datetime import date, datetime
 from pyvirtualdisplay import Display
 from selenium import webdriver
@@ -24,6 +24,7 @@ class IAdScraper(Scraper):
     SS_FNAME = 'ScraperScreen_%s.png'
     STATS_PAGE = 'https://iad.apple.com/itcportal/#app_homepage'
     LOGIN_TITLE = 'iTunes Connect - iAd Network Sign In'
+    APPS_TITLE = 'My Apps'
     SITE_ID_IDENTIFIER = '&siteid='
     APP_STATS = ('revenue', 'ecpm', 'requests', 'impressions', 'fill_rate',
             'ctr')
@@ -50,7 +51,7 @@ class IAdScraper(Scraper):
 
         time.sleep(1)
         count = 0
-        while self.browser.title == self.LOGIN_TITLE and count < 3:
+        while self.browser.title == self.LOGIN_TITLE and count < 2:
             login = self.browser.find_element_by_css_selector('#accountname')
             login.clear()
             login.send_keys(self.username)
@@ -204,7 +205,7 @@ class IAdScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'chesscom'
+    NC.username = 'chesscoml'
     NC.password = 'Faisal1Chess'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)

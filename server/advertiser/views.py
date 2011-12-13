@@ -97,11 +97,10 @@ class AdGroupIndexHandler(RequestHandler):
         adunits_dict = {}
         apps_dict = {}
 
+        """
         # gets account level stats
-
         stats_model = StatsModelQueryManager(self.account, offline=self.offline)
         stats = stats_model.get_stats_for_days(publisher=None, advertiser=None, days=days)
-
 
         key = "||"
         stats_dict = {}
@@ -114,7 +113,8 @@ class AdGroupIndexHandler(RequestHandler):
         response_dict = {}
         response_dict['status'] = 200
         response_dict['all_stats'] = stats_dict
-
+        """
+        
         for adgroup in adgroups:
             adunits = []
             adunit_keys_to_fetch = []
@@ -152,7 +152,7 @@ class AdGroupIndexHandler(RequestHandler):
                                    # 'graph_adgroups': graph_adgroups,
                                    # 'graph_gtee_adgroups': graph_gtee_adgroups,
                                    # 'graph_totals': account_level_stats,
-                                   'account_stats': simplejson.dumps(response_dict),
+                                   # 'account_stats': simplejson.dumps(response_dict),
                                    'start_date': days[0],
                                    'end_date':days[-1],
                                    'date_range': self.date_range,

@@ -79,9 +79,9 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                to='tiago@mopub.com',
-                #to=emails,
-                #cc='tiago@mopub.com, report-monitoring@mopub.com',
+                #to='tiago@mopub.com',
+                to=emails,
+                cc='tiago@mopub.com, report-monitoring@mopub.com',
                 subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
                 body=("Learn more at http://mopub-experimental.appspot."
@@ -311,8 +311,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         emails = ', '.join(AccountQueryManager.get_emails(
             only_these_credentials.account))
         mail.send_mail(sender='olp@mopub.com',
-                       to="tiago@mopub.com",
-                       #to=emails,
+                       #to="tiago@mopub.com",
+                       to=emails,
                        subject="Finished Collecting Stats",
                        body="Check out http://frontend-0.mopub-inc." \
                                "appspot.com/ad_network_reports.")

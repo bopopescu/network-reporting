@@ -14,7 +14,7 @@ from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
 from common.utils.BeautifulSoup import BeautifulSoup
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pyvirtualdisplay import Display
 from selenium import webdriver
 
@@ -36,9 +36,9 @@ class IAdScraper(Scraper):
 
         self.authenticate()
 
-    def __del__(self):
-        self.browser.quit()
-        self.disp.stop()
+#    def __del__(self):
+#        self.browser.quit()
+#        self.disp.stop()
 
     def authenticate(self):
         # Must have selenium running or something
@@ -196,8 +196,8 @@ class IAdScraper(Scraper):
                                       impressions = app_dict['impressions'],
                                       fill_rate = app_dict['fill_rate'],
                                       clicks = int(app_dict['ctr'] * app_dict[
-                                          'impressions']),
-                                      ctr = app_dict['ctr'] * 100,
+                                          'impressions'] / 100),
+                                      ctr = app_dict['ctr'],
                                       ecpm = app_dict['ecpm'],
                                       app_tag = app_dict['apple_id'])
             records.append(nsr)
@@ -205,8 +205,8 @@ class IAdScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'chesscoml'
-    NC.password = 'Faisal1Chess'
+    NC.username = 'jprhombus'
+    NC.password = 'mopub512'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
-    print SCRAPER.get_site_stats(date.today())
+    print SCRAPER.get_site_stats(date.today() - timedelta(days=4))

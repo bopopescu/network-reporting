@@ -34,9 +34,6 @@ AD_NETWORK_NAMES = {'admob': 'AdMob',
                     'inmobi': 'InMobi',
                     'mobfox': 'MobFox'}
 
-# Don't touch or everything is fucked
-KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
-
 class Stats(object):
     pass
 

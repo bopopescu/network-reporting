@@ -1,8 +1,6 @@
 import logging
 from copy import copy
 
-from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        KEY
 from ad_network_reports.scrapers.admob_scraper import AdMobScraper
 from ad_network_reports.scrapers.iad_scraper import IAdScraper
 from ad_network_reports.scrapers.inmobi_scraper import InMobiScraper

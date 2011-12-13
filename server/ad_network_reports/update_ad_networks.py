@@ -40,6 +40,8 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
+TESTING = True
+
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
     app_id = 'mopub-inc'
@@ -80,9 +82,9 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
                 reply_to='support@mopub.com',
-                to='tiago@mopub.com',
-                #to=emails,
-                #cc='tiago@mopub.com, report-monitoring@mopub.com',
+                to='tiago@mopub.com' if TESTING else emails,
+                cc='' if TESTING else
+                    'tiago@mopub.com, report-monitoring@mopub.com',
                 subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
                 body=("Learn more at http://mopub-experimental.appspot."
@@ -210,7 +212,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                             login_credentials.account.key(),
                             login_credentials.ad_network_name))
                 exc_traceback = sys.exc_info()[2]
-                mail.send_mail(sender='support@mopub.com',
+                mail.send_mail(sender='olp@mopub.com',
                                to='tiago@mopub.com',
                                subject=("Ad Network Scrape Error on %s" %
                                    test_date.strftime("%m/%d/%y")),
@@ -312,7 +314,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
             only_these_credentials.account))
         mail.send_mail(sender='olp@mopub.com',
                        reply_to='support@mopub.com',
-                       to='tiago@mopub.com',#emails,
+                       to='tiago@mopub.com' if TESTING else emails,
                        subject="Finished Collecting Stats",
                        body="Check out https://app.mopub.com/" \
                                "ad_network_reports.")

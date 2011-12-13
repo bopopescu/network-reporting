@@ -127,11 +127,12 @@ class IAdScraper(Scraper):
         else:
             button = 'td>div.datePickerNextButton'
         # GO ALL THE WAY
-        while curr_date.month != test_date.month or curr_date.year != \
+        while curr_date.month != test_date.month and curr_date.year != \
                 test_date.year:
             self.browser.find_element_by_css_selector(button).click()
             curr_date = self.get_cal_date()
             time.sleep(1)
+        time.sleep(2)
         days = self.browser.find_elements_by_css_selector('.datePickerDay')
         for day in days:
             if 'datePickDayIsFiller' in day.get_attribute('class'):
@@ -211,4 +212,5 @@ if __name__ == '__main__':
     NC.password = 'mopub512'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
-    print SCRAPER.get_site_stats(date(2011,12,1))
+    print SCRAPER.get_site_stats(date(2011,11,30))
+

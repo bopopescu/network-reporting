@@ -2,6 +2,7 @@ import selenium
 import os
 import sys
 import time
+import logging
 
 # Paths only needed for testing
 if os.path.exists('/home/ubuntu/'):
@@ -204,6 +205,7 @@ class IAdScraper(Scraper):
 
             nsr.app_tag = app_dict['apple_id']
 
+        logging.info(records)
         return records
 
 if __name__ == '__main__':

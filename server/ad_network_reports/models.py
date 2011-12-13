@@ -50,9 +50,8 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     def decoded_username(self):
         # Note: Crypto.Cipher cannot be imported in app engine.
         from Crypto.Cipher import AES
-        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.
-                login_credentials.username_iv)
-        return username_aes_cfb.decrypt(self.login_credentials.username)
+        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
+        return username_aes_cfb.decrypt(self.username)
 
     @classmethod
     def get_by_ad_network_name(cls, account, ad_network_name):

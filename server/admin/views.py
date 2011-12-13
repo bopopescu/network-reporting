@@ -145,11 +145,34 @@ def dashboard_prep(request, *args, **kwargs):
         "unique_apps": unique_apps, 
         "new_users": new_users,
         "mailing_list": [a for a in new_users if a.mpuser.mailing_list]}
+    
+    logging.warn("reached")
+    html = render_to_string(request,'admin/pre_render.html',render_params)
+    logging.warn("rendered")
+
+    internal_file_name = files.blobstore.create(
+                        mime_type="text/plain",
+                        _blobinfo_uploaded_filename='admin-d.html')
+    
+
+    html = "<html><body>fuckyou</body></html>"
+    # open the file and write lines
+    with files.open(internal_file_name, 'a') as f:
+        f.write(html)
+    logging.warn("written")
+
+    # finalize this file
+    files.finalize(internal_file_name)
+    logging.warn("finalized")
 
     page = AdminPage(offline=offline,
-                     html=render_to_string(request,'admin/pre_render.html',render_params),
+                     blob_key=files.blobstore.get_blob_key(internal_file_name),
                      today_requests=total_stats[-1].request_count)
+
+    logging.warn("page made")
+                 
     page.put()
+    logging.warn("page put")
     
     return HttpResponse("OK")
 
@@ -194,7 +217,10 @@ def dashboard(request, *args, **kwargs):
             logging.warning("task error: %s"%e)                
         
     page = AdminPage.get_by_stats_source(offline=offline)
-    loading = loading or page.loading
+
+    html_file = blobstore.BlobReader(page.blob_key)
+    page.html = html_file.read()
+
     return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})
         
 def update_sfdc_leads(request, *args, **kwargs):

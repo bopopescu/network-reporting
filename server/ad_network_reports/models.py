@@ -1,3 +1,5 @@
+import sys
+import os
 import logging
 from google.appengine.ext import db
 
@@ -43,15 +45,28 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
         if 'password' in kwargs:
             self.password = kwargs['password']
 
-    @property
-    def password(self):
+    def get_username(self):
+        # Note: Crypto.Cipher cannot be imported in app engine.
+        from Crypto.Cipher import AES
+        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
+        return username_aes_cfb.decrypt(self._username)
+
+    def set_username(self, username):
+        from Crypto.Cipher import AES
+        from Crypto.Util import randpool
+        rp = randpool.RandomPool()
+
+        self.username_iv = rp.get_bytes(16)
+        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
+        self._username = username_aes_cfb.encrypt(username)
+
+    def get_password(self):
         # Note: Crypto.Cipher cannot be imported in app engine.
         from Crypto.Cipher import AES
         password_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.password_iv)
         return password_aes_cfb.decrypt(self._password)
 
-    @password.setter
-    def password(self, password):
+    def set_password(self, password):
         from Crypto.Cipher import AES
         from Crypto.Util import randpool
         rp = randpool.RandomPool()
@@ -60,22 +75,10 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
         password_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.password_iv)
         self._password = password_aes_cfb.encrypt(password)
 
-    @property
-    def username(self):
-        # Note: Crypto.Cipher cannot be imported in app engine.
-        from Crypto.Cipher import AES
-        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
-        return username_aes_cfb.decrypt(self._username)
+    username = property(get_username, set_username)
 
-    @username.setter
-    def username(self, username):
-        from Crypto.Cipher import AES
-        from Crypto.Util import randpool
-        rp = randpool.RandomPool()
+    password = property(get_password, set_password)
 
-        self.username_iv = rp.get_bytes(16)
-        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
-        self._username = username_aes_cfb.encrypt(username)
 
     @classmethod
     def get_by_ad_network_name(cls, account, ad_network_name):

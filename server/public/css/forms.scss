@@ -118,6 +118,10 @@ dl.formFields.thin {
     width: 50px;
 }
 
+.formFields dt.wide {
+    width: 100px;
+}
+
 .formFields.flat dt{
     font-size: 16px;
     padding: 0 0;
@@ -147,6 +151,10 @@ dl.formFields.thin {
 
 .formFields.thin dd {
     width: 250px;
+}
+
+.formFields dd.thinner {
+    width: 150px;
 }
 
 .formFields .radios {

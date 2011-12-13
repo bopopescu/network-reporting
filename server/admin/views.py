@@ -10,7 +10,8 @@ from google.appengine.api import users
 from google.appengine.api.urlfetch import fetch
 from google.appengine.api import mail
 from google.appengine.api import memcache
-from google.appengine.ext import db
+from google.appengine.api import files
+from google.appengine.ext import db, blobstore
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
@@ -155,7 +156,6 @@ def dashboard_prep(request, *args, **kwargs):
                         _blobinfo_uploaded_filename='admin-d.html')
     
 
-    html = "<html><body>fuckyou</body></html>"
     # open the file and write lines
     with files.open(internal_file_name, 'a') as f:
         f.write(html)

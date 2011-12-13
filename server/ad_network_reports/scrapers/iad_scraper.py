@@ -2,6 +2,7 @@ import selenium
 import os
 import sys
 import time
+import logging
 
 # Paths only needed for testing
 if os.path.exists('/home/ubuntu/'):
@@ -201,6 +202,7 @@ class IAdScraper(Scraper):
                                       ecpm = app_dict['ecpm'],
                                       app_tag = app_dict['apple_id'])
             records.append(nsr)
+        logging.info(records)
         return records
 
 if __name__ == '__main__':

@@ -7,8 +7,18 @@ backends:
   instances: 20
   options: public
   class: B2
-  
+
 - name: frontend-staging
   instances: 2
   options: public
-  class: B2 
+  class: B2
+
+- name: frontend-boom
+  instances: 2
+  options: public
+  class: B2
+
+- name: frontend-slam
+  instances: 2
+  options: public
+  class: B2

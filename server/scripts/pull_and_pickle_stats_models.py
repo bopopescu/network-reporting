@@ -17,7 +17,6 @@ from datetime import date
 
 from google.appengine.ext.db import Timeout
 
-# Timesout on fetches >= 500
 LIMIT = 1000
 
 def auth_func():

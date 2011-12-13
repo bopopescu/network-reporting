@@ -180,19 +180,33 @@ ul.adunits {
     th:not(:first-child) {
         text-align: center;
     }
-    .app-row td {
-        font-size: 18px;
-        text-align: left;
-        background: #f9f9f9;
-        &:not(:first-child) {
+    .shaded {
+        background: #f9f9f9; 
+    }
+    .top-row {
+        td {
+            font-size: 18px;
             text-align: right;
         }
+        td:first-child {
+            text-align: left;
+        }
+        td.network-status {
+            text-align: left;
+        }
+        td.network-icon {
+            width: 10%;
+        }
+        span.muted {
+            font-size: 13px; 
+        }
     }
-    .network-row td:not(:first-child) {
+    .sub-rows td:not(:first-child) {
         text-align: right;
     }
 
-    .network-row:not(:last-child) {
-        border-bottom: 1px dotted #bbb;
+    .add-border td {
+        border-bottom: 1px dotted #ddd;
     }
 }
+

@@ -57,7 +57,8 @@ class User(hybrid_models.User):
 #
 class NetworkConfig(db.Model):
     """ The set of ids for all the different networks """
-    iad_pub_id = db.StringProperty()
+    # iad_pub_id is stored in the app url. Take a look at publisher's query
+    # managers for App for more information.
     admob_pub_id = db.StringProperty()
     adsense_pub_id = db.StringProperty()
     brightroll_pub_id = db.StringProperty()

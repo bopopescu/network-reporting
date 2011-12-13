@@ -29,13 +29,10 @@ class JumpTapScraper(Scraper):
         level publisher ids and adunit level publisher ids for the account.
         """
         if isinstance(login_info, tuple):
-            credentials, self.publisher_ids, self.adunit_publisher_ids = login_info
-            logging.info("JUMPTAP INFO:")
-            self.publisher_ids = list(self.publisher_ids)
-            self.adunit_publisher_ids = list(self.adunit_publisher_ids)
-            logging.info(list(self.publisher_ids))
-            logging.info(list(self.adunit_publisher_ids))
-            self.adunit_publisher_ids = set(list(self.adunit_publisher_ids))
+            credentials, self.publisher_ids, self.adunit_publisher_ids = \
+                    login_info
+            self.publisher_ids = set(self.publisher_ids)
+            self.adunit_publisher_ids = set(self.adunit_publisher_ids)
         else:
             credentials = login_info
             self.publisher_ids = ['']
@@ -120,8 +117,15 @@ if __name__ == '__main__':
     NC = NetworkConfidential()
     NC.username = 'com2ususa'
     NC.password = 'com2us1001'
-    publisher_ids = [u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app', u'pa_com2us_usa_inc__slice_it__drd_app']
-    adunit_publisher_ids = iter([u'pa_com2us_usa_inc__op_3d_lab_a_tes_drd_app_banner', u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app_home_me_banner', u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app_home_me_medrect', u'pa_com2us_usa_inc_slice_it_drd_app_banner', u'pa_com2us_usa_inc__slice_it__drd_app_banner2'])#iter([])
+    publisher_ids = [u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app',
+            u'pa_com2us_usa_inc__slice_it__drd_app']
+    adunit_publisher_ids = iter([
+        u'pa_com2us_usa_inc__op_3d_lab_a_tes_drd_app_banner',
+        u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app_home_me_banner',
+        u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app_home_me_medrect',
+        u'pa_com2us_usa_inc_slice_it_drd_app_banner',
+        u'pa_com2us_usa_inc__slice_it__drd_app_banner2'])
+    #iter([])
     NC.ad_network_name = 'jumptap'
     SCRAPER = JumpTapScraper((NC, publisher_ids, adunit_publisher_ids))
     print SCRAPER.get_site_stats(date.today() - timedelta(days = 1))

@@ -80,7 +80,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
                 + stats.__dict__.items()))
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
-        mail.send_mail(sender='olp@mopub.com',
+        mail.send_mail(sender='support@mopub.com',
                 to='tiago@mopub.com',
                 #to=emails,
                 #cc='tiago@mopub.com, report-monitoring@mopub.com',
@@ -211,7 +211,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                             login_credentials.account.key(),
                             login_credentials.ad_network_name))
                 exc_traceback = sys.exc_info()[2]
-                mail.send_mail(sender='olp@mopub.com',
+                mail.send_mail(sender='support@mopub.com',
                                to='tiago@mopub.com',
                                subject=("Ad Network Scrape Error on %s" %
                                    test_date.strftime("%m/%d/%y")),
@@ -312,11 +312,11 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     if only_these_credentials:
         emails = ', '.join(AccountQueryManager.get_emails(
             only_these_credentials.account))
-        mail.send_mail(sender='olp@mopub.com',
+        mail.send_mail(sender='support@mopub.com',
                        to='tiago@mopub.com',#emails,
                        subject="Finished Collecting Stats",
-                       body="Check out http://frontend-0.mopub-inc." \
-                               "appspot.com/ad_network_reports.")
+                       body="Check out https://app.mopub.com/" \
+                               "ad_network_reports.")
 
 if __name__ == "__main__":
     setup_remote_api()

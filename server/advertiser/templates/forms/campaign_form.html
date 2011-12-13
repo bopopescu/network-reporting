@@ -151,7 +151,8 @@
             <option class="network_option" value="{{network.0}}" {% if network.2 %}selected="selected"{%endif%}>{{network.1}}</option>
           {% endfor %}
         </select>
-        <span id="network_select_sdk_msg" class="hidden error">(requires network SDK)</span>
+        <span id="network_select_sdk_msg" class="hidden error">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
+        <span id="network_select_id_msg" class="hidden error">(requires client integration steps) <a href="http://help.mopub.com/customer/portal/articles/89183-iads-network" target="_blank">Learn more</a></span>
       </dd>
 
       <div class='networkDependent custom'>

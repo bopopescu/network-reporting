@@ -158,13 +158,10 @@ def rep_timed_out(rep):
  
 @staff_login_required
 def reports_dashboard(request, *args, **kwargs):
-    if users.is_current_user_admin():
-        reps = Report.all().order('-created_at').fetch(50)
-        rep_status = [(rep, rep.status) if not rep_timed_out(rep) else (rep, 'Timed Out') for rep in reps]
-        render_params = dict(status = rep_status)
-        return render_to_response(request, 'admin/reports.html', render_params)
-    else:
-        return Http404()
+    reps = Report.all().order('-created_at').fetch(50)
+    rep_status = [(rep, rep.status) if not rep_timed_out(rep) else (rep, 'Timed Out') for rep in reps]
+    render_params = dict(status = rep_status)
+    return render_to_response(request, 'admin/reports.html', render_params)
 
 @staff_login_required
 def dashboard(request, *args, **kwargs):

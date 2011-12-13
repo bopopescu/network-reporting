@@ -94,7 +94,7 @@
         {% endif %}
         <form class="loginCredentials" id="form-{{form.ad_network}}" autocomplete="off">
           <fieldset>
-              <h2>{{network_name}} Credentials</h2>
+              <h2>{{network_name}} Credentials{% ifequal form.ad_network "admob" %} <a target="_blank" href="http://help.mopub.com/customer/portal/articles/274115-admob-revenue-reporting-setup">(Learn more)</a> {% endifequal %}</h2>
               <dl class="formFields thin" style="margin:0">
                   {% ifequal form.ad_network "inmobi" %}
                     <dt class="wide"> Access ID: </dt>
@@ -141,7 +141,7 @@
         </form>
       </div>
 		  {% if network %}
-      <div class="appData-details" style="margin: -10px 0 0 86px">
+    <div class="appData-details hidden {{form.ad_network}}-row" style="margin: -10px 0 0 86px">
         <div class="appData-details-inner show">
           <table class="dataTable">
             <tbody>

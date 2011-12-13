@@ -70,9 +70,13 @@ class NetworkConfig(db.Model):
     millennial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
 
+    # marketplace related
     rev_share = db.FloatProperty(default=.80)
     price_floor = db.FloatProperty(default=.25) # dollars CPM
     blocklist = db.StringListProperty(indexed=False)
+    category_blocklist = db.StringListProperty(indexed=False,
+                                    default=["IAB7-39","IAB8-5","IAB8-18",
+                                             "IAB9-9","IAB14-1","IAB25"])
     blind = db.BooleanProperty(default=False)
 
 class MarketPlaceConfig(db.Model):

@@ -171,7 +171,6 @@ def _create_mdb_json(stats_to_put):
     # these are request counts only; insert them into json_d
     for (adunit, date_hour) in request_d_keys:
         k = '%s::%s' % (adunit, date_hour)
-
         # all other counts are 0
         counts = {}
         counts['attempt_count'] = 0
@@ -179,7 +178,6 @@ def _create_mdb_json(stats_to_put):
         counts['click_count'] = 0
         counts['conversion_count'] = 0
         counts['revenue'] = 0
-
         json_d[k] = counts
         json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
 

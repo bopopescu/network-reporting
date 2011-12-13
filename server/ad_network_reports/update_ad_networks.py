@@ -110,7 +110,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
             <td><b>%(fill_rate).2f%%</b></td>
             <td><b>%(clicks)d</b></td>
             <td><b>%(ctr).2f%%</b></td>
-            <td><b>%(ecpm).2f</b></td>
+            <td><b>%(cpm).2f</b></td>
         </tr>
                     """ % aggregate_stats.__dict__ +
                     email_body +
@@ -288,10 +288,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                         revenue=float(stats.revenue),
                         attempts=stats.attempts,
                         impressions=stats.impressions,
-                        fill_rate=float(stats.fill_rate),
                         clicks=stats.clicks,
-                        ctr=float(stats.ctr),
-                        ecpm=float(stats.ecpm)
                         ).put()
 
                 if test_date == yesterday and login_credentials and \

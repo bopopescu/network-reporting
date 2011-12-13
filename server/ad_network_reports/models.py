@@ -79,7 +79,6 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 
     password = property(get_password, set_password)
 
-
     @classmethod
     def get_by_ad_network_name(cls, account, ad_network_name):
         return cls.get_by_key_name('k:%s:%s' % (account.key(), ad_network_name))

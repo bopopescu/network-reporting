@@ -2,6 +2,7 @@ import selenium
 import os
 import sys
 import time
+import logging
 
 # Paths only needed for testing
 if os.path.exists('/home/ubuntu/'):
@@ -14,7 +15,7 @@ from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
 from common.utils.BeautifulSoup import BeautifulSoup
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pyvirtualdisplay import Display
 from selenium import webdriver
 
@@ -127,11 +128,12 @@ class IAdScraper(Scraper):
         else:
             button = 'td>div.datePickerNextButton'
         # GO ALL THE WAY
-        while curr_date.month != test_date.month or curr_date.year != \
+        while curr_date.month != test_date.month and curr_date.year != \
                 test_date.year:
             self.browser.find_element_by_css_selector(button).click()
             curr_date = self.get_cal_date()
             time.sleep(1)
+        time.sleep(2)
         days = self.browser.find_elements_by_css_selector('.datePickerDay')
         for day in days:
             if 'datePickDayIsFiller' in day.get_attribute('class'):
@@ -160,7 +162,7 @@ class IAdScraper(Scraper):
         app_rows = [app.parent for app in apps]
         records = []
 
-        for index, row in enumerate(app_rows):
+        for row in app_rows:
             # app_name = row.findAll('p', {"class":"app_text"})[0].text
             app_dict = {}
             # Find desired stats
@@ -181,7 +183,17 @@ class IAdScraper(Scraper):
 
                 app_dict[stat] = data
 
-            time.sleep(4)
+            nsr = NetworkScrapeRecord(revenue = app_dict['revenue'],
+                                      attempts = app_dict['requests'],
+                                      impressions = app_dict['impressions'],
+                                      fill_rate = app_dict['fill_rate'],
+                                      clicks = int(app_dict['ctr'] * app_dict[
+                                          'impressions'] / 100),
+                                      ctr = app_dict['ctr'],
+                                      ecpm = app_dict['ecpm'])
+            records.append(nsr)
+
+        for index, nsr in enumerate(records):
             self.browser.find_elements_by_css_selector('.app_text')[index]. \
                     click()
             time.sleep(1)
@@ -191,19 +203,16 @@ class IAdScraper(Scraper):
             self.browser.back()
             time.sleep(1)
 
-            nsr = NetworkScrapeRecord(revenue = app_dict['revenue'],
-                                      attempts = app_dict['requests'],
-                                      impressions = app_dict['impressions'],
-                                      clicks = int(app_dict['ctr'] * app_dict[
-                                          'impressions']),
-                                      app_tag = app_dict['apple_id'])
-            records.append(nsr)
+            nsr.app_tag = app_dict['apple_id']
+
+        logging.info(records)
         return records
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'chesscoml'
-    NC.password = 'Faisal1Chess'
+    NC.username = 'jprhombus'
+    NC.password = 'mopub512'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
-    print SCRAPER.get_site_stats(date.today())
+    print SCRAPER.get_site_stats(date(2011,11,30))
+

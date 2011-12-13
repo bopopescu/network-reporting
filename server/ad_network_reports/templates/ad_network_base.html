@@ -115,13 +115,6 @@
             other.datepicker('option', 'maxDate', date);
           }
         });
-
-        $('.learn-more').click(function () {
-          var div = $('.learn-more-text');
-          div.dialog({
-              buttons: { "Close": function() { $(this).dialog('close');} }
-          });
-        });
     });
   </script>
 {% endblock extraScripts %}
@@ -159,10 +152,7 @@
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
       </div>
     </section>
-      <div style="float:right">Data shown is from the ad networks and may change. <a class="learn-more" style="cursor:pointer;">Learn more</a></div>
-      <div class="learn-more-text hidden">The data shown is this page was retrieved from the ad networks given the credentials you provided and is to be used for estimation purposes only.  This data may be changed by the network at any time and you should use your publisher dashboard with each network to verify the final numbers.
-      
-      Reach out to us at support@mopub.com if you have any questions.</div>
+      <div style="float:right">Data shown is from the ad networks and may change. <a target="_blank" href="http://help.mopub.com/customer/portal/articles/273229-ad-network-revenue-reporting">Learn more</a></div>
   {% else %}
     <div class="alert-message block-message">
       MoPub can automatically pull ad network revenue data from most ad networks that are supported. To enable reporting for each network, enter your login credentials for the ad networks below.  MoPub will pull data each morning for the previous day.<br/>

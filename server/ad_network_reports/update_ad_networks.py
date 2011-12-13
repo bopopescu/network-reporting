@@ -42,8 +42,6 @@ from google.appengine.ext import db
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
-    #app_id = 'mopub-experimental'
-    #host = '38.latest.mopub-experimental.appspot.com'
     app_id = 'mopub-inc'
     host = '38.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func,
@@ -212,7 +210,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                             login_credentials.account.key(),
                             login_credentials.ad_network_name))
                 exc_traceback = sys.exc_info()[2]
-                mail.send_mail(sender='olp@mopub.com',
+                mail.send_mail(sender='support@mopub.com',
                                to='tiago@mopub.com',
                                subject=("Ad Network Scrape Error on %s" %
                                    test_date.strftime("%m/%d/%y")),
@@ -316,8 +314,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                        reply_to='support@mopub.com',
                        to='tiago@mopub.com',#emails,
                        subject="Finished Collecting Stats",
-                       body="Check out http://frontend-0.mopub-inc." \
-                               "appspot.com/ad_network_reports.")
+                       body="Check out https://app.mopub.com/" \
+                               "ad_network_reports.")
 
 if __name__ == "__main__":
     setup_remote_api()

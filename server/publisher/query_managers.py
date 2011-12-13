@@ -37,7 +37,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
         adunit_key = str(adunit_key).replace("'","")
         adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)
 
-        memcache_ts = memcache.get(adunit_context_key, namespace="context-timestamp")
+        memcache_ts = memcache.get("ts:%s" % adunit_context_key)
         hypercached_context = hypercache.get(adunit_context_key)
 
         # We can return our hypercached context if nothing in memcache changed yet
@@ -47,7 +47,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
         trace_logging.warning("hypercache miss: fetching adunit_context from memcache")
 
         # Something has changed, let's get the new memcached context
-        adunit_context = memcache.get(adunit_context_key, namespace="context")
+        adunit_context = memcache.get(adunit_context_key)
 
         if adunit_context is None:
             trace_logging.warning("memcache miss: fetching adunit_context from db")
@@ -57,10 +57,9 @@ class AdUnitContextQueryManager(CachedQueryManager):
             adunit_context = AdUnitContext.wrap(adunit)
             memcache.set(adunit_context_key,
                          adunit_context,
-                         namespace="context",
                          time=CACHE_TIME)
             new_timestamp = datetime.datetime.now()
-            memcache.set(adunit_context_key, new_timestamp, namespace="context-timestamp")
+            memcache.set("ts:%s" % adunit_context_key, new_timestamp)
         else:
             new_timestamp = memcache_ts
 
@@ -82,8 +81,8 @@ class AdUnitContextQueryManager(CachedQueryManager):
           adunits = [adunits]
         keys = ["context:"+str(adunit.key()) for adunit in adunits]
         logging.info("deleting from cache: %s"%keys)
-        success = memcache.delete_multi(keys, namespace="context")
-        ts_success = memcache.delete_multi(keys, namespace="context-timestamp")
+        success = memcache.delete_multi(keys)
+        ts_success = memcache.delete_multi(["ts:%s" % k for k in keys])
 
         logging.info("deleted: %s" % success and ts_success)
         return success

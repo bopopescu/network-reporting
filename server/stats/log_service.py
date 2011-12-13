@@ -3,7 +3,7 @@ from __future__ import with_statement
 import datetime
 import logging
 import random
-import simplejson
+from django.utils import simplejson
 import sys
 import traceback
 import uuid
@@ -39,7 +39,16 @@ class LogService(object):
 
 
     def log(self, line):
-        self.lines.append(to_ascii(line))
+        pass
+        # some lines contain non-UTF-8 encoded chars or have invalid bytes
+        # clean those by converting all non-unicode lines into unicode with UTF-8 encoding and with invalid bytes replaced
+        try:
+            line = to_uni(line)
+        except Exception, e:
+            pass
+            # logging.error('%s: %s' % (e, line))
+
+        self.lines.append(line)
         if self._should_flush():
             try:
                 self.schedule_flush()
@@ -47,7 +56,7 @@ class LogService(object):
                 logging.error("Over quota a bit")
             except:
                 exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-                logging.error(exception_traceback)
+                # logging.error(exception_traceback)
 
 
     def _should_flush(self):
@@ -102,9 +111,11 @@ class LogService(object):
             self.last_flush = datetime.datetime.now()
         except taskqueue.TaskAlreadyExistsError:
             logging.info("task %s already exists"%task_name)
+        except UnicodeDecodeError, e:
+            logging.warning(e)
         except Exception, e:
             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-            logging.error(exception_traceback)
+            # logging.error(exception_traceback)
 
 
 def get_blob_name_for_time(t, blob_file_name="apache"):

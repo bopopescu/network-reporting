@@ -295,9 +295,12 @@ def ll_dist(p1, p2):
 def lat_lon_filter(ll=None):
     ll_p = None
     #ll should be input as a string, turn it into a list of floats
-    if ll:
-        ll_p = [float(val) for val in ll.split(',')]
     log_mesg = "Removed due to being outside target lat/long radii: %s"
+    if ll:
+        try:
+            ll_p = [float(val) for val in ll.split(',')]
+        except:
+            return  (lambda x: False, log_mesg, [])
     def real_filter(a):
         #If ll_p is none or adgroup has no city targets, dont' exclude
         if not ll_p or not a.cities or len(a.cities) == 0:

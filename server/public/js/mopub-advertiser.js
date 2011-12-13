@@ -70,13 +70,6 @@ var mopub = mopub || {};
               });
           });
           
-          $('.learn-more').click(function () {
-              var div = $('.learn-more-text');
-              div.dialog({
-                  buttons: { "Close": function() { $(this).dialog('close');} }
-              });
-          });
-
           $('.show-status').click(function () {
               var key = $(this).attr('id');
               var div = $('.' + key);
@@ -290,6 +283,7 @@ var mopub = mopub || {};
               }
 
               if (network == 'iAd') {
+                  $('#network_select_id_msg').show();
                   $('div.adunit-Target.mweb')
                       .hide()
                       .find('input')
@@ -299,6 +293,7 @@ var mopub = mopub || {};
                       .find('input')
                       .removeAttr('checked');
               } else {
+                  $('#network_select_id_msg').hide();
                   $('div.adunit-Target:hidden').show();
               }
           }).change();

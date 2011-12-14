@@ -39,7 +39,7 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
-TESTING = True
+TESTING = False
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
@@ -316,6 +316,13 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                        subject="Finished Collecting Stats",
                        body="Check out https://app.mopub.com/" \
                                "ad_network_reports.")
+
+        mail.send_mail(sender='olp@mopub.com',
+                       to='tiago@mopub.com',
+                       subject="Finished Collecting Stats",
+                       body="account: " + str(account.key()) + "\n" +
+                       "emails: " + emails + "\n" +
+                       "network: " + only_these_credentials.ad_network_name)
 
 if __name__ == "__main__":
     setup_remote_api()

@@ -125,7 +125,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                             args=(two_weeks_ago, None,
                                 login_credentials))
                     logging.info(p.daemon)
-                    p.daemon = True
+                    #p.daemon = True
                     p.start()
                     logging.info(p.daemon)
 

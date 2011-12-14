@@ -89,7 +89,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
         mail.send_mail(sender='olp@mopub.com',
                 reply_to='support@mopub.com',
                 to='tiago@mopub.com' if TESTING else emails,
-                cc='' if TESTING else
+                cc='tiago@mopub.com' if TESTING else
                     'tiago@mopub.com, report-monitoring@mopub.com',
                 subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),

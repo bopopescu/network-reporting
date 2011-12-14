@@ -186,11 +186,8 @@ class IAdScraper(Scraper):
             nsr = NetworkScrapeRecord(revenue = app_dict['revenue'],
                                       attempts = app_dict['requests'],
                                       impressions = app_dict['impressions'],
-                                      fill_rate = app_dict['fill_rate'],
                                       clicks = int(app_dict['ctr'] * app_dict[
-                                          'impressions'] / 100),
-                                      ctr = app_dict['ctr'],
-                                      ecpm = app_dict['ecpm'])
+                                          'impressions'] / 100))
             records.append(nsr)
 
         for index, nsr in enumerate(records):

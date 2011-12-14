@@ -39,7 +39,7 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
-TESTING = False
+TESTING = True
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
@@ -75,8 +75,15 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
                 <td>%(ctr).2f%%</td>
                 <td>%(cpm).2f</td>
             </tr>
-            """ % dict([('app', app_name), ('ad_network_name', ad_network_name)]
-                + stats.__dict__.items()))
+            """ % {'app': app_name,
+                   'ad_network_name': ad_network_name,
+                   'revenue': stats.revenue,
+                   'attempts': stats.attempts,
+                   'impressions': stats.impressions,
+                   'fill_rate': stats.fill_rate,
+                   'clicks': stats.clicks,
+                   'ctr': stats.ctr,
+                   'cpm': stats.cpm})
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
@@ -290,15 +297,14 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                     revenue=float(stats.revenue),
                     attempts=stats.attempts,
                     impressions=stats.impressions,
-                    clicks=stats.clicks,
-                    ).put()
+                    clicks=stats.clicks)
+                scrape_stats.put()
 
                 if test_date == yesterday and login_credentials and \
                         login_credentials.email:
-                    logger.info(scrape_stats.__dict__)
                     valid_stats_list.append((ad_network_app_mapper.application.
                         name, ad_network_app_mapper.ad_network_name,
-                        scrape_stats.__dict__['_entity']))
+                        scrape_stats))
             login_credentials.put()
 
         if not only_these_credentials:

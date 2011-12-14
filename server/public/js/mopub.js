@@ -65,7 +65,6 @@ if (typeof window.console == "undefined") {
             }
         }
 
-
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
@@ -316,6 +315,22 @@ if (typeof window.console == "undefined") {
         });
 
     }); // end $(document).ready
+
+    function getUrlParameters()
+    {
+        var parameters = {};
+        var url_params = window.location.search.slice(1).split('&');
+        var param;
+        for(var i = 0; i < url_params.length; i++)
+        {
+            param = url_params[i].split('=');
+            parameters[param[0]] = param[1];
+        }
+        return parameters;
+    }
+
+    var url_parameters = getUrlParameters();
+
 
 
     /*
@@ -730,7 +745,7 @@ if (typeof window.console == "undefined") {
 
         $.ajax({
             url: self.url,
-
+            data: getUrlParameters(),
             dataType: 'json',
 
             success: function() {
@@ -775,7 +790,6 @@ if (typeof window.console == "undefined") {
      * ## DOCUMENT THIS
      */
     Stats.statArrayFromDailyStats = function(arrayOfDailyStats, statName) {
-        console.log(arrayOfDailyStats);
         return $.map(arrayOfDailyStats, function(oneDayStats) {
             return parseFloat(oneDayStats[statName]);
         });

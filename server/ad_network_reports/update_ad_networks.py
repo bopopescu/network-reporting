@@ -325,8 +325,9 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                        reply_to='support@mopub.com',
                        to='tiago@mopub.com' if TESTING else emails,
                        subject="Finished Collecting Stats",
-                       body="Check out https://app.mopub.com/" \
-                               "ad_network_reports.")
+                       body="Your ad network revenue report for AdMob is now ready.\n" \
+                               "Access it here: https://app.mopub.com/ad_network_reports.\n\n" \
+                               "If you have any questions, please reach out to us at support@mopub.com")
 
         mail.send_mail(sender='olp@mopub.com',
                        to='tiago@mopub.com',

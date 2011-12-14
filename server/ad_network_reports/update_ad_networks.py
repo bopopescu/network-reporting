@@ -39,7 +39,7 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
-TESTING = False
+TESTING = True
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
@@ -149,8 +149,12 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
             only_these_credentials else get_all_login_credentials()
 
     # Create log file.
-    logger = logging.getLogger('update_log')
-    hdlr = logging.FileHandler('/var/tmp/update.log')
+    if not only_these_credentials:
+        logger = logging.getLogger('update_log')
+        hdlr = logging.FileHandler('/var/tmp/update.log')
+    else:
+        logger = logging.getLogger('update_log_' + str(only_these_credentials.key()))
+        hdlr = logging.FileHandler('/var/tmp/check_%s.log' % str(only_these_credentials.key()))
     formatter = logging.Formatter('%(asctime)s %(levelname)s'
             ' %(message)s')
     hdlr.setFormatter(formatter)

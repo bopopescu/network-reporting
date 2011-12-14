@@ -57,8 +57,8 @@ class JumpTapScraper(Scraper):
 
     def get_site_stats(self, from_date):
         # Create log file.
-        logger = logging.getLogger('jumptap_log')
-        hdlr = logging.FileHandler('/var/tmp/jumptap.log')
+        logger = logging.getLogger('jumptap_log_' + self.key)
+        hdlr = logging.FileHandler('/var/tmp/jumptap_%s.log' % self.key)
         formatter = logging.Formatter('%(asctime)s %(levelname)s'
                 ' %(message)s')
         hdlr.setFormatter(formatter)

@@ -28,6 +28,7 @@ class Scraper(object):
                         self.NETWORK_NAME))
         self.username = credentials.username
         self.password = credentials.password
+        self.key = str(credentials.key())
 
     def get_site_stats(self, start_date):
         """Start_date is a datetime objects."""

@@ -26,7 +26,6 @@ from google.appengine.api import mail
 
 from datetime import date, datetime, timedelta
 
-from account.query_managers import AccountQueryManager
 from ad_network_reports.ad_networks import AdNetwork
 from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkScrapeStats, \
@@ -56,7 +55,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
     """Send email with scrape stats data for the test date organized in a
     table.
     """
-    emails = ', '.join(AccountQueryManager.get_emails(account))
+    emails = ', '.join(account.emails)
 
     if emails and valid_stats_list:
         aggregate_stats = manager.roll_up_stats([stats for app_name,
@@ -310,8 +309,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                     valid_stats_list)
 
     if only_these_credentials and stats_list:
-        emails = ', '.join(AccountQueryManager.get_emails(
-            only_these_credentials.account))
+        emails = ', '.join(account.emails)
         mail.send_mail(sender='olp@mopub.com',
                        reply_to='support@mopub.com',
                        to='tiago@mopub.com' if TESTING else emails,

@@ -534,30 +534,44 @@ def create_fake_data(account=None):
     """
     import random
     from common.utils import date_magic
-
-    load_test_data(account)
+    from publisher.models import App
 
     a = AdNetworkReportQueryManager(account)
 
     last_90_days = date_magic.gen_date_range(90)
 
-    for network in AD_NETWORK_NAMES.keys():
-        a.create_login_credentials_and_mappers(network,
-                                               username='bullshit',
-                                               password='bullshit',
-                                               client_key='asdfasf',
-                                               send_email=False,
-                                               use_crypto=True)
+    for network in AD_NETWORK_NAMES.keys()[1:-2]:
+        login = AdNetworkLoginCredentials(account=account,
+                           ad_network_name=network,
+                           username='bullshit',
+                           password='bullshit',
+                           client_key='asdfasf',
+                           send_email=False)
+        login.put()
+        app = App(account=account,
+                name='My little pony island adventures')
+        app.put()
+        AdNetworkAppMapper(ad_network_name=network,
+                publisher_id=str(random.random()*100),
+                ad_network_login=login,
+                application=app).put()
+    AdNetworkLoginCredentials(account=account,
+            ad_network_name=AD_NETWORK_NAMES.keys()[0],
+            app_pub_ids=['hfehafa','aihef;iawh']).put()
+    AdNetworkLoginCredentials(account=account,
+            ad_network_name=AD_NETWORK_NAMES.keys()[-1]).put()
 
 
     for day in last_90_days:
-
         for mapper in a.get_ad_network_mappers():
-            stats = AdNetworkScrapeStats(revenue = random.random()*100000,
-                                         attempts = random.randint(1, 100000),
-                                         impressions = random.randint(1, 100000),
-                                         clicks = random.randint(1, 1000),
-                                         date = day,
+            attempts = random.randint(1, 100000)
+            impressions = random.randint(1, attempts)
+            clicks = random.randint(1, impressions)
+            stats = AdNetworkScrapeStats(revenue=random.random()*10000,
+                                         attempts=attempts,
+                                         impressions=impressions,
+                                         clicks=clicks,
+                                         date=day,
                                          ad_network_app_mapper=mapper)
             stats.put()
 

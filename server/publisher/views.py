@@ -752,7 +752,8 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
     def post(self,adunit_key=None):
         adunit_key = adunit_key or self.request.POST.get('adunit_key')
         if adunit_key:
-            adunit = AdUnitQueryManager.get(adunit_key) # Note this gets things from the cache ?
+            # Note this gets things from the cache ?
+            adunit = AdUnitQueryManager.get(adunit_key)
         else:
             adunit = None
 
@@ -760,15 +761,19 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
         json_dict = {'success':False, 'errors': []}
 
         if adunit_form.is_valid():
-            if not adunit_form.instance: #ensure form posts do not change ownership
+            #ensure form posts do not change ownership
+            if not adunit_form.instance:
                 account = self.account
             else:
                 account = adunit_form.instance.account
+
             adunit = adunit_form.save(commit=False)
             adunit.account = account
             AdUnitQueryManager.put(adunit)
 
-            enable_marketplace(adunit, self.account)
+            # If the adunit already exists we don't need to enable the marketplace
+            if not adunit_key:
+                enable_marketplace(adunit, self.account)
 
             json_dict.update(success=True)
             return self.json_response(json_dict)
@@ -782,6 +787,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
 def adunit_update_ajax(request,*args,**kwargs):
     return AdUnitUpdateAJAXHandler()(request,*args,**kwargs)
 
+
 class AppIconHandler(RequestHandler):
     def get(self, app_key):
         a = App.get(app_key)
@@ -794,6 +800,7 @@ class AppIconHandler(RequestHandler):
 
 def app_icon(request,*args,**kwargs):
     return AppIconHandler()(request,*args,**kwargs)
+
 
 class RemoveAdUnitHandler(RequestHandler):
     def post(self, adunit_key):

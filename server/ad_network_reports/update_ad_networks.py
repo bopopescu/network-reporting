@@ -58,7 +58,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
     """
     emails = ', '.join(AccountQueryManager.get_emails(account))
 
-    if emails:
+    if emails and valid_stats_list:
         aggregate_stats = manager.roll_up_stats([stats for app_name,
             ad_network_name, stats in valid_stats_list])
         valid_stats_list = sorted(valid_stats_list, key = lambda s: s[0] + s[1])
@@ -309,7 +309,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
             send_stats_mail(login_credentials.account, manager, test_date,
                     valid_stats_list)
 
-    if only_these_credentials:
+    if only_these_credentials and stats_list:
         emails = ', '.join(AccountQueryManager.get_emails(
             only_these_credentials.account))
         mail.send_mail(sender='olp@mopub.com',

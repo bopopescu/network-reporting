@@ -109,13 +109,11 @@
                     <dt class="wide"> Access ID: </dt>
                     <dd class="thinner">
                       <input type="text" name="{{form.ad_network}}-username" id="id_username" class="input-text input-text-half-width" value=""> {{form.username.errors}}
-                      <a href="#" class="whatsthis" id="inmobi-access-helpLink"> What's This? </a>
                     </dd>
 
                     <dt class="wide"> Secret Key: </dt>
                     <dd class="thinner">
                       <input type="password" name="{{form.ad_network}}-password"  id="id_password" class="input-text input-text-half-width" value="">  {{form.password.errors}}
-                      <a href="#" class="whatsthis" id="inmobi-secret-helpLink"> What's This? </a>
                     </dd>
 
                   {% else %}
@@ -245,25 +243,6 @@
       </div>
     </div>
   {% endfor %}
-  </div>
-
-
-  {# What's This? content #}
-
-  <div class="hidden" id="inmobi-access-helpContent">
-    To access publisher reports from InMobi, you will need to request an Access ID
-    and a Secret Key from their help desk. To do this, send a request to
-    <a href="mailto:helpdesk@inmobi.com"> helpdesk@inmobi.com </a> with "Enable Publisher
-    Reports" as the subject line along with your username/email. InMobi will then assign
-    you a new Access ID and Secret Key, which you can enter here.
-  </div>
-
-  <div class="hidden" id="inmobi-secret-helpContent">
-        To access publisher reports from InMobi, you will need to request an Access ID
-    and a Secret Key from their help desk. To do this, send a request to
-    <a href="mailto:helpdesk@inmobi.com"> helpdesk@inmobi.com </a> with "Enable Publisher
-    Reports" as the subject line along with your username/email. InMobi will then assign
-    you a new Access ID and Secret Key, which you can enter here.
   </div>
   </section>
 

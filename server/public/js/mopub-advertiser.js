@@ -96,7 +96,7 @@ var mopub = mopub || {};
 
           $('.show-hide').click(function () {
               var key = $(this).attr('id');
-              var rows = $('.for-key-' + key);
+              var rows = $('.' + key + '-row');
               var button = $(this).children('span')
               $.each(rows, function (iter, row) {
                   if ($(row).hasClass('hidden')) {

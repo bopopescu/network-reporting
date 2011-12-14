@@ -54,6 +54,9 @@
                 
                 <span class="muted">Last synced: {{ network.sync_date|date }}</span>
                 <a class="show-status" style="cursor:pointer;" id="{{network_name}}-status">Status</a>
+                <div>
+                    <a class="show-hide button button-small" id={{network.key}} style="width:75px;">Show Apps</a>
+                </div>
             </td>
             <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
             <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
@@ -94,7 +97,7 @@
         {% endif %}
         <form class="loginCredentials" id="form-{{form.ad_network}}" autocomplete="off">
           <fieldset>
-              <h2>{{network_name}} Credentials{% ifequal form.ad_network "admob" %} <a target="_blank" href="http://help.mopub.com/customer/portal/articles/274115-admob-revenue-reporting-setup">(Learn more)</a> {% endifequal %}</h2>
+              <h2>{{network_name}} Credentials{% if form.ad_network == "admob" or form.ad_network == "inmobi" %} <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% ifequal form.ad_network "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endifequal %}">(Learn more)</a> {% endif %}</h2>
               <dl class="formFields thin" style="margin:0">
                   {% ifequal form.ad_network "inmobi" %}
                     <dt class="wide"> Access ID: </dt>
@@ -141,7 +144,7 @@
         </form>
       </div>
 		  {% if network %}
-    <div class="appData-details hidden {{form.ad_network}}-row" style="margin: -10px 0 0 86px">
+    <div class="appData-details hidden {{network.key}}-row" style="margin: -10px 0 0 86px">
         <div class="appData-details-inner show">
           <table class="dataTable">
             <tbody>

@@ -2,6 +2,9 @@
 
   {% block body %}
     <style>
+    a {
+      text-decoration: none;
+    }
     body {
       top-margin:0;
       margin:0;
@@ -24,7 +27,7 @@
         </div>
   {% if creative.action_icon != 'none' %}
         <div style="padding-top:5px;position:absolute;top:0;right:0;">
-          <img src="/images/{{creative.action_icon}}.png" width=40 height=40/>
+          <img src="http://ads.mopub.com/images/{{creative.action_icon}}.png" width=40 height=40/>
         </div>
   {% endif %}
       </div>

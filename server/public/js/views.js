@@ -66,7 +66,9 @@
             this.collection.bind('change', this.render, this);
         },
         show_chart: function() {
-            mopub.Chart.setupDashboardStatsChart( ($('#dashboard-stats .stats-breakdown .active').attr('id') == 'stats-breakdown-ctr') ? 'line' : 'area');
+            if(this.collection.isFullyLoaded()) {
+                mopub.Chart.setupDashboardStatsChart( ($('#dashboard-stats .stats-breakdown .active').attr('id') == 'stats-breakdown-ctr') ? 'line' : 'area');
+            }
         },
         render: function() {
             if(this.collection.isFullyLoaded()) {

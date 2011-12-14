@@ -1409,21 +1409,19 @@ class NetworkIndexHandler(RequestHandler):
         today = datetime.datetime.now(Pacific_tzinfo()).date()
         yesterday = today - datetime.timedelta(days=1)
 
-        logging.warn(today)
-        logging.warn(yesterday)
-
-        logging.warn(self.start_date)
-        logging.warn(self.date_range)
-
+        date_range = self.date_range if self.date_range >= 0 else 14
         if self.start_date:
-            days = date_magic.gen_days(self.start_date, self.start_date + datetime.timedelta(self.date_range))
+            start_date = self.start_date if self.start_date < today else today
+            end_date = start_date + datetime.timedelta(days=self.date_range)
+            if end_date > today:
+                end_date = today
+                date_range = (end_date - start_date).days
         else:
-            days = date_magic.gen_days(today - datetime.timedelta(days=self.date_range), today)
-
-        today = days.index(today) if today in days else None
-        yesterday = days.index(yesterday) if yesterday in days else None
-
-        logging.warn(days)
+            start_date = today - datetime.timedelta(days=self.date_range)
+            end_date = today
+        
+        today_index = (today - start_date).days if today >= start_date and today <= end_date else None
+        yesterday_index = (yesterday - start_date).days if yesterday >= start_date and yesterday <= end_date else None
 
         network_adgroups = []
         for campaign in CampaignQueryManager.get_network_campaigns(account=self.account):
@@ -1434,11 +1432,11 @@ class NetworkIndexHandler(RequestHandler):
                                   "advertiser/network_index.html",
                                   {
                                       'network_adgroups': network_adgroups,
-                                      'start_date': days[0],
-                                      'end_date': days[-1],
-                                      'date_range': self.date_range,
-                                      'today': today,
-                                      'yesterday': yesterday
+                                      'start_date': start_date,
+                                      'end_date': end_date,
+                                      'date_range': date_range,
+                                      'today': today_index,
+                                      'yesterday': yesterday_index
                                   })
 
 @login_required

@@ -114,7 +114,9 @@ def build_marketplace_dict(adunit, kws, udid, ua, ll, ip, adunit_context, countr
                     blind = 1 if app.account.network_config.blind else 0,
                     blocked_advs = app.account.network_config.blocklist,
                     blocked_cats = app.account.network_config.category_blocklist,
+                    blocked_attrs = app.account.network_config.attribute_blocklist,
                     )
+        asdf
         none_keys = []
         for k,v in ret.iteritems():
             if v is None:

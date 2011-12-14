@@ -77,6 +77,9 @@ class NetworkConfig(db.Model):
     category_blocklist = db.StringListProperty(indexed=False,
                                     default=["IAB7-39","IAB8-5","IAB8-18",
                                              "IAB9-9","IAB14-1","IAB25"])
+    attribute_blocklist = db.ListProperty(int,
+                                          indexed=False,
+                                          default=[9, 10, 14])
     blind = db.BooleanProperty(default=False)
 
 class MarketPlaceConfig(db.Model):

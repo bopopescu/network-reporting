@@ -56,15 +56,6 @@ class JumpTapScraper(Scraper):
         self.get_site_stats(date.today() - timedelta(days = 1))
 
     def get_site_stats(self, from_date):
-        # Create log file.
-        logger = logging.getLogger('jumptap_log_' + self.key)
-        hdlr = logging.FileHandler('/var/tmp/jumptap_%s.log' % self.key)
-        formatter = logging.Formatter('%(asctime)s %(levelname)s'
-                ' %(message)s')
-        hdlr.setFormatter(formatter)
-        logger.addHandler(hdlr)
-        logger.setLevel(logging.DEBUG)
-
         to_date = from_date
 
         records = []
@@ -86,7 +77,6 @@ class JumpTapScraper(Scraper):
                 raise
 
             headers = response.readline().split(',')
-            logger.info(headers)
 
             revenue_index = headers.index(REVENUE_HEADER)
             request_index = headers.index(REQUEST_HEADER)
@@ -101,7 +91,6 @@ class JumpTapScraper(Scraper):
             clicks = 0
 
             for line in response:
-                logger.info(line)
                 vals = line.split(',')
                 if vals[0] != 'Totals' and vals[adunit_index] in \
                         self.adunit_publisher_ids or not \

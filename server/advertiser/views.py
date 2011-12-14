@@ -1409,19 +1409,12 @@ class NetworkIndexHandler(RequestHandler):
         today = datetime.datetime.now(Pacific_tzinfo()).date()
         yesterday = today - datetime.timedelta(days=1)
 
-        date_range = self.date_range if self.date_range >= 0 else 14
-        if self.start_date:
-            start_date = self.start_date if self.start_date < today else today
-            end_date = start_date + datetime.timedelta(days=self.date_range)
-            if end_date > today:
-                end_date = today
-                date_range = (end_date - start_date).days
-        else:
-            start_date = today - datetime.timedelta(days=self.date_range)
-            end_date = today
+        if not self.start_date:
+            self.start_date = today - datetime.timedelta(days=self.date_range)
+        end_date = self.start_date + datetime.timedelta(days=self.date_range)
         
-        today_index = (today - start_date).days if today >= start_date and today <= end_date else None
-        yesterday_index = (yesterday - start_date).days if yesterday >= start_date and yesterday <= end_date else None
+        today_index = (today - self.start_date).days if today >= self.start_date and today <= end_date else None
+        yesterday_index = (yesterday - self.start_date).days if yesterday >= self.start_date and yesterday <= end_date else None
 
         network_adgroups = []
         for campaign in CampaignQueryManager.get_network_campaigns(account=self.account):
@@ -1432,9 +1425,9 @@ class NetworkIndexHandler(RequestHandler):
                                   "advertiser/network_index.html",
                                   {
                                       'network_adgroups': network_adgroups,
-                                      'start_date': start_date,
+                                      'start_date': self.start_date,
                                       'end_date': end_date,
-                                      'date_range': date_range,
+                                      'date_range': self.date_range,
                                       'today': today_index,
                                       'yesterday': yesterday_index
                                   })

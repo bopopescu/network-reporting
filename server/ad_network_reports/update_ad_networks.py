@@ -60,6 +60,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
     if emails and valid_stats_list:
         aggregate_stats = manager.roll_up_stats([stats for app_name,
             ad_network_name, stats in valid_stats_list])
+        aggregate_stats['ctr'] *= 100
         valid_stats_list = sorted(valid_stats_list, key = lambda s: s[0] + s[1])
         email_body = ""
         for app_name, ad_network_name, stats in valid_stats_list:
@@ -82,7 +83,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
                    'impressions': stats.impressions,
                    'fill_rate': stats.fill_rate,
                    'clicks': stats.clicks,
-                   'ctr': stats.ctr,
+                   'ctr': stats.ctr * 100,
                    'cpm': stats.cpm})
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>

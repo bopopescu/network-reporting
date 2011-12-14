@@ -3,6 +3,7 @@ backends:
   # options: dynamic
   options: public
   class: B4
+
 - name: frontend-0
   instances: 20
   options: public
@@ -12,7 +13,6 @@ backends:
   instances: 2
   options: public
   class: B2 
-  class: B2
 
 - name: frontend-boom
   instances: 2
@@ -22,5 +22,4 @@ backends:
 - name: frontend-slam
   instances: 2
   options: public
-  class: B2
   class: B2

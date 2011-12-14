@@ -49,15 +49,21 @@
               <img src="/images/{{network_name|lower}}-transparent.png"
               alt="{{network_name}}" width="75" height="25" />
             </td>
-			{% if network %}
+			{% if network.state == 1 or network.state == 2 %}
             <td class="network-status dataTable-name">
                 
+                {% ifequal network.state 2 %}
                 <span class="muted">Last synced: {{ network.sync_date|date }}</span>
-                <a class="show-status" style="cursor:pointer;" id="{{network_name}}-status">Status</a>
+                {% endifequal %}
+                <a class="show-status" style="cursor:pointer;" id="{{form.ad_network}}-status">Status</a>
+                {% ifequal network.state 2 %}
                 <div>
                     <a class="show-hide button button-small" id={{network.key}} style="width:75px;">Show Apps</a>
                 </div>
+                {% endifequal %}
             </td>
+            {% endif %}
+			{% ifequal network.state 2 %}
             <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
             <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
             <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
@@ -67,25 +73,26 @@
             <td class="dataTable-data numeric">{{ network.cpc|currency }} </td>
             <td class="dataTable-data numeric">{{ network.ctr|percentage }} </td>
 		    {% else %}
-            <td class="network-status dataTable-name" colspan="7">
-               <div>
-                   <a class="show-status button button-small" id="{{network_name}}-status">Enable Reporting</a>
-               </div>
-            </td>
-		    {% endif %}
+                {% ifequal network.state 0 %}
+                <td class="network-status dataTable-name" colspan="7">
+                    <div class="form-{{form.ad_network}}-enable">
+                       <a class="show-status button button-small" id="{{form.ad_network}}-status">Enable Reporting</a>
+                   </div>
+                </td>
+                {% endifequal %}
+		    {% endifequal %}
           </tr>
         </tbody>
       </table>
-      <div class="{{network_name}}-status hidden">
+      <div class="{{form.ad_network}}-status hidden">
         <div class="form-{{form.ad_network}}-message hidden alert-message block-message warning"></div>
-        {% if network %}
         <dl class="formFields thin" style="margin:0">
-          {% if network.sync_error %}
+          {% if network.state == 2 and network.sync_error %}
           <dt>Status:</dt>
           <dd>Last synchronization failed.  Check that your credentials are correct.
           If this error persists, please contact support@mopub.com.</dd>
           {% endif %}
-          {% if network.app_pub_ids %}
+          {% if network.state != 0 and network.app_pub_ids %}
           <dt>Notes:</dt>
           <dd> MoPub received a response for the following ad networks IDs.
           Make sure these apps are properly set up in MoPub to view the reports.
@@ -94,7 +101,6 @@
           </dd>
           {% endif %}
         </dl>
-        {% endif %}
         <form class="loginCredentials" id="form-{{form.ad_network}}" autocomplete="off">
           <fieldset>
               <h2>{{network_name}} Credentials{% if form.ad_network == "admob" or form.ad_network == "inmobi" %} <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% ifequal form.ad_network "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endifequal %}">(Learn more)</a> {% endif %}</h2>
@@ -143,13 +149,13 @@
           </fieldset>
         </form>
       </div>
-		  {% if network %}
+      {% if network.state == 2 %}
     <div class="appData-details hidden {{network.key}}-row" style="margin: -10px 0 0 86px">
         <div class="appData-details-inner show">
           <table class="dataTable">
             <tbody>
               {% for app in network.sub_data_list %}
-              <tr class="show-details sub-rows {% if not forloop.last %} add-border {% endif %} for-key-{{network.key}}" id="{{app.key}}">
+              <tr class="show-details sub-rows {% if not forloop.last %} add-border {% endif %}" id="{{app.key}}">
                   <td class="dataTable-name">
                     {{app.name}} <a class="hidden details-{{app.key}}" href="{% url ad_network_app_detail app.key %}">Details</a>
                   </td>
@@ -167,7 +173,7 @@
           </table>
         </div>
       </div>
-		  {% endif %}
+      {% endif %}
     </div>
   {% endfor %}
   </div>

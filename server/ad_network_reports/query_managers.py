@@ -114,6 +114,11 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         # large hoops so we do a rough check.
         yesterday = (datetime.now() - timedelta(days=1)).date()
 
+        if networks:
+            def login_credentials_query():
+                return AdNetworkLoginCredentials.all().filter('account =',
+                        self.account)
+
         data_dict = {}
         for mapper, stats, application, sync_date in aggregate_stats_list:
             if networks:
@@ -151,13 +156,12 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                     'key': str(key),
                 }
                 if networks:
-                    login_credentials = AdNetworkLoginCredentials.all(). \
-                            filter('ad_network_name =', mapper. \
-                            ad_network_name).filter('account =',
-                                    self.account).get()
+                    data_dict[attr]['state'] = 2
                     data_dict[attr]['sync_date'] = sync_date
                     data_dict[attr]['sync_error'] = not sync_date or sync_date - \
                         yesterday >= timedelta(days=1)
+                    login_credentials = login_credentials_query().filter(
+                            'ad_network_name =', mapper.ad_network_name).get()
                     data_dict[attr]['app_pub_ids'] = ', '.join(
                             login_credentials.app_pub_ids)
                 else:
@@ -199,7 +203,17 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
             for network in networks_without_creds:
                 if AD_NETWORK_NAMES[network] not in data_dict:
-                    data_dict[AD_NETWORK_NAMES[network]] = None
+                    login_credentials = login_credentials_query().filter(
+                            'ad_network_name =', network).get()
+                    if login_credentials:
+                        app_pub_ids = ', '.join(login_credentials.app_pub_ids)
+                        if app_pub_ids:
+                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 1,
+                                    'app_pub_ids': app_pub_ids}
+                        else:
+                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 0}
+                    else:
+                        data_dict[AD_NETWORK_NAMES[network]] = {'state': 0}
 
         # Sort alphabetically
         data_list = sorted(data_dict.items(), key=lambda data_tuple:

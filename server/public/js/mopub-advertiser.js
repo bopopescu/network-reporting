@@ -130,6 +130,7 @@ var mopub = mopub || {};
                   success: function(valid) {
                       // Upon success notify the user
                       if (valid) {
+                          $('.' + key + '-enable').html("Pending")
                           $(message).html("Check back in a couple minutes to see your ad network revenue report. You will receive an email when it is ready.");
                       } else {
                           $(message).html("Invalid login information.");

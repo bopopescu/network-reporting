@@ -82,15 +82,17 @@ class TestRequestHandlers(AsyncHTTPTestCase):
         assert AdNetworkAppMapper.all().count() == 1
 
         children = multiprocessing.active_children()
-        print children
-        print children[0].pid
-        children[0].join()
+        if children:
+            print children
+            print children[0].pid
+            children[0].join()
+
+            assert children[0].exitcode == 0
 
         # Unfortunately the app engine datastore doesn't play well with multiprocessing
         # when testing.
 #        print AdNetworkScrapeStats.all().count()
 #        assert AdNetworkScrapeStats.all().count() == 14
-        assert children[0].exitcode == 0
 
     def mptest_mobfox_handler_test(self):
         # create test models

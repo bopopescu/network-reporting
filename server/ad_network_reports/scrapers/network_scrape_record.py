@@ -1,16 +1,14 @@
 class NetworkScrapeRecord(object):
-    def __init__(self, revenue, attempts, impressions, clicks, ecpm=0.0,
-            fill_rate=0.0, ctr=0.0, app_tag=None):
+    def __init__(self, revenue=0, attempts=0, impressions=0, clicks=0,
+            app_tag=None):
         self.revenue = revenue
         self.attempts = attempts
         self.impressions = impressions
-        self.fill_rate = fill_rate
         self.clicks = clicks
-        self.ctr = ctr
-        self.ecpm = ecpm
+        # app_tag is always the pub_id
         self.app_tag = app_tag
 
-    # For debugging    
+    # For debugging
     def __str__(self):
         self.__repr__()
 

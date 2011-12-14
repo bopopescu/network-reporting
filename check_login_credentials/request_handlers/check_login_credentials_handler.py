@@ -73,7 +73,6 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
         # TODO: Verify that mobfox form is valid.
         if form.is_valid():
             login_credentials = AdNetworkLoginCredentials()
-            logging.warning(form.cleaned_data)
             login_credentials.ad_network_name = ad_network
             login_credentials.username = form.cleaned_data.get('username_str',
                     '')
@@ -84,6 +83,8 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
 
             try:
                 account_key = self.get_argument('account_key')
+                if os.path.exists('/home/ubuntu/'):
+                    setup_remote_api()
                 manager = AdNetworkReportQueryManager(db.get(account_key))
                 scraper = AdNetwork(login_credentials).create_scraper()
                 # Password and username aren't encrypted yet so we don't need
@@ -119,7 +120,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                         accounts_login_credentials:
                     pacific = timezone('US/Pacific')
                     two_weeks_ago = (datetime.now(pacific) -
-                            timedelta(days=2)).date()
+                            timedelta(days=14)).date()
                     p = multiprocessing.Process(target=update_ad_networks,
                             args=(two_weeks_ago, None,
                                 login_credentials))

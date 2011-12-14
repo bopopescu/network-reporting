@@ -1,8 +1,6 @@
 import logging
 from copy import copy
 
-from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        KEY
 from ad_network_reports.scrapers.admob_scraper import AdMobScraper
 from ad_network_reports.scrapers.iad_scraper import IAdScraper
 from ad_network_reports.scrapers.inmobi_scraper import InMobiScraper
@@ -23,17 +21,7 @@ class AdNetwork(object):
         return cls.scraper(cls.login_credentials)
 
     def append_extra_info(cls):
-        """Decode password prior to sending it to the scarper."""
-        if cls.login_credentials.password:
-            password_aes_cfb = AES.new(KEY, AES.MODE_CFB, cls.
-                    login_credentials.password_iv)
-            cls.login_credentials.password = password_aes_cfb.decrypt(cls.
-                    login_credentials.password)
-        if cls.login_credentials.username:
-            username_aes_cfb = AES.new(KEY, AES.MODE_CFB, cls.
-                    login_credentials.username_iv)
-            cls.login_credentials.username = username_aes_cfb.decrypt(cls.
-                    login_credentials.username)
+        pass
 
 class AdMobAdNetwork(AdNetwork):
     scraper = AdMobScraper

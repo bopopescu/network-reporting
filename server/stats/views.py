@@ -595,25 +595,24 @@ def async_put_models(account_name,stats_models,bucket_size):
 class FinalizeHandler(webapp.RequestHandler):
     def post(self):
         post_data = simplejson.loads(self.request.body)
+        blob_file_name = post_data['blob_file_name']
+        log_lines = post_data['log_lines']  # all log lines are unicode due to simplejson.dumps()
 
-        try:
-            blob_file_name = post_data['blob_file_name']
-            log_lines = post_data['log_lines']
+        # write() of files API only uses ascii encoding, which could fail
+        # therefore explicitly convert all unicode to string using utf-8 encoding
+        ascii_log_lines = [helpers.to_ascii(line) for line in log_lines]
 
-            # create new file in blobstore (file name is GAE internal)
-            internal_file_name = files.blobstore.create(
-                                mime_type="text/plain",
-                                _blobinfo_uploaded_filename=blob_file_name+'.log')
+        # create new file in blobstore (file name is GAE internal)
+        internal_file_name = files.blobstore.create(
+                            mime_type="text/plain",
+                            _blobinfo_uploaded_filename=blob_file_name+'.log')
 
-            # open the file and write lines
-            with files.open(internal_file_name, 'a') as f:
-                f.write('\n'.join(log_lines)+'\n')
+        # open the file and write lines
+        with files.open(internal_file_name, 'a') as f:
+            f.write('\n'.join(ascii_log_lines)+'\n')
 
-            # finalize this file
-            files.finalize(internal_file_name)
-        except:
-            exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
-            logging.error(exception_traceback)
+        # finalize this file
+        files.finalize(internal_file_name)
 
     def get(self):
         try:

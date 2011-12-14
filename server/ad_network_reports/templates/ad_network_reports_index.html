@@ -92,19 +92,19 @@
           {% endif %}
         </dl>
         {% endif %}
-        <form class="loginCredentials" id="form-{{form.ad_network}}">
+        <form class="loginCredentials" id="form-{{form.ad_network}}" autocomplete="off">
           <fieldset>
               <h2>{{network_name}} Credentials</h2>
               <dl class="formFields thin" style="margin:0">
                   {% ifequal form.ad_network "inmobi" %}
-                    <dt> Access ID: </dt>
-                    <dd>
+                    <dt class="wide"> Access ID: </dt>
+                    <dd class="thinner">
                       <input type="text" name="{{form.ad_network}}-username" id="id_username" class="input-text input-text-half-width" value=""> {{form.username.errors}}
                       <a href="#" class="whatsthis" id="inmobi-access-helpLink"> What's This? </a>
                     </dd>
 
-                    <dt> Secret Key: </dt>
-                    <dd>
+                    <dt class="wide"> Secret Key: </dt>
+                    <dd class="thinner">
                       <input type="password" name="{{form.ad_network}}-password"  id="id_password" class="input-text input-text-half-width" value="">  {{form.password.errors}}
                       <a href="#" class="whatsthis" id="inmobi-secret-helpLink"> What's This? </a>
                     </dd>
@@ -112,14 +112,14 @@
                   {% else %}
                       {% ifequal form.ad_network "mobfox" %}
                       {% else %}
-                        <dt> Username: </dt>
-                        <dd> <input type="text"
+                        <dt class="wide"> Username: </dt>
+                        <dd class="thinner"> <input type="text"
                         name="{{form.ad_network}}-username" id="id_username"
                         class="input-text input-text-half-width"
                         value="{{form.initial.username}}"> {{form.username.errors}}</dd>
 
-                        <dt> Password: </dt>
-                        <dd> <input type="password"
+                        <dt class="wide">{% ifequal form.ad_network "admob" %} API {% endifequal %}Password: </dt>
+                        <dd class="thinner"> <input type="password"
                         name="{{form.ad_network}}-password"  id="id_password"
                         class="input-text input-text-half-width"
                         value="{{form.initial.password}}">  {{form.password.errors}}</dd>
@@ -128,8 +128,8 @@
 
 
                   {% if form.ad_network == "admob" %}
-                    <dt> Client ID: </dt>
-                    <dd> <input type="text" name="admob-client_key"
+                    <dt class="wide"> API Key: </dt>
+                    <dd class="thinner"> <input type="text" name="admob-client_key"
                     id="id_admob-client_key" class="input-text
                     input-text-half-width" value="{{form.initial.client_key}}"></dd>
                   {% endif %}

@@ -34,9 +34,6 @@ AD_NETWORK_NAMES = {'admob': 'AdMob',
                     'inmobi': 'InMobi',
                     'mobfox': 'MobFox'}
 
-# Don't touch or everything is fucked
-KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
-
 class Stats(object):
     pass
 
@@ -270,7 +267,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         aggregate_stats.attempts = 0
         aggregate_stats.impressions = 0
         aggregate_stats.cpm = 0.0
-        aggregate_stats.fill_rate = 0
+        aggregate_stats.fill_rate = 0.0
         aggregate_stats.clicks = 0
         aggregate_stats.cpc = 0.0
         aggregate_stats.ctr = 0.0
@@ -290,6 +287,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         if aggregate_stats.attempts:
             aggregate_stats.fill_rate = (aggregate_stats.fill_rate_impressions /
                     float(aggregate_stats.attempts))
+
         if aggregate_stats.impressions:
             aggregate_stats.ctr = (aggregate_stats.clicks /
                     float(aggregate_stats.impressions))
@@ -341,7 +339,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         for app in AppQueryManager.get_apps_with_network_configs(self.account):
             publisher_id = getattr(app.network_config, '%s_pub_id'
                     % ad_network_name, None)
-            if publisher_id != None:
+            if publisher_id:
                 # example return (App, NetworkConfig.admob_pub_id)
                 yield (app, publisher_id)
 
@@ -350,8 +348,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                              username='',
                                              password='',
                                              client_key='',
-                                             send_email=False,
-                                             use_crypto=True):
+                                             send_email=False):
         """Check login credentials by making a request to tornado on EC2. If
         they're valid create AdNetworkLoginCredentials and AdNetworkAppMapper
         entities and store them in the db.
@@ -359,32 +356,10 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return None if the login credentials are correct otherwise return an
         error message.
         """
-        if use_crypto:
-            from Crypto.Cipher import AES
-            from Crypto.Util import randpool
-            password_iv = ''
-            username_iv = ''
-            if password:
-                rp = randpool.RandomPool()
-
-                username_iv = rp.get_bytes(16)
-                username_aes_cfb = AES.new(KEY, AES.MODE_CFB, username_iv)
-                username = username_aes_cfb.encrypt(username)
-
-                password_iv = rp.get_bytes(16)
-                password_aes_cfb = AES.new(KEY, AES.MODE_CFB, password_iv)
-                password = password_aes_cfb.encrypt(password)
-
-        else:
-            username_iv = username
-            password_iv = password
-
         login_credentials = AdNetworkLoginCredentials(account=self.account,
                                         ad_network_name=ad_network_name,
                                         username=username,
-                                        username_iv=username_iv,
                                         password=password,
-                                        password_iv=password_iv,
                                         client_key=client_key,
                                         email=send_email)
         login_credentials.put()
@@ -490,7 +465,7 @@ def load_test_data(account=None):
     from google.appengine.ext import db
     from account.models import Account, NetworkConfig
 
-    if account == None:
+    if not account:
         account = Account()
         account.put()
 

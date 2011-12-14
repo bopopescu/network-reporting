@@ -40,10 +40,10 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
+TESTING = True
+
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
-    #app_id = 'mopub-experimental'
-    #host = '38.latest.mopub-experimental.appspot.com'
     app_id = 'mopub-inc'
     host = '38.latest.mopub-inc.appspot.com'
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func,
@@ -74,16 +74,17 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
                 <td>%(fill_rate).2f%%</td>
                 <td>%(clicks)d</td>
                 <td>%(ctr).2f%%</td>
-                <td>%(ecpm).2f</td>
+                <td>%(cpm).2f</td>
             </tr>
             """ % dict([('app', app_name), ('ad_network_name', ad_network_name)]
                 + stats.__dict__.items()))
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
-                to='tiago@mopub.com',
-                #to=emails,
-                #cc='tiago@mopub.com, report-monitoring@mopub.com',
+                reply_to='support@mopub.com',
+                to='tiago@mopub.com' if TESTING else emails,
+                cc='' if TESTING else
+                    'tiago@mopub.com, report-monitoring@mopub.com',
                 subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
                 body=("Learn more at http://mopub-experimental.appspot."
@@ -100,7 +101,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
         <th>FILLRATE</th>
         <th>CLICKS</th>
         <th>CTR</th>
-        <th>ECPM</th>
+        <th>CPM</th>
     </thead>
     <tbody>
         <tr>
@@ -112,7 +113,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
             <td><b>%(fill_rate).2f%%</b></td>
             <td><b>%(clicks)d</b></td>
             <td><b>%(ctr).2f%%</b></td>
-            <td><b>%(ecpm).2f</b></td>
+            <td><b>%(cpm).2f</b></td>
         </tr>
                     """ % aggregate_stats.__dict__ +
                     email_body +
@@ -284,22 +285,21 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                 if not only_these_credentials:
                     aggregate.increment(login_credentials.ad_network_name +
                             '_updated')
-                AdNetworkScrapeStats(ad_network_app_mapper=
-                        ad_network_app_mapper,
-                        date=test_date,
-                        revenue=float(stats.revenue),
-                        attempts=stats.attempts,
-                        impressions=stats.impressions,
-                        fill_rate=float(stats.fill_rate),
-                        clicks=stats.clicks,
-                        ctr=float(stats.ctr),
-                        ecpm=float(stats.ecpm)
-                        ).put()
+                scrape_stats = AdNetworkScrapeStats(ad_network_app_mapper=
+                    ad_network_app_mapper,
+                    date=test_date,
+                    revenue=float(stats.revenue),
+                    attempts=stats.attempts,
+                    impressions=stats.impressions,
+                    clicks=stats.clicks,
+                    ).put()
 
                 if test_date == yesterday and login_credentials and \
                         login_credentials.email:
+                    logger.info(scrape_stats.__dict__)
                     valid_stats_list.append((ad_network_app_mapper.application.
-                        name, ad_network_app_mapper.ad_network_name, stats))
+                        name, ad_network_app_mapper.ad_network_name,
+                        scrape_stats.__dict__['_entity']))
             login_credentials.put()
 
         if not only_these_credentials:
@@ -313,10 +313,11 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         emails = ', '.join(AccountQueryManager.get_emails(
             only_these_credentials.account))
         mail.send_mail(sender='olp@mopub.com',
-                       to='tiago@mopub.com',#emails,
+                       reply_to='support@mopub.com',
+                       to='tiago@mopub.com' if TESTING else emails,
                        subject="Finished Collecting Stats",
-                       body="Check out http://frontend-0.mopub-inc." \
-                               "appspot.com/ad_network_reports.")
+                       body="Check out https://app.mopub.com/" \
+                               "ad_network_reports.")
 
 if __name__ == "__main__":
     setup_remote_api()

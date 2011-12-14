@@ -116,10 +116,7 @@ class AdMobScraper(Scraper):
                 nsr = NetworkScrapeRecord(revenue = stats['revenue'],
                                           attempts = stats['requests'],
                                           impressions = stats['impressions'],
-                                          fill_rate = stats['fill_rate'] * 100,
-                                          clicks = stats['clicks'],
-                                          ctr = stats['ctr'] * 100,
-                                          ecpm = stats['ecpm'])
+                                          clicks = stats['clicks'])
 
                 if 'site_id' in stats:
                     nsr.app_tag = stats['site_id']

@@ -193,12 +193,12 @@ class IAdScraper(Scraper):
         for index, nsr in enumerate(records):
             self.browser.find_elements_by_css_selector('.app_text')[index]. \
                     click()
-            time.sleep(1)
+            time.sleep(6)
             app_dict['apple_id'] = self.browser.current_url[self.browser.
                     current_url.find(self.SITE_ID_IDENTIFIER) + len(self.
                         SITE_ID_IDENTIFIER):]
             self.browser.back()
-            time.sleep(1)
+            time.sleep(6)
 
             nsr.app_tag = app_dict['apple_id']
 
@@ -207,8 +207,8 @@ class IAdScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'jprhombus'
-    NC.password = 'mopub512'
+    NC.username = 'appfigures@peepsoftware.com'
+    NC.password = 'A99figures'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
     print SCRAPER.get_site_stats(date(2011,11,30))

@@ -56,6 +56,15 @@ class JumpTapScraper(Scraper):
         self.get_site_stats(date.today() - timedelta(days = 1))
 
     def get_site_stats(self, from_date):
+        # Create log file.
+        logger = logging.getLogger('jumptap_log')
+        hdlr = logging.FileHandler('/var/tmp/jumptap.log')
+        formatter = logging.Formatter('%(asctime)s %(levelname)s'
+                ' %(message)s')
+        hdlr.setFormatter(formatter)
+        logger.addHandler(hdlr)
+        logger.setLevel(logging.DEBUG)
+
         to_date = from_date
 
         records = []
@@ -77,7 +86,7 @@ class JumpTapScraper(Scraper):
                 raise
 
             headers = response.readline().split(',')
-            print headers
+            logger.info(headers)
 
             revenue_index = headers.index(REVENUE_HEADER)
             request_index = headers.index(REQUEST_HEADER)
@@ -92,7 +101,7 @@ class JumpTapScraper(Scraper):
             clicks = 0
 
             for line in response:
-                print line
+                logger.info(line)
                 vals = line.split(',')
                 if vals[0] != 'Totals' and vals[adunit_index] in \
                         self.adunit_publisher_ids or not \
@@ -124,10 +133,17 @@ if __name__ == '__main__':
 #        u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app_home_me_medrect',
 #        u'pa_com2us_usa_inc_slice_it_drd_app_banner',
 #        u'pa_com2us_usa_inc__slice_it__drd_app_banner2'])
-    NC.username = 'chesscom'
-    NC.password = 'Y7u8i9o0'
-    publisher_ids = ['pa_chess_com_llc_chess_com_-_pla_iph_app',
-            'pa_chess_com_llc_chess_com_-_and_drd_app']
+
+#    NC.username = 'chesscom'
+#    NC.password = 'Y7u8i9o0'
+#    publisher_ids = ['pa_chess_com_llc_chess_com_-_pla_iph_app',
+#            'pa_chess_com_llc_chess_com_-_and_drd_app']
+
+    NC.username = 'komastudios'
+    NC.password = 'nH0J4od4'
+    publisher_ids = [u'pa_koma_studios_ug_penalty_kick_iph_app',
+            u'pa_koma_studios_ug_penalty_kick_an_drd_app']
+
     adunit_publisher_ids = iter([])
     NC.ad_network_name = 'jumptap'
     SCRAPER = JumpTapScraper((NC, publisher_ids, adunit_publisher_ids))

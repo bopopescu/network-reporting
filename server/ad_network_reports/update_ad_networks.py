@@ -148,7 +148,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     login_credentials_list = (only_these_credentials,) if \
             only_these_credentials else get_all_login_credentials()
 
-    # Create the log file.
+    # Create log file.
     logger = logging.getLogger('update_log')
     hdlr = logging.FileHandler('/var/tmp/update.log')
     formatter = logging.Formatter('%(asctime)s %(levelname)s'

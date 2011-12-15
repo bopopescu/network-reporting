@@ -37,6 +37,7 @@ DEFAULT_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign',
 REP_Q = None
 
 def fire_report_sqs(data):
+    global REP_Q
     if not REP_Q:
         SQS_CONN = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
         REP_Q = SQS_CONN.create_queue('report_queue')

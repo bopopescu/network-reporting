@@ -10,7 +10,8 @@ from google.appengine.api import users
 from google.appengine.api.urlfetch import fetch
 from google.appengine.api import mail
 from google.appengine.api import memcache
-from google.appengine.ext import db
+from google.appengine.api import files
+from google.appengine.ext import db, blobstore
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
@@ -36,6 +37,7 @@ from google.appengine.api import taskqueue
 from admin import beatbox
 from common.utils.decorators import cache_page_until_post, staff_login_required
 from common.utils import simplejson
+from common.utils.helpers import to_ascii, to_uni
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 NUM_DAYS = 14
@@ -145,10 +147,26 @@ def dashboard_prep(request, *args, **kwargs):
         "unique_apps": unique_apps, 
         "new_users": new_users,
         "mailing_list": [a for a in new_users if a.mpuser.mailing_list]}
+    
+    #need to convert to uni, then ascii for blobstore encoding
+    html = to_ascii(to_uni(render_to_string(request,'admin/pre_render.html',render_params)))
+
+    internal_file_name = files.blobstore.create(
+                        mime_type="text/plain",
+                        _blobinfo_uploaded_filename='admin-d.html')
+    
+
+    # open the file and write lines
+    with files.open(internal_file_name, 'a') as f:
+        f.write(html)
+
+    # finalize this file
+    files.finalize(internal_file_name)
 
     page = AdminPage(offline=offline,
-                     html=render_to_string(request,'admin/pre_render.html',render_params),
+                     blob_key=files.blobstore.get_blob_key(internal_file_name),
                      today_requests=total_stats[-1].request_count)
+                 
     page.put()
     
     return HttpResponse("OK")
@@ -186,7 +204,7 @@ def dashboard(request, *args, **kwargs):
                               params=dict(offline="1" if offline else "0"),
                               method='GET',
                               url='/admin/prep/',
-                              target='stats-updater')
+                              target='admin-prep')
         try:                      
             task.add("admin-dashboard-queue")
             return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')
@@ -194,7 +212,10 @@ def dashboard(request, *args, **kwargs):
             logging.warning("task error: %s"%e)                
         
     page = AdminPage.get_by_stats_source(offline=offline)
-    loading = loading or page.loading
+
+    html_file = blobstore.BlobReader(page.blob_key)
+    page.html = html_file.read()
+
     return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})
         
 def update_sfdc_leads(request, *args, **kwargs):

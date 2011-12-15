@@ -34,11 +34,12 @@ SQS_URL = 'http://%s%s' % (SQS_ENDPOINT, SQS_URI)
 NUM_REP_QS = 1
 REP_Q_NAME = "gen-rep-%02d"
 DEFAULT_REPORT_DIM_LIST = (('app', 'Apps'), ('adunit', 'Ad Units'), ('campaign', 'Campaigns'))
-SQS_CONN = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
-REP_Q = SQS_CONN.create_queue('report_queue')
-
+REP_Q = None
 
 def fire_report_sqs(data):
+    if not REP_Q:
+        SQS_CONN = SQSConnection(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+        REP_Q = SQS_CONN.create_queue('report_queue')
     # Don't send shit to EMR if we're not on prod
     if not IS_PROD:
         return

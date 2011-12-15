@@ -34,6 +34,8 @@ AD_NETWORK_NAMES = {'admob': 'AdMob',
                     'inmobi': 'InMobi',
                     'mobfox': 'MobFox'}
 
+MOBFOX = 'MobFox'
+
 class Stats(object):
     pass
 

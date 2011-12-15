@@ -65,10 +65,10 @@
             {% endif %}
 			{% ifequal network.state 2 %}
             <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
-            <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
+            <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ network.attempts|withsep }} {% endif %}</td>
             <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
             <td class="dataTable-data numeric">{{ network.cpm|currency }} </td>
-            <td class="dataTable-data numeric">{{ network.fill_rate|percentage }} </td>
+            <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ network.fill_rate|percentage }} {% endif %}</td>
             <td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
             <td class="dataTable-data numeric">{{ network.cpc|currency }} </td>
             <td class="dataTable-data numeric">{{ network.ctr|percentage }} </td>
@@ -158,10 +158,10 @@
                     {{app.name}} <a class="hidden details-{{app.key}}" href="{% url ad_network_app_detail app.key %}">Details</a>
                   </td>
                   <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
-                  <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
+                  <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ app.attempts|withsep }}{% endif %}</td>
                   <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
                   <td class="dataTable-data numeric">{{ app.cpm|currency }}</td>
-                  <td class="dataTable-data numeric">{{ app.fill_rate|percentage }}</td>
+                  <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ app.fill_rate|percentage }}{% endif %}</td>
                   <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
                   <td class="dataTable-data numeric">{{ app.cpc|currency }}</td>
                   <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
@@ -228,10 +228,10 @@
                    {{network.name}} <a class="hidden details-{{network.key}}" href="{% url ad_network_app_detail network.key %}">Details</a>
                 </td>
                 <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
-                <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
+                <td class="dataTable-data numeric">{% if network.name != MOBFOX %}{{ network.attempts|withsep }}{% endif %}</td>
                 <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
                 <td class="dataTable-data numeric">{{ network.cpm|currency }}</td>
-                <td class="dataTable-data numeric">{{ network.fill_rate|percentage }}</td>
+                <td class="dataTable-data numeric">{% if network.name != MOBFOX %}{{ network.fill_rate|percentage }}{% endif %}</td>
                 <td class="dataTable-data numeric">{{ network.clicks|withsep }}</td>
                 <td class="dataTable-data numeric">{{ network.cpc|currency }}</td>
                 <td class="dataTable-data numeric">{{ network.ctr|percentage }}</td>

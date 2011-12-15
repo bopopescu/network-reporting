@@ -22,7 +22,8 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      NetworkStatsFetcher, \
      DirectSoldStatsFetcher
 from common.utils import date_magic
-from common_templates.templatetags.filters import currency, percentage, percentage_rounded
+from common.utils.timezones import Pacific_tzinfo
+from common_templates.templatetags.filters import campaign_status, currency, percentage, percentage_rounded
 
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
@@ -245,13 +246,13 @@ class AdGroupService(RequestHandler):
     """
     def get(self, adgroup_key):
         try:
-            from common_templates.templatetags import filters
-
-            # TODO: get actual dates
             if self.start_date:
-                days = date_magic.gen_days(self.start_date, self.start_date + datetime.timedelta(self.date_range))
+                end_date = self.start_date + datetime.timedelta(days=self.date_range)
             else:
-                days = date_magic.gen_date_range(self.date_range)
+                today = datetime.datetime.now(Pacific_tzinfo()).date()
+                self.start_date = today - datetime.timedelta(days=self.date_range)
+                end_date = today
+            days = date_magic.gen_days(self.start_date, end_date)
 
             adgroup = AdGroupQueryManager.get(adgroup_key)
             stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
@@ -267,22 +268,20 @@ class AdGroupService(RequestHandler):
                 # TODO: overwrite clicks as well
                 stats_fetcher = MarketplaceStatsFetcher(self.account.key())
                 try:
-                    mpx_stats = stats_fetcher.get_account_stats( start_date, end_date)
+                    mpx_stats = stats_fetcher.get_account_stats(self.start_date, end_date)
                 except MPStatsAPIException, e:
                     mpx_stats = {}
                 summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
-
-                summed_stats.cpm = summed_stats.cpm # no-op
             else:
                 summed_stats.cpm = adgroup.cpm
-            logging.warn("PACE: %s"%budget_service.get_pace(adgroup.campaign.budget_obj))
+            
             adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
             percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
             summed_stats.percent_delivered = percent_delivered
             adgroup.percent_delivered = percent_delivered
 
-            summed_stats.status = filters.campaign_status(adgroup)
+            summed_stats.status = campaign_status(adgroup)
             if adgroup.running and adgroup.campaign.budget_obj and adgroup.campaign.budget_obj.delivery_type != 'allatonce':
                 summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign.budget_obj) else "behind"
             else:

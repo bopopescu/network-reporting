@@ -1,5 +1,5 @@
 import logging
-from datetime import date,datetime
+from datetime import date, datetime, timedelta
 
 from account.query_managers import AccountQueryManager
 from account.models import Account
@@ -44,17 +44,30 @@ class RequestHandler(object):
                 in order to be able to properly use the cache decorator """
             self.params = request.POST or request.GET
             self.request = request or self.request
+            
+            today = datetime.now(Pacific_tzinfo()).date()
 
+            # start date
             try:
-              self.date_range = int(self.params.get('r'))  # date range
+                s = self.request.GET.get('s').split('-')
+                self.start_date = date(int(s[0]), int(s[1]), int(s[2]))
+                # ensure start date is not in the future
+                if self.start_date > today:
+                    self.start_date = today
             except:
-              self.date_range = 14
+                self.start_date = None
 
+            # date range
             try:
-              s = self.request.GET.get('s').split('-')
-              self.start_date = date(int(s[0]),int(s[1]),int(s[2]))
+                self.date_range = int(self.params.get('r'))
             except:
-              self.start_date = None
+                self.date_range = 14
+            # ensure end date is not in the future
+            if self.start_date and self.start_date + timedelta(days=self.date_range) > today:
+                self.date_range = (today - self.start_date).days
+            
+            logging.warn('start_date: %s' % self.start_date)
+            logging.warn('date_range: %s' % self.date_range)
 
             if self.login:
                 if self.params.has_key('account'):

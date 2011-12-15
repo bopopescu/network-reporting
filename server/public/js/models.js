@@ -38,17 +38,17 @@
     /*
      * Helper functions for stats
      */
-    calculate_ctr = function(impression_count, click_count) {
+    function calculate_ctr (impression_count, click_count) {
         if(impression_count === null || click_count === null) return null;
         return (impression_count === 0) ? 0 : click_count / impression_count;
     }
 
-    calculate_fill_rate = function(request_count, impression_count) {
+    function calculate_fill_rate (request_count, impression_count) {
         if(request_count === null || impression_count === null) return null;
         return (request_count === 0) ? 0 : impression_count / request_count;
     }
 
-    format_stat = function(stat, value) {
+    function format_stat (stat, value) {
         if(value === null) return '--';
         switch(stat) {
             case 'click_count':
@@ -74,7 +74,8 @@
     /*
      *
      */
-    AdGroup = Backbone.Model.extend({
+
+    var AdGroup = Backbone.Model.extend({
         get_stat: function(stat) {
             if(!this.has(stat)) return null;
             return this.get(stat);
@@ -100,7 +101,7 @@
 
 
     /*
-     *  
+     *
      */
     AdGroups = Backbone.Collection.extend({
         model: AdGroup,
@@ -178,12 +179,17 @@
             if(adgroups.length == 0) {
                 return [];
             }
-            var sorted_adgroups = _.sortBy(adgroups, function(adgroup) { return -adgroup.get('impression_count'); });
+            var sorted_adgroups = _.sortBy(adgroups, function(adgroup) {
+                // dash because we're sorting in reverse order
+                return -adgroup.get('impression_count');
+            });
             var top_three_adgroups = sorted_adgroups.splice(0, 3);
             var other_adgroups = new AdGroups(sorted_adgroups);
             var chart_data = top_three_adgroups.map(function(adgroup) {
                 var adgroup_data = {};
-                adgroup_data[adgroup.get('name')] = _.map(adgroup.get('daily_stats'), function(day) { return day[stat]; });
+                adgroup_data[adgroup.get('name')] = _.map(adgroup.get('daily_stats'), function(day) {
+                    return day[stat];
+                });
                 return adgroup_data;
             });
             if(other_adgroups.size()) {
@@ -197,7 +203,10 @@
 
         get_days: function() {
             // TODO: make this less hacky
-            return this.reduce(function(memo, adgroup) { return (adgroup.has('daily_stats') && adgroup.get('daily_stats').length > memo) ? adgroup.get('daily_stats').length : memo; }, 0);
+            return this.reduce(function(memo, adgroup) {
+                return (adgroup.has('daily_stats') &&
+                        adgroup.get('daily_stats').length > memo) ? adgroup.get('daily_stats').length : memo;
+            }, 0);
         },
 
         isFullyLoaded: function() {
@@ -328,5 +337,7 @@
     window.AdUnitCollection = AdUnitCollection;
     window.App = App;
     window.AppCollection = AppCollection;
+    window.AdGroup = AdGroup;
+
 
 })(this.jQuery, this.Backbone, this._);

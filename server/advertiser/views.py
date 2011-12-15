@@ -708,6 +708,11 @@ class ShowAdGroupHandler(RequestHandler):
 
         totals = reduce(lambda x, y: x+y.stats, adunits, StatsModel())
 
+
+        logging.warn(dir(today))
+        logging.warn(dir(yesterday))
+        logging.warn(dir(totals))
+
         stats = {
             'revenue': {
                 'today': today.revenue,
@@ -715,14 +720,14 @@ class ShowAdGroupHandler(RequestHandler):
                 'total': totals.revenue
             },
             'impressions': {
-                'today': today.impressions,
-                'yesterday': yesterday.impressions,
-                'total': totals.impressions
+                'today': today.impression_count,
+                'yesterday': yesterday.impression_count,
+                'total': totals.impression_count
             },
             'conversions': {
-                'today': today.conversions,
-                'yesterday': yesterday.conversions,
-                'total': totals.conversions
+                'today': today.conversion_count,
+                'yesterday': yesterday.conversion_count,
+                'total': totals.conversion_count
             },
             'ctr': {
                 'today': today.ctr,

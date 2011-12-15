@@ -1,34 +1,38 @@
 $(function() {
-	// TODO: document
-	/*
-	 *   adgroups_data
-	 *   graph_start_date
-	 *   today
-	 *   yesterday
-	 *   ajax_query_string
-	 */
-	NetworksController = function(adgroups_data, graph_start_date, today, yesterday, ajax_query_string) {
-		var adgroups = new AdGroups(adgroups_data);
+    // TODO: document
+    /*
+     *   adgroups_data
+     *   graph_start_date
+     *   today
+     *   yesterday
+     *   ajax_query_string
+     */
+    var NetworksController = function(adgroups_data,
+                                      graph_start_date,
+                                      today,
+                                      yesterday,
+                                      ajax_query_string) {
+        var adgroups = new AdGroups(adgroups_data);
 
-		var graph_view = new CollectionGraphView({
-			collection: adgroups,
-			start_date: graph_start_date,
-			today: today,
-			yesterday: yesterday
-		});
-		graph_view.render();
+        var graph_view = new CollectionGraphView({
+            collection: adgroups,
+            start_date: graph_start_date,
+            today: today,
+            yesterday: yesterday
+        });
+        graph_view.render();
 
-		var adgroups_view = new AdGroupsView({
-			collection: adgroups,
-			el: '#adgroups',
-			title: 'Ad Networks',
-			type: 'network'
-		});
-		adgroups_view.render();
+        var adgroups_view = new AdGroupsView({
+            collection: adgroups,
+            el: '#adgroups',
+            title: 'Ad Networks',
+            type: 'network'
+        });
+        adgroups_view.render();
 
-		adgroups.each(function(adgroup) { adgroup.fetch({ data: ajax_query_string }); });
+        adgroups.each(function(adgroup) { adgroup.fetch({ data: ajax_query_string }); });
 
-		// TODO: move to views
+        // TODO: move to views
         // date picker
         // set up dateOptions
         $('#dashboard-dateOptions input').click(function() {
@@ -36,32 +40,32 @@ $(function() {
             var hash = document.location.hash;
             if(option == 'custom') {
                 $('#dashboard-dateOptions-custom-modal').dialog({
-	                width: 570,
-	                buttons: [
-		                {
-			                text: 'Set dates',
-			                css: { fontWeight: '600' },
-			                click: function() {
-				                var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
-				                var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
-				                var num_days=Math.round((to_date.getTime()-from_date.getTime())/(86400000));
+                    width: 570,
+                    buttons: [
+                        {
+                            text: 'Set dates',
+                            css: { fontWeight: '600' },
+                            click: function() {
+                                var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
+                                var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                                var num_days=Math.round((to_date.getTime()-from_date.getTime())/(86400000));
 
-				                var from_day=from_date.getDate();
-				                var from_month=from_date.getMonth()+1;
-				                var from_year=from_date.getFullYear();
+                                var from_day=from_date.getDate();
+                                var from_month=from_date.getMonth()+1;
+                                var from_year=from_date.getFullYear();
 
-				                $(this).dialog("close");
-				                var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
-				                document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day + hash;
-				            }
-			            },
-		                {
-			                text: 'Cancel',
-			                click: function() {
-			                	$(this).dialog("close");
-		                	}
-		                }
-                	]
+                                $(this).dialog("close");
+                                var location = document.location.href.replace(hash, '').replace(/\?.*/,'');
+                                document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day + hash;
+                            }
+                        },
+                        {
+                            text: 'Cancel',
+                            click: function() {
+                                $(this).dialog("close");
+                            }
+                        }
+                    ]
                 });
             }
             else {
@@ -70,6 +74,7 @@ $(function() {
                 document.location.href = location+'?r=' + option + hash;
             }
         });
+
 
         // set up custom dateOptions modal dialog
         $('#dashboard-dateOptions-custom-from').datepicker({
@@ -82,6 +87,7 @@ $(function() {
                 other.datepicker('option', 'minDate', date);
             }
         });
+
         $('#dashboard-dateOptions-custom-to').datepicker({
             defaultDate: '-1d',
             maxDate: '0d',
@@ -114,16 +120,18 @@ $(function() {
         $('.stats-breakdown-value').hide();
         $('.stats-breakdown-value.all').show();
 
-	    // Ad Campaign button
+        // Ad Campaign button
         $("#add_campaign_button").button({ icons : { primary : 'ui-icon-circle-plus'} });
 
 
         // AdGroups form
-		$.each(['pause', 'resume', 'activate', 'archive', 'delete'], function(iter, action) {
-			$('#campaignForm-' + action).click(function(e) {
-				e.preventDefault();
-				$('#campaignForm').find("#action").attr("value", action).end().submit();
-			});
-		});
-	};
+        $.each(['pause', 'resume', 'activate', 'archive', 'delete'], function(iter, action) {
+            $('#campaignForm-' + action).click(function(e) {
+                e.preventDefault();
+                $('#campaignForm').find("#action").attr("value", action).end().submit();
+            });
+        });
+    };
+
+    window.NetworksController = NetworksController;
 });

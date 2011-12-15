@@ -6,7 +6,7 @@
      * type: 'network', 'gtee', 'promo', or 'backfill_promo' -- affects which fields are shown
      * tables: mapping of
      */
-    AdGroupsView = Backbone.View.extend({
+    var AdGroupsView = Backbone.View.extend({
         initialize: function() {
             this.collection.bind('change', this.render, this);
         },
@@ -61,7 +61,7 @@
         }
     });
 
-    CollectionGraphView = Backbone.View.extend({
+    var CollectionGraphView = Backbone.View.extend({
         initialize: function() {
             this.collection.bind('change', this.render, this);
         },
@@ -295,5 +295,7 @@
 
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
+    window.AdGroupsView = AdGroupsView;
+    window.CollectionGraphView = CollectionGraphView;
 
 })(this.jQuery, this.Backbone);

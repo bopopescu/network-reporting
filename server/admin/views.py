@@ -37,6 +37,7 @@ from google.appengine.api import taskqueue
 from admin import beatbox
 from common.utils.decorators import cache_page_until_post, staff_login_required
 from common.utils import simplejson
+from common.utils.helpers import to_ascii, to_uni
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 NUM_DAYS = 14
@@ -147,9 +148,8 @@ def dashboard_prep(request, *args, **kwargs):
         "new_users": new_users,
         "mailing_list": [a for a in new_users if a.mpuser.mailing_list]}
     
-    logging.warn("reached")
-    html = render_to_string(request,'admin/pre_render.html',render_params)
-    logging.warn("rendered")
+    #need to convert to uni, then ascii for blobstore encoding
+    html = to_ascii(to_uni(render_to_string(request,'admin/pre_render.html',render_params)))
 
     internal_file_name = files.blobstore.create(
                         mime_type="text/plain",
@@ -159,20 +159,15 @@ def dashboard_prep(request, *args, **kwargs):
     # open the file and write lines
     with files.open(internal_file_name, 'a') as f:
         f.write(html)
-    logging.warn("written")
 
     # finalize this file
     files.finalize(internal_file_name)
-    logging.warn("finalized")
 
     page = AdminPage(offline=offline,
                      blob_key=files.blobstore.get_blob_key(internal_file_name),
                      today_requests=total_stats[-1].request_count)
-
-    logging.warn("page made")
                  
     page.put()
-    logging.warn("page put")
     
     return HttpResponse("OK")
 
@@ -209,7 +204,7 @@ def dashboard(request, *args, **kwargs):
                               params=dict(offline="1" if offline else "0"),
                               method='GET',
                               url='/admin/prep/',
-                              target='stats-updater')
+                              target='admin-prep')
         try:                      
             task.add("admin-dashboard-queue")
             return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')

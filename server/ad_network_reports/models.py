@@ -89,6 +89,7 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
 
     ad_network_login = db.ReferenceProperty(AdNetworkLoginCredentials,
             collection_name='ad_network_app_mappers')
+    # application property cannot be called app since it's a reseverd word
     application = db.ReferenceProperty(App, collection_name=
             'ad_network_app_mappers')
 
@@ -112,7 +113,6 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
         True if stats exist and false if they don't, so that we can tell from
         within the template if an error might have occured.
         """
-
         stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =',
                 self).get()
 

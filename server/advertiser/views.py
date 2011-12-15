@@ -109,6 +109,7 @@ class AdGroupIndexHandler(RequestHandler):
                                       'start_date': days[0],
                                       'end_date': days[-1],
                                       'date_range': num_days,
+                                      'offline': self.offline,
                                   })
 
 ####### Helpers for campaign page #######
@@ -1509,7 +1510,8 @@ class NetworkIndexHandler(RequestHandler):
                                       'date_range': self.date_range,
                                       'stats': stats,
                                       'today': today_index,
-                                      'yesterday': yesterday_index
+                                      'yesterday': yesterday_index,
+                                      'offline': self.offline,
                                   })
 
 @login_required

@@ -65,9 +65,6 @@ class RequestHandler(object):
             # ensure end date is not in the future
             if self.start_date and self.start_date + timedelta(days=self.date_range) > today:
                 self.date_range = (today - self.start_date).days
-            
-            logging.warn('start_date: %s' % self.start_date)
-            logging.warn('date_range: %s' % self.date_range)
 
             if self.login:
                 if self.params.has_key('account'):

@@ -31,7 +31,7 @@ from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkScrapeStats, \
         AdNetworkManagementStats
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        get_all_login_credentials
+        get_all_login_credentials, AD_NETWORK_NAMES
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
 from common.utils import date_magic
@@ -39,7 +39,7 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
-TESTING = True
+TESTING = False
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
@@ -90,7 +90,7 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
         mail.send_mail(sender='olp@mopub.com',
                 reply_to='support@mopub.com',
                 to='tiago@mopub.com' if TESTING else emails,
-                cc='tiago@mopub.com' if TESTING else
+                bcc='tiago@mopub.com' if TESTING else
                     'tiago@mopub.com, report-monitoring@mopub.com',
                 subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
@@ -324,17 +324,12 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         mail.send_mail(sender='olp@mopub.com',
                        reply_to='support@mopub.com',
                        to='tiago@mopub.com' if TESTING else emails,
+                       bcc='tiago@mopub.com',
                        subject="Finished Collecting Stats",
-                       body="Your ad network revenue report for AdMob is now ready. " \
+                       body="Your ad network revenue report for %s is now ready. " \
                                "Access it here: https://app.mopub.com/ad_network_reports.\n\n" \
-                               "If you have any questions, please reach out to us at support@mopub.com")
-
-        mail.send_mail(sender='olp@mopub.com',
-                       to='tiago@mopub.com',
-                       subject="Finished Collecting Stats",
-                       body="account: " + str(account_key) + "\n" +
-                       "emails: " + emails + "\n" +
-                       "network: " + only_these_credentials.ad_network_name)
+                               "If you have any questions, please reach out to us at support@mopub.com" \
+                               % AD_NETWORK_NAMES[only_these_credentials.ad_network_name])
 
 if __name__ == "__main__":
     setup_remote_api()

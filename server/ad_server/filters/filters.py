@@ -295,12 +295,9 @@ def ll_dist(p1, p2):
 def lat_lon_filter(ll=None):
     ll_p = None
     #ll should be input as a string, turn it into a list of floats
-    log_mesg = "Removed due to being outside target lat/long radii: %s"
     if ll:
-        try:
-            ll_p = [float(val) for val in ll.split(',')]
-        except:
-            return  (lambda x: False, log_mesg, [])
+        ll_p = parse_lat_long(ll)#[float(val) for val in ll.split(',')]
+    log_mesg = "Removed due to being outside target lat/long radii: %s"
     def real_filter(a):
         #If ll_p is none or adgroup has no city targets, dont' exclude
         if not ll_p or not a.cities or len(a.cities) == 0:
@@ -309,15 +306,24 @@ def lat_lon_filter(ll=None):
         # for every city.  Apply map to this split list to get (float('lat'), float('lon'))
         latlons = ((float(k) for k in t.split(',')) for t in (city.split(':')[0] for city in a.cities))
         for lat, lon in latlons:
-            #Check all lat, lon pairs.  If any one of them is too far, return False
-            # since all filters are inclusion filters (False means don't keep it)
-            try:
-                if ll_dist((lat,lon),ll_p) < CAPTURE_DIST:
-                    return True
-            except:
-                return False        
+            #Check all lat, lon pairs.  If any one of them is too far, return True
+            # since all filters are exclusion filters (True means don't keep it)
+            if ll_dist((lat,lon),ll_p) < CAPTURE_DIST:
+                return True
         return False
     return (real_filter, log_mesg, [])
+
+def parse_lat_long(ll_str):
+    # Try basic way first
+    latlon = ll_str.split(",")
+    if len(latlon) == 2:
+        return [float(val) for val in latlon]
+    elif len(latlon) == 4:
+        lat = float('.'.join(latlon[:2]))
+        lon = float('.'.join(latlon[2:]))
+        return [lat, lon]
+    else:
+        return None
 
 ###############
 # End filters

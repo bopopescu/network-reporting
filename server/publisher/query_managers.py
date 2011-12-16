@@ -208,9 +208,9 @@ class AppQueryManager(QueryManager):
                 for network in networks:
                     if not hasattr(network_config, network + '_pub_id') or not \
                             getattr(network_config, network + '_pub_id', None):
-                        apps[network].append(app.name)
+                        apps[network].append(app)
             else:
-                apps[ALL_NETWORKS].append(app.name)
+                apps[ALL_NETWORKS].append(app)
         return apps
 
     @classmethod

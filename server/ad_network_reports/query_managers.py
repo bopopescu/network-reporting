@@ -34,7 +34,9 @@ AD_NETWORK_NAMES = {'admob': 'AdMob',
                     'inmobi': 'InMobi',
                     'mobfox': 'MobFox'}
 
-MOBFOX = 'MobFox'
+MOBFOX_PRETTY = 'MobFox'
+IAD_PRETTY = 'iAd'
+IAD = 'iad'
 
 class Stats(object):
     pass
@@ -209,8 +211,13 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                 if AD_NETWORK_NAMES[network] not in data_dict:
                     login_credentials = login_credentials_query().filter(
                             'ad_network_name =', network).get()
-                    apps_for_network = ', '.join(apps_without_pub_ids[network] +
-                            apps_without_pub_ids[ALL_NETWORKS])
+                    apps_without_pub_ids_for_network = apps_without_pub_ids[
+                            network] + apps_without_pub_ids[ALL_NETWORKS]
+                    if network == IAD:
+                        apps_for_network = apps_without_pub_ids_for_network
+                    else:
+                        apps_for_network = ', '.join([app.name for app in
+                            apps_without_pub_ids_for_network])
                     if login_credentials:
                         app_pub_ids = ', '.join(login_credentials.app_pub_ids)
                         if app_pub_ids:
@@ -550,34 +557,34 @@ def create_fake_data(account=None):
             name='My little pony island adventures')
     app.put()
 
-    for network in AD_NETWORK_NAMES.keys()[1:-2]:
-        login = AdNetworkLoginCredentials(account=account,
-                           ad_network_name=network,
-                           username='bullshit',
-                           password='bullshit',
-                           client_key='asdfasf',
-                           send_email=False)
-        login.put()
-        AdNetworkAppMapper(ad_network_name=network,
-                publisher_id=str(random.random()*100),
-                ad_network_login=login,
-                application=app).put()
-    AdNetworkLoginCredentials(account=account,
-            ad_network_name=AD_NETWORK_NAMES.keys()[0],
-            app_pub_ids=['hfehafa','aihef;iawh']).put()
-    AdNetworkLoginCredentials(account=account,
-            ad_network_name=AD_NETWORK_NAMES.keys()[-1]).put()
-
-    for day in last_90_days:
-        for mapper in a.get_ad_network_mappers():
-            attempts = random.randint(1, 100000)
-            impressions = random.randint(1, attempts)
-            clicks = random.randint(1, impressions)
-            stats = AdNetworkScrapeStats(revenue=random.random()*10000,
-                                         attempts=attempts,
-                                         impressions=impressions,
-                                         clicks=clicks,
-                                         date=day,
-                                         ad_network_app_mapper=mapper)
-            stats.put()
+#    for network in AD_NETWORK_NAMES.keys()[1:-2]:
+#        login = AdNetworkLoginCredentials(account=account,
+#                           ad_network_name=network,
+#                           username='bullshit',
+#                           password='bullshit',
+#                           client_key='asdfasf',
+#                           send_email=False)
+#        login.put()
+#        AdNetworkAppMapper(ad_network_name=network,
+#                publisher_id=str(random.random()*100),
+#                ad_network_login=login,
+#                application=app).put()
+#    AdNetworkLoginCredentials(account=account,
+#            ad_network_name=AD_NETWORK_NAMES.keys()[0],
+#            app_pub_ids=['hfehafa','aihef;iawh']).put()
+#    AdNetworkLoginCredentials(account=account,
+#            ad_network_name=AD_NETWORK_NAMES.keys()[-1]).put()
+#
+#    for day in last_90_days:
+#        for mapper in a.get_ad_network_mappers():
+#            attempts = random.randint(1, 100000)
+#            impressions = random.randint(1, attempts)
+#            clicks = random.randint(1, impressions)
+#            stats = AdNetworkScrapeStats(revenue=random.random()*10000,
+#                                         attempts=attempts,
+#                                         impressions=impressions,
+#                                         clicks=clicks,
+#                                         date=day,
+#                                         ad_network_app_mapper=mapper)
+#            stats.put()
 

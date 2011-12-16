@@ -1,21 +1,13 @@
-import logging, os, re, datetime, hashlib
+import logging
+import datetime
 
-from django.conf import settings
-
-from urllib import urlencode
-from copy import deepcopy
-
-import base64, binascii
-from google.appengine.api import users, images, files
-from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
+
+from django.views.decorators.cache import cache_control
 
 from django.contrib.auth.decorators import login_required
 from common.utils import date_magic
 from common.utils import sswriter
-from common.utils.decorators import cache_page_until_post
 from common.utils.helpers import campaign_stats
 from common.utils import helpers
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -29,16 +21,8 @@ from budget.tzinfo import Pacific, utc
 from account.query_managers import AccountQueryManager
 from account.forms import NetworkConfigForm
 from advertiser.models import *
-from advertiser.forms import CampaignForm, AdGroupForm, \
-                             BaseCreativeForm, TextCreativeForm, \
-                             ImageCreativeForm, TextAndTileCreativeForm, \
-                             HtmlCreativeForm
-
-from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
-                                      CreativeQueryManager, TextCreativeQueryManager, \
-                                      ImageCreativeQueryManager, TextAndTileCreativeQueryManager, \
-                                      HtmlCreativeQueryManager
-
+from advertiser.forms import *
+from advertiser.query_managers import *
 from budget import budget_service
 from budget.models import Budget
 from budget.query_managers import BudgetQueryManager
@@ -52,11 +36,8 @@ from reporting.query_managers import StatsModelQueryManager
 
 from ad_network_reports.query_managers import AdNetworkReportQueryManager
 
-from common.constants import MPX_DSP_IDS
-
-from django.views.decorators.cache import cache_page
-
 from ad_server.optimizer.optimizer import DEFAULT_CTR
+
 
 class AdGroupIndexHandler(RequestHandler):
 
@@ -1174,9 +1155,6 @@ class AJAXStatsHandler(RequestHandler):
         response_dict['status'] = 200
         response_dict['all_stats'] = stats_dict
         return JSONResponse(response_dict)
-
-from django.views.decorators.cache import cache_control
-from django.views.decorators.vary import vary_on_headers, vary_on_cookie
 
 @login_required
 @cache_control(max_age=60)

@@ -123,7 +123,7 @@ var mopub = mopub || {};
               $(message).removeClass('hidden');
               $(message).html("Verifying login credentials...");
               $.ajax({
-                  url: 'http://checklogincredentials.mopub.com',
+                  url: 'https://checklogincredentials.mopub.com',
                   data: data,
                   crossDomain: true,
                   dataType: "jsonp",

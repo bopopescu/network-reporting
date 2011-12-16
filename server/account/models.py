@@ -142,6 +142,11 @@ class Account(db.Model):
     # use only mongo, not datastore for real time stats
     use_only_mongo = db.BooleanProperty(default=False)
 
+    @property
+    def emails(self):
+        """Return a list of emails for this account."""
+        return [db.get(user).email for user in self.all_mpusers]
+
     def is_admin(self):
         return users.is_current_user_admin()
 

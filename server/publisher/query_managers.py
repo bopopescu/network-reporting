@@ -22,6 +22,9 @@ from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 from common.constants import MAX_OBJECTS
 CACHE_TIME = 0 # turned off cache expiration
 
+IAD_URL = 'http://itunes.apple.com.*'
+ALL_NETWORKS = 'default'
+
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
     Deleted from memcache whenever its components are updated."""
@@ -194,14 +197,30 @@ class AppQueryManager(QueryManager):
                 'network_config !=', None)
 
     @classmethod
+    def get_apps_without_pub_ids(cls, account, networks):
+        apps = {ALL_NETWORKS: []}
+        for network in networks:
+            apps[network] = []
+
+        for app in App.all().filter('account =', account):
+            if hasattr(app, 'network_config'):
+                network_config = app.network_config
+                for network in networks:
+                    if not hasattr(network_config, network + '_pub_id') or not \
+                            getattr(network_config, network + '_pub_id', None):
+                        apps[network].append(app)
+            else:
+                apps[ALL_NETWORKS].append(app)
+        return apps
+
+    @classmethod
     def get_iad_pub_ids(cls, account, include_apps=True):
         """ Get the iAd pub id from the app's url field.
 
         Return the pub ids and potentialy apps as a generator.
         """
         for app in App.all().filter('account =', account):
-            if getattr(app, 'url', None) and re.match(
-                    'http://itunes.apple.com.*', app.url):
+            if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
                 pub_id = re.findall('/id[0-9]*\?', app.url)[0][len('/id'):-1]
                 if include_apps:
                     yield app, pub_id

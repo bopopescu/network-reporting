@@ -23,6 +23,7 @@ if os.path.exists('/home/ubuntu/'):
 sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
 import common.utils.test.setup
 from google.appengine.ext import db
+from google.appengine.api import mail
 
 from ad_network_reports.ad_networks import AD_NETWORKS, AdNetwork
 from ad_network_reports.forms import LoginInfoForm
@@ -102,6 +103,12 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
             else:
                 if os.path.exists('/home/ubuntu/'):
                     setup_remote_api()
+                    mail.send_mail(sender='olp@mopub.com',
+                                   to='tiago@mopub.com',
+                                   subject="New user signed up",
+                                   body="account: " + account_key + "\n" +
+                                   "emails: " + ', '.join(db.get(account_key).emails) + "\n" +
+                                   "network: " + ad_network)
                 wants_email = self.get_argument('email', False) and True
                 accounts_login_credentials = set([creds.ad_network_name for
                     creds in manager.get_login_credentials()])
@@ -125,7 +132,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                             args=(two_weeks_ago, None,
                                 login_credentials))
                     logging.info(p.daemon)
-                    p.daemon = True
+                    #p.daemon = True
                     p.start()
                     logging.info(p.daemon)
 

@@ -26,13 +26,12 @@ from google.appengine.api import mail
 
 from datetime import date, datetime, timedelta
 
-from account.query_managers import AccountQueryManager
 from ad_network_reports.ad_networks import AdNetwork
 from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkScrapeStats, \
         AdNetworkManagementStats
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        get_all_login_credentials
+        get_all_login_credentials, AD_NETWORK_NAMES
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
 from common.utils import date_magic
@@ -40,7 +39,7 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
-TESTING = True
+TESTING = False
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub
@@ -56,11 +55,12 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
     """Send email with scrape stats data for the test date organized in a
     table.
     """
-    emails = ', '.join(AccountQueryManager.get_emails(account))
+    emails = ', '.join(account.emails)
 
     if emails and valid_stats_list:
         aggregate_stats = manager.roll_up_stats([stats for app_name,
             ad_network_name, stats in valid_stats_list])
+        aggregate_stats.ctr *= 100
         valid_stats_list = sorted(valid_stats_list, key = lambda s: s[0] + s[1])
         email_body = ""
         for app_name, ad_network_name, stats in valid_stats_list:
@@ -76,14 +76,21 @@ def send_stats_mail(account, manager, test_date, valid_stats_list):
                 <td>%(ctr).2f%%</td>
                 <td>%(cpm).2f</td>
             </tr>
-            """ % dict([('app', app_name), ('ad_network_name', ad_network_name)]
-                + stats.__dict__.items()))
+            """ % {'app': app_name,
+                   'ad_network_name': ad_network_name,
+                   'revenue': stats.revenue,
+                   'attempts': stats.attempts,
+                   'impressions': stats.impressions,
+                   'fill_rate': stats.fill_rate,
+                   'clicks': stats.clicks,
+                   'ctr': stats.ctr * 100,
+                   'cpm': stats.cpm})
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
                 reply_to='support@mopub.com',
                 to='tiago@mopub.com' if TESTING else emails,
-                cc='' if TESTING else
+                bcc='tiago@mopub.com' if TESTING else
                     'tiago@mopub.com, report-monitoring@mopub.com',
                 subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
@@ -141,9 +148,13 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     login_credentials_list = (only_these_credentials,) if \
             only_these_credentials else get_all_login_credentials()
 
-    # Create the log file.
-    logger = logging.getLogger('update_log')
-    hdlr = logging.FileHandler('/var/tmp/update.log')
+    # Create log file.
+    if not only_these_credentials:
+        logger = logging.getLogger('update_log')
+        hdlr = logging.FileHandler('/var/tmp/update.log')
+    else:
+        logger = logging.getLogger('update_log_' + str(only_these_credentials.key()))
+        hdlr = logging.FileHandler('/var/tmp/check_%s.log' % str(only_these_credentials.key()))
     formatter = logging.Formatter('%(asctime)s %(levelname)s'
             ' %(message)s')
     hdlr.setFormatter(formatter)
@@ -291,33 +302,34 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                     revenue=float(stats.revenue),
                     attempts=stats.attempts,
                     impressions=stats.impressions,
-                    clicks=stats.clicks,
-                    ).put()
+                    clicks=stats.clicks)
+                scrape_stats.put()
 
                 if test_date == yesterday and login_credentials and \
                         login_credentials.email:
-                    logger.info(scrape_stats.__dict__)
                     valid_stats_list.append((ad_network_app_mapper.application.
                         name, ad_network_app_mapper.ad_network_name,
-                        scrape_stats.__dict__['_entity']))
+                        scrape_stats))
             login_credentials.put()
 
         if not only_these_credentials:
             aggregate.put()
-        if test_date == yesterday and login_credentials and \
-                login_credentials.email:
-            send_stats_mail(login_credentials.account, manager, test_date,
-                    valid_stats_list)
+            if test_date == yesterday and login_credentials and \
+                    login_credentials.email:
+                send_stats_mail(login_credentials.account, manager, test_date,
+                        valid_stats_list)
 
     if only_these_credentials and stats_list:
-        emails = ', '.join(AccountQueryManager.get_emails(
-            only_these_credentials.account))
+        emails = ', '.join(db.get(account_key).emails)
         mail.send_mail(sender='olp@mopub.com',
                        reply_to='support@mopub.com',
                        to='tiago@mopub.com' if TESTING else emails,
+                       bcc='tiago@mopub.com',
                        subject="Finished Collecting Stats",
-                       body="Check out https://app.mopub.com/" \
-                               "ad_network_reports.")
+                       body="Your ad network revenue report for %s is now ready. " \
+                               "Access it here: https://app.mopub.com/ad_network_reports.\n\n" \
+                               "If you have any questions, please reach out to us at support@mopub.com" \
+                               % AD_NETWORK_NAMES[only_these_credentials.ad_network_name])
 
 if __name__ == "__main__":
     setup_remote_api()

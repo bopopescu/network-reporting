@@ -14,7 +14,6 @@ class NetworkScrapeRecord(object):
 
     def __repr__(self):
         return ('<NetworkScrapeRecord app_tag:%(app_tag)s revenue:%(revenue)s '
-                'attempts:%(attempts)d impressions:%(impressions)d fill_rate:'
-                '%(fill_rate).2f clicks:%(clicks)d ctr:%(ctr).2f ecpm:%(ecpm)'
-                '.2f>' % self.__dict__)
+                'attempts:%(attempts)d impressions:%(impressions)d clicks'
+                ':%(clicks)d>' % self.__dict__)
 

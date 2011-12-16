@@ -77,7 +77,6 @@ class JumpTapScraper(Scraper):
                 raise
 
             headers = response.readline().split(',')
-            print headers
 
             revenue_index = headers.index(REVENUE_HEADER)
             request_index = headers.index(REQUEST_HEADER)
@@ -92,7 +91,6 @@ class JumpTapScraper(Scraper):
             clicks = 0
 
             for line in response:
-                print line
                 vals = line.split(',')
                 if vals[0] != 'Totals' and vals[adunit_index] in \
                         self.adunit_publisher_ids or not \
@@ -114,17 +112,28 @@ class JumpTapScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'com2ususa'
-    NC.password = 'com2us1001'
-    publisher_ids = [u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app',
-            u'pa_com2us_usa_inc__slice_it__drd_app']
-    adunit_publisher_ids = iter([
-        u'pa_com2us_usa_inc__op_3d_lab_a_tes_drd_app_banner',
-        u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app_home_me_banner',
-        u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app_home_me_medrect',
-        u'pa_com2us_usa_inc_slice_it_drd_app_banner',
-        u'pa_com2us_usa_inc__slice_it__drd_app_banner2'])
-    #iter([])
+    #NC.username = 'com2ususa'
+    #NC.password = 'com2us1001'
+#    publisher_ids = [u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app',
+#            u'pa_com2us_usa_inc__slice_it__drd_app']
+#    adunit_publisher_ids = iter([
+#        u'pa_com2us_usa_inc__op_3d_lab_a_tes_drd_app_banner',
+#        u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app_home_me_banner',
+#        u'pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app_home_me_medrect',
+#        u'pa_com2us_usa_inc_slice_it_drd_app_banner',
+#        u'pa_com2us_usa_inc__slice_it__drd_app_banner2'])
+
+    NC.username = 'chesscom'
+    NC.password = 'Y7u8i9o0'
+    publisher_ids = ['pa_chess_com_llc_chess_com_-_pla_iph_app',
+            'pa_chess_com_llc_chess_com_-_and_drd_app']
+
+#    NC.username = 'komastudios'
+#    NC.password = 'nH0J4od4'
+#    publisher_ids = [u'pa_koma_studios_ug_penalty_kick_iph_app',
+#            u'pa_koma_studios_ug_penalty_kick_an_drd_app']
+
+    adunit_publisher_ids = iter([])
     NC.ad_network_name = 'jumptap'
     SCRAPER = JumpTapScraper((NC, publisher_ids, adunit_publisher_ids))
     print SCRAPER.get_site_stats(date.today() - timedelta(days = 1))

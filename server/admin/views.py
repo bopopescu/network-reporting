@@ -42,7 +42,7 @@ from common.utils.helpers import to_ascii, to_uni
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 NUM_DAYS = 14
 
-BIDDER_SPENT_URL = "http://mpx.mopub.com/spent"
+BIDDER_SPENT_URL = "http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf"
 BIDDER_SPENT_MAX = 2000
 
 @staff_login_required

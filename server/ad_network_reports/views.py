@@ -2,7 +2,8 @@ import logging
 
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
-        AdNetworkReportQueryManager, get_management_stats, create_fake_data
+        MOBFOX_PRETTY, IAD_PRETTY, AdNetworkReportQueryManager, \
+        get_management_stats, create_fake_data
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from datetime import date, timedelta
@@ -67,7 +68,9 @@ class AdNetworkReportIndexHandler(RequestHandler):
                       'apps': apps,
                       'show_graph': apps != [],
                       'networks': zip(network_names, networks, forms),
-                      'forms': forms
+                      'forms': forms,
+                      'MOBFOX': MOBFOX_PRETTY,
+                      'IAD': IAD_PRETTY
                   })
 
 @login_required

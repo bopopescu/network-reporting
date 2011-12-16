@@ -30,3 +30,4 @@ cron:
   url: /admin/bidder_spent/
   schedule: every 60 minutes
   timezone: America/Los_Angeles
+  target: frontend-0

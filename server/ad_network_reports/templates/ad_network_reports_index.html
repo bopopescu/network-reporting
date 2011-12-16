@@ -65,10 +65,10 @@
             {% endif %}
 			{% ifequal network.state 2 %}
             <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
-            <td class="dataTable-data numeric">{{ network.attempts|withsep }} </td>
+            <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ network.attempts|withsep }} {% endif %}</td>
             <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
             <td class="dataTable-data numeric">{{ network.cpm|currency }} </td>
-            <td class="dataTable-data numeric">{{ network.fill_rate|percentage }} </td>
+            <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ network.fill_rate|percentage }} {% endif %}</td>
             <td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
             <td class="dataTable-data numeric">{{ network.cpc|currency }} </td>
             <td class="dataTable-data numeric">{{ network.ctr|percentage }} </td>
@@ -88,17 +88,35 @@
         <div class="form-{{form.ad_network}}-message hidden alert-message block-message warning"></div>
         <dl class="formFields thin" style="margin:0">
           {% if network.state == 2 and network.sync_error %}
-          <dt>Status:</dt>
-          <dd>Last synchronization failed.  Check that your credentials are correct.
-          If this error persists, please contact support@mopub.com.</dd>
+              <dt>Status:</dt>
+              <dd>Last synchronization failed.  Check that your credentials are correct.
+              If this error persists, please contact support@mopub.com.</dd>
           {% endif %}
-          {% if network.state != 0 and network.app_pub_ids %}
-          <dt>Notes:</dt>
-          <dd> MoPub received a response for the following ad networks IDs.
-          Make sure these apps are properly set up in MoPub to view the reports.
-          <br/><br/>
-          {{ network.app_pub_ids }}
-          </dd>
+          {% if network.apps_without_pub_ids or network.app_pub_ids %}
+              <dt>Notes:</dt>
+              <dd>
+              {% if network.apps_without_pub_ids %}
+                  {% if network_name == IAD %}
+                      In order to pull revenue data for your apps, MoPub requires that you
+                      assign your iTunes URL for each app. Click 'Edit app settings' for
+                      each app and enter your iTunes URL:
+                      <br/><br/>
+                      {% for app in network.apps_without_pub_ids %}<a href="/inventory/app/{{app.key}}">{{app.name}}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+                  {% else %}
+                      In order to pull revenue data for your apps, MoPub requires that you
+                      assign your ad network ID for each app.  Set up your network ID on
+                      the <a href="/account/networks/">Ad Network Settings</a> page for the
+                      following apps:
+                      <br/><br/>
+                      {{network.apps_without_pub_ids}}
+                  {% endif %}
+              {% else %}
+                  MoPub received a response for the following ad networks IDs.
+                  Make sure these apps are properly set up in MoPub to view the reports.
+                  <br/><br/>
+                  {{ network.app_pub_ids }}
+              {% endif %}
+              </dd>
           {% endif %}
         </dl>
         <form class="loginCredentials" id="form-{{form.ad_network}}" autocomplete="off">
@@ -158,10 +176,10 @@
                     {{app.name}} <a class="hidden details-{{app.key}}" href="{% url ad_network_app_detail app.key %}">Details</a>
                   </td>
                   <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
-                  <td class="dataTable-data numeric">{{ app.attempts|withsep }}</td>
+                  <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ app.attempts|withsep }}{% endif %}</td>
                   <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
                   <td class="dataTable-data numeric">{{ app.cpm|currency }}</td>
-                  <td class="dataTable-data numeric">{{ app.fill_rate|percentage }}</td>
+                  <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ app.fill_rate|percentage }}{% endif %}</td>
                   <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
                   <td class="dataTable-data numeric">{{ app.cpc|currency }}</td>
                   <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
@@ -228,10 +246,10 @@
                    {{network.name}} <a class="hidden details-{{network.key}}" href="{% url ad_network_app_detail network.key %}">Details</a>
                 </td>
                 <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
-                <td class="dataTable-data numeric">{{ network.attempts|withsep }}</td>
+                <td class="dataTable-data numeric">{% if network.name != MOBFOX %}{{ network.attempts|withsep }}{% endif %}</td>
                 <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
                 <td class="dataTable-data numeric">{{ network.cpm|currency }}</td>
-                <td class="dataTable-data numeric">{{ network.fill_rate|percentage }}</td>
+                <td class="dataTable-data numeric">{% if network.name != MOBFOX %}{{ network.fill_rate|percentage }}{% endif %}</td>
                 <td class="dataTable-data numeric">{{ network.clicks|withsep }}</td>
                 <td class="dataTable-data numeric">{{ network.cpc|currency }}</td>
                 <td class="dataTable-data numeric">{{ network.ctr|percentage }}</td>
@@ -250,7 +268,7 @@
 
 {% block extraScripts %}
   {{ block.super }}
-  <script type="text/javascript" src="/js/mopub-advertiser.js?v=47"></script>
+  <script type="text/javascript" src="/js/mopub-advertiser.js?v=48"></script>
   <script>
     $(function () {
         mopub.Advertiser.initializeAdReportsIndex();

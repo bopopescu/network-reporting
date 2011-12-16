@@ -314,10 +314,10 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
 
         if not only_these_credentials:
             aggregate.put()
-        if test_date == yesterday and login_credentials and \
-                login_credentials.email:
-            send_stats_mail(login_credentials.account, manager, test_date,
-                    valid_stats_list)
+            if test_date == yesterday and login_credentials and \
+                    login_credentials.email:
+                send_stats_mail(login_credentials.account, manager, test_date,
+                        valid_stats_list)
 
     if only_these_credentials and stats_list:
         emails = ', '.join(db.get(account_key).emails)

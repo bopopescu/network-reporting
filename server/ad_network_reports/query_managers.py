@@ -26,7 +26,7 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkManagementStats
 from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
-from publisher.query_managers import AppQueryManager
+from publisher.query_managers import AppQueryManager, ALL_NETWORKS
 
 AD_NETWORK_NAMES = {'admob': 'AdMob',
                     'jumptap': 'JumpTap',
@@ -203,19 +203,25 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 #                    list(self.get_networks_without_credentials())
             networks_without_creds = AD_NETWORK_NAMES.keys()
 
+            apps_without_pub_ids = AppQueryManager.get_apps_without_pub_ids(
+                    self.account, AD_NETWORK_NAMES.keys())
             for network in networks_without_creds:
                 if AD_NETWORK_NAMES[network] not in data_dict:
                     login_credentials = login_credentials_query().filter(
                             'ad_network_name =', network).get()
+                    apps_for_network = ', '.join(apps_without_pub_ids[network] +
+                            apps_without_pub_ids[ALL_NETWORKS])
                     if login_credentials:
                         app_pub_ids = ', '.join(login_credentials.app_pub_ids)
                         if app_pub_ids:
                             data_dict[AD_NETWORK_NAMES[network]] = {'state': 1,
                                     'app_pub_ids': app_pub_ids}
                         else:
-                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 0}
+                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
+                                    'apps_without_pub_ids': apps_for_network}
                     else:
-                        data_dict[AD_NETWORK_NAMES[network]] = {'state': 0}
+                        data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
+                                'apps_without_pub_ids': apps_for_network}
 
         # Sort alphabetically
         data_list = sorted(data_dict.items(), key=lambda data_tuple:
@@ -538,9 +544,11 @@ def create_fake_data(account=None):
     from common.utils import date_magic
     from publisher.models import App
 
-    a = AdNetworkReportQueryManager(account)
-
     last_90_days = date_magic.gen_date_range(90)
+
+    app = App(account=account,
+            name='My little pony island adventures')
+    app.put()
 
     for network in AD_NETWORK_NAMES.keys()[1:-2]:
         login = AdNetworkLoginCredentials(account=account,
@@ -550,9 +558,6 @@ def create_fake_data(account=None):
                            client_key='asdfasf',
                            send_email=False)
         login.put()
-        app = App(account=account,
-                name='My little pony island adventures')
-        app.put()
         AdNetworkAppMapper(ad_network_name=network,
                 publisher_id=str(random.random()*100),
                 ad_network_login=login,
@@ -562,7 +567,6 @@ def create_fake_data(account=None):
             app_pub_ids=['hfehafa','aihef;iawh']).put()
     AdNetworkLoginCredentials(account=account,
             ad_network_name=AD_NETWORK_NAMES.keys()[-1]).put()
-
 
     for day in last_90_days:
         for mapper in a.get_ad_network_mappers():

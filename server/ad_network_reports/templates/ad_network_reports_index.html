@@ -92,18 +92,16 @@
               <dd>Last synchronization failed.  Check that your credentials are correct.
               If this error persists, please contact support@mopub.com.</dd>
           {% endif %}
-          {% if network.state == 0 or network.app_pub_ids %}
+          {% if network.apps_without_pub_ids or network.app_pub_ids %}
               <dt>Notes:</dt>
               <dd>
-              {% if network.state == 0 and network.apps_without_pub_ids %}
+              {% if network.apps_without_pub_ids %}
                   {% if network_name == IAD %}
                       In order to pull revenue data for your apps, MoPub requires that you
                       assign your iTunes URL for each app. Click 'Edit app settings' for
                       each app and enter your iTunes URL:
                       <br/><br/>
-                      {% for app in network.apps_without_pub_ids %}
-                        <a href="/inventory/app/{{app.key}}">{{app.name}}</a>{% if not forloop.last %}, {% endif %}
-                      {% endfor %}
+                      {% for app in network.apps_without_pub_ids %}<a href="/inventory/app/{{app.key}}">{{app.name}}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
                   {% else %}
                       In order to pull revenue data for your apps, MoPub requires that you
                       assign your ad network ID for each app.  Set up your network ID on
@@ -112,8 +110,7 @@
                       <br/><br/>
                       {{network.apps_without_pub_ids}}
                   {% endif %}
-              {% endif %}
-              {% if network.state != 0 and network.app_pub_ids %}
+              {% else %}
                   MoPub received a response for the following ad networks IDs.
                   Make sure these apps are properly set up in MoPub to view the reports.
                   <br/><br/>

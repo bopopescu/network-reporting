@@ -3,6 +3,12 @@ backends:
   # options: dynamic
   options: public
   class: B4
+  instances: 2
+  
+- name: admin-prep
+  options: public
+  class: B4
+  instances: 2
 
 - name: frontend-0
   instances: 20
@@ -23,3 +29,4 @@ backends:
   instances: 2
   options: public
   class: B2
+  

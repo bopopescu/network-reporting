@@ -69,6 +69,9 @@
   <body style="margin:0;padding:0;">
     
     <style>
+    a {
+      text-decoration: none;
+    }
     body {
       top-margin:0;
       margin:0;
@@ -91,7 +94,7 @@
         </div>
   
         <div style="padding-top:5px;position:absolute;top:0;right:0;">
-          <img src="/images/download_arrow4.png" width=40 height=40/>
+          <img src="http://ads.mopub.com/images/download_arrow4.png" width=40 height=40/>
         </div>
   
       </div>

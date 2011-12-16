@@ -99,12 +99,12 @@ var mopub = mopub || {};
               var rows = $('.' + key + '-row');
               var button = $(this).children('span')
               $.each(rows, function (iter, row) {
-                  if ($(row).hasClass('hidden')) {
-                      $(row).removeClass('hidden');
-                      $(button).text('Hide Apps')
+                  if ($(row).is(":visible")) {
+                      $(row).slideUp('fast');
+                      $(button).text('Show Apps');
                   } else {
-                      $(row).addClass('hidden');
-                      $(button).text('Show Apps')
+                      $(row).slideDown('fast');
+                      $(button).text('Hide Apps');
                   }
               });
           });

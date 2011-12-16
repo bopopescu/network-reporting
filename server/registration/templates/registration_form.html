@@ -6,6 +6,11 @@
 {% block dateButtons %}{% endblock dateButtons %}
 
 {% block content %}
+ <script type="text/javascript">
+ var RecaptchaOptions = {
+    theme : 'white'
+ };
+ </script>
 <div class="content-main">
     <form action="" method="POST" accept-charset="utf-8" id="accountForm">
       {% csrf_token %}

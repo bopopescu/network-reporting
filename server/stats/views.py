@@ -154,32 +154,31 @@ def _create_mdb_json(stats_to_put):
             else:
                 d[key_tuple] = counts
 
-    # create new dict json_d with string keys (for json serialization) and fill in request_counts from request_d
+
+    # create new dict json_d with string keys (for json serialization)
+    # combination of d and request_d dicts
     # format of json_d:
     # { 'adunit:creative:date_hour':
     #   {'request_count': int, 'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
     # }
     json_d = {}
-    request_d_keys = request_d.keys()
     for (adunit, creative, date_hour), counts in d.iteritems():
         k = '%s:%s:%s' % (adunit, creative, date_hour)
         json_d[k] = d[(adunit, creative, date_hour)]
-        json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
-        if (adunit, date_hour) in request_d_keys:
-            request_d_keys.remove((adunit, date_hour))
+        json_d[k]['request_count'] = 0
 
     # these are request counts only; insert them into json_d
-    for (adunit, date_hour) in request_d_keys:
+    for (adunit, date_hour), req_count in request_d.iteritems():
         k = '%s::%s' % (adunit, date_hour)
-        # all other counts are 0
         counts = {}
+        counts['request_count'] = req_count
+        # all other counts are 0
         counts['attempt_count'] = 0
         counts['impression_count'] = 0
         counts['click_count'] = 0
         counts['conversion_count'] = 0
         counts['revenue'] = 0
         json_d[k] = counts
-        json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
 
     return simplejson.dumps(json_d)
 

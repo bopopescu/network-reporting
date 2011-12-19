@@ -256,7 +256,7 @@
                   <tr>
                     <th>
                       {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                      {% if marketplace_active %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
                       {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                       <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
                       <span class="muted">
@@ -287,46 +287,46 @@
                   </div>
 
             {% if marketplace %}
-                  <div class="appData alternating-color">
-                    <div class="appData-details noneg">
-              <div class="appData-details-inner show">
-                <table class="dataTable appData-main">
-                            <thead>
-                              <tr>
-                                <th class="dataTable-name big">Marketplace</th>
-                              <th class="dataTable-data numeric special">Revenue</th>
-                              <th class="dataTable-data numeric special">ECPM</th>
-                              <th class="dataTable-data numeric special">Impressions</th>
-                          </tr>
+              <div class="appData alternating-color">
+                <div class="appData-details noneg">
+                  <div class="appData-details-inner show">
+                    <table class="dataTable appData-main">
+                      <thead>
+                        <tr>
+                          <th class="dataTable-name big">Marketplace</th>
+                          <th class="dataTable-data numeric special">Revenue</th>
+                          <th class="dataTable-data numeric special">ECPM</th>
+                          <th class="dataTable-data numeric special">Impressions</th>
+                        </tr>
                       </thead>
                       <tbody>
-                  {% for adgroup in marketplace %}
-                  {% if forloop.counter0 == 0 %}
-                  <tr>
-                    <th>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <a href="{% url marketplace_index %}">{{adgroup.name}}</a>
-                      <span class="muted">MoPub Marketplace Beta</span>
-                    </th>
-                    <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                  </tr>
-                  {% endif %}
-                  {% endfor %}
-                </tbody>
-              </table>
-              </div>
-            </div>
+                        {% for adgroup in marketplace %}
+                          {% if forloop.counter0 == 0 %}
+                            <tr>
+                              <th>
+                                {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
+                                {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
+                                {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
+                                <a href="{% url marketplace_index %}">{{adgroup.name}}</a>
+                                <span class="muted">MoPub Marketplace Beta</span>
+                              </th>
+                              <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                              <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
+                              <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                            </tr>
+                          {% endif %}
+                        {% endfor %}
+                      </tbody>
+                    </table>
                   </div>
+                </div>
+              </div>
             {% endif %}
 
-                  <div class="appData alternating-color">
-                    <div class="appData-details noneg">
-              <div class="appData-details-inner show">
-                <table class="dataTable appData-main">
+            <div class="appData alternating-color">
+              <div class="appData-details noneg">
+                <div class="appData-details-inner show">
+                  <table class="dataTable appData-main">
                             <thead>
                               <tr>
                                 <th class="dataTable-name big">Network</th>

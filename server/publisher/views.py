@@ -346,7 +346,7 @@ def add_demo_campaign(site):
     CreativeQueryManager.put(h)
 
 class ShowAppHandler(RequestHandler):
-    def get(self,app_key):
+    def get(self, app_key):
     # Set start date if passed in, otherwise get most recent days
         if self.start_date:
             days = StatsModel.get_days(self.start_date, self.date_range)
@@ -450,25 +450,28 @@ class ShowAppHandler(RequestHandler):
         backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], app.adgroups)
         backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
 
+        active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) for adgroup in marketplace_campaigns])
 
-
-        return render_to_response(self.request,'publisher/app.html',
-            {'app': app,
-             'app_form_fragment':app_form_fragment,
-             'adunit_form_fragment':adunit_form_fragment,
-             'start_date': days[0],
-             'end_date': days[-1],
-             'date_range': self.date_range,
-             'today': today,
-             'yesterday': yesterday,
-             'account': self.account,
-             'helptext': help_text,
-             'gtee': gtee_levels,
-             'promo': promo_campaigns,
-             'marketplace': marketplace_campaigns,
-             'network': network_campaigns,
-             'backfill_promo': backfill_promo_campaigns,
-             'backfill_marketplace': backfill_marketplace_campaigns})
+        return render_to_response(self.request,
+                                  'publisher/app.html',
+                                  {
+                                      'app': app,
+                                      'app_form_fragment':app_form_fragment,
+                                      'adunit_form_fragment':adunit_form_fragment,
+                                      'start_date': days[0],
+                                      'end_date': days[-1],
+                                      'date_range': self.date_range,
+                                      'today': today,
+                                      'yesterday': yesterday,
+                                      'account': self.account,
+                                      'helptext': help_text,
+                                      'gtee': gtee_levels,
+                                      'promo': promo_campaigns,
+                                      'marketplace': marketplace_campaigns,
+                                      'marketplace_active': active_mpx_adunit_exists,
+                                      'network': network_campaigns,
+                                      'backfill_promo': backfill_promo_campaigns,
+                                  })
 
 
 @login_required

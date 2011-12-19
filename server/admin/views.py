@@ -31,6 +31,7 @@ from reports.models import Report
 from account.query_managers import AccountQueryManager, UserQueryManager
 from publisher.query_managers import AppQueryManager
 from reporting.query_managers import StatsModelQueryManager
+from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 from google.appengine.api import taskqueue
 
@@ -42,7 +43,7 @@ from common.utils.helpers import to_ascii, to_uni
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 NUM_DAYS = 14
 
-BIDDER_SPENT_URL = "http://mpx.mopub.com/spent"
+BIDDER_SPENT_URL = "http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf"
 BIDDER_SPENT_MAX = 2000
 
 @staff_login_required
@@ -111,6 +112,8 @@ def dashboard_prep(request, *args, **kwargs):
     # go and do it
     for app in apps:
         app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],num_days=NUM_DAYS)
+        yesterday = app_stats[-2]
+        
         for app_stat in app_stats:
             # add this site stats to the total for the day and increment user count
             if app_stat.date:
@@ -119,11 +122,26 @@ def dashboard_prep(request, *args, **kwargs):
                 totals[str(app_stat.date)].user_count = user_count
             if app_stat._publisher:
                 _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
+
         # Calculate a 1 day delta between yesterday and the day before that
         if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher and app_stats[-3].request_count > 0:
             unique_apps[str(app_stats[-2]._publisher)].requests_delta1day = \
                 float(app_stats[-2].request_count - app_stats[-3].request_count) / app_stats[-3].request_count
+
+        # % US for yesterday
+        unique_apps[str(app_stats[-2]._publisher)].percent_us = app_stats[-2].get_geo('US', 'request_count') / float(yesterday.request_count) if yesterday.request_count > 0 else 0 
             
+        # get mpx revenue/cpm numbers
+        try:
+            stats_fetcher = MarketplaceStatsFetcher(yesterday.publisher.account.key())
+            mpx_stats = stats_fetcher.get_app_stats(str(yesterday._publisher), start_date, datetime.date.today())
+            unique_apps[str(yesterday._publisher)].mpx_revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
+            unique_apps[str(yesterday._publisher)].mpx_impression_count = int(mpx_stats.get('impressions', 0))
+            unique_apps[str(yesterday._publisher)].mpx_clear_rate = int(mpx_stats.get('impressions', 0)) / float(sum(x.request_count for x in app_stats)) if yesterday.request_count > 0 else 0
+        except MPStatsAPIException, e:
+            unique_apps[str(yesterday._publisher)].mpx_revenue = 0
+            unique_apps[str(yesterday._publisher)].mpx_impression_count = 0
+            unique_apps[str(yesterday._publisher)].mpx_clear_rate = 0
     
     # organize daily stats by date
     total_stats = totals.values()

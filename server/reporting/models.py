@@ -389,6 +389,23 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
     
     percent_delivered = property(get_percent_delivered, set_percent_delivered)         
     
+    def get_pace(self):         
+        if hasattr(self, '_pace'): return self._pace
+        return None
+    
+    def set_pace(self, value):
+        self._pace = value
+    
+    pace = property(get_pace, set_pace)
+    
+    def get_pace_type(self):
+        if hasattr(self, '_pace_type'): return self._pace_type       
+    
+    def set_pace_type(self, value):
+        self._pace_type = value
+        
+    pace_type = property(get_pace_type, set_pace_type)
+    
     def get_status(self):
         if hasattr(self, '_status'): return self._status
         return None
@@ -435,7 +452,8 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
             
     def _dict_properties(self):
         model_props = self.properties().keys()
-        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'conv_rate', 'ctr', 'on_schedule', 'status']
+        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'pace', 'pace_type',\
+                        'conv_rate', 'ctr', 'on_schedule', 'status']
         return model_props + pseudo_props
                
     def to_dict(self):

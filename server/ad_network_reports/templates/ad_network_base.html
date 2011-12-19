@@ -170,12 +170,12 @@
           <thead>
             <th class="dataTable-name big"></th>
             <th class="dataTable-data numeric special"> Revenue </th>
-            {% if ad_network_name == MOBFOX %}
+            {% if ad_network_name != MOBFOX %}
             <th class="dataTable-data numeric special"> Attempts </th>
             {% endif %}
             <th class="dataTable-data numeric special"> Impressions </th>
             <th class="dataTable-data numeric special"> CPM </th>
-            {% if ad_network_name == MOBFOX %}
+            {% if ad_network_name != MOBFOX %}
             <th class="dataTable-data numeric special"> Fill Rate</th>
             {% endif %}
             <th class="dataTable-data numeric special"> Clicks </th>
@@ -187,12 +187,12 @@
               <tr>
                 <td class="dataTable-name">{{stats.date}}</td>
                 <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
-                {% if ad_network_name == MOBFOX %}
+                {% if ad_network_name != MOBFOX %}
                 <td class="dataTable-data numeric">{{ stats.attempts|withsep }}</td>
                 {% endif %}
                 <td class="dataTable-data numeric">{{ stats.impressions|withsep }}</td>
                 <td class="dataTable-data numeric">{{ stats.cpm|currency }}</td>
-                {% if ad_network_name == MOBFOX %}
+                {% if ad_network_name != MOBFOX %}
                 <td class="dataTable-data numeric">{{ stats.fill_rate|percentage }}</td>
                 {% endif %}
                 <td class="dataTable-data numeric">{{ stats.clicks|withsep }}</td>

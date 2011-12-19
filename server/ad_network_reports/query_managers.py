@@ -241,12 +241,16 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         Return rolled up stats.
         """
-        login_credentials_list = list(AdNetworkLoginCredentials.all().filter(
-                'account =', self.account))
-        mappers = list(AdNetworkAppMapper.all().filter('application !=', None).
-                filter('ad_network_login IN', login_credentials_list))
-        return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
-            day).filter('ad_network_app_mapper IN', mappers)))
+        stats_list = []
+        for login_credentials in AdNetworkLoginCredentials.all().filter(
+                'account =', self.account):
+            for mapper in AdNetworkAppMapper.all().filter('application !=',
+                    None).filter('ad_network_login =',
+                            login_credentials):
+                for stats in AdNetworkScrapeStats.all().filter('date =',
+                        day).filter('ad_network_app_mapper =', mapper):
+                    stats_list.append(stats)
+        return(self.roll_up_stats(stats_list))
 
     def get_chart_stats_for_all_networks(self, days):
         daily_stats = []
@@ -268,8 +272,12 @@ class AdNetworkReportQueryManager(CachedQueryManager):
 
         Return rolled up stats.
         """
-        return(self.roll_up_stats(AdNetworkScrapeStats.all().filter('date =',
-            day).filter('ad_network_app_mapper IN', mappers)))
+        stats_list = []
+        for mapper in mappers:
+            for stats in AdNetworkScrapeStats.all().filter('date =',
+                    day).filter('ad_network_app_mapper =', mapper):
+                stats_list.append(stats)
+        return(self.roll_up_stats(stats_list))
 
     def _get_stats_for_mapper_and_days(self, ad_network_app_mapper,
             days):
@@ -553,38 +561,40 @@ def create_fake_data(account=None):
 
     last_90_days = date_magic.gen_date_range(90)
 
+    manager = AdNetworkReportQueryManager(account)
+
     app = App(account=account,
             name='My little pony island adventures')
     app.put()
 
-#    for network in AD_NETWORK_NAMES.keys()[1:-2]:
-#        login = AdNetworkLoginCredentials(account=account,
-#                           ad_network_name=network,
-#                           username='bullshit',
-#                           password='bullshit',
-#                           client_key='asdfasf',
-#                           send_email=False)
-#        login.put()
-#        AdNetworkAppMapper(ad_network_name=network,
-#                publisher_id=str(random.random()*100),
-#                ad_network_login=login,
-#                application=app).put()
-#    AdNetworkLoginCredentials(account=account,
-#            ad_network_name=AD_NETWORK_NAMES.keys()[0],
-#            app_pub_ids=['hfehafa','aihef;iawh']).put()
-#    AdNetworkLoginCredentials(account=account,
-#            ad_network_name=AD_NETWORK_NAMES.keys()[-1]).put()
-#
-#    for day in last_90_days:
-#        for mapper in a.get_ad_network_mappers():
-#            attempts = random.randint(1, 100000)
-#            impressions = random.randint(1, attempts)
-#            clicks = random.randint(1, impressions)
-#            stats = AdNetworkScrapeStats(revenue=random.random()*10000,
-#                                         attempts=attempts,
-#                                         impressions=impressions,
-#                                         clicks=clicks,
-#                                         date=day,
-#                                         ad_network_app_mapper=mapper)
-#            stats.put()
+    for network in AD_NETWORK_NAMES.keys()[1:-2]:
+        login = AdNetworkLoginCredentials(account=account,
+                           ad_network_name=network,
+                           username='bullshit',
+                           password='bullshit',
+                           client_key='asdfasf',
+                           send_email=False)
+        login.put()
+        AdNetworkAppMapper(ad_network_name=network,
+                publisher_id=str(random.random()*100),
+                ad_network_login=login,
+                application=app).put()
+    AdNetworkLoginCredentials(account=account,
+            ad_network_name=AD_NETWORK_NAMES.keys()[0],
+            app_pub_ids=['hfehafa','aihef;iawh']).put()
+    AdNetworkLoginCredentials(account=account,
+            ad_network_name=AD_NETWORK_NAMES.keys()[-1]).put()
+
+    for day in last_90_days:
+        for mapper in manager.get_ad_network_mappers():
+            attempts = random.randint(1, 100000)
+            impressions = random.randint(1, attempts)
+            clicks = random.randint(1, impressions)
+            stats = AdNetworkScrapeStats(revenue=random.random()*10000,
+                                         attempts=attempts,
+                                         impressions=impressions,
+                                         clicks=clicks,
+                                         date=day,
+                                         ad_network_app_mapper=mapper)
+            stats.put()
 

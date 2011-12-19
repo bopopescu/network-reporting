@@ -146,6 +146,7 @@ def remaining_daily_budget(budget):
     # left for today is everything that hasn't been spent otherwise
     if budget.delivery_type == 'allatonce' and budget.static_total_budget:
         return budget.daily_budget - total_spent(budget)
+        
 
     ts_spend = total_spent(budget) - budget.total_spent
     tot_spend_today = budget.spent_today + ts_spend

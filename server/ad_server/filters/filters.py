@@ -51,6 +51,9 @@ def budget_filter():
 def active_filter():
     log_mesg = "Removed due to inactivity: %s"
     def real_filter(a):
+        # If this adgroup is LL targeted, then ignore this filter
+        if a.cities and len(a.cities) > 0:
+            return True
         return (a.campaign.active and a.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
     return (real_filter, log_mesg, [])
 

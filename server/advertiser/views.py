@@ -1,6 +1,7 @@
 import logging
 import datetime
 
+
 from google.appengine.ext import db
 
 from django.views.decorators.cache import cache_control
@@ -17,12 +18,26 @@ from common.ragendja.template import render_to_response, render_to_string, JSONR
 from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 from common.utils.timezones import Pacific_tzinfo
 from budget.tzinfo import Pacific, utc
-# from common.ragendja.auth.decorators import google_login_required as login_required
+
 from account.query_managers import AccountQueryManager
 from account.forms import NetworkConfigForm
 from advertiser.models import *
-from advertiser.forms import *
-from advertiser.query_managers import *
+
+# NOTE: don't be tempted to change this to import *
+# Some of these modules import datetime from datetime, which will
+# screw up all of the datetime calls in this module.
+from advertiser.forms import CampaignForm, AdGroupForm, \
+                             BaseCreativeForm, TextCreativeForm, \
+                             ImageCreativeForm, TextAndTileCreativeForm, \
+                             HtmlCreativeForm
+
+from advertiser.query_managers import CampaignQueryManager, \
+     AdGroupQueryManager, \
+     CreativeQueryManager, \
+     TextCreativeQueryManager, \
+     ImageCreativeQueryManager, \
+     TextAndTileCreativeQueryManager, \
+     HtmlCreativeQueryManager
 from budget import budget_service
 from budget.models import Budget
 from budget.query_managers import BudgetQueryManager
@@ -46,7 +61,6 @@ class AdGroupIndexHandler(RequestHandler):
 
         # Set up the date range
         num_days = 90
-        logging.warn(dir(datetime))
         today = datetime.datetime.now(Pacific_tzinfo()).date()
 
         days = date_magic.gen_days(today - datetime.timedelta(days=num_days), today)
@@ -140,7 +154,7 @@ def archive(request,*args,**kwargs):
     return AdGroupArchiveHandler()(request,*args,**kwargs)
 
 
-class CreateCampaignAJAXHander(RequestHandler):
+class CreateCampaignAJAXHandler(RequestHandler):
     """
     Holy christ, refactor
 
@@ -378,7 +392,7 @@ class CreateCampaignAJAXHander(RequestHandler):
 
 @login_required
 def campaign_adgroup_create_ajax(request,*args,**kwargs):
-    return CreateCampaignAJAXHander()(request,*args,**kwargs)
+    return CreateCampaignAJAXHandler()(request,*args,**kwargs)
 
 
 # Wrapper for the AJAX handler
@@ -402,6 +416,22 @@ def campaign_adgroup_create(request,*args,**kwargs):
 
 
 class CreateAdGroupHandler(RequestHandler):
+    """
+    Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
         if campaign_key:
             c = AdGroupQueryManager.get(campaign_key)
@@ -463,6 +493,22 @@ def campaign_adgroup_edit(request,*args,**kwargs):
 
 
 class AdgroupDetailHandler(RequestHandler):
+    """
+    Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     def get(self, adgroup_key):
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -706,6 +752,22 @@ def campaign_adgroup_show(request,*args,**kwargs):
 
 
 class PauseAdGroupHandler(RequestHandler):
+    """
+    Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     def post(self):
         action = self.request.POST.get("action", "pause")
         adgroups = []
@@ -825,6 +887,22 @@ class AddCreativeHandler(RequestHandler):
 
 
     def post(self):
+        """
+        Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+        """
         ad_group = AdGroupQueryManager.get(self.request.POST.get('adgroup_key'))
         creative_key = self.request.POST.get('creative_key')
         if creative_key:
@@ -1022,6 +1100,22 @@ def adserver_test(request,*args,**kwargs):
     return AdServerTestHandler()(request,*args,**kwargs)
 
 class AJAXStatsHandler(RequestHandler):
+    """
+    Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     def get(self, start_date=None, date_range=14):
         from common.utils.query_managers import QueryManager
         from common_templates.templatetags import filters

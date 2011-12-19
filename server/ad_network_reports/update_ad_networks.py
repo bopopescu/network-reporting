@@ -39,7 +39,7 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
-TESTING = False
+TESTING = True
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub

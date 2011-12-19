@@ -69,31 +69,41 @@
 
 <section class="separated">
 	<h3>Top MoPubs</h3>
-	<table class ="sortable" width="100%">
+	<table class ="sortable" width="100%" style="padding:0 2px; font-size: 9px;">
 		<thead>
 		  <th></th>
-			<th style="text-align: left;">App</th>
-			<th style="text-align: left;">Account</th>
-			<th width="100px">Requests</th>
-			<th width="75px">1d Delta</th>
-			<th width="100px">Impressions</th>
-			<th width="75px">Fill Rate</th>
-			<th width="75px">Clicks</th>
-			<th width="75px">CTR</th>
-			<th width="75px">Users</th>
+			<th style="text-align: left; width: 100px;">App</th>
+			<th style="text-align: left; width: 100px;">Account</th>
+			<th style="text-align: left;">Type</th>
+			<th style="text-align: left;">Category</th>
+			<th width="">Reqs</th>
+			<th width="">Impr</th>
+			<th width="">Delta</th>
+			<th width="">Fill%</th>
+			<th width="">Clicks</th>
+			<th width="">CTR</th>
+			<th width="">Users</th>
+			<th width="">MPX$</th>
+			<th width="">MPX%</th>
+	        <th width="">%US</th>
 		</thead>
 		{% for a in apps %}
 		<tr class="alternating-color">
 			<td>{{forloop.counter}}&nbsp;</td>
 			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:46}}</a></td>
-			<td><a href="mailto:{{a.publisher.account.mpuser.email}}" class="account_email">{{a.publisher.account.mpuser.email}}</a></td>
+			<td><a href="mailto:{{a.publisher.account.mpuser.email}}" class="account_email">{{a.publisher.account.mpuser.email|truncate:30}}</a></td>
+            <td>{{a.publisher.app_type}}</td>
+			<td>{{a.publisher.primary_category}}</td>
 			<td class="numeric">{{a.request_count|withsep}}</td>
-			<td class="numeric">{{a.requests_delta1day|percentage}}</td>
 			<td class="numeric">{{a.impression_count|withsep}}</td>
+			<td class="numeric">{{a.requests_delta1day|percentage}}</td>
 			<td class="numeric">{{a.fill_rate|percentage_rounded}}</td>
 			<td class="numeric">{{a.click_count|withsep}}</td>
 			<td class="numeric">{{a.ctr|percentage}}</td>
 			<td class="numeric">{{a.user_count|withsep}}</td>
+			<td class="numeric">{{a.mpx_revenue|currency}}</td>
+			<td class="numeric">{{a.mpx_clear_rate|percentage_rounded}}</td>
+			<td class="numeric">{{a.percent_us|percentage_rounded}}</td>            
 		</tr>
 		{% endfor %}
 	</table>

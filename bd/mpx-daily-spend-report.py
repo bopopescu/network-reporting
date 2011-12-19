@@ -12,8 +12,10 @@ import datetime
 import json
 import urllib
 
+MPX_URL="http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf&.."
+
 def main():
-    mpx = json.loads(urllib.urlopen("http://mpx.mopub.com/spent").read())
+    mpx = json.loads(urllib.urlopen(MPX_URL).read())
     
     total = sum([x["spent"] for x in mpx.values()])
     

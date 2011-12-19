@@ -121,7 +121,8 @@ class AppDetailHandler(RequestHandler):
                       'daily_stats' :
                         simplejson.dumps(daily_stats),
                       'stats_list' : stats_list,
-                      'show_graph': True
+                      'show_graph': True,
+                      'MOBFOX': MOBFOX_PRETTY
                   })
 
 @login_required

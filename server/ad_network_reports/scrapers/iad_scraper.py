@@ -207,8 +207,8 @@ class IAdScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'finance@komastudios.com'
-    NC.password = 'Kke6agPO1t85u9YzVhPR'
+    NC.username = 'jprhombus'
+    NC.password = 'mopub512'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
     print SCRAPER.get_site_stats(date(2011,11,30))

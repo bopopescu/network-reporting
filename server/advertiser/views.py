@@ -114,7 +114,7 @@ class AdGroupIndexHandler(RequestHandler):
         response_dict['status'] = 200
         response_dict['all_stats'] = stats_dict
         """
-        
+
         for adgroup in adgroups:
             adunits = []
             adunit_keys_to_fetch = []
@@ -1163,7 +1163,7 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
-                    
+
                     logging.warn("%s"%adgroup.name)
                     pace = budget_service.get_pace(adgroup.campaign.budget_obj)
                     if pace:
@@ -1329,6 +1329,11 @@ class MarketplaceIndexHandler(RequestHandler):
             yesterday_stats = mpx_stats["daily"][-2];
         except:
             pass
+
+        try:
+            blind = self.account.network_config.blind
+        except:
+            blind = False
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",

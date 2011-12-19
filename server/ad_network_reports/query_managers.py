@@ -38,330 +38,25 @@ MOBFOX_PRETTY = 'MobFox'
 IAD_PRETTY = 'iAd'
 IAD = 'iad'
 
-class Stats(object):
-    pass
-
 #TODO: Break up query manager into a query manager for each model
 class AdNetworkReportQueryManager(CachedQueryManager):
 
     def __init__(self, account=None):
         self.account = account
 
-    def get_ad_network_mappers(self):
-        """
-        Inner join AdNetworkLoginCredentials with AdNetworkAppMapper.
-        Return a generator of the AdNetworkAppMappers with this account.
-        """
-        for credential in AdNetworkLoginCredentials.all().filter('account =',
-                self.account):
-            for mapper in AdNetworkAppMapper.all().filter('ad_network_login =',
-                    credential):
-                yield mapper
-
     def get_index_data(self, days):
         """
         Get required data for the index page of ad network reports.
 
         Generate a list of aggregate stats for the ad networks, apps and
-        account fro a date range of the last 7 days. Roll up these aggregate
+        account for a date range of the last 7 days. Roll up these aggregate
         stats.
 
         Return the rolled up aggregates and the aggregate stats list in a
         tuple.
         """
-        mappers = list(self.get_ad_network_mappers())
-
-        # Get aggregate stats for all the different ad network mappers for the
-        # account between the selected date range
-        aggregates_with_dates = [self._get_stats_for_mapper_and_days(n, days)
-                for n in mappers]
-        if aggregates_with_dates:
-            aggregates_list, applications, sync_dates = \
-                    zip(*aggregates_with_dates)
-        else:
-            aggregates_list = []
-            sync_dates = []
-            applications = []
-        aggregate_stats_list = zip(mappers, aggregates_list, applications,
-                sync_dates)
-        aggregates = self.roll_up_stats(aggregates_list)
-
-        # Get the daily stats list.
-        daily_stats = [self._get_stats_for_day(date).__dict__ for
-                date in days]
-
-
-        networks = self._roll_up_unique_stats(aggregate_stats_list, True)
-        apps = self._roll_up_unique_stats(aggregate_stats_list, False)
 
         return (aggregates, daily_stats, networks, apps)
-
-    def _roll_up_unique_stats(self, aggregate_stats_list, networks=True):
-        """
-         Put the apps into an intuitive data structure
-         Apps are mapped to their stats, as well as to a list of
-         their individual network stats. E.g. :
-         {
-             'app1' : {
-                 'networks': [ {network1_stats ... networkn_stats],
-                 'revenue': 0,
-                 'attempts': 0,
-                 'impressions': 0,
-                 'fill_rate': 0,
-                 'clicks': 0,
-                 'ctr': 0,
-             }
-             ...
-         }
-        """
-        # Can't get timezone (pytz) on app engine without jumping through some
-        # large hoops so we do a rough check.
-        yesterday = (datetime.now() - timedelta(days=1)).date()
-
-        if networks:
-            def login_credentials_query():
-                return AdNetworkLoginCredentials.all().filter('account =',
-                        self.account)
-
-        data_dict = {}
-        for mapper, stats, application, sync_date in aggregate_stats_list:
-            if networks:
-                attr = AD_NETWORK_NAMES[mapper.ad_network_name]
-                name = mapper.application.name
-                key = mapper.key()
-            else:
-                attr = mapper.application.name
-                name = AD_NETWORK_NAMES[mapper.ad_network_name]
-                key = application.key()
-            sub_data = {
-                'name': name,
-                'key': mapper.key(),
-                'revenue': stats.revenue,
-                'attempts': stats.attempts,
-                'impressions': stats.impressions,
-                'cpm': stats.cpm,
-                'fill_rate': stats.fill_rate,
-                'clicks': stats.clicks,
-                'ctr': stats.ctr,
-                'cpc': stats.cpc,
-            }
-            if not data_dict.has_key(attr):
-                data_dict[attr] = {
-                    'sub_data_list': [],
-                    'revenue': 0.0,
-                    'attempts': 0,
-                    'fill_rate_impressions': 0,
-                    'impressions': 0,
-                    'cpm': 0.0,
-                    'fill_rate': 0.0,
-                    'clicks': 0,
-                    'ctr': 0.0,
-                    'cpc': 0.0,
-                    'key': str(key),
-                }
-                if networks:
-                    data_dict[attr]['state'] = 2
-                    data_dict[attr]['sync_date'] = sync_date
-                    data_dict[attr]['sync_error'] = not sync_date or sync_date - \
-                        yesterday >= timedelta(days=1)
-                    login_credentials = login_credentials_query().filter(
-                            'ad_network_name =', mapper.ad_network_name).get()
-                    data_dict[attr]['app_pub_ids'] = ', '.join(
-                            login_credentials.app_pub_ids)
-                else:
-                    data_dict[attr]['icon_url'] = application.icon_url
-                    data_dict[attr]['type'] = application.app_type_text()
-            data_dict[attr]['sub_data_list'].append(sub_data)
-            data_dict[attr]['revenue'] += sub_data['revenue']
-            data_dict[attr]['attempts'] += sub_data['attempts']
-            if sub_data['attempts']:
-                data_dict[attr]['fill_rate_impressions'] += \
-                        sub_data['impressions']
-            data_dict[attr]['impressions'] += sub_data['impressions']
-            data_dict[attr]['clicks'] += sub_data['clicks']
-
-        for data in data_dict.values():
-            # Sort sub_data list.
-            data['sub_data_list'] = sorted(data['sub_data_list'], key=lambda \
-                    sub_data: sub_data['name'].lower())
-            if data['attempts']:
-                data['fill_rate'] = data[
-                        'fill_rate_impressions'] / float(
-                                data['attempts'])
-            if data['clicks']:
-                data['cpc'] = data['revenue'] / data['clicks']
-            if data['impressions']:
-                data['cpm'] = data['revenue'] / data['impressions'] * 1000
-                data['ctr'] = (data['clicks'] /
-                        float(data['impressions']))
-
-        # Add networks that aren't included but still relevant to the account
-        # and set their data to None.
-        if networks:
-            # Get networks for which they've entered publisher information but
-            # havent given us login credentials so we can bug them about giving us
-            # their creds.
-#            networks_without_creds = \
-#                    list(self.get_networks_without_credentials())
-            networks_without_creds = AD_NETWORK_NAMES.keys()
-
-            apps_without_pub_ids = AppQueryManager.get_apps_without_pub_ids(
-                    self.account, AD_NETWORK_NAMES.keys())
-            for network in networks_without_creds:
-                if AD_NETWORK_NAMES[network] not in data_dict:
-                    login_credentials = login_credentials_query().filter(
-                            'ad_network_name =', network).get()
-                    apps_without_pub_ids_for_network = apps_without_pub_ids[
-                            network] + apps_without_pub_ids[ALL_NETWORKS]
-                    if network == IAD:
-                        apps_for_network = apps_without_pub_ids_for_network
-                    else:
-                        apps_for_network = ', '.join([app.name for app in
-                            apps_without_pub_ids_for_network])
-                    if login_credentials:
-                        app_pub_ids = ', '.join(login_credentials.app_pub_ids)
-                        if app_pub_ids:
-                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 1,
-                                    'app_pub_ids': app_pub_ids}
-                        else:
-                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
-                                    'apps_without_pub_ids': apps_for_network}
-                    else:
-                        data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
-                                'apps_without_pub_ids': apps_for_network}
-
-        # Sort alphabetically
-        data_list = sorted(data_dict.items(), key=lambda data_tuple:
-                data_tuple[0].lower())
-
-        return data_list
-
-    def _get_stats_for_day(self, day):
-        """Get rolled up stats for the given date (include all ad networks).
-
-        Return rolled up stats.
-        """
-        stats_list = []
-        for login_credentials in AdNetworkLoginCredentials.all().filter(
-                'account =', self.account):
-            for mapper in AdNetworkAppMapper.all().filter('application !=',
-                    None).filter('ad_network_login =',
-                            login_credentials):
-                for stats in AdNetworkScrapeStats.all().filter('date =',
-                        day).filter('ad_network_app_mapper =', mapper):
-                    stats_list.append(stats)
-        return(self.roll_up_stats(stats_list))
-
-    def get_chart_stats_for_all_networks(self, days):
-        daily_stats = []
-        for ad_network_name in AD_NETWORK_NAMES.keys():
-            login = AdNetworkLoginCredentials.get_by_ad_network_name(
-                    self.account, ad_network_name)
-            mappers = list(AdNetworkAppMapper.all().filter('ad_network_login =',
-                    login))
-
-            network_stats_dict = {}
-            network_stats_dict['name'] = ad_network_name
-            network_stats_dict['stats'] = [self._get_stats_for_network_and_day(
-                mappers, day) for day in days]
-            daily_stats.append(network_stats_dict)
-        return daily_stats
-
-    def _get_stats_for_network_and_day(self, mappers, day):
-        """Get rolled up stats for the given date and ad network name.
-
-        Return rolled up stats.
-        """
-        stats_list = []
-        for mapper in mappers:
-            for stats in AdNetworkScrapeStats.all().filter('date =',
-                    day).filter('ad_network_app_mapper =', mapper):
-                stats_list.append(stats)
-        return(self.roll_up_stats(stats_list))
-
-    def _get_stats_for_mapper_and_days(self, ad_network_app_mapper,
-            days):
-        """Calculate aggregate stats for an ad network and app
-        for the given days.
-
-        Return the aggregate stats.
-        """
-        stats_list, last_day = AdNetworkScrapeStats.get_by_app_mapper_and_days(
-                ad_network_app_mapper.key(), days, include_last_day=True)
-        if stats_list:
-            return (self.roll_up_stats(stats_list), ad_network_app_mapper.
-                    application, last_day)
-
-    def roll_up_stats(self, stats_iterable):
-        """Roll up (aggregate) stats in the stats iterable.
-
-        Take a stats iterable (query or list).
-
-        Return a stats object.
-        """
-        aggregate_stats = Stats()
-        aggregate_stats.revenue = 0.0
-        aggregate_stats.attempts = 0
-        aggregate_stats.impressions = 0
-        aggregate_stats.cpm = 0.0
-        aggregate_stats.fill_rate = 0.0
-        aggregate_stats.clicks = 0
-        aggregate_stats.cpc = 0.0
-        aggregate_stats.ctr = 0.0
-
-        aggregate_stats.fill_rate_impressions = 0
-        for stats in stats_iterable:
-            old_impressions_total = stats.impressions
-
-            aggregate_stats.revenue += stats.revenue
-            aggregate_stats.attempts += stats.attempts
-            aggregate_stats.impressions += stats.impressions
-            aggregate_stats.clicks += stats.clicks
-
-            if stats.attempts:
-                aggregate_stats.fill_rate_impressions += stats.impressions
-
-        if aggregate_stats.attempts:
-            aggregate_stats.fill_rate = (aggregate_stats.fill_rate_impressions /
-                    float(aggregate_stats.attempts))
-
-        if aggregate_stats.impressions:
-            aggregate_stats.ctr = (aggregate_stats.clicks /
-                    float(aggregate_stats.impressions))
-            aggregate_stats.cpm = aggregate_stats.revenue / \
-                    aggregate_stats.impressions * 1000
-        if aggregate_stats.clicks:
-            aggregate_stats.cpc = aggregate_stats.revenue / \
-                    aggregate_stats.clicks
-
-        return aggregate_stats
-
-    def get_stats_list_for_mapper_and_days(self, ad_network_app_mapper_key,
-            days):
-        """Filter AdNetworkScrapeStats for a given ad_network_app_mapper. Sort
-        chronologically by day, newest first (decending order.)
-
-        Return a list of stats sorted by date.
-        """
-        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
-                ad_network_app_mapper_key, days)
-        return sorted(stats_list, key=lambda stats: stats.date, reverse=True)
-
-    def get_ad_network_mapper(self,
-                              ad_network_app_mapper_key=None,
-                              publisher_id=None,
-                              ad_network_name=None):
-        """Keyword arguments: either an ad_network_app_mapper_key or a
-        publisher_id and login_credentials.
-
-        Return the corresponding AdNetworkAppMapper.
-        """
-        if ad_network_app_mapper_key:
-            return AdNetworkAppMapper.get(ad_network_app_mapper_key)
-        elif publisher_id and ad_network_name:
-            return AdNetworkAppMapper.get_by_publisher_id(publisher_id,
-                    ad_network_name)
-        return None
 
     def _get_apps_with_publisher_ids(self, ad_network_name):
         """Check apps to see if their pub_id for the given ad_network is
@@ -370,7 +65,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         Return generator of applications with publisher ids for the account on
         the ad_network.
         """
-        if ad_network_name == 'iad':
+        if ad_network_name == IAD:
             yield AppQueryManager.get_iad_pub_ids(account=self.account).next()
 
         for app in AppQueryManager.get_apps_with_network_configs(self.account):
@@ -480,13 +175,293 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             else:
                 yield network
 
-    def get_login_credentials(self):
-        """Return AdNetworkLoginCredentials entities for the given account."""
-        return AdNetworkLoginCredentials.all().filter('account =', self.account)
+class AdNetworkStatsManager(CachedQueryManager):
+    @classmethod
+    def roll_up_unique_stats(self, aggregate_stats_list, networks=True):
+        """
+        Generate the stats roll ups required for the index page.
 
-def get_all_login_credentials():
-    """Return all AdNetworkLoginCredentials entities ordered by account."""
-    return AdNetworkLoginCredentials.all().order('account')
+        Put the apps into an intuitive data structure
+        Apps are mapped to their stats, as well as to a list of
+        their individual network stats. E.g. :
+
+        Network level roll up: (kwarg networks=True)
+        {
+            'network1' : {
+                'sub_data': [ {app1_stats ... appN_stats],
+                'revenue': 0,
+                'attempts': 0,
+                'impressions': 0,
+                'fill_rate': 0,
+                'clicks': 0,
+                'ctr': 0,
+                ...
+            }
+            ...
+        }
+
+        App level roll up (kwarg networks=False):
+        {
+            'app1' : {
+                'sub_data': [ {network1_stats ... networkN_stats],
+                'revenue': 0,
+                'attempts': 0,
+                'impressions': 0,
+                'fill_rate': 0,
+                'clicks': 0,
+                'ctr': 0,
+                ...
+            }
+            ...
+        }
+
+        Make these generated data dict's lists then insert missing networks (if
+        kwarg networks=True) and sort them alphabetically.
+
+        Return the sorted list of lists which contain the rolled up stats for
+        the account.
+        """
+        # Can't get timezone (pytz) on app engine without jumping through some
+        # large hoops so we do a rough check.
+        yesterday = (datetime.now() - timedelta(days=1)).date()
+
+        if networks:
+            def login_credentials_query():
+                return AdNetworkLoginCredentials.all().filter('account =',
+                        self.account)
+
+        data_dict = {}
+        for mapper, stats, application, sync_date in aggregate_stats_list:
+            if networks:
+                attr = AD_NETWORK_NAMES[mapper.ad_network_name]
+                name = mapper.application.name
+                key = mapper.key()
+            else:
+                attr = mapper.application.name
+                name = AD_NETWORK_NAMES[mapper.ad_network_name]
+                key = application.key()
+            sub_data = {
+                'name': name,
+                'key': mapper.key(),
+                'revenue': stats.revenue,
+                'attempts': stats.attempts,
+                'impressions': stats.impressions,
+                'cpm': stats.cpm,
+                'fill_rate': stats.fill_rate,
+                'clicks': stats.clicks,
+                'ctr': stats.ctr,
+                'cpc': stats.cpc,
+            }
+            if not data_dict.has_key(attr):
+                data_dict[attr] = {
+                    'sub_data_list': [],
+                    'revenue': 0.0,
+                    'attempts': 0,
+                    'fill_rate_impressions': 0,
+                    'impressions': 0,
+                    'cpm': 0.0,
+                    'fill_rate': 0.0,
+                    'clicks': 0,
+                    'ctr': 0.0,
+                    'cpc': 0.0,
+                    'key': str(key),
+                }
+                if networks:
+                    data_dict[attr]['state'] = 2
+                    data_dict[attr]['sync_date'] = sync_date
+                    data_dict[attr]['sync_error'] = not sync_date or sync_date - \
+                        yesterday >= timedelta(days=1)
+                    login_credentials = login_credentials_query().filter(
+                            'ad_network_name =', mapper.ad_network_name).get()
+                    data_dict[attr]['app_pub_ids'] = ', '.join(
+                            login_credentials.app_pub_ids)
+                else:
+                    data_dict[attr]['icon_url'] = application.icon_url
+                    data_dict[attr]['type'] = application.app_type_text()
+            data_dict[attr]['sub_data_list'].append(sub_data)
+            data_dict[attr]['revenue'] += sub_data['revenue']
+            data_dict[attr]['attempts'] += sub_data['attempts']
+            if sub_data['attempts']:
+                data_dict[attr]['fill_rate_impressions'] += \
+                        sub_data['impressions']
+            data_dict[attr]['impressions'] += sub_data['impressions']
+            data_dict[attr]['clicks'] += sub_data['clicks']
+
+        for data in data_dict.values():
+            # Sort sub_data list.
+            data['sub_data_list'] = sorted(data['sub_data_list'], key=lambda \
+                    sub_data: sub_data['name'].lower())
+            if data['attempts']:
+                data['fill_rate'] = data[
+                        'fill_rate_impressions'] / float(
+                                data['attempts'])
+            if data['clicks']:
+                data['cpc'] = data['revenue'] / data['clicks']
+            if data['impressions']:
+                data['cpm'] = data['revenue'] / data['impressions'] * 1000
+                data['ctr'] = (data['clicks'] /
+                        float(data['impressions']))
+
+        # Add networks that aren't included but still relevant to the account
+        # and set their data to None.
+        if networks:
+            apps_without_pub_ids = AppQueryManager.get_apps_without_pub_ids(
+                    self.account, AD_NETWORK_NAMES.keys())
+
+            for network in AD_NETWORK_NAMES.keys():
+                if AD_NETWORK_NAMES[network] not in data_dict:
+                    login_credentials = login_credentials_query().filter(
+                            'ad_network_name =', network).get()
+                    apps_without_pub_ids_for_network = apps_without_pub_ids[
+                            network] + apps_without_pub_ids[ALL_NETWORKS]
+                    if network == IAD:
+                        apps_for_network = apps_without_pub_ids_for_network
+                    else:
+                        apps_for_network = ', '.join([app.name for app in
+                            apps_without_pub_ids_for_network])
+                    if login_credentials:
+                        app_pub_ids = ', '.join(login_credentials.app_pub_ids)
+                        if app_pub_ids:
+                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 1,
+                                    'app_pub_ids': app_pub_ids}
+                        else:
+                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
+                                    'apps_without_pub_ids': apps_for_network}
+                    else:
+                        data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
+                                'apps_without_pub_ids': apps_for_network}
+
+        # Sort alphabetically
+        data_list = sorted(data_dict.items(), key=lambda data_tuple:
+                data_tuple[0].lower())
+
+        return data_list
+
+    #TODO: Delete unused method
+    @classmethod
+    def _get_stats_for_day(account, day):
+        """Get rolled up stats for the given date (include all ad networks).
+
+        Return rolled up stats.
+        """
+        stats_list = []
+        for login_credentials in AdNetworkLoginCredentials.all().filter(
+                'account =', account):
+            for mapper in AdNetworkAppMapper.all().filter('application !=',
+                    None).filter('ad_network_login =',
+                            login_credentials):
+                for stats in AdNetworkScrapeStats.all().filter('date =',
+                        day).filter('ad_network_app_mapper =', mapper):
+                    stats_list.append(stats)
+        return(AdNetworkStatsManager.roll_up_stats(stats_list))
+
+    #TODO: Delete unused method
+    @classmethod
+    def _get_stats_for_network_and_day(cls, mappers, day):
+        """Get rolled up stats for the given date and ad network name.
+
+        Return rolled up stats.
+        """
+        stats_list = []
+        for mapper in mappers:
+            for stats in AdNetworkScrapeStats.all().filter('date =',
+                    day).filter('ad_network_app_mapper =', mapper):
+                stats_list.append(stats)
+        return(cls.roll_up_stats(stats_list))
+
+    @classmethod
+    def get_stats_for_mapper_and_days(cls, ad_network_app_mapper,
+            days):
+        """Calculate aggregate stats for an ad network and app
+        for the given days.
+
+        Return the aggregate stats.
+        """
+        stats_list, last_day = AdNetworkScrapeStats.get_by_app_mapper_and_days(
+                ad_network_app_mapper.key(), days, include_last_day=True)
+        if stats_list:
+            return (cls.roll_up_stats(stats_list), ad_network_app_mapper.
+                    application, last_day)
+
+    @classmethod
+    def roll_up_stats(cls, stats_iterable):
+        """Roll up (aggregate) stats in the stats iterable.
+
+        Take a stats iterable (query or list).
+
+        Return a stats object.
+        """
+        aggregate_stats = AdNetworkScrapeStats()
+
+        aggregate_stats.fill_rate_impressions = 0
+        for stats in stats_iterable:
+            old_impressions_total = stats.impressions
+
+            aggregate_stats.revenue += stats.revenue
+            aggregate_stats.attempts += stats.attempts
+            aggregate_stats.impressions += stats.impressions
+            aggregate_stats.clicks += stats.clicks
+
+            if stats.attempts:
+                aggregate_stats.fill_rate_impressions += stats.impressions
+
+        if aggregate_stats.attempts:
+
+        return aggregate_stats
+
+    @classmethod
+    def get_stats_list_for_mapper_and_days(self, ad_network_app_mapper_key,
+            days):
+        """Filter AdNetworkScrapeStats for a given ad_network_app_mapper. Sort
+        chronologically by day, newest first (decending order.)
+
+        Return a list of stats sorted by date.
+        """
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
+                ad_network_app_mapper_key, days)
+        return sorted(stats_list, key=lambda stats: stats.date, reverse=True)
+
+
+class AdNetworkLoginCredentialsManager(CachedQueryManager):
+    @classmethod
+    def get_login_credentials(cls, account):
+        """Return AdNetworkLoginCredentials entities for the given account."""
+        return cls.all().filter('account =', account)
+
+    @classmethod
+    def get_all_login_credentials(cls):
+        """Return all AdNetworkLoginCredentials entities ordered by account."""
+        return cls.all().order('account')
+
+class AdNetworkAppMapperManager(CachedQueryManager):
+    @classmethod
+    def get_ad_network_mappers(cls):
+        """
+        Inner join AdNetworkLoginCredentials with AdNetworkAppMapper.
+
+        Return a generator of the AdNetworkAppMappers with this account.
+        """
+        for credential in AdNetworkLoginCredentialsManager. \
+                get_login_credentials(account):
+            for mapper in cls.all().filter('ad_network_login =',
+                    credential):
+                yield mapper
+
+    @classmethod
+    def get_ad_network_mapper(cls,
+                              ad_network_app_mapper_key=None,
+                              publisher_id=None,
+                              ad_network_name=None):
+        """Keyword arguments: either an ad_network_app_mapper_key or a
+        publisher_id and login_credentials.
+
+        Return the corresponding AdNetworkAppMapper.
+        """
+        if ad_network_app_mapper_key:
+            return cls.get(ad_network_app_mapper_key)
+        elif publisher_id and ad_network_name:
+            return cls.get_by_publisher_id(publisher_id, ad_network_name)
+        return None
 
 def get_management_stats(days):
     return AdNetworkManagementStats.get_by_days(days)

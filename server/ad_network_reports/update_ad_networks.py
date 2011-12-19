@@ -31,25 +31,16 @@ from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkScrapeStats, \
         AdNetworkManagementStats
 from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        get_all_login_credentials, AD_NETWORK_NAMES
+        AdNetworkLoginCredentialsManager, AD_NETWORK_NAMES
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
 from common.utils import date_magic
+from common.utils.connect_to_appengine import setup_remote_api
 from pytz import timezone
 
 from google.appengine.ext import db
 
 TESTING = True
-
-def setup_remote_api():
-    from google.appengine.ext.remote_api import remote_api_stub
-    app_id = 'mopub-inc'
-    host = '38.latest.mopub-inc.appspot.com'
-    remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func,
-            host)
-
-def auth_func():
-    return 'olp@mopub.com', 'N47935'
 
 def send_stats_mail(account, manager, test_date, valid_stats_list):
     """Send email with scrape stats data for the test date organized in a
@@ -146,7 +137,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
     login_credentials_list = (only_these_credentials,) if \
-            only_these_credentials else get_all_login_credentials()
+            only_these_credentials else AdNetworkLoginCredentials. \
+            get_all_login_credentials()
 
     # Create log file.
     if not only_these_credentials:

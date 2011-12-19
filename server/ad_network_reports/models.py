@@ -121,7 +121,7 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
                                              collection_name='ad_network_stats')
-    date = db.DateProperty(required=True)
+    date = db.DateProperty()
 
     # stats info for a specific day
     revenue = db.FloatProperty(default=0.0)
@@ -131,10 +131,10 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            mapper = kwargs.get('ad_network_app_mapper', None)
-            mapper = mapper.key() if mapper else '*'
-            kwargs['key_name'] = ('k:%s:%s' % (mapper, kwargs['date'].
-                    strftime('%Y-%m-%d')))
+            if kwargs.get('ad_network_app_mapper', None) kwargs.get('date',
+                    None):
+                kwargs['key_name'] = ('k:%s:%s' % (ad_network_app_mapper.key(),
+                    kwargs['date'].strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
     @property
@@ -146,6 +146,10 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     @property
     def fill_rate(self):
         if self.attempts:
+            # If this instance is being used as a roll up
+            if hasattr(self, 'fill_rate_impressions'):
+                return aggregate_stats.fill_rate_impressions / \
+                        float(aggregate_stats.attempts)
             return self.impressions / float(self.attempts)
         return 0.0
 

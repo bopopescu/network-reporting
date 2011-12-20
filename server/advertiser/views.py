@@ -1111,7 +1111,7 @@ class AJAXStatsHandler(RequestHandler):
             days = StatsModel.lastdays(int(date_range))
 
         if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
+            end_date = datetime.datetime.strptime("%Y-%m-%d", self.start_date)
         else:
             end_date = datetime.date.today()
 
@@ -1210,8 +1210,8 @@ def stats_ajax(request, *args, **kwargs):
 
 class CampaignExporter(RequestHandler):
     def post(self, adgroup_key, file_type, start, end, *args, **kwargs):
-        start = datetime.datetime.strptime(start,'%m%d%y')
-        end = datetime.datetime.strptime(end,'%m%d%y')
+        start = datetime.datetime.strptime('%m%d%y', start)
+        end = datetime.datetime.strptime('%m%d%y', end)
         days = date_magic.gen_days(start, end)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)

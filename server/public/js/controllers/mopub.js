@@ -23,7 +23,7 @@ if (typeof window.console == "undefined") {
  * If you want something to happen everywhere, on every page,
  * it should go here.
  */
-(function($){
+(function($) {
 
     var mopub = window.mopub || {};
     var Chart = window.Chart || {};
@@ -204,17 +204,9 @@ if (typeof window.console == "undefined") {
                 message.remove();
                 hideMessageCenterIfNoMessages();
             });
-            // TODO: tell server that message.attr('id') has been hidden
-
-        // Set up stats breakdown
-        $('.stats-breakdown tr').click(function(e) {
-            var row = $(this);
-            if(!row.hasClass('active')) {
-                var table = row.parents('table');
-                $('tr.active', table).removeClass('active');
-                row.addClass('active');
-            }
         });
+        // TODO: tell server that message.attr('id') has been hidden
+
 
         // Set up highcharts default options
         Highcharts.setOptions({
@@ -348,6 +340,7 @@ if (typeof window.console == "undefined") {
             });
         });
 
+
     }); // end $(document).ready
 
     function getUrlParameters()
@@ -387,11 +380,11 @@ if (typeof window.console == "undefined") {
 
     /*
      * ## Dropdown Menus
-     *
-     * Usage:
-     *
-     * `$(dropdown-trigger).dropdown(things-that-dropdown);`
-     */
+         *
+             * Usage:
+             *
+             * `$(dropdown-trigger).dropdown(things-that-dropdown);`
+             */
     $.fn.dropdown = function(selector) {
         var self = this;
         var over_trigger, over_body = false;
@@ -413,7 +406,7 @@ if (typeof window.console == "undefined") {
             $(self).removeClass('hovered');
         }
 
-        // Set the hover states
+            // Set the hover states
         $(this).hover(function() {
             over_trigger = true;
         }, function () {
@@ -1226,6 +1219,7 @@ if (typeof window.console == "undefined") {
     window.mopub.Stats = Stats;
     window.mopub.Chart = Chart;
     window.Mopub = mopub;
+
 
 })(this.jQuery);
 

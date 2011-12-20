@@ -30,8 +30,10 @@ from ad_network_reports.ad_networks import AdNetwork
 from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkScrapeStats, \
         AdNetworkManagementStats
-from ad_network_reports.query_managers import AdNetworkReportQueryManager, \
-        AdNetworkLoginCredentialsManager, AD_NETWORK_NAMES
+from ad_network_reports.query_managers import \
+        AD_NETWORK_NAMES, \
+        AdNetworkLoginCredentialsManager, \
+        AdNetworkMapperManager
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
 from common.utils import date_magic
@@ -42,15 +44,15 @@ from google.appengine.ext import db
 
 TESTING = True
 
-def send_stats_mail(account, manager, test_date, valid_stats_list):
+def send_stats_mail(account, test_date, valid_stats_list):
     """Send email with scrape stats data for the test date organized in a
     table.
     """
     emails = ', '.join(account.emails)
 
     if emails and valid_stats_list:
-        aggregate_stats = manager.roll_up_stats([stats for app_name,
-            ad_network_name, stats in valid_stats_list])
+        aggregate_stats = AdNetworkStatsManager.roll_up_stats([stats for
+            app_name, ad_network_name, stats in valid_stats_list])
         aggregate_stats.ctr *= 100
         valid_stats_list = sorted(valid_stats_list, key = lambda s: s[0] + s[1])
         email_body = ""
@@ -137,7 +139,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
     login_credentials_list = (only_these_credentials,) if \
-            only_these_credentials else AdNetworkLoginCredentials. \
+            only_these_credentials else AdNetworkLoginCredentialsManager. \
             get_all_login_credentials()
 
     # Create log file.
@@ -175,14 +177,12 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
             if (account_key != previous_account_key and
                     previous_account_key):
                 if login_credentials.email and test_date == yesterday:
-                    send_stats_mail(db.get(previous_account_key), manager,
-                            test_date, valid_stats_list)
+                    send_stats_mail(db.get(previous_account_key), test_date,
+                            valid_stats_list)
                 valid_stats_list = []
             previous_account_key = account_key
 
             stats_list = []
-            manager = AdNetworkReportQueryManager(login_credentials.account)
-
             try:
                 # AdNetwork is a factory class that returns the appropriate
                 # subclass of itself when created.
@@ -238,15 +238,16 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
 
                 # Get the ad_network_app_mapper object that corresponds to the
                 # login_credentials and stats.
-                ad_network_app_mapper = manager.get_ad_network_mapper(
-                        publisher_id=publisher_id,
-                        ad_network_name=login_credentials.ad_network_name)
+                ad_network_app_mapper = AdNetworkMapperManager. \
+                        get_ad_network_mapper(publisher_id=publisher_id,
+                                ad_network_name=login_credentials.
+                                    ad_network_name)
 
                 if not ad_network_app_mapper:
                     # Check if the app has been added to MoPub prior to last
                     # update.
-                    ad_network_app_mapper = manager.find_app_for_stats(
-                            publisher_id, login_credentials)
+                    ad_network_app_mapper = AdNetworkMapperManager. \
+                            find_app_for_stats(publisher_id, login_credentials)
                     if not ad_network_app_mapper:
                         # App is not registered in MoPub but is still in the ad
                         # network.
@@ -308,7 +309,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
             aggregate.put()
             if test_date == yesterday and login_credentials and \
                     login_credentials.email:
-                send_stats_mail(login_credentials.account, manager, test_date,
+                send_stats_mail(login_credentials.account, test_date,
                         valid_stats_list)
 
     if only_these_credentials and stats_list:

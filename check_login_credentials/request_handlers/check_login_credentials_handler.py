@@ -75,7 +75,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 account_key = self.get_argument('account_key')
                 if os.path.exists('/home/ubuntu/'):
                     setup_remote_api()
-                manager = AdNetworkReportQueryManager(db.get(account_key))
+                account = db.get(account_key)
                 scraper = AdNetwork(login_credentials).create_scraper()
                 # Password and username aren't encrypted yet so we don't need
                 # to call append_extra info like in update_ad_networks.
@@ -100,14 +100,15 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 wants_email = self.get_argument('email', False) and True
                 accounts_login_credentials = set([creds.ad_network_name for
                     creds in AdNetworkLoginCredentialsManager. \
-                            get_login_credentials()])
-                login_credentials = manager. \
-                        create_login_credentials_and_mappers(ad_network_name=
-                        login_credentials.ad_network_name,
-                        username=login_credentials.username,
-                        password=login_credentials.password,
-                        client_key=login_credentials.client_key,
-                        send_email=wants_email)
+                            get_login_credentials(account)])
+                login_credentials = AdNetworkReportQueryManager. \
+                        create_login_credentials_and_mappers(account=account,
+                                ad_network_name=
+                                    login_credentials.ad_network_name,
+                                username=login_credentials.username,
+                                password=login_credentials.password,
+                                client_key=login_credentials.client_key,
+                                send_email=wants_email)
 
                 # Collect the last two weeks of data for these credentials and
                 # add it to the database if the login credentials for the

@@ -38,11 +38,10 @@ class JumpTapAdNetwork(AdNetwork):
         to login credentials.
         """
         super(self.__class__, self).append_extra_info()
-        manager = AdNetworkReportQueryManager(self.login_credentials.
-                account)
-        self.login_credentials = (self.login_credentials, manager.
-                get_app_publisher_ids(self.login_credentials.ad_network_name),
-                manager.get_adunit_publisher_ids(self.login_credentials.
+        account = self.login_credentials.account
+        self.login_credentials = (self.login_credentials, AdNetworkReportManager.
+                get_app_publisher_ids(account, self.login_credentials.ad_network_name),
+                AdNetworkReportManager.get_adunit_publisher_ids(account, self.login_credentials.
                     ad_network_name))
 
 class IAdAdNetwork(AdNetwork):
@@ -60,9 +59,9 @@ class MobFoxAdNetwork(AdNetwork):
         Return app level publisher ids appended to login credentials.
         """
         super(self.__class__, self).append_extra_info()
-        manager = AdNetworkReportQueryManager(self.login_credentials.account)
-        self.login_credentials = (self.login_credentials, manager.
-                get_app_publisher_ids(self.login_credentials.ad_network_name))
+        account = self.login_credentials.account
+        self.login_credentials = (self.login_credentials, AdNetworkReportQueryManager.
+                get_app_publisher_ids(account, self.login_credentials.ad_network_name))
 
 # dictionary of supported ad networks
 AD_NETWORKS = {'admob' : AdMobAdNetwork,

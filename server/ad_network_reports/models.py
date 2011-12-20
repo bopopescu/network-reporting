@@ -131,9 +131,10 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            if kwargs.get('ad_network_app_mapper', None) kwargs.get('date',
+            if kwargs.get('ad_network_app_mapper', None) and kwargs.get('date',
                     None):
-                kwargs['key_name'] = ('k:%s:%s' % (ad_network_app_mapper.key(),
+                kwargs['key_name'] = ('k:%s:%s' % (kwargs[
+                    'ad_network_app_mapper'].key(),
                     kwargs['date'].strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
@@ -148,8 +149,8 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
         if self.attempts:
             # If this instance is being used as a roll up
             if hasattr(self, 'fill_rate_impressions'):
-                return aggregate_stats.fill_rate_impressions / \
-                        float(aggregate_stats.attempts)
+                return self.fill_rate_impressions / \
+                        float(self.attempts)
             return self.impressions / float(self.attempts)
         return 0.0
 

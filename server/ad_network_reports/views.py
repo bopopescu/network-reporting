@@ -3,6 +3,7 @@ import logging
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
         MOBFOX_PRETTY, IAD_PRETTY, AdNetworkReportQueryManager, \
+        AdNetworkMapperManager, AdNetworkStatsManager, \
         get_management_stats, create_fake_data
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
@@ -11,8 +12,6 @@ from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.shortcuts import redirect
 from reporting.models import StatsModel
-
-from account.models import Account
 
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self):
@@ -28,10 +27,37 @@ class AdNetworkReportIndexHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range, 1)
 
-        manager = AdNetworkReportQueryManager(self.account)
-        aggregates, daily_stats, networks, apps = manager. \
-                get_index_data(days)
 
+        mappers = list(AdNetworkMapperManager.get_ad_network_mappers(self.account))
+
+        # Get aggregate stats for all the different ad network mappers for the
+        # account between the selected date range
+        aggregates_with_dates = [AdNetworkStatsManager. \
+                get_stats_for_mapper_and_days(n, days) for n in mappers]
+        if aggregates_with_dates:
+            aggregates_list, applications, sync_dates = \
+                    zip(*aggregates_with_dates)
+        else:
+            aggregates_list = []
+            sync_dates = []
+            applications = []
+        aggregate_stats_list = zip(mappers, aggregates_list, applications,
+                sync_dates)
+        aggregates = AdNetworkStatsManager.roll_up_stats(aggregates_list)
+
+        # Get the daily stats list.
+        daily_stats = []
+        for date in days:
+            stats_dict = AdNetworkStatsManager.get_stats_for_day(self.account,
+                    date).__dict__
+            stats_dict = dict([(key.replace('_', '', 1), val) for key, val
+                    in stats_dict.iteritems()])
+            daily_stats.append(stats_dict)
+
+        networks = AdNetworkStatsManager.roll_up_unique_stats(self.account,
+                aggregate_stats_list, True)
+        apps = AdNetworkStatsManager.roll_up_unique_stats(self.account,
+                aggregate_stats_list, False)
         if networks:
             network_names, networks = zip(*networks)
         else:
@@ -88,33 +114,9 @@ class AppDetailHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(self.date_range, 1)
 
-        manager = AdNetworkReportQueryManager()
-
-        mappers = list(manager.get_ad_network_mappers())
-
-        # Get aggregate stats for all the different ad network mappers for the
-        # account between the selected date range
-        aggregates_with_dates = [self.get_stats_for_mapper_and_days(n, days)
-                for n in mappers]
-        if aggregates_with_dates:
-            aggregates_list, applications, sync_dates = \
-                    zip(*aggregates_with_dates)
-        else:
-            aggregates_list = []
-            sync_dates = []
-            applications = []
-        aggregate_stats_list = zip(mappers, aggregates_list, applications,
-                sync_dates)
-        aggregates = self.roll_up_stats(aggregates_list)
 
 
-        networks = AdNetworkStatsManager.roll_up_unique_stats(
-                aggregate_stats_list, True)
-        apps = AdNetworkStatsManager.roll_up_unique_stats(
-                aggregate_stats_list, False)
-
-
-        ad_network_app_mapper = AdNetworkAppMapperManager.get_ad_network_mapper(
+        ad_network_app_mapper = AdNetworkMapperManager.get_ad_network_mapper(
                 ad_network_app_mapper_key=mapper_key)
         stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
                 mapper_key, days)
@@ -130,7 +132,7 @@ class AppDetailHandler(RequestHandler):
             del(stats_dict['date'])
             daily_stats.append(stats_dict)
         daily_stats.reverse()
-        aggregates = manager.roll_up_stats(stats_list)
+        aggregates = AdNetworkStatsManager.roll_up_stats(stats_list)
         return render_to_response(self.request,
                   'ad_network_reports/ad_network_base.html',
                   {

@@ -3,6 +3,7 @@ Views which allow users to create and activate accounts.
 
 """
 from google.appengine.api import mail
+from google.appengine.api import urlfetch  
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
@@ -11,6 +12,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
+
+import urllib
 
 from registration.forms import RegistrationForm, MPRegistrationForm, MPGoogleRegistrationForm, ChangeSettingsForm
 from registration.models import RegistrationProfile
@@ -136,7 +139,11 @@ def register(request, success_url=None,
     if request.method == 'POST':
         form = form_class(data=request.POST, files=request.FILES, request=request)
         domain_override = request.get_host()
-        if form.is_valid():
+
+        # Check reCAPTCHA response
+        captcha_success, form.captcha_error_msg = verify_captcha(request)
+
+        if form.is_valid() and captcha_success:
             new_user = form.save(domain_override)
 
             # Send welcome email
@@ -179,6 +186,51 @@ The MoPub Team"""%(new_user.first_name))
     return render_to_response(template_name,
                               { 'form': form },
                               context_instance=context)
+
+def verify_captcha(request):
+        # Ping the reCAPTCHA API from the account submit form
+        # Returns a tuple: (boolean success, string error)
+        #
+        # Notes:
+        # Successful response from reCAPTCHA API will be a single line:
+        #   true
+        # Unsuccessful response from reCAPTCHA API will be two lines:
+        #   false
+        #   <error_code>
+        #
+        # The errors are: invalid-site-private-key, invalid-request-cookie,
+        # incorrect-captcha-sol and recaptcha-not-reachable.  These should be included
+        # in the redisplay as &error=incorrect-captcha-sol, for example
+        #
+        captcha_url = 'http://www.google.com/recaptcha/api/verify'
+        captcha_private_key = '6LcbPcsSAAAAADQSC_Z6ZKaMqfQx_iNDDsVTWOcU'
+
+        captcha_data = {
+            'remoteip': request.META.get('REMOTE_ADDR'),
+            'privatekey': captcha_private_key,
+            'challenge': request.POST.get('recaptcha_challenge_field'),
+            'response': request.POST.get('recaptcha_response_field')
+        }
+
+        try:
+            response = urlfetch.fetch(captcha_url,
+                method=urlfetch.POST,
+                payload=urllib.urlencode(captcha_data),
+                headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        except:
+            return (False, None)
+        
+        if response.status_code == 200:
+            try:
+                lines = response.content.splitlines()
+                if lines[0] == 'true':
+                    return (True, None)
+                else:
+                    return (False, lines[1])
+            except:
+                pass
+
+        return (False, None)
 
 @login_required
 def settings_change(request,

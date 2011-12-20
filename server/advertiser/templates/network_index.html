@@ -15,6 +15,11 @@
   <li class="active"><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
 
+{% block titleBarRight %}
+<span class="titlebar-link">
+  <a class="linkIcon" href="/ad_network_reports/">Ad Network Revenue Report <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+</span>
+{% endblock titleBarRight %}
 
 {% block content %}
   <div class="clearfix">

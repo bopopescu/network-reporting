@@ -182,17 +182,33 @@
                           </a>
                           <span class="muted">
                             {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                              {{adgroup.campaign.start_datetime|format_date_compact}}-{{adgroup.campaign.end_datetime|format_date_compact}}.
-                              {% endif %} {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                              {{adgroup.campaign.start_datetime|format_date_compact}} -
+                              {{adgroup.campaign.end_datetime|format_date_compact}}.
+                            {% endif %}
+
+                            {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+
                               Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
-                              {% endif %} {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                            {% endif %}
+                            {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                               Ends {{adgroup.campaign.end_datetime|format_date_compact}}.
-                              {% endif %} {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                            {% endif %}
+                            {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
                               All dates.
                             {% endif %}
-                            {% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
-                            {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
-                            {% if adgroup.percent_delivered %}({{adgroup.percent_delivered|floatformat:1}}%){%endif %}
+                            {% ifequal adgroup.campaign.budget_type 'daily' %}
+                              {% if adgroup.campaign.budget %}
+                                {{adgroup.campaign.budget|currency}} daily budget.
+                              {% else %}
+                                  Unlimited budget.
+                              {% endif %}
+                            {% endifequal %}
+                            {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
+                              {{adgroup.campaign.full_budget|currency}} campaign budget.
+                            {% endifequal %}
+                            {% if adgroup.percent_delivered %}
+                              ({{adgroup.percent_delivered|floatformat:1}}%)
+                            {%endif %}
                           </span>
                         </th>
 
@@ -223,6 +239,7 @@
                     <th class="dataTable-data numeric special">Clicks</th>
                     <th class="dataTable-data numeric special">CTR</th>
                     <th class="dataTable-data numeric special">CONV</th>
+                    <th>
                   </tr>
                 </thead>
                 <tbody>
@@ -261,46 +278,50 @@
                   </div>
 
             {% if marketplace %}
-                  <div class="appData alternating-color">
-                    <div class="appData-details noneg">
-              <div class="appData-details-inner show">
-                <table class="dataTable appData-main">
-                            <thead>
-                              <tr>
-                                <th class="dataTable-name big">Marketplace</th>
-                              <th class="dataTable-data numeric special">Revenue</th>
-                              <th class="dataTable-data numeric special">ECPM</th>
-                              <th class="dataTable-data numeric special">Impressions</th>
-                          </tr>
+              <div class="appData alternating-color">
+                <div class="appData-details noneg">
+                  <div class="appData-details-inner show">
+                    <table class="dataTable appData-main">
+                      <thead>
+                        <tr>
+                          <th class="dataTable-name big">Marketplace</th>
+                          <th class="dataTable-data numeric special">Revenue</th>
+                          <th class="dataTable-data numeric special">ECPM</th>
+                          <th class="dataTable-data numeric special">Impressions</th>
+                        </tr>
                       </thead>
                       <tbody>
-                  {% for adgroup in marketplace %}
-                  {% if forloop.counter0 == 0 %}
-                  <tr>
-                    <th>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <a href="{% url marketplace_index %}">{{adgroup.name}}</a>
-                      <span class="muted">MoPub Marketplace</span>
-                    </th>
-                    <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                  </tr>
-                  {% endif %}
-                  {% endfor %}
-                </tbody>
-              </table>
-              </div>
-            </div>
+                        {% for adgroup in marketplace %}
+                          {% if forloop.counter0 == 0 %}
+                            <tr>
+                              <th>
+                                {% if marketplace_activated and active_mpx_adunit_exists %}
+                                  <img src="/images/active.gif" height=9 width=9 />
+                                {% else %}
+                                  <img src="/images/inactive.gif" height=9 width=9 />
+                                {% endif %}
+                                <a href="{% url marketplace_index %}">
+                                  {{ adgroup.name }}
+                                </a>
+                                <span class="muted">MoPub Marketplace Beta</span>
+                              </th>
+                              <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                              <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
+                              <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                            </tr>
+                          {% endif %}
+                        {% endfor %}
+                      </tbody>
+                    </table>
                   </div>
+                </div>
+              </div>
             {% endif %}
 
-                  <div class="appData alternating-color">
-                    <div class="appData-details noneg">
-              <div class="appData-details-inner show">
-                <table class="dataTable appData-main">
+            <div class="appData alternating-color">
+              <div class="appData-details noneg">
+                <div class="appData-details-inner show">
+                  <table class="dataTable appData-main">
                             <thead>
                               <tr>
                                 <th class="dataTable-name big">Network</th>

@@ -1,5 +1,5 @@
 /*
-	MoPub Client JS
+    MoPub Client JS
 */
 var mopub_click_url;
 function redo_tags(frame) {
@@ -62,9 +62,6 @@ function mp_cb(data) {
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
     mopub_ad_url += '&jsonp=1&callback=mp_cb';
 
-
-    //init openx cursor tracking magic
-    document.write('<script type="text/javascript" src="' + mopub_site_url + '/js/clicktracker.js?v=24"></script>');
     //iframe for ad
     document.write('<iframe id="mopub-iframe-' + ufid + '" frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" vspace="0"'
                    + ' width="'+window.mopub_ad_width+'"'

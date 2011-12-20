@@ -119,7 +119,7 @@ class CampaignQueryManager(QueryManager):
                                  site_keys = [adunit.key()],
                                  )
             ag.put()
-            creative = adgroup.default_creative()
+            creative = ag.default_creative()
             creative.account = acct
             creative.put()
             return camp

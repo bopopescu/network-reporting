@@ -179,11 +179,15 @@ class StatsModelQueryManager(CachedQueryManager):
                            num_days=None,
                            account=None,
                            country=None,
-                           offline=False, date_fmt='date'):
-        """ Gets the stats for a specific pairing. Definitions:
-            advertiser_group: Either Campaign, AdGroup or Creative
-            publisher_group: Either App, or Site(AdUnit)"""
+                           offline=False,
+                           date_fmt='date'):
+        """
+        Gets the stats for a specific pairing. Definitions:
+        advertiser_group: Either Campaign, AdGroup or Creative
+        publisher_group: Either App, or Site(AdUnit)
+        """
         offline = offline or self.offline
+
         if isinstance(publisher,db.Model):
           publisher = publisher.key()
 
@@ -252,8 +256,8 @@ class StatsModelQueryManager(CachedQueryManager):
                 pub_string = key.name().split(':')[1] # k:<publisher>:<advertiser>:<date>
                 publisher = db.Key(pub_string) if pub_string else None
                 stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()), account=account, publisher=publisher, advertiser=advertiser)
-                if not self.offline:
-                    self._patch_mongodb_stats(stat)
+                # if not self.offline:
+                #     self._patch_mongodb_stats(stat)
             stat.include_geo = self.include_geo
             final_stats.append(stat)
 

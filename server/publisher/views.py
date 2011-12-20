@@ -485,6 +485,10 @@ class ShowAppHandler(RequestHandler):
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'],
                                  app.adgroups)
+
+
+        # Sort out all of the campaigns that are targeting this app
+        promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], app.adgroups)
         promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
         gtee_types = ['gtee_high', 'gtee_low', 'gtee']
@@ -515,6 +519,17 @@ class ShowAppHandler(RequestHandler):
         backfill_promo_campaigns = sorted(backfill_promo_campaigns,
                                           lambda x,y: cmp(y.bid, x.bid))
 
+
+        # Figure out if the marketplace is activated and if it has any
+        # activated adgroups so we can mark it as active/inactive
+        active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
+                                        for adgroup in marketplace_campaigns])
+        try:
+            marketplace_activated = marketplace_campaigns[0].campaign.active
+        except IndexError:
+            marketplace_activated = False
+
+
         return render_to_response(self.request,
                                   'publisher/app.html',
                                   {
@@ -526,12 +541,13 @@ class ShowAppHandler(RequestHandler):
                                       'date_range': self.date_range,
                                       'today': today,
                                       'yesterday': yesterday,
-                                      'stats_breakdown_includes': ['requests', 'impressions', 'clicks', 'users'],
                                       'account': self.account,
                                       'helptext': help_text,
                                       'gtee': gtee_levels,
                                       'promo': promo_campaigns,
                                       'marketplace': marketplace_campaigns,
+                                      'marketplace_activated': marketplace_activated,
+                                      'active_mpx_adunit_exists': active_mpx_adunit_exists,
                                       'network': network_campaigns,
                                       'backfill_promo': backfill_promo_campaigns,
                                   })
@@ -753,6 +769,10 @@ class AdUnitShowHandler(RequestHandler):
         backfill_promo_campaigns = sorted(backfill_promo_campaigns,
                                           lambda x,y: cmp(y.bid, x.bid))
 
+        try:
+            marketplace_activated = marketplace_campaigns[0].campaign.active
+        except IndexError:
+            marketplace_activated = False
 
         today = adunit.all_stats[-1]
         try:
@@ -768,7 +788,6 @@ class AdUnitShowHandler(RequestHandler):
                                       'adunit': adunit,
                                       'today': today,
                                       'yesterday': yesterday,
-                                      'stats_breakdown_includes': ['requests', 'impressions', 'ctr'],
                                       'start_date': days[0],
                                       'end_date': days[-1],
                                       'date_range': self.date_range,
@@ -780,6 +799,8 @@ class AdUnitShowHandler(RequestHandler):
                                       'marketplace': marketplace_campaigns,
                                       'network': network_campaigns,
                                       'backfill_promo': backfill_promo_campaigns,
+                                      'backfill_marketplace': backfill_marketplace_campaigns,
+                                      'marketplace_activated': marketplace_activated
                                   })
 
 @login_required
@@ -877,11 +898,14 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
                 account = self.account
             else:
                 account = adunit_form.instance.account
+
             adunit = adunit_form.save(commit=False)
             adunit.account = account
             AdUnitQueryManager.put(adunit)
 
-            enable_marketplace(adunit, self.account)
+            # If the adunit already exists we don't need to enable the marketplace
+            if not adunit_key:
+                enable_marketplace(adunit, self.account)
 
             json_dict.update(success=True)
             return self.json_response(json_dict)
@@ -895,6 +919,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
 def adunit_update_ajax(request,*args,**kwargs):
     return AdUnitUpdateAJAXHandler()(request,*args,**kwargs)
 
+
 class AppIconHandler(RequestHandler):
     def get(self, app_key):
         a = App.get(app_key)
@@ -907,6 +932,7 @@ class AppIconHandler(RequestHandler):
 
 def app_icon(request,*args,**kwargs):
     return AppIconHandler()(request,*args,**kwargs)
+
 
 class DeleteAdUnitHandler(RequestHandler):
     def post(self, adunit_key):

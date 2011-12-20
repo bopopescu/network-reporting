@@ -51,6 +51,9 @@ def budget_filter():
 def active_filter():
     log_mesg = "Removed due to inactivity: %s"
     def real_filter(a):
+        # If this adgroup is LL targeted, then ignore this filter
+        if a.cities and len(a.cities) > 0:
+            return True
         return (a.campaign.active and a.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
     return (real_filter, log_mesg, [])
 
@@ -296,7 +299,7 @@ def lat_lon_filter(ll=None):
     ll_p = None
     #ll should be input as a string, turn it into a list of floats
     if ll:
-        ll_p = [float(val) for val in ll.split(',')]
+        ll_p = parse_lat_long(ll)#[float(val) for val in ll.split(',')]
     log_mesg = "Removed due to being outside target lat/long radii: %s"
     def real_filter(a):
         #If ll_p is none or adgroup has no city targets, dont' exclude
@@ -306,12 +309,24 @@ def lat_lon_filter(ll=None):
         # for every city.  Apply map to this split list to get (float('lat'), float('lon'))
         latlons = ((float(k) for k in t.split(',')) for t in (city.split(':')[0] for city in a.cities))
         for lat, lon in latlons:
-            #Check all lat, lon pairs.  If any one of them is too far, return False
-            # since all filters are inclusion filters (False means don't keep it)
+            #Check all lat, lon pairs.  If any one of them is too far, return True
+            # since all filters are exclusion filters (True means don't keep it)
             if ll_dist((lat,lon),ll_p) < CAPTURE_DIST:
                 return True
         return False
     return (real_filter, log_mesg, [])
+
+def parse_lat_long(ll_str):
+    # Try basic way first
+    latlon = ll_str.split(",")
+    if len(latlon) == 2:
+        return [float(val) for val in latlon]
+    elif len(latlon) == 4:
+        lat = float('.'.join(latlon[:2]))
+        lon = float('.'.join(latlon[2:]))
+        return [lat, lon]
+    else:
+        return None
 
 ###############
 # End filters

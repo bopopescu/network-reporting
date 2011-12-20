@@ -61,15 +61,8 @@ class MobFoxScraper(object):
             try:
                 nsr = NetworkScrapeRecord(revenue = float(self.get_value(
                     "earnings")),
-                    # We can't get the number of attempts / requests
-                    attempts = 0,
                     impressions = int(self.get_value("impressions")),
-                    # We can't get this and we don't have # attempts so we can't
-                    # calculate it
-                    fill_rate = 0.0,
                     clicks = int(self.get_value("clicks")),
-                    ecpm = float(self.get_value("ecpm")),
-                    ctr = float(self.get_value("ctr")),
                     app_tag = pub_id)
                 reports.append(nsr)
             except Exception:

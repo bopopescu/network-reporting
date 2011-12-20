@@ -169,6 +169,7 @@
         </div>
       </div>
 
+
       <div class="appData alternating-color">
         <div class="appData-details noneg">
           <div class="appData-details-inner show">
@@ -237,10 +238,10 @@
                           {% if adgroup.deleted %}
                             <img title="Deleted" alt="Deleted" src="/images/deleted.gif" height=9 width=9 />
                           {% endif %}
-                          {% if adgroup.active and not adgroup.deleted and marketplace.active %}
+                          {% if adgroup.active and not adgroup.deleted and marketplace_activated %}
                             <img title="Active" alt="Active" src="/images/active.gif" height=9 width=9 />
                           {% endif %}
-                          {% if adgroup.active and not adgroup.deleted and not marketplace.active %}
+                          {% if adgroup.active and not adgroup.deleted and not marketplace_activated %}
                             <img title="Inactive" alt="Inactive" src="/images/inactive.gif" height=9 width=9 />
                           {% endif %}
                           {% if not adgroup.active and not adgroup.deleted %}
@@ -348,50 +349,6 @@
           </div>
         </div>
       </div>
-
-      {% if backfill_marketplace %}
-        <div class="appData alternating-color">
-          <div class="appData-details noneg">
-            <div class="appData-details-inner show">
-              <table class="dataTable appData-main">
-                <thead>
-                  <tr>
-                    <th class="dataTable-name big">Backfill Marketplace</th>
-                    <th class="dataTable-data numeric special">Revenue</th>
-                    <th class="dataTable-data numeric special">ECPM</th>
-                    <th class="dataTable-data numeric special">Attempts</th>
-                    <th class="dataTable-data numeric special">Impressions</th>
-                    <th class="dataTable-data numeric special">Fillrate</th>
-                    <th class="dataTable-data numeric special">Clicks</th>
-                    <th class="dataTable-data numeric special">CTR</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for adgroup in backfill_marketplace %}
-                    <tr>
-                      <th class="dataTable-name">
-                        {% if adgroup.deleted %}<img title="Deleted" alt="Deleted" src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                        {% if adgroup.active and not adgroup.deleted %}<img title="Active" alt="Active" src="/images/active.gif" height=9 width=9 />{% endif %}
-                        {% if not adgroup.active and not adgroup.deleted %}<img title="Paused" alt="Paused" src="/images/paused.gif" height=9 width=9 />{% endif %}
-                        <span class="muted">MoPub Marketplace</span>
-                      </th>
-
-                      <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      {% endif %}
-
 
     {% else %}
       <table class="dataTable appData-main">

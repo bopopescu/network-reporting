@@ -65,7 +65,6 @@ if (typeof window.console == "undefined") {
             }
         }
 
-
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
@@ -174,6 +173,7 @@ if (typeof window.console == "undefined") {
         $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
 
 
+
         // Message Center
         // hide message center when page loads if there are no messages
         function hideMessageCenterIfNoMessages() {
@@ -205,6 +205,15 @@ if (typeof window.console == "undefined") {
                 hideMessageCenterIfNoMessages();
             });
             // TODO: tell server that message.attr('id') has been hidden
+
+        // Set up stats breakdown
+        $('.stats-breakdown tr').click(function(e) {
+            var row = $(this);
+            if(!row.hasClass('active')) {
+                var table = row.parents('table');
+                $('tr.active', table).removeClass('active');
+                row.addClass('active');
+            }
         });
 
         // Set up highcharts default options
@@ -341,6 +350,22 @@ if (typeof window.console == "undefined") {
 
     }); // end $(document).ready
 
+    function getUrlParameters()
+    {
+        var parameters = {};
+        var url_params = window.location.search.slice(1).split('&');
+        var param;
+        for(var i = 0; i < url_params.length; i++)
+        {
+            param = url_params[i].split('=');
+            parameters[param[0]] = param[1];
+        }
+        return parameters;
+    }
+
+    var url_parameters = getUrlParameters();
+
+
 
     /*
      * # MoPub-defined jQuery utility functions and extensions
@@ -473,10 +498,10 @@ if (typeof window.console == "undefined") {
             $(item).click(function(){
                 activate($(this), ul);
                 activate($(href), tab_sections);
-                window.location.hash = href;
+                window.location.hash = href + "-tab";
             });
 
-            if (window.location.hash == href) {
+            if (window.location.hash == href + "-tab") {
                 $(item).click();
             }
         });
@@ -754,7 +779,7 @@ if (typeof window.console == "undefined") {
 
         $.ajax({
             url: self.url,
-
+            data: getUrlParameters(),
             dataType: 'json',
 
             success: function() {

@@ -1,3 +1,6 @@
+import sys
+import os
+import logging
 from google.appengine.ext import db
 
 from appengine_django import InstallAppengineHelperForDjango
@@ -6,18 +9,20 @@ InstallAppengineHelperForDjango()
 from account.models import Account
 from publisher.models import App
 
+KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
+
 class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
-    account = db.ReferenceProperty(Account, required = True,
+    account = db.ReferenceProperty(Account, required=True,
             collection_name='login_credentials')
     ad_network_name = db.StringProperty(required=True)
 
     # Needed for all networks but mobfox
-    username = db.ByteStringProperty()
+    _username = db.ByteStringProperty()
 
     # Needed to store the username securely
     username_iv = db.ByteStringProperty()
 
-    password = db.ByteStringProperty()
+    _password = db.ByteStringProperty()
 
     # Needed to store the password securely
     password_iv = db.ByteStringProperty()
@@ -25,15 +30,54 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     # Needed for admob
     client_key = db.StringProperty()
 
-    email = db.BooleanProperty(default = False)
+    email = db.BooleanProperty(default=False)
 
-    is_active = db.BooleanProperty(default=True)
+    # List of application publisher ids that aren't tracked in MoPub.
+    app_pub_ids = db.StringListProperty(default=[])
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(), kwargs['ad_network_name']))
+            kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
+                kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
+        if 'username' in kwargs:
+            self.username = kwargs['username']
+        if 'password' in kwargs:
+            self.password = kwargs['password']
 
+    def get_username(self):
+        # Note: Crypto.Cipher cannot be imported in app engine.
+        from Crypto.Cipher import AES
+        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
+        return username_aes_cfb.decrypt(self._username)
+
+    def set_username(self, username):
+        from Crypto.Cipher import AES
+        from Crypto.Util import randpool
+        rp = randpool.RandomPool()
+
+        self.username_iv = rp.get_bytes(16)
+        username_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.username_iv)
+        self._username = username_aes_cfb.encrypt(username)
+
+    def get_password(self):
+        # Note: Crypto.Cipher cannot be imported in app engine.
+        from Crypto.Cipher import AES
+        password_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.password_iv)
+        return password_aes_cfb.decrypt(self._password)
+
+    def set_password(self, password):
+        from Crypto.Cipher import AES
+        from Crypto.Util import randpool
+        rp = randpool.RandomPool()
+
+        self.password_iv = rp.get_bytes(16)
+        password_aes_cfb = AES.new(KEY, AES.MODE_CFB, self.password_iv)
+        self._password = password_aes_cfb.encrypt(password)
+
+    username = property(get_username, set_username)
+
+    password = property(get_password, set_password)
 
     @classmethod
     def get_by_ad_network_name(cls, account, ad_network_name):
@@ -44,12 +88,10 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
     publisher_id = db.StringProperty(required=True)
 
     ad_network_login = db.ReferenceProperty(AdNetworkLoginCredentials,
-                                            collection_name='ad_network_app_mappers')
-    application = db.ReferenceProperty(App, collection_name='ad_network_app_mappers')
-
-    # If a network contains information for an app that the publisher
-    # hasn't entered into mopub, mark this false
-    app_in_mopub = db.BooleanProperty(default=True)
+            collection_name='ad_network_app_mappers')
+    # application property cannot be called app since it's a reseverd word
+    application = db.ReferenceProperty(App, collection_name=
+            'ad_network_app_mappers')
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
@@ -71,32 +113,53 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
         True if stats exist and false if they don't, so that we can tell from
         within the template if an error might have occured.
         """
-
-        stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =', self).get()
+        stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =',
+                self).get()
 
         return stats == None
 
 class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
-                                                 required=True,
-                                                 collection_name='ad_network_stats')
+                                             collection_name='ad_network_stats')
     date = db.DateProperty(required=True)
 
     # stats info for a specific day
-    revenue = db.FloatProperty()
-    attempts = db.IntegerProperty()
-    impressions = db.IntegerProperty()
-    fill_rate = db.FloatProperty()
-    clicks = db.IntegerProperty()
-    ctr = db.FloatProperty()
-    ecpm = db.FloatProperty()
+    revenue = db.FloatProperty(default=0.0)
+    attempts = db.IntegerProperty(default=0)
+    impressions = db.IntegerProperty(default=0)
+    clicks = db.IntegerProperty(default=0)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            kwargs['key_name'] = ('k:%s:%s' % (kwargs[
-                    'ad_network_app_mapper'].key(), kwargs['date'].
+            mapper = kwargs.get('ad_network_app_mapper', None)
+            mapper = mapper.key() if mapper else '*'
+            kwargs['key_name'] = ('k:%s:%s' % (mapper, kwargs['date'].
                     strftime('%Y-%m-%d')))
         super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
+
+    @property
+    def cpm(self):
+        if self.impressions:
+            return self.revenue / self.impressions * 1000
+        return 0.0
+
+    @property
+    def fill_rate(self):
+        if self.attempts:
+            return self.impressions / float(self.attempts)
+        return 0.0
+
+    @property
+    def cpc(self):
+        if self.clicks:
+            return self.revenue / self.clicks
+        return 0.0
+
+    @property
+    def ctr(self):
+        if self.impressions:
+            return self.clicks / float(self.impressions)
+        return 0.0
 
     @classmethod
     def get_by_app_mapper_and_day(cls, app_mapper, day):
@@ -104,10 +167,23 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
             day.strftime('%Y-%m-%d')))
 
     @classmethod
-    def get_by_app_mapper_and_days(cls, app_mapper_key, days):
-        return [stats for stats in cls.get_by_key_name(['k:%s:%s' % (
-            app_mapper_key, day.strftime('%Y-%m-%d')) for day in days]) if stats
-            != None]
+    def get_by_app_mapper_and_days(cls, app_mapper_key, days,
+            include_last_day=False):
+        stats_list = cls.get_by_key_name(['k:%s:%s' % (app_mapper_key,
+            day.strftime('%Y-%m-%d')) for day in days])
+        final_stats_list = []
+        for stats, day in zip(stats_list, days):
+            if not stats:
+                stats = AdNetworkScrapeStats(date=day)
+            final_stats_list.append(stats)
+        if include_last_day:
+            filtered_stats = [stats for stats in stats_list if stats != None]
+            if filtered_stats:
+                return final_stats_list, max(filtered_stats, key=lambda stats:
+                        stats.date).date
+            return final_stats_list, None
+        return final_stats_list
+
 
 class AdNetworkManagementStats(db.Model): #(date)
     date = db.DateProperty(required=True)

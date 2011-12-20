@@ -1,13 +1,5 @@
 /* Dashboard */
 
-
-
-#mopub-dashboard #messageCenter {
-    padding-bottom: 0;
-    border-bottom: none;
-    margin-bottom: 25px;
-}
-
 #dashboard-stats {
     padding: 20px 20px 10px 20px;
 
@@ -236,6 +228,11 @@
 .dataTable .appData-icon {
   padding-right: 11px;
   width: 45px;
+}
+
+.dataTable .networkData-icon {
+  padding-right:11px;
+  width: 75px;
 }
 
 .dataTable .appData-icon a img,

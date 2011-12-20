@@ -101,10 +101,10 @@
               <a href="#" class="dropdown-head"> Your Account <span class="dropdown-icon"> </span></a>
               <div class="dropdown invisible">
                 <ul>
-                  <li> <a href="{% url account_index %}">General Settings</a> </li>
-                  <li> <a href="{% url ad_network_settings %}">Ad Network Settings </a> </li>
-                  <li> <a href="{% url reports_index %}">Reports</a></li>
-                  <li> <a href="{% url payment_history %}">Payment History </a> </li>
+                  <li> <a href="/account/">General Settings</a> </li>
+                  <li> <a href="/account/networks/">Ad Network Settings </a> </li>
+                  <li> <a href="/reports/">Reports</a></li>
+                  <li> <a href="/account/payments/history">Payment History </a> </li>
                 </ul>
               </div>
             </li>
@@ -138,8 +138,6 @@
       </div>
       <div id="content">
         <div class="pageWidth">
-          {% block messageCenter %}
-          {% endblock messageCenter %}
 
 
           {% block flash %}
@@ -182,7 +180,7 @@
           </div>
           <div id="footer-account">
             {% if user.is_authenticated %}
-              Logged in as <a href="{% url account_index %}">{{user.email}}</a>
+              Logged in as <a href="/account/">{{user.email}}</a>
             {% endif %}
 
             {% block adminSelect %}

@@ -22,7 +22,8 @@ class AccountQueryManager(CachedQueryManager):
         user = user or request.user
         # try to fetch the account for this user from memcache
         if cache:
-            account = memcache.get(str(cls._user_key(user)), namespace="account")
+            account = memcache.get(str(cls._user_key(user)), namespace=
+                    "account")
         else:
             account = None
 

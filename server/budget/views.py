@@ -32,10 +32,10 @@ def budget_advance(request):
     # If there is no global counter, then create it
     if not slice_counter:
         logging.warning("%s" % datetime.now())
-        slice_counter = BudgetSliceCounter(slice_num = get_slice_from_ts(time.time()))
+        slice_counter = BudgetSliceCounter(slice_num = get_slice_from_datetime(datetime.utcnow()))
         # otherwise incr it
     else:
-        slice_counter.slice_num += 1
+        slice_counter.slice_num = get_slice_from_datetime(datetime.utcnow())
 
     slice_counter.put()
     # set it memc

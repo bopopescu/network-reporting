@@ -130,7 +130,9 @@ class Site(db.Model):
           u'320x50',
           u'custom',
       )
-    # TODO: Why is this "app_key" and not "app"?
+    # TODO: Why is this "app_key" and not "app"? Answer: app is a reserved word
+    # in app engine. This would definitely make more sense to rename app
+    # though since it obviously isn't a key.
     app_key = db.ReferenceProperty(App, collection_name="all_adunits")
     account = db.ReferenceProperty(Account)
 

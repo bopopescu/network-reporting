@@ -2,8 +2,8 @@ var retry=0;
 
 function checkReport(retry_num) {
     //If exists returns data, otherwise returns False
-    //
     var id = $('#reportKey').val();
+
     $.ajax({
        url: '/reports/check/'+id+'/?retry='+retry_num,
        success: writeReport
@@ -27,7 +27,13 @@ function buildTable(table) {
         'bJQueryUI':true,
         'aLengthMenu': [[50,100,-1], [50, 100, 'All']],
         'iDisplayLength' : 50,
-        'aoColumnDefs': [ {'asSorting': ['desc', 'asc'], 'aTargets': [0,1,2,3,4]},]
+        'aoColumnDefs': [
+            {
+                'asSorting': ['desc', 'asc'],
+                'aTargets': [0,1,2,3,4]
+            }
+        ],
+        "aaSorting": [[ 1, 'asc' ]]
     });
 }
 

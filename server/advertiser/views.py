@@ -77,7 +77,6 @@ class AdGroupIndexHandler(RequestHandler):
                 if not adgroup.archived:
                     adunits = []
                     adunit_keys_to_fetch = []
-
                     adgroup.targeted_app_keys = []
                     adunit_keys = [adunit_key for adunit_key in adgroup.site_keys]
                     for adunit_key in adunit_keys:
@@ -135,6 +134,7 @@ def _sort_campaigns(adgroups):
         guaranteed_campaigns,
         backfill_promo_campaigns,
     ]
+
 
 class AdGroupArchiveHandler(RequestHandler):
     def get(self):
@@ -1182,10 +1182,10 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = adgroup.cpm
 
                     adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
-
                     summed_stats.status = filters.campaign_status(adgroup)
                     if adgroup.running and adgroup.campaign.budget_obj and adgroup.campaign.budget_obj.delivery_type != 'allatonce':
                         summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign.budget_obj) else "behind"
@@ -1359,6 +1359,11 @@ class MarketplaceIndexHandler(RequestHandler):
 
         except Exception, e:
             logging.warn(e)
+
+        try:
+            blind = self.account.network_config.blind
+        except:
+            blind = False
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",

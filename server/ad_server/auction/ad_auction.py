@@ -7,6 +7,8 @@ from ad_server.auction.battles import (GteeBattle,
                                        BackfillPromoBattle
                                       )
 
+from common.constants import ACCEPTED_MULTI_COUNTRY
+
 def run(client_context, adunit_context, MarketplaceBattle=MarketplaceBattle):
     """ Runs the auction, returns a creative and an updated list of
         excluded_adgroup_keys. Pass in MarketplaceBattle as kwarg
@@ -87,6 +89,11 @@ def geo_predicates_from_country_code(country_code):
         """
     if not country_code:
         return ["country_name=US","country_name=*"]
+    elif country_code in ACCEPTED_MULTI_COUNTRY:
+        geo_pred = ['country_name=*']
+        for ccode in ACCEPTED_MULTI_COUNTRY[country_code]:
+            geo_pred.append('country_name=%s' % ccode)
+        return geo_pred
     else:
         return ["country_name=%s" % country_code, "country_name=*"]
 

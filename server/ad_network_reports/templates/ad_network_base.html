@@ -115,6 +115,12 @@
             other.datepicker('option', 'maxDate', date);
           }
         });
+
+        $("#ad-network-exportSelect").change(function() {
+            if ($(this).val()) {
+                window.open($(this).val());
+            }
+        });
     });
   </script>
 {% endblock extraScripts %}
@@ -163,8 +169,16 @@
   {% endblock graph %}
 
   {% block innerContent %}
+
     <section id="dashboard-apps">
       <h2>{{app_name}} on {{ad_network_name}}</h2>
+      <div class="buttonBank buttonBank-right">
+          <select name='exportSelect' id='ad-network-exportSelect' class='selectmenu'>
+              <option value="">Export</option>
+              <option value="/ad_network_reports/export/xls/{{mapper_key}}">XLS</option>
+              <option value="/ad_network_reports/export/csv/{{mapper_key}}">CSV</option>
+          </select>
+      </div>
       <div class="appData-details noneg">
         <table class="dataTable appData-main">
           <thead>
@@ -205,6 +219,6 @@
       </div>
     </section>
 
-    {% endblock innerContent %}
+  {% endblock innerContent %}
 
 {% endblock content %}

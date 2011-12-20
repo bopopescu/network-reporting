@@ -191,50 +191,29 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
 
 
 class AdNetworkManagementStats(db.Model): #(date)
+    ad_network_name = db.StringProperty(required=True)
     date = db.DateProperty(required=True)
 
-    # Could be done with the Expando class but probably better to make
-    # explicit.
+    found = db.IntegerProperty(default=0)
+    updated = db.IntegerProperty(default=0)
+    mapped = db.IntegerProperty(default=0)
 
-    admob_found = db.IntegerProperty(default=0)
-    admob_updated = db.IntegerProperty(default=0)
-    admob_mapped = db.IntegerProperty(default=0)
-    admob_login_failed = db.IntegerProperty(default=0)
-
-    jumptap_found = db.IntegerProperty(default=0)
-    jumptap_updated = db.IntegerProperty(default=0)
-    jumptap_mapped = db.IntegerProperty(default=0)
-    jumptap_login_failed = db.IntegerProperty(default=0)
-
-    iad_found = db.IntegerProperty(default=0)
-    iad_updated = db.IntegerProperty(default=0)
-    iad_mapped = db.IntegerProperty(default=0)
-    iad_login_failed = db.IntegerProperty(default=0)
-
-    inmobi_found = db.IntegerProperty(default=0)
-    inmobi_updated = db.IntegerProperty(default=0)
-    inmobi_mapped = db.IntegerProperty(default=0)
-    inmobi_login_failed = db.IntegerProperty(default=0)
-
-    mobfox_found = db.IntegerProperty(default=0)
-    mobfox_updated = db.IntegerProperty(default=0)
-    mobfox_mapped = db.IntegerProperty(default=0)
-    mobfox_login_failed = db.IntegerProperty(default=0)
+    failed_logins = db.ListProperty(
+            db.ReferenceProperty, default=[])
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
-            kwargs['key_name'] = ('k:%s' % kwargs['date'].
-                    strftime('%Y-%m-%d'))
+            kwargs['key_name'] = ('k:%s:%s' % (kwargs['ad_network_name'],
+                kwargs['date'].strftime('%Y-%m-%d')))
         super(AdNetworkManagementStats, self).__init__(*args, **kwargs)
 
-    def increment(self, field):
-        setattr(self, field, getattr(self, field) + 1)
+    @classmethod
+    def get_by_day(cls,ad_network_name, day):
+        return cls.get_by_key_name('k:%s:%s' % (ad_network_name,
+            day.strftime('%Y-%m-%d')))
 
     @classmethod
-    def get_by_day(cls, day):
-        return cls.get_by_key_name('k:%s' % day.strftime('%Y-%m-%d'))
-
-    @classmethod
-    def get_by_days(cls, days):
-        return [stats for stats in cls.get_by_key_name(['k:%s' % day.strftime(
-            '%Y-%m-%d') for day in days]) if stats != None]
+    def get_by_days(cls, ad_network_name, days):
+        return [stats for stats in cls.get_by_key_name(['k:%s:%s' %
+            (ad_network_name, day.strftime('%Y-%m-%d')) for day in days])
+            if stats != None]

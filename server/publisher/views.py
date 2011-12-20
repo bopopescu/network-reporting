@@ -505,7 +505,8 @@ class ExportFileHandler( RequestHandler ):
 
 
         #Set up attr getters/names
-        if key_type == 'app' or (key_type == 'account' and spec == 'apps') or (key_type == 'adunit' and spec == 'days'):
+        if key_type == 'app' or (key_type == 'account' and spec == 'apps') or \
+                (key_type == 'adunit' and spec == 'days'):
             stat_names = (REQ_STAT,) + stat_names
             if spec == 'days':
                 stat_names = (DTE_STAT,) + stat_names

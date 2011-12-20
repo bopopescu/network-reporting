@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from google.appengine.ext import db
 
 from common.constants import  *
-from common.utils.pyExcelerator import * 
+from common.utils.pyExcelerator import *
 #                   (  TABLE_FILE_FORMATS,
 #                                ALL_STATS,
 #                                REQ_STAT,
@@ -42,8 +42,11 @@ def write_xls_row( sheet, line, elts ):
 
 # Write a workbook to to_write ( file-like object )
 def write_xls( to_write, wbk ):
-    #This is essentially the 'save' function of pyExcelerator, but instead of writing
-    #to a file, we're writing to to_write (which should be an HttpResponse, which is a file-like object )
+    """
+    This is essentially the 'save' function of pyExcelerator, but instead of
+    writing to a file, we're writing to to_write (which should be an
+    HttpResponse, which is a file-like object )
+    """
     stream = wbk.get_biff_data()
     padding = '\x00' * ( 0x1000 - ( len( stream ) % 0x1000 ) )
 
@@ -60,8 +63,8 @@ def write_xls( to_write, wbk ):
     #continue making file 200x bigger than needed
     to_write.write( padding )
     to_write.write( doc.packed_MSAT_2nd )
-    to_write.write( doc.packed_SAT ) 
-    to_write.write( doc.dir_stream ) 
+    to_write.write( doc.packed_SAT )
+    to_write.write( doc.dir_stream )
 
 # Take a Worksheet to write to and return a fucntion that takes a list as input and writes said list to input Worksheet
 def make_row_writer( sheet ):
@@ -99,39 +102,49 @@ def verify_stats( stat ):
     assert stat in ALL_STATS, "Expected %s to be an element of %s, it's not" % ( stat, ALL_STATS )
     return stat.split( '_STAT' )[0]
 
-def write_stats( f_type, desired_stats, all_stats, site=None, owner=None, days=None, key_type=None):
-    #make sure things are valid
-    assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % ( TABLE_FILE_FORMATS, f_type )
+def write_stats( f_type, desired_stats, all_stats, site=None, owner=None,
+        days=None, key_type=None):
+    # make sure things are valid
+    assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % \
+            ( TABLE_FILE_FORMATS, f_type )
     response = None
 
     # setup response and writers
     if f_type == 'csv':
         response = HttpResponse( mimetype = 'text/csv' )
-        row_writer = write_csv_row( response ) 
+        row_writer = write_csv_row( response )
     elif f_type == 'xls':
         response = HttpResponse( mimetype = 'application/vnd.ms-excel' )
         row_writer, writer = make_xls_writers()
     else:
         # wat
-        assert False, "This should never happen, %s is in %s but doens't have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
+        assert False, "This should never happen, %s is in %s but doens't" \
+                "have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
 
     start = days[0]
     end = days[-1]
-    d_form = '%m-%d-%y' 
+    d_form = '%m-%d-%y'
     d_str = '%s--%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
     if key_type == 'adgroup':
         key_type = 'campaign'
-    owner_type = key_type.title() 
-    fname = "%s_%s_%s.%s" % ( owner_type, db.get(site).name, d_str, f_type )
+    owner_type = key_type.title()
+    if site:
+        fname = "%s_%s_%s.%s" % (owner_type, db.get(site).name, d_str, f_type)
+    else:
+        fname = "%s_%s.%s" % (owner_type, d_str, f_type)
     #should probably do something about the filename here
-    response['Content-disposition'] = 'attachment; filename=%s' % fname 
+    response['Content-disposition'] = 'attachment; filename=%s' % fname
 
-    #Verify requested stats and turn them into SiteStat attributes so we can getattr them
-    map_stats = map( verify_stats, desired_stats )
+    # Verify requested stats and turn them into SiteStat attributes so we can
+    # getattr them
+    if key_type == 'ad_network':
+        map_stats = desired_stats
+    else:
+        map_stats = map( verify_stats, desired_stats )
 
     # Title the columns with the stats that are going to be written
     row_writer( map_stats )
-    
+
     #Write the data
     for stat in all_stats:
         # This is super awesome, we iterate over all the stats objects, since the "desired stats" are formatted
@@ -141,10 +154,10 @@ def write_stats( f_type, desired_stats, all_stats, site=None, owner=None, days=N
         #excel has all the data in this temp object, dump all that into the response
         writer( response )
     return response
-        
+
 def export_writer(file_type, file_name, row_titles, row_data):
     """ Creates a file, writes data to it, and returns an HttpResponse
-    object for that file 
+    object for that file
 
     Args:
         file_type: string, type of file to be exported
@@ -158,7 +171,7 @@ def export_writer(file_type, file_name, row_titles, row_data):
     """
     if file_type == 'csv':
         response = HttpResponse(mimetype = 'text/csv')
-        row_writer = write_csv_row( response ) 
+        row_writer = write_csv_row( response )
     if file_type == 'xls':
         response = HttpResponse(mimetype = 'application/vnd.ms-excel')
         row_writer, writer = make_xls_writers()
@@ -184,7 +197,7 @@ def write_report(file_type, report_key, account):
     """
     if file_type == 'csv':
         response = HttpResponse(mimetype = 'text/csv')
-        row_writer = write_csv_row( response ) 
+        row_writer = write_csv_row( response )
     if file_type == 'xls':
         response = HttpResponse(mimetype = 'application/vnd.ms-excel')
         row_writer, writer = make_xls_writers()
@@ -195,7 +208,7 @@ def write_report(file_type, report_key, account):
     response['Content-disposition'] = 'attachment; filename=%s' % f_name
     stats_headers = ['Requests', 'Impressions', 'Clicks', 'Conversions']
     if report.report_blob:
-        stats_headers += ['Revenue', 'CTR']  
+        stats_headers += ['Revenue', 'CTR']
     headers = [report.d1.title()]
     if report.d2:
         headers.append(report.d2.title())
@@ -213,5 +226,5 @@ def write_report(file_type, report_key, account):
 
     return response
 
-        
+
 

@@ -10,6 +10,10 @@ urlpatterns = patterns('ad_network_reports.views',
             'app_detail',
             name='ad_network_app_detail'),
 
+        url(r'^export/(?P<f_type>xls|csv)/(?P<mapper_key>[-\w\.]+)/$',
+            'export_file',
+            name='exporter'),
+
         url(r'^manage/$',
             'ad_network_management',
             name='manage_ad_network_reports'),

@@ -125,7 +125,7 @@ def send_stats_mail(account, test_date, valid_stats_list):
 #"ad_network_reports/'>MoPub</a>"))
 
 def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
-        None):
+        None, send_email=(not TESTING)):
     """Update ad network stats.
 
     Iterate through all AdNetworkLoginCredentials. Login to the ad networks
@@ -161,7 +161,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     for test_date in date_magic.gen_days(start_date, end_date):
         logger.info("TEST DATE: %s" % test_date.strftime("%Y %m %d"))
         if not only_these_credentials:
-            aggregate = AdNetworkManagementStats(date=test_date)
+            aggregate = AdNetworkManagementStatsManager(date=test_date)
 
         previous_account_key = None
         valid_stats_list = []
@@ -176,7 +176,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
             # want email and the information is relevant (ie. yesterdays stats)
             if (account_key != previous_account_key and
                     previous_account_key):
-                if login_credentials.email and test_date == yesterday:
+                if login_credentials.email and test_date == yesterday and \
+                        send_mail:
                     send_stats_mail(db.get(previous_account_key), test_date,
                             valid_stats_list)
                 valid_stats_list = []
@@ -206,8 +207,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                 # This should catch ANY exception because we don't want to stop
                 # updating stats if something minor breaks somewhere.
                 if not only_these_credentials:
-                    aggregate.increment(login_credentials.ad_network_name +
-                            '_login_failed')
+                    aggregate.append_failed_login(login_credentials)
                 logger.error(("Couldn't get get stats for %s network for "
                         "\"%s\" account.  Can try again later or perhaps %s "
                         "changed it's API or site.") %
@@ -229,8 +229,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
 
             for stats in stats_list:
                 if not only_these_credentials:
-                    aggregate.increment(login_credentials.ad_network_name +
-                            '_found')
+                    aggregate.increment(login_credentials.ad_network_name,
+                            'found')
 
                 # Add the current day to the db.
 
@@ -260,17 +260,10 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                           ad_network_name))
                         login_credentials.app_pub_ids.append(stats.app_tag)
                         continue
-#                        ad_network_app_mapper = AdNetworkAppMapper(
-#                                ad_network_name=login_credentials.
-#                                        ad_network_name,
-#                                publisher_id=stats.app_tag,
-#                                ad_network_login=login_credentials,
-#                                application=None)
-#                        ad_network_app_mapper.put()
                     else:
                         if not only_these_credentials:
-                            aggregate.increment(login_credentials.ad_network_name +
-                                    '_mapped')
+                            aggregate.increment(login_credentials.
+                                    ad_network_name, 'mapped')
                         logger.info("%(account)s has pub id %(pub_id)s on "
                                 "%(ad_network)s that was FOUND in MoPub and "
                                 "mapped" %
@@ -287,8 +280,8 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                 ad_network = login_credentials.ad_network_name))
 
                 if not only_these_credentials:
-                    aggregate.increment(login_credentials.ad_network_name +
-                            '_updated')
+                    aggregate.increment(login_credentials.ad_network_name,
+                            'updated')
                 scrape_stats = AdNetworkScrapeStats(ad_network_app_mapper=
                     ad_network_app_mapper,
                     date=test_date,
@@ -305,14 +298,15 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                         scrape_stats))
             login_credentials.put()
 
-        if not only_these_credentials:
-            aggregate.put()
-            if test_date == yesterday and login_credentials and \
-                    login_credentials.email:
-                send_stats_mail(login_credentials.account, test_date,
-                        valid_stats_list)
-
-    if only_these_credentials and stats_list:
+    if not only_these_credentials:
+        aggregate.put_stats()
+        if test_date == yesterday and login_credentials and \
+                login_credentials.email:
+            send_stats_mail(login_credentials.account, test_date,
+                    valid_stats_list)
+        for failed_login in aggregate.get_failed_logins():
+            update_ad_networks(test_date, test_date, failed_login, email=False)
+    else if stats_list:
         emails = ', '.join(db.get(account_key).emails)
         mail.send_mail(sender='olp@mopub.com',
                        reply_to='support@mopub.com',

@@ -35,6 +35,7 @@ AD_NETWORK_NAMES = {'admob': 'AdMob',
                     'mobfox': 'MobFox'}
 
 MOBFOX_PRETTY = 'MobFox'
+MOBFOX = 'mobfox'
 IAD_PRETTY = 'iAd'
 IAD = 'iad'
 
@@ -452,66 +453,35 @@ class AdNetworkStatsManager(CachedQueryManager):
                 ad_network_app_mapper_key, days)
         return sorted(stats_list, key=lambda stats: stats.date, reverse=True)
 
-def get_management_stats(days):
-    return AdNetworkManagementStats.get_by_days(days)
+class AdNetworkManagementStatsManager(CachedQueryManager):
+    def __init__(day):
+        self.stats_dict = {}
+        for network in AD_NETWORK_NAMES.keys():
+            self.stats_dict[network] = AdNetworkManagementStats(
+                    ad_network_name=network,
+                    date=day)
 
-def create_manager(account_key, my_account):
-    if account_key:
-        return AdNetworkReportQueryManager(AccountQueryManager.get_account_by_key(account_key))
-    return AdNetworkReportQueryManager(my_account)
+    def append_failed_login(self, login_credentials):
+        self.stats_dict[login_credentials.ad_network_name].failed_logins.append(
+                login_credentials)
 
-def load_test_data(account=None):
-    from account.models import NetworkConfig
-    from publisher.models import App, Site
-    from google.appengine.ext import db
-    from account.models import Account, NetworkConfig
+    def get_failed_logins(self):
+        for stats in self.stats_dict.values():
+            if stats.failed_logins:
+                for login in stats.failed_logins:
+                    yield login
 
-    if not account:
-        account = Account()
-        account.put()
+    def increment(self, ad_network_name, field):
+        self.stats_dict[ad_network_name].setattr(field,
+                getattr(field) + 1)
 
-    chess_network_config = NetworkConfig(jumptap_pub_id='jumptap_chess_com_test',
-                                         iad_pub_id='329218549')
-    chess_network_config.put()
+    def put_stats(self):
+        for stats in self.stats_dict.values():
+            stats.put()
 
-    chess_app = App(account=account,
-                    name="Chess.com - Play & Learn Chess",
-                    network_config=chess_network_config)
-    chess_app.put()
-
-    bet_network_config = NetworkConfig(jumptap_pub_id='jumptap_bet_test',
-                                       admob_pub_id = 'a14c7d7e56eaff8')
-    bet_network_config.put()
-
-    bet_iad_network_config = NetworkConfig(iad_pub_id='418612824')
-    bet_iad_network_config.put()
-
-    bet_app = App(account=account,
-                  name="BET WAP Site",
-                  network_config=bet_network_config)
-    bet_app.put()
-
-    adunit_network_config = NetworkConfig(jumptap_pub_id='bet_wap_site_106andpark_top').put()
-    Site(app_key=bet_app, network_config=adunit_network_config).put()
-
-    bet_iad_app = App(account=account,
-                      name="106 & Park",
-                      network_config=bet_iad_network_config)
-    bet_iad_app.put()
-
-    officejerk_network_config = NetworkConfig(jumptap_pub_id='office_jerk_test')
-    officejerk_network_config.put()
-
-    officejerk_app = App(account=account,
-                         name="Office Jerk",
-                         network_config=officejerk_network_config)
-    officejerk_app.put()
-
-def clear_data():
-    db.delete(AdNetworkScrapeStats.all())
-    db.delete(AdNetworkAppMapper.all())
-    db.delete(AdNetworkLoginCredentials.all())
-    db.delete(Accounts.all())
+    @classmethod
+    def get_stats(ad_network_name, days):
+        return AdNetworkManagementStats.get_by_days(days)
 
 def create_fake_data(account=None):
     """

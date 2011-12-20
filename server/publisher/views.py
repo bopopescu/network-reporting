@@ -409,7 +409,10 @@ class ShowAppHandler(RequestHandler):
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
 
         for ag in app.adgroups:
-            ag.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=app,advertiser=ag,days=days)
+            stats_manager = StatsModelQueryManager(self.account,offline=self.offline)
+            ag.all_stats = stats_manager.get_stats_for_days(publisher=app,
+                                                            advertiser=ag,
+                                                            days=days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
             ag.percent_delivered = budget_service.percent_delivered(ag.campaign.budget_obj)
 
@@ -424,6 +427,8 @@ class ShowAppHandler(RequestHandler):
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
 
+
+        # Sort out all of the campaigns that are targeting this app
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], app.adgroups)
         promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
@@ -447,10 +452,15 @@ class ShowAppHandler(RequestHandler):
         backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], app.adgroups)
         backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
-        backfill_marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_marketplace'], app.adgroups)
-        backfill_marketplace_campaigns = sorted(backfill_marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
 
-        active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) for adgroup in marketplace_campaigns])
+        # Figure out if the marketplace is activated and if it has any
+        # activated adgroups so we can mark it as active/inactive
+        active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
+                                        for adgroup in marketplace_campaigns])
+        try:
+            marketplace_activated = marketplace_campaigns[0].campaign.active
+        except IndexError:
+            marketplace_activated = False
 
         return render_to_response(self.request,
                                   'publisher/app.html',
@@ -468,7 +478,8 @@ class ShowAppHandler(RequestHandler):
                                       'gtee': gtee_levels,
                                       'promo': promo_campaigns,
                                       'marketplace': marketplace_campaigns,
-                                      'marketplace_active': active_mpx_adunit_exists,
+                                      'marketplace_activated': marketplace_activated,
+                                      'active_mpx_adunit_exists': active_mpx_adunit_exists,
                                       'network': network_campaigns,
                                       'backfill_promo': backfill_promo_campaigns,
                                   })
@@ -662,26 +673,27 @@ class AdUnitShowHandler(RequestHandler):
             yesterday = StatsModel()
 
         # write response
-        return render_to_response(self.request,'publisher/adunit.html',
-            {'site': adunit,
-             'adunit': adunit,
-             'today': today,
-             'yesterday': yesterday,
-             'start_date': days[0],
-             'end_date': days[-1],
-             'date_range': self.date_range,
-             'account': self.account,
-             'days': days,
-             'adunit_form_fragment': adunit_form_fragment,
-             'gtee': gtee_levels,
-             'promo': promo_campaigns,
-             'marketplace': marketplace_campaigns,
-             'network': network_campaigns,
-             'backfill_promo': backfill_promo_campaigns,
-             'backfill_marketplace': backfill_marketplace_campaigns,
-             'marketplace_activated': marketplace_activated
-
-         })
+        return render_to_response(self.request,
+                                  'publisher/adunit.html',
+                                  {
+                                      'site': adunit,
+                                      'adunit': adunit,
+                                      'today': today,
+                                      'yesterday': yesterday,
+                                      'start_date': days[0],
+                                      'end_date': days[-1],
+                                      'date_range': self.date_range,
+                                      'account': self.account,
+                                      'days': days,
+                                      'adunit_form_fragment': adunit_form_fragment,
+                                      'gtee': gtee_levels,
+                                      'promo': promo_campaigns,
+                                      'marketplace': marketplace_campaigns,
+                                      'network': network_campaigns,
+                                      'backfill_promo': backfill_promo_campaigns,
+                                      'backfill_marketplace': backfill_marketplace_campaigns,
+                                      'marketplace_activated': marketplace_activated
+                                  })
 
 @login_required
 def adunit_show(request,*args,**kwargs):

@@ -32,7 +32,10 @@ class IAdScraper(Scraper):
     MONEY_STATS = ['revenue']
     PCT_STATS = ['ctr']
 
-    def __init__(self, credentials):
+    def __init__(self, login_info):
+        credentials, apps_with_pub_ids = login_info
+        self.apps = dict([(app.name, pub_id) for app, pub_id in
+            apps_with_pub_ids])
         super(IAdScraper, self).__init__(credentials)
 
         self.authenticate()
@@ -163,44 +166,34 @@ class IAdScraper(Scraper):
         records = []
 
         for row in app_rows:
-            # app_name = row.findAll('p', {"class":"app_text"})[0].text
-            app_dict = {}
-            # Find desired stats
-            for stat in self.APP_STATS:
-                class_name = 'td_' + stat
-                data = str(row.findAll('td', {"class":class_name})[0].text)
-                if stat in self.MONEY_STATS:
-                    # Skip the dollar sign
-                    data = float(filter(lambda x: x.isdigit() or x == '.',
-                        data))
-                elif stat in self.PCT_STATS:
-                    # Don't include the % sign
-                    data = float(filter(lambda x: x.isdigit() or x == '.',
-                        data))
-                else:
-                    data = int(filter(lambda x: x.isdigit() or x == '.',
-                        data))
+            app_name = row.findAll('p', {"class":"app_text"})[0].text
+            if app_name in self.apps:
+                app_dict = {}
+                # Find desired stats
+                for stat in self.APP_STATS:
+                    class_name = 'td_' + stat
+                    data = str(row.findAll('td', {"class":class_name})[0].text)
+                    if stat in self.MONEY_STATS:
+                        # Skip the dollar sign
+                        data = float(filter(lambda x: x.isdigit() or x == '.',
+                            data))
+                    elif stat in self.PCT_STATS:
+                        # Don't include the % sign
+                        data = float(filter(lambda x: x.isdigit() or x == '.',
+                            data))
+                    else:
+                        data = int(filter(lambda x: x.isdigit() or x == '.',
+                            data))
 
-                app_dict[stat] = data
+                    app_dict[stat] = data
 
-            nsr = NetworkScrapeRecord(revenue = app_dict['revenue'],
-                                      attempts = app_dict['requests'],
-                                      impressions = app_dict['impressions'],
-                                      clicks = int(app_dict['ctr'] * app_dict[
-                                          'impressions'] / 100))
-            records.append(nsr)
-
-        for index, nsr in enumerate(records):
-            self.browser.find_elements_by_css_selector('.app_text')[index]. \
-                    click()
-            time.sleep(6)
-            app_dict['apple_id'] = self.browser.current_url[self.browser.
-                    current_url.find(self.SITE_ID_IDENTIFIER) + len(self.
-                        SITE_ID_IDENTIFIER):]
-            self.browser.back()
-            time.sleep(6)
-
-            nsr.app_tag = app_dict['apple_id']
+                nsr = NetworkScrapeRecord(revenue=app_dict['revenue'],
+                                          attempts=app_dict['requests'],
+                                          impressions=app_dict['impressions'],
+                                          clicks=int(app_dict['ctr'] * app_dict[
+                                              'impressions'] / 100)
+                                          app_tag=self.apps[app_name])
+                records.append(nsr)
 
         logging.info(records)
         return records

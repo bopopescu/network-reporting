@@ -47,6 +47,17 @@ class JumpTapAdNetwork(AdNetwork):
 class IAdAdNetwork(AdNetwork):
     scraper = IAdScraper
 
+    def append_extra_info(self):
+        """Get extra information required for the iAd scraper.
+
+        Return app names with level publisher ids appended to login credentials.
+        """
+        super(self.__class__, self).append_extra_info()
+        account = self.login_credentials.account
+        self.login_credentials = (self.login_credentials,
+                AdNetworkReportQueryManager.get_apps_with_publisher_ids(
+                    account, self.login_credentials.ad_network_name))
+
 class InMobiAdNetwork(AdNetwork):
     scraper = InMobiScraper
 
@@ -60,8 +71,9 @@ class MobFoxAdNetwork(AdNetwork):
         """
         super(self.__class__, self).append_extra_info()
         account = self.login_credentials.account
-        self.login_credentials = (self.login_credentials, AdNetworkReportQueryManager.
-                get_app_publisher_ids(account, self.login_credentials.ad_network_name))
+        self.login_credentials = (self.login_credentials,
+                AdNetworkReportQueryManager.  get_app_publisher_ids(account,
+                    self.login_credentials.ad_network_name))
 
 # dictionary of supported ad networks
 AD_NETWORKS = {'admob' : AdMobAdNetwork,

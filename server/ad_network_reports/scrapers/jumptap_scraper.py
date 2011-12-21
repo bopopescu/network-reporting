@@ -36,15 +36,10 @@ class JumpTapScraper(Scraper):
         Take login credentials and extra info which contains a generator of app
         level publisher ids and adunit level publisher ids for the account.
         """
-        if isinstance(login_info, tuple):
-            credentials, self.publisher_ids, self.adunit_publisher_ids = \
-                    login_info
-            self.publisher_ids = set(self.publisher_ids)
-            self.adunit_publisher_ids = set(self.adunit_publisher_ids)
-        else:
-            credentials = login_info
-            self.publisher_ids = ['']
-            self.adunit_publisher_ids = iter([])
+        credentials, self.publisher_ids, self.adunit_publisher_ids = \
+                login_info
+        self.publisher_ids = set(self.publisher_ids)
+        self.adunit_publisher_ids = set(self.adunit_publisher_ids)
         super(JumpTapScraper, self).__init__(credentials)
 
     def test_login_info(self):

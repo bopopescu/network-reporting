@@ -50,7 +50,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         the ad_network.
         """
         if ad_network_name == IAD:
-            yield AppQueryManager.get_iad_pub_ids(account=account).next()
+            yield AppQueryManager.get_iad_pub_ids(account=account,
+                    include_apps=True).next()
 
         for app in AppQueryManager.get_apps_with_network_configs(account):
             publisher_id = getattr(app.network_config, '%s_pub_id'
@@ -103,8 +104,7 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         """
         # iad is special (it's pub id is located in it's app url)
         if ad_network_name == 'iad':
-            yield AppQueryManager.get_iad_pub_ids(account=cls.account,
-                    include_apps=False).next()
+            yield AppQueryManager.get_iad_pub_ids(account=cls.account).next()
 
         for app in AppQueryManager.get_apps_with_network_configs(cls.account):
             pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,

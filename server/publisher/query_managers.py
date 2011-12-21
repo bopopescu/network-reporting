@@ -214,7 +214,7 @@ class AppQueryManager(QueryManager):
         return apps
 
     @classmethod
-    def get_iad_pub_ids(cls, account, include_apps=True):
+    def get_iad_pub_ids(cls, account, include_apps=False):
         """ Get the iAd pub id from the app's url field.
 
         Return the pub ids and potentialy apps as a generator.

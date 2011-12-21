@@ -625,8 +625,6 @@ class ShowAdGroupHandler(RequestHandler):
         # Network campaigns have their date range set by the date picker
         # in the page
         if adgroup.campaign.network():
-            logging.warn("                                            YOU SIR")
-            logging.warn(dir(self))
             if self.start_date and self.date_range:
                 end_date = self.start_date + datetime.timedelta(int(self.date_range)-1)
                 days = date_magic.gen_days(self.start_date, end_date)

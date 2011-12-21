@@ -38,7 +38,6 @@ class IAdScraper(Scraper):
         credentials, apps_with_pub_ids = login_info
         self.apps = dict([(app.name, pub_id) for app, pub_id in
             apps_with_pub_ids])
-        logging.info(self.apps)
         super(IAdScraper, self).__init__(credentials)
 
         self.authenticate()
@@ -216,7 +215,6 @@ class IAdScraper(Scraper):
                 else:
                     nextPage = False
 
-        logging.info(records)
         return records
 
 

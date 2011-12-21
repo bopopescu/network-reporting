@@ -221,11 +221,15 @@ class AppQueryManager(QueryManager):
         """
         for app in App.all().filter('account =', account):
             if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
-                pub_id = re.findall('/id[0-9]*\?', app.url)[0][len('/id'):-1]
-                if include_apps:
-                    yield app, pub_id
-                else:
-                    yield pub_id
+                logging.info(app.name)
+                ids = re.findall('/id[0-9]*\?', app.url)
+                if ids:
+                    pub_id = ids[0][len('/id'):-1]
+                    logging.info(pub_id)
+                    if include_apps:
+                        yield app, pub_id
+                    else:
+                        yield pub_id
 
 class AdUnitQueryManager(QueryManager):
     Model = AdUnit

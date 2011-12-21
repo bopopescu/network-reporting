@@ -55,8 +55,9 @@ class IAdAdNetwork(AdNetwork):
         super(self.__class__, self).append_extra_info()
         account = self.login_credentials.account
         self.login_credentials = (self.login_credentials,
-                AdNetworkReportQueryManager.get_apps_with_publisher_ids(
-                    account, self.login_credentials.ad_network_name))
+                AdNetworkReportQueryManager.get_app_publisher_ids(
+                    account, self.login_credentials.ad_network_name,
+                    include_apps=True))
 
 class InMobiAdNetwork(AdNetwork):
     scraper = InMobiScraper

@@ -70,6 +70,7 @@ class AppIndexHandler(RequestHandler):
     """
     def get(self):
 
+        # XXX: What is this?
         report = self.request.POST.get('report')
 
         # Set start date if passed in, otherwise get most recent days
@@ -85,8 +86,8 @@ class AppIndexHandler(RequestHandler):
         adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
         # We list the app traits in the table, and then load their
-        # stats over ajax using Backbone. Fetch the apps for the template load,
-        # and then create a list of keys for ajax bootstrapping.
+        # stats over ajax using Backbone. Fetch the apps/adunits for the
+        # template load, and then create a list of keys for ajax bootstrapping.
         apps = {}
         for adunit in adunits:
             app = apps.get(adunit.app_key.key())
@@ -105,13 +106,16 @@ class AppIndexHandler(RequestHandler):
         if len(apps) == 0:
             return HttpResponseRedirect(reverse('publisher_create_app'))
 
+        # Get stats totals for the stats breakdown pane
         account_stats_mgr = StatsModelQueryManager(self.account, offline=self.offline)
         totals_list = account_stats_mgr.get_stats_for_days(days=days)
-
         today = totals_list[-1]
         try:
             yesterday = totals_list[-2]
         except IndexError:
+            # If yesterday isn't within the date range or there
+            # are no stats for it, give it a blank stats model with
+            # normal defaults
             yesterday = StatsModel()
         totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
 
@@ -119,6 +123,7 @@ class AppIndexHandler(RequestHandler):
         # NOT total unique users
         totals.user_count = max([t.user_count for t in totals_list])
 
+        # REFACTOR: this can be removed if we remove the chart
         # prepare account_stats object
         key = "||"
         stats_dict = {}
@@ -181,8 +186,10 @@ class GeoPerformanceHandler(RequestHandler):
         # compute start times; start day before today so
         # incomplete days don't mess up graphs
         if self.start_date:
+            # REFACTOR -- replace with date_magic methods
             days = StatsModel.get_days(self.start_date, self.date_range)
         else:
+            # REFACTOR -- replace with date_magic methods
             days = StatsModel.lastdays(self.date_range)
 
         now = datetime.now()
@@ -243,9 +250,21 @@ def geo_performance(request,*args,**kwargs):
 
 class CreateAppHandler(RequestHandler):
     """
-    Handles the creation of apps from form data.
+    REFACTOR
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
     """
-    # REFACTOR
     def get(self, app_form=None, adunit_form=None, reg_complete=None):
 
         # create the forms
@@ -385,7 +404,20 @@ def create_adunit(request,*args,**kwargs):
 
 class ShowAppHandler(RequestHandler):
     """
-    I can't wait to rip this shit apart once we're on backbone.
+    REFACTOR
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
     """
     def get(self, app_key):
     # Set start date if passed in, otherwise get most recent days
@@ -558,125 +590,24 @@ def app_show(request,*args,**kwargs):
     return ShowAppHandler()(request,*args,**kwargs)
 
 
-class ExportFileHandler(RequestHandler):
-    def get( self, key, key_type, f_type ):
-        # TODO make sure this is the right way to do it
-        spec = self.params.get('spec')
-        if self.start_date:
-            days = StatsModel.get_days( self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays( self.date_range )
-
-        stat_names, stat_models = self.get_desired_stats(key,
-                                                         key_type,
-                                                         days,
-                                                         spec=spec)
-        return sswriter.write_stats(f_type,
-                                    stat_names,
-                                    stat_models,
-                                    site=key,
-                                    days=days,
-                                    key_type=key_type)
-
-
-    def get_desired_stats(self, key, key_type, days, spec=None):
-        manager = StatsModelQueryManager(self.account, offline=self.offline)
-        """ Given a key, key_type, and specificity, return
-        the appropriate stats to get AND their names"""
-        #default for all
-        stat_names = (IMP_STAT, CLK_STAT, CTR_STAT)
-        #sanity check
-        assert key_type in ('adunit', 'app', 'adgroup', 'account')
-        if spec:
-            assert spec in ('creatives', 'adunits', 'campaigns', 'days', 'apps')
-
-
-
-        #Set up attr getters/names
-        if key_type == 'app' or \
-           (key_type == 'account' and spec == 'apps') or \
-           (key_type == 'adunit' and spec == 'days'):
-            stat_names = (REQ_STAT,) + stat_names
-            if spec == 'days':
-                stat_names = (DTE_STAT,) + stat_names
-        elif key_type == 'account' and spec == 'campaigns':
-            stat_names += (CPM_STAT, CNV_RATE_STAT, CPA_STAT)
-        elif key_type == 'adgroup':
-            if spec == 'days':
-                stat_names = (DTE_STAT,) + stat_names
-            stat_names += (REV_STAT, CNV_RATE_STAT, CPA_STAT)
-        elif key_type == 'adunit' and spec == 'campaigns':
-            stat_names += (REV_STAT,)
-
-
-
-        #General rollups for all data
-        if key_type == 'account':
-            if spec == 'apps':
-                apps = AppQueryManager.get_apps(self.account)
-                if len(apps) == 0:
-                    #should probably handle this more gracefully
-                    logging.warning("Apps for account is empty")
-                return (stat_names,
-                        [manager.get_stat_rollup_for_days(publisher=a,
-                                                          days=days) for a in apps])
-            elif spec == 'campaigns':
-                camps = CampaignQueryManager.get_campaigns(account=self.account)
-                if len(camps) == 0:
-                    logging.warning("Campaigns for account is empty")
-                return (stat_names,
-                        [manager.get_stat_rollup_for_days(advertiser=c,
-                                                          days=days) for c in camps])
-        #Rollups for adgroup data
-        elif key_type == 'adgroup':
-            if spec == 'creatives':
-                creatives = list(CreativeQueryManager.get_creatives(adgroup=key))
-                if len(creatives) == 0:
-                    logging.warning("Creatives for adgroup is empty")
-                return (stat_names,
-                        [manager.get_stat_rollup_for_days(advertiser=c,
-                                                          days=days) for c in creatives])
-            if spec == 'adunits':
-                adunits = map(lambda x: Site.get(x),
-                              AdGroupQueryManager.get(key).site_keys)
-                if len(adunits) == 0:
-                    logging.warning("Adunits for adgroup is empty")
-                return (stat_names,
-                        [manager.get_stat_rollup_for_days(advertiser=key,
-                                                          publisher=a,
-                                                          days=days) for a in adunits])
-            if spec == 'days':
-                return (stat_names,
-                        manager.get_stats_for_days(advertiser=key, days=days))
-        #Rollups + not-rollup for adunit data
-        elif key_type == 'adunit':
-            if spec == 'campaigns':
-                adgroups = AdGroupQueryManager.get_adgroups(adunit=key)
-                if len(adgroups) == 0:
-                    logging.warning("Campaigns for adunit is empty")
-                return (stat_names,
-                        [manager.get_stat_rollup_for_days(publisher=key,
-                                                          advertiser=a,
-                                                          days=days) for a in adgroups])
-            if spec == 'days':
-                return (stat_names, manager.get_stats_for_days(publisher=key, days=days))
-        #App adunit rollup data
-        elif key_type == 'app':
-            adunits = AdUnitQueryManager.get_adunits(app=key)
-            if len(adunits) == 0:
-                logging.warning("Apps is empty")
-            return (stat_name,
-                    [manager.get_stat_rollup_for_days(publisher=a,
-                                                      days=days) for a in adunits])
-
-
-@login_required
-def export_file( request, *args, **kwargs ):
-    return ExportFileHandler()( request, *args, **kwargs )
-
-
-
 class AdUnitShowHandler(RequestHandler):
+    """
+    REFACTOR
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
+
     def get(self, adunit_key):
     # load the site
         adunit = AdUnitQueryManager.get(adunit_key)
@@ -807,7 +738,24 @@ class AdUnitShowHandler(RequestHandler):
 def adunit_show(request,*args,**kwargs):
     return AdUnitShowHandler()(request,*args,**kwargs)
 
+
 class AppUpdateAJAXHandler(RequestHandler):
+    """
+    REFACTOR
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     TEMPLATE  = 'publisher/forms/app_form.html'
     def get(self,app_form=None,app=None):
         app_form = app_form or AppForm(instance=app, is_edit_form=True)
@@ -859,7 +807,25 @@ class AppUpdateAJAXHandler(RequestHandler):
 def app_update_ajax(request,*args,**kwargs):
     return AppUpdateAJAXHandler()(request,*args,**kwargs)
 
+
 class AdUnitUpdateAJAXHandler(RequestHandler):
+    """
+    REFACTOR
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
+
     TEMPLATE  = 'publisher/forms/adunit_form.html'
     def get(self,adunit_form=None,adunit=None,app=None):
         initial = {}
@@ -921,10 +887,13 @@ def adunit_update_ajax(request,*args,**kwargs):
 
 
 class AppIconHandler(RequestHandler):
+    """
+    Returns a png image for an app's icon from an app's key
+    """
     def get(self, app_key):
-        a = App.get(app_key)
-        if a.icon:
-            response = HttpResponse(a.icon)
+        app = App.get(app_key)
+        if app.icon:
+            response = HttpResponse(app.icon)
             response['Content-Type'] = 'image/png'
             return response
         else:
@@ -935,6 +904,9 @@ def app_icon(request,*args,**kwargs):
 
 
 class DeleteAdUnitHandler(RequestHandler):
+    """
+    Deletes an adunit and redirects to the adunit's app.
+    """
     def post(self, adunit_key):
         a = AdUnitQueryManager.get(adunit_key)
         if a != None and a.app_key.account == self.account:
@@ -952,6 +924,9 @@ def delete_adunit(request,*args,**kwargs):
 
 
 class DeleteAppHandler(RequestHandler):
+    """
+    Deletes an app and redirects to the app index.
+    """
     def post(self, app_key):
         app = AppQueryManager.get(app_key)
         adunits = AdUnitQueryManager.get_adunits(app=app)
@@ -969,7 +944,13 @@ class DeleteAppHandler(RequestHandler):
 def delete_app(request,*args,**kwargs):
     return DeleteAppHandler()(request,*args,**kwargs)
 
+
 class IntegrationHelpHandler(RequestHandler):
+    """
+    This page displays some helpful information that helps pubs get
+    their apps integrated. Pubs land on this page after they've
+    created a new adunit.
+    """
     def get(self,adunit_key):
         adunit = AdUnitQueryManager.get(adunit_key)
         status = self.params.get('status')
@@ -989,6 +970,22 @@ def integration_help(request,*args,**kwargs):
 
 
 class AppExportHandler(RequestHandler):
+    """
+    REFACTOR
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     def post(self, app_key, file_type, start, end):
         start = datetime.strptime(start,'%m%d%y')
         end = datetime.strptime(end,'%m%d%y')

@@ -135,8 +135,8 @@ class AdUnitService(RequestHandler):
             else:
                 start_date = end_date - datetime.timedelta(13)
 
-            # XXX: We don't necessarily need an app key to fetch an adunit
-            # but it makes the API easier to understand
+            # REFACTOR: The app key isn't necessary (we can fetch an adunit directly
+            # with it's key)
             if app_key:
                 # Get each adunit for the app and convert it to JSON
                 app = AppQueryManager.get_app_by_key(app_key)
@@ -230,8 +230,10 @@ class AdGroupService(RequestHandler):
             adgroup = AdGroupQueryManager.get(adgroup_key)
 
             # Get the stats for the adgroup
-            stats_fetcher = StatsModelQueryManager(self.account, offline=self.offline)
-            stats = stats_fetcher.get_stats_for_days(advertiser=adgroup, days=days)
+            stats_fetcher = StatsModelQueryManager(self.account,
+                                                   offline=self.offline)
+            stats = stats_fetcher.get_stats_for_days(advertiser=adgroup,
+                                                     days=days)
             summed_stats = sum(stats, StatsModel())
 
             # adds ECPM if the adgroup is a CPC adgroup
@@ -243,7 +245,8 @@ class AdGroupService(RequestHandler):
                 # TODO: overwrite clicks as well
                 stats_fetcher = MarketplaceStatsFetcher(self.account.key())
                 try:
-                    mpx_stats = stats_fetcher.get_account_stats(self.start_date, end_date)
+                    mpx_stats = stats_fetcher.get_account_stats(self.start_date,
+                                                                end_date)
                 except MPStatsAPIException, error:
                     mpx_stats = {}
                 summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))

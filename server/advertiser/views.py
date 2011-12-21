@@ -183,9 +183,17 @@ class CreateCampaignAJAXHandler(RequestHandler):
             initial.update(price_floor=self.account.network_config.price_floor)
         campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],\
-            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],['millennial_native', 'Millennial Media', False],["mobfox","MobFox",False],\
-            ['custom','Custom Network', False], ['custom_native','Custom Native Network', False]]
+        networks = [['admob_native', 'AdMob', False],
+                    ["adsense","AdSense",False],
+                    ["brightroll","BrightRoll",False],
+                    ["ejam","eJam",False],
+                    ["iAd","iAd",False],
+                    ["inmobi","InMobi",False],
+                    ["jumptap","Jumptap",False],
+                    ['millennial_native', 'Millennial Media', False],
+                    ["mobfox","MobFox",False],
+                    ['custom','Custom Network', False],
+                    ['custom_native','Custom Native Network', False]]
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # sorts by app name, then adunit name

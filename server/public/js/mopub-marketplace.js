@@ -350,10 +350,10 @@ var mopub = mopub || {};
      */
 
 
-        /*
-         * Fetches and renders all apps from a list of app_keys.
-         * Useful for bootstrapping table loads.
-         */
+    /*
+     * Fetches and renders all apps from a list of app_keys.
+     * Useful for bootstrapping table loads.
+     */
     function fetchAllApps (app_keys) {
 
         _.each(app_keys, function(app_key) {
@@ -402,6 +402,7 @@ var mopub = mopub || {};
         adunits.bind('reset', function(adunits_collection) {
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
+                adunit.app_id = app_key;
                 var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
                 adunitView.renderInline();
             });

@@ -440,7 +440,7 @@ class AdNetworkStatsManager(CachedQueryManager):
         return sorted(stats_list, key=lambda stats: stats.date, reverse=True)
 
 class AdNetworkManagementStatsManager(CachedQueryManager):
-    def __init__(day):
+    def __init__(self, day):
         self.stats_dict = {}
         for network in AD_NETWORK_NAMES.keys():
             self.stats_dict[network] = AdNetworkManagementStats(
@@ -449,7 +449,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
 
     def append_failed_login(self, login_credentials):
         self.stats_dict[login_credentials.ad_network_name].failed_logins.append(
-                login_credentials)
+                str(login_credentials.key()))
 
     def get_failed_logins(self):
         for stats in self.stats_dict.values():
@@ -458,8 +458,8 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
                     yield login
 
     def increment(self, ad_network_name, field):
-        self.stats_dict[ad_network_name].setattr(field,
-                getattr(field) + 1)
+        setattr(self.stats_dict[ad_network_name], field,
+                getattr(self.stats_dict[ad_network_name], field) + 1)
 
     def put_stats(self):
         for stats in self.stats_dict.values():

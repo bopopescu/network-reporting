@@ -198,8 +198,7 @@ class AdNetworkManagementStats(db.Model): #(date)
     updated = db.IntegerProperty(default=0)
     mapped = db.IntegerProperty(default=0)
 
-    failed_logins = db.ListProperty(
-            db.ReferenceProperty, default=[])
+    failed_logins = db.StringListProperty(default=[])
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):

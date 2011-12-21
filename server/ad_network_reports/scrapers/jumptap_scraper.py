@@ -36,19 +36,36 @@ class JumpTapScraper(Scraper):
         Take login credentials and extra info which contains a generator of app
         level publisher ids and adunit level publisher ids for the account.
         """
-        credentials, self.publisher_ids, self.adunit_publisher_ids = \
-                login_info
-        self.publisher_ids = set(self.publisher_ids)
-        self.adunit_publisher_ids = set(self.adunit_publisher_ids)
+        if isinstance(login_info, tuple):
+            credentials, self.publisher_ids, self.adunit_publisher_ids = \
+                    login_info
+            self.publisher_ids = set(self.publisher_ids)
+            self.adunit_publisher_ids = set(self.adunit_publisher_ids)
+        else:
+            credentials = login_info
         super(JumpTapScraper, self).__init__(credentials)
 
     def test_login_info(self):
         """Test the username and password.
 
-        Raise a 401 error if username or password are incorrect otherwise
-        return None.
+        Raise a UnauthorizedLogin error if username or password are incorrect
+        otherwise return None.
         """
-        self.get_site_stats(date.today() - timedelta(days = 1))
+        yesterday = date.today() - timedelta(days = 1)
+        query_dict = {"user": self.username,
+                      "pass": self.password,
+                      "fromDate": yesterday.strftime("%m/%d/%Y"),
+                      "toDate": yesterday.strftime("%m/%d/%Y"),
+                      "groupBy": "spot"}
+
+        req = urllib2.Request(self.SITE_STAT_URL,
+                              urllib.urlencode(query_dict))
+        try:
+            response = urllib2.urlopen(req)
+        except urllib2.HTTPError as e:
+            if e.code in (401, 403):
+                raise UnauthorizedLogin("Invalid login for Jumptap")
+            raise
 
     def get_site_stats(self, from_date):
         to_date = from_date
@@ -130,11 +147,15 @@ if __name__ == '__main__':
 
     NC.username = 'Glenn_Kiladis'
     NC.password = 'Aspenk'
+    NC.ad_network_name = 'jumptap'
+
+#    SCRAPER = JumpTapScraper(NC)
+#    print SCRAPER.test_login_info()
+
     publisher_ids = [u'pa_mediafriends_in_heywire_iph_app',
             u'pa_mediafriends_in_heywire_social__drd_app']
 
     adunit_publisher_ids = iter([])
-    NC.ad_network_name = 'jumptap'
     SCRAPER = JumpTapScraper((NC, publisher_ids, adunit_publisher_ids))
     print SCRAPER.get_site_stats(date.today() - timedelta(days = 1))
 

@@ -15,7 +15,7 @@ def load_test_data():
     TEST_INMOBI_PUB_ID ='4028cba630724cd90130c2adc9b6024f'
     TEST_MOBFOX_PUB_ID = 'fb8b314d6e62912617e81e0f7078b47e'
 
-    account = Account(key_name = 'test_account')
+    account = Account(key_name = 'account1')
     account.put()
 
 
@@ -24,7 +24,7 @@ def load_test_data():
             mobfox_pub_id=TEST_MOBFOX_PUB_ID)
     network_config.put()
 
-    app = App(account=account, name="Crazy Shit", network_config=
+    app = App(account=account, name="app1", network_config=
             network_config, url='http://itunes.apple.com/us/app/106-park/id'
             + TEST_IAD_PUB_ID + '?mt=8&uo=4')
     app.put()

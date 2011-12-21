@@ -34,7 +34,8 @@ from ad_network_reports.query_managers import \
         AD_NETWORK_NAMES, \
         IAD, \
         AdNetworkLoginCredentialsManager, \
-        AdNetworkMapperManager
+        AdNetworkMapperManager, \
+        AdNetworkManagementStatsManager
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
 from common.utils import date_magic
@@ -165,7 +166,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     for test_date in date_magic.gen_days(start_date, end_date):
         logger.info("TEST DATE: %s" % test_date.strftime("%Y %m %d"))
         if not only_these_credentials:
-            aggregate = AdNetworkManagementStatsManager(date=test_date)
+            aggregate = AdNetworkManagementStatsManager(day=test_date)
 
         previous_account_key = None
         valid_stats_list = []
@@ -314,7 +315,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                 login_credentials.email:
             send_stats_mail(login_credentials.account, test_date,
                     valid_stats_list)
-    else if stats_list:
+    elif stats_list:
         emails = ', '.join(db.get(account_key).emails)
         mail.send_mail(sender='olp@mopub.com',
                        reply_to='support@mopub.com',

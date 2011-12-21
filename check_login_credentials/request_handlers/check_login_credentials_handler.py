@@ -85,10 +85,10 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 self.write(callback + '(true)')
                 # Write out response and close connection.
                 self.finish()
-            except Exception as e:
+            except Exception as exception:
                 # We don't want Tornado to stop running if something breaks
                 # somewhere.
-                logging.error(e)
+                logging.error(exception)
             else:
                 if os.path.exists('/home/ubuntu/'):
                     mail.send_mail(sender='olp@mopub.com',

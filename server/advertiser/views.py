@@ -266,9 +266,10 @@ class AdGroupArchiveHandler(RequestHandler):
             adgroup.budget = adgroup.campaign.budget_obj
 
         return render_to_response(self.request,
-                                   'advertiser/archived_adgroups.html',
-                                    {'archived_adgroups':archived_adgroups,
-                                     })
+                                  'advertiser/archived_adgroups.html',
+                                  {
+                                      'archived_adgroups':archived_adgroups,
+                                  })
 
 
 @login_required
@@ -624,8 +625,11 @@ class ShowAdGroupHandler(RequestHandler):
         # Network campaigns have their date range set by the date picker
         # in the page
         if adgroup.campaign.network():
-            if self.start_date and self.end_date:
-                days = date_magic.gen_days(self.end_date, self.start_date)
+            logging.warn("                                            YOU SIR")
+            logging.warn(dir(self))
+            if self.start_date and self.date_range:
+                end_date = self.start_date + datetime.timedelta(int(self.date_range)-1)
+                days = date_magic.gen_days(self.start_date, end_date)
             else:
                 days = date_magic.gen_date_range(self.date_range)
 

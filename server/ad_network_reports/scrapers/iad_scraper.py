@@ -19,6 +19,8 @@ from datetime import date, datetime, timedelta
 from pyvirtualdisplay import Display
 from selenium import webdriver
 
+from HTMLParser import HTMLParser
+
 class IAdScraper(Scraper):
 
     NETWORK_NAME = 'iad'
@@ -36,6 +38,7 @@ class IAdScraper(Scraper):
         credentials, apps_with_pub_ids = login_info
         self.apps = dict([(app.name, pub_id) for app, pub_id in
             apps_with_pub_ids])
+        logging.info(self.apps)
         super(IAdScraper, self).__init__(credentials)
 
         self.authenticate()
@@ -150,59 +153,85 @@ class IAdScraper(Scraper):
 
         # Set the dates
         self.set_dates(start_date, end_date)
-        time.sleep(3)
-        # read the shit
-        page = None
-        while page is None:
-            try:
-                page = self.browser.page_source
-            except:
-                print "failed getting source"
-        soup = BeautifulSoup(page)
-        # Find all the apps since their TR's aren't named easily
-        apps = soup.findAll('td', {'class':'td_app'})
-        # Get all the tr's
-        app_rows = [app.parent for app in apps]
         records = []
 
-        for row in app_rows:
-            app_name = row.findAll('p', {"class":"app_text"})[0].text
-            if app_name in self.apps:
-                app_dict = {}
-                # Find desired stats
-                for stat in self.APP_STATS:
-                    class_name = 'td_' + stat
-                    data = str(row.findAll('td', {"class":class_name})[0].text)
-                    if stat in self.MONEY_STATS:
-                        # Skip the dollar sign
-                        data = float(filter(lambda x: x.isdigit() or x == '.',
-                            data))
-                    elif stat in self.PCT_STATS:
-                        # Don't include the % sign
-                        data = float(filter(lambda x: x.isdigit() or x == '.',
-                            data))
-                    else:
-                        data = int(filter(lambda x: x.isdigit() or x == '.',
-                            data))
+        # Handle pagination
+        nextPage = True
+        while nextPage:
+            time.sleep(3)
+            # read the shit
+            page = None
+            while page is None:
+                try:
+                    page = self.browser.page_source
+                except:
+                    logging.error("Failed getting source")
+            soup = BeautifulSoup(page)
+            # Find all the apps since their TR's aren't named easily
+            apps = soup.findAll('td', {'class':'td_app'})
+            # Get all the tr's
+            app_rows = [app.parent for app in apps]
 
-                    app_dict[stat] = data
+            for row in app_rows:
+                app_name =  HTMLParser.unescape.__func__(HTMLParser,
+                        row.findAll('p', {"class":"app_text"})[0].text)
+                if app_name in self.apps:
+                    app_dict = {}
+                    # Find desired stats
+                    for stat in self.APP_STATS:
+                        class_name = 'td_' + stat
+                        data = str(row.findAll('td', {"class":class_name})[0].text)
+                        if stat in self.MONEY_STATS:
+                            # Skip the dollar sign
+                            data = float(filter(lambda x: x.isdigit() or x == '.',
+                                data))
+                        elif stat in self.PCT_STATS:
+                            # Don't include the % sign
+                            data = float(filter(lambda x: x.isdigit() or x == '.',
+                                data))
+                        else:
+                            data = int(filter(lambda x: x.isdigit() or x == '.',
+                                data))
 
-                nsr = NetworkScrapeRecord(revenue=app_dict['revenue'],
-                                          attempts=app_dict['requests'],
-                                          impressions=app_dict['impressions'],
-                                          clicks=int(app_dict['ctr'] * app_dict[
-                                              'impressions'] / 100)
-                                          app_tag=self.apps[app_name])
-                records.append(nsr)
+                        app_dict[stat] = data
+
+                    nsr = NetworkScrapeRecord(revenue=app_dict['revenue'],
+                                              attempts=app_dict['requests'],
+                                              impressions=app_dict['impressions'],
+                                              clicks=int(app_dict['ctr'] * app_dict[
+                                                  'impressions'] / 100),
+                                              app_tag=self.apps[app_name])
+                    records.append(nsr)
+            # Goto the next page if it exists
+            try:
+                nextPage = self.browser.find_element_by_css_selector(
+                        '.pagingOptionsNextPage')
+            except selenium.common.exceptions.NoSuchElementException as \
+                    exception:
+                nextPage = False
+            else:
+                # Click the icon if we aren't already on the last page
+                if nextPage.get_attribute('class').find('last') == -1:
+                    nextPage.click()
+                else:
+                    nextPage = False
 
         logging.info(records)
         return records
 
+
 if __name__ == '__main__':
+    class App(object):
+        pass
+
     NC = NetworkConfidential()
-    NC.username = 'jprhombus'
-    NC.password = 'mopub512'
+    #NC.username = 'chesscom'
+    #NC.password = 'Faisal1Chess'
+    NC.username = 'salesreports@optimesoftware.com'
+    NC.password = 'Sales2012'
     NC.ad_network_name = 'iad'
-    SCRAPER = IAdScraper(NC)
+    app = App()
+    app.name = 'Chess.com - Play & Learn Chess'
+    SCRAPER = IAdScraper((NC, iter([(app, '329218549')])))
     print SCRAPER.get_site_stats(date(2011,11,30))
 

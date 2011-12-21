@@ -1,3 +1,5 @@
+from copy import copy
+
 class NetworkScrapeRecord(object):
     def __init__(self, revenue=0, attempts=0, impressions=0, clicks=0,
             app_tag=None):
@@ -13,7 +15,9 @@ class NetworkScrapeRecord(object):
         self.__repr__()
 
     def __repr__(self):
+        properties = copy(self.__dict__)
+        properties['app_tag'] = properties['app_tag'].encode('utf8')
         return ('<NetworkScrapeRecord app_tag:%(app_tag)s revenue:%(revenue)s '
                 'attempts:%(attempts)d impressions:%(impressions)d clicks'
-                ':%(clicks)d>' % self.__dict__)
+                ':%(clicks)d>' % properties)
 

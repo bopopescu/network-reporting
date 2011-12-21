@@ -214,18 +214,32 @@ class AppQueryManager(QueryManager):
         return apps
 
     @classmethod
-    def get_iad_pub_ids(cls, account, include_apps=True):
+    def get_iad_pub_id(self, account, app_name):
+        for app in App.all().filter('account =', account).filter('name =',
+                app_name):
+            if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
+                ids = re.findall('/id[0-9]*\?', app.url)
+                if ids:
+                    pub_id = ids[0][len('/id'):-1]
+                    return pub_id
+
+    @classmethod
+    def get_iad_pub_ids(cls, account, include_apps=False):
         """ Get the iAd pub id from the app's url field.
 
         Return the pub ids and potentialy apps as a generator.
         """
         for app in App.all().filter('account =', account):
             if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
-                pub_id = re.findall('/id[0-9]*\?', app.url)[0][len('/id'):-1]
-                if include_apps:
-                    yield app, pub_id
-                else:
-                    yield pub_id
+                logging.info(app.name)
+                ids = re.findall('/id[0-9]*\?', app.url)
+                if ids:
+                    pub_id = ids[0][len('/id'):-1]
+                    logging.info(pub_id)
+                    if include_apps:
+                        yield app, pub_id
+                    else:
+                        yield pub_id
 
 class AdUnitQueryManager(QueryManager):
     Model = AdUnit

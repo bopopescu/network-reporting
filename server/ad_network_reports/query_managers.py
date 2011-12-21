@@ -43,7 +43,7 @@ IAD = 'iad'
 # package helper functions.
 class AdNetworkReportQueryManager(CachedQueryManager):
     @classmethod
-    def get_apps_with_publisher_ids(cls, account, ad_network_name):
+    def get_app_publisher_ids(cls, account, ad_network_name, include_apps=False):
         """Check apps to see if their pub_id for the given ad_network is
         defined
 
@@ -51,14 +51,19 @@ class AdNetworkReportQueryManager(CachedQueryManager):
         the ad_network.
         """
         if ad_network_name == IAD:
-            yield AppQueryManager.get_iad_pub_ids(account=account).next()
+            for item in AppQueryManager.get_iad_pub_ids(account=account,
+                    include_apps=include_apps):
+                yield item
 
         for app in AppQueryManager.get_apps_with_network_configs(account):
             publisher_id = getattr(app.network_config, '%s_pub_id'
                     % ad_network_name, None)
             if publisher_id:
-                # example return (App, NetworkConfig.admob_pub_id)
-                yield (app, publisher_id)
+                if include_apps:
+                    # example return (App, NetworkConfig.admob_pub_id)
+                    yield (app, publisher_id)
+                else:
+                    yield publisher_id
 
     @classmethod
     def create_login_credentials_and_mappers(cls,
@@ -83,8 +88,8 @@ class AdNetworkReportQueryManager(CachedQueryManager):
                                         email=send_email)
         login_credentials.put()
 
-        apps_with_publisher_ids = cls.get_apps_with_publisher_ids(
-                account, ad_network_name)
+        apps_with_publisher_ids = cls.get_app_publisher_ids(
+                account, ad_network_name, include_apps=True)
         # Create all the different AdNetworkAppMappers for all the
         # applications on the ad network for the user and add them to the db
         db.put([AdNetworkAppMapper(ad_network_name=ad_network_name,
@@ -93,25 +98,6 @@ class AdNetworkReportQueryManager(CachedQueryManager):
             apps_with_publisher_ids])
 
         return login_credentials
-
-    @classmethod
-    def get_app_publisher_ids(cls, account, ad_network_name):
-        """Check apps to see if their pub_id for the given ad_network is
-        defined
-
-        Return generator of publisher ids at the application level for the
-        account on the ad_network.
-        """
-        # iad is special (it's pub id is located in it's app url)
-        if ad_network_name == 'iad':
-            yield AppQueryManager.get_iad_pub_ids(account=cls.account,
-                    include_apps=False).next()
-
-        for app in AppQueryManager.get_apps_with_network_configs(cls.account):
-            pub_id = getattr(app.network_config, '%s_pub_id' % ad_network_name,
-                    None)
-            if pub_id:
-                yield pub_id
 
     @classmethod
     def get_adunit_publisher_ids(cls, account, ad_network_name):
@@ -168,8 +154,8 @@ class AdNetworkMapperManager(CachedQueryManager):
         if publisher_id:
             ad_network_name = login_credentials.ad_network_name
             for app, app_publisher_id in AdNetworkReportQueryManager. \
-                    get_apps_with_publisher_ids(login_credentials.account, \
-                            ad_network_name):
+                    get_app_publisher_ids(login_credentials.account, \
+                            ad_network_name, include_apps=True):
                 # Is the app in Mopub?
                 if publisher_id == app_publisher_id:
                     mapper = AdNetworkAppMapper(ad_network_name=ad_network_name,

@@ -19,6 +19,13 @@
     <input type="radio" name="dashboard-sort-option" value="apps" id="dashboard-sort-app"/>
     <label for="dashboard-sort-app">Sort by App</label>
   </span>
+  <div class="buttonBank buttonBank-right">
+      <select name='exportSelect' id='ad-network-exportSelect' class='selectmenu'>
+          <option value="">Export</option>
+          <option value="/ad_network_reports/export/xls">XLS</option>
+          <option value="/ad_network_reports/export/csv">CSV</option>
+      </select>
+  </div>
 
   {% comment %}
     Make the table sorted by ad network.

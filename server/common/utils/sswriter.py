@@ -1,6 +1,6 @@
 import csv
 import datetime
-
+import logging
 
 from django.http import HttpResponse
 from google.appengine.ext import db
@@ -23,6 +23,7 @@ from reporting.query_managers import SiteStatsQueryManager, StatsModelQueryManag
 from reports.query_managers import ReportQueryManager
 
 DT_TYPES = (datetime.datetime, datetime.time, datetime.date)
+DEFAULT = 'default'
 
 # Create a new excel workbook and add a sheet to it, return both
 def open_xls_sheet():
@@ -152,6 +153,56 @@ def write_stats( f_type, desired_stats, all_stats, site=None, owner=None,
         row_writer( map( lambda x: getattr( stat, x ), map_stats ) )
     if f_type == 'xls':
         #excel has all the data in this temp object, dump all that into the response
+        writer( response )
+    return response
+
+def write_ad_network_stats( f_type, stat_names, all_stats, days):
+    # make sure things are valid
+    assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % \
+            ( TABLE_FILE_FORMATS, f_type )
+    response = None
+
+    # setup response and writers
+    if f_type == 'csv':
+        response = HttpResponse( mimetype = 'text/csv' )
+        row_writer = write_csv_row( response )
+    elif f_type == 'xls':
+        response = HttpResponse( mimetype = 'application/vnd.ms-excel' )
+        row_writer, writer = make_xls_writers()
+    else:
+        # wat
+        assert False, "This should never happen, %s is in %s but doens't" \
+                "have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
+
+    start = days[0]
+    end = days[-1]
+    d_form = '%m-%d-%y'
+    d_str = '%s--%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
+    fname = "ad_network_%s.%s" % (d_str, f_type)
+    #should probably do something about the filename here
+    response['Content-disposition'] = 'attachment; filename=%s' % fname
+
+    for network, network_stats in all_stats:
+        if network_stats and network_stats['state'] == 2:
+            row_writer( [network] )
+            if network in stat_names:
+                network_stat_names = stat_names[network]
+            else:
+                network_stat_names = stat_names[DEFAULT]
+
+            row_writer(network_stat_names)
+            logging.info('network_stats')
+            logging.info(network_stats)
+            row_writer([network_stats[stat] for stat in network_stat_names])
+            app_stat_names = list(network_stat_names)
+            app_stat_names.insert(0, 'name')
+            row_writer(app_stat_names)
+            for app in network_stats['sub_data_list']:
+                row_writer([app[stat] for stat in app_stat_names])
+
+    if f_type == 'xls':
+        # excel has all the data in this temp object, dump all that into the
+        # response
         writer( response )
     return response
 

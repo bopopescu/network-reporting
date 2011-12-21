@@ -466,8 +466,12 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
             stats.put()
 
     @classmethod
-    def get_stats(ad_network_name, days):
-        return AdNetworkManagementStats.get_by_days(days)
+    def get_stats(days):
+        management_stats = {}
+        for ad_network_name in AD_NETWORK_NAMES.keys():
+            management_stats[ad_network_name] = AdNetworkManagementStats. \
+                    get_by_days(network, days)
+        return management_stats
 
 def create_fake_data(account=None):
     """
@@ -501,8 +505,9 @@ def create_fake_data(account=None):
     AdNetworkLoginCredentials(account=account,
             ad_network_name=AD_NETWORK_NAMES.keys()[0],
             app_pub_ids=['hfehafa','aihef;iawh']).put()
-    AdNetworkLoginCredentials(account=account,
-            ad_network_name=AD_NETWORK_NAMES.keys()[-1]).put()
+    login = AdNetworkLoginCredentials(account=account,
+            ad_network_name=AD_NETWORK_NAMES.keys()[-1])
+    login.put()
 
     for day in last_90_days:
         for mapper in manager.get_ad_network_mappers():
@@ -515,5 +520,16 @@ def create_fake_data(account=None):
                                          clicks=clicks,
                                          date=day,
                                          ad_network_app_mapper=mapper)
+            stats.put()
+
+        for network in AD_NETWORK_NAMES.keys():
+            stats = AdNetworkManagementStats(ad_network_name=network,
+                                    date=day,
+                                    found=random.randint(1, 100000),
+                                    updated=random.randint(1, 100000),
+                                    mapped=random.randint(1, 100000))
+
+            if network == login.ad_network_name:
+                stats.failed_logins = [str(login.key())]
             stats.put()
 

@@ -216,3 +216,4 @@ class AdNetworkManagementStats(db.Model): #(date)
         return [stats for stats in cls.get_by_key_name(['k:%s:%s' %
             (ad_network_name, day.strftime('%Y-%m-%d')) for day in days])
             if stats != None]
+

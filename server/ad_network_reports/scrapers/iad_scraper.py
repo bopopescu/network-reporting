@@ -34,10 +34,7 @@ class IAdScraper(Scraper):
     MONEY_STATS = ['revenue']
     PCT_STATS = ['ctr']
 
-    def __init__(self, login_info):
-        credentials, apps_with_pub_ids = login_info
-        self.apps = dict([(app.name, pub_id) for app, pub_id in
-            apps_with_pub_ids])
+    def __init__(self, credentials):
         super(IAdScraper, self).__init__(credentials)
 
         self.authenticate()
@@ -174,33 +171,32 @@ class IAdScraper(Scraper):
             for row in app_rows:
                 app_name =  HTMLParser.unescape.__func__(HTMLParser,
                         row.findAll('p', {"class":"app_text"})[0].text)
-                if app_name in self.apps:
-                    app_dict = {}
-                    # Find desired stats
-                    for stat in self.APP_STATS:
-                        class_name = 'td_' + stat
-                        data = str(row.findAll('td', {"class":class_name})[0].text)
-                        if stat in self.MONEY_STATS:
-                            # Skip the dollar sign
-                            data = float(filter(lambda x: x.isdigit() or x == '.',
-                                data))
-                        elif stat in self.PCT_STATS:
-                            # Don't include the % sign
-                            data = float(filter(lambda x: x.isdigit() or x == '.',
-                                data))
-                        else:
-                            data = int(filter(lambda x: x.isdigit() or x == '.',
-                                data))
+                app_dict = {}
+                # Find desired stats
+                for stat in self.APP_STATS:
+                    class_name = 'td_' + stat
+                    data = str(row.findAll('td', {"class":class_name})[0].text)
+                    if stat in self.MONEY_STATS:
+                        # Skip the dollar sign
+                        data = float(filter(lambda x: x.isdigit() or x == '.',
+                            data))
+                    elif stat in self.PCT_STATS:
+                        # Don't include the % sign
+                        data = float(filter(lambda x: x.isdigit() or x == '.',
+                            data))
+                    else:
+                        data = int(filter(lambda x: x.isdigit() or x == '.',
+                            data))
 
-                        app_dict[stat] = data
+                    app_dict[stat] = data
 
-                    nsr = NetworkScrapeRecord(revenue=app_dict['revenue'],
-                                              attempts=app_dict['requests'],
-                                              impressions=app_dict['impressions'],
-                                              clicks=int(app_dict['ctr'] * app_dict[
-                                                  'impressions'] / 100),
-                                              app_tag=self.apps[app_name])
-                    records.append(nsr)
+                nsr = NetworkScrapeRecord(revenue=app_dict['revenue'],
+                                          attempts=app_dict['requests'],
+                                          impressions=app_dict['impressions'],
+                                          clicks=int(app_dict['ctr'] * app_dict[
+                                              'impressions'] / 100),
+                                          app_tag=app_name)
+                records.append(nsr)
             # Goto the next page if it exists
             try:
                 nextPage = self.browser.find_element_by_css_selector(
@@ -219,17 +215,12 @@ class IAdScraper(Scraper):
 
 
 if __name__ == '__main__':
-    class App(object):
-        pass
-
     NC = NetworkConfidential()
     #NC.username = 'chesscom'
     #NC.password = 'Faisal1Chess'
     NC.username = 'salesreports@optimesoftware.com'
     NC.password = 'Sales2012'
     NC.ad_network_name = 'iad'
-    app = App()
-    app.name = 'Chess.com - Play & Learn Chess'
-    SCRAPER = IAdScraper((NC, iter([(app, '329218549')])))
+    SCRAPER = IAdScraper(NC)
     print SCRAPER.get_site_stats(date(2011,11,30))
 

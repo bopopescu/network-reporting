@@ -47,18 +47,6 @@ class JumpTapAdNetwork(AdNetwork):
 class IAdAdNetwork(AdNetwork):
     scraper = IAdScraper
 
-    def append_extra_info(self):
-        """Get extra information required for the iAd scraper.
-
-        Return app names with level publisher ids appended to login credentials.
-        """
-        super(self.__class__, self).append_extra_info()
-        account = self.login_credentials.account
-        self.login_credentials = (self.login_credentials,
-                AdNetworkReportQueryManager.get_app_publisher_ids(
-                    account, self.login_credentials.ad_network_name,
-                    include_apps=True))
-
 class InMobiAdNetwork(AdNetwork):
     scraper = InMobiScraper
 

@@ -32,12 +32,14 @@ from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkManagementStats
 from ad_network_reports.query_managers import \
         AD_NETWORK_NAMES, \
+        IAD, \
         AdNetworkLoginCredentialsManager, \
         AdNetworkMapperManager
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
 from common.utils import date_magic
 from common.utils.connect_to_appengine import setup_remote_api
+from publisher.query_managers import AppQueryManager
 from pytz import timezone
 
 from google.appengine.ext import db
@@ -147,8 +149,10 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         logger = logging.getLogger('update_log')
         hdlr = logging.FileHandler('/var/tmp/update.log')
     else:
-        logger = logging.getLogger('update_log_' + str(only_these_credentials.key()))
-        hdlr = logging.FileHandler('/var/tmp/check_%s.log' % str(only_these_credentials.key()))
+        logger = logging.getLogger('update_log_' +
+                str(only_these_credentials.key()))
+        hdlr = logging.FileHandler('/var/tmp/check_%s.log' %
+                str(only_these_credentials.key()))
     formatter = logging.Formatter('%(asctime)s %(levelname)s'
             ' %(message)s')
     hdlr.setFormatter(formatter)
@@ -233,8 +237,15 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                             '_found')
 
                 # Add the current day to the db.
+                if login_credentials.ad_network_name == IAD:
+                    publisher_id = AppQueryManager.get_iad_pub_id(login_credentials.account,
+                            stats.app_tag)
+                else:
+                    publisher_id = stats.app_tag
 
-                publisher_id = stats.app_tag
+                if not publisher_id:
+                    login_credentials.app_pub_ids.append(stats.app_tag)
+                    continue
 
                 # Get the ad_network_app_mapper object that corresponds to the
                 # login_credentials and stats.
@@ -255,18 +266,11 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                 "%(ad_network)s that\'s NOT in MoPub" %
                                      dict(account=login_credentials.account.
                                          key(),
-                                          pub_id=stats.app_tag,
+                                          pub_id=publisher_id,
                                           ad_network=login_credentials.
                                           ad_network_name))
-                        login_credentials.app_pub_ids.append(stats.app_tag)
+                        login_credentials.app_pub_ids.append(publisher_id)
                         continue
-#                        ad_network_app_mapper = AdNetworkAppMapper(
-#                                ad_network_name=login_credentials.
-#                                        ad_network_name,
-#                                publisher_id=stats.app_tag,
-#                                ad_network_login=login_credentials,
-#                                application=None)
-#                        ad_network_app_mapper.put()
                     else:
                         if not only_these_credentials:
                             aggregate.increment(login_credentials.ad_network_name +
@@ -274,17 +278,17 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                         logger.info("%(account)s has pub id %(pub_id)s on "
                                 "%(ad_network)s that was FOUND in MoPub and "
                                 "mapped" %
-                                     dict(account = login_credentials.account.
+                                     dict(account=login_credentials.account.
                                          key(),
-                                          pub_id = stats.app_tag,
-                                          ad_network = login_credentials.
+                                          pub_id=publisher_id,
+                                          ad_network=login_credentials.
                                           ad_network_name))
                 else:
                     logger.info("%(account)s has pub id %(pub_id)s on "
                             "%(ad_network)s that\'s in MoPub" %
-                            dict(account = login_credentials.account.key(),
-                                pub_id = stats.app_tag,
-                                ad_network = login_credentials.ad_network_name))
+                            dict(account=login_credentials.account.key(),
+                                pub_id=publisher_id,
+                                ad_network=login_credentials.ad_network_name))
 
                 if not only_these_credentials:
                     aggregate.increment(login_credentials.ad_network_name +

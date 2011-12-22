@@ -149,6 +149,7 @@ class AdGroupArchiveHandler(RequestHandler):
                                       'archived_adgroups':archived_adgroups,
                                   })
 
+
 @login_required
 def archive(request,*args,**kwargs):
     return AdGroupArchiveHandler()(request,*args,**kwargs)
@@ -524,8 +525,9 @@ class AdgroupDetailHandler(RequestHandler):
         # Network campaigns have their date range set by the date picker
         # in the page
         if adgroup.campaign.network():
-            if self.start_date and self.end_date:
-                days = date_magic.gen_days(self.end_date, self.start_date)
+            if self.start_date and self.date_range:
+                end_date = self.start_date + datetime.timedelta(int(self.date_range)-1)
+                days = date_magic.gen_days(self.start_date, end_date)
             else:
                 days = date_magic.gen_date_range(self.date_range)
 
@@ -1228,8 +1230,8 @@ def stats_ajax(request, *args, **kwargs):
 
 class CampaignExporter(RequestHandler):
     def post(self, adgroup_key, file_type, start, end, *args, **kwargs):
-        start = datetime.datetime.strptime(start,'%m%d%y')
-        end = datetime.datetime.strptime(end,'%m%d%y')
+        start = datetime.datetime.strptime('%m%d%y', start)
+        end = datetime.datetime.strptime('%m%d%y', end)
         days = date_magic.gen_days(start, end)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)

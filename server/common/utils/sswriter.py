@@ -24,6 +24,12 @@ from reports.query_managers import ReportQueryManager
 
 DT_TYPES = (datetime.datetime, datetime.time, datetime.date)
 DEFAULT = 'default'
+AD_NETWORK_APP_KEY = 'ad_network_app_report'
+
+# NOTE: to use this module look at write_stats or write_ad_network stats as an
+# example. Use the setup decorator to setup the sswriter. Use row_writer which
+# takes a list of strings and prints it as a row with each element in it's
+# column.
 
 # Create a new excel workbook and add a sheet to it, return both
 def open_xls_sheet():
@@ -103,29 +109,45 @@ def verify_stats( stat ):
     assert stat in ALL_STATS, "Expected %s to be an element of %s, it's not" % ( stat, ALL_STATS )
     return stat.split( '_STAT' )[0]
 
-def write_stats( f_type, desired_stats, all_stats, site=None, owner=None,
-        days=None, key_type=None):
-    # make sure things are valid
-    assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % \
-            ( TABLE_FILE_FORMATS, f_type )
-    response = None
+def setup(func):
+    def wrapper(f_type, *args, **kwargs):
+        days = kwargs.get('days', None)
+        del kwargs['days']
+        # Make sure things are valid.
+        assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % \
+                ( TABLE_FILE_FORMATS, f_type )
+        response = None
+        writer = None
 
-    # setup response and writers
-    if f_type == 'csv':
-        response = HttpResponse( mimetype = 'text/csv' )
-        row_writer = write_csv_row( response )
-    elif f_type == 'xls':
-        response = HttpResponse( mimetype = 'application/vnd.ms-excel' )
-        row_writer, writer = make_xls_writers()
-    else:
-        # wat
-        assert False, "This should never happen, %s is in %s but doens't" \
-                "have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
+        # Setup response and writers.
+        if f_type == 'csv':
+            response = HttpResponse( mimetype = 'text/csv' )
+            row_writer = write_csv_row( response )
+        elif f_type == 'xls':
+            response = HttpResponse( mimetype = 'application/vnd.ms-excel' )
+            row_writer, writer = make_xls_writers()
+        else:
+            assert False, "This should never happen, %s is in %s but doens't" \
+                    "have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
 
-    start = days[0]
-    end = days[-1]
-    d_form = '%m-%d-%y'
-    d_str = '%s--%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
+        start = days[0]
+        end = days[-1]
+        d_form = '%m-%d-%y'
+        d_str = '%s--%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
+
+        response = func(f_type, response, row_writer, writer, d_str, *args,
+                **kwargs)
+
+        if f_type == 'xls':
+            # Excel has all the data in this temp object, dump all that into the
+            # response.
+            writer( response )
+        return response
+    return wrapper
+
+@setup
+def write_stats(f_type, response, row_writer, writer, d_str, desired_stats,
+        all_stats, site=None, owner=None, key_type=None):
     if key_type == 'adgroup':
         key_type = 'campaign'
     owner_type = key_type.title()
@@ -138,7 +160,7 @@ def write_stats( f_type, desired_stats, all_stats, site=None, owner=None,
 
     # Verify requested stats and turn them into SiteStat attributes so we can
     # getattr them
-    if key_type == 'ad_network':
+    if key_type == AD_NETWORK_APP_KEY:
         map_stats = desired_stats
     else:
         map_stats = map( verify_stats, desired_stats )
@@ -151,34 +173,12 @@ def write_stats( f_type, desired_stats, all_stats, site=None, owner=None,
         # This is super awesome, we iterate over all the stats objects, since the "desired stats" are formatted
         # to be identical to the properties, we just use the list of requested stats and map it to get the right values
         row_writer( map( lambda x: getattr( stat, x ), map_stats ) )
-    if f_type == 'xls':
-        #excel has all the data in this temp object, dump all that into the response
-        writer( response )
     return response
 
-def write_ad_network_stats( f_type, stat_names, all_stats, days):
-    # make sure things are valid
-    assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % \
-            ( TABLE_FILE_FORMATS, f_type )
-    response = None
-
-    # setup response and writers
-    if f_type == 'csv':
-        response = HttpResponse( mimetype = 'text/csv' )
-        row_writer = write_csv_row( response )
-    elif f_type == 'xls':
-        response = HttpResponse( mimetype = 'application/vnd.ms-excel' )
-        row_writer, writer = make_xls_writers()
-    else:
-        # wat
-        assert False, "This should never happen, %s is in %s but doens't" \
-                "have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
-
-    start = days[0]
-    end = days[-1]
-    d_form = '%m-%d-%y'
-    d_str = '%s--%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
-    fname = "ad_network_%s.%s" % (d_str, f_type)
+@setup
+def write_ad_network_stats(f_type, response, row_writer, writer, d_str,
+        stat_names, all_stats):
+    fname = "ad_network_report_%s.%s" % (d_str, f_type)
     #should probably do something about the filename here
     response['Content-disposition'] = 'attachment; filename=%s' % fname
 
@@ -191,8 +191,6 @@ def write_ad_network_stats( f_type, stat_names, all_stats, days):
                 network_stat_names = stat_names[DEFAULT]
 
             row_writer(network_stat_names)
-            logging.info('network_stats')
-            logging.info(network_stats)
             row_writer([network_stats[stat] for stat in network_stat_names])
             app_stat_names = list(network_stat_names)
             app_stat_names.insert(0, 'name')
@@ -276,6 +274,4 @@ def write_report(file_type, report_key, account):
         writer(response)
 
     return response
-
-
 

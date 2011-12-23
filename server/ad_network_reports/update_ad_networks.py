@@ -35,6 +35,7 @@ from ad_network_reports.query_managers import \
         IAD, \
         AdNetworkLoginCredentialsManager, \
         AdNetworkMapperManager, \
+        AdNetworkStatsManager, \
         AdNetworkManagementStatsManager
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin

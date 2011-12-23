@@ -5,6 +5,7 @@ from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
         MOBFOX, MOBFOX_PRETTY, IAD_PRETTY, AdNetworkReportQueryManager, \
         AdNetworkMapperManager, AdNetworkStatsManager, \
         AdNetworkManagementStatsManager, create_fake_data
+from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
@@ -35,29 +36,15 @@ class AdNetworkReportIndexHandler(RequestHandler):
         """
         #create_fake_data(self.account)
 
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range, 1)
+        days = get_days(self.start_date, self.date_range)
 
+        aggregate_stats_list = AdNetworkReportQueryManager. \
+                get_aggregate_stats_list(self.account, days)
 
-        mappers = list(AdNetworkMapperManager.get_ad_network_mappers(
-            self.account))
-
-        # Get aggregate stats for all the different ad network mappers for the
-        # account between the selected date range
-        aggregates_with_dates = [AdNetworkStatsManager. \
-                get_stats_for_mapper_and_days(n, days) for n in mappers]
-        if aggregates_with_dates:
-            aggregates_list, applications, sync_dates = \
-                    zip(*aggregates_with_dates)
-        else:
-            aggregates_list = []
-            sync_dates = []
-            applications = []
-        aggregate_stats_list = zip(mappers, aggregates_list, applications,
-                sync_dates)
-        aggregates = AdNetworkStatsManager.roll_up_stats(aggregates_list)
+        # Get aggregate_list from aggregate_stats_list and pass it to
+        # roll_up_stats.
+        aggregates = AdNetworkStatsManager.roll_up_stats(
+                zip(*aggregate_stats_list)[1])
 
         # Get the daily stats list.
         daily_stats = []
@@ -118,27 +105,15 @@ def ad_network_reports_index(request, *args, **kwargs):
 
 class ExportFileHandler(RequestHandler):
     def get(self, f_type):
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range)
+        """
+        Take a file type (xls or csv).
 
-        mappers = list(AdNetworkMapperManager.get_ad_network_mappers(
-            self.account))
+        Return a file with the aggregate stats data sorted by network or app.
+        """
+        days = get_days(self.start_date, self.date_range)
 
-        # Get aggregate stats for all the different ad network mappers for the
-        # account between the selected date range
-        aggregates_with_dates = [AdNetworkStatsManager. \
-                get_stats_for_mapper_and_days(n, days) for n in mappers]
-        if aggregates_with_dates:
-            aggregates_list, applications, sync_dates = \
-                    zip(*aggregates_with_dates)
-        else:
-            aggregates_list = []
-            sync_dates = []
-            applications = []
-        aggregate_stats_list = zip(mappers, aggregates_list, applications,
-                sync_dates)
+        aggregate_stats_list = AdNetworkReportQueryManager. \
+                get_aggregate_stats_list(self.account, days)
 
         networks = AdNetworkStatsManager.roll_up_unique_stats(self.account,
                 aggregate_stats_list, True)
@@ -161,12 +136,7 @@ class AppDetailHandler(RequestHandler):
 
         Return a webpage with the list of stats in a table.
         """
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range, 1)
-
-
+        days = get_days(self.start_date, self.date_range)
 
         ad_network_app_mapper = AdNetworkMapperManager.get_ad_network_mapper(
                 ad_network_app_mapper_key=mapper_key)
@@ -210,10 +180,11 @@ def app_detail(request, *args, **kwargs):
 
 class ExportAppDetailFileHandler(RequestHandler):
     def get(self, f_type, mapper_key):
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range)
+        """
+        Export data in for the app on the network (what's in the table) to xls
+        or csv.
+        """
+        days = get_days(self.start_date, self.date_range)
 
         stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
                 mapper_key, days)
@@ -225,12 +196,13 @@ class ExportAppDetailFileHandler(RequestHandler):
             stat_names = (DATE, REVENUE, ATTEMPTS, IMPRESSIONS,
                     CPM, FILL_RATE, CLICKS, CPC, CTR)
         return sswriter.write_stats(f_type, stat_names, stats_list, days=days,
-                key_type='ad_network')
+                key_type=sswriter.AD_NETWORK_APP_KEY)
 
 @login_required
 def export_app_detail_file(request, *args, **kwargs):
     return ExportAppDetailFileHandler()( request, *args, **kwargs )
 
+# TODO: Move to admin views
 class AdNetworkManagementHandler(RequestHandler):
     def get(self):
         """
@@ -238,10 +210,7 @@ class AdNetworkManagementHandler(RequestHandler):
         management stats and login credentials that resulted in error.
         Return a webpage with the list of management stats in a table.
         """
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range, 1)
+        days = get_days(self.start_date, self.date_range)
 
         management_stats = AdNetworkManagementStatsManager.get_stats(days)
         management_stats = sorted(management_sats.values(), key=lambda stats
@@ -256,7 +225,19 @@ class AdNetworkManagementHandler(RequestHandler):
                   'management_stats': management_stats
               })
 
-@login_required
+@staff_login_required
 def ad_network_management(request, *args, **kwargs):
     return AdNetworkManagementHandler()(request, *args, **kwargs)
+
+def get_days(start_date, date_range):
+    """
+    Take a start date and a date range.
+
+    Return a list of days, [datetime.date,...], objects for the given range.
+    """
+    if start_date:
+        days = StatsModel.get_days(start_date, date_range)
+    else:
+        days = StatsModel.lastdays(date_range, 1)
+    return days
 

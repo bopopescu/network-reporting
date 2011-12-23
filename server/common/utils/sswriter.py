@@ -177,26 +177,37 @@ def write_stats(f_type, response, row_writer, writer, d_str, desired_stats,
 
 @setup
 def write_ad_network_stats(f_type, response, row_writer, writer, d_str,
-        stat_names, all_stats):
+        stat_names, all_stats, networks):
     fname = "ad_network_report_%s.%s" % (d_str, f_type)
-    #should probably do something about the filename here
+    # should probably do something about the filename here
     response['Content-disposition'] = 'attachment; filename=%s' % fname
 
-    for network, network_stats in all_stats:
-        if network_stats and network_stats['state'] == 2:
-            row_writer( [network] )
-            if network in stat_names:
-                network_stat_names = stat_names[network]
-            else:
-                network_stat_names = stat_names[DEFAULT]
+    if networks:
+        for network, network_stats in all_stats:
+            if network_stats and network_stats['state'] == 2:
+                row_writer([network])
+                if network in stat_names:
+                    network_stat_names = stat_names[network]
+                else:
+                    network_stat_names = stat_names[DEFAULT]
 
-            row_writer(network_stat_names)
-            row_writer([network_stats[stat] for stat in network_stat_names])
-            app_stat_names = list(network_stat_names)
-            app_stat_names.insert(0, 'name')
+                row_writer(network_stat_names)
+                row_writer([network_stats[stat] for stat in network_stat_names])
+                app_stat_names = ['name'] + list(network_stat_names)
+                row_writer(app_stat_names)
+                for app in network_stats['sub_data_list']:
+                    row_writer([app[stat] for stat in app_stat_names])
+    else:
+        for app, app_stats in all_stats:
+            row_writer([app])
+            app_stat_names = stat_names[DEFAULT]
             row_writer(app_stat_names)
-            for app in network_stats['sub_data_list']:
-                row_writer([app[stat] for stat in app_stat_names])
+            row_writer([app_stats[stat] for stat in app_stat_names])
+            network_stat_names = ['name'] + list(app_stat_names)
+            row_writer(network_stat_names)
+            for network in app_stats['sub_data_list']:
+                row_writer([network.get(stat, 0) for stat in
+                    network_stat_names])
 
     if f_type == 'xls':
         # excel has all the data in this temp object, dump all that into the

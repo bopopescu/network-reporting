@@ -26,6 +26,7 @@ FILL_RATE = 'fill_rate'
 CLICKS = 'clicks'
 CPC = 'cpc'
 CTR = 'ctr'
+SORT_BY_NETWORK = 'network'
 
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self):
@@ -104,7 +105,9 @@ def ad_network_reports_index(request, *args, **kwargs):
     return AdNetworkReportIndexHandler()(request, *args, **kwargs)
 
 class ExportFileHandler(RequestHandler):
-    def get(self, f_type):
+    def get(self,
+            f_type,
+            sort_type):
         """
         Take a file type (xls or csv).
 
@@ -115,23 +118,28 @@ class ExportFileHandler(RequestHandler):
         aggregate_stats_list = AdNetworkReportQueryManager. \
                 get_aggregate_stats_list(self.account, days)
 
-        networks = AdNetworkStatsManager.roll_up_unique_stats(self.account,
-                aggregate_stats_list, True)
+        if sort_type == SORT_BY_NETWORK:
+            all_stats = AdNetworkStatsManager.roll_up_unique_stats(self.account,
+                    aggregate_stats_list, True)
+        else:
+            all_stats = AdNetworkStatsManager.roll_up_unique_stats(self.account,
+                    aggregate_stats_list, False)
 
         stat_names = {}
         stat_names[MOBFOX_PRETTY] = (REVENUE, IMPRESSIONS, CPM, CLICKS,
                 CPC, CTR)
         stat_names[sswriter.DEFAULT] = (REVENUE, ATTEMPTS, IMPRESSIONS,
                 CPM, FILL_RATE, CLICKS, CPC, CTR)
-        return sswriter.write_ad_network_stats(f_type, stat_names, networks,
-                days=days)
+        return sswriter.write_ad_network_stats(f_type, stat_names, all_stats,
+                days=days, networks=(sort_type == 'network'))
 
 @login_required
 def export_file(request, *args, **kwargs):
     return ExportFileHandler()( request, *args, **kwargs )
 
 class AppDetailHandler(RequestHandler):
-    def get(self, mapper_key, *args, **kwargs):
+    def get(self,
+            mapper_key):
         """Generate a list of stats for the ad network, app and account.
 
         Return a webpage with the list of stats in a table.
@@ -179,7 +187,9 @@ def app_detail(request, *args, **kwargs):
     return AppDetailHandler()(request, *args, **kwargs)
 
 class ExportAppDetailFileHandler(RequestHandler):
-    def get(self, f_type, mapper_key):
+    def get(self,
+            f_type,
+            mapper_key):
         """
         Export data in for the app on the network (what's in the table) to xls
         or csv.
@@ -229,7 +239,8 @@ class AdNetworkManagementHandler(RequestHandler):
 def ad_network_management(request, *args, **kwargs):
     return AdNetworkManagementHandler()(request, *args, **kwargs)
 
-def get_days(start_date, date_range):
+def get_days(start_date,
+             date_range):
     """
     Take a start date and a date range.
 

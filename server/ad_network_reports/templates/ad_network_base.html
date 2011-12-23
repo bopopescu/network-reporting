@@ -118,7 +118,15 @@
 
         $("#ad-network-exportSelect").change(function() {
             if ($(this).val()) {
-                window.open($(this).val());
+                if ('/ad_network_reports/' == $(location).attr('pathname')) {
+                    if ($('.networks').css('display') == 'block') {
+                        window.open($(this).val() + '/network');
+                    } else {
+                        window.open($(this).val() + '/app');
+                    }
+                } else {
+                    window.open($(this).val());
+                }
             }
         });
     });

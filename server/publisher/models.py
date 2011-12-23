@@ -46,7 +46,8 @@ class App(db.Model):
     admob_bgcolor = db.StringProperty()
     admob_textcolor = db.StringProperty()
 
-    app_type = db.StringProperty(required=True, default='iphone', choices=['iphone', 'android', 'ipad', 'mweb'])
+    app_type = db.StringProperty(required=True, default='iphone',
+            choices=['iphone', 'android', 'ipad', 'mweb'])
     description = db.TextProperty()
     url = db.StringProperty()
     package = db.StringProperty()

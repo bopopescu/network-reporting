@@ -25,6 +25,9 @@ from reports.query_managers import ReportQueryManager
 DT_TYPES = (datetime.datetime, datetime.time, datetime.date)
 DEFAULT = 'default'
 AD_NETWORK_APP_KEY = 'ad_network_app_report'
+MOBFOX = 'mobfox'
+ATTEMPTS = 'attempts'
+FILL_RATE = 'fill_rate'
 
 # NOTE: to use this module look at write_stats or write_ad_network stats as an
 # example. Use the setup decorator to setup the sswriter. Use row_writer which
@@ -147,10 +150,15 @@ def setup(func):
 
 @setup
 def write_stats(f_type, response, row_writer, writer, d_str, desired_stats,
-        all_stats, site=None, owner=None, key_type=None):
+        all_stats, site=None, owner=None, key_type=None, app_detail_name=None):
     if key_type == 'adgroup':
         key_type = 'campaign'
-    owner_type = key_type.title()
+
+    if app_detail_name:
+        owner_type = app_detail_name.encode('utf8')
+    else:
+        owner_type = key_type.title()
+
     if site:
         fname = "%s_%s_%s.%s" % (owner_type, db.get(site).name, d_str, f_type)
     else:
@@ -178,9 +186,17 @@ def write_stats(f_type, response, row_writer, writer, d_str, desired_stats,
 @setup
 def write_ad_network_stats(f_type, response, row_writer, writer, d_str,
         stat_names, all_stats, networks):
-    fname = "ad_network_report_%s.%s" % (d_str, f_type)
+    fname = "Ad_Network_Report_%s.%s" % (d_str, f_type)
     # should probably do something about the filename here
     response['Content-disposition'] = 'attachment; filename=%s' % fname
+
+    def encode_and_filter(data, stat):
+        if data.get('name', None) == MOBFOX and stat in (ATTEMPTS, FILL_RATE):
+            return ''
+        elif isinstance(data[stat], unicode):
+            return data[stat].encode('utf8')
+        return data[stat]
+
 
     if networks:
         for network, network_stats in all_stats:
@@ -192,21 +208,24 @@ def write_ad_network_stats(f_type, response, row_writer, writer, d_str,
                     network_stat_names = stat_names[DEFAULT]
 
                 row_writer(network_stat_names)
-                row_writer([network_stats[stat] for stat in network_stat_names])
+                row_writer([encode_and_filter(network_stats, stat) for stat in
+                    network_stat_names])
                 app_stat_names = ['name'] + list(network_stat_names)
                 row_writer(app_stat_names)
                 for app in network_stats['sub_data_list']:
-                    row_writer([app[stat] for stat in app_stat_names])
+                    row_writer([encode_and_filter(app, stat) for stat in
+                        app_stat_names])
     else:
         for app, app_stats in all_stats:
             row_writer([app])
             app_stat_names = stat_names[DEFAULT]
             row_writer(app_stat_names)
-            row_writer([app_stats[stat] for stat in app_stat_names])
+            row_writer([encode_and_filter(app_stats, stat) for stat in
+                app_stat_names])
             network_stat_names = ['name'] + list(app_stat_names)
             row_writer(network_stat_names)
             for network in app_stats['sub_data_list']:
-                row_writer([network.get(stat, 0) for stat in
+                row_writer([encode_and_filter(network, stat) for stat in
                     network_stat_names])
 
     if f_type == 'xls':

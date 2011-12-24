@@ -206,7 +206,8 @@ class ExportAppDetailFileHandler(RequestHandler):
             stat_names = (DATE, REVENUE, ATTEMPTS, IMPRESSIONS,
                     CPM, FILL_RATE, CLICKS, CPC, CTR)
         return sswriter.write_stats(f_type, stat_names, stats_list, days=days,
-                key_type=sswriter.AD_NETWORK_APP_KEY)
+                key_type=sswriter.AD_NETWORK_APP_KEY, app_detail_name=('%s_%s' %
+                (mapper.application.name, AD_NETWORK_NAMES[mapper.ad_network_name])))
 
 @login_required
 def export_app_detail_file(request, *args, **kwargs):

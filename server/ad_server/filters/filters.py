@@ -82,6 +82,9 @@ def kw_filter(keywords):
 def geo_filter(acceptable_geo_preds_list):
     log_mesg = "Removed due to geo mismatch: %s"
     def real_filter(a):
+        # If this adgroup is LL targeted, then ignore this filter
+        if a.cities and len(a.cities) > 0:
+            return True
         return (set(acceptable_geo_preds_list).intersection(a.geographic_predicates) > set())
     return (real_filter, log_mesg, [])
 

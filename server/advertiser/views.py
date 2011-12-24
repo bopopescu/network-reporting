@@ -114,7 +114,7 @@ class AdGroupIndexHandler(RequestHandler):
         response_dict['status'] = 200
         response_dict['all_stats'] = stats_dict
         """
-        
+
         for adgroup in adgroups:
             adunits = []
             adunit_keys_to_fetch = []
@@ -218,7 +218,7 @@ def _sort_campaigns(adgroups):
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
     # adgroup2.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
-    # adgroup3.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
+    # adgroup3.l = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
     # all_daily_stats = [(StatsModel(day=1),StatsModel(day=1),StatsModel(day=1)),
     #                    (StatsModel(day=2),StatsModel(day=2),StatsModel(day=2)),
     #                    (StatsModel(day=3),StatsModel(day=3),StatsModel(day=3))]
@@ -266,9 +266,10 @@ class AdGroupArchiveHandler(RequestHandler):
             adgroup.budget = adgroup.campaign.budget_obj
 
         return render_to_response(self.request,
-                                   'advertiser/archived_adgroups.html',
-                                    {'archived_adgroups':archived_adgroups,
-                                     })
+                                  'advertiser/archived_adgroups.html',
+                                  {
+                                      'archived_adgroups':archived_adgroups,
+                                  })
 
 
 @login_required
@@ -624,8 +625,9 @@ class ShowAdGroupHandler(RequestHandler):
         # Network campaigns have their date range set by the date picker
         # in the page
         if adgroup.campaign.network():
-            if self.start_date and self.end_date:
-                days = date_magic.gen_days(self.end_date, self.start_date)
+            if self.start_date and self.date_range:
+                end_date = self.start_date + datetime.timedelta(int(self.date_range)-1)
+                days = date_magic.gen_days(self.start_date, end_date)
             else:
                 days = date_magic.gen_date_range(self.date_range)
 
@@ -1163,12 +1165,16 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
-                    logging.warn("PACE: %s"%budget_service.get_pace(adgroup.campaign.budget_obj))
-                    adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+
+                    logging.warn("%s"%adgroup.name)
+                    pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+                    if pace:
+                        logging.warn("%s %s"%(pace[0], pace[1]))
+                        summed_stats.pace_type = pace[0]
+                        summed_stats.pace = round(pace[1], 2)
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
-
                     summed_stats.status = filters.campaign_status(adgroup)
                     if adgroup.running and adgroup.campaign.budget_obj and adgroup.campaign.budget_obj.delivery_type != 'allatonce':
                         summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign.budget_obj) else "behind"
@@ -1206,8 +1212,8 @@ def stats_ajax(request, *args, **kwargs):
 
 class CampaignExporter(RequestHandler):
     def post(self, adgroup_key, file_type, start, end, *args, **kwargs):
-        start = datetime.datetime.strptime(start,'%m%d%y')
-        end = datetime.datetime.strptime(end,'%m%d%y')
+        start = datetime.datetime.strptime(start, '%m%d%y')
+        end = datetime.datetime.strptime(end, '%m%d%y')
         days = date_magic.gen_days(start, end)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
@@ -1325,6 +1331,11 @@ class MarketplaceIndexHandler(RequestHandler):
             yesterday_stats = mpx_stats["daily"][-2];
         except:
             pass
+
+        try:
+            blind = self.account.network_config.blind
+        except:
+            blind = False
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",

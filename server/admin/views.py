@@ -138,10 +138,12 @@ def dashboard_prep(request, *args, **kwargs):
             unique_apps[str(yesterday._publisher)].mpx_revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
             unique_apps[str(yesterday._publisher)].mpx_impression_count = int(mpx_stats.get('impressions', 0))
             unique_apps[str(yesterday._publisher)].mpx_clear_rate = int(mpx_stats.get('impressions', 0)) / float(sum(x.request_count for x in app_stats)) if yesterday.request_count > 0 else 0
+            unique_apps[str(yesterday._publisher)].mpx_cpm = mpx_stats.get('ecpm')
         except MPStatsAPIException, e:
             unique_apps[str(yesterday._publisher)].mpx_revenue = 0
             unique_apps[str(yesterday._publisher)].mpx_impression_count = 0
             unique_apps[str(yesterday._publisher)].mpx_clear_rate = 0
+            unique_apps[str(yesterday._publisher)].mpx_cpm = '-'
     
     # organize daily stats by date
     total_stats = totals.values()

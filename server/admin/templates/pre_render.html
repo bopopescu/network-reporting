@@ -85,12 +85,13 @@
 			<th width="">Users</th>
 			<th width="">MPX$</th>
 			<th width="">MPX%</th>
+			<th width="">MPX CPM</th>			
 	        <th width="">%US</th>
 		</thead>
 		{% for a in apps %}
 		<tr class="alternating-color">
 			<td>{{forloop.counter}}&nbsp;</td>
-			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:46}}</a></td>
+			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:30}}</a></td>
 			<td><a href="mailto:{{a.publisher.account.mpuser.email}}" class="account_email">{{a.publisher.account.mpuser.email|truncate:30}}</a></td>
             <td>{{a.publisher.app_type}}</td>
 			<td>{{a.publisher.primary_category}}</td>
@@ -103,7 +104,8 @@
 			<td class="numeric">{{a.user_count|withsep}}</td>
 			<td class="numeric">{{a.mpx_revenue|currency}}</td>
 			<td class="numeric">{{a.mpx_clear_rate|percentage_rounded}}</td>
-			<td class="numeric">{{a.percent_us|percentage_rounded}}</td>            
+			<td class="numeric">{{a.mpx_cpm}}</td>
+			<td class="numeric">{{a.percent_us|percentage_rounded}}</td>
 		</tr>
 		{% endfor %}
 	</table>

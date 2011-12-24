@@ -968,6 +968,8 @@ var mopub = mopub || {};
         cpc: "cpc",
         cpm: "ecpm",
         ctr: "ctr",
+        pace: "pace",
+        pace_type: "pace_type",
         budget_goal: "budget_goal",
         fill_rate: "fill"
     };
@@ -1076,9 +1078,28 @@ var mopub = mopub || {};
         }
       }
       results.on_schedule = onScheduleHtml;
-
+      
+      results.pace = htmlForPacing(results);
+            
       return results;
     }
+    
+        function htmlForPacing(results) {
+            if (results.pace_type) {
+               color = "";
+               if (results.pace_type == "Delivery") {
+                   color = "black";
+               } else if (results.pace >= .95) {
+                    color = "green";
+                } else if (results.pace >= .80) {
+                    color = "#F1C522";
+                } else {
+                    color = "red";
+                }
+                return '<div style="color:' + color + '; font-size:9px;">' + results.pace_type + ': ' + 
+                    mopub.Utils.formatNumberAsPercentage(results.pace) + '</div>';
+            }
+        }
 
         function populateGraphWithAccountStats(stats) {
             var dailyStats = stats["all_stats"]["||"]["daily_stats"];

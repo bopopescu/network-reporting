@@ -57,7 +57,7 @@ def send_stats_mail(account, test_date, valid_stats_list):
     if emails and valid_stats_list:
         aggregate_stats = AdNetworkStatsManager.roll_up_stats([stats for
             app_name, ad_network_name, stats in valid_stats_list])
-        aggregate_stats.ctr *= 100
+        aggregate_stats._ctr = aggregate_stats.ctr * 100
         valid_stats_list = sorted(valid_stats_list, key = lambda s: s[0] + s[1])
         email_body = ""
         for app_name, ad_network_name, stats in valid_stats_list:
@@ -116,7 +116,7 @@ def send_stats_mail(account, test_date, valid_stats_list):
             <td><b>%(impressions)d</b></td>
             <td><b>%(fill_rate).2f%%</b></td>
             <td><b>%(clicks)d</b></td>
-            <td><b>%(ctr).2f%%</b></td>
+            <td><b>%(_ctr).2f%%</b></td>
             <td><b>%(cpm).2f</b></td>
         </tr>
                     """ % aggregate_stats.__dict__ +
@@ -124,9 +124,7 @@ def send_stats_mail(account, test_date, valid_stats_list):
                     """
     </tbody>
 </table>
-""")) #+
-#"Learn more at <a href='http://mopub-experimental.appspot.com/"
-#"ad_network_reports/'>MoPub</a>"))
+"""))
 
 def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         None):

@@ -3,6 +3,7 @@ import datetime
 import logging
 
 from django.http import HttpResponse
+from django.utils import encoding
 from google.appengine.ext import db
 
 from common.constants import  *
@@ -19,13 +20,14 @@ from common.utils.pyExcelerator import *
  #                               )
 
 from reporting.models import SiteStats
-from reporting.query_managers import SiteStatsQueryManager, StatsModelQueryManager
+from reporting.query_managers import SiteStatsQueryManager, \
+        StatsModelQueryManager
 from reports.query_managers import ReportQueryManager
 
 DT_TYPES = (datetime.datetime, datetime.time, datetime.date)
 DEFAULT = 'default'
 AD_NETWORK_APP_KEY = 'ad_network_app_report'
-MOBFOX = 'mobfox'
+MOBFOX_PRETTY = 'MobFox'
 ATTEMPTS = 'attempts'
 FILL_RATE = 'fill_rate'
 
@@ -76,7 +78,8 @@ def write_xls( to_write, wbk ):
     to_write.write( doc.packed_SAT )
     to_write.write( doc.dir_stream )
 
-# Take a Worksheet to write to and return a fucntion that takes a list as input and writes said list to input Worksheet
+# Take a Worksheet to write to and return a fucntion that takes a list as
+# input and writes said list to input Worksheet
 def make_row_writer( sheet ):
     #Because I don't want a function that just takes a list and writes it,
     #there's no reason I should have to keep track of lines
@@ -89,7 +92,8 @@ def make_row_writer( sheet ):
         return
     return helper
 
-# Takes the XLS workbook and returns a function which writes said book to a file-like object
+# Takes the XLS workbook and returns a function which writes said book to a
+# file-like object
 def make_resp_writer( book ):
     def helper( resp ):
         write_xls( resp, book )
@@ -107,7 +111,8 @@ def write_csv_row( resp ):
     writer = csv.writer( resp )
     return writer.writerow
 
-# Function for map, verifies that a stat is valid and then removes the _STAT part of it
+# Function for map, verifies that a stat is valid and then removes the _STAT
+# part of it
 def verify_stats( stat ):
     assert stat in ALL_STATS, "Expected %s to be an element of %s, it's not" % ( stat, ALL_STATS )
     return stat.split( '_STAT' )[0]
@@ -155,14 +160,15 @@ def write_stats(f_type, response, row_writer, writer, d_str, desired_stats,
         key_type = 'campaign'
 
     if app_detail_name:
-        owner_type = app_detail_name.encode('utf8')
+        owner_type = app_detail_name
     else:
         owner_type = key_type.title()
 
     if site:
         fname = "%s_%s_%s.%s" % (owner_type, db.get(site).name, d_str, f_type)
     else:
-        fname = "%s_%s.%s" % (owner_type, d_str, f_type)
+        fname = "%s_%s.%s" % (encoding.smart_str(owner_type, encoding='ascii',
+            errors='ignore'), d_str, f_type)
     #should probably do something about the filename here
     response['Content-disposition'] = 'attachment; filename=%s' % fname
 
@@ -191,7 +197,8 @@ def write_ad_network_stats(f_type, response, row_writer, writer, d_str,
     response['Content-disposition'] = 'attachment; filename=%s' % fname
 
     def encode_and_filter(data, stat):
-        if data.get('name', None) == MOBFOX and stat in (ATTEMPTS, FILL_RATE):
+        if data.get('name', None) == MOBFOX_PRETTY and stat in (ATTEMPTS,
+                FILL_RATE):
             return ''
         elif isinstance(data[stat], unicode):
             return data[stat].encode('utf8')
@@ -217,7 +224,7 @@ def write_ad_network_stats(f_type, response, row_writer, writer, d_str,
                         app_stat_names])
     else:
         for app, app_stats in all_stats:
-            row_writer([app])
+            row_writer([app.encode('utf8')])
             app_stat_names = stat_names[DEFAULT]
             row_writer(app_stat_names)
             row_writer([encode_and_filter(app_stats, stat) for stat in

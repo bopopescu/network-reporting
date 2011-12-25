@@ -41,7 +41,7 @@ IAD = 'iad'
 
 #TODO: Figure out where to put this. Basically ad_network_reports
 # package helper functions.
-class AdNetworkReportQueryManager(CachedQueryManager):
+class AdNetworkReportManager(CachedQueryManager):
     @classmethod
     def get_aggregate_stats_list(cls,
                                  account,
@@ -190,7 +190,7 @@ class AdNetworkMapperManager(CachedQueryManager):
         # Sanity check
         if publisher_id:
             ad_network_name = login_credentials.ad_network_name
-            for app, app_publisher_id in AdNetworkReportQueryManager. \
+            for app, app_publisher_id in AdNetworkReportManager. \
                     get_app_publisher_ids(login_credentials.account, \
                             ad_network_name, include_apps=True):
                 # Is the app in Mopub?
@@ -540,7 +540,7 @@ def create_fake_data(account=None):
     if settings.DEBUG:
         last_90_days = date_magic.gen_date_range(90)
 
-        manager = AdNetworkReportQueryManager(account)
+        manager = AdNetworkReportManager(account)
 
         app = App(account=account,
                 name='My little pony island adventures')

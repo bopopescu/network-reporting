@@ -50,7 +50,7 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
-from ad_network_reports.query_managers import AdNetworkReportQueryManager
+from ad_network_reports.query_managers import AdNetworkReportManager
 
 from common.constants import MPX_DSP_IDS
 

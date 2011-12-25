@@ -2,7 +2,7 @@ import logging
 
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
-        MOBFOX, MOBFOX_PRETTY, IAD_PRETTY, AdNetworkReportQueryManager, \
+        MOBFOX, MOBFOX_PRETTY, IAD_PRETTY, AdNetworkReportManager, \
         AdNetworkMapperManager, AdNetworkStatsManager, \
         AdNetworkManagementStatsManager, create_fake_data
 from common.utils.decorators import staff_login_required
@@ -39,7 +39,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
 
         days = get_days(self.start_date, self.date_range)
 
-        aggregate_stats_list = AdNetworkReportQueryManager. \
+        aggregate_stats_list = AdNetworkReportManager. \
                 get_aggregate_stats_list(self.account, days)
 
         # Get aggregate_list from aggregate_stats_list and pass it to
@@ -115,7 +115,7 @@ class ExportFileHandler(RequestHandler):
         """
         days = get_days(self.start_date, self.date_range)
 
-        aggregate_stats_list = AdNetworkReportQueryManager. \
+        aggregate_stats_list = AdNetworkReportManager. \
                 get_aggregate_stats_list(self.account, days)
 
         if sort_type == SORT_BY_NETWORK:

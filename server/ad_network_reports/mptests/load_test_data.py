@@ -3,7 +3,7 @@ import common.utils.test.setup
 
 from account.models import Account, NetworkConfig
 from ad_network_reports.models import *
-from ad_network_reports.query_managers import AdNetworkReportQueryManager
+from ad_network_reports.query_managers import AdNetworkReportManager
 from publisher.models import App, Site
 
 def load_test_data():
@@ -38,7 +38,7 @@ def load_test_data():
     jumptap_adunit.put()
 
     # AdMob login info
-    AdNetworkReportQueryManager.create_login_credentials_and_mappers(
+    AdNetworkReportManager.create_login_credentials_and_mappers(
             account=account,
             ad_network_name='admob',
             username='adnetwork@com2usamerica.com',
@@ -46,27 +46,27 @@ def load_test_data():
             client_key='ka820827f7daaf94826ce4cee343837a')
 
     # JumpTap login info
-    AdNetworkReportQueryManager.create_login_credentials_and_mappers(
+    AdNetworkReportManager.create_login_credentials_and_mappers(
             account=account,
             ad_network_name='jumptap',
             username='zaphrox',
             password='JR.7x89re0')
     # iAd login info
-    AdNetworkReportQueryManager.create_login_credentials_and_mappers(
+    AdNetworkReportManager.create_login_credentials_and_mappers(
             account=account,
             ad_network_name='iad',
             username='chesscom',
             password='Faisal1Chess')
 
     # InMobi login info
-    AdNetworkReportQueryManager.create_login_credentials_and_mappers(
+    AdNetworkReportManager.create_login_credentials_and_mappers(
             account=account,
             ad_network_name='inmobi',
             username='4028cb973099fe040130c2aa2a0904b5',
             password='098233019949')
 
     # MobFox login info
-    AdNetworkReportQueryManager.create_login_credentials_and_mappers(
+    AdNetworkReportManager.create_login_credentials_and_mappers(
             account=account,
             ad_network_name='mobfox')
 

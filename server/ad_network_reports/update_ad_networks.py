@@ -57,7 +57,6 @@ def send_stats_mail(account, test_date, valid_stats_list):
     if emails and valid_stats_list:
         aggregate_stats = AdNetworkStatsManager.roll_up_stats([stats for
             app_name, ad_network_name, stats in valid_stats_list])
-        aggregate_stats._ctr = aggregate_stats.ctr * 100
         valid_stats_list = sorted(valid_stats_list, key = lambda s: s[0] + s[1])
         email_body = ""
         for app_name, ad_network_name, stats in valid_stats_list:
@@ -116,10 +115,16 @@ def send_stats_mail(account, test_date, valid_stats_list):
             <td><b>%(impressions)d</b></td>
             <td><b>%(fill_rate).2f%%</b></td>
             <td><b>%(clicks)d</b></td>
-            <td><b>%(_ctr).2f%%</b></td>
+            <td><b>%(ctr).2f%%</b></td>
             <td><b>%(cpm).2f</b></td>
         </tr>
-                    """ % aggregate_stats.__dict__ +
+                    """ % {'revenue': aggregate_stats.revenue,
+                           'attempts': aggregate_stats.attempts,
+                           'impressions': aggregate_stats.impressions,
+                           'fill_rate': aggregate_stats.fill_rate,
+                           'clicks': aggregate_stats.clicks,
+                           'ctr': aggregate_stats.ctr * 100,
+                           'cpm': aggregate_stats.cpm} +
                     email_body +
                     """
     </tbody>

@@ -246,14 +246,24 @@ class AdNetworkManagementHandler(RequestHandler):
         aggregates['failed'] = reduce(lambda prev, stats: prev +
                 stats['failed'], [0] + networks.values())
 
-        daily_stats = []
+        stats_by_date = {}
         for stats_tuple in zip(*management_stats.values()):
+            stats_by_date[stats_tuple[0].date] = stats_tuple
+
+        daily_stats = []
+        for day in days:
             stats_dict = {}
-            for stat in MANAGEMENT_STAT_NAMES:
-                stats_dict[stat] = int(reduce(lambda prev, stats: prev +
-                        getattr(stats, stat), [0] + list(stats_tuple)))
-            stats_dict['failed'] = int(reduce(lambda prev, stats: prev +
-                    len(stats.failed_logins), [0] + list(stats_tuple)))
+            if day in stats_by_date:
+                stats_tuple = stats_by_date[day]
+                for stat in MANAGEMENT_STAT_NAMES:
+                    stats_dict[stat] = int(reduce(lambda prev, stats: prev +
+                            getattr(stats, stat), [0] + list(stats_tuple)))
+                stats_dict['failed'] = int(reduce(lambda prev, stats: prev +
+                        len(stats.failed_logins), [0] + list(stats_tuple)))
+            else:
+                for stat in MANAGEMENT_STAT_NAMES:
+                    stats_dict[stat] = 0
+                stats_dict['failed'] = 0
             daily_stats.append(stats_dict)
 
         networks = sorted(networks.iteritems(), key=lambda network: network[0])

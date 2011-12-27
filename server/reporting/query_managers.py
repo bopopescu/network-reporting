@@ -24,6 +24,7 @@ from common.utils.query_managers import CachedQueryManager
 from common.utils import date_magic
 from common.utils.helpers import chunks
 from reporting.models import SiteStats, StatsModel, BlobLog
+from reporting import mongostats
 from advertiser.models import Creative
 from publisher.models import Site as AdUnit
 
@@ -107,7 +108,7 @@ class StatsModelQueryManager(CachedQueryManager):
 
         stats = []
         for account,apps in account_app_dict.iteritems():
-            stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days)
+            stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days,no_mongo=True)
 
         return stats
 
@@ -168,7 +169,8 @@ class StatsModelQueryManager(CachedQueryManager):
                            account=None,
                            country=None,
                            offline=False,
-                           date_fmt='date'):
+                           date_fmt='date',
+                           no_mongo=False):
         """
         Gets the stats for a specific pairing. Definitions:
         advertiser_group: Either Campaign, AdGroup or Creative
@@ -188,6 +190,15 @@ class StatsModelQueryManager(CachedQueryManager):
             days = days or []
 
         account = account or self.account
+        
+        #### USES MONGOSTATS API ####
+        if not offline and self.account_obj and self.account_obj.display_mongo and not no_mongo:
+            return mongostats.api_fetch(start_date=days[0],
+                                        end_date=days[-1],
+                                        account_key=account, 
+                                        publisher_key=publisher,
+                                        advertiser_key=advertiser,
+                                        )
 
         if account:
             parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=offline))
@@ -234,6 +245,7 @@ class StatsModelQueryManager(CachedQueryManager):
                                       parent=parent)
                         for d in days]
         days_len = len(days)
+                
         stats = StatsModel.get(keys) # db get
         #since pubs iterates more than once around days, stats might be too long
         #but it should only iterate on MULTIPLES of days_len, so ct mod days_len

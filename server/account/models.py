@@ -139,8 +139,12 @@ class Account(db.Model):
     # ex: Outblaze and Mobipeak have too many apps for GAE realtime stats to handle
     use_mongodb_stats = db.BooleanProperty(default=True)
 
-    # use only mongo, not datastore for real time stats
+    # use only mongo, not datastore for storing real time stats
     use_only_mongo = db.BooleanProperty(default=False)
+    
+    # use only mongo to display realtime stats in UI
+    display_mongo = db.BooleanProperty(default=False)
+    
 
     @property
     def emails(self):

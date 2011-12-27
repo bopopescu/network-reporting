@@ -145,6 +145,13 @@ def get_all(Model, limit=300):
         models += new_models
     return models
 
+def put_all(models, limit=300):
+    cnt = 0
+    for sub_models in chunks(models, limit):
+        db.put(sub_models)
+        cnt += len(sub_models)
+        print "put %d/%d" % (cnt, len(models))
+    
 def get_udid_appid(request):
     """
     This is necessary because of a temporary error in Android's conversion tracking URL; there was a

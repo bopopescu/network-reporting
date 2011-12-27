@@ -18,8 +18,6 @@ from common.ragendja.settings_pre import *
 
 NEW_UI = True
 
-DEBUG = True
-
 DEFAULT_FROM_EMAIL = 'olp@mopub.com'
 SERVER_EMAIL = 'olp@mopub.com'
 

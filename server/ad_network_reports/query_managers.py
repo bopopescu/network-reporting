@@ -522,7 +522,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
         management_stats = {}
         for ad_network_name in AD_NETWORK_NAMES.keys():
             management_stats[ad_network_name] = AdNetworkManagementStats. \
-                    get_by_days(network, days)
+                    get_by_days(ad_network_name, days)
         return management_stats
 
 def create_fake_data(account=None):
@@ -539,8 +539,6 @@ def create_fake_data(account=None):
     # Make sure this isn't used on production datastore.
     if settings.DEBUG:
         last_90_days = date_magic.gen_date_range(90)
-
-        manager = AdNetworkReportManager(account)
 
         app = App(account=account,
                 name='My little pony island adventures')
@@ -566,7 +564,8 @@ def create_fake_data(account=None):
         login.put()
 
         for day in last_90_days:
-            for mapper in manager.get_ad_network_mappers():
+            for mapper in AdNetworkMapperManager.get_ad_network_mappers(
+                    account):
                 attempts = random.randint(1, 100000)
                 impressions = random.randint(1, attempts)
                 clicks = random.randint(1, impressions)

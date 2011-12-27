@@ -27,6 +27,7 @@ CLICKS = 'clicks'
 CPC = 'cpc'
 CTR = 'ctr'
 SORT_BY_NETWORK = 'network'
+MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped')
 
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self):
@@ -225,8 +226,37 @@ class AdNetworkManagementHandler(RequestHandler):
         days = get_days(self.start_date, self.date_range)
 
         management_stats = AdNetworkManagementStatsManager.get_stats(days)
-        management_stats = sorted(management_sats.values(), key=lambda stats
-                : stats.ad_network_name)
+
+        networks = {}
+        for ad_network_name in management_stats.keys():
+            networks[ad_network_name] = {}
+        for name, stats_list in management_stats.iteritems():
+            for stat in MANAGEMENT_STAT_NAMES:
+                networks[name][stat] = reduce(lambda prev, stats: prev +
+                        getattr(stats, stat), [0] + stats_list)
+            networks[name]['failed'] = reduce(lambda prev, stats: prev +
+                    len(stats.failed_logins), [0] + stats_list)
+            stats_list = stats_list.reverse()
+            networks[name]['sub_data_list'] = stats_list
+
+        aggregates = {}
+        for stat in MANAGEMENT_STAT_NAMES:
+            aggregates[stat] = reduce(lambda prev, stats: prev +
+                    stats[stat], [0] + networks.values())
+        aggregates['failed'] = reduce(lambda prev, stats: prev +
+                stats['failed'], [0] + networks.values())
+
+        daily_stats = []
+        for stats_tuple in zip(*management_stats.values()):
+            stats_dict = {}
+            for stat in MANAGEMENT_STAT_NAMES:
+                stats_dict[stat] = int(reduce(lambda prev, stats: prev +
+                        getattr(stats, stat), [0] + list(stats_tuple)))
+            stats_dict['failed'] = int(reduce(lambda prev, stats: prev +
+                    len(stats.failed_logins), [0] + list(stats_tuple)))
+            daily_stats.append(stats_dict)
+
+        networks = sorted(networks.iteritems(), key=lambda network: network[0])
 
         return render_to_response(self.request,
               'ad_network_reports/ad_network_management.html',
@@ -234,7 +264,9 @@ class AdNetworkManagementHandler(RequestHandler):
                   'start_date' : days[0],
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
-                  'management_stats': management_stats
+                  'networks': networks,
+                  'aggregates': aggregates,
+                  'daily_stats': daily_stats
               })
 
 @staff_login_required

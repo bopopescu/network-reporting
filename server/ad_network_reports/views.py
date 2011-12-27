@@ -236,7 +236,7 @@ class AdNetworkManagementHandler(RequestHandler):
                         getattr(stats, stat), [0] + stats_list)
             networks[name]['failed'] = reduce(lambda prev, stats: prev +
                     len(stats.failed_logins), [0] + stats_list)
-            stats_list = stats_list.reverse()
+            stats_list.reverse()
             networks[name]['sub_data_list'] = stats_list
 
         aggregates = {}

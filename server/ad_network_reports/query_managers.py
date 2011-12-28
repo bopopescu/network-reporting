@@ -83,7 +83,7 @@ class AdNetworkReportManager(CachedQueryManager):
 
         for app in AppQueryManager.get_apps_with_network_configs(account):
             publisher_id = getattr(app.network_config, '%s_pub_id'
-                    % ad_network_name, None)
+                    % ad_network_name, None).strip()
             if publisher_id:
                 if include_apps:
                     # example return (App, NetworkConfig.admob_pub_id)
@@ -139,7 +139,7 @@ class AdNetworkReportManager(CachedQueryManager):
                 if hasattr(adunit, 'network_config') and getattr(adunit.
                         network_config, '%s_pub_id' % ad_network_name, None):
                     yield getattr(adunit.network_config, '%s_pub_id' %
-                            ad_network_name)
+                            ad_network_name).strip()
 
     @classmethod
     def get_networks_without_credentials(cls,

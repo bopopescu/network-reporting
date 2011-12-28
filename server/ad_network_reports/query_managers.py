@@ -52,6 +52,7 @@ class AdNetworkReportManager(CachedQueryManager):
         Return aggregate stats for all the different ad network mappers for the
         account for the given days.
         """
+        # Get all the mappers for this account.
         mappers = list(AdNetworkMapperManager.get_ad_network_mappers(
             account))
 

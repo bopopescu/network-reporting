@@ -104,9 +104,10 @@
               <dd>
               {% if network.apps_without_pub_ids %}
                   {% if network_name == IAD %}
-                      In order to pull revenue data for your apps, MoPub requires that you
-                      assign your iTunes URL for each app. Click 'Edit app settings' for
-                      each app and enter your iTunes URL:
+                      In order to pull revenue data for your apps, MoPub requires that your
+                      app names in mopub match your app names in iAd and you assign an
+                      iTunes URL for each app. Click 'Edit app settings' for each app and
+                      enter your iTunes URL:
                       <br/><br/>
                       {% for app in network.apps_without_pub_ids %}<a href="/inventory/app/{{app.key}}">{{app.name}}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
                   {% else %}
@@ -118,8 +119,15 @@
                       {{network.apps_without_pub_ids}}
                   {% endif %}
               {% else %}
-                  MoPub received a response for the following ad networks IDs.
-                  Make sure these apps are properly set up in MoPub to view the reports.
+                  {% if network_name == IAD %}
+                  MoPub received a response for the following apps. Make sure these
+                  apps are properly set up in MoPub to view the reports (the iAd
+                  app names exactly match the MoPub app names and the iTunes urls
+                  are properly enetered for the apps).
+                  {% else %}
+                      MoPub received a response for the following ad networks IDs.
+                      Make sure these apps are properly set up in MoPub to view the reports.
+                  {% endif %}
                   <br/><br/>
                   {{ network.app_pub_ids }}
               {% endif %}

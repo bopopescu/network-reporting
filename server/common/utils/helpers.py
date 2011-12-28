@@ -128,6 +128,8 @@ def to_ascii(obj, encoding='utf-8'):
 def get_url_for_blob(blob, ssl=True):
     from google.appengine.api import images
     url = images.get_serving_url(blob)
+    # by default, app engine serves a maximum dimension of 512, adding =s0
+    # forces the actual dimensions
     url += '=s0'
     if ssl:
         return url.replace('http:', 'https:')

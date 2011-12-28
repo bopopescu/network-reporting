@@ -59,11 +59,11 @@ class AdNetworkReportManager(CachedQueryManager):
         aggregates_with_dates = [AdNetworkStatsManager. \
                 get_stats_for_mapper_and_days(n, days) for n in mappers]
         if aggregates_with_dates:
-            aggregates_list, applications, sync_dates = \
+            aggregates_list, sync_dates = \
                     zip(*aggregates_with_dates)
         else:
             return []
-        return zip(mappers, aggregates_list, applications, sync_dates)
+        return zip(mappers, aggregates_list, sync_dates)
 
     @classmethod
     def get_app_publisher_ids(cls,
@@ -165,7 +165,8 @@ class AdNetworkReportManager(CachedQueryManager):
 
 class AdNetworkLoginCredentialsManager(CachedQueryManager):
     @classmethod
-    def get_login_credentials(cls, account):
+    def get_login_credentials(cls,
+                              account):
         """Return AdNetworkLoginCredentials entities for the given account."""
         return AdNetworkLoginCredentials.all().filter('account =', account)
 
@@ -285,19 +286,16 @@ class AdNetworkStatsManager(CachedQueryManager):
         # large hoops so we do a rough check.
         yesterday = (datetime.now() - timedelta(days=1)).date()
 
-        if networks:
-            def login_credentials_query():
-                return AdNetworkLoginCredentials.all().filter('account =',
-                        account)
-
         data_dict = {}
-        for mapper, stats, application, sync_date in aggregate_stats_list:
+        for mapper, stats, sync_date in aggregate_stats_list:
+            application = mapper.application
             if networks:
                 attr = AD_NETWORK_NAMES[mapper.ad_network_name]
-                name = mapper.application.name
+                name = '%s (%s)' % (application.name, application. \
+                        app_type_text())
                 key = mapper.key()
             else:
-                attr = mapper.application.name
+                attr = (application.name, application.app_type_text())
                 name = AD_NETWORK_NAMES[mapper.ad_network_name]
                 key = application.key()
             sub_data = {
@@ -329,32 +327,35 @@ class AdNetworkStatsManager(CachedQueryManager):
                 if networks:
                     data_dict[attr]['state'] = 2
                     data_dict[attr]['sync_date'] = sync_date
-                    data_dict[attr]['sync_error'] = not sync_date or sync_date - \
-                        yesterday >= timedelta(days=1)
-                    login_credentials = login_credentials_query().filter(
-                            'ad_network_name =', mapper.ad_network_name).get()
+                    data_dict[attr]['sync_error'] = not sync_date or yesterday \
+                            - sync_date >= timedelta(days=2)
+                    login_credentials = AdNetworkLoginCredentialsManager. \
+                            get_login_credentials(account).filter(
+                                    'ad_network_name =',
+                                    mapper.ad_network_name).get()
                     data_dict[attr]['app_pub_ids'] = ', '.join(
                             login_credentials.app_pub_ids)
                 else:
                     data_dict[attr]['icon_url'] = application.icon_url
-                    data_dict[attr]['type'] = application.app_type_text()
             data_dict[attr]['sub_data_list'].append(sub_data)
             data_dict[attr]['revenue'] += sub_data['revenue']
             data_dict[attr]['attempts'] += sub_data['attempts']
+            # Only include impressions in fill rate calculations when attempts
+            # is != 0 (MobFox doesn't report attempts)
             if sub_data['attempts']:
                 data_dict[attr]['fill_rate_impressions'] += \
                         sub_data['impressions']
             data_dict[attr]['impressions'] += sub_data['impressions']
             data_dict[attr]['clicks'] += sub_data['clicks']
 
+        # Calculate stats for highest level roll up for networks or apps.
         for data in data_dict.values():
-            # Sort sub_data list.
+            # Sort sub_data list by app name or network name.
             data['sub_data_list'] = sorted(data['sub_data_list'], key=lambda \
                     sub_data: sub_data['name'].lower())
             if data['attempts']:
-                data['fill_rate'] = data[
-                        'fill_rate_impressions'] / float(
-                                data['attempts'])
+                data['fill_rate'] = data['fill_rate_impressions'] / float(
+                        data['attempts'])
             if data['clicks']:
                 data['cpc'] = data['revenue'] / data['clicks']
             if data['impressions']:
@@ -362,23 +363,29 @@ class AdNetworkStatsManager(CachedQueryManager):
                 data['ctr'] = (data['clicks'] /
                         float(data['impressions']))
 
-        # Add networks that aren't included but still relevant to the account
-        # and set their data to None.
+        # Add all ad networks. If there are apps without pub ids set for the
+        # network this list in the data_dict for the network.
         if networks:
             apps_without_pub_ids = AppQueryManager.get_apps_without_pub_ids(
                     account, AD_NETWORK_NAMES.keys())
 
             for network in AD_NETWORK_NAMES.keys():
                 if AD_NETWORK_NAMES[network] not in data_dict:
-                    login_credentials = login_credentials_query().filter(
-                            'ad_network_name =', network).get()
+                    login_credentials =  AdNetworkLoginCredentialsManager. \
+                            get_login_credentials(account).filter(
+                                    'ad_network_name =', network).get()
                     apps_without_pub_ids_for_network = apps_without_pub_ids[
                             network] + apps_without_pub_ids[ALL_NETWORKS]
+
+                    # iAd displays a link to each app in the front-end message
+                    # so in this case the front-end requires more information
+                    # than simply the app's name.
                     if network == IAD:
                         apps_for_network = apps_without_pub_ids_for_network
                     else:
                         apps_for_network = ', '.join([app.name for app in
                             apps_without_pub_ids_for_network])
+
                     if login_credentials:
                         app_pub_ids = ', '.join(login_credentials.app_pub_ids)
                         if app_pub_ids:
@@ -391,9 +398,13 @@ class AdNetworkStatsManager(CachedQueryManager):
                         data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
                                 'apps_without_pub_ids': apps_for_network}
 
-        # Sort alphabetically
-        data_list = sorted(data_dict.items(), key=lambda data_tuple:
-                data_tuple[0].lower())
+            # Sort alphabetically
+            data_list = sorted(data_dict.items(), key=lambda data_tuple:
+                    data_tuple[0].lower())
+        else:
+            # Sort alphabetically
+            data_list = sorted(data_dict.items(), key=lambda data_tuple:
+                    data_tuple[0][0].lower() + data_tuple[0][1].lower())
 
         return data_list
 
@@ -444,8 +455,7 @@ class AdNetworkStatsManager(CachedQueryManager):
         stats_list, last_day = AdNetworkScrapeStats.get_by_app_mapper_and_days(
                 ad_network_app_mapper.key(), days, include_last_day=True)
         if stats_list:
-            return (cls.roll_up_stats(stats_list), ad_network_app_mapper.
-                    application, last_day)
+            return (cls.roll_up_stats(stats_list), last_day)
 
     @classmethod
     def roll_up_stats(cls,

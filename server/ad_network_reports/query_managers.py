@@ -460,8 +460,6 @@ class AdNetworkStatsManager(CachedQueryManager):
 
         aggregate_stats.fill_rate_impressions = 0
         for stats in stats_iterable:
-            old_impressions_total = stats.impressions
-
             aggregate_stats.revenue += stats.revenue
             aggregate_stats.attempts += stats.attempts
             aggregate_stats.impressions += stats.impressions

@@ -1,0 +1,84 @@
+{% extends 'advertiser/base.html' %}
+
+{% load filters %}
+
+{% block extraScripts %}
+<script src="/js/controllers/campaign_adgroup_form.js?v=0"></script>
+{% endblock extraScripts %}
+
+{% block pageTitle %}
+    <h1>New Campaign</h1>
+    {% if account.status == 'step4' %}
+        <!-- MixPanel Tracking -->
+        <script type="text/javascript">
+            mpq.push(["track", "Sign up: Create campaign"]);
+        </script>
+    {% endif %}
+{% endblock pageTitle %}
+
+{% block content %}
+<form action="{% url advertiser_campaign_create %}" method="post">
+    <fieldset class="formFields">
+        <h2>Campaign Details</h2>
+        <p>Campaigns allow you to manage ads that will run on your mobile ad units.</p>
+        <dl>
+            {% for field in campaign_form %}
+            <dt>{{ field.label }}:</dt>
+            <dd>{{ field }}</dd>
+            {% endfor %}
+            {% comment %}
+            <dt>{{ campaign_form.campaign_type.label }}</dt>
+            <dd>
+                <select id="{{ campaign_form.campaign_type.id }}" name="{{ campaign_form.campaign_type.name }}">
+                    <option value="gtee" selected="selected">Guaranteed</option>
+                    <option value="promo">Promotional</option>
+                    <option value="network">Network</option>
+                </select>
+
+                <a href="#" id="campaignForm-type-helpLink">What's this?</a>
+
+                <div id="campaignForm-type-helpContent" class="hidden">
+                    <h3>Campaign Type</h3>
+                    <h4>Guaranteed</h4>
+                    <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
+                    <h4>Promotional</h4>
+                    <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
+                    <h4>Network</h4>
+                    <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
+                </div>
+            </dd>
+
+            <dt>Priority:</dt>
+            <dd>
+            <select name='gtee_level'>
+            <option value='high' {% ifequal form.gtee_level.value 'high' %}selected{% endifequal %}>High</option>
+            <option value='normal' {% ifequal form.gtee_level.value 'normal' %}selected{% endifequal %}{% if not form.gtee_level.value %}selected{% endif %}>Normal</option>
+            <option value='low' {% ifequal form.gtee_level.value 'low' %}selected{% endifequal %}>Low</option>
+            </select>
+            <a href="#" id="campaignForm-priority-helpLink">What's this?</a>
+
+            <div id='campaignForm-priority-helpContent' class='hidden'>
+            <h3>Priority</h3>
+            <p>Within a given priority campaigns are run in order of CPM.  By assigning a campaign priority you set it to run before those at a lower priority level.</p>
+            </div>
+            </dd>
+            </div>
+
+            <dt>{{ campaign_form.name.label }}</dt>
+            <dd>{{ campaign_form.name }}</dd>
+            {% endcomment %}
+        </dl>
+    </fieldset>
+
+    <fieldset>
+        <h2>Targeting</h2>
+        <p>Choose which ad units this campaign will target.</p>
+    </fieldset>
+
+    <div class="clear"></div>
+
+    <div class="form-submit">
+        <span class="buttonWrap"><a href="#" class="button" id="campaignAdgroupForm-submit">Continue</a></span>
+    </div>
+</form>
+{% endblock content %}

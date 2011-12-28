@@ -27,7 +27,7 @@
         <div class="alert-message block-message error">{{campaign_form.errors}}{{adgroup_form.errors}} </div>
       {% endif %}
       <a name="adgroupEditForm" class="hidden">anchor</a>
-      <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm" class="validate">
+      <form action="{% url advertiser_campaign_create_ajax %}" method="POST" accept-charset="utf-8" id="campaignAdgroupForm">
         {% if adgroup_key %}<input type="hidden" name="adgroup_key" value="{{adgroup_key}}"/>{% endif %}
         <div id="campaignAdgroupForm-fragment">
           {{campaign_create_form_fragment}}

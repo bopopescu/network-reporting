@@ -33,6 +33,7 @@ import cgi
 
 from common.constants import IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES
 
+
 def get_filetype_extension(filename):
     if not type(filename) == str:
         filename = str(filename)
@@ -40,6 +41,8 @@ def get_filetype_extension(filename):
         return filename.split('.')[-1]
     return None
 
+
+"""
 class CampaignForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/campaign_form.html'
     gtee_level = forms.Field(widget = forms.Select)
@@ -213,8 +216,34 @@ class CampaignForm(mpforms.MPModelForm):
                 'end_time',
                 'start_datetime',
                 'end_datetime')
+"""
+
+class CampaignForm(forms.ModelForm):
+    general_type = forms.ChoiceField()
+    gtee_priority = forms.ChoiceField()
+    promo_priority = forms.ChoiceField()
+    def __init__(self, *args, **kwargs):
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+        logging.warn(CampaignForm.__bases__)
+        # orders the fields as they are in self.Meta.fields
+        # should not have to do this: https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
+        # WTF?
+        self.fields.keyOrder = self.Meta.fields
+    class Meta:
+        model = Campaign
+        fields = ('general_type',
+                  'gtee_priority',
+                  'promo_priority',
+                  'name',
+                  'description',
+                  'start_datetime',
+                  'end_datetime',)
+        widgets = {
+            'name': forms.Textarea(attrs={'cols': 80, 'rows': 20}),
+        }
 
 
+"""
 class AdGroupForm(mpforms.MPModelForm):
     TEMPLATE = 'advertiser/forms/adgroup_form.html'
 
@@ -298,6 +327,23 @@ class AdGroupForm(mpforms.MPModelForm):
 
 
         super(AdGroupForm,self).__init__(*args,**kwargs)
+"""
+
+class AdGroupForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+        # orders the fields as they are in self.Meta.fields
+        # should not have to do this: https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
+        # WTF?
+        self.fields.keyOrder = self.Meta.fields
+    class Meta:
+        model = AdGroup
+        fields = ('network_type',
+                 'rate',
+                 'network_rate',
+                 'delivery_amount',
+                 'delivery_speed',)
+
 
 class AbstractCreativeForm(mpforms.MPModelForm):
     def save(self,commit=True):
@@ -341,7 +387,6 @@ class AbstractCreativeForm(mpforms.MPModelForm):
         # return None if nothing was found
         return None
 
-
 class BaseCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/base_creative_form.html'
 
@@ -354,7 +399,6 @@ class BaseCreativeForm(AbstractCreativeForm):
         if not data:
             raise forms.ValidationError('You must give your creative a name.')
         return data
-
 
 class TextCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_creative_form.html'
@@ -428,7 +472,6 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
         if commit:
             obj.put()
         return obj
-
 
 class HtmlCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/html_creative_form.html'
@@ -510,4 +553,3 @@ class ImageCreativeForm(AbstractCreativeForm):
         if commit:
             obj.put()
         return obj
-

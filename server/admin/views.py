@@ -21,7 +21,6 @@ from common.ragendja.template import render_to_response, render_to_string
 from django.core.mail import send_mail, EmailMessage
 
 from advertiser.models import *
-from advertiser.forms import CampaignForm, AdGroupForm
 
 from admin.models import AdminPage
 from publisher.models import Site, Account, App
@@ -48,10 +47,10 @@ BIDDER_SPENT_MAX = 2000
 def admin_switch_user(request,*args,**kwargs):
     params = request.POST or request.GET
     url = params.get('next',None) or request.META["HTTP_REFERER"]
-    
+
     # redirect where the request came from
     response = HttpResponseRedirect(url)
-    
+
     # drop a cookie of the email is the admin user is trying to impersonate
     email = params.get('user_email',None)
     set_cookie = False
@@ -65,8 +64,8 @@ def admin_switch_user(request,*args,**kwargs):
     if not set_cookie:
       response.delete_cookie('account_impersonation')
     return response
-  
-  
+
+
 def dashboard_prep(request, *args, **kwargs):
     offline = request.GET.get('offline',False)
     offline = True if offline == "1" else False
@@ -78,34 +77,34 @@ def dashboard_prep(request, *args, **kwargs):
         if page:
             page.loading = True
             page.put()
-    db.run_in_transaction(_txn)    
-    
-    
+    db.run_in_transaction(_txn)
+
+
     days = StatsModel.lastdays(NUM_DAYS)
     # gets all undeleted applications
     start_date = datetime.date.today() - datetime.timedelta(days=NUM_DAYS) # NOTE: change
 
     apps = AppQueryManager.get_all_apps()
-    
+
     # get all the daily stats for the undeleted apps
     # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
-    # accumulate individual site stats into daily totals 
+    # accumulate individual site stats into daily totals
     unique_apps = {}
     totals = {}
-    
+
     for d in days:
         dt = datetime.datetime(year=d.year,month=d.month,day=d.day)
         totals[str(dt)] = StatsModel(date=dt)
         totals[str(dt)].user_count = 0
-    
+
     # init the totals dictionary
     def _incr_dict(d,k,v):
         if not k in d:
             d[k] = v
         else:
             d[k] += v
-    
+
     # go and do it
     for app in apps:
         app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],num_days=NUM_DAYS)
@@ -121,28 +120,28 @@ def dashboard_prep(request, *args, **kwargs):
         if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher and app_stats[-3].request_count > 0:
             unique_apps[str(app_stats[-2]._publisher)].requests_delta1day = \
                 float(app_stats[-2].request_count - app_stats[-3].request_count) / app_stats[-3].request_count
-            
-    
+
+
     # organize daily stats by date
     total_stats = totals.values()
     total_stats.sort(lambda x,y: cmp(x.date,y.date))
     apps = unique_apps.values()
     apps.sort(lambda x,y: cmp(y.request_count, x.request_count))
-    
+
     # get folks who want to be on the mailing list
     new_users = Account.gql("where date_added >= :1 order by date_added desc", start_date).fetch(1000)
-    
+
     # params
-    render_params = {"stats": total_stats, 
+    render_params = {"stats": total_stats,
         "start_date": start_date,
         "today": total_stats[-1],
         "yesterday": total_stats[-2],
-        "all": StatsModel(request_count=sum([x.request_count for x in total_stats]), 
-            impression_count=sum([x.impression_count for x in total_stats]), 
+        "all": StatsModel(request_count=sum([x.request_count for x in total_stats]),
+            impression_count=sum([x.impression_count for x in total_stats]),
             click_count=sum([x.click_count for x in total_stats]),
             user_count=max([x.user_count for x in total_stats])),
         "apps": apps,
-        "unique_apps": unique_apps, 
+        "unique_apps": unique_apps,
         "new_users": new_users,
         "mailing_list": [a for a in new_users if a.mpuser.mailing_list]}
 
@@ -150,12 +149,12 @@ def dashboard_prep(request, *args, **kwargs):
                      html=render_to_string(request,'admin/pre_render.html',render_params),
                      today_requests=total_stats[-1].request_count)
     page.put()
-    
+
     return HttpResponse("OK")
 
 def rep_timed_out(rep):
     return not rep.data and rep.status == 'Pending' and (datetime.datetime.now() - rep.created_at).seconds > 7200
- 
+
 @staff_login_required
 def reports_dashboard(request, *args, **kwargs):
     if users.is_current_user_admin():
@@ -174,7 +173,7 @@ def dashboard(request, *args, **kwargs):
     refresh = True if refresh == "1" else False
     loading = request.GET.get('loading',False)
     loading = True if loading == "1" else False
-    
+
     if offline:
         key_name = "offline"
     else:
@@ -190,16 +189,16 @@ def dashboard(request, *args, **kwargs):
                               method='GET',
                               url='/admin/prep/',
                               target='stats-updater')
-        try:                      
+        try:
             task.add("admin-dashboard-queue")
             return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')
         except Exception, e:
-            logging.warning("task error: %s"%e)                
-        
+            logging.warning("task error: %s"%e)
+
     page = AdminPage.get_by_stats_source(offline=offline)
     loading = loading or page.loading
     return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})
-        
+
 def update_sfdc_leads(request, *args, **kwargs):
     #
     # a convenience function that maps accounts > SFDC fields
@@ -210,7 +209,7 @@ def update_sfdc_leads(request, *args, **kwargs):
                 'LastName': (a.mpuser.last_name or '')[:80],
                 'Email': a.mpuser.email or '',
                 'Title': (a.mpuser.title or '')[:80],
-                'Company': (a.company or a.mpuser.email or '')[:255], 
+                'Company': (a.company or a.mpuser.email or '')[:255],
                 'City': (a.mpuser.city or '')[:40],
                 'State': (a.mpuser.state or '')[:20],
                 'Country': (a.country or '')[:40],
@@ -219,12 +218,12 @@ def update_sfdc_leads(request, *args, **kwargs):
                 'Apps__c': "\n".join(app.name for app in apps),
                 'Number_of_Apps__c': len(apps),
                 'iTunesURL__c': max(app.url for app in apps) if apps else None,
-                'LeadSource': 'app.mopub.com', 
+                'LeadSource': 'app.mopub.com',
                 'Impressions_Month__c': str(a.traffic) or "Unknown",
                 'MoPub_Account_ID__c': str(a.key()),
                 'MoPub_Signup_Date__c': a.date_added,
                 'type': 'Lead'}
-    
+
     # Gnarly constants
     USER = "jim@mopub.com"
     PW = "fhaaCohb2SbVB0IFXhsseGfJ3Onr9UA46"
@@ -239,8 +238,8 @@ def update_sfdc_leads(request, *args, **kwargs):
     except beatbox.SoapFaultError, errorInfo:
         print "Login failed: %s %s" % (errorInfo.faultCode, errorInfo.faultString)
         return
-    
-    # Create/update the recent leads...  
+
+    # Create/update the recent leads...
     start_date = datetime.date.today() - datetime.timedelta(days=DAYS_BACK)
     accounts = Account.gql("where date_added >= :1", start_date).fetch(ACCOUNT_FETCH_MAX)
     results = ""
@@ -251,7 +250,7 @@ def update_sfdc_leads(request, *args, **kwargs):
         except beatbox.SoapFaultError, errorInfo:
             mail.send_mail_to_admins(sender="olp@mopub.com",
                                      subject="SFDC upsert failed",
-                                     body="%s %s" % (results, errorInfo.faultString))            
+                                     body="%s %s" % (results, errorInfo.faultString))
             logging.error("Submit into SFDC failed for %d records" % BATCH_SIZE)
         accounts[:BATCH_SIZE] = []
 
@@ -259,16 +258,16 @@ def update_sfdc_leads(request, *args, **kwargs):
     return HttpResponse(results)
 
 def migrate_many_images(request, *args, **kwargs):
-    pass 
-    
-    
-def migrate_image(request, *args, **kwargs):  
+    pass
+
+
+def migrate_image(request, *args, **kwargs):
     """ Migrates a text and tile image. """
     from google.appengine.api import files
     from common.utils import helpers
-    
+
     params = request.POST or request.GET
-     
+
     app_keys = params.getlist('app_key')
     for app_key in app_keys:
         app = App.get(app_key)
@@ -285,14 +284,14 @@ def migrate_image(request, *args, **kwargs):
 
         # Get the file's blob key
         blob_key = files.blobstore.get_blob_key(file_name)
-                        
+
         # Do not delete image yet
-        # app.icon = None 
-        app.icon_blob = blob_key      
+        # app.icon = None
+        app.icon_blob = blob_key
         url = helpers.get_url_for_blob(blob_key)
-        app.put()  
-    
-    return HttpResponse('(%s, %s)' % (blob_key, url))                
+        app.put()
+
+    return HttpResponse('(%s, %s)' % (blob_key, url))
 
 def bidder_spent(request, *args, **kwargs):
     num_sent = 0
@@ -312,4 +311,4 @@ def bidder_spent(request, *args, **kwargs):
     return HttpResponse(str(num_sent))
 
 
-    
+

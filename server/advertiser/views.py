@@ -113,7 +113,6 @@ class AdGroupIndexHandler(RequestHandler):
                                   })
 
 ####### Helpers for campaign page #######
-
 def _sort_guarantee_levels(guaranteed_campaigns):
     """ Sort guaranteed campaigns according to levels """
     levels = ('high', '', 'low')
@@ -175,7 +174,6 @@ def _calc_app_level_stats(adgroups):
     all_daily_stats = zip(*[adgroup.all_stats for adgroup in adgroups])
     return [sum(daily_stats, StatsModel()) for daily_stats in all_daily_stats]
 
-
 def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
     """ Requires that adgroups already have attached stats """
     for adgroup in adgroups_with_stats:
@@ -198,7 +196,6 @@ def _calc_and_attach_osi_success(adgroups):
 
     return adgroups
 
-
 @login_required
 def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
@@ -217,12 +214,90 @@ class AdGroupArchiveHandler(RequestHandler):
                                     {'archived_adgroups':archived_adgroups,
                                      })
 
-
 @login_required
 def archive(request,*args,**kwargs):
     return AdGroupArchiveHandler()(request,*args,**kwargs)
 
 
+""" Replaces CreateCampaignAJAXHandler and CreateCampaignHandler """
+class CreateCampaignAndAdGroupHandler(RequestHandler):
+    def get(self):
+        return render_to_response(self.request,
+                                  'advertiser/create_campaign_and_adgroup.html',
+                                  {
+                                      'campaign_form': CampaignForm(),
+                                      'adgroup_form': AdGroupForm(),
+                                  })
+
+    def post(self):
+        if not self.request.is_ajax():
+            raise Http404
+
+        campaign_form = CampaignForm(request.POST)
+        if campaign_form.is_valid():
+            campaign = campaign_form.save()
+            adgroup_form = AdGroupForm(request.POST, instance=Adgroup(campaign=campaign))
+            if adgroup_form.is_valid():
+                adgroup = adgroup_form.save()
+                return JSONResponse({
+                    'success': True,
+                    'redirect': reverse('advertiser_adgroup', adgroup.key),
+                })
+
+        errors = {}
+        for key, value in campaign_form.errors.items():
+            errors[key] = ' '.join([ error for error in value ])
+        for key, value in adgroup_form.errors.items():
+            errors[key] = ' '.join([ error for error in value ])
+
+        return JSONResponse({
+            'errors': errors,
+            'success': False,
+        })
+
+@login_required
+def create_campaign_and_adgroup(request, *args, **kwargs):
+    return CreateCampaignAndAdGroupHandler()(request, *args, **kwargs)
+
+
+"""
+class CreateAdgroupHandler(RequestHandler):
+    pass
+
+@login_required
+def create_adgroup(request, *args, **kwargs):
+    return CreateAdgroupHandler()(request, *args, **kwars)
+"""
+
+
+""" Replaces CreateCampaignHandler """
+class EditCampaignAndAdGroupHandler(RequestHandler):
+    pass
+
+@login_required
+def edit_campaign_and_adgroup(request, *args, **kwargs):
+    return EditCampaignAndAdGroupHandler()(request, *args, **kwargs)
+
+
+"""
+class EditCampaignHandler(RequestHandler):
+    pass
+
+@login_required
+def edit_campaign(request, *args, **kwargs):
+    return EditCampaignHandler()(request, *args, **kwargs)
+
+
+class EditAdGroupHandler(RequestHandler):
+    pass
+
+@login_required
+def edit_adgroup(request, *args, **kwargs):
+    return EditAdGroupHandler()(request, *args, **kwargs)
+"""
+
+
+""" TODO: Remove """
 class CreateCampaignAJAXHander(RequestHandler):
     TEMPLATE    = 'advertiser/forms/campaign_create_form.html'
     def get(self,campaign_form=None,adgroup_form=None,
@@ -297,9 +372,7 @@ class CreateCampaignAJAXHander(RequestHandler):
         return JSONResponse(json_dict)
 
     def post(self):
-        """
-        TODO: Refactor these incredibly long views into something less mindfucky.
-        """
+        # TODO: Refactor these incredibly long views into something less mindfucky.
         adgroup_key = self.request.POST.get('adgroup_key')
         if adgroup_key:
             adgroup = AdGroupQueryManager.get(adgroup_key)

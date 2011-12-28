@@ -340,7 +340,8 @@ class AdNetworkStatsManager(CachedQueryManager):
             data_dict[attr]['sub_data_list'].append(sub_data)
             data_dict[attr]['revenue'] += sub_data['revenue']
             data_dict[attr]['attempts'] += sub_data['attempts']
-# Only include
+            # Only include impressions in fill rate calculations when attempts
+            # is != 0 (MobFox doesn't report attempts)
             if sub_data['attempts']:
                 data_dict[attr]['fill_rate_impressions'] += \
                         sub_data['impressions']
@@ -397,9 +398,13 @@ class AdNetworkStatsManager(CachedQueryManager):
                         data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
                                 'apps_without_pub_ids': apps_for_network}
 
-        # Sort alphabetically
-        data_list = sorted(data_dict.items(), key=lambda data_tuple:
-                data_tuple[0].lower())
+            # Sort alphabetically
+            data_list = sorted(data_dict.items(), key=lambda data_tuple:
+                    data_tuple[0].lower())
+        else:
+            # Sort alphabetically
+            data_list = sorted(data_dict.items(), key=lambda data_tuple:
+                    data_tuple[0][0].lower() + data_tuple[0][1].lower())
 
         return data_list
 

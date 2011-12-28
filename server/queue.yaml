@@ -1,4 +1,4 @@
-total_storage_limit: 100G
+total_storage_limit: 500G
 
 queue:
 
@@ -68,18 +68,6 @@ queue:
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
-
-- name: bulk-log-processor-overflow-00
-  rate: 100/s
-  bucket_size: 100
-
-- name: bulk-log-processor-overflow-01
-  rate: 100/s
-  bucket_size: 100
-
-- name: bulk-log-processor-overflow-02
-  rate: 100/s
-  bucket_size: 100
 
 - name: network-request-00
   rate: 100/s
@@ -196,6 +184,126 @@ queue:
     task_retry_limit: 1
 
 - name: network-request-19
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+    
+- name: network-request-20
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-21
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-22
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-23
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-24
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-25
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-26
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-27
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-28
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-29
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+    
+- name: network-request-30
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-31
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-32
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-33
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-34
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-35
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-36
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-37
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-38
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 1
+
+- name: network-request-39
   rate: 100/s
   bucket_size: 100
   retry_parameters:

@@ -62,9 +62,7 @@ class AdNetworkReportManager(CachedQueryManager):
             aggregates_list, applications, sync_dates = \
                     zip(*aggregates_with_dates)
         else:
-            aggregates_list = []
-            sync_dates = []
-            applications = []
+            return []
         return zip(mappers, aggregates_list, applications, sync_dates)
 
     @classmethod

@@ -45,8 +45,11 @@ class AdNetworkReportIndexHandler(RequestHandler):
 
         # Get aggregate_list from aggregate_stats_list and pass it to
         # roll_up_stats.
-        aggregates = AdNetworkStatsManager.roll_up_stats(
-                zip(*aggregate_stats_list)[1])
+        if aggregate_stats_list:
+            aggregates = AdNetworkStatsManager.roll_up_stats(
+                    zip(*aggregate_stats_list)[1])
+        else:
+            aggregates = []
 
         # Get the daily stats list.
         daily_stats = []
@@ -69,7 +72,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
 
         forms = []
         from ad_network_reports.models import AdNetworkLoginCredentials
-        for name in AD_NETWORK_NAMES.keys():
+        for name in sorted(AD_NETWORK_NAMES.keys()):
             try:
                 instance = AdNetworkLoginCredentials. \
                         get_by_ad_network_name(self.account, name)

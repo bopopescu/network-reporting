@@ -83,11 +83,11 @@ class AdNetworkReportManager(CachedQueryManager):
 
         for app in AppQueryManager.get_apps_with_network_configs(account):
             publisher_id = getattr(app.network_config, '%s_pub_id'
-                    % ad_network_name, None).strip()
+                    % ad_network_name, None)
             if publisher_id:
                 if include_apps:
                     # example return (App, NetworkConfig.admob_pub_id)
-                    yield (app, publisher_id)
+                    yield (app, publisher_id.strip())
                 else:
                     yield publisher_id
 

@@ -47,7 +47,7 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
-TESTING = True
+TESTING = False
 
 def send_stats_mail(account, test_date, valid_stats_list):
     """Send email with scrape stats data for the test date organized in a
@@ -57,11 +57,11 @@ def send_stats_mail(account, test_date, valid_stats_list):
 
     if emails and valid_stats_list:
         aggregate_stats = AdNetworkStatsManager.roll_up_stats([stats for
-            app_name, ad_network_name, stats in valid_stats_list])
+            mapper, stats in valid_stats_list])
         valid_stats_list = sorted(valid_stats_list, key = lambda stats:
-                stats[0].application.name.lower() +
-                stats[0].application.app_type_text().lower() +
-                stats[0].ad_network_name)
+                '%s(%s)%s' % (stats[0].application.name.lower(),
+                stats[0].application.app_type_text().lower(),
+                stats[0].ad_network_name))
         email_body = ""
         for mapper, stats in valid_stats_list:
             app_name = '%s (%s)' % (mapper.application.name,
@@ -76,23 +76,23 @@ def send_stats_mail(account, test_date, valid_stats_list):
                    'clicks': stats.clicks,
                    'ctr': stats.ctr * 100,
                    'cpm': stats.cpm}
-            email_body += ("""
+            email_body += (("""
             <tr>
                 <td>%(app)s</td>
                 <td>%(ad_network_name)s</td>
                 <td>$%(revenue).2f</td>
                 """ +
-                "<td>%(attempts)d</td>\n" if mapper.ad_network_name != MOBFOX \
-                        else "<td></td>\n" +
-                "<td>%(impressions)d</td>\n" +
-                "<td>%(fill_rate).2f%%</td>\n" if mapper.ad_network_name != \
-                        MOBFOX else "<td></td>\n" +
+                ("<td>%(attempts)d</td>" if mapper.ad_network_name != MOBFOX \
+                        else "<td></td>") +
+                "<td>%(impressions)d</td>" +
+                ("<td>%(fill_rate).2f%%</td>" if mapper.ad_network_name != \
+                        MOBFOX else "<td></td>") +
                 """
                 <td>%(clicks)d</td>
                 <td>%(ctr).2f%%</td>
                 <td>%(cpm).2f</td>
             </tr>
-            """ % stats_dict)
+            """) % stats_dict)
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
@@ -320,10 +320,9 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                     clicks=stats.clicks)
                 scrape_stats.put()
 
-                if test_date == yesterday and login_credentials and \
+                if not only_these_credentials and login_credentials and \
                         login_credentials.email:
-                    valid_stats_list.append((ad_network_app_mapper,
-                        scrape_stats))
+                    valid_stats_list.append((ad_network_app_mapper, scrape_stats))
             login_credentials.put()
 
     if not only_these_credentials:

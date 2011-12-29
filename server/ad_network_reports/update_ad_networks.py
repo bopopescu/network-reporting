@@ -33,6 +33,7 @@ from ad_network_reports.models import AdNetworkAppMapper, \
 from ad_network_reports.query_managers import \
         AD_NETWORK_NAMES, \
         IAD, \
+        MOBFOX, \
         AdNetworkLoginCredentialsManager, \
         AdNetworkMapperManager, \
         AdNetworkStatsManager, \
@@ -57,30 +58,41 @@ def send_stats_mail(account, test_date, valid_stats_list):
     if emails and valid_stats_list:
         aggregate_stats = AdNetworkStatsManager.roll_up_stats([stats for
             app_name, ad_network_name, stats in valid_stats_list])
-        valid_stats_list = sorted(valid_stats_list, key = lambda s: s[0] + s[1])
+        valid_stats_list = sorted(valid_stats_list, key = lambda stats:
+                stats[0].application.name.lower() +
+                stats[0].application.app_type_text().lower() +
+                stats[0].ad_network_name)
         email_body = ""
-        for app_name, ad_network_name, stats in valid_stats_list:
-            email_body += ("""
-            <tr>
-                <td>%(app)s</td>
-                <td>%(ad_network_name)s</td>
-                <td>$%(revenue).2f</td>
-                <td>%(attempts)d</td>
-                <td>%(impressions)d</td>
-                <td>%(fill_rate).2f%%</td>
-                <td>%(clicks)d</td>
-                <td>%(ctr).2f%%</td>
-                <td>%(cpm).2f</td>
-            </tr>
-            """ % {'app': app_name,
-                   'ad_network_name': ad_network_name,
+        for mapper, stats in valid_stats_list:
+            app_name = '%s (%s)' % (mapper.application.name,
+                    mapper.application.app_type_text())
+
+            stats_dict = {'app': app_name,
+                   'ad_network_name': AD_NETWORK_NAMES[mapper.ad_network_name],
                    'revenue': stats.revenue,
                    'attempts': stats.attempts,
                    'impressions': stats.impressions,
                    'fill_rate': stats.fill_rate,
                    'clicks': stats.clicks,
                    'ctr': stats.ctr * 100,
-                   'cpm': stats.cpm})
+                   'cpm': stats.cpm}
+            email_body += ("""
+            <tr>
+                <td>%(app)s</td>
+                <td>%(ad_network_name)s</td>
+                <td>$%(revenue).2f</td>
+                """ +
+                "<td>%(attempts)d</td>\n" if mapper.ad_network_name != MOBFOX \
+                        else "<td></td>\n" +
+                "<td>%(impressions)d</td>\n" +
+                "<td>%(fill_rate).2f%%</td>\n" if mapper.ad_network_name != \
+                        MOBFOX else "<td></td>\n" +
+                """
+                <td>%(clicks)d</td>
+                <td>%(ctr).2f%%</td>
+                <td>%(cpm).2f</td>
+            </tr>
+            """ % stats_dict)
 
         # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
         mail.send_mail(sender='olp@mopub.com',
@@ -90,8 +102,8 @@ def send_stats_mail(account, test_date, valid_stats_list):
                     'tiago@mopub.com, report-monitoring@mopub.com',
                 subject=("Ad Network Revenue Reporting for %s" %
                                 test_date.strftime("%m/%d/%y")),
-                body=("Learn more at http://mopub-experimental.appspot."
-                    "com/ad_network_reports/"),
+                body=("Learn more at https://app.mopub.com/"
+                    "ad_network_reports/"),
                 html=(
                 """
 <table width=100%%>
@@ -129,6 +141,8 @@ def send_stats_mail(account, test_date, valid_stats_list):
                     """
     </tbody>
 </table>
+
+Learn more at https://app.mopub.com/ad_network_reports/
 """))
 
 def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
@@ -185,7 +199,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
             # want email and the information is relevant (ie. yesterdays stats)
             if (account_key != previous_account_key and
                     previous_account_key):
-                if login_credentials.email and test_date == yesterday:
+                if login_credentials.email:
                     send_stats_mail(db.get(previous_account_key), test_date,
                             valid_stats_list)
                 valid_stats_list = []
@@ -308,15 +322,13 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
 
                 if test_date == yesterday and login_credentials and \
                         login_credentials.email:
-                    valid_stats_list.append((ad_network_app_mapper.application.
-                        name, ad_network_app_mapper.ad_network_name,
+                    valid_stats_list.append((ad_network_app_mapper,
                         scrape_stats))
             login_credentials.put()
 
     if not only_these_credentials:
         aggregate.put_stats()
-        if test_date == yesterday and login_credentials and \
-                login_credentials.email:
+        if login_credentials and login_credentials.email:
             send_stats_mail(login_credentials.account, test_date,
                     valid_stats_list)
     elif stats_list:

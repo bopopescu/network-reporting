@@ -1218,11 +1218,11 @@ class CampaignExporter(RequestHandler):
         adgroup = AdGroupQueryManager.get(adgroup_key)
         all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         f_name_dict = dict(adgroup_title = adgroup.campaign.name,
-                           start = start.strftime('%b %d'),
-                           end   = end.strftime('%b %d, %Y'),
+                           start = start.strftime('%m/%d/%y'),
+                           end   = end.strftime('%m/%d/%y'),
                            )
         # Build
-        f_name = "%(adgroup_title)s CampaignStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = "MoPub Campaign Stats--Name:%(adgroup_title)s--DateRange:%(start)s - %(end)s" % f_name_dict
         f_name = f_name.encode('ascii', 'ignore')
         # Zip up days w/ corresponding stats object and other stuff
         data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [campaign_stats(stat, adgroup.campaign.campaign_type) for stat in all_stats]))

@@ -99,10 +99,10 @@ def log(request,
                               url='/m/req')
         queue_num = random.randint(0,NUM_REQ_QUEUES-1)
         queue_name = REQ_QUEUE_NAME%queue_num
-        try:
-            task.add(queue_name)
-        except Exception, e:
-            trace_logging.warning(e)
+        # try:
+        #     task.add(queue_name)
+        # except Exception, e:
+        #     trace_logging.warning(e)
 
         # make async internal request to appengine
         # rpc = urlfetch.create_rpc(deadline=2) # in seconds

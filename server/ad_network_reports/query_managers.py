@@ -171,13 +171,28 @@ class AdNetworkLoginCredentialsManager(CachedQueryManager):
     @classmethod
     def get_login_credentials(cls,
                               account):
-        """Return AdNetworkLoginCredentials entities for the given account."""
+        """
+        Return AdNetworkLoginCredentials entities for the given account.
+        """
         return AdNetworkLoginCredentials.all().filter('account =', account)
 
     @classmethod
     def get_all_login_credentials(cls):
-        """Return all AdNetworkLoginCredentials entities ordered by account."""
+        """
+        Return all AdNetworkLoginCredentials entities ordered by account.
+        """
         return AdNetworkLoginCredentials.all().order('account')
+
+    @classmethod
+    def get_number_of_accounts(cls):
+        """
+        Return the total number of accounts using ad network revenue
+        reporting.
+        """
+        accounts = set()
+        for login in AdNetworkLoginCredentials.all():
+            accounts.add(str(login.account.key()))
+        return len(accounts)
 
 class AdNetworkMapperManager(CachedQueryManager):
     @classmethod
@@ -669,7 +684,8 @@ def create_fake_data(account=None):
                                         date=day,
                                         found=random.randint(1, 100000),
                                         updated=random.randint(1, 100000),
-                                        mapped=random.randint(1, 100000))
+                                        mapped=random.randint(1, 100000),
+                                        attempted_logins=random.randint(1, 100))
 
                 if network == login.ad_network_name:
                     stats.failed_logins = [str(login.key())]

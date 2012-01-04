@@ -2,9 +2,15 @@ import logging
 
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
-        MOBFOX, MOBFOX_PRETTY, IAD_PRETTY, AdNetworkReportManager, \
-        AdNetworkMapperManager, AdNetworkStatsManager, \
-        AdNetworkManagementStatsManager, create_fake_data
+        MOBFOX, \
+        MOBFOX_PRETTY, \
+        IAD_PRETTY, \
+        AdNetworkReportManager, \
+        AdNetworkLoginCredentialsManager, \
+        AdNetworkMapperManager, \
+        AdNetworkStatsManager, \
+        AdNetworkManagementStatsManager, \
+        create_fake_data
 from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
@@ -27,7 +33,10 @@ CLICKS = 'clicks'
 CPC = 'cpc'
 CTR = 'ctr'
 SORT_BY_NETWORK = 'network'
-MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped')
+MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped', 'attempted_logins')
+FAILED = 'failed'
+LOGINS = 'logins'
+ACCOUNTS = 'accounts'
 
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self):
@@ -235,19 +244,20 @@ class AdNetworkManagementHandler(RequestHandler):
             networks[ad_network_name] = {}
         for name, stats_list in management_stats.iteritems():
             for stat in MANAGEMENT_STAT_NAMES:
-                networks[name][stat] = reduce(lambda prev, stats: prev +
-                        getattr(stats, stat), [0] + stats_list)
-            networks[name]['failed'] = reduce(lambda prev, stats: prev +
-                    len(stats.failed_logins), [0] + stats_list)
+                networks[name][stat] = sum([getattr(stats, stat) for stats in
+                    stats_list])
+            networks[name][FAILED] = sum([len(stats.failed_logins) for stats
+                in stats_list])
             stats_list.reverse()
             networks[name]['sub_data_list'] = stats_list
 
         aggregates = {}
         for stat in MANAGEMENT_STAT_NAMES:
-            aggregates[stat] = reduce(lambda prev, stats: prev +
-                    stats[stat], [0] + networks.values())
-        aggregates['failed'] = reduce(lambda prev, stats: prev +
-                stats['failed'], [0] + networks.values())
+            aggregates[stat] = sum([stats[stat] for stats in networks.values()])
+        aggregates[FAILED] = sum([stats['failed'] for stats in
+            networks.values()])
+        aggregates[ACCOUNTS] = AdNetworkLoginCredentialsManager.get_number_of_accounts()
+        aggregates[LOGINS] = AdNetworkLoginCredentialsManager.get_all_login_credentials().count()
 
         stats_by_date = {}
         for stats_tuple in zip(*management_stats.values()):
@@ -259,14 +269,14 @@ class AdNetworkManagementHandler(RequestHandler):
             if day in stats_by_date:
                 stats_tuple = stats_by_date[day]
                 for stat in MANAGEMENT_STAT_NAMES:
-                    stats_dict[stat] = int(reduce(lambda prev, stats: prev +
-                            getattr(stats, stat), [0] + list(stats_tuple)))
-                stats_dict['failed'] = int(reduce(lambda prev, stats: prev +
-                        len(stats.failed_logins), [0] + list(stats_tuple)))
+                    stats_dict[stat] = int(sum([getattr(stats, stat) for stats
+                        in stats_tuple]))
+                stats_dict[FAILED] = int(sum([len(stats.failed_logins) for
+                    stats in stats_tuple]))
             else:
                 for stat in MANAGEMENT_STAT_NAMES:
                     stats_dict[stat] = 0
-                stats_dict['failed'] = 0
+                stats_dict[FAILED] = 0
             daily_stats.append(stats_dict)
 
         networks = sorted(networks.iteritems(), key=lambda network: network[0])

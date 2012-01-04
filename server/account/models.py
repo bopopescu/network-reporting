@@ -143,7 +143,7 @@ class Account(db.Model):
     use_only_mongo = db.BooleanProperty(default=False)
     
     # use only mongo to display realtime stats in UI
-    display_mongo = db.BooleanProperty(default=False)
+    display_mongo = db.BooleanProperty(default=True)
     
 
     @property

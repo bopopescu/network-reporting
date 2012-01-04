@@ -222,11 +222,24 @@ def archive(request,*args,**kwargs):
 """ Replaces CreateCampaignAJAXHandler and CreateCampaignHandler """
 class CreateCampaignAndAdGroupHandler(RequestHandler):
     def get(self):
+        campaign_form = CampaignForm()
+        logging.warn(CampaignForm.Media)
+        logging.warn(str(CampaignForm.Media))
+        logging.warn(CampaignForm.Media())
+        logging.warn(str(CampaignForm.Media()))
+        logging.warn(campaign_form.Media)
+        logging.warn(str(campaign_form.Media))
+        logging.warn(campaign_form.Media())
+        logging.warn(str(campaign_form.Media()))
+        logging.warn(campaign_form.media)
+        logging.warn(str(campaign_form.media))
+        adgroup_form = AdGroupForm()
+        #logging.warn(adgroup_form.media)
         return render_to_response(self.request,
                                   'advertiser/create_campaign_and_adgroup.html',
                                   {
-                                      'campaign_form': CampaignForm(),
-                                      'adgroup_form': AdGroupForm(),
+                                      'campaign_form': campaign_form,
+                                      'adgroup_form': adgroup_form,
                                   })
 
     def post(self):

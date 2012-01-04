@@ -88,9 +88,11 @@ import django.utils.datastructures
 
 try:
   from django import newforms as forms
+  from django.newforms.widgets import media_property
   have_uploadedfile = False
 except ImportError:
   from django import forms
+  from django.forms.widgets import media_property
   from django.core.files import uploadedfile
   have_uploadedfile = True
 
@@ -773,8 +775,11 @@ class ModelFormMetaclass(type):
     else:
       attrs['base_fields'] = declared_fields
 
-    return super(ModelFormMetaclass, cls).__new__(cls,
-                                                  name, bases, attrs)
+    new_class = super(ModelFormMetaclass, cls).__new__(cls, name, bases, attrs)
+    # TODO: why dosen't this work? it is exactly like django.forms.ModelFormmetaClass
+    #if 'media' not in attrs:
+    #    new_class.media = media_property(new_class)
+    return new_class
 
 
 class BaseModelForm(forms.BaseForm):

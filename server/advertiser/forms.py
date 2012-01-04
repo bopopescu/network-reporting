@@ -218,17 +218,30 @@ class CampaignForm(mpforms.MPModelForm):
                 'end_datetime')
 """
 
+
 class CampaignForm(forms.ModelForm):
-    general_type = forms.ChoiceField()
-    gtee_priority = forms.ChoiceField()
-    promo_priority = forms.ChoiceField()
+    general_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
+                                              ('promo', 'Promotional'),
+                                              ('network', 'Network')),
+                                     label='Campaign Type')
+    gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
+                                               ('normal', 'Normal'),
+                                               ('low', 'Low')),
+                                      initial='normal',
+                                      label='Priority')
+    promo_priority = forms.ChoiceField(choices=(('normal', 'Normal'),
+                                                ('backfill', 'Backfill')),
+                                       initial='normal',
+                                       label='Priority')
     def __init__(self, *args, **kwargs):
         super(forms.ModelForm, self).__init__(*args, **kwargs)
-        logging.warn(CampaignForm.__bases__)
-        # orders the fields as they are in self.Meta.fields
-        # should not have to do this: https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
-        # WTF?
+        # hack to make the forms ordered correctly
+        # TODO: fix common.utils.djangoforms.ModelForm to conform to
+        # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
+    # TODO: doesn't work with djangoforms
+    class Media:
+        js = ('campaign_adgroup_form.js',)
     class Meta:
         model = Campaign
         fields = ('general_type',
@@ -329,20 +342,21 @@ class AdGroupForm(mpforms.MPModelForm):
         super(AdGroupForm,self).__init__(*args,**kwargs)
 """
 
+
 class AdGroupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(forms.ModelForm, self).__init__(*args, **kwargs)
-        # orders the fields as they are in self.Meta.fields
-        # should not have to do this: https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
-        # WTF?
-        self.fields.keyOrder = self.Meta.fields
+        # hack to make the forms ordered correctly
+        # TODO: fix common.utils.djangoforms.ModelForm to conform to
+        # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
+        #self.fields.keyOrder = self.Meta.fields
     class Meta:
         model = AdGroup
-        fields = ('network_type',
-                 'rate',
-                 'network_rate',
-                 'delivery_amount',
-                 'delivery_speed',)
+        #fields = ('network_type',
+        #         'rate',
+        #         'network_rate',
+        #         'delivery_amount',
+        #         'delivery_speed',)
 
 
 class AbstractCreativeForm(mpforms.MPModelForm):

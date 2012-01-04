@@ -697,7 +697,7 @@ class ModelFormMetaclass(type):
   See the docs for ModelForm below for a usage example.
   """
 
-  def __new__(cls, class_name, bases, attrs):
+  def __new__(cls, name, bases, attrs):
     """Constructor for a new ModelForm class instance.
 
     The signature of this method is determined by Python internals.
@@ -714,6 +714,7 @@ class ModelFormMetaclass(type):
     for base in bases[::-1]:
       if hasattr(base, 'base_fields'):
         fields = base.base_fields.items() + fields
+
     declared_fields = django.utils.datastructures.SortedDict()
     for field_name, obj in fields:
       declared_fields[field_name] = obj
@@ -729,30 +730,32 @@ class ModelFormMetaclass(type):
         base_models.append(base_model)
     if len(base_models) > 1:
       raise django.core.exceptions.ImproperlyConfigured(
-          "%s's base classes define more than one model." % class_name)
+          "%s's base classes define more than one model." % name)
 
     if opts.model is not None:
       if base_models and base_models[0] is not opts.model:
         raise django.core.exceptions.ImproperlyConfigured(
-            '%s defines a different model than its parent.' % class_name)
+            '%s defines a different model than its parent.' % name)
 
       model_fields = django.utils.datastructures.SortedDict()
-      for name, prop in sorted(opts.model.properties().iteritems(),
+      for prop_name, prop in sorted(opts.model.properties().iteritems(),
                                key=lambda prop: prop[1].creation_counter):
-        if opts.fields and name not in opts.fields:
+        if opts.fields and prop_name not in opts.fields:
           continue
-        if opts.exclude and name in opts.exclude:
+        if opts.exclude and prop_name in opts.exclude:
           continue
         form_field = prop.get_form_field()
         if form_field is not None:
-          model_fields[name] = form_field
+          model_fields[prop_name] = form_field
+        if opts.widgets and prop_name in opts.widgets:
+          model_fields[prop_name].widget = opts.widgets[prop_name]
 
       model_fields.update(declared_fields)
       attrs['base_fields'] = model_fields
 
       props = opts.model.properties()
-      for name, field in model_fields.iteritems():
-        prop = props.get(name)
+      for field_name, field in model_fields.iteritems():
+        prop = props.get(field_name)
         if prop:
           if hasattr(forms, 'FileField') and isinstance(field, forms.FileField):
             def clean_for_property_field(value, initial, prop=prop,
@@ -771,7 +774,7 @@ class ModelFormMetaclass(type):
       attrs['base_fields'] = declared_fields
 
     return super(ModelFormMetaclass, cls).__new__(cls,
-                                                  class_name, bases, attrs)
+                                                  name, bases, attrs)
 
 
 class BaseModelForm(forms.BaseForm):

@@ -1112,8 +1112,9 @@ class AJAXStatsHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(int(date_range))
 
-        if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
+        # this is tarded. the start date is really the end of the date range.
+        if self.start_date:
+            end_date = self.start_date
         else:
             end_date = datetime.date.today()
 

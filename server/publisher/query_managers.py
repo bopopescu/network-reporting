@@ -22,6 +22,8 @@ from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 from common.constants import MAX_OBJECTS
 CACHE_TIME = 0 # turned off cache expiration
 
+IAD = 'iad'
+APPLE_DEVICES = ('iphone', 'ipad')
 IAD_URL = 'http://itunes.apple.com.*'
 ALL_NETWORKS = 'default'
 
@@ -198,6 +200,12 @@ class AppQueryManager(QueryManager):
 
     @classmethod
     def get_apps_without_pub_ids(cls, account, networks):
+        """
+        Take account and list of network names.
+
+        Return dictionary where the keys are the network names and the values
+        are lists of apps where the pub_ids for that network haven't been set.
+        """
         apps = {ALL_NETWORKS: []}
         for network in networks:
             apps[network] = []
@@ -206,26 +214,45 @@ class AppQueryManager(QueryManager):
             if hasattr(app, 'network_config'):
                 network_config = app.network_config
                 for network in networks:
-                    if not hasattr(network_config, network + '_pub_id') or not \
-                            getattr(network_config, network + '_pub_id', None):
+                    # iAd only supports apple devices
+                    if network == IAD:
+                        if app.app_type in APPLE_DEVICES:
+                            apps[network].append(app)
+                    elif not hasattr(network_config, network + '_pub_id') or \
+                            not getattr(network_config, network + '_pub_id',
+                                    None):
                         apps[network].append(app)
             else:
                 apps[ALL_NETWORKS].append(app)
         return apps
 
     @classmethod
-    def get_iad_pub_ids(cls, account, include_apps=True):
+    def get_iad_pub_id(self, account, app_name):
+        for app in App.all().filter('account =', account).filter('name =',
+                app_name):
+            if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
+                ids = re.findall('/id[0-9]*\?', app.url)
+                if ids:
+                    pub_id = ids[0][len('/id'):-1]
+                    return pub_id
+
+    @classmethod
+    def get_iad_pub_ids(cls, account, include_apps=False):
         """ Get the iAd pub id from the app's url field.
 
         Return the pub ids and potentialy apps as a generator.
         """
         for app in App.all().filter('account =', account):
             if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
-                pub_id = re.findall('/id[0-9]*\?', app.url)[0][len('/id'):-1]
-                if include_apps:
-                    yield app, pub_id
-                else:
-                    yield pub_id
+                logging.info(app.name)
+                ids = re.findall('/id[0-9]*\?', app.url)
+                if ids:
+                    pub_id = ids[0][len('/id'):-1]
+                    logging.info(pub_id)
+                    if include_apps:
+                        yield app, pub_id
+                    else:
+                        yield pub_id
 
 class AdUnitQueryManager(QueryManager):
     Model = AdUnit

@@ -128,6 +128,9 @@ def to_ascii(obj, encoding='utf-8'):
 def get_url_for_blob(blob, ssl=True):
     from google.appengine.api import images
     url = images.get_serving_url(blob)
+    # by default, app engine serves a maximum dimension of 512, adding =s0
+    # forces the actual dimensions
+    url += '=s0'
     if ssl:
         return url.replace('http:', 'https:')
     return url
@@ -150,25 +153,25 @@ def get_udid_appid(request):
     This is necessary because of a temporary error in Android's conversion tracking URL; there was a
     missing ampersand between the 'id' and 'udid' fields. This function properly parses the
     following requests:
-    
+
     ?id=123&udid=456
     ?id=123udid=456
     ?udid=456&id=123
     """
     udid = request.get('udid')
     mobile_appid = request.get('id')
-    
+
     # If we have we can't request udid, we have a broken URL
     if not udid:
         query_string = request.query_string
         result = re.search('id=(?P<id>.*?)(?P<ampersand>&?)udid=(?P<udid>.*?)$', query_string)
-        
+
         if (result):
             return result.group('udid'), result.group('id')
             # note: if result.group('ampersand') is empty string, we have a broken url
             # though the return groups are the same regardless
         else:
             return None, None
-    
+
     # Otherwise, there's no need to do special processing. Simply return the request parameters
     return udid, mobile_appid

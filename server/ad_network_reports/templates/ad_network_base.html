@@ -115,6 +115,20 @@
             other.datepicker('option', 'maxDate', date);
           }
         });
+
+        $("#ad-network-exportSelect").change(function() {
+            if ($(this).val()) {
+                if ('/ad_network_reports/' == $(location).attr('pathname')) {
+                    if ($('.networks').css('display') == 'block') {
+                        window.open($(this).val() + '/network');
+                    } else {
+                        window.open($(this).val() + '/app');
+                    }
+                } else {
+                    window.open($(this).val());
+                }
+            }
+        });
     });
   </script>
 {% endblock extraScripts %}
@@ -157,14 +171,22 @@
     <div class="alert-message block-message">
       MoPub can automatically pull ad network revenue data from most ad networks that are supported. To enable reporting for each network, enter your login credentials for the ad networks below.  MoPub will pull data each morning for the previous day.<br/>
       <br/>
-      <b>Note:</b> Your credentials will be encrypted on the MoPub servers to ensure security.  These credentials will <b>only</b> used for reading your data and displaying it to you and will not be used for any other purposes. This service is optional and only used for reporting your data.  If you choose not to use this, it will not impact the performance of your apps in MoPub.
+      <b>Note:</b> Your credentials will be encrypted on the MoPub servers to ensure security.  These credentials will <b>only</b> be used for reading your data and displaying it to you and will not be used for any other purposes. This service is optional and only used for reporting your data.  If you choose not to use this, it will not impact the performance of your apps in MoPub.
     </div>
   {% endif %}
   {% endblock graph %}
 
   {% block innerContent %}
+
     <section id="dashboard-apps">
       <h2>{{app_name}} on {{ad_network_name}}</h2>
+      <div class="buttonBank buttonBank-right">
+          <select name='exportSelect' id='ad-network-exportSelect' class='selectmenu'>
+              <option value="">Export</option>
+              <option value="/ad_network_reports/export/xls/{{mapper_key}}">XLS</option>
+              <option value="/ad_network_reports/export/csv/{{mapper_key}}">CSV</option>
+          </select>
+      </div>
       <div class="appData-details noneg">
         <table class="dataTable appData-main">
           <thead>
@@ -205,6 +227,6 @@
       </div>
     </section>
 
-    {% endblock innerContent %}
+  {% endblock innerContent %}
 
 {% endblock content %}

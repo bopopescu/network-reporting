@@ -45,7 +45,6 @@ class App(db.Model):
     adsense_app_id = db.StringProperty()
     admob_bgcolor = db.StringProperty()
     admob_textcolor = db.StringProperty()
-
     app_type = db.StringProperty(required=True,
                                  default='iphone',
                                  choices=['iphone', 'android', 'ipad', 'mweb'])

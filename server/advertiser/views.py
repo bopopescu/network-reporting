@@ -49,7 +49,7 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
-from ad_network_reports.query_managers import AdNetworkReportQueryManager
+from ad_network_reports.query_managers import AdNetworkReportManager
 
 from ad_server.optimizer.optimizer import DEFAULT_CTR
 
@@ -1137,8 +1137,9 @@ class AJAXStatsHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(int(date_range))
 
-        if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.datetime.strptime("%Y-%m-%d", self.start_date)
+        # this is tarded. the start date is really the end of the date range.
+        if self.start_date:
+            end_date = self.start_date
         else:
             end_date = datetime.date.today()
 
@@ -1230,17 +1231,17 @@ def stats_ajax(request, *args, **kwargs):
 
 class CampaignExporter(RequestHandler):
     def post(self, adgroup_key, file_type, start, end, *args, **kwargs):
-        start = datetime.datetime.strptime('%m%d%y', start)
-        end = datetime.datetime.strptime('%m%d%y', end)
+        start = datetime.datetime.strptime(start, '%m%d%y')
+        end = datetime.datetime.strptime(end, '%m%d%y')
         days = date_magic.gen_days(start, end)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         f_name_dict = dict(adgroup_title = adgroup.campaign.name,
-                           start = start.strftime('%b %d'),
-                           end   = end.strftime('%b %d, %Y'),
+                           start = start.strftime('%m/%d/%y'),
+                           end   = end.strftime('%m/%d/%y'),
                            )
         # Build
-        f_name = "%(adgroup_title)s CampaignStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = "MoPub Campaign Stats--Name:%(adgroup_title)s--DateRange:%(start)s - %(end)s" % f_name_dict
         f_name = f_name.encode('ascii', 'ignore')
         # Zip up days w/ corresponding stats object and other stuff
         data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [campaign_stats(stat, adgroup.campaign.campaign_type) for stat in all_stats]))

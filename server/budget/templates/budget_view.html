@@ -4,20 +4,19 @@
        <h1>Admin Budget View for AdGroup: {{campaign.name}}</h1>
 {% endblock pageTitle %}
 {% block dateButtons %}{% endblock dateButtons %}
-{% block messageCenter %}{% endblock messageCenter %}
 
 {% block titleBarRight %}{% endblock titleBarRight %}
 
-{% block content %} 
+{% block content %}
 
-{% if not campaign.budget_obj %}  
-  <h2> NOTE: This campaign does not have a budget set. It has an unlimited budget. </h2>  
+{% if not campaign.budget_obj %}
+  <h2> NOTE: This campaign does not have a budget set. It has an unlimited budget. </h2>
 {% endif %}
-<h3>      
-  
+<h3>
+
   <table style="border-spacing:20px 2px; border-collapse:separate">
     <tr>
-      <td>Base Slice Budget:</td> <td>{{budget.slice_budget}}</td> 
+      <td>Base Slice Budget:</td> <td>{{budget.slice_budget}}</td>
       <td><h5> <a href="{{budget_obj_url}}">View/Edit Budget </a> </h5></td>
     </tr>
     <tr>
@@ -32,13 +31,13 @@
       <td>Timeslice Budget: </td> <td>{{remaining_ts_budget|currency}}</td>
       <td><h5> <a href="{{clear_memcache_ts_url}}">Clear from memcache and fall back to Budget backup</a> </h5></td>
     </tr>
-    
+
     <tr>
       <td>Braking Percentage: </td> <td>{{braking_fraction|percentage}}</td>
       <td> (25% means that 25% of machines will actually try to execute the request)</td>
     </tr>
 
-    
+
   </table>
 
 </h3>

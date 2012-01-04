@@ -1,114 +1,234 @@
-﻿{% extends 'ad_network_base.html' %}
+﻿{% extends "base.html" %}
 {% load filters %}
+{% block navLinks %}
+  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li><a href="{% url marketplace_index %}">Marketplace</a></li>
+  <li class="active"><a href="{% url network_index %}">Networks</a></li>
+{% endblock navLinks %}
+
 
 {% block extraScripts %}
+  <script type="text/javascript">
+    var mopub = mopub || {};
+
+    $(function() {
+        // Use breakdown to switch charts
+        $('.stats-breakdown tr').click(function(e) {
+          $('#dashboard-stats-chart').fadeOut(100, function() {
+            mopub.Chart.setupDashboardStatsChart('line');
+            $(this).show();
+          });
+        });
+
+        mopub.graphStartDate = Date.UTC({{start_date.year}},
+            {{start_date.month|add:"-1"}},
+            {{start_date.day}});
+
+        // Populate the graph with found, updated, mapped, and failed stats
+        function populateGraphWithStats(dailyStats) {
+            mopub.dashboardStatsChartData = {
+                pointStart: mopub.graphStartDate,
+                pointInterval: 86400000,
+                found: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "found")}],
+                updated: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "updated")}],
+                mapped: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "mapped")}],
+                failed: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "failed")}],
+            };
+
+            mopub.Chart.setupDashboardStatsChart('area');
+        }
+
+        populateGraphWithStats({{daily_stats|safe}});
+
+
+        // TODO: put in shared js file with dashboard. Note: latest date allowed in range is yesterday.
+        // set up dateOptions
+        $('#dashboard-dateOptions input').click(function() {
+          var option = $(this).val();
+          if(option == 'custom') {
+            $('#dashboard-dateOptions-custom-modal').dialog({
+              width: 570,
+              buttons: [
+                {
+                  text: 'Set dates',
+                  css: { fontWeight: '600' },
+                  click: function() {
+                    var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
+                    var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                    var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+
+                    var from_day=from_date.getDate();
+                    var from_month=from_date.getMonth()+1;
+                    var from_year=from_date.getFullYear();
+
+                    $(this).dialog("close");
+                    var location = document.location.href.replace(/\?.*/,'');
+                    document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day;
+                  }
+                },
+                {
+                  text: 'Cancel',
+                  click: function() {
+                    $(this).dialog("close");
+                  }
+                }
+              ]
+            });
+          }
+          else {
+            // Tell server about selected option to get new data
+            var location = document.location.href.replace(/\?.*/,'');
+            document.location.href = location+'?r=' + option;
+          }
+        });
+
+        // set up stats breakdown dateOptions
+        $('#stats-breakdown-dateOptions input').click(function() {
+          $('.stats-breakdown-value').hide();
+          $('.stats-breakdown-value.'+$(this).val()).show();
+        });
+
+        // set up custom dateOptions modal dialog
+        $('#dashboard-dateOptions-custom-from').datepicker({
+          defaultDate: '-15d',
+          maxDate: '-1d',
+          onSelect: function(selectedDate) {
+            var other = $('#dashboard-dateOptions-custom-to');
+            var instance = $(this).data("datepicker");
+            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+            other.datepicker('option', 'minDate', date);
+          }
+        });
+        $('#dashboard-dateOptions-custom-to').datepicker({
+          defaultDate: '-1d',
+          maxDate: '-1d',
+          onSelect: function(selectedDate) {
+            var other = $('#dashboard-dateOptions-custom-from');
+            var instance = $(this).data("datepicker");
+            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+            other.datepicker('option', 'maxDate', date);
+          }
+        });
+
+        // TODO: Merge with mopub-advertiser version
+        $('.show-hide').click(function () {
+            var key = $(this).attr('id');
+            var rows = $('.' + key + '-row');
+            var button = $(this).children('span')
+            $.each(rows, function (iter, row) {
+                if ($(row).is(":visible")) {
+                    $(row).slideUp('fast');
+                    $(button).text('Show Stats');
+                } else {
+                    $(row).slideDown('fast');
+                    $(button).text('Hide Stats');
+                }
+            });
+        });
+    });
+  </script>
 {% endblock extraScripts %}
 
-{% block adNetworkTitle %}
-{% endblock %}
-
-{% block graph %}
-{% endblock graph %}
-
-{% block tableTitle %}
-<h3 class="dataTable-title">Management Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-{% endblock tableTitle %}
+{% block pageTitle %}
+<h3 class="dataTable-title">Ad Network Reporting Management Stats</h3>
+{% endblock pageTitle %}
 
 {% block content %}
+  {% block graph %}
+    <section class="offset nomargin" id="dashboard-stats">
+      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <div class="stats clearfix">
+        <div class="stats-breakdown">
+          <table class="sortable">
+            <tbody>
+              <tr class="active" id="stats-breakdown-found">
+                <td class="stats-breakdown-value today">
+                  <span class="inner">{{ aggregates.found|withsep }}</span>
+                </td>
+                <th class="stats-breakdown-name"><span class="inner">Found</span></th>
+              </tr>
+              <tr id="stats-breakdown-updated">
+                <td class="stats-breakdown-value today">
+                  <span class="inner">{{aggregates.updated|withsep}}</span>
+                </td>
+                <th class="stats-breakdown-name"><span class="inner">Updated</span></th>
+              </tr>
+              <tr id="stats-breakdown-mapped">
+                <td class="stats-breakdown-value today">
+                  <span class="inner">{{ aggregates.mapped|withsep }}</span>
+                </td>
+                <th class="stats-breakdown-name"><span class="inner">Mapped</span></th>
+              </tr>
+              <tr id="stats-breakdown-failed">
+                <td class="stats-breakdown-value today">
+                  <span class="inner">{{ aggregates.failed|withsep }}</span>
+                </td>
+                <th class="stats-breakdown-name"><span class="inner">Failed</span></th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+      </div>
+    </section>
+  {% endblock graph %}
 
-<table class="zebra-striped simpletable campaignData-main">
-	<thead>
-		<th class="dataTable-name"> admob found </th>
-		<th class="dataTable-name"> admob updated </th>
-		<th class="dataTable-name"> admob mapped </th>
-		<th class="dataTable-name"> admob login_failed </th>
-	</thead>
-	<tbody>
-		{% for management_stats in management_stats_list %}
-	  <tr>
-			<td class="dataTable-name"> {{management_stats.admob_found}} </td>
-			<td class="dataTable-name"> {{management_stats.admob_updated}} </td>
-			<td class="dataTable-name"> {{management_stats.admob_mapped}} </td>
-			<td class="dataTable-name"> {{management_stats.admob_login_failed}} </td>
-	  </tr>
-		{% endfor %}
-	</tbody>
-</table>
-
-<table class="zebra-striped simpletable campaignData-main">
-	<thead>
-		<th class="dataTable-name"> jumptap found </th>
-		<th class="dataTable-name"> jumptap updated </th>
-		<th class="dataTable-name"> jumptap mapped </th>
-		<th class="dataTable-name"> jumptap login_failed </th>
-	</thead>
-	<tbody>
-		{% for management_stats in management_stats_list %}
-	  <tr>
-			<td class="dataTable-name"> {{management_stats.jumptap_found}} </td>
-			<td class="dataTable-name"> {{management_stats.jumptap_updated}} </td>
-			<td class="dataTable-name"> {{management_stats.jumptap_mapped}} </td>
-			<td class="dataTable-name"> {{management_stats.jumptap_login_failed}} </td>
-	  </tr>
-		{% endfor %}
-	</tbody>
-</table>
-
-<table class="zebra-striped simpletable campaignData-main">
-	<thead>
-		<th class="dataTable-name"> iad found </th>
-		<th class="dataTable-name"> iad updated </th>
-		<th class="dataTable-name"> iad mapped </th>
-		<th class="dataTable-name"> iad login_failed </th>
-	</thead>
-	<tbody>
-		{% for management_stats in management_stats_list %}
-	  <tr>
-			<td class="dataTable-name"> {{management_stats.iad_found}} </td>
-			<td class="dataTable-name"> {{management_stats.iad_updated}} </td>
-			<td class="dataTable-name"> {{management_stats.iad_mapped}} </td>
-			<td class="dataTable-name"> {{management_stats.iad_login_failed}} </td>
-		</tr>
-		{% endfor %}
-	</tbody>
-</table>
-
-<table class="zebra-striped simpletable campaignData-main">
-	<thead>
-		<th class="dataTable-name"> inmobi found </th>
-		<th class="dataTable-name"> inmobi updated </th>
-		<th class="dataTable-name"> inmobi mapped </th>
-		<th class="dataTable-name"> inmobi login_failed </th>
-	</thead>
-	<tbody>
-		{% for management_stats in management_stats_list %}
-	  <tr>
-			<td class="dataTable-name"> {{management_stats.inmobi_found}} </td>
-			<td class="dataTable-name"> {{management_stats.inmobi_updated}} </td>
-			<td class="dataTable-name"> {{management_stats.inmobi_mapped}} </td>
-			<td class="dataTable-name"> {{management_stats.inmobi_login_failed}} </td>
-		</tr>
-		{% endfor %}
-	</tbody>
-</table>
-
-<table class="zebra-striped simpletable campaignData-main">
-	<thead>
-		<th class="dataTable-name"> mobfox found </th>
-		<th class="dataTable-name"> mobfox updated </th>
-		<th class="dataTable-name"> mobfox mapped </th>
-		<th class="dataTable-name"> mobfox login_failed </th>
-	</thead>
-	<tbody>
-		{% for management_stats in management_stats_list %}
-	  <tr>
-			<td class="dataTable-name"> {{management_stats.mobfox_found}} </td>
-			<td class="dataTable-name"> {{management_stats.mobfox_updated}} </td>
-			<td class="dataTable-name"> {{management_stats.mobfox_mapped}} </td>
-			<td class="dataTable-name"> {{management_stats.mobfox_login_failed}} </td>
-		</tr>
-		{% endfor %}
-	</tbody>
-</table>
+  <section id="dashboard-apps">
+    <div class="appData-columnHeaders">
+      <table class="dataTable" width=100%>
+        <thead>
+          <th class="networkData-icon" style="width:75px"></th>
+          <th class="dataTable-data numeric"> Date </th>
+          <th class="dataTable-data numeric"> Found </th>
+          <th class="dataTable-data numeric"> Updated </th>
+          <th class="dataTable-data numeric"> Mapped </th>
+          <th class="dataTable-data numeric"> Failed </th>
+        </thead>
+      </table>
+    </div>
+    {% for network_name, network in networks %}
+    <div class="{% cycle 'appData' 'appData appData-alt' %}">
+      <table class="dataTable appData-main">
+        <tbody>
+          <tr>
+            <td class="networkData-icon">
+              <img src="/images/{{network_name|lower}}-transparent.png"
+              alt="{{network_name}}" width="75" height="25" />
+            </td>
+            <td class="dataTable-data numeric">
+              <a class="show-hide button button-small" id={{network_name}} style="width:75px;">Show Stats</a>
+            </td>
+            <td class="dataTable-data numeric">{{ network.found }} </td>
+            <td class="dataTable-data numeric">{{ network.updated }} </td>
+            <td class="dataTable-data numeric">{{ network.mapped }} </td>
+            <td class="dataTable-data numeric">{{ network.failed }} </td>
+          </tr>
+        </tbody>
+      </table>
+  {% comment %}
+    TODO: Clean up this stuff
+  {% endcomment %}
+    <div class="appData-details hidden {{network_name}}-row" style="margin: -10px 0 0 86px">
+        <div class="appData-details-inner show">
+          <table class="dataTable">
+            <tbody>
+              {% for stats in network.sub_data_list %}
+              <tr class="show-details sub-rows {% if not forloop.last %} add-border {% endif %}">
+                  <td class="dataTable-data numeric">{{ stats.date|format_date_compact }}</td>
+                  <td class="dataTable-data numeric">{{ stats.found }}</td>
+                  <td class="dataTable-data numeric">{{ stats.updated }}</td>
+                  <td class="dataTable-data numeric">{{ stats.mapped }}</td>
+                  <td class="dataTable-data numeric">{{ stats.failed_logins|length }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
 
 {% endblock content %}
+

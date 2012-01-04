@@ -300,7 +300,7 @@ class MarketplaceBattle(Battle):
                     creative.width = self.client_context.adunit.get_width()
                     creative.height = self.client_context.adunit.get_height()
                     # Do not ever add marketplace adgroups to
-                    # the excluded_adgroup_keys
+                    # the excluded_adgroup_keys hence don't call super
                     return creative
                 return None
         except Exception, e: # TODO: catch real exception
@@ -450,6 +450,8 @@ class NetworkBattle(Battle):
                     creative.height = server_side.creative_height
                 return super(NetworkBattle, self)._process_winner(creative)
             except ServerSideException:
+                # call the super class so that the exclude parameter is properly set
+                super(NetworkBattle, self)._process_winner(creative)
                 return False
                 # log
 

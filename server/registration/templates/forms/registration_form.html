@@ -65,16 +65,30 @@
     </dt>
     <dd>
         {{form.traffic|raw}}
-    </dd>                
+    </dd>       
+    <dt></dt>
+    <dd>
+        <script type="text/javascript"
+     src="https://www.google.com/recaptcha/api/challenge?k=6LcbPcsSAAAAAFL3Nad5JQoP7e4TBZ7gEfKqzJPS{% if form.captcha_error_msg %}&error={{form.captcha_error_msg}}{% endif %}">
+        </script>
+        <noscript>
+        <iframe src="https://www.google.com/recaptcha/api/noscript?k=6LcbPcsSAAAAAFL3Nad5JQoP7e4TBZ7gEfKqzJPS{% if form.captcha_error_msg %}&error={{form.captcha_error_msg}}{% endif %}"
+            height="300" width="500" frameborder="0"></iframe><br>
+        <textarea name="recaptcha_challenge_field" rows="3" cols="40"></textarea>
+        <input type="hidden" name="recaptcha_response_field" value="manual_challenge">
+        </noscript>
+    </dd>         
     <dt>
         {{form.mailing_list.as_widget}}
     </dt>    
     <dd>
         {{form.mailing_list.label}}
-    </dd>    
+    </dd>
     <dt>
         {{form.tos.as_widget}}
     </dt>
+
+
     <dd>
         I agree to the <a href="http://www.mopub.com/terms/">Terms of Service</a> and the <a href="http://www.mopub.com/privacy/">Privacy Policy</a>
         

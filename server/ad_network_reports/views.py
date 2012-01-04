@@ -2,318 +2,223 @@ import logging
 
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
-        AdNetworkReportQueryManager, get_management_stats, create_manager
+        MOBFOX, MOBFOX_PRETTY, IAD_PRETTY, AdNetworkReportManager, \
+        AdNetworkMapperManager, AdNetworkStatsManager, \
+        AdNetworkManagementStatsManager, create_fake_data
+from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
+from common.utils import sswriter
 from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.shortcuts import redirect
 from reporting.models import StatsModel
 
-from account.models import Account
+from google.appengine.ext import db
+
+DATE = 'date'
+REVENUE = 'revenue'
+ATTEMPTS = 'attempts'
+IMPRESSIONS = 'impressions'
+CPM = 'cpm'
+FILL_RATE = 'fill_rate'
+CLICKS = 'clicks'
+CPC = 'cpc'
+CTR = 'ctr'
+SORT_BY_NETWORK = 'network'
+MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped')
 
 class AdNetworkReportIndexHandler(RequestHandler):
-    def get(self, account_key=None):
+    def get(self):
         """
         Create the index page for ad network reports for an account.
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
+        #create_fake_data(self.account)
+
+        days = get_days(self.start_date, self.date_range)
+
+        aggregate_stats_list = AdNetworkReportManager. \
+                get_aggregate_stats_list(self.account, days)
+
+        # Get aggregate_list from aggregate_stats_list and pass it to
+        # roll_up_stats.
+        if aggregate_stats_list:
+            aggregates = AdNetworkStatsManager.roll_up_stats(
+                    zip(*aggregate_stats_list)[1])
         else:
-            days = StatsModel.lastdays(self.date_range, 1)
+            aggregates = []
 
-        manager = create_manager(account_key, self.account)
-        manager = AdNetworkReportQueryManager(self.account)
-        aggregates, daily_stats, aggregate_stats_list = manager.get_index_data(days)
+        # Get the daily stats list.
+        daily_stats = []
+        for date in days:
+            stats_dict = AdNetworkStatsManager.get_stats_for_day(self.account,
+                    date).__dict__
+            stats_dict = dict([(key.replace('_', '', 1), val) for key, val
+                    in stats_dict.iteritems()])
+            daily_stats.append(stats_dict)
 
-        if account_key:
-            add_credentials_url = '/ad_network_reports/manage/' + \
-                                  str(account_key) + '/add'
+        networks = AdNetworkStatsManager.roll_up_unique_stats(self.account,
+                aggregate_stats_list, True)
+        apps = AdNetworkStatsManager.roll_up_unique_stats(self.account,
+                aggregate_stats_list, False)
+        if networks:
+            network_names, networks = zip(*networks)
         else:
-            add_credentials_url = '/ad_network_reports/add'
-
-
-
-        # Put the apps into an intuitive data structure
-        # Apps are mapped to their stats, as well as to a list of
-        # their individual network stats. E.g. :
-        # {
-        #     'app1' : {
-        #         'networks': [ {network1_stats ... networkn_stats],
-        #         'revenue': 0,
-        #         'attempts': 0,
-        #         'impressions': 0,
-        #         'fill_rate': 0,
-        #         'clicks': 0,
-        #         'ctr': 0,
-        #     }
-        # }
-        #
-        # lol so tarded, sry
-        apps = {}
-        for key, mapper, stats in aggregate_stats_list:
-            network_data_for_app = {
-                'name': mapper.ad_network_name,
-                'revenue': stats.revenue,
-                'attempts': stats.attempts,
-                'impressions': stats.impressions,
-                'fill_rate': stats.fill_rate,
-                'clicks': stats.clicks,
-                'ctr': stats.ctr,
-                'has_potential_errors': mapper.has_potential_errors()
-            }
-            if apps.has_key(mapper.application.name):
-                apps[mapper.application.name]['networks'].append(network_data_for_app)
-                apps[mapper.application.name]['revenue'] += network_data_for_app['revenue']
-                apps[mapper.application.name]['attempts'] += network_data_for_app['attempts']
-                apps[mapper.application.name]['impressions'] += network_data_for_app['impressions']
-                apps[mapper.application.name]['fill_rate'] += network_data_for_app['fill_rate']
-                apps[mapper.application.name]['clicks'] += network_data_for_app['clicks']
-                apps[mapper.application.name]['ctr'] += network_data_for_app['ctr']
-            else:
-                apps[mapper.application.name] = {
-                    'networks': [],
-                    'revenue': 0,
-                    'attempts': 0,
-                    'impressions': 0,
-                    'fill_rate': 0,
-                    'clicks': 0,
-                    'ctr': 0,
-                }
-                apps[mapper.application.name]['networks'].append(network_data_for_app)
-                apps[mapper.application.name]['key'] = str(key)
-                apps[mapper.application.name]['revenue'] += network_data_for_app['revenue']
-                apps[mapper.application.name]['attempts'] += network_data_for_app['attempts']
-                apps[mapper.application.name]['impressions'] += network_data_for_app['impressions']
-                apps[mapper.application.name]['fill_rate'] += network_data_for_app['fill_rate']
-                apps[mapper.application.name]['clicks'] += network_data_for_app['clicks']
-                apps[mapper.application.name]['ctr'] += network_data_for_app['ctr']
-
-
-        # Do the same for networks
-        networks = {}
-        for key, mapper, stats in aggregate_stats_list:
-            app_data_for_network = {
-                'name': mapper.application.name,
-                'revenue': stats.revenue,
-                'attempts': stats.attempts,
-                'impressions': stats.impressions,
-                'fill_rate': stats.fill_rate,
-                'clicks': stats.clicks,
-                'ctr': stats.ctr,
-                'key': str(key),
-                'has_potential_errors': mapper.has_potential_errors()
-            }
-            if networks.has_key(mapper.ad_network_name):
-                networks[mapper.ad_network_name]['apps'].append(app_data_for_network)
-                networks[mapper.ad_network_name]['revenue'] += app_data_for_network['revenue']
-                networks[mapper.ad_network_name]['attempts'] += app_data_for_network['attempts']
-                networks[mapper.ad_network_name]['impressions'] += app_data_for_network['impressions']
-                networks[mapper.ad_network_name]['fill_rate'] += app_data_for_network['fill_rate']
-                networks[mapper.ad_network_name]['clicks'] += app_data_for_network['clicks']
-                networks[mapper.ad_network_name]['ctr'] += app_data_for_network['ctr']
-            else:
-                networks[mapper.ad_network_name] = {
-                    'apps': [],
-                    'revenue': 0,
-                    'attempts': 0,
-                    'impressions': 0,
-                    'fill_rate': 0,
-                    'clicks': 0,
-                    'ctr': 0,
-                }
-                networks[mapper.ad_network_name]['apps'].append(app_data_for_network)
-                networks[mapper.ad_network_name]['key'] = str(key)
-                networks[mapper.ad_network_name]['revenue'] += app_data_for_network['revenue']
-                networks[mapper.ad_network_name]['attempts'] += app_data_for_network['attempts']
-                networks[mapper.ad_network_name]['impressions'] += app_data_for_network['impressions']
-                networks[mapper.ad_network_name]['fill_rate'] += app_data_for_network['fill_rate']
-                networks[mapper.ad_network_name]['clicks'] += app_data_for_network['clicks']
-                networks[mapper.ad_network_name]['ctr'] += app_data_for_network['ctr']
-
-
+            network_names = []
+            networks = []
 
         forms = []
-        for name in AD_NETWORK_NAMES:
+        from ad_network_reports.models import AdNetworkLoginCredentials
+        for name in sorted(AD_NETWORK_NAMES.keys()):
             try:
-                instance = AdNetworkLoginCredentials.get_by_ad_network_name(self.account, name)
+                instance = AdNetworkLoginCredentials. \
+                        get_by_ad_network_name(self.account, name)
                 form = LoginInfoForm(instance=instance, prefix=name)
+                # Encryption doesn't work on app engine...
+                #form.initial['password'] = instance.decoded_password
+                #form.initial['username'] = instance.decoded_password
             except Exception, error:
                 instance = None
                 form = LoginInfoForm(prefix=name)
             form.ad_network = name
             forms.append(form)
 
-
-
-        # Get networks for which they've entered publisher information but
-        # havent given us login credentials so we can bug them about giving us
-        # their creds
-        networks_without_creds = manager.get_networks_without_credentials()
-
-
-        # REFACTOR
-        # Each view should return one template only.
-
-        if aggregate_stats_list:
-            return render_to_response(self.request,
-                                      'ad_network_reports/ad_network_reports_index.html',
-                                      {
-                                          'start_date' : days[0],
-                                          'end_date' : days[-1],
-                                          'date_range' : self.date_range,
-                                          'add_credentials_url' : add_credentials_url,
-                                          'aggregates' : aggregates,
-                                          'daily_stats' : simplejson.dumps(daily_stats),
-                                          'aggregate_stats_list' : aggregate_stats_list,
-                                          'apps': apps,
-                                          'networks': networks,
-                                          'networks_without_creds': networks_without_creds,
-                                          'forms': forms
-                                      })
-        else:
-            return render_to_response(self.request,
-                                      'ad_network_reports/ad_network_setup.html',
-                                      {
-                                          'add_credentials_url': add_credentials_url,
-                                      })
+        return render_to_response(self.request,
+              'ad_network_reports/ad_network_reports_index.html',
+              {
+                  'start_date' : days[0],
+                  'end_date' : days[-1],
+                  'date_range' : self.date_range,
+                  'account_key' : str(self.account.key()),
+                  'aggregates' : aggregates,
+                  'daily_stats' : simplejson.dumps(
+                      daily_stats),
+                  'apps': apps,
+                  'show_graph': apps != [],
+                  'networks': zip(network_names, networks, forms),
+                  'forms': forms,
+                  'MOBFOX': MOBFOX_PRETTY,
+                  'IAD': IAD_PRETTY
+              })
 
 @login_required
 def ad_network_reports_index(request, *args, **kwargs):
     return AdNetworkReportIndexHandler()(request, *args, **kwargs)
 
+class ExportFileHandler(RequestHandler):
+    def get(self,
+            f_type,
+            sort_type):
+        """
+        Take a file type (xls or csv).
+
+        Return a file with the aggregate stats data sorted by network or app.
+        """
+        days = get_days(self.start_date, self.date_range)
+
+        aggregate_stats_list = AdNetworkReportManager. \
+                get_aggregate_stats_list(self.account, days)
+
+        if sort_type == SORT_BY_NETWORK:
+            all_stats = AdNetworkStatsManager.roll_up_unique_stats(self.account,
+                    aggregate_stats_list, True)
+        else:
+            all_stats = AdNetworkStatsManager.roll_up_unique_stats(self.account,
+                    aggregate_stats_list, False)
+
+        stat_names = {}
+        stat_names[MOBFOX_PRETTY] = (REVENUE, IMPRESSIONS, CPM, CLICKS,
+                CPC, CTR)
+        stat_names[sswriter.DEFAULT] = (REVENUE, ATTEMPTS, IMPRESSIONS,
+                CPM, FILL_RATE, CLICKS, CPC, CTR)
+        return sswriter.write_ad_network_stats(f_type, stat_names, all_stats,
+                days=days, networks=(sort_type == 'network'))
+
+@login_required
+def export_file(request, *args, **kwargs):
+    return ExportFileHandler()( request, *args, **kwargs )
 
 class AppDetailHandler(RequestHandler):
-    def get(self, app_key, *args, **kwargs):
+    def get(self,
+            mapper_key):
         """Generate a list of stats for the ad network, app and account.
 
         Return a webpage with the list of stats in a table.
         """
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range, 1)
+        days = get_days(self.start_date, self.date_range)
 
-        manager = AdNetworkReportQueryManager()
-        ad_network_app_mapper = manager.get_ad_network_mapper(ad_network_app_mapper_key=mapper_key)
-        stats_list = manager.get_stats_list_for_mapper_and_days(mapper_key, days)
+        ad_network_app_mapper = AdNetworkMapperManager.get_ad_network_mapper(
+                ad_network_app_mapper_key=mapper_key)
+        stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
+                mapper_key, days)
         daily_stats = []
         for stats in stats_list:
             stats_dict = stats.__dict__['_entity']
-            del(stats_dict['ad_network_app_mapper'])
+            if not stats_dict:
+                stats_dict = stats.__dict__
+                stats_dict = dict([(key.replace('_', '', 1), val) for key, val
+                    in stats_dict.iteritems()])
+            else:
+                del(stats_dict['ad_network_app_mapper'])
             del(stats_dict['date'])
             daily_stats.append(stats_dict)
-        aggregates = manager.roll_up_stats(stats_list)
+        daily_stats.reverse()
+        aggregates = AdNetworkStatsManager.roll_up_stats(stats_list)
+        app = ad_network_app_mapper.application
         return render_to_response(self.request,
-                                  'ad_network_reports/ad_network_base.html',
-                                  {
-                                      'start_date' : days[0],
-                                      'end_date' : days[-1],
-                                      'date_range' : self.date_range,
-                                      'ad_network_name' : ad_network_app_mapper.ad_network_name,
-                                      'app_name' : ad_network_app_mapper.application.name,
-                                      'aggregates' : aggregates,
-                                      'daily_stats' : simplejson.dumps(daily_stats),
-                                      'stats_list' : stats_list
-                                  })
+                  'ad_network_reports/ad_network_base.html',
+                  {
+                      'start_date' : days[0],
+                      'end_date' : days[-1],
+                      'date_range' : self.date_range,
+                      'ad_network_name' :
+                        AD_NETWORK_NAMES[ad_network_app_mapper.ad_network_name],
+                      'app_name' : '%s (%s)' % (app.name, app.app_type_text()),
+                      'aggregates' : aggregates,
+                      'daily_stats' :
+                        simplejson.dumps(daily_stats),
+                      'stats_list' : stats_list,
+                      'show_graph': True,
+                      'mapper_key': mapper_key,
+                      'MOBFOX': MOBFOX_PRETTY
+                  })
 
 @login_required
 def app_detail(request, *args, **kwargs):
     return AppDetailHandler()(request, *args, **kwargs)
 
-
-
-class NetworkDetailHandler(RequestHandler):
-    def get(self, network_name, *args, **kwargs):
-        """Generate a list of stats for the ad network, app and account.
-
-        Return a webpage with the list of stats in a table.
+class ExportAppDetailFileHandler(RequestHandler):
+    def get(self,
+            f_type,
+            mapper_key):
         """
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
+        Export data in for the app on the network (what's in the table) to xls
+        or csv.
+        """
+        days = get_days(self.start_date, self.date_range)
+
+        stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
+                mapper_key, days)
+        mapper = db.get(mapper_key)
+        if mapper.ad_network_name == MOBFOX:
+            stat_names = (DATE, REVENUE, IMPRESSIONS, CPM,
+                    CLICKS, CPC, CTR)
         else:
-            days = StatsModel.lastdays(self.date_range, 1)
-
-
-        manager = AdNetworkReportQueryManager(self.account)
-        networks = manager._
-
-
-
-
-        ad_network_app_mapper = manager.get_ad_network_mapper(ad_network_app_mapper_key=mapper_key)
-        stats_list = manager.get_stats_list_for_mapper_and_days(mapper_key, days)
-        daily_stats = []
-        for stats in stats_list:
-            stats_dict = stats.__dict__['_entity']
-            del(stats_dict['ad_network_app_mapper'])
-            del(stats_dict['date'])
-            daily_stats.append(stats_dict)
-        aggregates = manager.roll_up_stats(stats_list)
-        return render_to_response(self.request,
-                                  'ad_network_reports/ad_network_base.html',
-                                  {
-                                      'start_date' : days[0],
-                                      'end_date' : days[-1],
-                                      'date_range' : self.date_range,
-                                      'ad_network_name' : ad_network_app_mapper.ad_network_name,
-                                      'app_name' : ad_network_app_mapper.application.name,
-                                      'aggregates' : aggregates,
-                                      'daily_stats' : simplejson.dumps(daily_stats),
-                                      'stats_list' : stats_list
-                                  })
-
+            stat_names = (DATE, REVENUE, ATTEMPTS, IMPRESSIONS,
+                    CPM, FILL_RATE, CLICKS, CPC, CTR)
+        return sswriter.write_stats(f_type, stat_names, stats_list, days=days,
+                key_type=sswriter.AD_NETWORK_APP_KEY, app_detail_name=('%s_%s' %
+                (mapper.application.name.encode('utf8'), AD_NETWORK_NAMES[
+                    mapper.ad_network_name])))
 
 @login_required
-def network_detail(request, *args, **kwargs):
-    return NetworkDetailHandler()(request, *args, **kwargs)
+def export_app_detail_file(request, *args, **kwargs):
+    return ExportAppDetailFileHandler()( request, *args, **kwargs )
 
-
-
-class AddLoginCredentialsHandler(RequestHandler):
-    #TODO: Make SSL iframe
-    def get(self, account_key=None):
-        """
-        Return form with ad network login info.
-        """
-
-        if account_key:
-            account = Account.get(account_key)
-            management_mode = True
-        else:
-            account = self.account
-            account_key = self.account.key()
-            management_mode = False
-
-        forms = []
-        for name in AD_NETWORK_NAMES:
-            try:
-                instance = AdNetworkLoginCredentials.get_by_ad_network_name(account, name)
-                form = LoginInfoForm(instance=instance, prefix=name)
-            except Exception, error:
-                instance = None
-                form = LoginInfoForm(prefix=name)
-            form.ad_network = name
-            forms.append(form)
-
-        return render_to_response(self.request,
-                                  'ad_network_reports/add_login_credentials.html',
-                                  {
-                                      'management_mode' : management_mode,
-                                      'account_key' : str(account_key),
-                                      'ad_network_names' : AD_NETWORK_NAMES,
-                                      'forms' : forms,
-                                      'error' : "",
-                                  })
-
-@login_required
-def add_login_credentials(request, *args, **kwargs):
-    return AddLoginCredentialsHandler()(request, *args, **kwargs)
-
-
+# TODO: Move to admin views
 class AdNetworkManagementHandler(RequestHandler):
     def get(self):
         """
@@ -321,22 +226,76 @@ class AdNetworkManagementHandler(RequestHandler):
         management stats and login credentials that resulted in error.
         Return a webpage with the list of management stats in a table.
         """
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            days = StatsModel.lastdays(self.date_range, 1)
+        days = get_days(self.start_date, self.date_range)
 
-        management_stats_list = get_management_stats(days)
+        management_stats = AdNetworkManagementStatsManager.get_stats(days)
+
+        networks = {}
+        for ad_network_name in management_stats.keys():
+            networks[ad_network_name] = {}
+        for name, stats_list in management_stats.iteritems():
+            for stat in MANAGEMENT_STAT_NAMES:
+                networks[name][stat] = reduce(lambda prev, stats: prev +
+                        getattr(stats, stat), [0] + stats_list)
+            networks[name]['failed'] = reduce(lambda prev, stats: prev +
+                    len(stats.failed_logins), [0] + stats_list)
+            stats_list.reverse()
+            networks[name]['sub_data_list'] = stats_list
+
+        aggregates = {}
+        for stat in MANAGEMENT_STAT_NAMES:
+            aggregates[stat] = reduce(lambda prev, stats: prev +
+                    stats[stat], [0] + networks.values())
+        aggregates['failed'] = reduce(lambda prev, stats: prev +
+                stats['failed'], [0] + networks.values())
+
+        stats_by_date = {}
+        for stats_tuple in zip(*management_stats.values()):
+            stats_by_date[stats_tuple[0].date] = stats_tuple
+
+        daily_stats = []
+        for day in days:
+            stats_dict = {}
+            if day in stats_by_date:
+                stats_tuple = stats_by_date[day]
+                for stat in MANAGEMENT_STAT_NAMES:
+                    stats_dict[stat] = int(reduce(lambda prev, stats: prev +
+                            getattr(stats, stat), [0] + list(stats_tuple)))
+                stats_dict['failed'] = int(reduce(lambda prev, stats: prev +
+                        len(stats.failed_logins), [0] + list(stats_tuple)))
+            else:
+                for stat in MANAGEMENT_STAT_NAMES:
+                    stats_dict[stat] = 0
+                stats_dict['failed'] = 0
+            daily_stats.append(stats_dict)
+
+        networks = sorted(networks.iteritems(), key=lambda network: network[0])
 
         return render_to_response(self.request,
-                                  'ad_network_reports/ad_network_management.html',
-                                  {
-                                      'start_date' : days[0],
-                                      'end_date' : days[-1],
-                                      'date_range' : self.date_range,
-                                      'management_stats_list': management_stats_list
-                                  })
+              'ad_network_reports/ad_network_management.html',
+              {
+                  'start_date' : days[0],
+                  'end_date' : days[-1],
+                  'date_range' : self.date_range,
+                  'networks': networks,
+                  'aggregates': aggregates,
+                  'daily_stats': daily_stats
+              })
 
-@login_required
+@staff_login_required
 def ad_network_management(request, *args, **kwargs):
     return AdNetworkManagementHandler()(request, *args, **kwargs)
+
+def get_days(start_date,
+             date_range):
+    """
+    Take a start date and a date range.
+
+    Return a list of days, [datetime.date,...], objects for the given range.
+    """
+    if start_date:
+        days = StatsModel.get_days(start_date, date_range)
+    else:
+        days = StatsModel.lastdays(date_range, 1)
+    return days
+

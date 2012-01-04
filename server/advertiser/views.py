@@ -1,21 +1,14 @@
-import logging, os, re, datetime, hashlib
+import logging
+import datetime
 
-from django.conf import settings
 
-from urllib import urlencode
-from copy import deepcopy
-
-import base64, binascii
-from google.appengine.api import users, images, files
-from google.appengine.api.urlfetch import fetch
 from google.appengine.ext import db
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
+
+from django.views.decorators.cache import cache_control
 
 from django.contrib.auth.decorators import login_required
 from common.utils import date_magic
 from common.utils import sswriter
-from common.utils.decorators import cache_page_until_post
 from common.utils.helpers import campaign_stats
 from common.utils import helpers
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -25,20 +18,26 @@ from common.ragendja.template import render_to_response, render_to_string, JSONR
 from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 from common.utils.timezones import Pacific_tzinfo
 from budget.tzinfo import Pacific, utc
-# from common.ragendja.auth.decorators import google_login_required as login_required
+
 from account.query_managers import AccountQueryManager
 from account.forms import NetworkConfigForm
 from advertiser.models import *
+
+# NOTE: don't be tempted to change this to import *
+# Some of these modules import datetime from datetime, which will
+# screw up all of the datetime calls in this module.
 from advertiser.forms import CampaignForm, AdGroupForm, \
                              BaseCreativeForm, TextCreativeForm, \
                              ImageCreativeForm, TextAndTileCreativeForm, \
                              HtmlCreativeForm
 
-from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
-                                      CreativeQueryManager, TextCreativeQueryManager, \
-                                      ImageCreativeQueryManager, TextAndTileCreativeQueryManager, \
-                                      HtmlCreativeQueryManager
-
+from advertiser.query_managers import CampaignQueryManager, \
+     AdGroupQueryManager, \
+     CreativeQueryManager, \
+     TextCreativeQueryManager, \
+     ImageCreativeQueryManager, \
+     TextAndTileCreativeQueryManager, \
+     HtmlCreativeQueryManager
 from budget import budget_service
 from budget.models import Budget
 from budget.query_managers import BudgetQueryManager
@@ -50,35 +49,34 @@ from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnit
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
-from ad_network_reports.query_managers import AdNetworkReportQueryManager
-
-from common.constants import MPX_DSP_IDS
-
-from django.views.decorators.cache import cache_page
+from ad_network_reports.query_managers import AdNetworkReportManager
 
 from ad_server.optimizer.optimizer import DEFAULT_CTR
+
+CAMPAIGN_LEVELS = ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo']
 
 class AdGroupIndexHandler(RequestHandler):
 
     def get(self):
-        num_days = 90
 
+        # Set up the date range
+        num_days = 90
         today = datetime.datetime.now(Pacific_tzinfo()).date()
+
         days = date_magic.gen_days(today - datetime.timedelta(days=num_days), today)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
 
-        campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo'])
-
+        # Get a list of adgroups (for sorting), and get a list of each adunit
+        # and attach them to each adgroup
         adgroups = []
         adunits_dict = {}
-        apps_dict = {}
         for campaign in campaigns:
             for adgroup in campaign.adgroups:
                 if not adgroup.archived:
                     adunits = []
                     adunit_keys_to_fetch = []
-
                     adgroup.targeted_app_keys = []
                     adunit_keys = [adunit_key for adunit_key in adgroup.site_keys]
                     for adunit_key in adunit_keys:
@@ -97,7 +95,7 @@ class AdGroupIndexHandler(RequestHandler):
 
                     adgroups.append(adgroup)
 
-        promo_adgroups, gtee_adgroups, marketplace_adgroups, network_adgroups, backfill_promo_adgroups = _sort_campaigns(adgroups)
+        promo_adgroups, gtee_adgroups, backfill_promo_adgroups = _sort_campaigns(adgroups)
 
         # TODO: do I need to add 'account': self.account,?
         return render_to_response(self.request,
@@ -112,6 +110,7 @@ class AdGroupIndexHandler(RequestHandler):
                                       'offline': self.offline,
                                   })
 
+<<<<<<< HEAD
 ####### Helpers for campaign page #######
 def _sort_guarantee_levels(guaranteed_campaigns):
     """ Sort guaranteed campaigns according to levels """
@@ -133,21 +132,22 @@ def _sort_guarantee_levels(guaranteed_campaigns):
         else:
             level['display'] = False
     return gtee_levels
+=======
+@login_required
+def adgroups(request,*args,**kwargs):
+    return AdGroupIndexHandler()(request,*args,**kwargs)
+>>>>>>> 856cef3509512b4d708758e906d2440162856e5a
+
 
 def _sort_campaigns(adgroups):
-
+    """
+    Helper for the adgroup_index page which probably could be refactored
+    """
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
     promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
-
     guaranteed_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
     guaranteed_campaigns = sorted(guaranteed_campaigns, lambda x,y: cmp(y.bid, x.bid))
-
-    marketplace_campaigns = filter(lambda x: x.campaign.campaign_type in ['marketplace'], adgroups)
-    marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
-
-    network_campaigns = filter(lambda x: x.campaign.campaign_type in ['network'], adgroups)
-    network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
 
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
     backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -156,11 +156,10 @@ def _sort_campaigns(adgroups):
     return [
         promo_campaigns,
         guaranteed_campaigns,
-        marketplace_campaigns,
-        network_campaigns,
         backfill_promo_campaigns,
     ]
 
+<<<<<<< HEAD
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
     # adgroup2.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
@@ -200,25 +199,28 @@ def _calc_and_attach_osi_success(adgroups):
 def adgroups(request,*args,**kwargs):
     return AdGroupIndexHandler()(request,*args,**kwargs)
 
+=======
+>>>>>>> 856cef3509512b4d708758e906d2440162856e5a
 
 class AdGroupArchiveHandler(RequestHandler):
-
     def get(self):
-        archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account, archived=True)
-
+        archived_adgroups = AdGroupQueryManager().get_adgroups(account=self.account,
+                                                               archived=True)
         for adgroup in archived_adgroups:
             adgroup.budget = adgroup.campaign.budget_obj
 
         return render_to_response(self.request,
-                                   'advertiser/archived_adgroups.html',
-                                    {'archived_adgroups':archived_adgroups,
-                                     })
+                                  'advertiser/archived_adgroups.html',
+                                  {
+                                      'archived_adgroups':archived_adgroups,
+                                  })
 
 @login_required
 def archive(request,*args,**kwargs):
     return AdGroupArchiveHandler()(request,*args,**kwargs)
 
 
+<<<<<<< HEAD
 """ Replaces CreateCampaignAJAXHandler and CreateCampaignHandler """
 class CreateCampaignAndAdGroupHandler(RequestHandler):
     def get(self):
@@ -311,7 +313,23 @@ def edit_adgroup(request, *args, **kwargs):
 
 
 """ TODO: Remove """
-class CreateCampaignAJAXHander(RequestHandler):
+class CreateCampaignAJAXHandler(RequestHandler):
+    """
+    Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     TEMPLATE    = 'advertiser/forms/campaign_create_form.html'
     def get(self,campaign_form=None,adgroup_form=None,
                              campaign=None,adgroup=None):
@@ -324,9 +342,17 @@ class CreateCampaignAJAXHander(RequestHandler):
             initial.update(price_floor=self.account.network_config.price_floor)
         campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],\
-            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],['millennial_native', 'Millennial Media', False],["mobfox","MobFox",False],\
-            ['custom','Custom Network', False], ['custom_native','Custom Native Network', False]]
+        networks = [['admob_native', 'AdMob', False],
+                    ["adsense","AdSense",False],
+                    ["brightroll","BrightRoll",False],
+                    ["ejam","eJam",False],
+                    ["iAd","iAd",False],
+                    ["inmobi","InMobi",False],
+                    ["jumptap","Jumptap",False],
+                    ['millennial_native', 'Millennial Media', False],
+                    ["mobfox","MobFox",False],
+                    ['custom','Custom Network', False],
+                    ['custom_native','Custom Native Network', False]]
 
         all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # sorts by app name, then adunit name
@@ -531,7 +557,7 @@ class CreateCampaignAJAXHander(RequestHandler):
 
 @login_required
 def campaign_adgroup_create_ajax(request,*args,**kwargs):
-    return CreateCampaignAJAXHander()(request,*args,**kwargs)
+    return CreateCampaignAJAXHandler()(request,*args,**kwargs)
 
 
 # Wrapper for the AJAX handler
@@ -553,7 +579,24 @@ class CreateCampaignHandler(RequestHandler):
 def campaign_adgroup_create(request,*args,**kwargs):
     return CreateCampaignHandler()(request,*args,**kwargs)
 
+
 class CreateAdGroupHandler(RequestHandler):
+    """
+    Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
         if campaign_key:
             c = AdGroupQueryManager.get(campaign_key)
@@ -613,43 +656,24 @@ def campaign_adgroup_edit(request,*args,**kwargs):
     kwargs.update(title="Edit Ad Group",edit=True)
     return CreateAdGroupHandler()(request,*args,**kwargs)
 
-class ShowAdGroupHandler(RequestHandler):
-    def post(self, adgroup_key):
-        adgroup = AdGroupQueryManager.get(adgroup_key)
-        opt = self.params.get('action')
-        update = False
-        campaign = adgroup.campaign
-        if opt == 'play':
-            adgroup.active = True
-            adgroup.archived = False
-            update = True
-        elif opt == 'pause':
-            adgroup.active = False
-            adgroup.archived = False
-            update = True
-        elif opt == "archive":
-            adgroup.active = False
-            adgroup.archived = True
-            update = True
-        elif opt == "delete":
-            adgroup.deleted = True
-            campaign.deleted = True
-            AdGroupQueryManager.put(adgroup)
-            CampaignQueryManager.put(campaign)
 
-            self.request.flash["message"] = "Campaign: %s has been deleted." % adgroup.name
-            return HttpResponseRedirect(reverse('advertiser_campaign'))
+class AdgroupDetailHandler(RequestHandler):
+    """
+    Holy christ, refactor
 
-        else:
-            logging.error("Passed an impossible option")
-
-        if update:
-            campaign.active = adgroup.active
-            campaign.deleted = adgroup.deleted
-            CampaignQueryManager.put(campaign)
-            AdGroupQueryManager.put(adgroup)
-        return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}))
-
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     def get(self, adgroup_key):
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -657,8 +681,9 @@ class ShowAdGroupHandler(RequestHandler):
         # Network campaigns have their date range set by the date picker
         # in the page
         if adgroup.campaign.network():
-            if self.start_date and self.end_date:
-                days = date_magic.gen_days(self.end_date, self.start_date)
+            if self.start_date and self.date_range:
+                end_date = self.start_date + datetime.timedelta(int(self.date_range)-1)
+                days = date_magic.gen_days(self.start_date, end_date)
             else:
                 days = date_magic.gen_date_range(self.date_range)
 
@@ -668,7 +693,8 @@ class ShowAdGroupHandler(RequestHandler):
         else:
             today = datetime.datetime.now(Pacific_tzinfo())
 
-            if adgroup.campaign.end_datetime and adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific) < today:
+            if adgroup.campaign.end_datetime \
+               and adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific) < today:
                 end_date = adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific)
             else:
                 end_date = today
@@ -681,8 +707,6 @@ class ShowAdGroupHandler(RequestHandler):
             else:
                 start_date = end_date - datetime.timedelta(90)
 
-            logging.warn(start_date)
-            logging.warn(end_date)
             days = date_magic.gen_days(start_date, end_date)
 
 
@@ -738,7 +762,10 @@ class ShowAdGroupHandler(RequestHandler):
             else:
                 app.adunits += [au]
 
-            au.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(publisher=au,advertiser=adgroup, days=days)
+            stats_manager = StatsModelQueryManager(self.account,offline=self.offline)
+            au.all_stats = stats_manager.get_stats_for_days(publisher=au,
+                                                            advertiser=adgroup,
+                                                            days=days)
             au.stats = reduce(lambda x, y: x+y, au.all_stats, StatsModel())
 
 
@@ -783,9 +810,15 @@ class ShowAdGroupHandler(RequestHandler):
             else:
                 adgroup_network_type = adgroup.network_type
 
-            if (self.account.network_config and not getattr(self.account.network_config,adgroup_network_type+'_pub_id')) or not self.account.network_config:
+            if (self.account.network_config \
+                and not getattr(self.account.network_config, adgroup_network_type+'_pub_id')) \
+                or not self.account.network_config:
+
                 for app in apps.values():
-                    if (app.network_config and not getattr(app.network_config,adgroup_network_type+'_pub_id')) or not app.network_config:
+                    if (app.network_config \
+                        and not getattr(app.network_config,adgroup_network_type+'_pub_id')) \
+                        or not app.network_config:
+
                         message.append("The application "+app.name+" needs to have a <strong>"+adgroup_network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup_network_type.title()+" Network ID on <a href=%s>your account's ad network settings</a> page."%reverse("ad_network_settings"))
         if message == []:
             message = None
@@ -794,11 +827,6 @@ class ShowAdGroupHandler(RequestHandler):
 
 
         totals = reduce(lambda x, y: x+y.stats, adunits, StatsModel())
-
-
-        logging.warn(dir(today))
-        logging.warn(dir(yesterday))
-        logging.warn(dir(totals))
 
         stats = {
             'revenue': {
@@ -839,12 +867,73 @@ class ShowAdGroupHandler(RequestHandler):
                                       'message': message
                                   })
 
+    def post(self, adgroup_key):
+        """
+        Used to change an adgroup's status (active/paused/archived/deleted)
+        """
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+
+        # Update the adgroup's status if it's changed
+        opt = self.params.get('action')
+        update = False
+        campaign = adgroup.campaign
+        if opt == 'play':
+            adgroup.active = True
+            adgroup.archived = False
+            update = True
+        elif opt == 'pause':
+            adgroup.active = False
+            adgroup.archived = False
+            update = True
+        elif opt == "archive":
+            adgroup.active = False
+            adgroup.archived = True
+            update = True
+        elif opt == "delete":
+            adgroup.deleted = True
+            campaign.deleted = True
+            AdGroupQueryManager.put(adgroup)
+            CampaignQueryManager.put(campaign)
+
+            self.request.flash["message"] = "Campaign: %s has been deleted." % adgroup.name
+            return HttpResponseRedirect(reverse('advertiser_campaign'))
+
+        else:
+            logging.error("Passed an impossible option")
+
+        if update:
+            campaign.active = adgroup.active
+            campaign.deleted = adgroup.deleted
+            CampaignQueryManager.put(campaign)
+            AdGroupQueryManager.put(adgroup)
+        return HttpResponseRedirect(reverse('advertiser_adgroup_show',
+                                            kwargs={
+                                                'adgroup_key': str(adgroup.key())
+                                            }))
+
+
 @login_required
 def campaign_adgroup_show(request,*args,**kwargs):
-    return ShowAdGroupHandler()(request,*args,**kwargs)
+    return AdgroupDetailHandler()(request,*args,**kwargs)
 
 
 class PauseAdGroupHandler(RequestHandler):
+    """
+    Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     def post(self):
         action = self.request.POST.get("action", "pause")
         adgroups = []
@@ -960,13 +1049,26 @@ class AddCreativeHandler(RequestHandler):
         return render_to_string(self.request,template_name=template_name,data=kwargs)
 
     def json_response(self,json_dict):
-        # if not self.request.FILES:
         return JSONResponse(json_dict)
-        # else:
-        #     logging.info("responding with: %s"%('<textarea>'+simplejson.dumps(json_dict)+'</textarea>'))
-        #     return HttpResponse('<textarea>'+simplejson.dumps(json_dict)+'</textarea>',mimetype="text/plain")
+
 
     def post(self):
+        """
+        Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+        """
         ad_group = AdGroupQueryManager.get(self.request.POST.get('adgroup_key'))
         creative_key = self.request.POST.get('creative_key')
         if creative_key:
@@ -1164,6 +1266,22 @@ def adserver_test(request,*args,**kwargs):
     return AdServerTestHandler()(request,*args,**kwargs)
 
 class AJAXStatsHandler(RequestHandler):
+    """
+    Holy christ, refactor
+
+                     %%%%%%
+                   %%%% = =
+                   %%C    >
+                    _)' _( .' ,
+                 __/ |_/\   " *. o
+                /` \_\ \/     %`= '_  .
+               /  )   \/|      .^',*. ,
+              /' /-   o/       - " % '_
+             /\_/     <       = , ^ ~ .
+             )_o|----'|          .`  '
+         ___// (_  - (\
+        ///-(    \'   \\
+    """
     def get(self, start_date=None, date_range=14):
         from common.utils.query_managers import QueryManager
         from common_templates.templatetags import filters
@@ -1175,8 +1293,9 @@ class AJAXStatsHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(int(date_range))
 
-        if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
+        # this is tarded. the start date is really the end of the date range.
+        if self.start_date:
+            end_date = self.start_date
         else:
             end_date = datetime.date.today()
 
@@ -1228,12 +1347,12 @@ class AJAXStatsHandler(RequestHandler):
                         summed_stats.cpm = summed_stats.cpm # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
-                    logging.warn("PACE: %s"%budget_service.get_pace(adgroup.campaign.budget_obj))
+
                     adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+
                     percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
                     summed_stats.percent_delivered = percent_delivered
                     adgroup.percent_delivered = percent_delivered
-
                     summed_stats.status = filters.campaign_status(adgroup)
                     if adgroup.running and adgroup.campaign.budget_obj and adgroup.campaign.budget_obj.delivery_type != 'allatonce':
                         summed_stats.on_schedule = "on pace" if budget_service.get_osi(adgroup.campaign.budget_obj) else "behind"
@@ -1261,9 +1380,6 @@ class AJAXStatsHandler(RequestHandler):
         response_dict['all_stats'] = stats_dict
         return JSONResponse(response_dict)
 
-from django.views.decorators.cache import cache_control
-from django.views.decorators.vary import vary_on_headers, vary_on_cookie
-
 @login_required
 @cache_control(max_age=60)
 def stats_ajax(request, *args, **kwargs):
@@ -1271,17 +1387,17 @@ def stats_ajax(request, *args, **kwargs):
 
 class CampaignExporter(RequestHandler):
     def post(self, adgroup_key, file_type, start, end, *args, **kwargs):
-        start = datetime.datetime.strptime(start,'%m%d%y')
-        end = datetime.datetime.strptime(end,'%m%d%y')
+        start = datetime.datetime.strptime(start, '%m%d%y')
+        end = datetime.datetime.strptime(end, '%m%d%y')
         days = date_magic.gen_days(start, end)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         f_name_dict = dict(adgroup_title = adgroup.campaign.name,
-                           start = start.strftime('%b %d'),
-                           end   = end.strftime('%b %d, %Y'),
+                           start = start.strftime('%m/%d/%y'),
+                           end   = end.strftime('%m/%d/%y'),
                            )
         # Build
-        f_name = "%(adgroup_title)s CampaignStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = "MoPub Campaign Stats--Name:%(adgroup_title)s--DateRange:%(start)s - %(end)s" % f_name_dict
         f_name = f_name.encode('ascii', 'ignore')
         # Zip up days w/ corresponding stats object and other stuff
         data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [campaign_stats(stat, adgroup.campaign.campaign_type) for stat in all_stats]))
@@ -1389,7 +1505,7 @@ class MarketplaceIndexHandler(RequestHandler):
         try:
             today_stats = mpx_stats["daily"][-1]
             yesterday_stats = mpx_stats["daily"][-2]
-            logging.warn(today_stats)
+
             stats = {
                 'revenue': {
                     'today': today_stats['revenue'],
@@ -1408,14 +1524,13 @@ class MarketplaceIndexHandler(RequestHandler):
                 },
             }
 
-            logging.warn('\n\n\n\n\n\n\n\n\n\n\n')
-            logging.warn(stats)
-
         except Exception, e:
-            logging.warn('\n\n\n\n\n\n\n\n\n\n\n')
             logging.warn(e)
 
-
+        try:
+            blind = self.account.network_config.blind
+        except:
+            blind = False
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",

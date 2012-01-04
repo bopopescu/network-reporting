@@ -6,8 +6,12 @@
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li class="active"><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
-{% block pageTitle %}<h1>Ad Network Reports</h1>{% endblock pageTitle %}
-{% block messageCenter %}{% endblock messageCenter %}
+{% block pageTitle %}
+  <div class="breadcrumb">
+    <a class="linkIcon breadcrumb-back" href="/ad_network_reports/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Ad Network Revenue Report</a>
+    <h1>{{app_name}} on {{ad_network_name}}</h1>
+  </div>
+{% endblock pageTitle %}
 {% block titleBarRight %}{% endblock titleBarRight %}
 
 {% block extraScripts %}
@@ -112,6 +116,19 @@
           }
         });
 
+        $("#ad-network-exportSelect").change(function() {
+            if ($(this).val()) {
+                if ('/ad_network_reports/' == $(location).attr('pathname')) {
+                    if ($('.networks').css('display') == 'block') {
+                        window.open($(this).val() + '/network');
+                    } else {
+                        window.open($(this).val() + '/app');
+                    }
+                } else {
+                    window.open($(this).val());
+                }
+            }
+        });
     });
   </script>
 {% endblock extraScripts %}
@@ -121,15 +138,10 @@
 {% endblock dateButtons %}
 
 {% block content %}
-
-  {% block adNetworkTitle %}
-    <h2>{{app_name}} on {{ad_network_name}}</h2>
-  {% endblock adNetworkTitle %}
-
   {% block graph %}
-
+  {% if show_graph %}
     <section class="offset nomargin" id="dashboard-stats">
-          <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
       <div class="stats clearfix">
         <div class="stats-breakdown">
           <table class="sortable">
@@ -143,7 +155,9 @@
                 <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
               </tr>
               <tr id="stats-breakdown-clicks">
-                <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
+                <td class="stats-breakdown-value today"><span
+                        class="inner"><span class="muted
+                            unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
                 <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
               </tr>
             </tbody>
@@ -152,47 +166,67 @@
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
       </div>
     </section>
+      <div style="float:right">Data shown is from the ad networks and may change. <a target="_blank" href="http://help.mopub.com/customer/portal/articles/273229-ad-network-revenue-reporting">Learn more</a></div>
+  {% else %}
+    <div class="alert-message block-message">
+      MoPub can automatically pull ad network revenue data from most ad networks that are supported. To enable reporting for each network, enter your login credentials for the ad networks below.  MoPub will pull data each morning for the previous day.<br/>
+      <br/>
+      <b>Note:</b> Your credentials will be encrypted on the MoPub servers to ensure security.  These credentials will <b>only</b> be used for reading your data and displaying it to you and will not be used for any other purposes. This service is optional and only used for reporting your data.  If you choose not to use this, it will not impact the performance of your apps in MoPub.
+    </div>
+  {% endif %}
   {% endblock graph %}
 
   {% block innerContent %}
-  {% block tableTitle %}
-    <div style="padding-top:250px; text-align:center;">
-      <h3 class="dataTable-title">Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-    </div>
-  {% endblock tableTitle %}
 
-      <table class="zebra-striped simpletable campaignData-main sortable">
-        <thead>
-          {% block tableHead %}
-            <th class="dataTable-name"> Date </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Revenue </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Attempts </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Impressions </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Fill Rate</th>
-            <th style="text-align:center;" class="dataTable-data numeric"> Clicks </th>
-            <th style="text-align:center;" class="dataTable-data numeric"> CTR </th>
-          {% endblock tableHead %}
-        </thead>
-        <tbody>
-          {% block tableData %}
-            {% for stats in stats_list %}
+    <section id="dashboard-apps">
+      <h2>{{app_name}} on {{ad_network_name}}</h2>
+      <div class="buttonBank buttonBank-right">
+          <select name='exportSelect' id='ad-network-exportSelect' class='selectmenu'>
+              <option value="">Export</option>
+              <option value="/ad_network_reports/export/xls/{{mapper_key}}">XLS</option>
+              <option value="/ad_network_reports/export/csv/{{mapper_key}}">CSV</option>
+          </select>
+      </div>
+      <div class="appData-details noneg">
+        <table class="dataTable appData-main">
+          <thead>
+            <th class="dataTable-name big"></th>
+            <th class="dataTable-data numeric special"> Revenue </th>
+            {% if ad_network_name != MOBFOX %}
+            <th class="dataTable-data numeric special"> Attempts </th>
+            {% endif %}
+            <th class="dataTable-data numeric special"> Impressions </th>
+            <th class="dataTable-data numeric special"> CPM </th>
+            {% if ad_network_name != MOBFOX %}
+            <th class="dataTable-data numeric special"> Fill Rate</th>
+            {% endif %}
+            <th class="dataTable-data numeric special"> Clicks </th>
+            <th class="dataTable-data numeric special"> CPC </th>
+            <th class="dataTable-data numeric special"> CTR </th>
+          </thead>
+          <tbody>
+              {% for stats in stats_list %}
               <tr>
-                <td class="dataTable-name">{{stats.date|format_date_compact}}</td>
+                <td class="dataTable-name">{{stats.date}}</td>
                 <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
-                <td class="dataTable-data numeric">{{stats.attempts|withsep }}</td>
-                <td class="dataTable-data numeric">{{stats.impressions|withsep }}</td>
-                <td class="dataTable-data numeric">{{stats.fill_rate|percentage }}</td>
-                <td class="dataTable-data numeric">{{stats.clicks|withsep }}</td>
-                <td class="dataTable-data numeric">{{stats.ctr|percentage }}</td>
+                {% if ad_network_name != MOBFOX %}
+                <td class="dataTable-data numeric">{{ stats.attempts|withsep }}</td>
+                {% endif %}
+                <td class="dataTable-data numeric">{{ stats.impressions|withsep }}</td>
+                <td class="dataTable-data numeric">{{ stats.cpm|currency }}</td>
+                {% if ad_network_name != MOBFOX %}
+                <td class="dataTable-data numeric">{{ stats.fill_rate|percentage }}</td>
+                {% endif %}
+                <td class="dataTable-data numeric">{{ stats.clicks|withsep }}</td>
+                <td class="dataTable-data numeric">{{ stats.cpc|currency }}</td>
+                <td class="dataTable-data numeric">{{ stats.ctr|percentage }}</td>
               </tr>
-            {% endfor %}
-          {% endblock tableData %}
-        </tbody>
-      </table>
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-    {% endblock innerContent %}
-
-    {% block appendedContent %}
-    {% endblock appendedContent %}
+  {% endblock innerContent %}
 
 {% endblock content %}

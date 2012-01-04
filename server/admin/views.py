@@ -10,7 +10,8 @@ from google.appengine.api import users
 from google.appengine.api.urlfetch import fetch
 from google.appengine.api import mail
 from google.appengine.api import memcache
-from google.appengine.ext import db
+from google.appengine.api import files
+from google.appengine.ext import db, blobstore
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
@@ -29,17 +30,19 @@ from reports.models import Report
 from account.query_managers import AccountQueryManager, UserQueryManager
 from publisher.query_managers import AppQueryManager
 from reporting.query_managers import StatsModelQueryManager
+from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 from google.appengine.api import taskqueue
 
 from admin import beatbox
 from common.utils.decorators import cache_page_until_post, staff_login_required
 from common.utils import simplejson
+from common.utils.helpers import to_ascii, to_uni
 
 MEMCACHE_KEY = "jpayne:admin/d:render_p"
 NUM_DAYS = 14
 
-BIDDER_SPENT_URL = "http://mpx.mopub.com/spent"
+BIDDER_SPENT_URL = "http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf"
 BIDDER_SPENT_MAX = 2000
 
 @staff_login_required
@@ -108,6 +111,8 @@ def dashboard_prep(request, *args, **kwargs):
     # go and do it
     for app in apps:
         app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],num_days=NUM_DAYS)
+        yesterday = app_stats[-2]
+
         for app_stat in app_stats:
             # add this site stats to the total for the day and increment user count
             if app_stat.date:
@@ -116,11 +121,27 @@ def dashboard_prep(request, *args, **kwargs):
                 totals[str(app_stat.date)].user_count = user_count
             if app_stat._publisher:
                 _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
+
         # Calculate a 1 day delta between yesterday and the day before that
         if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher and app_stats[-3].request_count > 0:
             unique_apps[str(app_stats[-2]._publisher)].requests_delta1day = \
                 float(app_stats[-2].request_count - app_stats[-3].request_count) / app_stats[-3].request_count
+        # % US for yesterday
+        unique_apps[str(app_stats[-2]._publisher)].percent_us = app_stats[-2].get_geo('US', 'request_count') / float(yesterday.request_count) if yesterday.request_count > 0 else 0
 
+        # get mpx revenue/cpm numbers
+        try:
+            stats_fetcher = MarketplaceStatsFetcher(yesterday.publisher.account.key())
+            mpx_stats = stats_fetcher.get_app_stats(str(yesterday._publisher), start_date, datetime.date.today())
+            unique_apps[str(yesterday._publisher)].mpx_revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
+            unique_apps[str(yesterday._publisher)].mpx_impression_count = int(mpx_stats.get('impressions', 0))
+            unique_apps[str(yesterday._publisher)].mpx_clear_rate = int(mpx_stats.get('impressions', 0)) / float(sum(x.request_count for x in app_stats)) if yesterday.request_count > 0 else 0
+            unique_apps[str(yesterday._publisher)].mpx_cpm = mpx_stats.get('ecpm')
+        except MPStatsAPIException, e:
+            unique_apps[str(yesterday._publisher)].mpx_revenue = 0
+            unique_apps[str(yesterday._publisher)].mpx_impression_count = 0
+            unique_apps[str(yesterday._publisher)].mpx_clear_rate = 0
+            unique_apps[str(yesterday._publisher)].mpx_cpm = '-'
 
     # organize daily stats by date
     total_stats = totals.values()
@@ -145,9 +166,25 @@ def dashboard_prep(request, *args, **kwargs):
         "new_users": new_users,
         "mailing_list": [a for a in new_users if a.mpuser.mailing_list]}
 
+    #need to convert to uni, then ascii for blobstore encoding
+    html = to_ascii(to_uni(render_to_string(request,'admin/pre_render.html',render_params)))
+
+    internal_file_name = files.blobstore.create(
+                        mime_type="text/plain",
+                        _blobinfo_uploaded_filename='admin-d.html')
+
+
+    # open the file and write lines
+    with files.open(internal_file_name, 'a') as f:
+        f.write(html)
+
+    # finalize this file
+    files.finalize(internal_file_name)
+
     page = AdminPage(offline=offline,
-                     html=render_to_string(request,'admin/pre_render.html',render_params),
+                     blob_key=files.blobstore.get_blob_key(internal_file_name),
                      today_requests=total_stats[-1].request_count)
+
     page.put()
 
     return HttpResponse("OK")
@@ -157,13 +194,10 @@ def rep_timed_out(rep):
 
 @staff_login_required
 def reports_dashboard(request, *args, **kwargs):
-    if users.is_current_user_admin():
-        reps = Report.all().order('-created_at').fetch(50)
-        rep_status = [(rep, rep.status) if not rep_timed_out(rep) else (rep, 'Timed Out') for rep in reps]
-        render_params = dict(status = rep_status)
-        return render_to_response(request, 'admin/reports.html', render_params)
-    else:
-        return Http404()
+    reps = Report.all().order('-created_at').fetch(50)
+    rep_status = [(rep, rep.status) if not rep_timed_out(rep) else (rep, 'Timed Out') for rep in reps]
+    render_params = dict(status = rep_status)
+    return render_to_response(request, 'admin/reports.html', render_params)
 
 @staff_login_required
 def dashboard(request, *args, **kwargs):
@@ -188,7 +222,7 @@ def dashboard(request, *args, **kwargs):
                               params=dict(offline="1" if offline else "0"),
                               method='GET',
                               url='/admin/prep/',
-                              target='stats-updater')
+                              target='admin-prep')
         try:
             task.add("admin-dashboard-queue")
             return HttpResponseRedirect(reverse('admin_dashboard')+'?loading=1')
@@ -196,7 +230,10 @@ def dashboard(request, *args, **kwargs):
             logging.warning("task error: %s"%e)
 
     page = AdminPage.get_by_stats_source(offline=offline)
-    loading = loading or page.loading
+
+    html_file = blobstore.BlobReader(page.blob_key)
+    page.html = html_file.read()
+
     return render_to_response(request,'admin/d.html',{'page': page, 'loading': loading})
 
 def update_sfdc_leads(request, *args, **kwargs):

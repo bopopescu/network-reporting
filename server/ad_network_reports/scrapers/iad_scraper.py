@@ -2,6 +2,7 @@ import selenium
 import os
 import sys
 import time
+import logging
 
 # Paths only needed for testing
 if os.path.exists('/home/ubuntu/'):
@@ -14,9 +15,11 @@ from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
 from common.utils.BeautifulSoup import BeautifulSoup
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pyvirtualdisplay import Display
 from selenium import webdriver
+
+from HTMLParser import HTMLParser
 
 class IAdScraper(Scraper):
 
@@ -24,11 +27,12 @@ class IAdScraper(Scraper):
     SS_FNAME = 'ScraperScreen_%s.png'
     STATS_PAGE = 'https://iad.apple.com/itcportal/#app_homepage'
     LOGIN_TITLE = 'iTunes Connect - iAd Network Sign In'
+    APPS_TITLE = 'My Apps'
     SITE_ID_IDENTIFIER = '&siteid='
-    APP_STATS = ('revenue', 'ecpm', 'requests', 'impressions', 'fill_rate',
-            'ctr')
-    MONEY_STATS = ['revenue', 'ecpm']
-    PCT_STATS = ['fill_rate', 'ctr']
+    # We have to collect the ctr in order to calculate the number of clicks
+    APP_STATS = ('revenue', 'requests', 'impressions', 'ctr')
+    MONEY_STATS = ['revenue']
+    PCT_STATS = ['ctr']
 
     def __init__(self, credentials):
         super(IAdScraper, self).__init__(credentials)
@@ -50,7 +54,7 @@ class IAdScraper(Scraper):
 
         time.sleep(1)
         count = 0
-        while self.browser.title == self.LOGIN_TITLE and count < 3:
+        while self.browser.title == self.LOGIN_TITLE and count < 2:
             login = self.browser.find_element_by_css_selector('#accountname')
             login.clear()
             login.send_keys(self.username)
@@ -126,11 +130,12 @@ class IAdScraper(Scraper):
         else:
             button = 'td>div.datePickerNextButton'
         # GO ALL THE WAY
-        while curr_date.month != test_date.month or curr_date.year != \
+        while curr_date.month != test_date.month and curr_date.year != \
                 test_date.year:
             self.browser.find_element_by_css_selector(button).click()
             curr_date = self.get_cal_date()
             time.sleep(1)
+        time.sleep(2)
         days = self.browser.find_elements_by_css_selector('.datePickerDay')
         for day in days:
             if 'datePickDayIsFiller' in day.get_attribute('class'):
@@ -144,68 +149,78 @@ class IAdScraper(Scraper):
 
         # Set the dates
         self.set_dates(start_date, end_date)
-        time.sleep(3)
-        # read the shit
-        page = None
-        while page is None:
-            try:
-                page = self.browser.page_source
-            except:
-                print "failed getting source"
-        soup = BeautifulSoup(page)
-        # Find all the apps since their TR's aren't named easily
-        apps = soup.findAll('td', {'class':'td_app'})
-        # Get all the tr's
-        app_rows = [app.parent for app in apps]
         records = []
 
-        for index, row in enumerate(app_rows):
-            # app_name = row.findAll('p', {"class":"app_text"})[0].text
-            app_dict = {}
-            # Find desired stats
-            for stat in self.APP_STATS:
-                class_name = 'td_' + stat
-                data = str(row.findAll('td', {"class":class_name})[0].text)
-                if stat in self.MONEY_STATS:
-                    # Skip the dollar sign
-                    data = float(filter(lambda x: x.isdigit() or x == '.',
-                        data))
-                elif stat in self.PCT_STATS:
-                    # Don't include the % sign
-                    data = float(filter(lambda x: x.isdigit() or x == '.',
-                        data))
+        # Handle pagination
+        nextPage = True
+        while nextPage:
+            time.sleep(3)
+            # read the shit
+            page = None
+            while page is None:
+                try:
+                    page = self.browser.page_source
+                except:
+                    logging.error("Failed getting source")
+            soup = BeautifulSoup(page)
+            # Find all the apps since their TR's aren't named easily
+            apps = soup.findAll('td', {'class':'td_app'})
+            # Get all the tr's
+            app_rows = [app.parent for app in apps]
+
+            for row in app_rows:
+                app_name =  HTMLParser.unescape.__func__(HTMLParser,
+                        row.findAll('p', {"class":"app_text"})[0].text)
+                app_dict = {}
+                # Find desired stats
+                for stat in self.APP_STATS:
+                    class_name = 'td_' + stat
+                    data = str(row.findAll('td', {"class":class_name})[0].text)
+                    if stat in self.MONEY_STATS:
+                        # Skip the dollar sign
+                        data = float(filter(lambda x: x.isdigit() or x == '.',
+                            data))
+                    elif stat in self.PCT_STATS:
+                        # Don't include the % sign
+                        data = float(filter(lambda x: x.isdigit() or x == '.',
+                            data))
+                    else:
+                        data = int(filter(lambda x: x.isdigit() or x == '.',
+                            data))
+
+                    app_dict[stat] = data
+
+                nsr = NetworkScrapeRecord(revenue=app_dict['revenue'],
+                                          attempts=app_dict['requests'],
+                                          impressions=app_dict['impressions'],
+                                          clicks=int(app_dict['ctr'] * app_dict[
+                                              'impressions'] / 100),
+                                          app_tag=app_name)
+                records.append(nsr)
+            # Goto the next page if it exists
+            try:
+                nextPage = self.browser.find_element_by_css_selector(
+                        '.pagingOptionsNextPage')
+            except selenium.common.exceptions.NoSuchElementException as \
+                    exception:
+                nextPage = False
+            else:
+                # Click the icon if we aren't already on the last page
+                if nextPage.get_attribute('class').find('last') == -1:
+                    nextPage.click()
                 else:
-                    data = int(filter(lambda x: x.isdigit() or x == '.',
-                        data))
+                    nextPage = False
 
-                app_dict[stat] = data
-
-            time.sleep(4)
-            self.browser.find_elements_by_css_selector('.app_text')[index]. \
-                    click()
-            time.sleep(1)
-            app_dict['apple_id'] = self.browser.current_url[self.browser.
-                    current_url.find(self.SITE_ID_IDENTIFIER) + len(self.
-                        SITE_ID_IDENTIFIER):]
-            self.browser.back()
-            time.sleep(1)
-
-            nsr = NetworkScrapeRecord(revenue = app_dict['revenue'],
-                                      attempts = app_dict['requests'],
-                                      impressions = app_dict['impressions'],
-                                      fill_rate = app_dict['fill_rate'],
-                                      clicks = int(app_dict['ctr'] * app_dict[
-                                          'impressions']),
-                                      ctr = app_dict['ctr'] * 100,
-                                      ecpm = app_dict['ecpm'],
-                                      app_tag = app_dict['apple_id'])
-            records.append(nsr)
         return records
+
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'chesscom'
-    NC.password = 'Faisal1Chess'
+    #NC.username = 'chesscom'
+    #NC.password = 'Faisal1Chess'
+    NC.username = 'salesreports@optimesoftware.com'
+    NC.password = 'Sales2012'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
-    print SCRAPER.get_site_stats(date.today())
+    print SCRAPER.get_site_stats(date(2011,11,30))
+

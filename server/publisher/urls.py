@@ -18,6 +18,4 @@ urlpatterns = patterns(
     url(r'^adunit/(?P<adunit_key>[-\w\.]+)/generate/$', 'integration_help', name='publisher_integration_help'),
     url(r'^adunit/update/ajax/$','adunit_update_ajax', name='publisher_adunit_update_ajax'),
     url(r'^adunit/(?P<adunit_key>[-\w\.]+)/$','adunit_show', name='publisher_adunit_show'),
-
-    url(r'^export/(?P<f_type>xls|csv)/(?P<key_type>adunit|app|adgroup|account)/(?P<key>[-\w\.]+)/$', 'export_file', name='exporter' ),
 )

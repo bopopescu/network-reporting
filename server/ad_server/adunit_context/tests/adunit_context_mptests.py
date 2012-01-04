@@ -403,13 +403,13 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
          adunit_key = str(self.adunit.key()).replace("'","")
          adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)
          
-         ts1 = memcache.get(adunit_context_key, namespace="context-timestamp")   
+         ts1 = memcache.get("ts:%s" % adunit_context_key)
          
          assert ts1 is not None   
                                                              
          local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())   
          
-         ts2 = memcache.get(adunit_context_key, namespace="context-timestamp")  
+         ts2 = memcache.get("ts:%s" % adunit_context_key)
          
          eq_(ts1, ts2) 
          
@@ -426,7 +426,7 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         
         
         # This sets a new ts value in memcache
-        ts1 = memcache.get(adunit_context_key, namespace="context-timestamp")  
+        ts1 = memcache.get("ts:%s" % adunit_context_key)
         
         hyper_context = hypercache.get(adunit_context_key)                 
         eq_(hyper_context.adunit.name, "Test AdUnit")    
@@ -435,7 +435,7 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())    
            
         # This does not change the ts value in memcache
-        ts2 = memcache.get(adunit_context_key, namespace="context-timestamp")   
+        ts2 = memcache.get("ts:%s" % adunit_context_key)
         eq_(ts1, ts2)
         
         eq_(local_context.adunit.name, "Test AdUnit")   
@@ -451,7 +451,7 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())  
          
         # This means that the digest has changed              
-        ts3 = memcache.get(adunit_context_key, namespace="context-timestamp")    
+        ts3 = memcache.get("ts:%s" % adunit_context_key)
                            
         assert (ts2 != ts3)
           

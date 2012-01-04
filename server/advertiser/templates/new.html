@@ -1,7 +1,11 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
 
-{% block extraScripts %}<script src="/js/controllers/campaign_adgroup_form.js?v=0"></script>{% endblock extraScripts %}
+{% block extraScripts %}
+  <script src="/js/controllers/campaign_adgroup_form.js?v=0"></script>
+{% endblock extraScripts %}
+
+{% block dateButtons %}{% endblock %}
 
 {% block pageTitle %}
   {% if adgroup %}
@@ -16,9 +20,6 @@
     {% endifequal %}
   {% endif %}
 {% endblock pageTitle %}
-
-{% block messageCenter %}{% endblock %}
-{% block dateButtons %}{% endblock %}
 
 {% block content %}
   <section id="advertiser-adgroupCreateForm">

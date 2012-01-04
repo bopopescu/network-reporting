@@ -57,7 +57,8 @@ class User(hybrid_models.User):
 #
 class NetworkConfig(db.Model):
     """ The set of ids for all the different networks """
-    iad_pub_id = db.StringProperty()
+    # iad_pub_id is stored in the app url. Take a look at publisher's query
+    # managers for App for more information.
     admob_pub_id = db.StringProperty()
     adsense_pub_id = db.StringProperty()
     brightroll_pub_id = db.StringProperty()
@@ -69,9 +70,16 @@ class NetworkConfig(db.Model):
     millennial_pub_id = db.StringProperty()
     mobfox_pub_id = db.StringProperty()
 
+    # marketplace related
     rev_share = db.FloatProperty(default=.80)
     price_floor = db.FloatProperty(default=.25) # dollars CPM
     blocklist = db.StringListProperty(indexed=False)
+    category_blocklist = db.StringListProperty(indexed=False,
+                                    default=["IAB7-39","IAB8-5","IAB8-18",
+                                             "IAB9-9","IAB14-1","IAB25"])
+    attribute_blocklist = db.ListProperty(int,
+                                          indexed=False,
+                                          default=[9, 10, 14])
     blind = db.BooleanProperty(default=False)
 
 class MarketPlaceConfig(db.Model):
@@ -133,6 +141,11 @@ class Account(db.Model):
 
     # use only mongo, not datastore for real time stats
     use_only_mongo = db.BooleanProperty(default=False)
+
+    @property
+    def emails(self):
+        """Return a list of emails for this account."""
+        return [db.get(user).email for user in self.all_mpusers]
 
     def is_admin(self):
         return users.is_current_user_admin()

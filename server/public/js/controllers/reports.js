@@ -77,95 +77,96 @@
         icons: {secondary: 'ui-icon-circle-triangle-e' }});
 
     function ajaxSave() {
-        $.ajax({url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/',
-                success: function() {
-                    $('#reports-view-toIndex').click();
-                    }
-                });
+        $.ajax({
+            url:'http://' + window.location.host + '/reports/save/' + $('#reportKey').val() + '/',
+            success: function() {
+                $('#reports-view-toIndex').click();
+            }
+        });
     }
 
-    $('#reports-view-saveAsButton').button({icons: {secondary: 'ui-icon-check'}})
-        .click(function(e) {
-            e.preventDefault();
-            $('#saveAs').val('True');
-            $('#reportName-input').val('Copy of '+ $('#reportName-input').val());
-            $('.dim-selectmenu').selectmenu('disable');
-            $('#interval').selectmenu('disable');
-            $('#start-input').datepicker('disable');
-            $('#end-input').datepicker('disable');
-            $('#reportCreateForm-submit').button({label: 'Save As'});
-            $('#sched_interval').selectmenu('index', 0).change();
-            $('#reportForm-container').dialog({width:750});
+     $('#reports-view-saveAsButton').button({icons: {secondary: 'ui-icon-check'}})
+         .click(function(e) {
+             e.preventDefault();
+             $('#saveAs').val('True');
+             $('#reportName-input').val('Copy of '+ $('#reportName-input').val());
+             $('.dim-selectmenu').selectmenu('disable');
+             $('#interval').selectmenu('disable');
+             $('#start-input').datepicker('disable');
+             $('#end-input').datepicker('disable');
+             $('#reportCreateForm-submit').button({label: 'Save As'});
+             $('#sched_interval').selectmenu('index', 0).change();
+             $('#reportForm-container').dialog({width:750});
         });
 
-    $('#reportCreateForm-cancel').button()
-        .click(function(e) {
-            e.preventDefault();
-            $('#reports-reportAddForm').slideUp('fast');
-        });
+     $('#reportCreateForm-cancel').button()
+         .click(function(e) {
+             e.preventDefault();
+             $('#reports-reportAddForm').slideUp('fast');
+         });
 
-    $('#reports-addReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
-        .click(function(e){
+     $('#reports-addReportButton').button({icons: {primary: 'ui-icon-circle-plus'}})
+         .click(function(e){
                 e.preventDefault();
-                var report_form = $('#reports-reportAddForm');
-                if (report_form.is(':hidden')) {
-                    $('#reports-reportAddForm').slideDown('fast');
-                }
-                else {
-                    $('#reports-reportAddForm').slideUp('fast');
-                }
-        });
+             var report_form = $('#reports-reportAddForm');
+             if (report_form.is(':hidden')) {
+                 $('#reports-reportAddForm').slideDown('fast');
+             }
+             else {
+                 $('#reports-reportAddForm').slideUp('fast');
+             }
+         });
 
-    $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-wrench'}})
-        .click(function(e) {
-            e.preventDefault();
-            $('#saveAs').val('False');
-            $('#reportCreateForm-submit').button({label: 'Save'});
-            var report_form = $('#reportForm-container');
-            report_form.dialog({width:750});
-        });
+     $('#reports-view-editReportButton').button({icons: {primary: 'ui-icon-wrench'}})
+         .click(function(e) {
+             e.preventDefault();
+             $('#saveAs').val('False');
+             $('#reportCreateForm-submit').button({label: 'Save'});
+             var report_form = $('#reportForm-container');
+             report_form.dialog({width:750});
+         });
 
 
-    $('#reportCreateForm-cancel')
-        .button()
-        .click(function(e) {
-            e.preventDefault();
-            $('.dim-selectmenu').selectmenu('enable');
-            $('#interval').selectmenu('enable');
-            $('#start-input').datepicker('enable');
-            $('#end-input').datepicker('enable');
-            revert_state(form_state);
-            $(this).parents('#reportForm-container')
-            .dialog('close');
-        });
+     $('#reportCreateForm-cancel')
+         .button()
+         .click(function(e) {
+             e.preventDefault();
+             $('.dim-selectmenu').selectmenu('enable');
+             $('#interval').selectmenu('enable');
+             $('#start-input').datepicker('enable');
+             $('#end-input').datepicker('enable');
+             revert_state(form_state);
+             $(this).parents('#reportForm-container')
+                 .dialog('close');
+         });
 
-    $('#reportUpdateForm-cancel')
-        .button()
-        .click(function(e) {
-            e.preventDefault();
-            $(this).parents('#reportFormSaveAs-container')
-            .dialog('close');
-        });
+     $('#reportUpdateForm-cancel')
+         .button()
+         .click(function(e) {
+             e.preventDefault();
+             $(this).parents('#reportFormSaveAs-container')
+                 .dialog('close');
+         });
 
-    $('#reportUpdateForm-submit')
-        .button()
-        .click(function(e) {
-            e.preventDefault();
+     $('#reportUpdateForm-submit')
+         .button()
+         .click(function(e) {
+             e.preventDefault();
             $(this).parents('form').submit();
-        });
+         });
 
-    $('#reports-view-exportSelect')
-        .change(function(e) {
-            e.preventDefault();
-            var val = $(this).val();
-            if (val != 'exp') {
-                $('#reportExportForm')
-                    .find('#report-exportFtype')
-                    .val(val)
-                    .end()
-                    .submit();
-            }
-            $(this).selectmenu('index', 0);
+     $('#reports-view-exportSelect')
+         .change(function(e) {
+             e.preventDefault();
+             var val = $(this).val();
+             if (val != 'exp') {
+                 $('#reportExportForm')
+                     .find('#report-exportFtype')
+                     .val(val)
+                     .end()
+                     .submit();
+             }
+             $(this).selectmenu('index', 0);
         });
 
     $('#reports-view-exportSelect-menu').find('li').first().hide();
@@ -296,19 +297,20 @@
                             $('#start-input').val(),
                             $('#reportName-input').val(),
                             $('#email-input-checkbox')
-                            )
+                          );
     }
     function build_state(d1, d2, d3, interv, sched_interv, end, start, name, email) {
-        return {d1: d1,
-                d2: d2,
-                d3: d3,
-                interv: interv,
-                sched_interv: sched_interv,
-                end: end,
-                start: start,
-                name: name,
-                email:email.is(':checked'),
-                }
+        return {
+            d1: d1,
+            d2: d2,
+            d3: d3,
+            interv: interv,
+            sched_interv: sched_interv,
+            end: end,
+            start: start,
+            name: name,
+            email:email.is(':checked'),
+        };
     }
     function sel_state(obj) {
         return obj.selectmenu('index');
@@ -527,8 +529,8 @@ function obj_equals(x, y) {
 
 
 
-    function d2_validate(obj) {
-        var idx = obj.selectmenu('index');
+     function d2_validate(obj) {
+         var idx = obj.selectmenu('index');
         //start with everything enabled
         var d3_idx = d3_sel.selectmenu("index");
         $('#d3-show').show();

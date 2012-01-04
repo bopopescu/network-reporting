@@ -59,7 +59,8 @@ var mopub = mopub || {};
         adunits.bind('reset', function(adunits_collection) {
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
-                var adunitView = new AdUnitView({ model: adunit, el: 'marketplace-apps' });
+                adunit.app_id = app_key;
+                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
                 adunitView.renderInline();
             });
         });
@@ -102,7 +103,7 @@ var mopub = mopub || {};
             }).get("price_floor");
 
             // Set the app's price floor cell to the range of the adunits
-             // Keep the "Edit Price Floor" button
+            // Keep the "Edit Price Floor" button
             var btn = $("<a href='#" + app_key +"'" +
                         " class='edit_price_floor' " +
                         "id='" + app_key + "'> "
@@ -208,9 +209,9 @@ var mopub = mopub || {};
                 //{"sWidth": "80px"}, // Clicks
                 //{"sWidth": "80px"}, // CTR
             ],
-            // Don't resize table columns, we'll do it manually
+            // Don't resize table columns automatically, we'll do it manually
             bAutoWidth:false,
-            // Sort by revenue descending from the start
+            // Sort by revenue descending on table load
             aaSorting: [[2,'desc']],
             // Endpoint to fetch table data
             sAjaxSource: "http://mpx.mopub.com/stats/creatives",
@@ -224,10 +225,9 @@ var mopub = mopub || {};
                         end: end_date,
                         format:'jsonp'
                     },
-                    // When the data returns from the endpoint, format it the way
-                    // datatables wants. When sort functions are called on the table,
-                    // the type of each data will be considered in sorting, so make sure
-                    // to type cast if necessary.
+                    // When the data returns from the endpoint, we have to format it the way
+                    // datatables wants. We also have to make sure to get the types of each
+                    // data the way we want them if we want sorting to work correctly.
                     success: function(data, textStatus, jqXHR) {
 
                         var creative_data = _.map(data, function(creative, key) {
@@ -278,7 +278,7 @@ var mopub = mopub || {};
                     //         $this.remove();
                     //     });
                     // });
-                    $("td:eq(1)", nRow).html(domain); //.append(anchor);
+                    $("td:eq(1)", nRow).html(domain);
                 } else {
                     $("td:eq(1)", nRow).html("<span class='muted'>(Unknown)</span>");
                 }
@@ -325,9 +325,13 @@ var mopub = mopub || {};
         });
     }
 
+
+
     var MarketplaceController = {
         initializeIndex: function (bootstrapping_data) {
 
+            // Fill in the stats data for each of the apps and
+            // each of their adunits
             fetchAppStats(bootstrapping_data.app_keys);
             _.each(bootstrapping_data.app_keys, function(app_key) {
                 fetchAdunitStats(app_key, bootstrapping_data.marketplace_active);
@@ -339,15 +343,15 @@ var mopub = mopub || {};
                                                      bootstrapping_data.end_date);
 
             /*
-             * Settings stuff
+             * Blindness settings
              */
             $("#blindness").click(function () {
-                var blindness_xhr = $.post("/campaigns/marketplace/settings/blindness/",{
+                var blindness_xhr = $.post("/campaigns/marketplace/settings/blindness/", {
                     activate: $(this).is(":checked")
                 });
 
                 blindness_xhr.done(function(data){
-
+                    // put toast here later
                 });
             });
 

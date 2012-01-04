@@ -124,9 +124,6 @@ class Campaign(db.Model):
         return self.campaign_type in ['promo', 'backfill_promo']
 
     def network(self):
-        logging.warn('dansfibasngkbdafjkgbdsfjkgbjksdfbgjksdfbgjkbsdfjkgbsdfkjgbsdfjkhgbsdfkjgbsdfkjgbsdjkfhbgsdjkfgbsdjhbg')
-        logging.warn(self.campaign_type)
-        logging.warn('dansfibasngkbdafjkgbdsfjkgbjksdfbgjksdfbgjkbsdfjkgbsdfkjgbsdfjkhgbsdfkjgbsdfkjgbsdjkfhbgsdjkfgbsdjhbg')
         return self.campaign_type in ['network']
 
     def marketplace(self):

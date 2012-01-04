@@ -1,5 +1,6 @@
 import logging
 import hashlib
+import re
 
 from hypercache import hypercache
 import datetime
@@ -19,7 +20,12 @@ from google.appengine.api import memcache
 from ad_server.debug_console import trace_logging
 from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
 from common.constants import MAX_OBJECTS
-CACHE_TIME = 60*60
+CACHE_TIME = 0 # turned off cache expiration
+
+IAD = 'iad'
+APPLE_DEVICES = ('iphone', 'ipad')
+IAD_URL = 'http://itunes.apple.com.*'
+ALL_NETWORKS = 'default'
 
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
@@ -37,7 +43,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
         adunit_key = str(adunit_key).replace("'","")
         adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)
 
-        memcache_ts = memcache.get(adunit_context_key, namespace="context-timestamp")
+        memcache_ts = memcache.get("ts:%s" % adunit_context_key)
         hypercached_context = hypercache.get(adunit_context_key)
 
         # We can return our hypercached context if nothing in memcache changed yet
@@ -47,7 +53,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
         trace_logging.warning("hypercache miss: fetching adunit_context from memcache")
 
         # Something has changed, let's get the new memcached context
-        adunit_context = memcache.get(adunit_context_key, namespace="context")
+        adunit_context = memcache.get(adunit_context_key)
 
         if adunit_context is None:
             trace_logging.warning("memcache miss: fetching adunit_context from db")
@@ -57,10 +63,9 @@ class AdUnitContextQueryManager(CachedQueryManager):
             adunit_context = AdUnitContext.wrap(adunit)
             memcache.set(adunit_context_key,
                          adunit_context,
-                         namespace="context",
                          time=CACHE_TIME)
             new_timestamp = datetime.datetime.now()
-            memcache.set(adunit_context_key, new_timestamp, namespace="context-timestamp")
+            memcache.set("ts:%s" % adunit_context_key, new_timestamp)
         else:
             new_timestamp = memcache_ts
 
@@ -82,8 +87,8 @@ class AdUnitContextQueryManager(CachedQueryManager):
           adunits = [adunits]
         keys = ["context:"+str(adunit.key()) for adunit in adunits]
         logging.info("deleting from cache: %s"%keys)
-        success = memcache.delete_multi(keys, namespace="context")
-        ts_success = memcache.delete_multi(keys, namespace="context-timestamp")
+        success = memcache.delete_multi(keys)
+        ts_success = memcache.delete_multi(["ts:%s" % k for k in keys])
 
         logging.info("deleted: %s" % success and ts_success)
         return success
@@ -112,9 +117,12 @@ class AppQueryManager(QueryManager):
         return cls.get_apps(account, deleted, limit, alphabetize, offset, keys_only = True)
 
     @classmethod
-    def get_all_apps(cls, account=None, deleted=False, alphabetize=False):
+    def get_all_apps(cls, **kwargs):
+        """
+        kwargs: account=None, deleted=False, alphabetize=False
+        """
         num_apps = 0
-        apps = cls.get_apps(limit=1000)
+        apps = cls.get_apps(limit=1000, **kwargs)
         while len(apps) > num_apps:
             num_apps = len(apps)
             apps.extend(cls.get_apps(limit=1000, offset=apps[-1].key()))
@@ -189,6 +197,62 @@ class AppQueryManager(QueryManager):
     def get_apps_with_network_configs(cls, account):
         return App.all().filter('account =', account).filter(
                 'network_config !=', None)
+
+    @classmethod
+    def get_apps_without_pub_ids(cls, account, networks):
+        """
+        Take account and list of network names.
+
+        Return dictionary where the keys are the network names and the values
+        are lists of apps where the pub_ids for that network haven't been set.
+        """
+        apps = {ALL_NETWORKS: []}
+        for network in networks:
+            apps[network] = []
+
+        for app in App.all().filter('account =', account):
+            if hasattr(app, 'network_config'):
+                network_config = app.network_config
+                for network in networks:
+                    # iAd only supports apple devices
+                    if network == IAD:
+                        if app.app_type in APPLE_DEVICES:
+                            apps[network].append(app)
+                    elif not hasattr(network_config, network + '_pub_id') or \
+                            not getattr(network_config, network + '_pub_id',
+                                    None):
+                        apps[network].append(app)
+            else:
+                apps[ALL_NETWORKS].append(app)
+        return apps
+
+    @classmethod
+    def get_iad_pub_id(self, account, app_name):
+        for app in App.all().filter('account =', account).filter('name =',
+                app_name):
+            if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
+                ids = re.findall('/id[0-9]*\?', app.url)
+                if ids:
+                    pub_id = ids[0][len('/id'):-1]
+                    return pub_id
+
+    @classmethod
+    def get_iad_pub_ids(cls, account, include_apps=False):
+        """ Get the iAd pub id from the app's url field.
+
+        Return the pub ids and potentialy apps as a generator.
+        """
+        for app in App.all().filter('account =', account):
+            if getattr(app, 'url', None) and re.match(IAD_URL, app.url):
+                logging.info(app.name)
+                ids = re.findall('/id[0-9]*\?', app.url)
+                if ids:
+                    pub_id = ids[0][len('/id'):-1]
+                    logging.info(pub_id)
+                    if include_apps:
+                        yield app, pub_id
+                    else:
+                        yield pub_id
 
 class AdUnitQueryManager(QueryManager):
     Model = AdUnit

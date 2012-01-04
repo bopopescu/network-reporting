@@ -70,42 +70,113 @@ var mopub = mopub || {};
               });
           });
 
-          $('.app-row').click(function () {
-              var app_key = $(this).attr('id');
-              var network_rows = $('.for-app-' + app_key);
-              $.each(network_rows, function (iter, row) {
-                  if ($(row).hasClass('hidden')) {
-                      $(row).removeClass('hidden');
+          // Make 'Sort by network', 'Sort by app' sticky
+          // NOTE: Would be cleaner if we had the jQuery cookie plugin
+          function setCookie(name,value,days) {
+              if (days) {
+                  var date = new Date();
+                  date.setTime(date.getTime()+(days*24*60*60*1000));
+                  var expires = "; expires="+date.toGMTString();
+              }
+              else var expires = "";
+              document.cookie = name+"="+value+expires+"; path=/";
+          }
+
+          function getCookie(name) {
+              var nameEQ = name + "=";
+              var ca = document.cookie.split(';');
+              for(var i=0;i < ca.length;i++) {
+                  var c = ca[i];
+                  while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                  if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+              }
+              return null;
+          }
+
+          function deleteCookie(name) {
+                  setCookie(name,"",-1);
+          }
+
+          $('#dashboard-sort-network').click(function () {
+              deleteCookie('network-reports-tab');
+              //$.cookie('network-reports-tab', null);
+          });
+
+          $('#dashboard-sort-app').click(function () {
+              setCookie('network-reports-tab', '#dashboard-sort-app', 7);
+              //$.cookie('network-reports-tab', '#dashboard-sort-app', { expires: 7, path: '/ad_network_reports' });
+          });
+
+          if (getCookie('network-reports-tab') == '#dashboard-sort-app') {
+            $('#dashboard-sort-app').click();
+            $('.apps').addClass('active');
+            $('.networks').removeClass('active');
+          }          
+
+          $('.show-status').click(function () {
+              var key = $(this).attr('id');
+              var div = $('.' + key);
+              div.dialog({
+                  buttons: { "Update": function() { $('form.loginCredentials',div).submit(); },
+                             "Close": function() { $(this).dialog('close');} }
+              });
+          });
+
+          $('#dashboard-sort input').click(function() {
+            $('.tab-section').hide();
+            $('.tab-section.'+$(this).val()).show();
+          });
+
+          $('.show-details').mouseover(function () {
+              var key = $(this).attr('id');
+              $('.details-' + key).removeClass('hidden');
+          });
+
+          $('.show-details').mouseout(function () {
+              var key = $(this).attr('id');
+              $('.details-' + key).addClass('hidden');
+          });
+
+          $('.show-hide').click(function () {
+              var key = $(this).attr('id');
+              var rows = $('.' + key + '-row');
+              var button = $(this).children('span')
+              $.each(rows, function (iter, row) {
+                  if ($(row).is(":visible")) {
+                      $(row).slideUp('fast');
+                      $(button).text('Show Apps');
                   } else {
-                      $(row).addClass('hidden');
+                      $(row).slideDown('fast');
+                      $(button).text('Hide Apps');
                   }
               });
           });
         },
 
-        initializeCredentialsPage: function (management_mode, account_key) {
-          $("#loginCredentials").submit(function(event) {
+        initializeCredentialsPage: function (account_key) {
+          $(".loginCredentials").submit(function(event) {
               event.preventDefault();
 
               // Check if data submitted in the form is valid login
               // information for the ad network
               var data = $(this).serialize();
-              data += ("&account_key=" + account_key);
+              var key = $(this).attr('id');
+              data += ("&account_key=" + account_key + "&ad_network_name=" + key.substr("form-".length));
+              var message = $('.' + key + '-message');
+              $(message).removeClass('hidden');
+              $(message).html("Verifying login credentials...");
               $.ajax({
-                  url: 'http://checklogincredentials.mopub.com',
+                  url: 'https://checklogincredentials.mopub.com',
                   data: data,
                   crossDomain: true,
                   dataType: "jsonp",
                   success: function(valid) {
-                      // Upon success update the database
+                      // Upon success notify the user
                       if (valid) {
-                          if (management_mode) {
-                              window.location = "/ad_network_reports/manage/" + account_key;
-                          } else {
-                              window.location = "/ad_network_reports/";
-                          }
+                          $('.' + key + '-enable').html("Pending")
+                          $(message).html("Check back in a couple minutes to see your ad network revenue report. You will receive an email when it is ready.");
                       } else {
-                          $("#error").html("Invalid login information.");
+                          $(message).html("Invalid login information.");
                       }
                   }
               });
@@ -256,6 +327,7 @@ var mopub = mopub || {};
               }
 
               if (network == 'iAd') {
+                  $('#network_select_id_msg').show();
                   $('div.adunit-Target.mweb')
                       .hide()
                       .find('input')
@@ -265,6 +337,7 @@ var mopub = mopub || {};
                       .find('input')
                       .removeAttr('checked');
               } else {
+                  $('#network_select_id_msg').hide();
                   $('div.adunit-Target:hidden').show();
               }
           }).change();
@@ -895,6 +968,8 @@ var mopub = mopub || {};
         cpc: "cpc",
         cpm: "ecpm",
         ctr: "ctr",
+        pace: "pace",
+        pace_type: "pace_type",
         budget_goal: "budget_goal",
         fill_rate: "fill"
     };
@@ -1003,9 +1078,28 @@ var mopub = mopub || {};
         }
       }
       results.on_schedule = onScheduleHtml;
-
+      
+      results.pace = htmlForPacing(results);
+            
       return results;
     }
+    
+        function htmlForPacing(results) {
+            if (results.pace_type) {
+               color = "";
+               if (results.pace_type == "Delivery") {
+                   color = "black";
+               } else if (results.pace >= .95) {
+                    color = "green";
+                } else if (results.pace >= .80) {
+                    color = "#F1C522";
+                } else {
+                    color = "red";
+                }
+                return '<div style="color:' + color + '; font-size:9px;">' + results.pace_type + ': ' + 
+                    mopub.Utils.formatNumberAsPercentage(results.pace) + '</div>';
+            }
+        }
 
         function populateGraphWithAccountStats(stats) {
             var dailyStats = stats["all_stats"]["||"]["daily_stats"];

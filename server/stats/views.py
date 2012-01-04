@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import datetime
 import logging
 import sys
@@ -51,7 +53,7 @@ MAX_PUT_SIZE = 8
 
 STATS_MODEL_QUERY_KEY = "sm"
 
-MDB_STATS_UPDATER_IP = 'http://mongostats.mopub.com'
+MDB_STATS_UPDATER_IP = 'http://write.mongostats.mopub.com'
 MDB_STATS_UPDATER_HANDLER_PATH = '/stats/update'
 
 
@@ -152,7 +154,9 @@ def _create_mdb_json(stats_to_put):
             else:
                 d[key_tuple] = counts
 
-    # create new dict json_d with string keys (for json serialization) and fill in request_counts from request_d
+
+    # create new dict json_d with string keys (for json serialization)
+    # combination of d and request_d dicts
     # format of json_d:
     # { 'adunit:creative:date_hour':
     #   {'request_count': int, 'attempt_count': int, 'impression_count': int, 'click_count': int, 'conversion_count': int, 'revenue': float}
@@ -161,7 +165,20 @@ def _create_mdb_json(stats_to_put):
     for (adunit, creative, date_hour), counts in d.iteritems():
         k = '%s:%s:%s' % (adunit, creative, date_hour)
         json_d[k] = d[(adunit, creative, date_hour)]
-        json_d[k]['request_count'] = request_d.get((adunit, date_hour), 0)
+        json_d[k]['request_count'] = 0
+
+    # these are request counts only; insert them into json_d
+    for (adunit, date_hour), req_count in request_d.iteritems():
+        k = '%s::%s' % (adunit, date_hour)
+        counts = {}
+        counts['request_count'] = req_count
+        # all other counts are 0
+        counts['attempt_count'] = 0
+        counts['impression_count'] = 0
+        counts['click_count'] = 0
+        counts['conversion_count'] = 0
+        counts['revenue'] = 0
+        json_d[k] = counts
 
     return simplejson.dumps(json_d)
 
@@ -186,7 +203,7 @@ def _package_mdb_post_data(mdb_dict):
         [app, account] = _deref_adunit(adunit) or [None, None]
 
 
-        if None not in [app, account, adgroup, campaign]:
+        if None not in [app, account]:
             post_dict = {'adunit': adunit,
                          'app': app,
                          'account': account,
@@ -252,6 +269,9 @@ def deref_adgroup(adgroup_str):
 
 # returns [adgroup_str, campaign_str, account_str] or None
 def _deref_creative(creative_str):
+    if not creative_str:    # None or ''
+        return None
+
     if creative_str in DEREF_CACHE:
         return DEREF_CACHE[creative_str]
 
@@ -573,11 +593,29 @@ def async_put_models(account_name,stats_models,bucket_size):
 
 class FinalizeHandler(webapp.RequestHandler):
     def post(self):
-        return self.get(self)
+        post_data = simplejson.loads(self.request.body)
+        blob_file_name = post_data['blob_file_name']
+        log_lines = post_data['log_lines']  # all log lines are unicode due to simplejson.dumps()
+
+        # write() of files API only uses ascii encoding, which could fail
+        # therefore explicitly convert all unicode to string using utf-8 encoding
+        ascii_log_lines = [helpers.to_ascii(line) for line in log_lines]
+
+        # create new file in blobstore (file name is GAE internal)
+        internal_file_name = files.blobstore.create(
+                            mime_type="text/plain",
+                            _blobinfo_uploaded_filename=blob_file_name+'.log')
+
+        # open the file and write lines
+        with files.open(internal_file_name, 'a') as f:
+            f.write('\n'.join(ascii_log_lines)+'\n')
+
+        # finalize this file
+        files.finalize(internal_file_name)
 
     def get(self):
-        file_name = self.request.get('file_name')
         try:
+            file_name = self.request.get('file_name')
             files.finalize(file_name)
         except (files.ExistenceError, files.FinalizationError):
             pass # no-opp file is already finalized
@@ -651,16 +689,15 @@ class ServeLogHandler(blobstore_handlers.BlobstoreDownloadHandler):
 class MongoUpdateStatsHandler(webapp.RequestHandler):
     def post(self):
         mdb_dict = simplejson.loads(self.request.body)  # mdb_dict is json_d in _create_mdb_json()
-        logging.info('POST_BODY: %s' % mdb_dict)
 
         has_err, err_msg, post_data = _package_mdb_post_data(mdb_dict)
         if has_err:
             logging.error(err_msg)
             #respond immediately without posting any data to MongoDB
             self.response.out.write(err_msg)
+            return
 
-        logging.info('POST TO MDB: %s' % post_data)
-        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://mongostats.mopub.com/update
+        post_url = MDB_STATS_UPDATER_IP + MDB_STATS_UPDATER_HANDLER_PATH # ex: http://write.mongostats.mopub.com/update
         post_request = urllib2.Request(post_url, post_data)
         post_response = urllib2.urlopen(post_request)
         status_code = post_response.code

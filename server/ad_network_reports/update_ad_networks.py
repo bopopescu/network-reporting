@@ -37,6 +37,7 @@ from ad_network_reports.query_managers import \
         AdNetworkLoginCredentialsManager, \
         AdNetworkMapperManager, \
         AdNetworkStatsManager, \
+        AdNetworkAggregateManager, \
         AdNetworkManagementStatsManager
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
@@ -145,6 +146,9 @@ def send_stats_mail(account, test_date, valid_stats_list):
 Learn more at https://app.mopub.com/ad_network_reports/
 """))
 
+# TODO: could be faster with bulk gets and writes. This probably is not the
+# limiting factor though it probably is the query time in the individual
+# scrapers that makes it slow.
 def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         None):
     """Update ad network stats.
@@ -192,6 +196,9 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
         # log in to ad networks and update stats for each user
         for login_credentials in login_credentials_list:
             login_credentials.app_pub_ids = []
+            if not only_these_credentials:
+                aggregate.increment(login_credentials.ad_network_name,
+                        'attempted_logins')
 
             account_key = login_credentials.account.key()
             ad_network_name = login_credentials.ad_network_name
@@ -308,9 +315,6 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                                 pub_id=publisher_id,
                                 ad_network=login_credentials.ad_network_name))
 
-                if not only_these_credentials:
-                    aggregate.increment(login_credentials.ad_network_name,
-                            'updated')
                 scrape_stats = AdNetworkScrapeStats(ad_network_app_mapper=
                     ad_network_app_mapper,
                     date=test_date,
@@ -318,11 +322,36 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
                     attempts=stats.attempts,
                     impressions=stats.impressions,
                     clicks=stats.clicks)
+
+                if only_these_credentials:
+                    # Update the rolled up stats.
+                    AdNetworkAggregateManager.update_stats(login_credentials. \
+                            account, ad_network_app_mapper, test_date, scrape_stats,
+                            network=ad_network_app_mapper.ad_network_name)
+                    AdNetworkAggregateManager.update_stats(login_credentials. \
+                            account, ad_network_app_mapper, test_date, scrape_stats,
+                            app=ad_network_app_mapper.application)
+                else:
+                    # Calculate the app roll-up and store it in the db.
+                    # TODO: could be faster if we didn't store it until we
+                    # finished with the account
+                    AdNetworkAggregateManager.put_stats(login_credentials. \
+                            account, test_date, [scrape_stats],
+                            app=ad_network_app_mapper.application)
+                    aggregate.increment(login_credentials.ad_network_name,
+                            'updated')
                 scrape_stats.put()
 
                 if not only_these_credentials and login_credentials and \
                         login_credentials.email:
-                    valid_stats_list.append((ad_network_app_mapper, scrape_stats))
+                    valid_stats_list.append((ad_network_app_mapper,
+                        scrape_stats))
+            if not only_these_credentials:
+                # Calculate the network roll-up and store it in the db.
+                AdNetworkAggregateManager.put_stats(login_credentials.account,
+                        test_date, stats_list,
+                        network=login_credentials.ad_network_name)
+
             login_credentials.put()
 
     if not only_these_credentials:

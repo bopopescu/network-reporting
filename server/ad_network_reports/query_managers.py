@@ -23,10 +23,14 @@ from account.query_managers import AccountQueryManager
 from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppMapper, \
      AdNetworkScrapeStats, \
-     AdNetworkManagementStats
+     AdNetworkNetworkStats, \
+     AdNetworkAppStats, \
+     AdNetworkManagementStats, \
+     STAT_NAMES
 from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
-from publisher.query_managers import AppQueryManager, ALL_NETWORKS
+from publisher.query_managers import AppQueryManager, \
+        ALL_NETWORKS
 
 AD_NETWORK_NAMES = {'admob': 'AdMob',
                     'jumptap': 'JumpTap',
@@ -470,10 +474,7 @@ class AdNetworkStatsManager(CachedQueryManager):
 
         aggregate_stats.fill_rate_impressions = 0
         for stats in stats_iterable:
-            aggregate_stats.revenue += stats.revenue
-            aggregate_stats.attempts += stats.attempts
-            aggregate_stats.impressions += stats.impressions
-            aggregate_stats.clicks += stats.clicks
+            cls.combined_stats(aggregate_stats, stats)
 
             if stats.attempts:
                 aggregate_stats.fill_rate_impressions += stats.impressions
@@ -492,6 +493,85 @@ class AdNetworkStatsManager(CachedQueryManager):
         stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
                 ad_network_app_mapper_key, days)
         return sorted(stats_list, key=lambda stats: stats.date, reverse=True)
+
+    @classmethod
+    def copy_stats(cls,
+                   stats1,
+                   stats2):
+        for stat in STAT_NAMES:
+            setattr(stats1, stat, getattr(stats2, stat))
+
+    @classmethod
+    def combined_stats(cls,
+                       stats1,
+                       stats2,
+                       subtract=False):
+        """
+        stats1 = stats1 + stats2
+        """
+        for stat in STAT_NAMES:
+            # example: stats1.revenue += stats2.revenue
+            if subtract:
+                setattr(stats1, stat, getattr(stats1, stat) - getattr(stats2,
+                    stat))
+            else:
+                setattr(stats1, stat, getattr(stats1, stat) + getattr(stats2,
+                    stat))
+
+class AdNetworkAggregateManager(CachedQueryManager):
+    @classmethod
+    def put_stats(cls,
+                  account,
+                  day,
+                  stats_list,
+                  network=None,
+                  app=None):
+        stats = cls.find_or_create(account, day, network, app)
+        AdNetworkStatsManager.combined_stats(stats,
+                AdNetworkStatsManager.roll_up_stats(stats_list))
+        stats.put()
+
+    @classmethod
+    def update_stats(cls,
+                     account,
+                     mapper,
+                     day,
+                     stats,
+                     network=None,
+                     app=None):
+        old_stats = AdNetworkScrapeStats.get_by_app_mapper_and_day(mapper, day)
+        aggregate_stats = cls.find_or_create(account, day, network, app)
+        # Do AdNetworkScrapeStats already exist for the app, network and day?
+        if old_stats:
+            AdNetworkStatsManager.combined_stats(aggregate_stats, old_stats,
+                    subtract=True)
+        AdNetworkStatsManager.combined_stats(aggregate_stats, stats)
+        aggregate_stats.put()
+
+    @classmethod
+    def find_or_create(cls,
+                       account,
+                       day,
+                       network=None,
+                       app=None):
+        if network:
+            return AdNetworkNetworkStats.get_by_network_and_day(account,
+                                                                network,
+                                                                day) \
+                    or \
+                    AdNetworkNetworkStats(account=account,
+                                          ad_network_name=network,
+                                          date=day)
+        elif app:
+            return AdNetworkAppStats.get_by_app_and_day(account,
+                                                        app,
+                                                        day) \
+                    or \
+                    AdNetworkAppStats(account=account,
+                                      application=app,
+                                      date=day)
+        raise LookupError("Method needs either an app or a network.")
+
 
 class AdNetworkManagementStatsManager(CachedQueryManager):
     def __init__(self,

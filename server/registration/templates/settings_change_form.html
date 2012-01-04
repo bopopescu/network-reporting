@@ -9,8 +9,8 @@
 {% block content %}
 <div class="content-main">
 
-<form action="" method="POST" accept-charset="utf-8" id="accountForm">
-<fieldset id="appForm-details"> 
+<form action="{% url settings_change %}" method="POST" accept-charset="utf-8" id="accountForm">
+<fieldset id="appForm-details">
 
 <dl class="formFields">
     <dt>
@@ -57,7 +57,7 @@
             <option value="200" {% ifequal form.traffic.value "200" %}selected{% endifequal %}>200MM+</option>
         </select>
         {% for error in form.traffic.errors %}
-        <div class="form-error-text">{{error}}</div> 
+        <div class="form-error-text">{{error}}</div>
         {% endfor %}
     </dd>
     <dt>
@@ -67,10 +67,10 @@
         {{form.mailing_list.label}}
     </dd>
 </dl>
-</fieldset>    
+</fieldset>
 <div class="clear"></div>
 <div class="form-submit">
-    {% if not google_user %}  
+    {% if not google_user %}
     <a href="{% url auth_password_change %}">Reset your password.</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     {% endif %}
     <span class="buttonWrap">

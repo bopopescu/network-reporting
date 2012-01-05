@@ -11,6 +11,9 @@ from google.appengine.api import urlfetch
 from publisher.query_managers import AdUnitContextQueryManager
 from reporting import models as reporting_models
 
+from ad_server.mp_webapp import MPLoggingWSGIApplication
+from stats.log_service import logger
+
 
 REQ_EVENT = 0
 IMP_EVENT = 1
@@ -94,22 +97,7 @@ def log(request,
     if adunit_id and creative_id and event == REQ_EVENT:
         trace_logging.info("fire and forget--adunit: %s creative:%s"%(adunit_id,creative_id))
         fire_forget_params = dict(id=adunit_id, cid=creative_id, udid=udid or '', ua=user_agent)
-        task = taskqueue.Task(params=fire_forget_params,
-                              method='GET',
-                              url='/m/req')
-        queue_num = random.randint(0,NUM_REQ_QUEUES-1)
-        queue_name = REQ_QUEUE_NAME%queue_num
-        # try:
-        #     task.add(queue_name)
-        # except Exception, e:
-        #     trace_logging.warning(e)
-
-        # make async internal request to appengine
-        # rpc = urlfetch.create_rpc(deadline=2) # in seconds
-        # urlfetch.make_fetch_call(rpc=rpc,
-        #                          url="http://38-attempt.mopub-inc.appspot.com/m/req?"+urllib.urlencode(fire_forget_params),
-        #                          headers={'X-URLFetch-Service-Id': 'APPSPOT'},
-        #                          follow_redirects=False,)
+        _log_attempt(fire_forget_params)
 
     # get account name from the adunit
     if not adunit:
@@ -204,6 +192,48 @@ def _get_shard_num(account,adunit_id,creative_id):
     # otherwise do a mod on the hash of (adunit_id+creative_id)
     hash_string = '%s:%s'%(adunit_id or '',creative_id or '')
     return hash(hash_string)%account_num_shards
+
+def _log_attempt(params, now=None):
+    """
+    Creates a pseudo access log line (apache style) and logs it 
+    directly to the blob logger which is responsible for the buffering
+    and flushing/finalizing to the blob store
+    """
+    # OLD WAY
+
+    # task = taskqueue.Task(params=fire_forget_params,
+    #                       method='GET',
+    #                       url='/m/req')
+    # queue_num = random.randint(0,NUM_REQ_QUEUES-1)
+    # queue_name = REQ_QUEUE_NAME%queue_num
+    # try:
+    #     task.add(queue_name)
+    # except Exception, e:
+    #     trace_logging.warning(e)
+
+    
+    now = now or datetime.datetime.now()
+    apache_dict = { 'ip': '0.0.0.0',
+                    'identd': None,
+                    'auth_user': None,
+                    'date': now.strftime('%d/%b/%Y:%H:%M:%S %z'),#14/Jun/2011:11:50:54 -0700
+                    'method': 'GET',
+                    'url': '/m/req' + '?' + urllib.urlencode(params),
+                    'protocol': 'HTTP/1.1',
+                    'status': 200,
+                    'bytes': 10,
+                    'referrer': None,
+                    'user_agent': None,
+                  }
+
+    # replaces all None's with '-'
+    for key, value in apache_dict.iteritems():
+      apache_dict[key] = value or '-'
+
+    log_string = MPLoggingWSGIApplication.APACHE_STR_FORMAT % apache_dict
+    logger.log(log_string)
+    # return for testing purposes
+    return log_string
 
 # seperated for cleanliness temporarily
 def log_inapp_purchase(request, event, udid, receipt, mobile_appid=None):

@@ -19,13 +19,13 @@ from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
 
-from server.ad_server.main import  ( AdClickHandler,
+from ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-from server.ad_server.handlers import adhandler
-from server.ad_server.handlers.adhandler import AdHandler
-from server.ad_server.optimizer import optimizer
+from ad_server.handlers import adhandler
+from ad_server.handlers.adhandler import AdHandler
+from ad_server.optimizer import optimizer
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############
@@ -46,7 +46,7 @@ from advertiser.models import (DummyServerSideSuccessCreative,
 
 from ad_server.auction.client_context import ClientContext
 
-from server.ad_server.auction import ad_auction
+from ad_server.auction import ad_auction
 from google.appengine.ext import testbed
 ################# End to End #################
 

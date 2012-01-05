@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: windows-1251 -*-
+
 
 #  Copyright (C) 2005 Roman V. Kiseliov
 #  All rights reserved.

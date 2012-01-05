@@ -1,31 +1,30 @@
 #!/usr/bin/env python
-# -*- coding: windows-1251 -*-
 
 #  Copyright (C) 2005 Roman V. Kiseliov
 #  All rights reserved.
-# 
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
 #  are met:
-# 
+#
 #  1. Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-# 
+#
 #  2. Redistributions in binary form must reproduce the above copyright
 #     notice, this list of conditions and the following disclaimer in
 #     the documentation and/or other materials provided with the
 #     distribution.
-# 
+#
 #  3. All advertising materials mentioning features or use of this
 #     software must display the following acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  4. Redistributions of any form whatsoever must retain the following
 #     acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  THIS SOFTWARE IS PROVIDED BY Roman V. Kiseliov ``AS IS'' AND ANY
 #  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -73,10 +72,10 @@ Offset  Size    Contents
                                1 = Contains Rich-Text settings
 [2 or 3] 2      (optional, only if richtext=1) Number of Rich-Text formatting runs (rt)
 [var.]   4      (optional, only if phonetic=1) Size of Asian phonetic settings block (in bytes, sz)
-var.     ln or 
+var.     ln or
          2·ln   Character array (8-bit characters or 16-bit characters, dependent on ccompr)
-[var.]   4·rt   (optional, only if richtext=1) List of rt formatting runs 
-[var.]   sz     (optional, only if phonetic=1) Asian Phonetic Settings Block 
+[var.]   4·rt   (optional, only if richtext=1) List of rt formatting runs
+[var.]   sz     (optional, only if phonetic=1) Asian Phonetic Settings Block
 '''
 
 
@@ -99,7 +98,7 @@ def u2bytes(ustr):
 def upack2(_str):
     try:
         ustr = u2bytes(unicode(_str, 'ascii'))
-        return struct.pack('<HB', len(_str), 0) + _str    
+        return struct.pack('<HB', len(_str), 0) + _str
     except:
         if isinstance(_str, unicode):
             ustr = u2bytes(_str)
@@ -110,7 +109,7 @@ def upack2(_str):
 def upack1(_str):
     try:
         ustr = u2bytes(unicode(_str, 'ascii'))
-        return struct.pack('BB', len(_str), 0) + _str    
+        return struct.pack('BB', len(_str), 0) + _str
     except:
         if isinstance(_str, unicode):
             ustr = u2bytes(_str)
@@ -118,7 +117,7 @@ def upack1(_str):
             ustr = u2bytes(unicode(_str, DEFAULT_ENCODING))
         return struct.pack('BB', len(_str), 1) + ustr
 
-if __name__ == '__main__':   
+if __name__ == '__main__':
     f = file('out0.bin', 'wb')
     f.write(u2bytes('þíèêîä: unicode'))
     f.close()

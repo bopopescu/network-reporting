@@ -269,13 +269,9 @@ def alloc_filter(test_value=None):
 
     log_mesg = "Removed due to allocation cap: %s"
     def real_filter(a):
-        if test_value:
-            if test_value < a.allocation_percentage:
-                return True
-            else:
-                return False
+        d100f = test_value or random.random() * 100
         if a.allocation_percentage:
-            if (random.random() * 100 < a.allocation_percentage):
+            if (d100f < a.allocation_percentage):
                 return True
             else:
                 return False

@@ -28,6 +28,7 @@ from budget.tzinfo import Pacific, utc
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from account.query_managers import AccountQueryManager
 from account.forms import NetworkConfigForm
+from account.models import NetworkConfig
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm, \
                              BaseCreativeForm, TextCreativeForm, \
@@ -1335,7 +1336,7 @@ class MarketplaceIndexHandler(RequestHandler):
 
         try:
             blind = self.account.network_config.blind
-        except:
+        except AttributeError:
             blind = False
 
         return render_to_response(self.request,
@@ -1354,7 +1355,7 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'start_date': start_date,
                                       'end_date': end_date,
                                       'date_range': self.date_range,
-                                      'blind': self.account.network_config.blind,
+                                      'blind': blind,
                                   })
 
 
@@ -1446,6 +1447,14 @@ class MarketplaceBlindnessChangeHandler(RequestHandler):
     def post(self):
         try:
             network_config = self.account.network_config
+
+            # Some accounts won't have a network config yet
+            if network_config == None:
+                n = NetworkConfig().put()
+                self.account.network_config = n
+                self.account.put()
+                network_config = n
+
             activate = self.request.POST.get('activate', None)
             if activate == 'true':
                 network_config.blind = True

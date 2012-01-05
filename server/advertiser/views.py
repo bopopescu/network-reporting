@@ -1,5 +1,3 @@
-import logging, os, re, datetime, hashlib
-
 from django.conf import settings
 
 from urllib import urlencode
@@ -525,7 +523,7 @@ class CreateAdGroupHandler(RequestHandler):
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
         if campaign_key:
             c = AdGroupQueryManager.get(campaign_key)
-            adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
+            adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, allocation_percentage=100.0)
         if adgroup_key:
             adgroup = AdGroupQueryManager.get(adgroup_key)
             c = adgroup.campaign

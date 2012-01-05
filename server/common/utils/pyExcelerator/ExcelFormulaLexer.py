@@ -150,13 +150,3 @@ class Lexer(TokenStream):
                 return Tok(type = ty, text = te, col = self._pos)
         # at this point, smth strange is happened
         raise TokenStreamException("Unknown char %s at %u col." % (self.curr_ch(), self._pos))
-
-
-if __name__ == '__main__' :
-    import locale
-    locale.setlocale(locale.LC_ALL, 'russian')
-    try:
-        for t in Lexer('1+2+3+67.8678 + " @##$$$ klhkh kljhklhkl " + .58e-678*A1:B4 - 1lkjljlkjl3535порпор'):
-            print t
-    except TokenStreamException, e:
-        print "error:", e

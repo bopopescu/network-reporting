@@ -73,8 +73,8 @@ Offset  Size    Contents
 [2 or 3] 2      (optional, only if richtext=1) Number of Rich-Text formatting runs (rt)
 [var.]   4      (optional, only if phonetic=1) Size of Asian phonetic settings block (in bytes, sz)
 var.     ln or
-         2·ln   Character array (8-bit characters or 16-bit characters, dependent on ccompr)
-[var.]   4·rt   (optional, only if richtext=1) List of rt formatting runs
+         2.ln   Character array (8-bit characters or 16-bit characters, dependent on ccompr)
+[var.]   4.rt   (optional, only if richtext=1) List of rt formatting runs
 [var.]   sz     (optional, only if phonetic=1) Asian Phonetic Settings Block
 '''
 
@@ -116,19 +116,3 @@ def upack1(_str):
         else:
             ustr = u2bytes(unicode(_str, DEFAULT_ENCODING))
         return struct.pack('BB', len(_str), 1) + ustr
-
-if __name__ == '__main__':
-    f = file('out0.bin', 'wb')
-    f.write(u2bytes('юникод: unicode'))
-    f.close()
-
-    f = file('out1.bin', 'wb')
-    f.write(upack1('юникод: unicode'))
-    f.close()
-
-    f = file('out2.bin', 'wb')
-    f.write(upack2('юникод: unicode'))
-    f.close()
-
-
-

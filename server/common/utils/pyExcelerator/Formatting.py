@@ -1,31 +1,30 @@
 #!/usr/bin/env python
-# -*- coding: windows-1251 -*-
 
 #  Copyright (C) 2005 Roman V. Kiseliov
 #  All rights reserved.
-# 
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
 #  are met:
-# 
+#
 #  1. Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-# 
+#
 #  2. Redistributions in binary form must reproduce the above copyright
 #     notice, this list of conditions and the following disclaimer in
 #     the documentation and/or other materials provided with the
 #     distribution.
-# 
+#
 #  3. All advertising materials mentioning features or use of this
 #     software must display the following acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  4. Redistributions of any form whatsoever must retain the following
 #     acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  THIS SOFTWARE IS PROVIDED BY Roman V. Kiseliov ``AS IS'' AND ANY
 #  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -52,7 +51,7 @@ Group           Attributes
 -------------------------------------
 Number format   Number format index (index to FORMAT record)
 Font            Font index (index to FONT record)
-Alignment       Horizontal and vertical alignment, text wrap, indentation, 
+Alignment       Horizontal and vertical alignment, text wrap, indentation,
                 orientation/rotation, text direction
 Border          Border line styles and colours
 Background      Background area style and colours
@@ -114,20 +113,20 @@ class Font(CopyableObject):
     ESCAPEMENT_NONE         = 0x00
     ESCAPEMENT_SUPERSCRIPT  = 0x01
     ESCAPEMENT_SUBSCRIPT    = 0x02
-    
+
     UNDERLINE_NONE          = 0x00
     UNDERLINE_SINGLE        = 0x01
     UNDERLINE_SINGLE_ACC    = 0x21
     UNDERLINE_DOUBLE        = 0x02
     UNDERLINE_DOUBLE_ACC    = 0x22
-    
+
     FAMILY_NONE         = 0x00
     FAMILY_ROMAN        = 0x01
     FAMILY_SWISS        = 0x02
     FAMILY_MODERN       = 0x03
     FAMILY_SCRIPT       = 0x04
     FAMILY_DECORARTIVE  = 0x05
-    
+
     CHARSET_ANSI_LATIN          = 0x00
     CHARSET_SYS_DEFAULT         = 0x01
     CHARSET_SYMBOL              = 0x02
@@ -146,13 +145,13 @@ class Font(CopyableObject):
     CHARSET_ANSI_CYRILLIC       = 0xCC
     CHARSET_ANSI_THAI           = 0xDE
     CHARSET_ANSI_LATIN_II       = 0xEE
-    CHARSET_OEM_LATIN_I         = 0xFF   
-    
+    CHARSET_OEM_LATIN_I         = 0xFF
+
     def __init__(self):
         # twip = 1/20 of a point = 1/1440 of a inch
-        # usually resolution == 96 pixels per 1 inch 
+        # usually resolution == 96 pixels per 1 inch
         # (rarely 120 pixels per 1 inch or another one)
-        
+
         self.height = 0x00C8 # 200: this is font with height 10 points
         self.italic = False
         self.struck_out = False
@@ -164,12 +163,12 @@ class Font(CopyableObject):
         self.escapement = self.ESCAPEMENT_NONE
         self.underline = self.UNDERLINE_NONE
         self.family = self.FAMILY_NONE
-        self.charset = self.CHARSET_ANSI_CYRILLIC       
+        self.charset = self.CHARSET_ANSI_CYRILLIC
         self.name = 'Arial'
-                
+
     def get_biff_record(self):
         height = self.height
-        
+
         options = 0x00
         if self.bold:
             options |= 0x01
@@ -184,17 +183,17 @@ class Font(CopyableObject):
             options |= 0x010
         if self.shadow:
             options |= 0x020
-            
+
         colour_index = get_colour_val(self.colour_index)
         weight = self._weight
         escapement = self.escapement
-        underline = self.underline 
-        family = self.family 
+        underline = self.underline
+        family = self.family
         charset = self.charset
         name = self.name
-        
-        return BIFFRecords.FontRecord(height, options, colour_index, weight, escapement, 
-                    underline, family, charset, 
+
+        return BIFFRecords.FontRecord(height, options, colour_index, weight, escapement,
+                    underline, family, charset,
                     name)
 
 class Alignment(CopyableObject):
@@ -206,8 +205,8 @@ class Alignment(CopyableObject):
     HORZ_JUSTIFIED              = 0x05 # BIFF4-BIFF8X
     HORZ_CENTER_ACROSS_SEL      = 0x06 # Centred across selection (BIFF4-BIFF8X)
     HORZ_DISTRIBUTED            = 0x07 # Distributed (BIFF8X)
-    
-    VERT_TOP                    = 0x00 
+
+    VERT_TOP                    = 0x00
     VERT_CENTER                 = 0x01
     VERT_BOTTOM                 = 0x02
     VERT_JUSTIFIED              = 0x03 # Justified (BIFF5-BIFF8X)
@@ -224,12 +223,12 @@ class Alignment(CopyableObject):
 
     ROTATION_0_ANGLE            = 0x00
     ROTATION_STACKED            = 0xFF
-    
+
     WRAP_AT_RIGHT               = 0x01
     NOT_WRAP_AT_RIGHT           = 0x00
-    
+
     SHRINK_TO_FIT               = 0x01
-    NOT_SHRINK_TO_FIT           = 0x00       
+    NOT_SHRINK_TO_FIT           = 0x00
 
     def __init__(self):
         self.horz = self.HORZ_GENERAL
@@ -258,7 +257,7 @@ class Borders(CopyableObject):
     THIN_DASH_DOT_DOTTED        = 0x0B
     MEDIUM_DASH_DOT_DOTTED      = 0x0C
     SLANTED_MEDIUM_DASH_DOTTED  = 0x0D
-    
+
     NEED_DIAG1      = 0x01
     NEED_DIAG2      = 0x01
     NO_NEED_DIAG1   = 0x00
@@ -276,24 +275,24 @@ class Borders(CopyableObject):
         self.top_colour    = 0x40
         self.bottom_colour = 0x40
         self.diag_colour   = 0x40
-        
+
         self.need_diag1 = self.NO_NEED_DIAG1
         self.need_diag2 = self.NO_NEED_DIAG2
 
 class Pattern(CopyableObject):
     # patterns 0x00 - 0x12
-    NO_PATTERN      = 0x00 
-    SOLID_PATTERN   = 0x01 
-    
+    NO_PATTERN      = 0x00
+    SOLID_PATTERN   = 0x01
+
     def __init__(self):
         self.pattern = self.NO_PATTERN
         self._pattern_fore_colour = 0x40
         self._pattern_back_colour = 0x41
-    
+
     def get_pattern_fore_colour(self): return self._pattern_fore_colour
     def set_pattern_fore_colour(self, c): self._pattern_fore_colour = get_colour_val(c)
     pattern_fore_colour = property(get_pattern_fore_colour, set_pattern_fore_colour)
-    
+
     def get_pattern_back_colour(self): return self._pattern_back_colour
     def set_pattern_back_colour(self, c): self._pattern_back_colour = get_colour_val(c)
     pattern_back_colour = property(get_pattern_back_colour, set_pattern_back_colour)
@@ -302,8 +301,8 @@ class Protection(CopyableObject):
     def __init__(self):
         self.cell_locked = 1
         self.formula_hidden = 0
-        
-        
+
+
 if __name__ == '__main__':
     font0 = Font()
     font0.name = 'Arial'
@@ -313,7 +312,7 @@ if __name__ == '__main__':
     font2.name = 'Times New Roman'
     font3 = Font()
     font3.name = 'Courier New Cyr'
-    
+
     for font, filename in [(font0, 'font0.bin'), (font1, 'font1.bin'), (font2, 'font2.bin'), (font3, 'font3.bin')]:
         f = file(filename, 'wb')
         f.write(font.get_biff_record().get_data())

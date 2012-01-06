@@ -11,6 +11,7 @@ from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
         AdNetworkStatsManager, \
         AdNetworkManagementStatsManager, \
         create_fake_data
+from common.utils.date_magic import gen_days_for_range
 from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
@@ -19,7 +20,6 @@ from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.shortcuts import redirect
-from reporting.models import StatsModel
 
 from google.appengine.ext import db
 
@@ -47,7 +47,9 @@ class AdNetworkReportIndexHandler(RequestHandler):
         """
         #create_fake_data(self.account)
 
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
+        logging.info(self.start_date)
+        logging.info(self.date_range)
 
         aggregate_stats_list = AdNetworkReportManager. \
                 get_aggregate_stats_list(self.account, days)
@@ -126,7 +128,7 @@ class ExportFileHandler(RequestHandler):
 
         Return a file with the aggregate stats data sorted by network or app.
         """
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
 
         aggregate_stats_list = AdNetworkReportManager. \
                 get_aggregate_stats_list(self.account, days)
@@ -157,7 +159,7 @@ class AppDetailHandler(RequestHandler):
 
         Return a webpage with the list of stats in a table.
         """
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
 
         ad_network_app_mapper = AdNetworkMapperManager.get_ad_network_mapper(
                 ad_network_app_mapper_key=mapper_key)
@@ -207,7 +209,7 @@ class ExportAppDetailFileHandler(RequestHandler):
         Export data in for the app on the network (what's in the table) to xls
         or csv.
         """
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
 
         stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
                 mapper_key, days)
@@ -235,7 +237,7 @@ class AdNetworkManagementHandler(RequestHandler):
         management stats and login credentials that resulted in error.
         Return a webpage with the list of management stats in a table.
         """
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
 
         management_stats = AdNetworkManagementStatsManager.get_stats(days)
 
@@ -295,17 +297,4 @@ class AdNetworkManagementHandler(RequestHandler):
 @staff_login_required
 def ad_network_management(request, *args, **kwargs):
     return AdNetworkManagementHandler()(request, *args, **kwargs)
-
-def get_days(start_date,
-             date_range):
-    """
-    Take a start date and a date range.
-
-    Return a list of days, [datetime.date,...], objects for the given range.
-    """
-    if start_date:
-        days = StatsModel.get_days(start_date, date_range)
-    else:
-        days = StatsModel.lastdays(date_range, 1)
-    return days
 

@@ -289,7 +289,7 @@
             network: '{{ form.ad_network }}'},
           {% endfor %}]},
         {% endfor %}],
-        's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}{% if offline %}&offline=1{% endif %}');
+        's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}');
     });
   </script>
 {% endblock extraScripts %}

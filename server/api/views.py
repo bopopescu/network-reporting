@@ -302,16 +302,15 @@ class AppOnNetworkService(RequestHandler):
             # Formulate the date range
             if self.request.GET.get('s', None):
                 year, month, day = str(self.request.GET.get('s')).split('-')
-                end_date = datetime.date(int(year), int(month), int(day))
+                start_date = datetime.date(int(year), int(month), int(day))
             else:
-                end_date = datetime.date.today()
+                start_date = datetime.date.today()
+            days_in_range = int(self.request.GET.get('r'))
 
-            if self.request.GET.get('r', None):
-                days_in_range = int(self.request.GET.get('r')) - 1
-                start_date = end_date - datetime.timedelta(days_in_range)
-            else:
-                start_date = end_date - datetime.timedelta(13)
-            days = date_magic.gen_days(start_date, end_date)
+            logging.info("Ajax")
+            logging.info(start_date)
+            logging.info(days_in_range)
+            days = date_magic.gen_days_for_range(start_date, days_in_range)
 
             # If an app key is provided get only stats for that app
             if pub_id:

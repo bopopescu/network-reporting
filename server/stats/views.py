@@ -466,7 +466,7 @@ class LogTaskHandler(webapp.RequestHandler):
               mdb_json = _create_mdb_json(stats_to_put)
               try:
                   taskqueue.add(name='mdb-'+task_name,
-                                queue_name=queue_name,
+                                queue_name=queue_name.replace('bulk-log-processor','mongo-rt-stats'),
                                 method='post',
                                 url='/mdb/update_stats',
                                 countdown=random.uniform(0,9), # splay out the requests so as not be so spikey

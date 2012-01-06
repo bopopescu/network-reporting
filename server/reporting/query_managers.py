@@ -190,14 +190,14 @@ class StatsModelQueryManager(CachedQueryManager):
 
         account = account or self.account
         
-        # if going to use mongo we want offline = True in case we need to pull the user info
-        if not offline and self.account_obj and self.account_obj.display_mongo and not no_mongo:
-            offline = True
-
         if account:
             parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=offline))
         else:
             parent = None
+
+        # if going to use mongo we want offline = True in case we need to pull the user info
+        if not offline and self.account_obj and self.account_obj.display_mongo and not no_mongo:
+            parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=True))
 
         if publishers:
             keys = [db.Key.from_path(StatsModel.kind(),
@@ -241,12 +241,12 @@ class StatsModelQueryManager(CachedQueryManager):
                                               advertiser_key=advertiser,
                                               )
             # add user data from offline stats for particular queries:
-            # (Account-*-*) and (Account-App-*)
-            if (account and not publisher_key and not advertiser_key) or \
-                (account and publisher_key and publisher_key.kind() == 'App' and not advertiser_key):
+            # (Account-*-*) and (Account-<Any Pub>-*)
+            if (account and not publisher and not advertiser) or \
+                (account and publisher and not advertiser):
                 offline_stats = StatsModel.get(keys) # db get
                 for rt_stat, offline_stat in zip(realtime_stats, offline_stats):
-                    rt_stat.user_count = offline_stat.user_count
+                    rt_stat.user_count = offline_stat.user_count if offline_stat else 0
 
             return realtime_stats
 

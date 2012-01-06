@@ -11,10 +11,10 @@ from publisher.models import Site as AdUnit
 from advertiser.models import Creative
 
 def alloc_filter_mptest():
-    adgroup = AdGroup(allocation_percentage=50)
-    real_filter1, msg, l = alloc_filter(test_value=30)
-    real_filter2, msg, l = alloc_filter(test_value=50)
-    real_filter3, msg, l = alloc_filter(test_value=100)
+    adgroup = AdGroup(allocation_percentage=50.0)
+    real_filter1, msg, l = alloc_filter(test_value=30.0)
+    real_filter2, msg, l = alloc_filter(test_value=50.0)
+    real_filter3, msg, l = alloc_filter(test_value=100.0)
     assert(real_filter1(adgroup))
     assert(not real_filter2(adgroup))
     assert(not real_filter2(adgroup))

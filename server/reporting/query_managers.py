@@ -189,7 +189,13 @@ class StatsModelQueryManager(CachedQueryManager):
             days = days or []
 
         account = account or self.account
-        
+
+
+        # in order to use the keys for a lookup we need the parent,
+        # publisher or advertiser and days
+        # NOTE: publisher=None and advertiser=None and day=Something is actually valid
+        #       this is basically the rollup for the entire account, but just not supported
+        #       in this QM
         if account:
             parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=offline))
         else:
@@ -232,7 +238,13 @@ class StatsModelQueryManager(CachedQueryManager):
                         for d in days]
 
 
-        #### USES MONGOSTATS API ####
+        #### BEGIN USE MONGOSTATS API ####
+
+        # we only want to get our data from mongostats API if we are not explicitly trying
+        # to get offline data (from GAE, i.e. 'offline=True') or explicitly don't want
+        # data from mongo
+        # TODO: remove this conditional so that we always use mongo data in all of our UI
+        #       including the admin page
         if not offline and self.account_obj and self.account_obj.display_mongo and not no_mongo:
             realtime_stats = mongostats.api_fetch(start_date=days[0],
                                               end_date=days[-1],
@@ -240,21 +252,27 @@ class StatsModelQueryManager(CachedQueryManager):
                                               publisher_key=publisher,
                                               advertiser_key=advertiser,
                                               )
-            # add user data from offline stats for particular queries:
+
+            # In order to get unique user counts we must also get the offline stats
+            # from the GAE datastore:
+            # Currently the UI only needs 'user_count' for the following types of queries
             # (Account-*-*) and (Account-<Any Pub>-*)
+            # TODO: remove the if statement so that we always have this data available
+            # TODO: monogstats should be able to provide this data as well so we don't have to
+            #       do two queries (one to API one Datastore lookup)
             if (account and not publisher and not advertiser) or \
                 (account and publisher and not advertiser):
-                offline_stats = StatsModel.get(keys) # db get
+
+                # db get
+                offline_stats = StatsModel.get(keys)
+
+                # we patch the user_count data from the offline stats if possible
                 for rt_stat, offline_stat in zip(realtime_stats, offline_stats):
                     rt_stat.user_count = offline_stat.user_count if offline_stat else 0
 
             return realtime_stats
 
-        # in order to use the keys for a lookup we need the parent,
-        # publisher or advertiser and days
-        # NOTE: publisher=None and advertiser=None and day=Something is actually valid
-        #       this is basically the rollup for the entire account, but just not supported
-        #       in this QM
+        #### END USE MONGOSTATS API ####
 
         days_len = len(days)
                 

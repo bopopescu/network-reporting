@@ -39,7 +39,7 @@ var mopub = mopub || {};
             if (typeof(attributes.price_floor != 'undefined')) {
                 var valid_number = Number(attributes.price_floor);
                 if (isNaN(valid_number)) {
-                    return "please enter a valid number for the price floor";
+                    return "Please enter a valid number for the price floor";
                 }
             }
         },
@@ -280,16 +280,25 @@ var mopub = mopub || {};
 
             // Add the event handler to submit price floor changes over ajax.
             $('.price_floor .input-text', adunit_row).keyup(function() {
+                var input_field = $(this);
+                input_field.removeClass('error');
                 var loading_img = $(".price_floor .loading-img", adunit_row);
                 loading_img.show();
-                current_model.save({'price_floor': $(this).val()}, {
-                    success: function (model, response) {
-                        loading_img.hide();
-                    },
-                    error: function(model, response) {
-                        loading_img.hide();
-                    }
+
+                var promise = current_model.save({
+                    price_floor: $(this).val()
                 });
+                if (promise) {
+                    promise.success(function() {
+                        loading_img.hide();
+                    });
+                    promise.error(function() {
+                        loading_img.hide();
+                    });
+                } else {
+                    loading_img.hide();
+                    input_field.addClass('error');
+                }
             });
 
             return this;

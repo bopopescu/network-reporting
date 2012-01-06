@@ -18,6 +18,9 @@ if (typeof window.console == "undefined") {
     };
 }
 
+window.logging = window.console;
+window.logging.warn = window.console.log;
+
 /*
  * # Global document.ready function
  * If you want something to happen everywhere, on every page,

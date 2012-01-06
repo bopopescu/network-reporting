@@ -8,6 +8,7 @@ from ad_server.filters.filters import (budget_filter,
                                     format_filter,
                                     exclude_filter,
                                     freq_filter,
+                                    alloc_filter,
                                     lat_lon_filter,
                                     os_filter,
                                    )
@@ -118,7 +119,8 @@ class Battle(object):
                                        self.client_context.raw_udid,
                                        self.client_context.now,
                                        frequency_cap_dict),
-                           budget_filter())
+                           budget_filter(),
+                           alloc_filter())
                            # Run budget last b/c it touches memcache
 
 

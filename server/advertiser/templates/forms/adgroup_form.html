@@ -282,14 +282,7 @@
 <div class="adgroupForm-advanced hidden">
   <dt>Allocation:</dt>
   <dd>
-    <input type="text" class="input-text input-text-number {% if form.allocation_percentage.errors %}form-error{% endif %}" name="{{form.allocation_percentage.name}}" value="{{form.allocation_percentage.value}}"/> % of all
-    <select name="{{form.allocation_type.name}}">
-      <option value="users" {% if not form.allocation_type.value %}selected="selected"{% endif %}{% ifequal form.allocation_type.value 'users' %}checked="checked"{% endifequal %}>Users</option>
-      <option value="requests" {% ifequal form.allocation_type.value 'requests' %}selected="selected"{% endifequal %}>Requests</option>
-    </select>
-    {% for error in form.percent_users.errors %}
-      <div class="form-error-text">{{error}}</div>
-    {% endfor %}
+    <input type="text" class="input-text input-text-number {% if form.allocation_percentage.errors %}form-error{% endif %}" name="{{form.allocation_percentage.name}}" value="{{form.allocation_percentage.value}}"/> % of all requests
   </dd>
 
   <dt>Frequency Caps:</dt>

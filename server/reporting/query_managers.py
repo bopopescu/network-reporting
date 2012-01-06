@@ -108,7 +108,7 @@ class StatsModelQueryManager(CachedQueryManager):
 
         stats = []
         for account,apps in account_app_dict.iteritems():
-            stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days,no_mongo=True)
+            stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days,use_mongo=False)
 
         return stats
 
@@ -169,7 +169,7 @@ class StatsModelQueryManager(CachedQueryManager):
                            country=None,
                            offline=False,
                            date_fmt='date',
-                           no_mongo=False):
+                           use_mongo=True):
         """
         Gets the stats for a specific pairing. Definitions:
         advertiser_group: Either Campaign, AdGroup or Creative
@@ -202,7 +202,7 @@ class StatsModelQueryManager(CachedQueryManager):
             parent = None
 
         # if going to use mongo we want offline = True in case we need to pull the user info
-        if not offline and self.account_obj and self.account_obj.display_mongo and not no_mongo:
+        if not offline and self.account_obj and self.account_obj.display_mongo and use_mongo:
             parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=True))
 
         if publishers:
@@ -245,7 +245,7 @@ class StatsModelQueryManager(CachedQueryManager):
         # data from mongo
         # TODO: remove this conditional so that we always use mongo data in all of our UI
         #       including the admin page
-        if not offline and self.account_obj and self.account_obj.display_mongo and not no_mongo:
+        if not offline and self.account_obj and self.account_obj.display_mongo and use_mongo:
             realtime_stats = mongostats.api_fetch(start_date=days[0],
                                               end_date=days[-1],
                                               account_key=account,

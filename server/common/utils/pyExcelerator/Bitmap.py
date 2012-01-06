@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: windows-1251 -*-
 
 #  Copyright (C) 2005 Roman V. Kiseliov
 
@@ -9,29 +8,29 @@
 
 #  All rights reserved.
 
-# 
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
 #  are met:
-# 
+#
 #  1. Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-# 
+#
 #  2. Redistributions in binary form must reproduce the above copyright
 #     notice, this list of conditions and the following disclaimer in
 #     the documentation and/or other materials provided with the
 #     distribution.
-# 
+#
 #  3. All advertising materials mentioning features or use of this
 #     software must display the following acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  4. Redistributions of any form whatsoever must retain the following
 #     acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  THIS SOFTWARE IS PROVIDED BY Roman V. Kiseliov ``AS IS'' AND ANY
 #  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -58,7 +57,7 @@ def _size_col(sheet, col):
 
 
 def _size_row(sheet, row):
-    return sheet.row_height(row)     
+    return sheet.row_height(row)
 
 
 def _position_image(sheet, row_start, col_start, x1, y1, width, height):
@@ -111,7 +110,7 @@ def _position_image(sheet, row_start, col_start, x1, y1, width, height):
     y1  - Distance to top of object
     width  - Width of image frame
     height  - Height of image frame
-    
+
     """
     # Adjust start column for offsets that are greater than the col width
     while x1 >= _size_col(sheet, col_start):
@@ -194,7 +193,7 @@ class ObjBmpRecord(BiffRecord):
         Reserved4 = 0x0000  # Reserved
         grbit2 = 0x0001     # Option flags
         Reserved5 = 0x0000  # Reserved
-        
+
         data = pack("<L", cObj)
         data += pack("<H", OT)
         data += pack("<H", id)

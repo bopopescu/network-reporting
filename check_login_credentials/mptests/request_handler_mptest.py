@@ -159,14 +159,15 @@ def _check_response(resp, check_string):
 
         children = multiprocessing.active_children()
         print children
-        print children[0].pid
-        children[0].join()
+        if children:
+            print children[0].pid
+            children[0].join()
 
-        # Unfortunately the app engine datastore doesn't play nice with
-        # multiprocessing when testing.
-#        print AdNetworkScrapeStats.all().count()
-#        assert AdNetworkScrapeStats.all().count() == 14
-        assert children[0].exitcode == 0
+            # Unfortunately the app engine datastore doesn't play nice with
+            # multiprocessing when testing.
+#            print AdNetworkScrapeStats.all().count()
+#            assert AdNetworkScrapeStats.all().count() == 14
+            assert children[0].exitcode == 0
     else:
         assert resp.body.find(INVALID_REQUEST) != -1
         assert AdNetworkLoginCredentials.all().count() == 0

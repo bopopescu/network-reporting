@@ -19,6 +19,13 @@
     <input type="radio" name="dashboard-sort-option" value="apps" id="dashboard-sort-app"/>
     <label for="dashboard-sort-app">Sort by App</label>
   </span>
+  <div class="buttonBank buttonBank-right">
+      <select name='exportSelect' id='ad-network-exportSelect' class='selectmenu'>
+          <option value="">Export</option>
+          <option value="/ad_network_reports/export/xls">XLS</option>
+          <option value="/ad_network_reports/export/csv">CSV</option>
+      </select>
+  </div>
 
   {% comment %}
     Make the table sorted by ad network.
@@ -97,9 +104,10 @@
               <dd>
               {% if network.apps_without_pub_ids %}
                   {% if network_name == IAD %}
-                      In order to pull revenue data for your apps, MoPub requires that you
-                      assign your iTunes URL for each app. Click 'Edit app settings' for
-                      each app and enter your iTunes URL:
+                      In order to pull revenue data for your apps, MoPub requires that your
+                      app names in MoPub match your app names in iAd and you assign an
+                      iTunes URL for each app. Click 'Edit app settings' for each app and
+                      enter your iTunes URL:
                       <br/><br/>
                       {% for app in network.apps_without_pub_ids %}<a href="/inventory/app/{{app.key}}">{{app.name}}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
                   {% else %}
@@ -111,8 +119,15 @@
                       {{network.apps_without_pub_ids}}
                   {% endif %}
               {% else %}
-                  MoPub received a response for the following ad networks IDs.
-                  Make sure these apps are properly set up in MoPub to view the reports.
+                  {% if network_name == IAD %}
+                      MoPub received a response for the following apps. Make sure these
+                      apps are properly set up in MoPub to view the reports (the MoPub
+                      app names exactly match the iAd app names and the iTunes URLs
+                      are properly enetered for the apps).
+                  {% else %}
+                      MoPub received a response for the following ad networks IDs.
+                      Make sure these apps are properly set up in MoPub to view the reports.
+                  {% endif %}
                   <br/><br/>
                   {{ network.app_pub_ids }}
               {% endif %}
@@ -221,8 +236,8 @@
           <tr class="app-row" id="{{app.key}}">
             <td class="appData-icon"><a href="{% url publisher_app_show app_key=app.key %}"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
             <td class="dataTable-name">
-                <a href="{% url publisher_app_show app_key=app.key %}">{{app_name}}</a>
-                <span class="muted unbold">({{app.type}})</span>
+                <a href="{% url publisher_app_show app_key=app.key %}">{{app_name.0}}</a>
+                <span class="muted unbold">({{app_name.1}})</span>
                 <img id="{{app.key}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
             </td>
             <td class="dataTable-data numeric">{{app.revenue|currency}}</td>

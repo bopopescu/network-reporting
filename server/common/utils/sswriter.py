@@ -1,12 +1,13 @@
 import csv
 import datetime
-
+import logging
 
 from django.http import HttpResponse
+from django.utils import encoding
 from google.appengine.ext import db
 
 from common.constants import  *
-from common.utils.pyExcelerator import * 
+from common.utils.pyExcelerator import *
 #                   (  TABLE_FILE_FORMATS,
 #                                ALL_STATS,
 #                                REQ_STAT,
@@ -19,10 +20,21 @@ from common.utils.pyExcelerator import *
  #                               )
 
 from reporting.models import SiteStats
-from reporting.query_managers import SiteStatsQueryManager, StatsModelQueryManager
+from reporting.query_managers import SiteStatsQueryManager, \
+        StatsModelQueryManager
 from reports.query_managers import ReportQueryManager
 
 DT_TYPES = (datetime.datetime, datetime.time, datetime.date)
+DEFAULT = 'default'
+AD_NETWORK_APP_KEY = 'ad_network_app_report'
+MOBFOX_PRETTY = 'MobFox'
+ATTEMPTS = 'attempts'
+FILL_RATE = 'fill_rate'
+
+# NOTE: to use this module look at write_stats or write_ad_network stats as an
+# example. Use the setup decorator to setup the sswriter. Use row_writer which
+# takes a list of strings and prints it as a row with each element in it's
+# column.
 
 # Create a new excel workbook and add a sheet to it, return both
 def open_xls_sheet():
@@ -42,8 +54,11 @@ def write_xls_row( sheet, line, elts ):
 
 # Write a workbook to to_write ( file-like object )
 def write_xls( to_write, wbk ):
-    #This is essentially the 'save' function of pyExcelerator, but instead of writing
-    #to a file, we're writing to to_write (which should be an HttpResponse, which is a file-like object )
+    """
+    This is essentially the 'save' function of pyExcelerator, but instead of
+    writing to a file, we're writing to to_write (which should be an
+    HttpResponse, which is a file-like object )
+    """
     stream = wbk.get_biff_data()
     padding = '\x00' * ( 0x1000 - ( len( stream ) % 0x1000 ) )
 
@@ -60,10 +75,11 @@ def write_xls( to_write, wbk ):
     #continue making file 200x bigger than needed
     to_write.write( padding )
     to_write.write( doc.packed_MSAT_2nd )
-    to_write.write( doc.packed_SAT ) 
-    to_write.write( doc.dir_stream ) 
+    to_write.write( doc.packed_SAT )
+    to_write.write( doc.dir_stream )
 
-# Take a Worksheet to write to and return a fucntion that takes a list as input and writes said list to input Worksheet
+# Take a Worksheet to write to and return a fucntion that takes a list as
+# input and writes said list to input Worksheet
 def make_row_writer( sheet ):
     #Because I don't want a function that just takes a list and writes it,
     #there's no reason I should have to keep track of lines
@@ -76,7 +92,8 @@ def make_row_writer( sheet ):
         return
     return helper
 
-# Takes the XLS workbook and returns a function which writes said book to a file-like object
+# Takes the XLS workbook and returns a function which writes said book to a
+# file-like object
 def make_resp_writer( book ):
     def helper( resp ):
         write_xls( resp, book )
@@ -94,57 +111,139 @@ def write_csv_row( resp ):
     writer = csv.writer( resp )
     return writer.writerow
 
-# Function for map, verifies that a stat is valid and then removes the _STAT part of it
+# Function for map, verifies that a stat is valid and then removes the _STAT
+# part of it
 def verify_stats( stat ):
     assert stat in ALL_STATS, "Expected %s to be an element of %s, it's not" % ( stat, ALL_STATS )
     return stat.split( '_STAT' )[0]
 
-def write_stats( f_type, desired_stats, all_stats, site=None, owner=None, days=None, key_type=None):
-    #make sure things are valid
-    assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % ( TABLE_FILE_FORMATS, f_type )
-    response = None
+def setup(func):
+    def wrapper(f_type, *args, **kwargs):
+        days = kwargs.get('days', None)
+        del kwargs['days']
+        # Make sure things are valid.
+        assert f_type in TABLE_FILE_FORMATS, "Expected %s, got %s" % \
+                ( TABLE_FILE_FORMATS, f_type )
+        response = None
+        writer = None
 
-    # setup response and writers
-    if f_type == 'csv':
-        response = HttpResponse( mimetype = 'text/csv' )
-        row_writer = write_csv_row( response ) 
-    elif f_type == 'xls':
-        response = HttpResponse( mimetype = 'application/vnd.ms-excel' )
-        row_writer, writer = make_xls_writers()
-    else:
-        # wat
-        assert False, "This should never happen, %s is in %s but doens't have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
+        # Setup response and writers.
+        if f_type == 'csv':
+            response = HttpResponse( mimetype = 'text/csv' )
+            row_writer = write_csv_row( response )
+        elif f_type == 'xls':
+            response = HttpResponse( mimetype = 'application/vnd.ms-excel' )
+            row_writer, writer = make_xls_writers()
+        else:
+            assert False, "This should never happen, %s is in %s but doens't" \
+                    "have an if/else case" % ( f_type, TABLE_FILE_FORMATS )
 
-    start = days[0]
-    end = days[-1]
-    d_form = '%m-%d-%y' 
-    d_str = '%s--%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
+        start = days[0]
+        end = days[-1]
+        d_form = '%m-%d-%y'
+        d_str = '%s--%s' % ( start.strftime( d_form ), end.strftime( d_form ) )
+
+        response = func(f_type, response, row_writer, writer, d_str, *args,
+                **kwargs)
+
+        if f_type == 'xls':
+            # Excel has all the data in this temp object, dump all that into the
+            # response.
+            writer( response )
+        return response
+    return wrapper
+
+@setup
+def write_stats(f_type, response, row_writer, writer, d_str, desired_stats,
+        all_stats, site=None, owner=None, key_type=None, app_detail_name=None):
     if key_type == 'adgroup':
         key_type = 'campaign'
-    owner_type = key_type.title() 
-    fname = "%s_%s_%s.%s" % ( owner_type, db.get(site).name, d_str, f_type )
-    #should probably do something about the filename here
-    response['Content-disposition'] = 'attachment; filename=%s' % fname 
 
-    #Verify requested stats and turn them into SiteStat attributes so we can getattr them
-    map_stats = map( verify_stats, desired_stats )
+    if app_detail_name:
+        owner_type = app_detail_name
+    else:
+        owner_type = key_type.title()
+
+    if site:
+        fname = "%s_%s_%s.%s" % (owner_type, db.get(site).name, d_str, f_type)
+    else:
+        fname = "%s_%s.%s" % (encoding.smart_str(owner_type, encoding='ascii',
+            errors='ignore'), d_str, f_type)
+    #should probably do something about the filename here
+    response['Content-disposition'] = 'attachment; filename=%s' % fname
+
+    # Verify requested stats and turn them into SiteStat attributes so we can
+    # getattr them
+    if key_type == AD_NETWORK_APP_KEY:
+        map_stats = desired_stats
+    else:
+        map_stats = map( verify_stats, desired_stats )
 
     # Title the columns with the stats that are going to be written
     row_writer( map_stats )
-    
+
     #Write the data
     for stat in all_stats:
         # This is super awesome, we iterate over all the stats objects, since the "desired stats" are formatted
         # to be identical to the properties, we just use the list of requested stats and map it to get the right values
         row_writer( map( lambda x: getattr( stat, x ), map_stats ) )
+    return response
+
+@setup
+def write_ad_network_stats(f_type, response, row_writer, writer, d_str,
+        stat_names, all_stats, networks):
+    fname = "Ad_Network_Report_%s.%s" % (d_str, f_type)
+    # should probably do something about the filename here
+    response['Content-disposition'] = 'attachment; filename=%s' % fname
+
+    def encode_and_filter(data, stat):
+        if data.get('name', None) == MOBFOX_PRETTY and stat in (ATTEMPTS,
+                FILL_RATE):
+            return ''
+        elif isinstance(data[stat], unicode):
+            return data[stat].encode('utf8')
+        return data[stat]
+
+
+    if networks:
+        for network, network_stats in all_stats:
+            if network_stats and network_stats['state'] == 2:
+                row_writer([network])
+                if network in stat_names:
+                    network_stat_names = stat_names[network]
+                else:
+                    network_stat_names = stat_names[DEFAULT]
+
+                row_writer(network_stat_names)
+                row_writer([encode_and_filter(network_stats, stat) for stat in
+                    network_stat_names])
+                app_stat_names = ['name'] + list(network_stat_names)
+                row_writer(app_stat_names)
+                for app in network_stats['sub_data_list']:
+                    row_writer([encode_and_filter(app, stat) for stat in
+                        app_stat_names])
+    else:
+        for app, app_stats in all_stats:
+            row_writer(['%s (%s)' % (app[0].encode('utf8'), app[1])])
+            app_stat_names = stat_names[DEFAULT]
+            row_writer(app_stat_names)
+            row_writer([encode_and_filter(app_stats, stat) for stat in
+                app_stat_names])
+            network_stat_names = ['name'] + list(app_stat_names)
+            row_writer(network_stat_names)
+            for network in app_stats['sub_data_list']:
+                row_writer([encode_and_filter(network, stat) for stat in
+                    network_stat_names])
+
     if f_type == 'xls':
-        #excel has all the data in this temp object, dump all that into the response
+        # excel has all the data in this temp object, dump all that into the
+        # response
         writer( response )
     return response
-        
+
 def export_writer(file_type, file_name, row_titles, row_data):
     """ Creates a file, writes data to it, and returns an HttpResponse
-    object for that file 
+    object for that file
 
     Args:
         file_type: string, type of file to be exported
@@ -158,7 +257,7 @@ def export_writer(file_type, file_name, row_titles, row_data):
     """
     if file_type == 'csv':
         response = HttpResponse(mimetype = 'text/csv')
-        row_writer = write_csv_row( response ) 
+        row_writer = write_csv_row( response )
     if file_type == 'xls':
         response = HttpResponse(mimetype = 'application/vnd.ms-excel')
         row_writer, writer = make_xls_writers()
@@ -184,7 +283,7 @@ def write_report(file_type, report_key, account):
     """
     if file_type == 'csv':
         response = HttpResponse(mimetype = 'text/csv')
-        row_writer = write_csv_row( response ) 
+        row_writer = write_csv_row( response )
     if file_type == 'xls':
         response = HttpResponse(mimetype = 'application/vnd.ms-excel')
         row_writer, writer = make_xls_writers()
@@ -195,7 +294,7 @@ def write_report(file_type, report_key, account):
     response['Content-disposition'] = 'attachment; filename=%s' % f_name
     stats_headers = ['Requests', 'Impressions', 'Clicks', 'Conversions']
     if report.report_blob:
-        stats_headers += ['Revenue', 'CTR']  
+        stats_headers += ['Revenue', 'CTR']
     headers = [report.d1.title()]
     if report.d2:
         headers.append(report.d2.title())
@@ -212,6 +311,4 @@ def write_report(file_type, report_key, account):
         writer(response)
 
     return response
-
-        
 

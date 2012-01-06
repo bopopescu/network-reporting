@@ -1,31 +1,30 @@
 #!/usr/bin/env python
-# -*- coding: windows-1251 -*-
 
 #  Copyright (C) 2005 Roman V. Kiseliov
 #  All rights reserved.
-# 
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
 #  are met:
-# 
+#
 #  1. Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-# 
+#
 #  2. Redistributions in binary form must reproduce the above copyright
 #     notice, this list of conditions and the following disclaimer in
 #     the documentation and/or other materials provided with the
 #     distribution.
-# 
+#
 #  3. All advertising materials mentioning features or use of this
 #     software must display the following acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  4. Redistributions of any form whatsoever must retain the following
 #     acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  THIS SOFTWARE IS PROVIDED BY Roman V. Kiseliov ``AS IS'' AND ANY
 #  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -53,7 +52,7 @@ import datetime as dt
 
 
 class Row(object):
-    __slots__ = ["__init__", 
+    __slots__ = ["__init__",
                  "__adjust_height",
                  "__adjust_bound_col_idx",
                  "__excel_date_dt",
@@ -109,7 +108,7 @@ class Row(object):
         self.__height = 0x00FF
         self.__height_in_pixels = 0x11
         self.__frmla_opts = self.__parent.frmla_opts
-        
+
         self.level = 0
         self.collapse = 0
         self.hidden = 0
@@ -122,7 +121,7 @@ class Row(object):
         points = float(twips)/20.0
         # Cell height in pixels can be calcuted by following approx. formula:
         # cell height in pixels = font height in points * 83/50 + 2/5
-        # It works when screen resolution is 96 dpi 
+        # It works when screen resolution is 96 dpi
         pix = int(round(points*83.0/50.0 + 2.0/5.0))
         if pix > self.__height_in_pixels:
             self.__height_in_pixels = pix
@@ -159,29 +158,29 @@ class Row(object):
         self.__adjust_height(style)
         self.__xf_index = self.__parent_wb.add_style(style)
 
-            
+
     def get_xf_index(self):
         return self.__xf_index
 
-    
+
     def get_cells_count(self):
         return len(self.__cells)
 
-    
+
     def get_min_col(self):
         return self.__min_col_idx
 
-        
+
     def get_max_col(self):
         return self.__max_col_idx
 
-        
+
     def get_str_count(self):
         return self.__total_str
 
 
     def get_row_biff_data(self):
-        height_options = (self.__height & 0x07FFF) 
+        height_options = (self.__height & 0x07FFF)
         height_options |= (self.__has_default_height & 0x01) << 15
 
         options =  (self.level & 0x07) << 0
@@ -193,12 +192,12 @@ class Row(object):
             options |= (0x01 & 0x01) << 7
         else:
             options |= (0x00 & 0x01) << 7
-        options |= (self.__xf_index & 0x0FFF) << 16 
+        options |= (self.__xf_index & 0x0FFF) << 16
         options |= (0x00 & self.space_above) << 28
         options |= (0x00 & self.space_below) << 29
-        
-        return BIFFRecords.RowRecord(self.__idx, self.__min_col_idx, self.__max_col_idx, height_options, options).get()                                              
-                        
+
+        return BIFFRecords.RowRecord(self.__idx, self.__min_col_idx, self.__max_col_idx, height_options, options).get()
+
 
     def get_cells_biff_data(self):
         return ''.join([ cell.get_biff_data() for cell in self.__cells ])
@@ -215,7 +214,7 @@ class Row(object):
         if h == None:
             self.__has_default_height = 0x01
         else: self.__height = h
-    
+
     height = property(get_height, set_height)
 
     @accepts(object, int)
@@ -239,17 +238,16 @@ class Row(object):
             else:
                 self.__cells.extend([ Cell.BlankCell(self, col, self.__parent_wb.add_style(style)) ])
         elif isinstance(label, (int, long, float)):
-            self.__cells.extend([ Cell.NumberCell(self, col, self.__parent_wb.add_style(style), label) ])            
+            self.__cells.extend([ Cell.NumberCell(self, col, self.__parent_wb.add_style(style), label) ])
         elif isinstance(label, (dt.datetime, dt.time)):
             self.__cells.extend([ Cell.NumberCell(self, col, self.__parent_wb.add_style(style), self.__excel_date_dt(label)) ])
         else:
             self.__cells.extend([ Cell.FormulaCell(self, col, self.__parent_wb.add_style(style), label) ])
 
-    @accepts(object, int, int, Style.XFStyle)                        
+    @accepts(object, int, int, Style.XFStyle)
     def write_blanks(self, c1, c2, style):
         self.__adjust_height(style)
         self.__adjust_bound_col_idx(c1, c2)
         self.__cells.extend([ Cell.MulBlankCell(self, c1, c2, self.__parent_wb.add_style(style)) ])
 
-        
-        
+

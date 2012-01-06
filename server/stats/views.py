@@ -708,6 +708,7 @@ class MongoUpdateStatsHandler(webapp.RequestHandler):
             logging.info(handler_response)
         else:   # failed
             logging.error(handler_response)
+            raise Exception(handler_response)
         self.response.out.write(handler_response)
 
 

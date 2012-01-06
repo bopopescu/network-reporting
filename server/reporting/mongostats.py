@@ -119,4 +119,8 @@ def _str_or_empty(key):
     return str(key) if key else ''
 
 def _key_or_none(key_string):
+    """
+    Returns a db.Key object of the string representation of the string
+    NOTE: the api returns '*' (i.e. wildcard) when the key should be None
+    """
     return db.Key(key_string) if key_string and key_string != '*' else None

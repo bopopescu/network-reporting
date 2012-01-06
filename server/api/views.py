@@ -170,9 +170,13 @@ class AdUnitService(RequestHandler):
         adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
 
         if new_price_floor:
-            adgroup.mktplace_price_floor = float(new_price_floor)
-            adgroup.active = activity
-            AdGroupQueryManager.put(adgroup)
+            try:
+                adgroup.mktplace_price_floor = float(new_price_floor)
+                adgroup.active = activity
+                AdGroupQueryManager.put(adgroup)
+            except ValueError, e:
+                logging.warn(e)
+                return JSONResponse({'error': 'price floor must be a float or an integer'})
 
         return JSONResponse({'success':'success'})
 

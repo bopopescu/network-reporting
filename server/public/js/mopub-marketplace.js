@@ -36,9 +36,11 @@ var mopub = mopub || {};
             return (impressions/attempts)*100;
         },
         validate: function(attributes) {
-            var valid_number = Number(attributes.price_floor);
-            if (valid_number == NaN) {
-                return "please enter a valid number for the price floor";
+            if (typeof(attributes.price_floor != 'undefined')) {
+                var valid_number = Number(attributes.price_floor);
+                if (isNaN(valid_number)) {
+                    return "please enter a valid number for the price floor";
+                }
             }
         },
         url: function() {
@@ -268,7 +270,7 @@ var mopub = mopub || {};
                 loading_img.show();
                 current_model.set({'active': $(this).is(":checked")});
                 current_model.save({}, {
-                    success: function () {
+                    success: function (model, response) {
                         setTimeout(function() {
                             loading_img.hide();
                         }, 2000);
@@ -280,12 +282,12 @@ var mopub = mopub || {};
             $('.price_floor .input-text', adunit_row).keyup(function() {
                 var loading_img = $(".price_floor .loading-img", adunit_row);
                 loading_img.show();
-                current_model.set({'price_floor': $(this).val()});
-                current_model.save({}, {
-                    success: function () {
-                        setTimeout(function() {
-                            loading_img.hide();
-                        }, 2000);
+                current_model.save({'price_floor': $(this).val()}, {
+                    success: function (model, response) {
+                        loading_img.hide();
+                    },
+                    error: function(model, response) {
+                        loading_img.hide();
                     }
                 });
             });

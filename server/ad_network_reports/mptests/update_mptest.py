@@ -43,7 +43,7 @@ class TestUpdate(unittest.TestCase):
         update_ad_networks()
 
         test_network_app_mappers = list(AdNetworkMapperManager.
-                get_ad_network_mappers(account))
+                get_mappers(account))
         print 'App Mapper\'s len: %d' % len(test_network_app_mappers)
         assert len(test_network_app_mappers) > 0
 

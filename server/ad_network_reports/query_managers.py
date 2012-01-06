@@ -58,7 +58,7 @@ class AdNetworkReportManager(CachedQueryManager):
         account for the given days.
         """
         # Get all the mappers for this account.
-        mappers = list(AdNetworkMapperManager.get_ad_network_mappers(
+        mappers = list(AdNetworkMapperManager.get_mappers(
             account))
 
         aggregates_with_dates = [AdNetworkStatsManager. \
@@ -168,11 +168,11 @@ class AdNetworkReportManager(CachedQueryManager):
             else:
                 yield network
 
-class AdNetworkLoginCredentialsManager(CachedQueryManager):
+class AdNetworkLoginManager(CachedQueryManager):
     @classmethod
-    def get_login_credentials(cls,
-                              account,
-                              network_name=''):
+    def get_login(cls,
+                  account,
+                  network_name=''):
         """
         Return AdNetworkLoginCredentials entities for the given account.
         """
@@ -228,7 +228,7 @@ class AdNetworkMapperManager(CachedQueryManager):
                     return mapper
 
     @classmethod
-    def get_ad_network_mappers(cls,
+    def get_mappers(cls,
                                account,
                                network_name=''):
         """
@@ -236,8 +236,8 @@ class AdNetworkMapperManager(CachedQueryManager):
 
         Return a generator of the AdNetworkAppMappers with this account.
         """
-        for login in AdNetworkLoginCredentialsManager. \
-                get_login_credentials(account):
+        for login in AdNetworkLoginManager. \
+                get_login(account):
             query = AdNetworkAppMapper.all().filter('ad_network_login =',
                     login)
             if network_name:
@@ -359,8 +359,8 @@ class AdNetworkStatsManager(CachedQueryManager):
                     data_dict[attr]['sync_date'] = sync_date
                     data_dict[attr]['sync_error'] = not sync_date or yesterday \
                             - sync_date >= timedelta(days=2)
-                    login_credentials = AdNetworkLoginCredentialsManager. \
-                            get_login_credentials(account).filter(
+                    login_credentials = AdNetworkLoginManager. \
+                            get_login(account).filter(
                                     'ad_network_name =',
                                     mapper.ad_network_name).get()
                     data_dict[attr]['app_pub_ids'] = ', '.join(
@@ -401,8 +401,8 @@ class AdNetworkStatsManager(CachedQueryManager):
 
             for network in AD_NETWORK_NAMES.keys():
                 if AD_NETWORK_NAMES[network] not in data_dict:
-                    login_credentials =  AdNetworkLoginCredentialsManager. \
-                            get_login_credentials(account).filter(
+                    login_credentials =  AdNetworkLoginManager. \
+                            get_login(account).filter(
                                     'ad_network_name =', network).get()
                     apps_without_pub_ids_for_network = apps_without_pub_ids[
                             network] + apps_without_pub_ids[ALL_NETWORKS]
@@ -581,23 +581,26 @@ class AdNetworkAggregateManager(CachedQueryManager):
                        account,
                        day,
                        network=None,
-                       app=None):
+                       app=None,
+                       create=True):
         if network:
-            return AdNetworkNetworkStats.get_by_network_and_day(account,
+            stats = AdNetworkNetworkStats.get_by_network_and_day(account,
                                                                 network,
-                                                                day) \
-                    or \
-                    AdNetworkNetworkStats(account=account,
-                                          ad_network_name=network,
-                                          date=day)
+                                                                day)
+            if create and not stats:
+                return AdNetworkNetworkStats(account=account,
+                                             ad_network_name=network,
+                                             date=day)
+            return stats
         elif app:
-            return AdNetworkAppStats.get_by_app_and_day(account,
+            stats = AdNetworkAppStats.get_by_app_and_day(account,
                                                         app,
-                                                        day) \
-                    or \
+                                                        day)
+            if create and not stats:
                     AdNetworkAppStats(account=account,
                                       application=app,
                                       date=day)
+            return stats
         raise LookupError("Method needs either an app or a network.")
 
 
@@ -679,7 +682,7 @@ def create_fake_data(account=None):
         login.put()
 
         for day in last_90_days:
-            for mapper in AdNetworkMapperManager.get_ad_network_mappers(
+            for mapper in AdNetworkMapperManager.get_mappers(
                     account):
                 attempts = random.randint(1, 100000)
                 impressions = random.randint(1, attempts)

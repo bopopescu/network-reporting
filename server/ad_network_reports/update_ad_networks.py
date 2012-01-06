@@ -34,7 +34,7 @@ from ad_network_reports.query_managers import \
         AD_NETWORK_NAMES, \
         IAD, \
         MOBFOX, \
-        AdNetworkLoginCredentialsManager, \
+        AdNetworkLoginManager, \
         AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager, \
@@ -164,7 +164,7 @@ def update_ad_networks(start_date=None, end_date=None, only_these_credentials=
     yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
     login_credentials_list = (only_these_credentials,) if \
-            only_these_credentials else AdNetworkLoginCredentialsManager. \
+            only_these_credentials else AdNetworkLoginManager. \
             get_all_login_credentials()
 
     # Create log file.

@@ -1,12 +1,13 @@
 import logging
 
 from ad_network_reports.forms import LoginInfoForm
+from ad_network_reports.models import LoginStates
 from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
         MOBFOX, \
         MOBFOX_PRETTY, \
         IAD_PRETTY, \
         AdNetworkReportManager, \
-        AdNetworkLoginCredentialsManager, \
+        AdNetworkLoginManager, \
         AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkManagementStatsManager, \
@@ -48,20 +49,41 @@ class AdNetworkReportIndexHandler(RequestHandler):
         #create_fake_data(self.account)
 
         days = gen_days_for_range(self.start_date, self.date_range)
-        logging.info(self.start_date)
-        logging.info(self.date_range)
 
-        aggregate_stats_list = AdNetworkReportManager. \
-                get_aggregate_stats_list(self.account, days)
+        networks = []
+        for network in sorted(AD_NETWORK_NAMES.keys()):
+            # Give the template just enough information to make the appropriate
+            # queries ajax queries for the rest of the data
+            network_data = {}
+            network_data['pretty_name'] = AD_NETWORK_NAMES[network]
+            login = AdNetworkLoginManager.get_login(self.account,
+                    network).get()
+            if login:
+                network_data['app_pub_ids'] = login.app_pub_ids
+                network_data['state'] = login.state
+            else:
+                network_data['state'] = LoginStates.NOT_SETUP
+            network_data['apps'] = []
+            # TODO: move this to stats_helpers and load the entire collection via Ajax
+            for mapper in sorted(AdNetworkMapperManager.get_mappers(self.account,
+                network), key=lambda mapper: mapper.application.name.lower()):
+                network_data['apps'].append({'id': mapper.publisher_id})
+            # Create a form for each network and autopopulate fields.
+            try:
+                login = AdNetworkLoginCredentials. \
+                        get_by_ad_network_name(self.account, network)
+                form = LoginInfoForm(instance=login, prefix=network)
+                # Encryption doesn't work on app engine...
+                #form.initial['password'] = login.decoded_password
+                #form.initial['username'] = login.decoded_password
+            except Exception, error:
+                form = LoginInfoForm(prefix=network)
+            network_data['form'] = form
+            networks.append((network, network_data))
 
-        # Get aggregate_list from aggregate_stats_list and pass it to
-        # roll_up_stats.
-        if aggregate_stats_list:
-            aggregates = AdNetworkStatsManager.roll_up_stats(
-                    zip(*aggregate_stats_list)[1])
-        else:
-            aggregates = []
+        logging.info(networks)
 
+        # TODO: make this load through Ajax
         # Get the daily stats list.
         daily_stats = []
         for date in days:
@@ -71,46 +93,21 @@ class AdNetworkReportIndexHandler(RequestHandler):
                     in stats_dict.iteritems()])
             daily_stats.append(stats_dict)
 
-        networks = AdNetworkStatsManager.roll_up_unique_stats(self.account,
-                aggregate_stats_list, True)
-        apps = AdNetworkStatsManager.roll_up_unique_stats(self.account,
-                aggregate_stats_list, False)
-        if networks:
-            network_names, networks = zip(*networks)
-        else:
-            network_names = []
-            networks = []
-
-        forms = []
-        from ad_network_reports.models import AdNetworkLoginCredentials
-        for name in sorted(AD_NETWORK_NAMES.keys()):
-            try:
-                instance = AdNetworkLoginCredentials. \
-                        get_by_ad_network_name(self.account, name)
-                form = LoginInfoForm(instance=instance, prefix=name)
-                # Encryption doesn't work on app engine...
-                #form.initial['password'] = instance.decoded_password
-                #form.initial['username'] = instance.decoded_password
-            except Exception, error:
-                instance = None
-                form = LoginInfoForm(prefix=name)
-            form.ad_network = name
-            forms.append(form)
-
+        # Aggregate stats (rolled up stats at the app and network level for the
+        # account), daily stats needed for the graph and stats for each mapper
+        # for the account all get loaded via Ajax.
         return render_to_response(self.request,
               'ad_network_reports/ad_network_reports_index.html',
               {
                   'start_date' : days[0],
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
+                  # Account key needed for form submission to EC2.
                   'account_key' : str(self.account.key()),
-                  'aggregates' : aggregates,
                   'daily_stats' : simplejson.dumps(
                       daily_stats),
-                  'apps': apps,
-                  'show_graph': apps != [],
-                  'networks': zip(network_names, networks, forms),
-                  'forms': forms,
+                  'networks': networks,
+                  'LoginStates': LoginStates,
                   'MOBFOX': MOBFOX_PRETTY,
                   'IAD': IAD_PRETTY
               })
@@ -258,8 +255,8 @@ class AdNetworkManagementHandler(RequestHandler):
             aggregates[stat] = sum([stats[stat] for stats in networks.values()])
         aggregates[FAILED] = sum([stats['failed'] for stats in
             networks.values()])
-        aggregates[ACCOUNTS] = AdNetworkLoginCredentialsManager.get_number_of_accounts()
-        aggregates[LOGINS] = AdNetworkLoginCredentialsManager.get_all_login_credentials().count()
+        aggregates[ACCOUNTS] = AdNetworkLoginManager.get_number_of_accounts()
+        aggregates[LOGINS] = AdNetworkLoginManager.get_all_login_credentials().count()
 
         stats_by_date = {}
         for stats_tuple in zip(*management_stats.values()):

@@ -159,7 +159,6 @@ class StatsModelQueryManager(CachedQueryManager):
         else:
             return stats
 
-
     def get_stats_for_days(self,
                            publisher=None,
                            publishers=None,
@@ -191,27 +190,14 @@ class StatsModelQueryManager(CachedQueryManager):
 
         account = account or self.account
         
-        #### USES MONGOSTATS API ####
+        # if going to use mongo we want offline = True in case we need to pull the user info
         if not offline and self.account_obj and self.account_obj.display_mongo and not no_mongo:
-            return mongostats.api_fetch(start_date=days[0],
-                                        end_date=days[-1],
-                                        account_key=account, 
-                                        publisher_key=publisher,
-                                        advertiser_key=advertiser,
-                                        )
+            offline = True
 
         if account:
             parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=offline))
         else:
             parent = None
-
-        # in order to use the keys for a lookup we need the parent,
-        # publisher or advertiser and days
-        # NOTE: publisher=None and advertiser=None and day=Something is actually valid
-        #       this is basically the rollup for the entire account, but just not supported
-        #       in this QM
-        if not publishers and publisher:
-            publishers = [publisher]
 
         if publishers:
             keys = [db.Key.from_path(StatsModel.kind(),
@@ -244,6 +230,32 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              date_fmt=date_fmt),
                                       parent=parent)
                         for d in days]
+
+
+        #### USES MONGOSTATS API ####
+        if not offline and self.account_obj and self.account_obj.display_mongo and not no_mongo:
+            realtime_stats = mongostats.api_fetch(start_date=days[0],
+                                              end_date=days[-1],
+                                              account_key=account,
+                                              publisher_key=publisher,
+                                              advertiser_key=advertiser,
+                                              )
+            # add user data from offline stats for particular queries:
+            # (Account-*-*) and (Account-App-*)
+            if (account and not publisher_key and not advertiser_key) or \
+                (account and publisher_key and publisher_key.kind() == 'App' and not advertiser_key):
+                offline_stats = StatsModel.get(keys) # db get
+                for rt_stat, offline_stat in zip(realtime_stats, offline_stats):
+                    rt_stat.user_count = offline_stat.user_count
+
+            return realtime_stats
+
+        # in order to use the keys for a lookup we need the parent,
+        # publisher or advertiser and days
+        # NOTE: publisher=None and advertiser=None and day=Something is actually valid
+        #       this is basically the rollup for the entire account, but just not supported
+        #       in this QM
+
         days_len = len(days)
                 
         stats = StatsModel.get(keys) # db get

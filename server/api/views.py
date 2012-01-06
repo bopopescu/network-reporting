@@ -1,18 +1,27 @@
-from advertiser.models import *
-from publisher.models import *
-from advertiser.query_managers import CampaignQueryManager, \
-     AdGroupQueryManager, \
-     CreativeQueryManager, \
-     TextCreativeQueryManager, \
-     ImageCreativeQueryManager, \
-     TextAndTileCreativeQueryManager, \
-     HtmlCreativeQueryManager
-from publisher.query_managers import AdUnitQueryManager, AppQueryManager, AdUnitContextQueryManager
+__doc__ = """
+API for fetching JSON serialized data for Apps, AdUnits, AdGroups, and
+AdNetworkReports.
+"""
+from advertiser.query_managers import AdGroupQueryManager
+from publisher.query_managers import AdUnitQueryManager, \
+     AppQueryManager
+from reporting.models import StatsModel
+from reporting.query_managers import StatsModelQueryManager
+
+from ad_server.optimizer.optimizer import DEFAULT_CTR
+
+from budget import budget_service
 
 from common.utils.request_handler import RequestHandler
-from common.ragendja.template import render_to_response, render_to_string, JSONResponse
-from common.utils.marketplace_helpers import MarketplaceStatsFetcher
-from common_templates.templatetags.filters import currency, percentage, percentage_rounded
+from common.ragendja.template import JSONResponse
+from common.utils.stats_helpers import MarketplaceStatsFetcher, \
+     SummedStatsFetcher, \
+     NetworkStatsFetcher, \
+     DirectSoldStatsFetcher, \
+     AdNetworkStatsFetcher
+from common.utils import date_magic
+from common.utils.timezones import Pacific_tzinfo
+from common_templates.templatetags.filters import campaign_status
 
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
@@ -151,7 +160,7 @@ class AdUnitService(RequestHandler):
 
                 return JSONResponse(response)
             else:
-                return JSONResponse({'error':'No parameters provided'})
+                return JSONResponse({'error': 'No parameters provided'})
         except Exception, e:
             logging.warn(e)
             return JSONResponse({'error': str(e)})
@@ -279,73 +288,46 @@ class CreativeService(RequestHandler):
 
 
 @login_required
-def creative_service(request, *args, **kwargs):
-    return CreativeService()(request, use_cache=False, *args, **kwargs)
+def adgroup_service(request, *args, **kwargs):
+    return AdGroupService()(request, use_cache=False, *args, **kwargs)
 
 
-class DspService(RequestHandler):
+class AppOnNetworkService(RequestHandler):
     """
-    API Service for delivering serialized Dsp data
+    API Service for delivering serialized app on network data
     """
-    def get(self, dsp_key=None):
-        return JSONResponse({'error':'No parameters provided'})
+    def get(self, network, pub_id=''):
+        try:
 
-    def post(self):
-        pass
+            # Formulate the date range
+            if self.request.GET.get('s', None):
+                year, month, day = str(self.request.GET.get('s')).split('-')
+                end_date = datetime.date(int(year), int(month), int(day))
+            else:
+                end_date = datetime.date.today()
 
-    def put(self):
-        pass
+            if self.request.GET.get('r', None):
+                days_in_range = int(self.request.GET.get('r')) - 1
+                start_date = end_date - datetime.timedelta(days_in_range)
+            else:
+                start_date = end_date - datetime.timedelta(13)
+            days = date_magic.gen_days(start_date, end_date)
 
-    def delete(self):
-        pass
+            # If an app key is provided get only stats for that app
+            if pub_id:
+                return JSONResponse(AdNetworkStatsFetcher.get_app_stats(
+                    network, days, pub_id))
+            # If no app key is provided, return stats rolled up stats for the
+            # network and account
+            return JSONResponse(AdNetworkStatsFetcher.get_stats(
+                self.account, network, days))
+
+        except Exception, e:
+            logging.warn("APPS ON NETWORK FETCH ERROR "  + str(e))
+            return JSONResponse({'error': str(e)})
 
 
 @login_required
-def dsp_service(request, *args, **kwargs):
-    return DspService()(request, use_cache=False, *args, **kwargs)
-
-
-
-class NetworkCampaignService(RequestHandler):
-    """
-    API Service for delivering serialized network campaign data
-    """
-    def get(self, campaign_key=None):
-
-
-        start_date = request.GET.get('start_date', None)
-        end_date = request.GET.get('end_date', None)
-        batch = request.GET.get('batch', None)
-
-        # If campaign_key isn't None, they want a single campaign.
-        # Give it to them.
-        if campaign_key:
-            pass
-
-        # If batch parameters are found, it means they want a couple
-        # of campaigns at once. This is usually used to load data in chunks to
-        # balance network latency with I/O, and also so that something is always
-        # happening on the page.
-        elif batch:
-            pass
-
-        # If no parameters are passed in any way, return all of the network campaigns.
-        else:
-            network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
-
-        return JSONResponse({'error':'No parameters provided'})
-
-    def post(self):
-        pass
-
-    def put(self):
-        pass
-
-    def delete(self):
-        pass
-
-
-@login_required
-def network_campaign_service(request, *args, **kwargs):
-    return NetworkCampaignService()(request, use_cache=False, *args, **kwargs)
+def app_on_network_service(request, *args, **kwargs):
+    return AppOnNetworkService()(request, use_cache=False, *args, **kwargs)
 

@@ -65,7 +65,7 @@
                 <a class="show-status" style="cursor:pointer;" id="{{form.ad_network}}-status">Status</a>
                 {% ifequal network.state 2 %}
                 <div>
-                    <a class="show-hide button button-small" id={{network.key}} style="width:75px;">Show Apps</a>
+                    <a class="show-hide button button-small" id={{form.ad_network}} style="width:75px;">Show Apps</a>
                 </div>
                 {% endifequal %}
             </td>
@@ -181,25 +181,10 @@
         </form>
       </div>
       {% if network.state == 2 %}
-    <div class="appData-details hidden {{network.key}}-row" style="margin: -10px 0 0 86px">
+    <div class="appData-details hidden {{form.ad_network}}-row" style="margin: -10px 0 0 86px">
         <div class="appData-details-inner show">
           <table class="dataTable">
-            <tbody>
-              {% for app in network.sub_data_list %}
-              <tr class="show-details sub-rows {% if not forloop.last %} add-border {% endif %}" id="{{app.key}}">
-                  <td class="dataTable-name">
-                    {{app.name}} <a class="hidden details-{{app.key}}" href="{% url ad_network_app_detail app.key %}">Details</a>
-                  </td>
-                  <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
-                  <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ app.attempts|withsep }}{% endif %}</td>
-                  <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
-                  <td class="dataTable-data numeric">{{ app.cpm|currency }}</td>
-                  <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ app.fill_rate|percentage }}{% endif %}</td>
-                  <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
-                  <td class="dataTable-data numeric">{{ app.cpc|currency }}</td>
-                  <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
-                </tr>
-              {% endfor %}
+            <tbody id="app-on-{{form.ad_network}}">
             </tbody>
           </table>
         </div>
@@ -283,12 +268,28 @@
 
 {% block extraScripts %}
   {{ block.super }}
-  <script type="text/javascript" src="/js/mopub-advertiser.js?v=48"></script>
+  <script type="text/html" id="app-on-network-row-template">
+    {% include "partials/app_on_network.html" %}
+  </script>
+  <script type="text/javascript" src="/js/models.js?v=1"></script>
+  <script type="text/javascript" src="/js/views.js?v=1"></script>
+  <script type="text/javascript" src="/js/controllers/advertiser.js?v=46"></script>
+  <script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=2"></script>
   <script>
     $(function () {
         mopub.Advertiser.initializeAdReportsIndex();
         account_key = '{{ account_key }}';
         mopub.Advertiser.initializeCredentialsPage(account_key);
+
+        AdNetworkReportsController(
+        [{% for network_name, network, form in networks %} {
+           network: '{{ form.ad_network }}',
+           models: [{% for app in network.sub_data_list %}{
+            id: '{{ app.id }}',
+            network: '{{ form.ad_network }}'},
+          {% endfor %}]},
+        {% endfor %}],
+        's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}{% if offline %}&offline=1{% endif %}');
     });
   </script>
 {% endblock extraScripts %}

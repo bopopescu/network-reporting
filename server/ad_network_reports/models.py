@@ -12,6 +12,7 @@ from publisher.models import App
 KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
 STAT_NAMES = ('revenue', 'attempts', 'impressions', 'clicks')
+CALCULATED_STAT_NAMES = ('cpm', 'fill_rate', 'cpc', 'ctr')
 
 class AdNetworkLoginCredentials(db.Model):
     """
@@ -164,6 +165,23 @@ class AdNetworkStats(db.Model):
         if self.impressions:
             return self.clicks / float(self.impressions)
         return 0.0
+
+    @property
+    def dict_(self):
+        """
+        Override __dict__ property to return a dict of the stats.
+
+        Basically it removes all the app engine entity crap.
+        """
+        # TODO: Remove reference properties too probably in children
+        stats_dict = super(AdNetworkStats, self).__dict__['_entity']
+        if not stats_dict:
+            stats_dict = super(AdNetworkStats, self).__dict__
+            stats_dict = dict([(key.replace('_', '', 1), val) for key, val in
+                stats_dict.iteritems()])
+        for stat in CALCULATED_STAT_NAMES:
+            stats_dict[stat] = getattr(self, stat)
+        return stats_dict
 
 class AdNetworkScrapeStats(AdNetworkStats):
     """

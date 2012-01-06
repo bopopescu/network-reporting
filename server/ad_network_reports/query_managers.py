@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from account.query_managers import AccountQueryManager
 from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppMapper, \
+     AdNetworkStats, \
      AdNetworkScrapeStats, \
      AdNetworkNetworkStats, \
      AdNetworkAppStats, \
@@ -170,11 +171,15 @@ class AdNetworkReportManager(CachedQueryManager):
 class AdNetworkLoginCredentialsManager(CachedQueryManager):
     @classmethod
     def get_login_credentials(cls,
-                              account):
+                              account,
+                              network_name=''):
         """
         Return AdNetworkLoginCredentials entities for the given account.
         """
-        return AdNetworkLoginCredentials.all().filter('account =', account)
+        query = AdNetworkLoginCredentials.all().filter('account =', account)
+        if network_name:
+            return query.filter('ad_network_name =', network_name)
+        return query
 
     @classmethod
     def get_all_login_credentials(cls):
@@ -224,16 +229,20 @@ class AdNetworkMapperManager(CachedQueryManager):
 
     @classmethod
     def get_ad_network_mappers(cls,
-                               account):
+                               account,
+                               network_name=''):
         """
         Inner join AdNetworkLoginCredentials with AdNetworkAppMapper.
 
         Return a generator of the AdNetworkAppMappers with this account.
         """
-        for credential in AdNetworkLoginCredentialsManager. \
+        for login in AdNetworkLoginCredentialsManager. \
                 get_login_credentials(account):
-            for mapper in AdNetworkAppMapper.all().filter('ad_network_login =',
-                    credential):
+            query = AdNetworkAppMapper.all().filter('ad_network_login =',
+                    login)
+            if network_name:
+                query.filter('ad_network_name =', network_name)
+            for mapper in query:
                 yield mapper
 
     @classmethod
@@ -312,7 +321,7 @@ class AdNetworkStatsManager(CachedQueryManager):
                 attr = AD_NETWORK_NAMES[mapper.ad_network_name]
                 name = '%s (%s)' % (application.name, application. \
                         app_type_text())
-                key = mapper.key()
+                key = str(mapper.key())
             else:
                 attr = (application.name, application.app_type_text())
                 name = AD_NETWORK_NAMES[mapper.ad_network_name]
@@ -329,6 +338,8 @@ class AdNetworkStatsManager(CachedQueryManager):
                 'ctr': stats.ctr,
                 'cpc': stats.cpc,
             }
+            if networks:
+                sub_data['id'] = mapper.publisher_id
             if not data_dict.has_key(attr):
                 data_dict[attr] = {
                     'sub_data_list': [],
@@ -341,7 +352,7 @@ class AdNetworkStatsManager(CachedQueryManager):
                     'clicks': 0,
                     'ctr': 0.0,
                     'cpc': 0.0,
-                    'key': str(key),
+                    'key': key,
                 }
                 if networks:
                     data_dict[attr]['state'] = 2
@@ -485,7 +496,7 @@ class AdNetworkStatsManager(CachedQueryManager):
 
         Return a stats object.
         """
-        aggregate_stats = AdNetworkScrapeStats()
+        aggregate_stats = AdNetworkStats()
 
         aggregate_stats.fill_rate_impressions = 0
         for stats in stats_iterable:
@@ -532,6 +543,8 @@ class AdNetworkStatsManager(CachedQueryManager):
             else:
                 setattr(stats1, stat, getattr(stats1, stat) + getattr(stats2,
                     stat))
+
+
 
 class AdNetworkAggregateManager(CachedQueryManager):
     @classmethod

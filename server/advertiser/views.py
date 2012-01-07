@@ -31,7 +31,7 @@ from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm, \
                              BaseCreativeForm, TextCreativeForm, \
                              ImageCreativeForm, TextAndTileCreativeForm, \
-                             HtmlCreativeForm
+                             HtmlCreativeForm, ContentFilterForm
 
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager, TextCreativeQueryManager, \
@@ -1337,6 +1337,8 @@ class MarketplaceIndexHandler(RequestHandler):
         except AttributeError:
             blind = False
 
+        filter_form = ContentFilterForm()
+
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {
@@ -1354,6 +1356,7 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'end_date': end_date,
                                       'date_range': self.date_range,
                                       'blind': blind,
+                                      'filter_form': filter_form
                                   })
 
 

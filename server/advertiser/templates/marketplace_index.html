@@ -224,9 +224,20 @@
       The MoPub Marketplace has been turned off. Visit the settings page if you'd like to turn it on again.
     </div>
 
+    <h2> Content Filtering </h2>
+    <div class="well">
+      <p>
+        MoPub can filter ads so that only appropriate ads will be displayed to for your audience.
+        Select the filtering level for your ads below.
+        <a href="#"> Learn More </a>
+      </p>
+
+      {{ filter_form }}
+    </div>
 
     <h2>Blocklist</h2>
     <div class="well">
+      <p> Ads will not be served from domains in your blocklist.</p>
       <div class="clearfix" style="width: 560px;">
         <div id="current_blocklist" class="right">
           <h3> Currently Blocked </h3>

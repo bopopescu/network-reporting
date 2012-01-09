@@ -659,10 +659,12 @@ def create_fake_data(account=None):
         last_90_days = date_magic.gen_date_range(90)
 
         app = App(account=account,
-                name='My little pony island adventures')
+                name='Hello Kitty Island Adventures')
         app.put()
 
-        for network in AD_NETWORK_NAMES.keys()[1:-2]:
+        networks = AD_NETWORK_NAMES.keys()[1:-2]
+
+        for network in networks:
             login = AdNetworkLoginCredentials(account=account,
                                ad_network_name=network,
                                username='bullshit',
@@ -682,20 +684,31 @@ def create_fake_data(account=None):
         login.put()
 
         for day in last_90_days:
+            totals = {}
             for mapper in AdNetworkMapperManager.get_mappers(
                     account):
+                revenue = random.random() * 10000
                 attempts = random.randint(1, 100000)
                 impressions = random.randint(1, attempts)
                 clicks = random.randint(1, impressions)
-                stats = AdNetworkScrapeStats(revenue=random.random()*10000,
+                stats = AdNetworkScrapeStats(revenue=revenue,
                                              attempts=attempts,
                                              impressions=impressions,
                                              clicks=clicks,
                                              date=day,
                                              ad_network_app_mapper=mapper)
                 stats.put()
+                if mapper.ad_network_name not in totals:
+                    totals[mapper.ad_network_name] = \
+                            AdNetworkNetworkStats(account=account,
+                                                  ad_network_name=mapper.ad_network_name,
+                                                  date=day)
+                AdNetworkStatsManager.combined_stats(totals[mapper.ad_network_name], stats)
 
-            for network in AD_NETWORK_NAMES.keys():
+            for stats in totals.itervalues():
+                stats.put()
+
+            for network in networks:
                 stats = AdNetworkManagementStats(ad_network_name=network,
                                         date=day,
                                         found=random.randint(1, 100000),

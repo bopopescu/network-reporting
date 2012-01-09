@@ -89,6 +89,9 @@ class App(db.Model):
         if not self.icon_blob: return "/placeholders/image.gif"
         return helpers.get_url_for_blob(self.icon_blob)
 
+    @property
+    def identifier(self):
+        return self.name.replace(' ', '_') + '-' + self.app_type
 
     def get_owner(self):
         return None

@@ -297,33 +297,27 @@ class AppOnNetworkService(RequestHandler):
     API Service for delivering serialized app on network data
     """
     def get(self, network, pub_id=''):
-        try:
 
-            # Formulate the date range
-            if self.request.GET.get('s', None):
-                year, month, day = str(self.request.GET.get('s')).split('-')
-                start_date = datetime.date(int(year), int(month), int(day))
-            else:
-                start_date = datetime.date.today()
-            days_in_range = int(self.request.GET.get('r'))
+        # Formulate the date range
+        if self.request.GET.get('s', None):
+            year, month, day = str(self.request.GET.get('s')).split('-')
+            start_date = datetime.date(int(year), int(month), int(day))
+        else:
+            start_date = datetime.date.today()
+        days_in_range = int(self.request.GET.get('r'))
 
-            logging.info("Ajax")
-            logging.info(start_date)
-            logging.info(days_in_range)
-            days = date_magic.gen_days_for_range(start_date, days_in_range)
+        days = date_magic.gen_days_for_range(start_date, days_in_range)
 
-            # If an app key is provided get only stats for that app
-            if pub_id:
-                return JSONResponse(AdNetworkStatsFetcher.get_app_stats(
-                    network, days, pub_id))
-            # If no app key is provided, return stats rolled up stats for the
-            # network and account
-            return JSONResponse(AdNetworkStatsFetcher.get_stats(
-                self.account, network, days))
+        # If a pub id is provided get only stats for that app
+        if pub_id:
+            return JSONResponse(AdNetworkStatsFetcher.get_app_stats(
+                network, days, pub_id))
+        logging.info("REQUESTING ROLLED UP STATS")
+        # If no pub id is provided, return stats rolled up stats for the
+        # network and account
+        return JSONResponse(AdNetworkStatsFetcher.get_stats(
+            self.account, network, days))
 
-        except Exception, e:
-            logging.warn("APPS ON NETWORK FETCH ERROR "  + str(e))
-            return JSONResponse({'error': str(e)})
 
 
 @login_required

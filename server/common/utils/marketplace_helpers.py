@@ -327,9 +327,12 @@ class AdNetworkStatsFetcher(object):
 
     @classmethod
     def get_stats(cls, account, network, days):
-        # TODO: don't create on find
-        return AdNetworkStatsManager.roll_up_stats([AdNetworkAggregateManager.find_or_create(
-            account, day, network=network) for day in days]).dict_
+        stats = AdNetworkStatsManager.roll_up_stats([stats for stats in
+            [AdNetworkAggregateManager.find_or_create(account, day,
+                network=network, create=False) for day in days] if stats !=
+            None])
+        logging.info(stats.dict_)
+        return stats.dict_
 
 # Helper/Utility functions
 

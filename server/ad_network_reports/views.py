@@ -51,23 +51,26 @@ class AdNetworkReportIndexHandler(RequestHandler):
         days = gen_days_for_range(self.start_date, self.date_range)
 
         networks = []
+        apps_with_data = {}
         for network in sorted(AD_NETWORK_NAMES.keys()):
-            # Give the template just enough information to make the appropriate
-            # queries ajax queries for the rest of the data
             network_data = {}
+            network_data['name'] = network
             network_data['pretty_name'] = AD_NETWORK_NAMES[network]
             login = AdNetworkLoginManager.get_login(self.account,
                     network).get()
             if login:
-                network_data['app_pub_ids'] = login.app_pub_ids
+                network_data['pub_ids_without_data'] = login.app_pub_ids
                 network_data['state'] = login.state
             else:
                 network_data['state'] = LoginStates.NOT_SETUP
-            network_data['apps'] = []
-            # TODO: move this to stats_helpers and load the entire collection via Ajax
+            network_data['pub_ids'] = []
+            # Give the template enough information to make the appropriate
+            # queries ajax queries to get all the models for each collection
             for mapper in sorted(AdNetworkMapperManager.get_mappers(self.account,
                 network), key=lambda mapper: mapper.application.name.lower()):
-                network_data['apps'].append({'id': mapper.publisher_id})
+                network_data['pub_ids'].append(mapper.publisher_id)
+                app = mapper.application
+                apps_with_data[(app.name, app.app_type)] = mapper.application
             # Create a form for each network and autopopulate fields.
             try:
                 login = AdNetworkLoginCredentials. \
@@ -79,19 +82,22 @@ class AdNetworkReportIndexHandler(RequestHandler):
             except Exception, error:
                 form = LoginInfoForm(prefix=network)
             network_data['form'] = form
-            networks.append((network, network_data))
+            networks.append(network_data)
+
+        apps = [app for app in sorted(apps_with_data.itervalues(), key=lambda
+            app: app.identifier)]
 
         logging.info(networks)
 
         # TODO: make this load through Ajax
         # Get the daily stats list.
-        daily_stats = []
-        for date in days:
-            stats_dict = AdNetworkStatsManager.get_stats_for_day(self.account,
-                    date).__dict__
-            stats_dict = dict([(key.replace('_', '', 1), val) for key, val
-                    in stats_dict.iteritems()])
-            daily_stats.append(stats_dict)
+#        daily_stats = []
+#        for date in days:
+#            stats_dict = AdNetworkStatsManager.get_stats_for_day(self.account,
+#                    date).__dict__
+#            stats_dict = dict([(key.replace('_', '', 1), val) for key, val
+#                    in stats_dict.iteritems()])
+#            daily_stats.append(stats_dict)
 
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper
@@ -104,9 +110,8 @@ class AdNetworkReportIndexHandler(RequestHandler):
                   'date_range' : self.date_range,
                   # Account key needed for form submission to EC2.
                   'account_key' : str(self.account.key()),
-                  'daily_stats' : simplejson.dumps(
-                      daily_stats),
                   'networks': networks,
+                  'apps': apps,
                   'LoginStates': LoginStates,
                   'MOBFOX': MOBFOX_PRETTY,
                   'IAD': IAD_PRETTY

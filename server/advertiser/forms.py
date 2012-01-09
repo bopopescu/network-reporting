@@ -253,7 +253,7 @@ class AdGroupForm(mpforms.MPModelForm):
                   'target_ipod', 'target_ipad', 'ios_version_max','ios_version_min',
                   'target_android', 'android_version_max','android_version_min',
                   'target_other')
-    
+
     def save( self, commit=True):
         obj = super(AdGroupForm, self).save(commit=False)
         if obj:
@@ -346,13 +346,22 @@ class BaseCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = Creative
-        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
+        fields = ('ad_type','name','tracking_url','url','display_url',
+                  'format','custom_height','custom_width','landscape',
+                  'conv_appid', 'launchpage')
 
     def clean_name(self):
         data = self.cleaned_data.get('name', None)
         if not data:
             raise forms.ValidationError('You must give your creative a name.')
         return data
+
+    def clean_url(self):
+        url = self.cleaned_data.get('url', None)
+        if url:
+            if url.find("://") == -1:
+                raise forms.ValidationError("You need to specify a protocol (like http://) at the beginning of your url")
+        return url
 
 
 class TextCreativeForm(AbstractCreativeForm):
@@ -361,7 +370,9 @@ class TextCreativeForm(AbstractCreativeForm):
     class Meta:
         model = TextCreative
         fields = ('headline','line1','line2') + \
-                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
+                 ('ad_type','name','tracking_url','url','display_url',
+                  'format','custom_height','custom_width','landscape',
+                  'conv_appid', 'launchpage')
 
 class TextAndTileCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
@@ -435,7 +446,9 @@ class HtmlCreativeForm(AbstractCreativeForm):
     class Meta:
         model = HtmlCreative
         fields = ('html_data', 'ormma_html') + \
-                 ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
+                 ('ad_type','name','tracking_url','url','display_url','format',
+                  'custom_height','custom_width','landscape', 'conv_appid',
+                  'launchpage')
 
 class ImageCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/image_creative_form.html'
@@ -445,7 +458,9 @@ class ImageCreativeForm(AbstractCreativeForm):
 
     class Meta:
         model = ImageCreative
-        fields = ('ad_type','name','tracking_url','url','display_url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
+        fields = ('ad_type','name','tracking_url','url','display_url','format',
+                  'custom_height','custom_width','landscape', 'conv_appid',
+                  'launchpage')
 
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)

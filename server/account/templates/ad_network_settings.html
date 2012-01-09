@@ -127,11 +127,11 @@
                   <div class="buttonBank buttonBank-right">
                     <a class="button button-small adForm-fields-toggleButton" href="#">Hide details</a>
                   </div>
-                  <legend>eJam {% if ejam_status == 1 or ejam_status == 2 or ejam_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
+                  <legend>TapIt {% if ejam_status == 1 or ejam_status == 2 or ejam_status == 4 %}<span class="success unbold">(Enabled)</span>{% endif %}
                                         {% if ejam_status == 3 %}<span class ="partial unbold">(Partially enabled)</span>{% endif %}
                                         {% if ejam_status == 0 %}<span class="muted unbold">(Not configured)</span>{% endif %}</legend>
                   <dl class="formFields {% if ejam_status != 0 %}show{% endif %}">
-                    <dt><label for="appForm-adUnitName">eJam Zone ID:</label></dt>
+                    <dt><label for="appForm-adUnitName">TapIt Zone ID:</label></dt>
                     <dd><input type="text" class="input-text" name="ejam_pub_id" value="{{account.network_config.ejam_pub_id|default_if_none:""}}" placeholder="ex: 23710" /></dd>
 
                     <div class="adForm-apps {% if ejam_status == 2 or ejam_status == 3 or ejam_status == 4 %} {% else %} show {% endif %}">
@@ -141,7 +141,7 @@
                       {% endfor %}
                     </div>
                         <dt><a class="button button-small adForm-fields-appButton" href="#"> </a></dt>
-                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.ejam.com/" target="_blank">Go to eJam<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
+                    <div class="formFields-right"><a class="linkIcon breadcrumb-back" href="http://www.tapit.com/" target="_blank">Go to TapIt<span class="ui-icon ui-icon-arrowthick-1-e"></span></a></div>
                   </dl>
                 </fieldset>
                 <fieldset class="adForm alt">

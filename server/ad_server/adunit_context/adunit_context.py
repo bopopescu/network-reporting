@@ -216,7 +216,8 @@ class CreativeCTR(object):
 
           qm_stats = smqm.get_stats_for_days(publisher=self.adunit,
                                            advertiser=self.creative,
-                                           days=[date])
+                                           days=[date],
+                                           use_mongo=False)
 
           stats = qm_stats[0] # qm_stats is a list of stats of length 1
           # Make sure we have enough impressions

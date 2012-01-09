@@ -314,7 +314,7 @@ class MarketplaceStatsFetcher(object):
 
 class AdNetworkStatsFetcher(object):
     @classmethod
-    def get_app_stats(cls, network, days, pub_id):
+    def get_app_on_network_stats(cls, network, days, pub_id):
         mapper = AdNetworkMapperManager.get_ad_network_mapper(publisher_id=pub_id,
                 ad_network_name=network)
         stats = AdNetworkStatsManager.get_stats_for_mapper_and_days(mapper,
@@ -326,11 +326,11 @@ class AdNetworkStatsFetcher(object):
 
 
     @classmethod
-    def get_stats(cls, account, network, days):
+    def get_roll_up_stats(cls, account, days, network=None, app=None):
+        stats_list = [AdNetworkAggregateManager.find_or_create(account, day,
+                network=network, app=app, create=False) for day in days]
         stats = AdNetworkStatsManager.roll_up_stats([stats for stats in
-            [AdNetworkAggregateManager.find_or_create(account, day,
-                network=network, create=False) for day in days] if stats !=
-            None])
+                stats_list if stats != None])
         logging.info(stats.dict_)
         return stats.dict_
 

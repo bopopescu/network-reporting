@@ -24,9 +24,9 @@ urlpatterns = patterns(
         'adgroup_service',
         name='adgroup_service'),
 
-    url(r'^app_on_network/(?P<network>[-\w\.]+)$',
-        'app_on_network_service',
-        name='adunit_service'),
+    url(r'^roll_up/(?P<type_>app|network)/id/(?P<id_>[-\w\.]+)$',
+        'roll_up_service',
+        name='roll_up_service'),
     url(r'^app_on_network/(?P<network>[-\w\.]+)/pub_id/(?P<pub_id>[-\w\.]+)$',
         'app_on_network_service',
         name='app_on_network_service'),

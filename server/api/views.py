@@ -33,6 +33,10 @@ from django.conf import settings
 
 import urllib2
 
+class Types:
+    APP = 'app'
+    NETWORK = 'network'
+
 class AppService(RequestHandler):
     """
     API Service for delivering serialized App data
@@ -291,12 +295,13 @@ class CreativeService(RequestHandler):
 def adgroup_service(request, *args, **kwargs):
     return AdGroupService()(request, use_cache=False, *args, **kwargs)
 
-
+## Ad Network Services
+#
 class AppOnNetworkService(RequestHandler):
     """
     API Service for delivering serialized app on network data
     """
-    def get(self, network, pub_id=''):
+    def get(self, network, pub_id):
 
         # Formulate the date range
         if self.request.GET.get('s', None):
@@ -308,19 +313,44 @@ class AppOnNetworkService(RequestHandler):
 
         days = date_magic.gen_days_for_range(start_date, days_in_range)
 
-        # If a pub id is provided get only stats for that app
-        if pub_id:
-            return JSONResponse(AdNetworkStatsFetcher.get_app_stats(
-                network, days, pub_id))
-        logging.info("REQUESTING ROLLED UP STATS")
-        # If no pub id is provided, return stats rolled up stats for the
-        # network and account
-        return JSONResponse(AdNetworkStatsFetcher.get_stats(
-            self.account, network, days))
-
+        # Get only stats for that app
+        return JSONResponse(AdNetworkStatsFetcher.get_app_on_network_stats(
+            network, days, pub_id))
 
 
 @login_required
 def app_on_network_service(request, *args, **kwargs):
     return AppOnNetworkService()(request, use_cache=False, *args, **kwargs)
+
+class RollUpService(RequestHandler):
+    """
+    API Service for delivering serialized precalculated roll up stats for ad
+    networks
+    """
+
+    def get(self, type_, id_):
+
+        # Formulate the date range
+        if self.request.GET.get('s', None):
+            year, month, day = str(self.request.GET.get('s')).split('-')
+            start_date = datetime.date(int(year), int(month), int(day))
+        else:
+            start_date = datetime.date.today()
+        days_in_range = int(self.request.GET.get('r'))
+
+        days = date_magic.gen_days_for_range(start_date, days_in_range)
+
+        logging.info("REQUESTING ROLLED UP STATS")
+        # Return stats rolled up stats for the network and account
+        if type_ == Types.APP:
+            return JSONResponse(AdNetworkStatsFetcher.get_roll_up_stats(
+                self.account, days, app=AppQueryManager.get_app_by_key(id_)))
+        elif type_ == Types.NETWORK:
+            return JSONResponse(AdNetworkStatsFetcher.get_roll_up_stats(
+                self.account, days, network=id_))
+
+
+@login_required
+def roll_up_service(request, *args, **kwargs):
+    return RollUpService()(request, use_cache=False, *args, **kwargs)
 

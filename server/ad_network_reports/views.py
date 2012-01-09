@@ -46,7 +46,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        #create_fake_data(self.account)
+        create_fake_data(self.account)
 
         days = gen_days_for_range(self.start_date, self.date_range)
 

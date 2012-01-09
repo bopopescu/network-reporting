@@ -93,6 +93,10 @@ class App(db.Model):
     def identifier(self):
         return self.name.replace(' ', '_') + '-' + self.app_type
 
+    @property
+    def key_(self):
+        return str(self.key())
+
     def get_owner(self):
         return None
 

@@ -684,7 +684,8 @@ def create_fake_data(account=None):
         login.put()
 
         for day in last_90_days:
-            totals = {}
+            network_totals = {}
+            app_totals = {}
             for mapper in AdNetworkMapperManager.get_mappers(
                     account):
                 revenue = random.random() * 10000
@@ -698,14 +699,23 @@ def create_fake_data(account=None):
                                              date=day,
                                              ad_network_app_mapper=mapper)
                 stats.put()
-                if mapper.ad_network_name not in totals:
-                    totals[mapper.ad_network_name] = \
+                if mapper.ad_network_name not in network_totals:
+                    network_totals[mapper.ad_network_name] = \
                             AdNetworkNetworkStats(account=account,
                                                   ad_network_name=mapper.ad_network_name,
                                                   date=day)
-                AdNetworkStatsManager.combined_stats(totals[mapper.ad_network_name], stats)
+                AdNetworkStatsManager.combined_stats(network_totals[mapper.ad_network_name], stats)
+                if mapper.application.key_ not in app_totals:
+                    app_totals[mapper.application.key_] = \
+                            AdNetworkAppStats(account=account,
+                                              application=mapper.application,
+                                              date=day)
+                AdNetworkStatsManager.combined_stats(app_totals[mapper.application.key_], stats)
 
-            for stats in totals.itervalues():
+            for stats in network_totals.itervalues():
+                stats.put()
+
+            for stats in app_totals.itervalues():
                 stats.put()
 
             for network in networks:

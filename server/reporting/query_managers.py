@@ -108,7 +108,7 @@ class StatsModelQueryManager(CachedQueryManager):
 
         stats = []
         for account,apps in account_app_dict.iteritems():
-            stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days,use_mongo=False)
+            stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days)
 
         return stats
 

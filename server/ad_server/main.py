@@ -43,6 +43,7 @@ from ad_server import memcache_mangler
 ###################
 from ad_server.handlers import TestHandler, UDIDHandler, MPXUDIDHandler
 from ad_server.handlers import adhandler
+from ad_server.handlers import budget_handlers
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 from userstore.models import CLICK_EVENT_NO_APP_ID
@@ -220,7 +221,8 @@ def main():
                                                   ('/m/memshow', memcache_mangler.ShowHandler),
                                                   ('/m/purchase', PurchaseHandler),
                                                   ('/m/purchase_txn', PurchaseHandlerTxn),
-                                                  ('/m/req',AdRequestHandler),],
+                                                  ('/m/req',AdRequestHandler),
+                                                  ('/m/budget/advance', budget_handlers.BudgetAdvanceHandler)],
                                                   debug=DEBUG)
     run_wsgi_app(application)
     # wsgiref.handlers.CGIHandler().run(application)

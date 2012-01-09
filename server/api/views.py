@@ -190,17 +190,23 @@ class AdUnitService(RequestHandler):
             activity = put_data['active']
 
             account_key = self.account.key()
-            adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key,
-                                                                  account_key)
+            adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
 
-            adgroup.mktplace_price_floor = float(new_price_floor)
-            adgroup.active = activity
-            AdGroupQueryManager.put(adgroup)
+            if new_price_floor:
+                try:
+                    adgroup.mktplace_price_floor = float(new_price_floor)
+                    adgroup.active = activity
+                    AdGroupQueryManager.put(adgroup)
+                except ValueError, e:
+                    logging.warn(e)
+                    return JSONResponse({'error': 'price floor must be a float or an integer'})
 
             return JSONResponse({'success':'success'})
+
         except Exception, error:
             logging.warn(error)
             return JSONResponse({"error": "error"})
+
 
     def delete(self):
         pass

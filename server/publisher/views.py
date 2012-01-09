@@ -206,7 +206,8 @@ class GeoPerformanceHandler(RequestHandler):
         account_stats_mgr = StatsModelQueryManager(self.account,
                                                    self.offline,
                                                    include_geo=True)
-        all_stats = account_stats_mgr.get_stats_for_days(days=days)
+        all_stats = account_stats_mgr.get_stats_for_days(days=days, use_mongo=False)
+
         for stats in all_stats:
             totals = totals + StatsModel(request_count=stats.request_count,
                                          impression_count=stats.impression_count,

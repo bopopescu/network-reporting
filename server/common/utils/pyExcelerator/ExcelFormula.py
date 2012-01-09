@@ -1,31 +1,30 @@
 #!/usr/bin/env python
-# -*- coding: windows-1251 -*-
 
 #  Copyright (C) 2005 Roman V. Kiseliov
 #  All rights reserved.
-# 
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
 #  are met:
-# 
+#
 #  1. Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-# 
+#
 #  2. Redistributions in binary form must reproduce the above copyright
 #     notice, this list of conditions and the following disclaimer in
 #     the documentation and/or other materials provided with the
 #     distribution.
-# 
+#
 #  3. All advertising materials mentioning features or use of this
 #     software must display the following acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  4. Redistributions of any form whatsoever must retain the following
 #     acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  THIS SOFTWARE IS PROVIDED BY Roman V. Kiseliov ``AS IS'' AND ANY
 #  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -55,10 +54,10 @@ PartOfShareFormula=0x08
 
 class ErrorCode(object):
     error_msg = dict([(i[1], i[0]) for i in ExcelMagic.error_msg_by_code.items()])
-    
+
     def __init__(self, s):
         self.val = self.error_msg[s]
-    
+
     def int(self): return self.val
 
 class Formula(object):

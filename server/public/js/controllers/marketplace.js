@@ -4,7 +4,356 @@
 var mopub = mopub || {};
 
 // depends underscore, backbone, jquery, mopub.chart, mopub.util
-(function($) {
+(function($, Backbone) {
+
+    /*
+     * ## AdUnit
+     */
+    var AdUnit = Backbone.Model.extend({
+        // If we don't set defaults, the templates will explode
+        defaults : {
+            active: false,
+            attempts: 0,
+            clicks: 0,
+            ctr: 0,
+            ecpm: 0,
+            fill_rate: 0,
+            impressions: 0,
+            name: '',
+            price_floor: 0,
+            revenue: 0
+        },
+        calcCtr: function () {
+            return (this.get('clicks') / (this.get('impressions')+1));
+        },
+        calcEcpm: function () {
+            return (this.get('revenue') / (this.get('impressions')+1)*1000);
+        },
+        calcFillRate: function () {
+            if (attempts === 0) {
+                return 0.0;
+            }
+            return (impressions/attempts)*100;
+        },
+        validate: function(attributes) {
+            if (typeof(attributes.price_floor != 'undefined')) {
+                var valid_number = Number(attributes.price_floor);
+                if (isNaN(valid_number)) {
+                    return "Please enter a valid number for the price floor";
+                }
+            }
+        },
+        url: function() {
+            return '/api/app/' + this.app_id + '/adunits/' + this.id + '?' + window.location.search.substring(1);
+        }
+    });
+
+    /*
+     * ## AdUnitCollection
+     */
+    var AdUnitCollection = Backbone.Collection.extend({
+        model: AdUnit,
+        url: function() {
+            return '/api/app/' + this.app_id + '/adunits/?' + window.location.search.substring(1);
+        }
+    });
+
+
+    /*
+     * ## App
+     * We might consider turning derivative values (ecpm, fill_rate, ctr) into
+     * functions.
+     */
+    var App = Backbone.Model.extend({
+        defaults : {
+            name: '',
+            url:'#',
+            revenue: 0,
+            attempts: 0,
+            icon_url: "/placeholders/image.gif",
+            impressions: 0,
+            fill_rate: 0,
+            clicks: 0,
+            price_floor: 0,
+            app_type: 'iOS',
+            ecpm: 0,
+            ctr: 0
+        },
+        url: function () {
+            return '/api/app/' + this.id + "?"  + window.location.search.substring(1);
+        },
+        parse: function (response) {
+            // The api returns everything from this url as a list,
+            // so that you can request one or all apps.
+            return response[0];
+        }
+    });
+
+    /*
+     * ## AppCollection
+     */
+    var AppCollection = Backbone.Collection.extend({
+        model: App,
+        // If an app key isn't passed to the url, it'll return a list of all of the apps for the account
+        url: '/api/app/',
+        // Not used anymore, but could come in handy
+        fetchAdUnits: function() {
+            this.each(function (app) {
+                app.adunits = new AdUnitCollection();
+                app.adunits.app_id = app.id;
+                app.adunits.fetch();
+            });
+        }
+    });
+
+    /*
+     * ## Creative
+     */
+    var Creative = Backbone.Model.extend({
+        defaults: {
+            revenue: 0,
+            ecpm: 0,
+            impressions: 0,
+            clicks: 0,
+            ctr: 0,
+            creative_url: "#",
+            ad_domain: '#',
+            domain_blocked: false
+        },
+        url: function() {
+            return '/api/creative/' + this.id + "?" +  window.location.search.substring(1);
+        }
+    });
+
+    /*
+     * ## CreativeCollection
+     *
+     * This is kind of jankity. Right now creatives are 'collected' by DSP,
+     * and its the best way
+     */
+    var CreativeCollection = Backbone.Collection.extend({
+        model: Creative,
+        url: function () {
+            return '/api/dsp/' + this.dsp_key + "?" + window.location.search.substring(1);
+        }
+    });
+
+    /*
+     * ## AppView
+     *
+     * See templates/partials/app.html to see how this is rendered in HTML.
+     * This renders an app as a table row. It also adds the call to load
+     * adunits over ajax and put them in the table.
+     */
+    var AppView = Backbone.View.extend({
+
+        initialize: function () {
+            this.template = _.template($('#app-template').html());
+        },
+
+        renderInline: function () {
+            var app_row = $("tr.app-row#app-" + this.model.id, this.el);
+            $(".revenue", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("revenue")));
+            $(".impressions", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
+            $(".ecpm", app_row).text(this.model.get("ecpm"));
+            // $(".clicks", app_row).text(this.model.get("clicks"));
+            // $(".ctr", app_row).text(this.model.get("ctr"));
+
+            /* Don't load this dynamically for now
+            var adunit_show_link = $('a.adunits', app_row);
+            adunit_show_link.click(showAdUnits).click();
+            $('a.edit_price_floor', app_row).click(function(e) {
+                e.preventDefault();
+                adunit_show_link.click();
+            });
+            $('a.view_targeting', app_row).click(function(e) {
+                e.preventDefault();
+                adunit_show_link.click();
+                $(this).addClass('hidden');
+            });
+            *****/
+            return this;
+        },
+        render: function () {
+            var renderedContent = $(this.template(this.model.toJSON()));
+
+            // When we render an appview, we also attach a handler to fetch
+            // and render it's adunits when a link is clicked.
+            $('a.adunits', renderedContent).click(showAdUnits);
+            $('tbody', this.el).append(renderedContent);
+            return this;
+        }
+    });
+
+
+    /*
+     * ## CreativeView
+     */
+    var CreativeView = Backbone.View.extend({
+        initialize: function() {
+            this.template = _.template($("#creative-row-template").html());
+        },
+
+        render: function () {
+            var renderedContent = $(this.template(this.model.toJSON()));
+
+            // Here: attach event handlers for stuff in the creative table row
+
+            $("tbody", this.el).append(renderedContent);
+            return this;
+        }
+    });
+
+    /*
+     * ## showAdUnits/hideAdUnits
+     *
+     * Utility methods for AppView that control the showing/hiding
+     * of adunits underneath an app row.
+     */
+    function showAdUnits(event){
+        event.preventDefault();
+        var href = $(this).attr('href').replace('#','');
+        Marketplace.fetchAdunitsForApp(href);
+        $(this).text('Hide AdUnits').unbind("click").click(hideAdUnits);
+    }
+
+    function hideAdUnits(event){
+        event.preventDefault();
+        var href = $(this).attr('href').replace('#','');
+        $.each($(".for-app-" + href), function (iter, item) {
+            $(item).remove();
+        });
+        $("#app-" + href + " a.view_targeting").removeClass("hidden");
+        $(this).text('Show Adunits').unbind("click").click(showAdUnits);
+    }
+
+    /*
+     * ## AdUnitView
+     *
+     * See templates/partials/adunit.html to see how this is rendered in HTML
+     * Renders an adunit as a row in a table. Also ads the event handler to
+     * submit the price floor change over ajax when the price_floor field is changed.
+     */
+    var AdUnitView = Backbone.View.extend({
+
+        initialize: function () {
+            this.template = _.template($('#adunit-template').html());
+        },
+
+        /*
+         * Render the AdUnit into a table row that already exists. Adds handlers
+         * for changing AdUnit attributes over ajax.
+         */
+        renderInline: function () {
+            var current_model = this.model;
+            var adunit_row = $("tr.adunit-row#adunit-" + this.model.id, this.el);
+
+            $(".revenue", adunit_row).text(this.model.get("revenue"));
+            $(".ecpm", adunit_row).text(this.model.get("ecpm"));
+            $(".impressions", adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
+            $(".price_floor", adunit_row).html('<img class="loading-img hidden" src="/images/icons-custom/spinner-12.gif"></img> ' +
+                                               '<input id="' +
+                                               this.model.id +
+                                               '" type="text" class="input-text input-text-number number" style="width:50px;margin: -3px 0;" value="' +
+                                               this.model.get("price_floor") +
+                                               '"> ');
+            $(".targeting", adunit_row).html('<img class="loading-img hidden"  src="/images/icons-custom/spinner-12.gif"></img> ' +
+                                             '<input class="targeting-box" type="checkbox">');
+
+            if (this.model.get("active")) {
+                $("input.targeting-box", adunit_row).attr('checked', 'checked');
+            }
+
+            // Add the event handler to submit targeting changes over ajax.
+            $("input.targeting-box", adunit_row).click(function() {
+                var loading_img = $(".targeting .loading-img", adunit_row);
+                loading_img.show();
+                current_model.set({'active': $(this).is(":checked")});
+                current_model.save({}, {
+                    success: function (model, response) {
+                        setTimeout(function() {
+                            loading_img.hide();
+                        }, 2000);
+                    }
+                });
+            });
+
+            // Add the event handler to submit price floor changes over ajax.
+            $('.price_floor .input-text', adunit_row).keyup(function() {
+                var input_field = $(this);
+                input_field.removeClass('error');
+                var loading_img = $(".price_floor .loading-img", adunit_row);
+                loading_img.show();
+
+                var promise = current_model.save({
+                    price_floor: $(this).val()
+                });
+                if (promise) {
+                    promise.success(function() {
+                        loading_img.hide();
+                    });
+                    promise.error(function() {
+                        loading_img.hide();
+                    });
+                } else {
+                    loading_img.hide();
+                    input_field.addClass('error');
+                }
+            });
+
+            return this;
+        },
+
+        /*
+         * Render the adunit model in the template. This assumes that the table
+         * row for the app has already been rendered. This will render underneath
+         * it's app's row.
+         */
+        render: function () {
+            // render the adunit and attach it to the table after it's adunit's row
+            var current_model = this.model;
+            var renderedContent = $(this.template(this.model.toJSON()));
+
+            // Add the event handler to submit price floor changes over ajax.
+            $('.price_floor_change', renderedContent)
+                .change(function() {
+                    current_model.set({'price_floor': $(this).val()});
+                    // Save when they click the save button in the price floor cell
+                    var save_link = $(".save", $(this).parent());
+                        save_link.click(function(e) {
+                            e.preventDefault();
+                            save_link.addClass('disabled').text('Saving...');
+                            current_model.save({}, {
+                                success: function () {
+                                    setTimeout(function() {
+                                        save_link.removeClass('disabled').text('Saved');
+                                        save_link.text("Save");
+                                    }, 2000);
+                                }
+                            });
+                        });
+                });
+
+            // Add the event handler to submit targeting changes over ajax.
+            $("input.targeting-box", renderedContent).click(function() {
+                var targeting = $(this).attr('name');
+                var activation = $(this).is(":checked") ? "On" : "Off";
+                $("label[for='"+ targeting +"']", renderedContent).text(activation);
+
+                current_model.set({'active': $(this).is(":checked")});
+                current_model.save();
+            });
+
+            // Add the right background color based on where the app is in the table
+            var app_row = $('tr#app-' + this.model.get('app_id'), this.el);
+            var zebra = app_row.hasClass("even") ? "even" : "odd";
+            renderedContent.addClass(zebra);
+
+            app_row.after(renderedContent);
+
+            return this;
+        }
+    });
 
     /*
      * ## Marketplace utility methods

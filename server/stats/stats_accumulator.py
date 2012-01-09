@@ -38,8 +38,9 @@ TIME_BUFFER = 10
 SHARD_INTERVAL = 10
 MEMCACHE_ALIVE_TIME = 0#6*TIME_BUCKET
 
-REQ_QUEUE_NAME = "network-request-%02d"
-NUM_REQ_QUEUES = 50
+# network request queues are obsolete; already deleted from queue.yaml
+# REQ_QUEUE_NAME = "network-request-%02d"
+# NUM_REQ_QUEUES = 50
 
 
 INAPP_QUEUE_NAME = 'inapp-recorder-%02d'
@@ -195,7 +196,7 @@ def _get_shard_num(account,adunit_id,creative_id):
 
 def _log_attempt(params, now=None):
     """
-    Creates a pseudo access log line (apache style) and logs it 
+    Creates a pseudo access log line (apache style) and logs it
     directly to the blob logger which is responsible for the buffering
     and flushing/finalizing to the blob store
     """
@@ -211,7 +212,7 @@ def _log_attempt(params, now=None):
     # except Exception, e:
     #     trace_logging.warning(e)
 
-    
+
     now = now or datetime.datetime.now()
     apache_dict = { 'ip': '0.0.0.0',
                     'identd': None,

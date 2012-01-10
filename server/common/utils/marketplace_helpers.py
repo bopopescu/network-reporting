@@ -5,7 +5,8 @@ import datetime
 
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
-        AdNetworkAggregateManager
+        AdNetworkAggregateManager, \
+        AD_NETWORK_NAMES
 from publisher.query_managers import AppQueryManager,\
      AdUnitQueryManager, \
      AdUnitContextQueryManager
@@ -320,8 +321,11 @@ class AdNetworkStatsFetcher(object):
         stats = AdNetworkStatsManager.get_stats_for_mapper_and_days(mapper,
                 days)[0]
         stats_dict = stats.dict_
-        stats_dict['name'] = mapper.application.name
-        stats_dict['key'] = str(mapper.key())
+        app = mapper.application
+        stats_dict['app_name'] = app.full_name
+        stats_dict['network_name'] = AD_NETWORK_NAMES[mapper.ad_network_name]
+        stats_dict['mapper_key'] = str(mapper.key())
+        stats_dict['app_key'] = mapper.application.key_
         return stats_dict
 
 

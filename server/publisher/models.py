@@ -91,7 +91,11 @@ class App(db.Model):
 
     @property
     def identifier(self):
-        return self.name.replace(' ', '_') + '-' + self.app_type
+        return (self.name.replace(' ', '_') + '-' + self.app_type).lower()
+
+    @property
+    def full_name(self):
+        return self.name + " (" + self.app_type_text() + ")"
 
     @property
     def key_(self):

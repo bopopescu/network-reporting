@@ -173,12 +173,12 @@
 
           <div class="networkDependent ejam hidden">
             <div class="adgroupForm-editNetwork {% if adunit.app.network_config.ejam_pub_id %}hidden{% endif %}">
-              eJam Zone ID:
+              TapIt Zone ID:
               <input type="text" name="{{adunit.app.key}}-__-ejam_pub_id" class="input-text input-text-half-width adgroupForm-editNetwork" placeholder="ex: 23710" value="{{adunit.app.network_config.ejam_pub_id|default_if_none:""}}"/>
             </div>
             {% if adunit.app.network_config.ejam_pub_id %}
               <div class="adgroupForm-showNetwork">
-                <span class="muted">eJam Zone ID: {{adunit.app.network_config.ejam_pub_id|default_if_none:""}}</span>
+                <span class="muted">TapIt Zone ID: {{adunit.app.network_config.ejam_pub_id|default_if_none:""}}</span>
                 <a href="#" class="adgroupForm-editNetwork-link">Change</a>
               </div>
             {% endif %}

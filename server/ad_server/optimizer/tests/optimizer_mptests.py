@@ -98,7 +98,8 @@ class TestOptimizer(unittest.TestCase):
                 
         qm_stats = self.smqm.get_stats_for_days(publisher=self.adunit,
                                             advertiser=self.creative,
-                                            days=[self.dt.date()])
+                                            days=[self.dt.date()],
+                                            use_mongo=False)
         
         
         stats = qm_stats[0] # qm_stats is a list of stats of length 1
@@ -111,7 +112,8 @@ class TestOptimizer(unittest.TestCase):
     
         qm_stats = self.smqm.get_stats_for_days(publisher=self.adunit,
                                             advertiser=self.creative,
-                                            days=[self.dt.date()])
+                                            days=[self.dt.date()],
+                                            use_mongo=False)
         stats = qm_stats[0] # qm_stats is a list of stats of length 1
     
         logging.warning(stats)
@@ -275,7 +277,8 @@ class TestOptimizer(unittest.TestCase):
         
         qm_stats = self.smqm.get_stats_for_days(publisher=self.adunit,
                                             advertiser=self.creative,
-                                            days=[self.dt.date()])
+                                            days=[self.dt.date()],
+                                            use_mongo=False)
        
         stats = qm_stats[0] # qm_stats is a list of stats of length 1
         eq_(stats.impression_count, 1200)
@@ -304,7 +307,8 @@ class TestOptimizer(unittest.TestCase):
        
         qm_stats = self.smqm.get_stats_for_days(publisher=self.adunit,
                                             advertiser=self.creative,
-                                            days=[yesterday])
+                                            days=[yesterday],
+                                            use_mongo=False)
        
         stats = qm_stats[0] # qm_stats is a list of stats of length 1
         eq_(stats.impression_count, 1200)

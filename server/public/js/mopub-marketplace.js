@@ -36,7 +36,7 @@ var mopub = mopub || {};
             return (impressions/attempts)*100;
         },
         validate: function(attributes) {
-            if (typeof(attributes.price_floor != 'undefined')) {
+            if (typeof(attributes.price_floor) != 'undefined') {
                 var valid_number = Number(attributes.price_floor);
                 if (isNaN(valid_number)) {
                     return "Please enter a valid number for the price floor";
@@ -268,8 +268,7 @@ var mopub = mopub || {};
             $("input.targeting-box", adunit_row).click(function() {
                 var loading_img = $(".targeting .loading-img", adunit_row);
                 loading_img.show();
-                current_model.set({'active': $(this).is(":checked")});
-                current_model.save({}, {
+                var is_valid = current_model.save({'active': $(this).is(":checked")}, {
                     success: function (model, response) {
                         setTimeout(function() {
                             loading_img.hide();

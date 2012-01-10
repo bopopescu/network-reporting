@@ -1,4 +1,10 @@
+/*
+ * # models.js
+ *
+ * Backbone models
+ */
 (function($, Backbone, _) {
+
 
     /*
      * ## Campaigns
@@ -72,7 +78,9 @@
     }
 
     /*
-     *
+     * ## AdGroup model
+     * This will most likely need to be refactored soon when we change how
+     * AdGroups work on the backend.
      */
 
     var AdGroup = Backbone.Model.extend({
@@ -101,9 +109,9 @@
 
 
     /*
-     *
+     * ## Adgroup Collection
      */
-    AdGroups = Backbone.Collection.extend({
+    var AdGroups = Backbone.Collection.extend({
         model: AdGroup,
 
         get_stat_sum: function(stat) {
@@ -250,7 +258,12 @@
         }
     });
 
-
+    /*
+     * ## AdUnitCollection
+     *
+     * Should collections be named 'collection' or should we pluralize their
+     * model name?
+     */
     var AdUnitCollection = Backbone.Collection.extend({
         model: AdUnit,
         url: function() {
@@ -332,12 +345,15 @@
     });
 
 
-    // Globalize. We should find a better way to do this.
+    /*
+     * Globalize. We should find a better way to do this.
+     */
     window.AdUnit = AdUnit;
     window.AdUnitCollection = AdUnitCollection;
     window.App = App;
     window.AppCollection = AppCollection;
     window.AdGroup = AdGroup;
+    window.AdGroups = AdGroups;
 
 
 })(this.jQuery, this.Backbone, this._);

@@ -1,0 +1,492 @@
+<html>
+	<head>
+		<title>Dont forget to use --title to specify me!</title>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+		<style>body {
+    margin: 0;
+    padding: 0;
+    font: 14px/1.5 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    color: #252519;
+}
+a {
+    color: #252519;
+}
+a:hover {
+    text-decoration: underline;
+    color: #19469D;
+}
+p {
+    margin: 12px 0;
+}
+h1, h2, h3 {
+    margin: 0;
+    padding: 0;
+}
+table#source {
+    width: 100%;
+    border-collapse: collapse;
+}
+table#source td:first-child {
+    padding: 30px 40px 30px 40px;
+    vertical-align: top;
+}
+table#source td:first-child,
+table#source td:first-child pre {
+    width: 450px;
+}
+table#source td:last-child {
+    padding: 30px 0 30px 40px;
+    border-left: 1px solid #E5E5EE;
+    background: #F5F5FF;
+}
+table#source tr {
+    border-bottom: 1px solid #E5E5EE;
+}
+table#source tr.filename {
+    padding-top: 40px;
+    border-top: 1px solid #E5E5EE;
+}
+table#source tr.filename td:first-child {
+    text-transform: capitalize;
+}
+table#source tr.filename td:last-child {
+    font-size: 12px;
+}
+table#source tr.filename h2 {
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+}
+table#source tr.code h1,
+table#source tr.code h2,
+table#source tr.code h3 {
+    margin-top: 30px;
+    font-family: "Lucida Grande", "Helvetica Nueue", Arial, sans-serif;
+    font-size: 18px;
+}
+table#source tr.code h2 {
+    font-size: 16px;
+}
+table#source tr.code h3 {
+    font-size: 14px;
+}
+table#source tr.code ul {
+    margin: 15px 0 15px 35px;
+    padding: 0;
+}
+table#source tr.code ul li {
+    margin: 0;
+    padding: 1px 0;
+}
+table#source tr.code ul li p {
+    margin: 0;
+    padding: 0;
+}
+table#source tr.code td:first-child pre {
+    padding: 20px;
+}
+#ribbon {
+    position: fixed;
+    top: 0;
+    right: 0;
+}
+code .string { color: #219161; }
+code .regexp { color: #219161; }
+code .keyword { color: #954121; }
+code .number { color: #19469D; }
+code .comment { color: #bbb; }
+code .this { color: #19469D; }</style>
+		<script>
+			$(function(){
+				$('tr.code').hide();
+				$('tr.filename').toggle(function(){
+					$(this).nextUntil('.filename').fadeIn();
+				}, function(){
+					$(this).nextUntil('.filename').fadeOut();
+				});
+			});
+		</script>
+	</head>
+	<body>
+<table id="source"><tbody><tr><td><h1>Dont forget to use --title to specify me!</h1></td><td></td></tr><tr class="filename"><td><h2 id="server/public/js/models.js"><a href="#">models</a></h2></td><td>server/public/js/models.js</td></tr><tr class="code">
+<td class="docs">
+<h1>models.js</h1>
+
+<p>Backbone models
+ </p>
+</td>
+<td class="code">
+<pre><code>(<span class="keyword">function</span>($, <span class="class">Backbone</span>, <span class="variable">_</span>) {</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>Campaigns</h2>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">Campaign</span> = <span class="class">Backbone</span>.<span class="class">Model</span>.<span class="variable">extend</span>({
+        <span class="variable">defaults</span>: {
+            <span class="variable">name</span>: <span class="string">''</span>,
+            <span class="variable">budget</span>: <span class="number float">0.0</span>,
+            <span class="variable">budget_type</span>: <span class="string">''</span>,
+            <span class="variable">start_datetime</span>: <span class="keyword">new</span> <span class="class">Date</span>(),
+            <span class="variable">end_datetime</span>: <span class="keyword">null</span>,
+            <span class="variable">active</span>: <span class="variable">false</span>
+        }
+    });
+
+    <span class="keyword">var</span> <span class="class">GuaranteedCampaign</span> = <span class="class">Campaign</span>.<span class="variable">extend</span>({
+
+    });
+
+    <span class="keyword">var</span> <span class="class">PromoCampaign</span> = <span class="class">Campaign</span>.<span class="variable">extend</span>({
+
+    });
+
+    <span class="keyword">var</span> <span class="class">NetworkCampaign</span> = <span class="class">Campaign</span>.<span class="variable">extend</span>({
+
+    });
+
+    <span class="keyword">var</span> <span class="class">Targeting</span> = <span class="class">Backbone</span>.<span class="class">Model</span>.<span class="variable">extend</span>({
+        <span class="comment">// for future use?</span>
+    });</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>AdGroups</h2>
+</td>
+<td class="code">
+
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Helper functions for stats
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">calculate_ctr</span> (<span class="variable">impression_count</span>, <span class="variable">click_count</span>) {
+        <span class="keyword">if</span>(<span class="variable">impression_count</span> === <span class="keyword">null</span> || <span class="variable">click_count</span> === <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">null</span>;
+        <span class="keyword">return</span> (<span class="variable">impression_count</span> === <span class="number integer">0</span>) ? <span class="number integer">0</span> : <span class="variable">click_count</span> / <span class="variable">impression_count</span>;
+    }
+
+    <span class="keyword">function</span> <span class="variable">calculate_fill_rate</span> (<span class="variable">request_count</span>, <span class="variable">impression_count</span>) {
+        <span class="keyword">if</span>(<span class="variable">request_count</span> === <span class="keyword">null</span> || <span class="variable">impression_count</span> === <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">null</span>;
+        <span class="keyword">return</span> (<span class="variable">request_count</span> === <span class="number integer">0</span>) ? <span class="number integer">0</span> : <span class="variable">impression_count</span> / <span class="variable">request_count</span>;
+    }
+
+    <span class="keyword">function</span> <span class="variable">format_stat</span> (<span class="variable">stat</span>, <span class="variable">value</span>) {
+        <span class="keyword">if</span>(<span class="variable">value</span> === <span class="keyword">null</span>) <span class="keyword">return</span> <span class="string">'--'</span>;
+        <span class="keyword">switch</span>(<span class="variable">stat</span>) {
+            <span class="keyword">case</span> <span class="string">'click_count'</span>:
+            <span class="keyword">case</span> <span class="string">'conversion_count'</span>:
+            <span class="keyword">case</span> <span class="string">'goal'</span>:
+            <span class="keyword">case</span> <span class="string">'impression_count'</span>:
+            <span class="keyword">case</span> <span class="string">'request_count'</span>:
+                <span class="keyword">return</span> <span class="variable">mopub</span>.<span class="class">Utils</span>.<span class="variable">formatNumberWithCommas</span>(<span class="variable">value</span>);
+            <span class="keyword">case</span> <span class="string">'cpm'</span>:
+            <span class="keyword">case</span> <span class="string">'revenue'</span>:
+                <span class="keyword">return</span> <span class="string">'$'</span> + <span class="variable">mopub</span>.<span class="class">Utils</span>.<span class="variable">formatNumberWithCommas</span>(<span class="variable">value</span>.<span class="variable">toFixed</span>(<span class="number integer">2</span>));
+            <span class="keyword">case</span> <span class="string">'conv_rate'</span>:
+            <span class="keyword">case</span> <span class="string">'ctr'</span>:
+            <span class="keyword">case</span> <span class="string">'fill_rate'</span>:
+                <span class="keyword">return</span> <span class="variable">mopub</span>.<span class="class">Utils</span>.<span class="variable">formatNumberAsPercentage</span>(<span class="variable">value</span>);
+            <span class="keyword">case</span> <span class="string">'status'</span>:
+                <span class="keyword">return</span> <span class="variable">value</span>;
+            <span class="keyword">default</span>:
+                <span class="keyword">throw</span> <span class="string">'Unsupported stat &quot;'</span> + <span class="variable">stat</span> + <span class="string">'&quot;.'</span>;
+        }
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<pre><code> </code></pre>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">AdGroup</span> = <span class="class">Backbone</span>.<span class="class">Model</span>.<span class="variable">extend</span>({
+        <span class="variable">get_stat</span>: <span class="keyword">function</span>(<span class="variable">stat</span>) {
+            <span class="keyword">if</span>(!<span class="this">this</span>.<span class="variable">has</span>(<span class="variable">stat</span>)) <span class="keyword">return</span> <span class="keyword">null</span>;
+            <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">get</span>(<span class="variable">stat</span>);
+        },
+
+        <span class="variable">get_formatted_stat</span>: <span class="keyword">function</span>(<span class="variable">stat</span>) {
+            <span class="keyword">return</span> <span class="variable">format_stat</span>(<span class="variable">stat</span>, <span class="this">this</span>.<span class="variable">get_stat</span>(<span class="variable">stat</span>));
+        },
+
+        <span class="variable">get_stat_for_day</span>: <span class="keyword">function</span>(<span class="variable">stat</span>, <span class="variable">day</span>) {
+            <span class="keyword">if</span>(!<span class="this">this</span>.<span class="variable">has</span>(<span class="variable">daily_stats</span>)) <span class="keyword">return</span> <span class="keyword">null</span>;
+            <span class="keyword">var</span> <span class="variable">daily_stats</span> = <span class="this">this</span>.<span class="variable">get</span>(<span class="variable">daily_stats</span>);
+            <span class="keyword">if</span>(<span class="variable">day</span> &<span class="variable">gt</span>;= <span class="variable">daily_stats</span>.<span class="variable">length</span>) <span class="keyword">return</span> <span class="keyword">null</span>;
+            <span class="keyword">var</span> <span class="variable">day_stats</span> = <span class="variable">daily_stats</span>[<span class="variable">day</span>];
+            <span class="keyword">if</span>(!<span class="variable">stat</span> <span class="keyword">in</span> <span class="variable">day_stats</span>) <span class="keyword">return</span> <span class="keyword">null</span>;
+            <span class="keyword">return</span> <span class="variable">day_stats</span>[<span class="variable">stat</span>];
+        },
+
+        <span class="variable">url</span>: <span class="keyword">function</span>() {
+            <span class="keyword">return</span> <span class="string">'/api/adgroup/'</span> + <span class="this">this</span>.<span class="variable">id</span>;
+        }
+    });</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<pre><code> </code></pre>
+</td>
+<td class="code">
+<pre><code><span class="class">AdGroups</span> = <span class="class">Backbone</span>.<span class="class">Collection</span>.<span class="variable">extend</span>({
+        <span class="variable">model</span>: <span class="class">AdGroup</span>,
+
+        <span class="variable">get_stat_sum</span>: <span class="keyword">function</span>(<span class="variable">stat</span>) {
+            <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">reduce</span>(<span class="keyword">function</span>(<span class="variable">memo</span>, <span class="variable">adgroup</span>) {
+                <span class="keyword">if</span>(<span class="variable">memo</span> === <span class="keyword">null</span> || !<span class="variable">adgroup</span>.<span class="variable">has</span>(<span class="variable">stat</span>)) <span class="keyword">return</span> <span class="keyword">null</span>;
+                <span class="keyword">return</span> <span class="variable">memo</span> + <span class="variable">adgroup</span>.<span class="variable">get</span>(<span class="variable">stat</span>);
+            }, <span class="number integer">0</span>);
+        },
+
+        <span class="variable">get_stat</span>: <span class="keyword">function</span>(<span class="variable">stat</span>) {
+            <span class="keyword">switch</span>(<span class="variable">stat</span>) {
+                <span class="keyword">case</span> <span class="string">'ctr'</span>:
+                    <span class="keyword">return</span> <span class="variable">calculate_ctr</span>(<span class="this">this</span>.<span class="variable">get_stat</span>(<span class="string">'impression_count'</span>), <span class="this">this</span>.<span class="variable">get_stat</span>(<span class="string">'click_count'</span>));
+                <span class="keyword">case</span> <span class="string">'fill_rate'</span>:
+                    <span class="keyword">return</span> <span class="variable">calculate_fill_rate</span>(<span class="this">this</span>.<span class="variable">get_stat</span>(<span class="string">'request_count'</span>), <span class="this">this</span>.<span class="variable">get_stat</span>(<span class="string">'impression_count'</span>));
+                <span class="keyword">case</span> <span class="string">'click_count'</span>:
+                <span class="keyword">case</span> <span class="string">'conversion_count'</span>:
+                <span class="keyword">case</span> <span class="string">'impression_count'</span>:
+                <span class="keyword">case</span> <span class="string">'request_count'</span>:
+                <span class="keyword">case</span> <span class="string">'revenue'</span>:
+                    <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">get_stat_sum</span>(<span class="variable">stat</span>);
+                <span class="keyword">default</span>:
+                    <span class="keyword">throw</span> <span class="string">'Unsupported stat &quot;'</span> + <span class="variable">stat</span> + <span class="string">'&quot;.'</span>;
+            }
+        },
+
+        <span class="variable">get_formatted_stat</span>: <span class="keyword">function</span>(<span class="variable">stat</span>) {
+            <span class="keyword">return</span> <span class="variable">format_stat</span>(<span class="variable">stat</span>, <span class="this">this</span>.<span class="variable">get_stat</span>(<span class="variable">stat</span>));
+        },
+
+        <span class="variable">get_stat_sum_for_day</span>: <span class="keyword">function</span>(<span class="variable">stat</span>, <span class="variable">day</span>) {
+            <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">reduce</span>(<span class="keyword">function</span>(<span class="variable">memo</span>, <span class="variable">adgroup</span>) {
+                <span class="keyword">if</span>(<span class="variable">memo</span> === <span class="keyword">null</span> ||
+                   !<span class="variable">adgroup</span>.<span class="variable">has</span>(<span class="string">'daily_stats'</span>) ||
+                   <span class="variable">day</span> &<span class="variable">gt</span>;= <span class="variable">adgroup</span>.<span class="variable">get</span>(<span class="string">'daily_stats'</span>).<span class="variable">length</span> ||
+                   !(<span class="variable">stat</span> <span class="keyword">in</span> <span class="variable">adgroup</span>.<span class="variable">get</span>(<span class="string">'daily_stats'</span>)[<span class="variable">day</span>]))
+                    <span class="keyword">return</span> <span class="keyword">null</span>;
+                <span class="keyword">return</span> <span class="variable">memo</span> + <span class="variable">adgroup</span>.<span class="variable">get</span>(<span class="string">'daily_stats'</span>)[<span class="variable">day</span>][<span class="variable">stat</span>];
+            }, <span class="number integer">0</span>);
+        },
+
+        <span class="variable">get_stat_for_day</span>: <span class="keyword">function</span>(<span class="variable">stat</span>, <span class="variable">day</span>) {
+            <span class="keyword">switch</span>(<span class="variable">stat</span>) {
+                <span class="keyword">case</span> <span class="string">'ctr'</span>:
+                    <span class="keyword">return</span> <span class="variable">calculate_ctr</span>(<span class="this">this</span>.<span class="variable">get_stat_for_day</span>(<span class="string">'impression_count'</span>, <span class="variable">day</span>), <span class="this">this</span>.<span class="variable">get_stat_for_day</span>(<span class="string">'click_count'</span>, <span class="variable">day</span>));
+                <span class="keyword">case</span> <span class="string">'fill_rate'</span>:
+                    <span class="keyword">return</span> <span class="variable">calculate_fill_rate</span>(<span class="this">this</span>.<span class="variable">get_stat_for_day</span>(<span class="string">'request_count'</span>, <span class="variable">day</span>), <span class="this">this</span>.<span class="variable">get_stat_for_day</span>(<span class="string">'impression_count'</span>, <span class="variable">day</span>));
+                <span class="keyword">case</span> <span class="string">'click_count'</span>:
+                <span class="keyword">case</span> <span class="string">'conversion_count'</span>:
+                <span class="keyword">case</span> <span class="string">'impression_count'</span>:
+                <span class="keyword">case</span> <span class="string">'request_count'</span>:
+                <span class="keyword">case</span> <span class="string">'revenue'</span>:
+                    <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">get_stat_sum_for_day</span>(<span class="variable">stat</span>, <span class="variable">day</span>);
+                <span class="keyword">default</span>:
+                    <span class="keyword">throw</span> <span class="string">'Unsupported stat &quot;'</span> + <span class="variable">stat</span> + <span class="string">'&quot;.'</span>;
+            }
+        },
+
+        <span class="variable">get_formatted_stat_for_day</span>: <span class="keyword">function</span>(<span class="variable">stat</span>, <span class="variable">day</span>) {
+            <span class="keyword">return</span> <span class="variable">format_stat</span>(<span class="variable">stat</span>, <span class="this">this</span>.<span class="variable">get_stat_for_day</span>(<span class="variable">stat</span>, <span class="variable">day</span>));
+        },
+
+        <span class="variable">get_total_daily_stats</span>: <span class="keyword">function</span>(<span class="variable">stat</span>) {
+            <span class="keyword">var</span> <span class="variable">total_daily_stats</span> = [];
+            <span class="keyword">for</span>(<span class="keyword">var</span> <span class="variable">day</span> <span class="keyword">in</span> <span class="this">this</span>.<span class="variable">at</span>(<span class="number integer">0</span>).<span class="variable">get</span>(<span class="string">'daily_stats'</span>)) {
+                <span class="variable">total_daily_stats</span>.<span class="variable">push</span>(<span class="this">this</span>.<span class="variable">get_stat_for_day</span>(<span class="variable">stat</span>, <span class="variable">day</span>));
+            }
+            <span class="keyword">return</span> <span class="variable">total_daily_stats</span>;
+        },
+
+        <span class="variable">get_chart_data</span>: <span class="keyword">function</span>(<span class="variable">stat</span>) {
+            <span class="keyword">var</span> <span class="variable">adgroups</span> = <span class="this">this</span>.<span class="variable">filter</span>(<span class="keyword">function</span>(<span class="variable">adgroup</span>) { <span class="keyword">return</span> <span class="variable">adgroup</span>.<span class="variable">has</span>(<span class="variable">stat</span>) &<span class="variable">amp</span>;&<span class="variable">amp</span>; <span class="variable">adgroup</span>.<span class="variable">has</span>(<span class="string">'daily_stats'</span>); });
+            <span class="keyword">if</span>(<span class="variable">adgroups</span>.<span class="variable">length</span> == <span class="number integer">0</span>) {
+                <span class="keyword">return</span> [];
+            }
+            <span class="keyword">var</span> <span class="variable">sorted_adgroups</span> = <span class="variable">_</span>.<span class="variable">sortBy</span>(<span class="variable">adgroups</span>, <span class="keyword">function</span>(<span class="variable">adgroup</span>) {
+                <span class="comment">// dash because we're sorting in reverse order</span>
+                <span class="keyword">return</span> -<span class="variable">adgroup</span>.<span class="variable">get</span>(<span class="string">'impression_count'</span>);
+            });
+            <span class="keyword">var</span> <span class="variable">top_three_adgroups</span> = <span class="variable">sorted_adgroups</span>.<span class="variable">splice</span>(<span class="number integer">0</span>, <span class="number integer">3</span>);
+            <span class="keyword">var</span> <span class="variable">other_adgroups</span> = <span class="keyword">new</span> <span class="class">AdGroups</span>(<span class="variable">sorted_adgroups</span>);
+            <span class="keyword">var</span> <span class="variable">chart_data</span> = <span class="variable">top_three_adgroups</span>.<span class="variable">map</span>(<span class="keyword">function</span>(<span class="variable">adgroup</span>) {
+                <span class="keyword">var</span> <span class="variable">adgroup_data</span> = {};
+                <span class="variable">adgroup_data</span>[<span class="variable">adgroup</span>.<span class="variable">get</span>(<span class="string">'name'</span>)] = <span class="variable">_</span>.<span class="variable">map</span>(<span class="variable">adgroup</span>.<span class="variable">get</span>(<span class="string">'daily_stats'</span>), <span class="keyword">function</span>(<span class="variable">day</span>) {
+                    <span class="keyword">return</span> <span class="variable">day</span>[<span class="variable">stat</span>];
+                });
+                <span class="keyword">return</span> <span class="variable">adgroup_data</span>;
+            });
+            <span class="keyword">if</span>(<span class="variable">other_adgroups</span>.<span class="variable">size</span>()) {
+                <span class="variable">chart_data</span>.<span class="variable">push</span>({ <span class="string">'Others'</span>: <span class="variable">other_adgroups</span>.<span class="variable">get_total_daily_stats</span>(<span class="variable">stat</span>) });
+            }
+            <span class="keyword">if</span>(<span class="variable">stat</span> == <span class="string">'ctr'</span>) {
+                <span class="variable">chart_data</span>.<span class="variable">push</span>({ <span class="string">'MoPub Optimized'</span>: <span class="this">this</span>.<span class="variable">get_total_daily_stats</span>(<span class="string">'ctr'</span>) });
+            }
+            <span class="keyword">return</span> <span class="variable">chart_data</span>;
+        },
+
+        <span class="variable">get_days</span>: <span class="keyword">function</span>() {
+            <span class="comment">// TODO: make this less hacky</span>
+            <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">reduce</span>(<span class="keyword">function</span>(<span class="variable">memo</span>, <span class="variable">adgroup</span>) {
+                <span class="keyword">return</span> (<span class="variable">adgroup</span>.<span class="variable">has</span>(<span class="string">'daily_stats'</span>) &<span class="variable">amp</span>;&<span class="variable">amp</span>;
+                        <span class="variable">adgroup</span>.<span class="variable">get</span>(<span class="string">'daily_stats'</span>).<span class="variable">length</span> &<span class="variable">gt</span>; <span class="variable">memo</span>) ? <span class="variable">adgroup</span>.<span class="variable">get</span>(<span class="string">'daily_stats'</span>).<span class="variable">length</span> : <span class="variable">memo</span>;
+            }, <span class="number integer">0</span>);
+        },
+
+        <span class="variable">isFullyLoaded</span>: <span class="keyword">function</span>() {
+            <span class="comment">// TODO: make this less hacky</span>
+            <span class="keyword">return</span> <span class="this">this</span>.<span class="variable">reduce</span>(<span class="keyword">function</span>(<span class="variable">memo</span>, <span class="variable">adgroup</span>) { <span class="keyword">return</span> <span class="variable">memo</span> &<span class="variable">amp</span>;&<span class="variable">amp</span>; <span class="variable">adgroup</span>.<span class="variable">has</span>(<span class="string">'impression_count'</span>) }, <span class="variable">true</span>);
+        }
+    });</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>AdUnit</h2>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">AdUnit</span> = <span class="class">Backbone</span>.<span class="class">Model</span>.<span class="variable">extend</span>({
+        <span class="comment">// If we don't set defaults, the templates will explode</span>
+        <span class="variable">defaults</span> : {
+            <span class="variable">active</span>: <span class="variable">false</span>,
+            <span class="variable">attempts</span>: <span class="number integer">0</span>,
+            <span class="variable">clicks</span>: <span class="number integer">0</span>,
+            <span class="variable">ctr</span>: <span class="number integer">0</span>,
+            <span class="variable">ecpm</span>: <span class="number integer">0</span>,
+            <span class="variable">fill_rate</span>: <span class="number integer">0</span>,
+            <span class="variable">impressions</span>: <span class="number integer">0</span>,
+            <span class="variable">name</span>: <span class="string">''</span>,
+            <span class="variable">price_floor</span>: <span class="number integer">0</span>,
+            <span class="variable">requests</span>: <span class="number integer">0</span>,
+            <span class="variable">revenue</span>: <span class="number integer">0</span>,
+            <span class="variable">stats_endpoint</span>: <span class="string">'all'</span>
+        },
+        <span class="variable">url</span>: <span class="keyword">function</span>() {
+            <span class="comment">// window.location.search.substring(1) is used to preserve date ranges from the url</span>
+            <span class="comment">// this makes the fetching work with the datepicker.</span>
+            <span class="keyword">var</span> <span class="variable">stats_endpoint</span> = <span class="this">this</span>.<span class="variable">get</span>(<span class="string">'stats_endpoint'</span>);
+            <span class="keyword">return</span> <span class="string">'/api/app/'</span>
+                + <span class="this">this</span>.<span class="variable">app_id</span>
+                + <span class="string">'/adunits/'</span>
+                + <span class="this">this</span>.<span class="variable">id</span>
+                + <span class="string">'?'</span>
+                + <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">search</span>.<span class="variable">substring</span>(<span class="number integer">1</span>)
+                + <span class="string">'&amp;endpoint='</span>
+                + <span class="variable">stats_endpoint</span>;
+        }
+    });
+
+
+    <span class="keyword">var</span> <span class="class">AdUnitCollection</span> = <span class="class">Backbone</span>.<span class="class">Collection</span>.<span class="variable">extend</span>({
+        <span class="variable">model</span>: <span class="class">AdUnit</span>,
+        <span class="variable">url</span>: <span class="keyword">function</span>() {
+            <span class="comment">// window.location.search.substring(1) is used to preserve date ranges from the url</span>
+            <span class="comment">// this makes the fetching work with the datepicker.</span>
+            <span class="keyword">var</span> <span class="variable">stats_endpoint</span> = <span class="this">this</span>.<span class="variable">stats_endpoint</span>;
+            <span class="keyword">return</span> <span class="string">'/api/app/'</span>
+                + <span class="this">this</span>.<span class="variable">app_id</span>
+                + <span class="string">'/adunits/'</span>
+                + <span class="string">'?'</span>
+                + <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">search</span>.<span class="variable">substring</span>(<span class="number integer">1</span>)
+                + <span class="string">'&amp;endpoint='</span>
+                + <span class="variable">stats_endpoint</span>;
+        }
+    });</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>App</h2>
+
+<p>We might consider turning derivative values (ecpm, fill_rate, ctr) into
+functions.
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">App</span> = <span class="class">Backbone</span>.<span class="class">Model</span>.<span class="variable">extend</span>({
+        <span class="variable">defaults</span> : {
+            <span class="variable">name</span>: <span class="string">''</span>,
+            <span class="variable">url</span>:<span class="string">'#'</span>,
+            <span class="variable">icon_url</span>: &<span class="variable">quot</span>;<span class="regexp">/placeholders/image</span>.<span class="variable">gif</span>&<span class="variable">quot</span>;,
+            <span class="variable">app_type</span>: <span class="string">'iOS'</span>,
+            <span class="variable">active</span>: <span class="variable">false</span>,
+            <span class="variable">attempts</span>: <span class="number integer">0</span>,
+            <span class="variable">clicks</span>: <span class="number integer">0</span>,
+            <span class="variable">ctr</span>: <span class="number integer">0</span>,
+            <span class="variable">ecpm</span>: <span class="number integer">0</span>,
+            <span class="variable">fill_rate</span>: <span class="number integer">0</span>,
+            <span class="variable">impressions</span>: <span class="number integer">0</span>,
+            <span class="variable">price_floor</span>: <span class="number integer">0</span>,
+            <span class="variable">requests</span>: <span class="number integer">0</span>,
+            <span class="variable">revenue</span>: <span class="number integer">0</span>,
+            <span class="variable">stats_endpoint</span>: <span class="string">'all'</span>
+        },
+        <span class="variable">url</span>: <span class="keyword">function</span> () {
+            <span class="keyword">var</span> <span class="variable">stats_endpoint</span> = <span class="this">this</span>.<span class="variable">get</span>(<span class="string">'stats_endpoint'</span>);
+            <span class="keyword">return</span> <span class="string">'/api/app/'</span>
+                + <span class="this">this</span>.<span class="variable">id</span>
+                + &<span class="variable">quot</span>;?&<span class="variable">quot</span>;
+                + <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">search</span>.<span class="variable">substring</span>(<span class="number integer">1</span>)
+                + <span class="string">'&amp;endpoint='</span>
+                + <span class="variable">stats_endpoint</span>;
+        },
+        <span class="variable">parse</span>: <span class="keyword">function</span> (<span class="variable">response</span>) {
+            <span class="comment">// The api returns everything from this url as a list,</span>
+            <span class="comment">// so that you can request one or all apps.</span>
+            <span class="keyword">return</span> <span class="variable">response</span>[<span class="number integer">0</span>];
+        }
+    });</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>AppCollection</h2>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">AppCollection</span> = <span class="class">Backbone</span>.<span class="class">Collection</span>.<span class="variable">extend</span>({
+        <span class="variable">model</span>: <span class="class">App</span>,
+        <span class="comment">// If an app key isn't passed to the url, it'll return a list of all of the apps for the account</span>
+        <span class="variable">url</span>: <span class="keyword">function</span>() {
+            <span class="keyword">var</span> <span class="variable">stats_endpoint</span> = <span class="this">this</span>.<span class="variable">stats_endpoint</span>;
+            <span class="keyword">return</span> <span class="string">'/api/app/'</span> +
+                + <span class="string">'?'</span>
+                + <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">search</span>.<span class="variable">substring</span>(<span class="number integer">1</span>)
+                + <span class="string">'&amp;endpoint='</span>
+                + <span class="variable">stats_endpoint</span>;
+        },
+        <span class="comment">// Not used anymore, but could come in handy</span>
+        <span class="variable">fetchAdUnits</span>: <span class="keyword">function</span>() {
+            <span class="this">this</span>.<span class="variable">each</span>(<span class="keyword">function</span> (<span class="variable">app</span>) {
+                <span class="variable">app</span>.<span class="variable">adunits</span> = <span class="keyword">new</span> <span class="class">AdUnitCollection</span>();
+                <span class="variable">app</span>.<span class="variable">adunits</span>.<span class="variable">app_id</span> = <span class="variable">app</span>.<span class="variable">id</span>;
+                <span class="variable">app</span>.<span class="variable">adunits</span>.<span class="variable">fetch</span>();
+            });
+        }
+    });</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Globalize. We should find a better way to do this.
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="variable">window</span>.<span class="class">AdUnit</span> = <span class="class">AdUnit</span>;
+    <span class="variable">window</span>.<span class="class">AdUnitCollection</span> = <span class="class">AdUnitCollection</span>;
+    <span class="variable">window</span>.<span class="class">App</span> = <span class="class">App</span>;
+    <span class="variable">window</span>.<span class="class">AppCollection</span> = <span class="class">AppCollection</span>;
+    <span class="variable">window</span>.<span class="class">AdGroup</span> = <span class="class">AdGroup</span>;
+
+
+})(<span class="this">this</span>.<span class="variable">jQuery</span>, <span class="this">this</span>.<span class="class">Backbone</span>, <span class="this">this</span>.<span class="variable">_</span>);</code></pre>
+</td>
+</tr>	</body>
+</html></tbody></table>

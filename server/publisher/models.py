@@ -241,6 +241,16 @@ class Site(db.Model):
     def owner_name(self):
         return "app_key"
 
+    def get_code_format(self):
+        code_formats = {
+            '728x90': "MOPUB_LEADERBOARD_SIZE",
+            '300x250': "MOPUB_MEDIUM_RECT_SIZE",
+            '160x600': "MOPUB_WIDE_SKYSCRAPER_SIZE",
+            '320x50': "MOPUB_BANNER_SIZE",
+            'custom': "CGSizeMake(" + str(self.get_width()) + ", " + str(self.get_height()) +")",
+        }
+        return code_formats.get(self.format, None)
+
     def get_pub_id(self, pub_id_attr):
         """ Look up the pub string in all levels """
 

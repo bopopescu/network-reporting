@@ -5,6 +5,7 @@ import urllib
 
 from ad_server.debug_console import trace_logging
 from common.utils import helpers
+from common.utils.timezones import Pacific_tzinfo
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
@@ -213,7 +214,7 @@ def _log_attempt(params, now=None):
     #     trace_logging.warning(e)
 
 
-    now = now or datetime.datetime.now()
+    now = now or datetime.datetime.now(tz=Pacific_tzinfo())
     apache_dict = { 'ip': '0.0.0.0',
                     'identd': None,
                     'auth_user': None,

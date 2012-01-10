@@ -52,9 +52,36 @@ class User(hybrid_models.User):
 
     def __repr__(self):
         return unicode(self)
+
+
 #
 # The main account
 #
+DEFAULT_CATEGORIES =  ["IAB25"]
+LOW_CATEGORIES = ["IAB25"]
+MODERATE_CATEGORIES = ["IAB25",
+                       "IAB-39",
+                       "IAB8-5",
+                       "IAB8-18",
+                       "IAB9-9",
+                       "IAB14-1"]
+STRICT_CATEGORIES = ["IAB25",
+                     "IAB-39",
+                     "IAB8-5",
+                     "IAB8-18",
+                     "IAB9-9",
+                     "IAB14-1",
+                     "IAB6-7",
+                     "IAB7-3",
+                     "IAB7-28",
+                     "IAB7-30",
+                     "IAB14-2",
+                     "IAB14-3"]
+DEFAULT_ATTRIBUTES = [10, 14]
+LOW_ATTRIBUTES = \
+MODERATE_ATTRIBUTES = \
+STRICT_ATTRIBUTES = [9, 10, 14]
+
 class NetworkConfig(db.Model):
     """ The set of ids for all the different networks """
     # iad_pub_id is stored in the app url. Take a look at publisher's query
@@ -81,6 +108,43 @@ class NetworkConfig(db.Model):
                                           indexed=False,
                                           default=[9, 10, 14])
     blind = db.BooleanProperty(default=False)
+
+    @property
+    def filter_level(self):
+        if sorted(self.category_blocklist) == sorted(DEFAULT_CATEGORIES) && \
+           sorted(self.attribute_blocklist) == sorted(DEFAULT_ATTRIBUTES):
+            return "none"
+        elif sorted(self.category_blocklist) == sorted(LOW_CATEGORIES) && \
+             sorted(self.attribute_blocklist) == sorted(LOW_ATTRIBUTES):
+            return "low"
+        elif sorted(self.category_blocklist) == sorted(MODERATE_CATEGORIES) && \
+             sorted(self.attribute_blocklist) == sorted(MODERATE_ATTRIBUTES):
+            return "moderate"
+        elif sorted(self.category_blocklist) == sorted(STRICT_CATEGORIES) && \
+             sorted(self.attribute_blocklist) == sorted(STRICT_ATTRIBUTES):
+            return "strict"
+        else:
+            return "custom"
+
+    def set_strict_filter(self):
+        self.attribute_blocklist = STRICT_ATTRIBUTES
+        self.category_blocklist = STRICT_CATEGORIES
+        self.put()
+
+    def set_moderate_filter(self):
+        self.attribute_blocklist = MODERATE_ATTRIBUTES
+        self.category_blocklist = MODERATE_CATEGORIES
+        self.put()
+
+    def set_low_filter(self):
+        self.attribute_blocklist = LOW_ATTRIBUTES
+        self.category_blocklist = LOW_CATEGORIES
+        self.put()
+
+    def set_no_filter(self):
+        self.attribute_blocklist = DEFAULT_ATTRIBUTES
+        self.category_blocklist = DEFAULT_CATEGORIES
+        self.put()
 
 class MarketPlaceConfig(db.Model):
     """ All marketplace related configurations """
@@ -141,10 +205,10 @@ class Account(db.Model):
 
     # use only mongo, not datastore for storing real time stats
     use_only_mongo = db.BooleanProperty(default=False)
-    
+
     # use only mongo to display realtime stats in UI
     display_mongo = db.BooleanProperty(default=True)
-    
+
 
     @property
     def emails(self):

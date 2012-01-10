@@ -35,7 +35,7 @@ class GeneralSettingsHandler(RequestHandler):
 
 @login_required
 def index(request, *args, **kwargs):
-    return GeneralSettingsHandler()(request, *args, **kwargs)
+    return GeneralSettingsHandler()(request, use_cache=False, *args, **kwargs)
 
 
 class AdNetworkSettingsHandler(RequestHandler):

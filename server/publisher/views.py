@@ -858,11 +858,13 @@ class GenerateHandler(RequestHandler):
         adunit = AdUnitQueryManager.get(adunit_key)
         status = self.params.get('status')
         return render_to_response(self.request,'publisher/code.html',
-            {'site': adunit,
-             'status': status,
-             'width': adunit.get_width(),
-             'height': adunit.get_height(),
-             'account': self.account})
+                                  {
+                                      'site': adunit,
+                                      'status': status,
+                                      'width': adunit.get_width(),
+                                      'height': adunit.get_height(),
+                                      'account': self.account
+                                  })
 
 @login_required
 def generate(request,*args,**kwargs):

@@ -87,7 +87,10 @@ class App(db.Model):
     def icon_url(self):
         from common.utils import helpers
         if not self.icon_blob: return "/placeholders/image.gif"
-        return helpers.get_url_for_blob(self.icon_blob)
+        try:
+            return helpers.get_url_for_blob(self.icon_blob)
+        except Exception:
+            return None
 
 
     def get_owner(self):

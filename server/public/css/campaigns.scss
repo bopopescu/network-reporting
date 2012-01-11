@@ -181,7 +181,7 @@ ul.adunits {
         text-align: center;
     }
     .shaded {
-        background: #f9f9f9; 
+        background: #f9f9f9;
     }
     .top-row {
         td {
@@ -198,7 +198,7 @@ ul.adunits {
             width: 10%;
         }
         span.muted {
-            font-size: 13px; 
+            font-size: 13px;
         }
     }
     .sub-rows td:not(:first-child) {
@@ -210,3 +210,8 @@ ul.adunits {
     }
 }
 
+ul#content_filter_levels {
+    list-style-type: none;
+    margin-left: 5px;
+    padding-left: 1px;
+}

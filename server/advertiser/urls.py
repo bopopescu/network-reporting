@@ -26,4 +26,5 @@ urlpatterns = patterns('advertiser.views',
   url(r'^marketplace/activation/$', 'marketplace_on_off', name='marketplace_on_off'),
   url(r'^marketplace/settings/blindness/$', 'marketplace_blindness_change', name='marketplace_blindness_change'),
   url(r'^marketplace/settings/blocklist/$', 'marketplace_blocklist_change', name='marketplace_blocklist_change'),
+  url(r'^marketplace/settings/content_filter/$', 'marketplace_content_filter', name='marketplace_content_filter'),
 )

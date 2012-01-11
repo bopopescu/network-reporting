@@ -349,11 +349,18 @@ class AdNetworkStatsFetcher(object):
 
     @classmethod
     def get_roll_up_stats(cls, account, days, network=None, app=None):
-        stats_list = [AdNetworkAggregateManager.find_or_create(account, day,
-                network=network, app=app, create=False) for day in days]
-        stats = AdNetworkStatsManager.roll_up_stats([stats for stats in
-                stats_list if stats != None])
-        return stats.dict_
+        stats_list = [stats for stats in [AdNetworkAggregateManager.
+                find_or_create(account, day, network=network, app=app,
+                    create=False) for day in days] if stats != None]
+        stats = AdNetworkStatsManager.roll_up_stats(stats_list)
+        stats_dict = stats.dict_
+
+        if network and stats_list:
+            # Get the last sync date
+            sync_date = stats_list[-1].date
+            stats_dict['sync_date'] = sync_date.strftime('%b %d, %Y');
+
+        return stats_dict
 
 # Helper/Utility functions
 

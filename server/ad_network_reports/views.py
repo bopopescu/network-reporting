@@ -12,11 +12,16 @@ from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
         AdNetworkStatsManager, \
         AdNetworkManagementStatsManager, \
         create_fake_data
+
 from common.utils.date_magic import gen_days_for_range
 from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
+
+from publisher.query_managers import AppQueryManager, \
+        ALL_NETWORKS
+
 from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
@@ -63,14 +68,25 @@ class AdNetworkReportIndexHandler(RequestHandler):
                 network_data['state'] = login.state
             else:
                 network_data['state'] = LoginStates.NOT_SETUP
-            network_data['pub_ids'] = []
+
+            # Get list of apps that need pub ids if they want to be included
+            if not login or not login.app_pub_ids:
+                apps_for_network = AppQueryManager.get_apps_without_pub_ids(self.account,
+                        AD_NETWORK_NAMES.keys())
+                apps_for_network = apps_for_network[network] + \
+                        apps_for_network[ALL_NETWORKS]
+
+                network_data['apps_without_pub_ids'] = apps_for_network
+
             # Give the template enough information to make the appropriate
             # queries ajax queries to get all the models for each collection
+            network_data['pub_ids'] = []
             for mapper in sorted(AdNetworkMapperManager.get_mappers(self.account,
                     network), key=lambda mapper: mapper.application.name.lower()):
                 network_data['pub_ids'].append(mapper.publisher_id)
                 app = mapper.application
                 apps_with_data[(app.name, app.app_type)] = mapper.application
+
             # Create a form for each network and autopopulate fields.
             try:
                 login = AdNetworkLoginCredentials. \

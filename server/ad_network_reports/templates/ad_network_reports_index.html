@@ -60,7 +60,7 @@
             <td class="network-status dataTable-name">
 
                 {% if network.state == LoginStates.WORKING %}
-                <span class="muted">Last synced: {{ network.sync_date|date }}</span>
+                <span class="muted">Last synced: </span>
                 {% endif %}
                 <a class="show-status" style="cursor:pointer;" id="{{network.name}}-status">Status</a>
                 {% if network.state == LoginStates.WORKING %}
@@ -124,7 +124,7 @@
                 the <a href="/account/networks/">Ad Network Settings</a> page for the
                 following apps:
                 <br/><br/>
-                {{network.apps_without_pub_ids}}
+                {% for app in network.apps_without_pub_ids %}{{app.name}}{% if not forloop.last %}, {% endif %}{% endfor %}
               {% endif %}
             {% else %}
               {% if network.name == IAD %}
@@ -137,7 +137,7 @@
                 Make sure these apps are properly set up in MoPub to view the reports.
               {% endif %}
               <br/><br/>
-              {{ network.pub_ids_without_data }}
+              {% for id in network.pub_ids_without_data %}{{id}}{% if not forloop.last %}, {% endif %}{% endfor %}
             {% endif %}
             </dd>
           {% endif %}

@@ -54,6 +54,11 @@
         },
 
         render: function () {
+            if(this.model.get("type") == 'network' && this.model.get("sync_date")) {
+                console.log("#" + this.model.id + "-row");
+                $("#" + this.model.id + "-row .network-status span:first").append(this.model.get("sync_date"));
+            }
+
             var mapper_row = $("tr#" + this.model.id + "-row");
             $(".revenue", mapper_row).text(mopub.Utils.formatCurrency(this.model.get("revenue")));
             $(".attempts", mapper_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("attempts")));
@@ -81,31 +86,29 @@
         },
 
         render: function () {
-            var attributes = this.model.attributes;
-
             context_dict = {
-                name: attributes.app_name + '  ',
+                name: this.model.get('app_name') + '  ',
                 network: this.model.get('network_name'),
-                key: attributes.mapper_key,
-                url: '/ad_network_reports/app_view/' + attributes.mapper_key,
-                revenue: mopub.Utils.formatCurrency(attributes.revenue),
-                attempts: mopub.Utils.formatNumberWithCommas(attributes.attempts),
-                impressions: mopub.Utils.formatNumberWithCommas(attributes.impressions),
-                cpm: mopub.Utils.formatCurrency(attributes.cpm),
-                fill_rate: mopub.Utils.formatNumberAsPercentage(attributes.fill_rate),
-                clicks: mopub.Utils.formatNumberWithCommas(attributes.clicks),
-                cpc: mopub.Utils.formatCurrency(attributes.cpc),
-                ctr: mopub.Utils.formatNumberAsPercentage(attributes.ctr),
+                key: this.model.get('mapper_key'),
+                url: '/ad_network_reports/app_view/' + this.model.get('mapper_key'),
+                revenue: mopub.Utils.formatCurrency(this.model.get('revenue')),
+                attempts: mopub.Utils.formatNumberWithCommas(this.model.get('attempts')),
+                impressions: mopub.Utils.formatNumberWithCommas(this.model.get('impressions')),
+                cpm: mopub.Utils.formatCurrency(this.model.get('cpm')),
+                fill_rate: mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')),
+                clicks: mopub.Utils.formatNumberWithCommas(this.model.get('clicks')),
+                cpc: mopub.Utils.formatCurrency(this.model.get('cpc')),
+                ctr: mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')),
             }
             network_html = _.template($('#app-on-network-row-template').html(), context_dict);
 
-            $('#app-on-' + attributes.network).append(network_html);
+            $('#app-on-' + this.model.get('network')).append(network_html);
 
             // It will always insert in alphabetical order since we pull stats
             // from the networks in alphabetical order
-            context_dict['name'] = attributes.network_name + '  '
+            context_dict['name'] = this.model.get('network_name') + '  '
             app_html = _.template($('#app-on-network-row-template').html(), context_dict);
-            $('#' + attributes.app_key + '-on-networks').append(app_html);
+            $('#' + this.model.get('app_key') + '-on-networks').append(app_html);
 
             $('.details-row').mouseover(function () {
                 var key = $(this).attr('id');

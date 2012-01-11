@@ -222,7 +222,7 @@ def main():
                                                   ('/m/purchase', PurchaseHandler),
                                                   ('/m/purchase_txn', PurchaseHandlerTxn),
                                                   ('/m/req',AdRequestHandler),
-                                                  ('/m/budget/advance', budget_handlers.BudgetAdvanceHandler)],
+                                                  ('/m/budget/advance/', budget_handlers.BudgetAdvanceHandler)],
                                                   debug=DEBUG)
     run_wsgi_app(application)
     # wsgiref.handlers.CGIHandler().run(application)

@@ -13,6 +13,7 @@ cron:
   url: /reports/daily_sched_runner/
   schedule: every day 0:01
   timezone: America/Los_Angeles
+  target: frontend-0
   
 - description: Periodic dashboard refresh
   url: /admin/prep/

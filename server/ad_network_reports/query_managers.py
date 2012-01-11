@@ -658,9 +658,12 @@ def create_fake_data(account=None):
     if settings.DEBUG:
         last_90_days = date_magic.gen_date_range(90)
 
-        app = App(account=account,
+        app1 = App(account=account,
                 name='Hello Kitty Island Adventures')
-        app.put()
+        app1.put()
+        app2 = App(account=account,
+                name='WoW')
+        app2.put()
 
         networks = AD_NETWORK_NAMES.keys()[1:-2]
 
@@ -675,7 +678,11 @@ def create_fake_data(account=None):
             AdNetworkAppMapper(ad_network_name=network,
                     publisher_id=str(random.random()*100),
                     ad_network_login=login,
-                    application=app).put()
+                    application=app1).put()
+            AdNetworkAppMapper(ad_network_name=network,
+                    publisher_id=str(random.random()*100),
+                    ad_network_login=login,
+                    application=app2).put()
         AdNetworkLoginCredentials(account=account,
                 ad_network_name=AD_NETWORK_NAMES.keys()[0],
                 app_pub_ids=['hfehafa','aihef;iawh']).put()

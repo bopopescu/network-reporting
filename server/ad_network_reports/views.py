@@ -67,7 +67,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
             # Give the template enough information to make the appropriate
             # queries ajax queries to get all the models for each collection
             for mapper in sorted(AdNetworkMapperManager.get_mappers(self.account,
-                network), key=lambda mapper: mapper.application.name.lower()):
+                    network), key=lambda mapper: mapper.application.name.lower()):
                 network_data['pub_ids'].append(mapper.publisher_id)
                 app = mapper.application
                 apps_with_data[(app.name, app.app_type)] = mapper.application
@@ -87,18 +87,6 @@ class AdNetworkReportIndexHandler(RequestHandler):
         apps = [app for app in sorted(apps_with_data.itervalues(), key=lambda
             app: app.identifier)]
 
-        logging.info(networks)
-
-        # TODO: make this load through Ajax
-        # Get the daily stats list.
-#        daily_stats = []
-#        for date in days:
-#            stats_dict = AdNetworkStatsManager.get_stats_for_day(self.account,
-#                    date).__dict__
-#            stats_dict = dict([(key.replace('_', '', 1), val) for key, val
-#                    in stats_dict.iteritems()])
-#            daily_stats.append(stats_dict)
-
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper
         # for the account all get loaded via Ajax.
@@ -108,12 +96,13 @@ class AdNetworkReportIndexHandler(RequestHandler):
                   'start_date' : days[0],
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
+                  'show_graph' : True,
                   # Account key needed for form submission to EC2.
                   'account_key' : str(self.account.key()),
                   'networks': networks,
                   'apps': apps,
                   'LoginStates': LoginStates,
-                  'MOBFOX': MOBFOX_PRETTY,
+                  'MOBFOX': MOBFOX,
                   'IAD': IAD_PRETTY
               })
 

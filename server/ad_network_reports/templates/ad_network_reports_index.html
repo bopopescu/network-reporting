@@ -72,10 +72,18 @@
             {% endif %}
             {% if network.state == LoginStates.WORKING %}
               <td class="dataTable-data numeric revenue">--</td>
-              <td class="dataTable-data numeric attempts">--</td>
+              {% if network.name != MOBFOX %}
+                <td class="dataTable-data numeric attempts">--</td>
+              {% else %}
+                <td class="dataTable-data numeric"></td>
+              {% endif %}
               <td class="dataTable-data numeric impressions">--</td>
               <td class="dataTable-data numeric cpm">--</td>
-              <td class="dataTable-data numeric fill-rate">--</td>
+              {% if network.name != MOBFOX %}
+                <td class="dataTable-data numeric fill-rate">--</td>
+              {% else %}
+                <td class="dataTable-data numeric"></td>
+              {% endif %}
               <td class="dataTable-data numeric clicks">--</td>
               <td class="dataTable-data numeric cpc">--</td>
               <td class="dataTable-data numeric ctr">--</td>
@@ -221,9 +229,9 @@
       <table class="dataTable appData-main">
         <tbody>
           <tr class="app-row" id="{{app.key_}}-row">
-            <td class="appData-icon"><a href="{% url publisher_app_show app_key=app.identifier %}"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td> <td class="dataTable-name">
-                <a href="{% url publisher_app_show app_key=app.identifier %}">{{app.name}}</a>
-                <span class="muted unbold">({{app.app_type}})</span>
+            <td class="appData-icon"><a href="/inventory/app/{{app.key_}}"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td> <td class="dataTable-name">
+                <a href="/inventory/app/{{app.key_}}">{{app.name}}</a>
+                <span class="muted unbold">({{app.app_type_text}})</span>
                 <img id="{{app.identifier}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
             </td>
             <td class="dataTable-data numeric revenue">--</td>
@@ -257,10 +265,10 @@
   <script type="text/html" id="app-on-network-row-template">
     {% include "partials/app_on_network.html" %}
   </script>
-  <script type="text/javascript" src="/js/models/ad_network_reports.js?v=1"></script>
-  <script type="text/javascript" src="/js/views/ad_network_reports.js?v=1"></script>
-  <script type="text/javascript" src="/js/controllers/advertiser.js?v=46"></script>
-  <script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=2"></script>
+  <script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
+  <script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
+  <script type="text/javascript" src="/js/controllers/advertiser.js?v=48"></script>
+  <script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=4"></script>
   <script>
     $(function () {
         mopub.Advertiser.initializeAdReportsIndex();
@@ -270,14 +278,14 @@
         AdNetworkReportsController(
         [{% for network in networks %} {
            network: '{{ network.name }}',
-           models: [{% for id in network.pub_ids %}{
-              id: '{{ id }}',
+           models: [{% for key in network.pub_ids %}{
+              id: '{{ key }}',
               network: '{{ network.name }}'},
           {% endfor %}]},
         {% endfor %}],
         [{% for app in apps %}{
             id: '{{ app.key_ }}',
-          }{% endfor %}],
+          },{% endfor %}],
         's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}');
     });
   </script>

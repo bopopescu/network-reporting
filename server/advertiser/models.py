@@ -728,13 +728,15 @@ class GreyStripeCreative(Creative):
         return ('320x320', '320x50', '300x250',)
 
 class MobFoxCreative(Creative):
-
     network_name = "mobfox"
     Renderer = MobFoxRenderer
 
     ServerSide = MobFoxServerSide
 
-
+    @property
+    def multi_format(self):
+        return ('728x90', '320x50')
+        
 class NullCreative(Creative):
     pass
 

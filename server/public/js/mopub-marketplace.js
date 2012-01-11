@@ -726,12 +726,23 @@ var mopub = mopub || {};
              * Settings stuff
              */
             $("#blindness").click(function () {
+                var loading_img = $("#blindness-spinner").show();
+                var saving = $("#blindness-save-status .saving").show();
+
                 var blindness_xhr = $.post("/campaigns/marketplace/settings/blindness/",{
                     activate: $(this).is(":checked")
                 });
 
                 blindness_xhr.done(function(data){
-                    console.log(data);
+                    loading_img.hide();
+                    saving.hide();
+                    if (data.hasOwnProperty('success')) {
+                        var saved = $("#blindness-save-status .saved").show();
+                        setTimeout(function() { saved.fadeOut(); }, 1000);
+                    } else {
+                        var errored = $("#blindness-save-status .error").show();
+                        setTimeout(function() {errored.fadeOut(); }, 1000);
+                    }
                 });
             });
 
@@ -807,6 +818,8 @@ var mopub = mopub || {};
              * that let the user know something has happened. These should be rolled up
              * into their own library and put in mopub.js. For now they're here because
              * this is the only place they're used.
+             *
+             * # REFACTOR: use the new kind of toast
              */
             $("#top_switch").click(function() {
                 if ( $("#top_switch .switch").hasClass('on') ) {
@@ -827,7 +840,7 @@ var mopub = mopub || {};
             });
 
             /*
-             * REFACTOR: Blocklist should submit over ajax
+             * ## Blocklist adding/editing
              */
             $('#blocklist-submit').click(function(e) {
                 e.preventDefault();
@@ -838,7 +851,6 @@ var mopub = mopub || {};
                 });
 
                 blocklist_xhr.done(function (response) {
-                    response = $.parseJSON(response);
                     var domains = response['new'];
                     $.each(domains, function(iter, domain) {
                         addToBlocklist(domain);
@@ -852,13 +864,35 @@ var mopub = mopub || {};
             });
 
             /*
-             * Blocklist removal
+             * ## Blocklist removal
              */
             $("a.blocklist_remove").click(blocklistRemoveClickHandler);
 
+            /*
+             * ## Content filtering
+             */
 
+            $("input.content_level").click(function(){
+                var self = $(this);
+                var filter_level = self.attr('value');
+                var loading_img = $("#filter-spinner").show();
+                var saving = $("#filter-save-status .saving").show();
+                var result = $.post("/campaigns/marketplace/settings/content_filter/", {
+                    filter_level: filter_level
+                });
+                result.success(function(data){
+                    loading_img.hide();
+                    saving.hide();
+                    if (data.hasOwnProperty('success')) {
+                        var saved = $("#filter-save-status .saved").show();
+                        setTimeout(function() { saved.fadeOut(); }, 1000);
 
-
+                    } else {
+                        var errored = $("#filter-save-status .error").show();
+                        setTimeout(function() {errored.fadeOut(); }, 1000);
+                    }
+                });
+            });
 
 
 

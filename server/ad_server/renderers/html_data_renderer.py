@@ -1,5 +1,7 @@
 from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
 
+ORMMA_ADTYPE = 'ormma'
+
 class HtmlDataRenderer(BaseHtmlRenderer):
     """ 
     Simple extension to BaseHtmlRenderer. Overrides _setup_html_context
@@ -17,7 +19,15 @@ class HtmlDataRenderer(BaseHtmlRenderer):
         self.html_context['html_data'] = self.creative.html_data
         self.html_context['random_val'] = self.random_val
 
-    def _get_ad_type(self):
+    def _setup_headers(self):
+        super(HtmlDataRenderer, self)._setup_headers()
+        # TODO: clean this up
+        # for ORMMA HTML we need to pass
+        # banner: 'ormma' as the adtype, None as full_ad_type
+        # interstitial: 'interstitial' as the adtype, 'ormma' as full_ad_type
         if getattr(self.creative, 'ormma_html', False):
-            return 'ormma'
-        return super(HtmlDataRenderer, self)._get_ad_type()
+            if self.adunit.is_fullscreen():
+                self.header_context.ad_type = "interstitial"
+                self.header_context.full_ad_type = ORMMA_ADTYPE
+            else:
+                self.header_context.ad_type = ORMMA_ADTYPE

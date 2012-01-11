@@ -60,13 +60,13 @@ class User(hybrid_models.User):
 DEFAULT_CATEGORIES =  ["IAB25"]
 LOW_CATEGORIES = ["IAB25"]
 MODERATE_CATEGORIES = ["IAB25",
-                       "IAB-39",
+                       "IAB7-39",
                        "IAB8-5",
                        "IAB8-18",
                        "IAB9-9",
                        "IAB14-1"]
 STRICT_CATEGORIES = ["IAB25",
-                     "IAB-39",
+                     "IAB7-39",
                      "IAB8-5",
                      "IAB8-18",
                      "IAB9-9",
@@ -102,25 +102,24 @@ class NetworkConfig(db.Model):
     price_floor = db.FloatProperty(default=.25) # dollars CPM
     blocklist = db.StringListProperty(indexed=False)
     category_blocklist = db.StringListProperty(indexed=False,
-                                    default=["IAB7-39","IAB8-5","IAB8-18",
-                                             "IAB9-9","IAB14-1","IAB25"])
+                                    default=MODERATE_CATEGORIES)
     attribute_blocklist = db.ListProperty(int,
                                           indexed=False,
-                                          default=[9, 10, 14])
+                                          default=MODERATE_ATTRIBUTES)
     blind = db.BooleanProperty(default=False)
 
     @property
     def filter_level(self):
-        if sorted(self.category_blocklist) == sorted(DEFAULT_CATEGORIES) && \
+        if sorted(self.category_blocklist) == sorted(DEFAULT_CATEGORIES) and \
            sorted(self.attribute_blocklist) == sorted(DEFAULT_ATTRIBUTES):
             return "none"
-        elif sorted(self.category_blocklist) == sorted(LOW_CATEGORIES) && \
+        elif sorted(self.category_blocklist) == sorted(LOW_CATEGORIES) and \
              sorted(self.attribute_blocklist) == sorted(LOW_ATTRIBUTES):
             return "low"
-        elif sorted(self.category_blocklist) == sorted(MODERATE_CATEGORIES) && \
+        elif sorted(self.category_blocklist) == sorted(MODERATE_CATEGORIES) and \
              sorted(self.attribute_blocklist) == sorted(MODERATE_ATTRIBUTES):
             return "moderate"
-        elif sorted(self.category_blocklist) == sorted(STRICT_CATEGORIES) && \
+        elif sorted(self.category_blocklist) == sorted(STRICT_CATEGORIES) and \
              sorted(self.attribute_blocklist) == sorted(STRICT_ATTRIBUTES):
             return "strict"
         else:

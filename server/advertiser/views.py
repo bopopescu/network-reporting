@@ -1337,7 +1337,7 @@ class MarketplaceIndexHandler(RequestHandler):
         except AttributeError:
             blind = False
 
-        filter_form = ContentFilterForm()
+        logging.warn(network_config.filter_level)
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
@@ -1356,7 +1356,7 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'end_date': end_date,
                                       'date_range': self.date_range,
                                       'blind': blind,
-                                      'filter_form': filter_form
+                                      'network_config': network_config
                                   })
 
 
@@ -1415,6 +1415,42 @@ class BlocklistHandler(RequestHandler):
 def marketplace_blocklist_change(request,*args,**kwargs):
     return BlocklistHandler()(request,*args,**kwargs)
 
+
+class ContentFilterHandler(RequestHandler):
+    """
+    Ajax handler for changing the marketplace content filter settings.
+    """
+    def post(self):
+        network_config = self.account.network_config
+        filter_level = self.request.POST.get('filter_level', None)
+
+        # If the account doesn't have a network config, make one
+        if not network_config:
+            network_config = NetworkConfig()
+            network_config.put()
+            self.account.network_config = network_config
+            self.account.put()
+
+        # Set the filter level if it was passed
+        if filter_level:
+            if filter_level == "none":
+                network_config.set_no_filter()
+            elif filter_level  == "low":
+                network_config.set_low_filter()
+            elif filter_level == "moderate":
+                network_config.set_moderate_filter()
+            elif filter_level == "strict":
+                network_config.set_strict_filter()
+            else:
+                return JSONResponse({'error': 'Invalid filter level'})
+        else:
+            return JSONResponse({'error': 'No filter level specified (choose one of [none, low, moderate, strict]'})
+
+        return JSONResponse({'success': 'success'})
+
+@login_required
+def marketplace_content_filter(request, *args, **kwargs):
+    return ContentFilterHandler()(request, *args, **kwargs)
 
 class MarketplaceOnOffHandler(RequestHandler):
     """

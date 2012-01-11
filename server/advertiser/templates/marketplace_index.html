@@ -198,7 +198,12 @@
 
   <div class="clearfix tab-section" id="settings">
 
-    <h2> Marketplace Settings </h2>
+    <h2>
+      Marketplace Settings
+      <span id="blindness-save-status">
+        <img id="blindness-spinner" class="hidden" src="/images/icons-custom/spinner-12.gif"></img>
+      </span>
+    </h2>
     <div class="well">
 
       <div class="clearfix" style="width: 380px;">
@@ -221,19 +226,18 @@
           </p>
         </div>
       </div>
-      <div id="blindness-save-status">
-        <img id="blindness-spinner" class="hidden" src="/images/icons-custom/spinner-12.gif"></img>
-        <span class="hidden saving">Saving... </span>
-        <span class="hidden saved">Saved!</span>
-        <span class="hidden error">Whoops! There was an error.</span>
-      </div>
     </div>
 
     <div class="alert-message block-message hidden" id="settings_toast">
       The MoPub Marketplace has been turned off. Visit the settings page if you'd like to turn it on again.
     </div>
 
-    <h2> Content Filtering </h2>
+    <h2>
+      Content Filtering
+      <span id="filter-save-status">
+        <img id="filter-spinner" class="hidden" src="/images/icons-custom/spinner-12.gif"></img>
+      </span>
+    </h2>
     <div class="well">
       <p>
         MoPub can filter ads so that only appropriate ads will be displayed to for your audience.
@@ -260,12 +264,6 @@
           MoPub always blocks illegal or deceptive ads.
         </li>
       </ul>
-      <div id="filter-save-status">
-        <img id="filter-spinner" class="hidden" src="/images/icons-custom/spinner-12.gif"></img>
-        <span class="hidden saving">Saving... </span>
-        <span class="hidden saved">Saved!</span>
-        <span class="hidden error">Whoops! There was an error.</span>
-      </div>
     </div>
 
     <h2>Blocklist</h2>

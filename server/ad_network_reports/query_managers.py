@@ -53,7 +53,7 @@ class AdNetworkReportManager(CachedQueryManager):
         account for the given days.
         """
         # Get all the mappers for this account.
-        mappers = list(AdNetworkMapperManager.get_ad_network_mappers(
+        mappers = list(AdNetworkMapperManager.get_mappers(
             account))
 
         aggregates_with_dates = [AdNetworkStatsManager. \
@@ -171,9 +171,15 @@ class AdNetworkLoginCredentialsManager(CachedQueryManager):
         return AdNetworkLoginCredentials.all().filter('account =', account)
 
     @classmethod
-    def get_all_login_credentials(cls):
-        """Return all AdNetworkLoginCredentials entities ordered by account."""
-        return AdNetworkLoginCredentials.all().order('account')
+    def get_all_logins(cls, order_by_account=False):
+        """
+        Return all AdNetworkLoginCredential entities (ordered by account if
+        the order by account flag is set).
+        """
+        query = AdNetworkLoginCredentials.all()
+        if order_by_account:
+            return query.order('account')
+        return query
 
 class AdNetworkMapperManager(CachedQueryManager):
     @classmethod
@@ -204,8 +210,8 @@ class AdNetworkMapperManager(CachedQueryManager):
                     return mapper
 
     @classmethod
-    def get_ad_network_mappers(cls,
-                               account):
+    def get_mappers(cls,
+                    account):
         """
         Inner join AdNetworkLoginCredentials with AdNetworkAppMapper.
 
@@ -571,7 +577,7 @@ def create_fake_data(account=None):
         login.put()
 
         for day in last_90_days:
-            for mapper in AdNetworkMapperManager.get_ad_network_mappers(
+            for mapper in AdNetworkMapperManager.get_mappers(
                     account):
                 attempts = random.randint(1, 100000)
                 impressions = random.randint(1, attempts)

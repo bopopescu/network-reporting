@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta
 
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager
-from ad_network_reports.update_ad_networks import update_ad_networks
+from ad_network_reports.update_ad_networks import update_all
 from common.utils import date_magic
 from pytz import timezone
 from google.appengine.ext import testbed
@@ -35,15 +35,15 @@ class TestUpdate(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
-    def ad_network_reports_mptest(self):
+    def update_all_mptest(self):
         # Create default models.
         account = load_test_data()
 
         # Call the method we are testing.
-        update_ad_networks()
+        update_all()
 
         test_network_app_mappers = list(AdNetworkMapperManager.
-                get_ad_network_mappers(account))
+                get_mappers(account))
         print 'App Mapper\'s len: %d' % len(test_network_app_mappers)
         assert len(test_network_app_mappers) > 0
 

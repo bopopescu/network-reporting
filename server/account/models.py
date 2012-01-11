@@ -142,6 +142,10 @@ class Account(db.Model):
     # use only mongo, not datastore for real time stats
     use_only_mongo = db.BooleanProperty(default=False)
 
+    # AdNetworkReports account level settings
+    receive_ad_network_emails = db.BooleanProperty(default=False)
+    ad_network_emails = db.StringListProperty(indexed=False, default=[])
+
     @property
     def emails(self):
         """Return a list of emails for this account."""

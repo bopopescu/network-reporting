@@ -68,7 +68,7 @@ def budget_advance(request):
         # serialization of dict objects fails for params so we do it manually
         # key_shard = [str(key) for key in key_shard]
 
-        taskqueue.add(url=reverse('budget_advance_worker'),
+        taskqueue.add(url='/m/budget/advance_worker/',
                       queue_name='budget-advance',
                       params={'key_shard': serial_key_shard}
                       )

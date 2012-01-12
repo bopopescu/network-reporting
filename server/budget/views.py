@@ -78,9 +78,9 @@ def budget_advance(request):
 
     return HttpResponse('Advanced budget timeslices: %s' % text)
 
-def advance_worker(request):
+def advance_worker(request, key_shard=None):
 
-    serial_key_shard = request.POST['key_shard']
+    serial_key_shard = key_shard or request.POST['key_shard']
     keys = serial_key_shard.split(',')
 
     budgets = Budget.get(keys)

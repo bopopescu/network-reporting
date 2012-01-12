@@ -8,5 +8,6 @@ class BudgetAdvanceHandler(webapp.RequestHandler):
 
 class BudgetAdvanceWorkerHandler(webapp.RequestHandler):
     def post(self):
-        resp = advance_worker(self.request)
+        resp = advance_worker(self.request, 
+                              key_shard=self.request.get('key_shard'))
         self.reponse.out.write(resp.content)

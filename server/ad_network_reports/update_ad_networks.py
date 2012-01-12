@@ -81,24 +81,29 @@ def multiprocess_update_all(start_day=None, end_day=None, email=True,
     # create multiprocess queue to store management stats
     queue = Queue()
 
+    logging.info("Creating processes to collect and saving stats...")
     children = []
+    offset_adjustment = 0
     for num in range(processes):
         # Create a log file
         info = (num,
                 start_day.strftime('%Y_%m_%d'),
                 end_day.strftime('%Y_%m_%d'),)
-        logger = create_logger('update_p%d_%s_to_%s_log' % info, '/var/tmp/update_p%d_%s_to_%s.log'
-                % info)
+        logger = create_logger('update_p%d_%s_to_%s_log' % info,
+                '/var/tmp/update_p%d_%s_to_%s.log' % info)
 
         # Calculate offset
-        offset = range_ * num
+        offset = range_ * num + offset_adjustment
 
-        # If we are creating the last process include the remainder
-        if num == processes - 1:
-            range_ += remainder
+        adjusted_range = range_
+        # Add one to range of each process until remainder = 0
+        if remainder > 0:
+            adjusted_range += 1
+            offset_adjustment += 1
+            remainder -= 1
 
         logger.info("Starting process %d with offset %d and range %d" % (num,
-            offset, range_))
+            offset, adjusted_range))
 
         # Spawn off new process calling update_all and giving it it's
         # appropriate offset (start point) and range
@@ -107,7 +112,7 @@ def multiprocess_update_all(start_day=None, end_day=None, email=True,
                         'end_day': end_day,
                         'logger': logger,
                         'offset': offset,
-                        'range_': range_,
+                        'range_': adjusted_range,
                         'queue': queue})
         process.start()
         children.append(process)
@@ -116,25 +121,34 @@ def multiprocess_update_all(start_day=None, end_day=None, email=True,
     for process in children:
         process.join()
 
+    logging.info("Updating management stats...")
     # Save management stats
     stats_dict = {}
-    while queue.full():
+    while not queue.empty():
+        logging.info("Pop from queue")
         stats = queue.get()
         if stats.day in stats_dict:
+            logging.info("Combineding")
             stats_dict[stats.day].combined(stats)
         else:
+            logging.info("Creating")
             stats_dict[stats.day] = stats
 
     for stats in stats_dict.itervalues():
+        logging.info("Putting stats")
         stats.put_stats()
 
+    logging.info("Emailing accounts...")
     # Email accounts
     if email:
         for day in date_magic.gen_days(start_day, end_day):
             send_emails(day)
 
+    logging.info("Finished.")
 
-def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1, queue=None):
+
+def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1,
+        queue=None):
     """Update all ad network stats.
 
     Iterate through all AdNetworkLoginCredentials. Login to the ad networks
@@ -188,7 +202,8 @@ def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1, q
                 logins = []
 
 
-        queue.put(management_stats)
+        if queue and management_stats:
+            queue.put(management_stats)
     # Flush the remaining stats to the db
     db.put([stats for mapper, stats in stats_list])
 
@@ -233,7 +248,8 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
                                % AD_NETWORK_NAMES[login.ad_network_name])
 
 
-def update_login_stats(login, day, management_stats=None, logger=None, queue=None):
+def update_login_stats(login, day, management_stats=None, logger=None,
+        queue=None):
     """
     Update or create stats for the given login and day.
 
@@ -375,8 +391,8 @@ def bulk_get(query, last_object, limit):
 
 
 def send_emails(day):
-    logins_query = AdNetworkLoginCredentialsManager.get_all_logins(order_by_account=
-            True)
+    logins_query = AdNetworkLoginCredentialsManager.get_all_logins(
+            order_by_account=True)
 
     last_account = None
     for login in logins_query:
@@ -385,8 +401,9 @@ def send_emails(day):
             if login.email or getattr(login.account,
                     'receive_ad_network_emails', False):
                 mappers = AdNetworkMapperManager.get_mappers(login.account)
-                stats_list = [AdNetworkStatsManager.get_stats_for_mapper_and_days(mapper,
-                    (day,)) for mapper in mappers]
+                stats_list = [(mapper, AdNetworkStatsManager. \
+                        get_stats_for_mapper_and_days(mapper, (day,))[0]) for
+                        mapper in mappers]
                 send_stats_mail(login.account, day, stats_list)
 
 

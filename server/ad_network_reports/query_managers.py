@@ -534,7 +534,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
             for stat in MANAGEMENT_STAT_NAMES:
                 setattr(self.stats_dict[ad_network_name], stat, getattr(
                     self.stats_dict[ad_network_name], stat) + getattr(
-                    stats_manager[ad_network_name], stat))
+                    stats_manager.stats_dict[ad_network_name], stat))
 
     def put_stats(self):
         for stats in self.stats_dict.values():

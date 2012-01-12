@@ -8,7 +8,8 @@ import common.utils.test.setup
 from datetime import date, datetime, timedelta
 
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
-        AdNetworkStatsManager
+        AdNetworkStatsManager, \
+        AD_NETWORK_NAMES
 from ad_network_reports.update_ad_networks import update_all, \
         multiprocess_update_all
 from common.utils import date_magic
@@ -78,6 +79,9 @@ class TestUpdate(unittest.TestCase):
                 get_mappers(account))
         print 'App Mapper\'s len: %d' % len(test_network_app_mappers)
         assert len(test_network_app_mappers) > 0
+
+        assert AdNetworkManagementStats.all().count() == len(
+                AD_NETWORK_NAMES.keys())
 
         # TODO: figure out a way to verify data that spawned processes created
 

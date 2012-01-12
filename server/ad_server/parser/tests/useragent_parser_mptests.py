@@ -81,7 +81,13 @@ class TestUseragentParser(unittest.TestCase):
         
         filter1 = os_filter(user_agent)[0]
         assert(filter1(self.ipad_only_adgroup))
-        
+
+    def mptest_ipod(self):
+        user_agent = "Mozilla/5.0 (iPod; CPU iPhone OS 5_0_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A405 Safari/7534.48.3"
+        assert(get_os(user_agent) == ('iOS', 'iPod', '5.0.1'))
+        filter1 = os_filter(user_agent)[0]
+        assert(not filter1(self.ipad_only_adgroup))
+    
     def mptest_iphone(self):
         user_agent = "Mozilla/5.0 (iPhone; U; CPU iPhone OS 2.0 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16"
         assert(get_os(user_agent) == ("iOS",'iPhone','2.0'))

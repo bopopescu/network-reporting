@@ -313,6 +313,12 @@ def update_login_stats(login, day, management_stats=None, logger=None,
                                    extract_tb(exc_traceback)))))
         return []
 
+    # Get all mappers for login and put them in a dict for quick access
+    mappers = {}
+    for mapper in AdNetworkMapperManager.get_mappers_by_login(
+            login).fetch(MAX):
+        mappers[mapper.publisher_id] = mapper
+
     # Iterate through the NSR objects returned by the scraper
     for stats in stats_list:
         if management_stats:
@@ -330,39 +336,38 @@ def update_login_stats(login, day, management_stats=None, logger=None,
                 login.app_pub_ids.append(remove_control_chars(stats.app_tag))
             continue
 
-        # Get the mapper object that corresponds to the
-        # login and stats.
-        mapper = AdNetworkMapperManager. \
-                get_ad_network_mapper(publisher_id=publisher_id,
-                                      ad_network_name=login.ad_network_name)
+        # Get the mapper object that corresponds to the login and stats.
+#        mapper = AdNetworkMapperManager.get_mapper(publisher_id=publisher_id,
+#                ad_network_name=login.ad_network_name)
+        mapper = mappers.get(publisher_id, None)
 
         if not mapper:
-            # Check if the app has been added to MoPub prior to last
-            # update.
-            mapper = AdNetworkMapperManager. \
-                    find_app_for_stats(publisher_id, login)
-            if not mapper:
-                # App is not registered in MoPub but is still in the ad
-                # network.
-                if logger:
-                    logger.info("%(account)s has pub id %(pub_id)s on "
-                            "%(network)s that\'s NOT in MoPub" %
-                                 dict(account=login.account.key(),
-                                      pub_id=publisher_id,
-                                      network=login.ad_network_name))
-                login.app_pub_ids.append(publisher_id)
-                continue
-            else:
-                if management_stats:
-                    management_stats.increment(login.ad_network_name, 'mapped')
-                if logger:
-                    logger.info("%(account)s has pub id %(pub_id)s on "
-                            "%(network)s that was FOUND in MoPub and "
-                            "mapped" %
-                                 dict(account=login.account.
-                                     key(),
-                                      pub_id=publisher_id,
-                                      network=login.ad_network_name))
+#            # Check if the app has been added to MoPub prior to last
+#            # update.
+#            mapper = AdNetworkMapperManager. \
+#                    find_app_for_stats(publisher_id, login)
+#            if not mapper:
+#                # App is not registered in MoPub but is still in the ad
+#                # network.
+            if logger:
+                logger.info("%(account)s has pub id %(pub_id)s on "
+                        "%(network)s that\'s NOT in MoPub" %
+                             dict(account=login.account.key(),
+                                  pub_id=publisher_id,
+                                  network=login.ad_network_name))
+            login.app_pub_ids.append(publisher_id)
+            continue
+#            else:
+#                if management_stats:
+#                    management_stats.increment(login.ad_network_name, 'mapped')
+#                if logger:
+#                    logger.info("%(account)s has pub id %(pub_id)s on "
+#                            "%(network)s that was FOUND in MoPub and "
+#                            "mapped" %
+#                                 dict(account=login.account.
+#                                     key(),
+#                                      pub_id=publisher_id,
+#                                      network=login.ad_network_name))
         elif logger:
             logger.info("%(account)s has pub id %(pub_id)s on "
                     "%(network)s that\'s in MoPub" %

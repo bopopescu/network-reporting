@@ -212,6 +212,14 @@ class AdNetworkMapperManager(CachedQueryManager):
                     return mapper
 
     @classmethod
+    def get_mappers_by_login(cls,
+                             login):
+        """
+        Return a generator of the AdNetworkAppMappers with this login.
+        """
+        return AdNetworkAppMapper.all().filter('ad_network_login =', login)
+
+    @classmethod
     def get_mappers(cls,
                     account):
         """
@@ -226,19 +234,20 @@ class AdNetworkMapperManager(CachedQueryManager):
                 yield mapper
 
     @classmethod
-    def get_ad_network_mapper(cls,
-                              ad_network_app_mapper_key=None,
-                              publisher_id=None,
-                              ad_network_name=None):
+    def get_mapper(cls,
+                   mapper_key=None,
+                   publisher_id=None,
+                   ad_network_name=None):
         """Keyword arguments: either an ad_network_app_mapper_key or a
         publisher_id and login_credentials.
 
         Return the corresponding AdNetworkAppMapper.
         """
-        if ad_network_app_mapper_key:
-            return AdNetworkAppMapper.get(ad_network_app_mapper_key)
+        if mapper_key:
+            return AdNetworkAppMapper.get(mapper_key)
         elif publisher_id and ad_network_name:
-            return AdNetworkAppMapper.get_by_publisher_id(publisher_id, ad_network_name)
+            return AdNetworkAppMapper.get_by_publisher_id(publisher_id,
+                    ad_network_name)
         return None
 
 class AdNetworkStatsManager(CachedQueryManager):

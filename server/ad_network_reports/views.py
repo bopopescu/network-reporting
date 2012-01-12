@@ -150,8 +150,8 @@ class AppDetailHandler(RequestHandler):
         """
         days = get_days(self.start_date, self.date_range)
 
-        ad_network_app_mapper = AdNetworkMapperManager.get_ad_network_mapper(
-                ad_network_app_mapper_key=mapper_key)
+        ad_network_app_mapper = AdNetworkMapperManager.get_mapper(mapper_key=
+                mapper_key)
         stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
                 mapper_key, days)
         daily_stats = []

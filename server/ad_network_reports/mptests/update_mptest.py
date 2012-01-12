@@ -56,8 +56,7 @@ class TestUpdate(unittest.TestCase):
         yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
         print "YESTERDAY: %s" % yesterday.strftime('%Y %m %d')
         for mapper1 in test_network_app_mappers:
-            mapper2 = AdNetworkMapperManager.get_ad_network_mapper(
-                    ad_network_app_mapper_key=mapper1.key())
+            mapper2 = AdNetworkMapperManager.get_mapper(mapper_key=mapper1.key())
             stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =',
                     mapper1).filter('date =', yesterday).get()
             if mapper2.application:

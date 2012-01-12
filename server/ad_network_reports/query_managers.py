@@ -23,7 +23,8 @@ from account.query_managers import AccountQueryManager
 from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppMapper, \
      AdNetworkScrapeStats, \
-     AdNetworkManagementStats
+     AdNetworkManagementStats, \
+     MANAGEMENT_STAT_NAMES
 from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager, ALL_NETWORKS
@@ -505,6 +506,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
                  day):
         self.stats_dict = {}
         for network in AD_NETWORK_NAMES.keys():
+            self.day = day
             self.stats_dict[network] = AdNetworkManagementStats(
                     ad_network_name=network,
                     date=day)
@@ -525,6 +527,14 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
                   field):
         setattr(self.stats_dict[ad_network_name], field,
                 getattr(self.stats_dict[ad_network_name], field) + 1)
+
+    def combined(self,
+                 stats_manager):
+        for ad_network_name, stats in stats_manager.stats_dict.iteritems():
+            for stat in MANAGEMENT_STAT_NAMES:
+                setattr(self.stats_dict[ad_network_name], stat, getattr(
+                    self.stats_dict[ad_network_name], stat) + getattr(
+                    stats_manager[ad_network_name], stat))
 
     def put_stats(self):
         for stats in self.stats_dict.values():

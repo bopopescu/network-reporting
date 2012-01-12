@@ -22,7 +22,8 @@ else:
 
 import common.utils.test.setup
 
-import multiprocessing
+from multiprocessing import Process, Queue
+import unicodedata, re
 
 from google.appengine.api import mail
 
@@ -49,7 +50,7 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
-TESTING = False
+TESTING = True
 
 MAX = 1000
 BUFFER = 200
@@ -77,6 +78,9 @@ def multiprocess_update_all(start_day=None, end_day=None, email=True,
     range_ = int(login_count / processes)
     remainder = login_count % processes
 
+    # create multiprocess queue to store management stats
+    queue = Queue()
+
     children = []
     for num in range(processes):
         # Create a log file
@@ -98,12 +102,13 @@ def multiprocess_update_all(start_day=None, end_day=None, email=True,
 
         # Spawn off new process calling update_all and giving it it's
         # appropriate offset (start point) and range
-        process = multiprocessing.Process(target=update_all,
+        process = Process(target=update_all,
                 kwargs={'start_day': start_day,
                         'end_day': end_day,
                         'logger': logger,
                         'offset': offset,
-                        'range_': range_})
+                        'range_': range_,
+                        'queue': queue})
         process.start()
         children.append(process)
 
@@ -111,13 +116,25 @@ def multiprocess_update_all(start_day=None, end_day=None, email=True,
     for process in children:
         process.join()
 
+    # Save management stats
+    stats_dict = {}
+    while queue.full():
+        stats = queue.get()
+        if stats.day in stats_dict:
+            stats_dict[stats.day].combined(stats)
+        else:
+            stats_dict[stats.day] = stats
+
+    for stats in stats_dict.itervalues():
+        stats.put_stats()
+
     # Email accounts
     if email:
         for day in date_magic.gen_days(start_day, end_day):
             send_emails(day)
 
 
-def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1):
+def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1, queue=None):
     """Update all ad network stats.
 
     Iterate through all AdNetworkLoginCredentials. Login to the ad networks
@@ -125,8 +142,6 @@ def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1):
 
     Run daily as a cron job in EC2. Email Tiago if errors occur.
     """
-    if logger:
-        logger.info("HERE")
     if range_ == -1:
         range_ = AdNetworkLoginCredentialsManager.get_all_logins().count()
 
@@ -154,7 +169,7 @@ def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1):
         while logins:
             # Iterate through logins
             for login in logins:
-                stats_list += update_login_stats(login, day, management_stats, logger)
+                stats_list += update_login_stats(login, day, management_stats, logger, queue)
 
                 # Flush stats_list to the database
                 if len(stats_list) > MAX - BUFFER:
@@ -173,7 +188,7 @@ def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1):
                 logins = []
 
 
-        management_stats.put_stats()
+        queue.put(management_stats)
     # Flush the remaining stats to the db
     db.put([stats for mapper, stats in stats_list])
 
@@ -218,7 +233,7 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
                                % AD_NETWORK_NAMES[login.ad_network_name])
 
 
-def update_login_stats(login, day, management_stats=None, logger=None):
+def update_login_stats(login, day, management_stats=None, logger=None, queue=None):
     """
     Update or create stats for the given login and day.
 
@@ -295,7 +310,8 @@ def update_login_stats(login, day, management_stats=None, logger=None):
             publisher_id = stats.app_tag
 
         if not publisher_id:
-            login.app_pub_ids.append(stats.app_tag.encode('utf8'))
+            if stats.app_tag:
+                login.app_pub_ids.append(remove_control_chars(stats.app_tag))
             continue
 
         # Get the mapper object that corresponds to the
@@ -372,6 +388,16 @@ def send_emails(day):
                 stats_list = [AdNetworkStatsManager.get_stats_for_mapper_and_days(mapper,
                     (day,)) for mapper in mappers]
                 send_stats_mail(login.account, day, stats_list)
+
+
+CONTROL_CHARS = ''.join(map(unichr, range(0,32) + range(127,160)))
+CONTROL_CHAR_RE = re.compile('[%s]' % re.escape(CONTROL_CHARS))
+
+def remove_control_chars(str_):
+    """
+    Strip unicode pictures
+    """
+    return CONTROL_CHAR_RE.sub('', str_)
 
 
 def send_stats_mail(account, day, stats_list):
@@ -531,13 +557,13 @@ if __name__ == "__main__":
     if (len(sys.argv) > 1):
         for arg in sys.argv[1:]:
             if START_DAY + '=' == arg[:len(START_DAY) + 1]:
-                start_day = date(*[int(num) for num in arg.split('-')])
+                start_day = date(*[int(num) for num in arg[len(START_DAY) + 1:].split('-')])
             elif END_DAY + '=' == arg[:len(END_DAY) + 1]:
-                end_day = date(*[int(num) for num in arg.split('-')])
+                end_day = date(*[int(num) for num in arg[len(END_DAY) + 1:].split('-')])
             elif EMAIL + '=' == arg[:len(EMAIL) + 1]:
-                email = (arg in ('y', 'Y'))
+                email = (arg[len(EMAIL) + 1:] in ('y', 'Y'))
             elif PROCESSES + '=' == arg[:len(PROCESSES) + 1]:
-                processes = int(arg)
+                processes = int(arg[len(PROCESSES) + 1:])
 
     setup_remote_api()
     multiprocess_update_all(start_day, end_day, email, processes)

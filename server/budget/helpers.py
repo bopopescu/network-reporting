@@ -1,4 +1,5 @@
 from datetime import datetime
+import calendar
 import time
 import math
 
@@ -29,7 +30,7 @@ def get_curr_slice_num(curr_ts=None):
 
 def get_slice_from_datetime(dte, testing=False):
     """ Given a datetime obj, returns the UTC timeslice """
-    dte_ts = time.mktime(dte.timetuple())
+    dte_ts = calendar.timegm(dte.timetuple())
     return get_slice_from_ts(dte_ts, testing)
 
 def get_slice_from_ts(dte_ts, testing=False):
@@ -44,10 +45,10 @@ def get_datetime_from_slice(slice_num, testing = False):
         utc_ts = slice_num * TEST_SEC_PER_TS
     else:
         utc_ts = slice_num * SEC_PER_TS
-    return get_datettime_from_ts(utc_ts)
+    return get_datetime_from_ts(utc_ts)
 
-def get_datettime_from_ts(utc_ts):
-    return datetime.fromtimestamp(utc_ts)
+def get_datetime_from_ts(utc_ts):
+    return datetime.utcfromtimestamp(utc_ts)
 
 def get_slice_budget_from_daily(daily_budget, testing = False):
     if testing:
@@ -56,10 +57,10 @@ def get_slice_budget_from_daily(daily_budget, testing = False):
         return float(daily_budget)/TS_PER_DAY
 
 
-def build_budget_update_string(start=None, 
-                               end = None, 
+def build_budget_update_string(start=None,
+                               end = None,
                                delivery_type = None,
-                               static_total = None, 
+                               static_total = None,
                                static_slice = None):
     if static_total is not None and static_slice is not None:
         # Should probs raise an error, I'm lazy

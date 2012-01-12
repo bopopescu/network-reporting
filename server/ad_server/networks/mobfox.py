@@ -47,7 +47,8 @@ class MobFoxServerSide(ServerSide):
                 'v': 'api_mopub',
                 'device_override' : self._device_overide(),
               }
-              
+        if self.adunit.format == "728x90":
+            data['lbonly'] = 1
         return urllib.urlencode(data)
         
     def get_response(self):

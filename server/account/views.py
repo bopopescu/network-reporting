@@ -28,25 +28,38 @@ class GeneralSettingsHandler(RequestHandler):
         user = self.account.mpuser
         return render_to_response(self.request,
                                   "account/general_settings.html",
-                                  {"account": self.account,
-                                   "user":user})
+                                  {
+                                      "account": self.account,
+                                      "user":user
+                                  })
 
 @login_required
 def index(request, *args, **kwargs):
-    return GeneralSettingsHandler()(request, *args, **kwargs)
+    return GeneralSettingsHandler()(request, use_cache=False,
+                                    *args, **kwargs)
 
 
 class AdNetworkSettingsHandler(RequestHandler):
     def get(self,account_form=None):
+
         if self.params.get("skip"):
             self.account.status = "step4"
             AccountQueryManager.put_accounts(self.account)
             return HttpResponseRedirect(reverse('advertiser_campaign'))
+
         account_form = account_form or AccountForm(instance=self.account)
         apps_for_account = AppQueryManager.get_apps(account=self.account)
         user = self.account.mpuser
 
-        networks = ['admob_status','adsense_status','brightroll_status','ejam_status','greystripe_status','inmobi_status','jumptap_status','millennial_status','mobfox_status']
+        networks = ['admob_status',
+                    'adsense_status',
+                    'brightroll_status',
+                    'ejam_status',
+                    'greystripe_status',
+                    'inmobi_status',
+                    'jumptap_status',
+                    'millennial_status',
+                    'mobfox_status']
         network_config_status = {}
 
         def _get_net_status(account,network):
@@ -76,13 +89,16 @@ class AdNetworkSettingsHandler(RequestHandler):
             network_config_status[network] = _get_net_status(self.account,network)
 
 
-        return render_to_response(self.request,'account/ad_network_settings.html', dict({'account': self.account,
-                                                                      'account_form': account_form,
-                                                                      'user': user,
-                                                                      "apps": apps_for_account}.items() + network_config_status.items()))
+        return render_to_response(self.request,
+                                  'account/ad_network_settings.html',
+                                  dict({'account': self.account,
+                                        'account_form': account_form,
+                                        'user': user,
+                                        "apps": apps_for_account}.items() + network_config_status.items()))
 
 
     def post(self):
+
         account_form = AccountForm(data=self.request.POST, instance=self.account)
         network_config_form = NetworkConfigForm(data=self.request.POST, instance=self.account.network_config)
 
@@ -100,7 +116,6 @@ class AdNetworkSettingsHandler(RequestHandler):
                     if app_key_identifier[0] == str(app.key()):
                         app_network_config_data[app_key_identifier[1]] = value
 
-                logging.warning("link" + unicode(app.name) + " " + str(app_network_config_data))
                 app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
                 app_network_config = app_form.save(commit=False)
                 AppQueryManager.update_config_and_put(app, app_network_config)

@@ -160,7 +160,16 @@ class StatsModel(db.Expando):
         
         return super(StatsModel,self).__init__(parent=parent,key_name=key_name,**kwargs)
         
-        
+    def __eq__(self, other):
+        return self._account == other._account \
+           and self._publisher == other._publisher \
+           and self._advertiser == other._advertiser \
+           and self.date == other.date \
+           and self.request_count == other.request_count \
+           and self.impression_count == other.impression_count \
+           and self.click_count == other.click_count \
+           and self.conversion_count == other.conversion_count \
+           and self.revenue == other.revenue
 
     def update_geo(self,country,geo_type,value):
         # update dynamic properties

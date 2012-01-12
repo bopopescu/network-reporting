@@ -87,7 +87,10 @@ class App(db.Model):
     def icon_url(self):
         from common.utils import helpers
         if not self.icon_blob: return "/placeholders/image.gif"
-        return helpers.get_url_for_blob(self.icon_blob)
+        try:
+            return helpers.get_url_for_blob(self.icon_blob)
+        except Exception:
+            return None
 
 
     def get_owner(self):
@@ -237,6 +240,16 @@ class Site(db.Model):
     @property
     def owner_name(self):
         return "app_key"
+
+    def get_code_format(self):
+        code_formats = {
+            '728x90': "MOPUB_LEADERBOARD_SIZE",
+            '300x250': "MOPUB_MEDIUM_RECT_SIZE",
+            '160x600': "MOPUB_WIDE_SKYSCRAPER_SIZE",
+            '320x50': "MOPUB_BANNER_SIZE",
+            'custom': "CGSizeMake(" + str(self.get_width()) + ", " + str(self.get_height()) +")",
+        }
+        return code_formats.get(self.format, None)
 
     def get_pub_id(self, pub_id_attr):
         """ Look up the pub string in all levels """

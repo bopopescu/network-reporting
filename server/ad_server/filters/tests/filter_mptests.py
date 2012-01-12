@@ -5,11 +5,19 @@ sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from advertiser.models import AdGroup
-from ad_server.filters.filters import kw_filter, format_filter
+from ad_server.filters.filters import kw_filter, format_filter, alloc_filter
 
 from publisher.models import Site as AdUnit
 from advertiser.models import Creative
 
+def alloc_filter_mptest():
+    adgroup = AdGroup(allocation_percentage=50.0)
+    real_filter1, msg, l = alloc_filter(test_value=30.0)
+    real_filter2, msg, l = alloc_filter(test_value=50.0)
+    real_filter3, msg, l = alloc_filter(test_value=100.0)
+    assert(real_filter1(adgroup))
+    assert(not real_filter2(adgroup))
+    assert(not real_filter2(adgroup))
 
 def kw_filter_mptest():
     adgroup = AdGroup(keywords=[('m_age:19 AND m_gender:m'), # OR

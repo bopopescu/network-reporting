@@ -13,7 +13,7 @@ from ad_server.networks.server_side import ServerSideException
 """
 
 class MoceanServerSide(ServerSide):
-    base_url = "http://ads.mocean.mobi/ad"
+    base_url = "http://r.tapit.com/adrequest.php"
     pub_id_attr = 'mocean_pub_id'
     network_name = 'Mocean'
 

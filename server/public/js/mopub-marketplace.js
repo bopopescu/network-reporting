@@ -36,9 +36,11 @@ var mopub = mopub || {};
             return (impressions/attempts)*100;
         },
         validate: function(attributes) {
-            var valid_number = Number(attributes.price_floor);
-            if (valid_number == NaN) {
-                return "please enter a valid number for the price floor";
+            if (typeof(attributes.price_floor) != 'undefined') {
+                var valid_number = Number(attributes.price_floor);
+                if (isNaN(valid_number)) {
+                    return "Please enter a valid number for the price floor";
+                }
             }
         },
         url: function() {
@@ -266,9 +268,8 @@ var mopub = mopub || {};
             $("input.targeting-box", adunit_row).click(function() {
                 var loading_img = $(".targeting .loading-img", adunit_row);
                 loading_img.show();
-                current_model.set({'active': $(this).is(":checked")});
-                current_model.save({}, {
-                    success: function () {
+                var is_valid = current_model.save({'active': $(this).is(":checked")}, {
+                    success: function (model, response) {
                         setTimeout(function() {
                             loading_img.hide();
                         }, 2000);
@@ -278,16 +279,25 @@ var mopub = mopub || {};
 
             // Add the event handler to submit price floor changes over ajax.
             $('.price_floor .input-text', adunit_row).keyup(function() {
+                var input_field = $(this);
+                input_field.removeClass('error');
                 var loading_img = $(".price_floor .loading-img", adunit_row);
                 loading_img.show();
-                current_model.set({'price_floor': $(this).val()});
-                current_model.save({}, {
-                    success: function () {
-                        setTimeout(function() {
-                            loading_img.hide();
-                        }, 2000);
-                    }
+
+                var promise = current_model.save({
+                    price_floor: $(this).val()
                 });
+                if (promise) {
+                    promise.success(function() {
+                        loading_img.hide();
+                    });
+                    promise.error(function() {
+                        loading_img.hide();
+                    });
+                } else {
+                    loading_img.hide();
+                    input_field.addClass('error');
+                }
             });
 
             return this;
@@ -716,12 +726,23 @@ var mopub = mopub || {};
              * Settings stuff
              */
             $("#blindness").click(function () {
+                var loading_img = $("#blindness-spinner").show();
+                var saving = $("#blindness-save-status .saving").show();
+
                 var blindness_xhr = $.post("/campaigns/marketplace/settings/blindness/",{
                     activate: $(this).is(":checked")
                 });
 
                 blindness_xhr.done(function(data){
-                    console.log(data);
+                    loading_img.hide();
+                    saving.hide();
+                    if (data.hasOwnProperty('success')) {
+                        var saved = $("#blindness-save-status .saved").show();
+                        setTimeout(function() { saved.fadeOut(); }, 1000);
+                    } else {
+                        var errored = $("#blindness-save-status .error").show();
+                        setTimeout(function() {errored.fadeOut(); }, 1000);
+                    }
                 });
             });
 
@@ -797,6 +818,8 @@ var mopub = mopub || {};
              * that let the user know something has happened. These should be rolled up
              * into their own library and put in mopub.js. For now they're here because
              * this is the only place they're used.
+             *
+             * # REFACTOR: use the new kind of toast
              */
             $("#top_switch").click(function() {
                 if ( $("#top_switch .switch").hasClass('on') ) {
@@ -817,7 +840,7 @@ var mopub = mopub || {};
             });
 
             /*
-             * REFACTOR: Blocklist should submit over ajax
+             * ## Blocklist adding/editing
              */
             $('#blocklist-submit').click(function(e) {
                 e.preventDefault();
@@ -828,7 +851,6 @@ var mopub = mopub || {};
                 });
 
                 blocklist_xhr.done(function (response) {
-                    response = $.parseJSON(response);
                     var domains = response['new'];
                     $.each(domains, function(iter, domain) {
                         addToBlocklist(domain);
@@ -842,13 +864,35 @@ var mopub = mopub || {};
             });
 
             /*
-             * Blocklist removal
+             * ## Blocklist removal
              */
             $("a.blocklist_remove").click(blocklistRemoveClickHandler);
 
+            /*
+             * ## Content filtering
+             */
 
+            $("input.content_level").click(function(){
+                var self = $(this);
+                var filter_level = self.attr('value');
+                var loading_img = $("#filter-spinner").show();
+                var saving = $("#filter-save-status .saving").show();
+                var result = $.post("/campaigns/marketplace/settings/content_filter/", {
+                    filter_level: filter_level
+                });
+                result.success(function(data){
+                    loading_img.hide();
+                    saving.hide();
+                    if (data.hasOwnProperty('success')) {
+                        var saved = $("#filter-save-status .saved").show();
+                        setTimeout(function() { saved.fadeOut(); }, 1000);
 
-
+                    } else {
+                        var errored = $("#filter-save-status .error").show();
+                        setTimeout(function() {errored.fadeOut(); }, 1000);
+                    }
+                });
+            });
 
 
 

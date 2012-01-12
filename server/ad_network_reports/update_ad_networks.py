@@ -22,6 +22,8 @@ else:
 
 import common.utils.test.setup
 
+import multiprocessing
+
 from google.appengine.api import mail
 
 from datetime import date, datetime, timedelta
@@ -52,7 +54,70 @@ TESTING = False
 MAX = 1000
 BUFFER = 200
 
-def update_all(start_day=None, end_day=None, email=True):
+
+def multiprocess_update_all(start_day=None, end_day=None, email=True,
+        processes=1):
+    """
+    Break up update script into multiple processes.
+    """
+    # Standardize the date
+    pacific = timezone('US/Pacific')
+    yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
+
+    # Set start and end dates
+    start_day = start_day or yesterday
+    end_day = end_day or yesterday
+
+    login_count = AdNetworkLoginCredentialsManager.get_all_logins().count()
+
+    # Calculate the range (# of logins each process must handle) and the
+    # remainder (# of additional logins the last process must handle)
+    if processes > login_count:
+        processes = login_count
+    range_ = int(login_count / processes)
+    remainder = login_count % processes
+
+    children = []
+    for num in range(processes):
+        # Create a log file
+        info = (num,
+                start_day.strftime('%Y_%m_%d'),
+                end_day.strftime('%Y_%m_%d'),)
+        logger = create_logger('update_p%d_%s_to_%s_log' % info, '/var/tmp/update_p%d_%s_to_%s.log'
+                % info)
+
+        # Calculate offset
+        offset = range_ * num
+
+        # If we are creating the last process include the remainder
+        if num == processes - 1:
+            range_ += remainder
+
+        logger.info("Starting process %d with offset %d and range %d" % (num,
+            offset, range_))
+
+        # Spawn off new process calling update_all and giving it it's
+        # appropriate offset (start point) and range
+        process = multiprocessing.Process(target=update_all,
+                kwargs={'start_day': start_day,
+                        'end_day': end_day,
+                        'logger': logger,
+                        'offset': offset,
+                        'range_': range_})
+        process.start()
+        children.append(process)
+
+    # Wait for all processes to complete
+    for process in children:
+        process.join()
+
+    # Email accounts
+    if email:
+        for day in date_magic.gen_days(start_day, end_day):
+            send_emails(day)
+
+
+def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1):
     """Update all ad network stats.
 
     Iterate through all AdNetworkLoginCredentials. Login to the ad networks
@@ -60,21 +125,19 @@ def update_all(start_day=None, end_day=None, email=True):
 
     Run daily as a cron job in EC2. Email Tiago if errors occur.
     """
+    if logger:
+        logger.info("HERE")
+    if range_ == -1:
+        range_ = AdNetworkLoginCredentialsManager.get_all_logins().count()
+
     # Standardize the date
     pacific = timezone('US/Pacific')
     yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
     logins_query = AdNetworkLoginCredentialsManager.get_all_logins()
-    logins = logins_query.fetch(MAX)
-
-    # Create log file.
-    logger = logging.getLogger('update_log')
-    hdlr = logging.FileHandler('/var/tmp/update.log')
-    formatter = logging.Formatter('%(asctime)s %(levelname)s'
-            ' %(message)s')
-    hdlr.setFormatter(formatter)
-    logger.addHandler(hdlr)
-    logger.setLevel(logging.DEBUG)
+    limit = min(range_, MAX)
+    count = limit
+    logins = logins_query.fetch(limit, offset=offset)
 
     # Set start and end dates
     start_day = start_day or yesterday
@@ -83,7 +146,8 @@ def update_all(start_day=None, end_day=None, email=True):
     stats_list = []
     # Iterate through date range
     for day in date_magic.gen_days(start_day, end_day):
-        logger.info("TEST DATE: %s" % day.strftime("%Y %m %d"))
+        if logger:
+            logger.info("TEST DATE: %s" % day.strftime("%Y %m %d"))
         # Create Management Stats
         management_stats = AdNetworkManagementStatsManager(day=day)
 
@@ -101,13 +165,15 @@ def update_all(start_day=None, end_day=None, email=True):
             db.put(logins)
 
             # Get the next set of logins
-            logins = bulk_get(logins_query, login)
+            if range_ > count:
+                limit = min(range_ - count, MAX)
+                count += limit
+                logins = bulk_get(logins_query, login, limit=limit)
+            else:
+                logins = []
 
 
         management_stats.put_stats()
-
-        if email:
-            send_emails(day)
     # Flush the remaining stats to the db
     db.put([stats for mapper, stats in stats_list])
 
@@ -168,6 +234,8 @@ def update_login_stats(login, day, management_stats=None, logger=None):
 
     network_name = login.ad_network_name
     try:
+        if logger:
+            logger.info("Creating network")
         # AdNetwork is a factory class that returns the appropriate
         # subclass of itself when created.
         network = AdNetwork(login)
@@ -178,6 +246,8 @@ def update_login_stats(login, day, management_stats=None, logger=None):
         # Return a list of NetworkScrapeRecord objects of stats for
         # each app for the day
         stats_list = scraper.get_site_stats(day)
+        if logger:
+            logger.info("Received stats list")
     except UnauthorizedLogin:
         # Users email changed since we last verified
         if logger:
@@ -284,8 +354,8 @@ def update_login_stats(login, day, management_stats=None, logger=None):
 
 ## Helpers
 #
-def bulk_get(query, last_object):
-    return query.filter('__key__ >', last_object).fetch(MAX)
+def bulk_get(query, last_object, limit):
+    return query.filter('__key__ >', last_object).fetch(limit)
 
 
 def send_emails(day):
@@ -404,12 +474,26 @@ Learn more at https://app.mopub.com/ad_network_reports/
 """))
 
 
+def create_logger(name, file_path):
+    """
+    Create log file.
+    """
+    logger = logging.getLogger(name)
+    hdlr = logging.FileHandler(file_path)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s'
+            ' %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.DEBUG)
+    return logger
+
 if __name__ == "__main__":
     """
-    update_networks.py [start_day [end_day [email [processes]]]]
+    update_networks.py [start_day=xxxx-xx-xx] [end_day=xxxx-xx-xx]
+        [email=[Y y N n]] [processes=xx]
 
-    Updates the database from the given start date to the given end date using
-    the # of processes given.
+    Updates the database from the given start date to the given end date
+    sending emails if the flag is set and using the # of processes given.
 
     =================
     start_date, end_date:
@@ -427,17 +511,34 @@ if __name__ == "__main__":
     email
 
     Set to 'y' or 'Y' if emails should be sent.
+
+    =================
+    processes
+
+    Processes can be any non negative integer value. The max value is the
+    number of login credentials.
     """
-    setup_remote_api()
+    START_DAY = 'start_day'
+    END_DAY = 'end_day'
+    EMAIL = 'email'
+    PROCESSES = 'processes'
+
     start_day = None
     end_day = None
     email = True
-    if (len(sys.argv) > 1):
-        start_day = date(*[int(num) for num in sys.argv[1].split('-')])
-        if (len(sys.argv) > 2):
-            end_day = date(*[int(num) for num in sys.argv[2].split('-')])
-            if (len(sys.argv) > 3):
-                email = (sys.argv[1] in ('y', 'Y'))
+    processes = 1
 
-    update_all(start_day=start_day, end_day=end_day, email=email)
+    if (len(sys.argv) > 1):
+        for arg in sys.argv[1:]:
+            if START_DAY + '=' == arg[:len(START_DAY) + 1]:
+                start_day = date(*[int(num) for num in arg.split('-')])
+            elif END_DAY + '=' == arg[:len(END_DAY) + 1]:
+                end_day = date(*[int(num) for num in arg.split('-')])
+            elif EMAIL + '=' == arg[:len(EMAIL) + 1]:
+                email = (arg in ('y', 'Y'))
+            elif PROCESSES + '=' == arg[:len(PROCESSES) + 1]:
+                processes = int(arg)
+
+    setup_remote_api()
+    multiprocess_update_all(start_day, end_day, email, processes)
 

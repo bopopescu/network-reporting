@@ -6,7 +6,7 @@ from ad_network_reports.models import *
 from ad_network_reports.query_managers import AdNetworkReportManager
 from publisher.models import App, Site
 
-def load_test_data():
+def load_test_data(include_iad=False):
     entities = []
 
     TEST_JUMPTAP_PUB_ID = 'pa_zaphrox_zaphrox_drd_app'
@@ -52,11 +52,12 @@ def load_test_data():
             username='zaphrox',
             password='JR.7x89re0')
     # iAd login info
-    AdNetworkReportManager.create_login_credentials_and_mappers(
-            account=account,
-            ad_network_name='iad',
-            username='chesscom',
-            password='Faisal1Chess')
+    if include_iad:
+        AdNetworkReportManager.create_login_credentials_and_mappers(
+                account=account,
+                ad_network_name='iad',
+                username='chesscom',
+                password='Faisal1Chess')
 
     # InMobi login info
     AdNetworkReportManager.create_login_credentials_and_mappers(

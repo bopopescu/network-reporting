@@ -118,15 +118,15 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                     pacific = timezone('US/Pacific')
                     two_weeks_ago = (datetime.now(pacific) -
                             timedelta(days=14)).date()
-                    p = multiprocessing.Process(target=update_login_stats_for_check,
+                    process = multiprocessing.Process(target=update_login_stats_for_check,
                             args=(login_credentials,
                                   two_weeks_ago,
                                   None,
                                   ))
-                    logging.info(p.daemon)
-                    #p.daemon = True
-                    p.start()
-                    logging.info(p.daemon)
+                    logging.info(process.daemon)
+                    #process.daemon = True
+                    process.start()
+                    logging.info(process.daemon)
 
                     children = multiprocessing.active_children()
                     logging.info(children)

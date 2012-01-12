@@ -62,8 +62,6 @@ class TestRequestHandlers(AsyncHTTPTestCase):
         return IOLoop.instance()
 
     def setUp(self):
-
-
         _clear_db()
         super(TestRequestHandlers, self).setUp()
 

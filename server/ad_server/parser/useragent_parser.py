@@ -1,5 +1,3 @@
-import logging
-
 def get_os(user_agent_string):
     """ Returns 'iOS', 'Android' or None if other """
     """ Returns the appropriate float for the os version """
@@ -14,7 +12,6 @@ def get_os(user_agent_string):
         
         if user_os_name == 'iOS':
             if 'iPod touch' in user_agent_string or "iPod" in user_agent_string:
-                logging.warning("iPod in %s" %  user_agent_string)
                 user_model = 'iPod'
             elif 'iPad' in user_agent_string:
                 user_model = 'iPad'

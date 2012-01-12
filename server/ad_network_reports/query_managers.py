@@ -438,25 +438,6 @@ class AdNetworkStatsManager(CachedQueryManager):
 
         return data_list
 
-    @classmethod
-    def get_stats_for_day(cls,
-                          account,
-                          day):
-        """Get rolled up stats for the given date (include all ad networks).
-
-        Return rolled up stats.
-        """
-        stats_list = []
-        for login_credentials in AdNetworkLoginCredentials.all().filter(
-                'account =', account):
-            for mapper in AdNetworkAppMapper.all().filter('application !=',
-                    None).filter('ad_network_login =',
-                            login_credentials):
-                for stats in AdNetworkScrapeStats.all().filter('date =',
-                        day).filter('ad_network_app_mapper =', mapper):
-                    stats_list.append(stats)
-        return(AdNetworkStatsManager.roll_up_stats(stats_list))
-
     #TODO: Delete unused method
     @classmethod
     def _get_stats_for_network_and_day(cls,
@@ -602,6 +583,24 @@ class AdNetworkAggregateManager(CachedQueryManager):
                                       date=day)
             return stats
         raise LookupError("Method needs either an app or a network.")
+
+    @classmethod
+    def get_stats_for_day(cls,
+                          account,
+                          day):
+        """Get rolled up stats for the given date (include all ad networks).
+
+        Return rolled up stats.
+        """
+        stats_list = []
+        for network in AD_NETWORK_NAMES.keys():
+            stats = AdNetworkNetworkStats.get_by_network_and_day(
+                            account,
+                            network,
+                            day)
+            if stats:
+                stats_list.append(stats)
+        return(AdNetworkStatsManager.roll_up_stats(stats_list))
 
 
 class AdNetworkManagementStatsManager(CachedQueryManager):

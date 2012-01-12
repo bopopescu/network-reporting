@@ -295,7 +295,7 @@ def update_login_stats(login, day, management_stats=None, logger=None):
             publisher_id = stats.app_tag
 
         if not publisher_id:
-            login.app_pub_ids.append(str(stats.app_tag).encode('utf8'))
+            login.app_pub_ids.append(stats.app_tag.encode('utf8'))
             continue
 
         # Get the mapper object that corresponds to the

@@ -81,7 +81,7 @@ def multiprocess_update_all(start_day=None, end_day=None, email=True,
     # create multiprocess queue to store management stats
     queue = Queue()
 
-    logging.info("Creating processes to collect and saving stats...")
+    logging.info("Creating processes to collect and save stats...")
     children = []
     offset_adjustment = 0
     for num in range(processes):
@@ -530,7 +530,7 @@ def create_logger(name, file_path):
     logger.setLevel(logging.DEBUG)
     return logger
 
-if __name__ == "__main__":
+def main(args):
     """
     update_networks.py [start_day=xxxx-xx-xx] [end_day=xxxx-xx-xx]
         [email=[Y y N n]] [processes=xx]
@@ -539,7 +539,7 @@ if __name__ == "__main__":
     sending emails if the flag is set and using the # of processes given.
 
     =================
-    start_date, end_date:
+    start_day, end_day:
 
     Date arguments must be in the folowing format:
     YEAR-MONTH-DAY
@@ -561,6 +561,7 @@ if __name__ == "__main__":
     Processes can be any non negative integer value. The max value is the
     number of login credentials.
     """
+    HELP = 'help'
     START_DAY = 'start_day'
     END_DAY = 'end_day'
     EMAIL = 'email'
@@ -571,8 +572,11 @@ if __name__ == "__main__":
     email = True
     processes = 1
 
-    if (len(sys.argv) > 1):
-        for arg in sys.argv[1:]:
+    if (len(args) > 1):
+        for arg in args[1:]:
+            if HELP == arg:
+                print main.__doc__
+                return
             if START_DAY + '=' == arg[:len(START_DAY) + 1]:
                 start_day = date(*[int(num) for num in arg[len(START_DAY) + 1:].split('-')])
             elif END_DAY + '=' == arg[:len(END_DAY) + 1]:
@@ -585,3 +589,5 @@ if __name__ == "__main__":
     setup_remote_api()
     multiprocess_update_all(start_day, end_day, email, processes)
 
+if __name__ == "__main__":
+    main(sys.argv)

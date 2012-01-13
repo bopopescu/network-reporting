@@ -1,0 +1,321 @@
+<!DOCTYPE html>  <html> <head>   <title>models.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               models.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">$</span><span class="p">,</span> <span class="nx">Backbone</span><span class="p">,</span> <span class="nx">_</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="cm">/*</span>
+<span class="cm">     * ## Campaigns</span>
+<span class="cm">     */</span>
+    <span class="kd">var</span> <span class="nx">Campaign</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+        <span class="nx">defaults</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">budget</span><span class="o">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="nx">budget_type</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">start_datetime</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(),</span>
+            <span class="nx">end_datetime</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+            <span class="nx">active</span><span class="o">:</span> <span class="kc">false</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+
+    <span class="kd">var</span> <span class="nx">GuaranteedCampaign</span> <span class="o">=</span> <span class="nx">Campaign</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="p">});</span>
+
+    <span class="kd">var</span> <span class="nx">PromoCampaign</span> <span class="o">=</span> <span class="nx">Campaign</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="p">});</span>
+
+    <span class="kd">var</span> <span class="nx">NetworkCampaign</span> <span class="o">=</span> <span class="nx">Campaign</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="p">});</span>
+
+    <span class="kd">var</span> <span class="nx">Targeting</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>for future use?</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="p">});</span>
+
+
+    <span class="cm">/*</span>
+<span class="cm">     * ## AdGroups</span>
+<span class="cm">     */</span>
+
+    <span class="cm">/*</span>
+<span class="cm">     * Helper functions for stats</span>
+<span class="cm">     */</span>
+    <span class="kd">function</span> <span class="nx">calculate_ctr</span> <span class="p">(</span><span class="nx">impression_count</span><span class="p">,</span> <span class="nx">click_count</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">impression_count</span> <span class="o">===</span> <span class="kc">null</span> <span class="o">||</span> <span class="nx">click_count</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nx">impression_count</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">click_count</span> <span class="o">/</span> <span class="nx">impression_count</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">function</span> <span class="nx">calculate_fill_rate</span> <span class="p">(</span><span class="nx">request_count</span><span class="p">,</span> <span class="nx">impression_count</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">request_count</span> <span class="o">===</span> <span class="kc">null</span> <span class="o">||</span> <span class="nx">impression_count</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nx">request_count</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="nx">impression_count</span> <span class="o">/</span> <span class="nx">request_count</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">function</span> <span class="nx">format_stat</span> <span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">value</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="k">return</span> <span class="s1">&#39;--&#39;</span><span class="p">;</span>
+        <span class="k">switch</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">case</span> <span class="s1">&#39;click_count&#39;</span><span class="o">:</span>
+            <span class="k">case</span> <span class="s1">&#39;conversion_count&#39;</span><span class="o">:</span>
+            <span class="k">case</span> <span class="s1">&#39;goal&#39;</span><span class="o">:</span>
+            <span class="k">case</span> <span class="s1">&#39;impression_count&#39;</span><span class="o">:</span>
+            <span class="k">case</span> <span class="s1">&#39;request_count&#39;</span><span class="o">:</span>
+                <span class="k">return</span> <span class="nx">mopub</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">formatNumberWithCommas</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
+            <span class="k">case</span> <span class="s1">&#39;cpm&#39;</span><span class="o">:</span>
+            <span class="k">case</span> <span class="s1">&#39;revenue&#39;</span><span class="o">:</span>
+                <span class="k">return</span> <span class="s1">&#39;$&#39;</span> <span class="o">+</span> <span class="nx">mopub</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">formatNumberWithCommas</span><span class="p">(</span><span class="nx">value</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+            <span class="k">case</span> <span class="s1">&#39;conv_rate&#39;</span><span class="o">:</span>
+            <span class="k">case</span> <span class="s1">&#39;ctr&#39;</span><span class="o">:</span>
+            <span class="k">case</span> <span class="s1">&#39;fill_rate&#39;</span><span class="o">:</span>
+                <span class="k">return</span> <span class="nx">mopub</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">formatNumberAsPercentage</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
+            <span class="k">case</span> <span class="s1">&#39;status&#39;</span><span class="o">:</span>
+                <span class="k">return</span> <span class="nx">value</span><span class="p">;</span>
+            <span class="k">default</span><span class="o">:</span>
+                <span class="k">throw</span> <span class="s1">&#39;Unsupported stat &quot;&#39;</span> <span class="o">+</span> <span class="nx">stat</span> <span class="o">+</span> <span class="s1">&#39;&quot;.&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="cm">/*</span>
+<span class="cm">     *</span>
+<span class="cm">     */</span>
+
+    <span class="kd">var</span> <span class="nx">AdGroup</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+        <span class="nx">get_stat</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">stat</span><span class="p">))</span> <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">stat</span><span class="p">);</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_formatted_stat</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">format_stat</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_stat</span><span class="p">(</span><span class="nx">stat</span><span class="p">));</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_stat_for_day</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="nx">day</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">daily_stats</span><span class="p">))</span> <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">daily_stats</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">daily_stats</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">day</span> <span class="o">&gt;=</span> <span class="nx">daily_stats</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">day_stats</span> <span class="o">=</span> <span class="nx">daily_stats</span><span class="p">[</span><span class="nx">day</span><span class="p">];</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">stat</span> <span class="k">in</span> <span class="nx">day_stats</span><span class="p">)</span> <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+            <span class="k">return</span> <span class="nx">day_stats</span><span class="p">[</span><span class="nx">stat</span><span class="p">];</span>
+        <span class="p">},</span>
+
+        <span class="nx">url</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="s1">&#39;/api/adgroup/&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+
+
+    <span class="cm">/*</span>
+<span class="cm">     *</span>
+<span class="cm">     */</span>
+    <span class="nx">AdGroups</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+        <span class="nx">model</span><span class="o">:</span> <span class="nx">AdGroup</span><span class="p">,</span>
+
+        <span class="nx">get_stat_sum</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">adgroup</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span><span class="p">(</span><span class="nx">memo</span> <span class="o">===</span> <span class="kc">null</span> <span class="o">||</span> <span class="o">!</span><span class="nx">adgroup</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">stat</span><span class="p">))</span> <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">memo</span> <span class="o">+</span> <span class="nx">adgroup</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">stat</span><span class="p">);</span>
+            <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_stat</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">switch</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">case</span> <span class="s1">&#39;ctr&#39;</span><span class="o">:</span>
+                    <span class="k">return</span> <span class="nx">calculate_ctr</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">get_stat</span><span class="p">(</span><span class="s1">&#39;impression_count&#39;</span><span class="p">),</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_stat</span><span class="p">(</span><span class="s1">&#39;click_count&#39;</span><span class="p">));</span>
+                <span class="k">case</span> <span class="s1">&#39;fill_rate&#39;</span><span class="o">:</span>
+                    <span class="k">return</span> <span class="nx">calculate_fill_rate</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">get_stat</span><span class="p">(</span><span class="s1">&#39;request_count&#39;</span><span class="p">),</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_stat</span><span class="p">(</span><span class="s1">&#39;impression_count&#39;</span><span class="p">));</span>
+                <span class="k">case</span> <span class="s1">&#39;click_count&#39;</span><span class="o">:</span>
+                <span class="k">case</span> <span class="s1">&#39;conversion_count&#39;</span><span class="o">:</span>
+                <span class="k">case</span> <span class="s1">&#39;impression_count&#39;</span><span class="o">:</span>
+                <span class="k">case</span> <span class="s1">&#39;request_count&#39;</span><span class="o">:</span>
+                <span class="k">case</span> <span class="s1">&#39;revenue&#39;</span><span class="o">:</span>
+                    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_stat_sum</span><span class="p">(</span><span class="nx">stat</span><span class="p">);</span>
+                <span class="k">default</span><span class="o">:</span>
+                    <span class="k">throw</span> <span class="s1">&#39;Unsupported stat &quot;&#39;</span> <span class="o">+</span> <span class="nx">stat</span> <span class="o">+</span> <span class="s1">&#39;&quot;.&#39;</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_formatted_stat</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">format_stat</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_stat</span><span class="p">(</span><span class="nx">stat</span><span class="p">));</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_stat_sum_for_day</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="nx">day</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">adgroup</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span><span class="p">(</span><span class="nx">memo</span> <span class="o">===</span> <span class="kc">null</span> <span class="o">||</span>
+                   <span class="o">!</span><span class="nx">adgroup</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">)</span> <span class="o">||</span>
+                   <span class="nx">day</span> <span class="o">&gt;=</span> <span class="nx">adgroup</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">).</span><span class="nx">length</span> <span class="o">||</span>
+                   <span class="o">!</span><span class="p">(</span><span class="nx">stat</span> <span class="k">in</span> <span class="nx">adgroup</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">)[</span><span class="nx">day</span><span class="p">]))</span>
+                    <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">memo</span> <span class="o">+</span> <span class="nx">adgroup</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">)[</span><span class="nx">day</span><span class="p">][</span><span class="nx">stat</span><span class="p">];</span>
+            <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_stat_for_day</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="nx">day</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">switch</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">case</span> <span class="s1">&#39;ctr&#39;</span><span class="o">:</span>
+                    <span class="k">return</span> <span class="nx">calculate_ctr</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">get_stat_for_day</span><span class="p">(</span><span class="s1">&#39;impression_count&#39;</span><span class="p">,</span> <span class="nx">day</span><span class="p">),</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_stat_for_day</span><span class="p">(</span><span class="s1">&#39;click_count&#39;</span><span class="p">,</span> <span class="nx">day</span><span class="p">));</span>
+                <span class="k">case</span> <span class="s1">&#39;fill_rate&#39;</span><span class="o">:</span>
+                    <span class="k">return</span> <span class="nx">calculate_fill_rate</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">get_stat_for_day</span><span class="p">(</span><span class="s1">&#39;request_count&#39;</span><span class="p">,</span> <span class="nx">day</span><span class="p">),</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_stat_for_day</span><span class="p">(</span><span class="s1">&#39;impression_count&#39;</span><span class="p">,</span> <span class="nx">day</span><span class="p">));</span>
+                <span class="k">case</span> <span class="s1">&#39;click_count&#39;</span><span class="o">:</span>
+                <span class="k">case</span> <span class="s1">&#39;conversion_count&#39;</span><span class="o">:</span>
+                <span class="k">case</span> <span class="s1">&#39;impression_count&#39;</span><span class="o">:</span>
+                <span class="k">case</span> <span class="s1">&#39;request_count&#39;</span><span class="o">:</span>
+                <span class="k">case</span> <span class="s1">&#39;revenue&#39;</span><span class="o">:</span>
+                    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_stat_sum_for_day</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="nx">day</span><span class="p">);</span>
+                <span class="k">default</span><span class="o">:</span>
+                    <span class="k">throw</span> <span class="s1">&#39;Unsupported stat &quot;&#39;</span> <span class="o">+</span> <span class="nx">stat</span> <span class="o">+</span> <span class="s1">&#39;&quot;.&#39;</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_formatted_stat_for_day</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="nx">day</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">format_stat</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_stat_for_day</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="nx">day</span><span class="p">));</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_total_daily_stats</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">total_daily_stats</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">day</span> <span class="k">in</span> <span class="k">this</span><span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">total_daily_stats</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">get_stat_for_day</span><span class="p">(</span><span class="nx">stat</span><span class="p">,</span> <span class="nx">day</span><span class="p">));</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="nx">total_daily_stats</span><span class="p">;</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_chart_data</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">adgroups</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">adgroup</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">adgroup</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">adgroup</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">);</span> <span class="p">});</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">adgroups</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">[];</span>
+            <span class="p">}</span>
+            <span class="kd">var</span> <span class="nx">sorted_adgroups</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">sortBy</span><span class="p">(</span><span class="nx">adgroups</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">adgroup</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>dash because we're sorting in reverse order</p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="k">return</span> <span class="o">-</span><span class="nx">adgroup</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;impression_count&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+            <span class="kd">var</span> <span class="nx">top_three_adgroups</span> <span class="o">=</span> <span class="nx">sorted_adgroups</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">other_adgroups</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AdGroups</span><span class="p">(</span><span class="nx">sorted_adgroups</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">chart_data</span> <span class="o">=</span> <span class="nx">top_three_adgroups</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">adgroup</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">adgroup_data</span> <span class="o">=</span> <span class="p">{};</span>
+                <span class="nx">adgroup_data</span><span class="p">[</span><span class="nx">adgroup</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">adgroup</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">),</span> <span class="kd">function</span><span class="p">(</span><span class="nx">day</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">day</span><span class="p">[</span><span class="nx">stat</span><span class="p">];</span>
+                <span class="p">});</span>
+                <span class="k">return</span> <span class="nx">adgroup_data</span><span class="p">;</span>
+            <span class="p">});</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">other_adgroups</span><span class="p">.</span><span class="nx">size</span><span class="p">())</span> <span class="p">{</span>
+                <span class="nx">chart_data</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span> <span class="s1">&#39;Others&#39;</span><span class="o">:</span> <span class="nx">other_adgroups</span><span class="p">.</span><span class="nx">get_total_daily_stats</span><span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">});</span>
+            <span class="p">}</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">stat</span> <span class="o">==</span> <span class="s1">&#39;ctr&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">chart_data</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span> <span class="s1">&#39;MoPub Optimized&#39;</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_total_daily_stats</span><span class="p">(</span><span class="s1">&#39;ctr&#39;</span><span class="p">)</span> <span class="p">});</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="nx">chart_data</span><span class="p">;</span>
+        <span class="p">},</span>
+
+        <span class="nx">get_days</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>TODO: make this less hacky</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">adgroup</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">(</span><span class="nx">adgroup</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
+                        <span class="nx">adgroup</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">).</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="nx">memo</span><span class="p">)</span> <span class="o">?</span> <span class="nx">adgroup</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;daily_stats&#39;</span><span class="p">).</span><span class="nx">length</span> <span class="o">:</span> <span class="nx">memo</span><span class="p">;</span>
+            <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="p">},</span>
+
+        <span class="nx">isFullyLoaded</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>TODO: make this less hacky</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">adgroup</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">memo</span> <span class="o">&amp;&amp;</span> <span class="nx">adgroup</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="s1">&#39;impression_count&#39;</span><span class="p">)</span> <span class="p">},</span> <span class="kc">true</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+
+
+    <span class="cm">/*</span>
+<span class="cm">     * ## AdUnit</span>
+<span class="cm">     */</span>
+    <span class="kd">var</span> <span class="nx">AdUnit</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>If we don't set defaults, the templates will explode</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">defaults</span> <span class="o">:</span> <span class="p">{</span>
+            <span class="nx">active</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+            <span class="nx">attempts</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">clicks</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">ctr</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">ecpm</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">fill_rate</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">impressions</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">price_floor</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">requests</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">revenue</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">stats_endpoint</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span>
+        <span class="p">},</span>
+        <span class="nx">url</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>window.location.search.substring(1) is used to preserve date ranges from the url
+this makes the fetching work with the datepicker.</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="kd">var</span> <span class="nx">stats_endpoint</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;stats_endpoint&#39;</span><span class="p">);</span>
+            <span class="k">return</span> <span class="s1">&#39;/api/app/&#39;</span>
+                <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">app_id</span>
+                <span class="o">+</span> <span class="s1">&#39;/adunits/&#39;</span>
+                <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">id</span>
+                <span class="o">+</span> <span class="s1">&#39;?&#39;</span>
+                <span class="o">+</span> <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">search</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s1">&#39;&amp;endpoint=&#39;</span>
+                <span class="o">+</span> <span class="nx">stats_endpoint</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+
+
+    <span class="kd">var</span> <span class="nx">AdUnitCollection</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+        <span class="nx">model</span><span class="o">:</span> <span class="nx">AdUnit</span><span class="p">,</span>
+        <span class="nx">url</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>window.location.search.substring(1) is used to preserve date ranges from the url
+this makes the fetching work with the datepicker.</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="kd">var</span> <span class="nx">stats_endpoint</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">stats_endpoint</span><span class="p">;</span>
+            <span class="k">return</span> <span class="s1">&#39;/api/app/&#39;</span>
+                <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">app_id</span>
+                <span class="o">+</span> <span class="s1">&#39;/adunits/&#39;</span>
+                <span class="o">+</span> <span class="s1">&#39;?&#39;</span>
+                <span class="o">+</span> <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">search</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s1">&#39;&amp;endpoint=&#39;</span>
+                <span class="o">+</span> <span class="nx">stats_endpoint</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+
+
+    <span class="cm">/*</span>
+<span class="cm">     * ## App</span>
+<span class="cm">     * We might consider turning derivative values (ecpm, fill_rate, ctr) into</span>
+<span class="cm">     * functions.</span>
+<span class="cm">     */</span>
+    <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+        <span class="nx">defaults</span> <span class="o">:</span> <span class="p">{</span>
+            <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">url</span><span class="o">:</span><span class="s1">&#39;#&#39;</span><span class="p">,</span>
+            <span class="nx">icon_url</span><span class="o">:</span> <span class="s2">&quot;/placeholders/image.gif&quot;</span><span class="p">,</span>
+            <span class="nx">app_type</span><span class="o">:</span> <span class="s1">&#39;iOS&#39;</span><span class="p">,</span>
+            <span class="nx">active</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+            <span class="nx">attempts</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">clicks</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">ctr</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">ecpm</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">fill_rate</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">impressions</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">price_floor</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">requests</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">revenue</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="nx">stats_endpoint</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span>
+        <span class="p">},</span>
+        <span class="nx">url</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">stats_endpoint</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;stats_endpoint&#39;</span><span class="p">);</span>
+            <span class="k">return</span> <span class="s1">&#39;/api/app/&#39;</span>
+                <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">id</span>
+                <span class="o">+</span> <span class="s2">&quot;?&quot;</span>
+                <span class="o">+</span> <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">search</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s1">&#39;&amp;endpoint=&#39;</span>
+                <span class="o">+</span> <span class="nx">stats_endpoint</span><span class="p">;</span>
+        <span class="p">},</span>
+        <span class="nx">parse</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>The api returns everything from this url as a list,
+so that you can request one or all apps.</p>             </td>             <td class="code">               <div class="highlight"><pre>            <span class="k">return</span> <span class="nx">response</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+
+    <span class="cm">/*</span>
+<span class="cm">     * ## AppCollection</span>
+<span class="cm">     */</span>
+    <span class="kd">var</span> <span class="nx">AppCollection</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+        <span class="nx">model</span><span class="o">:</span> <span class="nx">App</span><span class="p">,</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>If an app key isn't passed to the url, it'll return a list of all of the apps for the account</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">url</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">stats_endpoint</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">stats_endpoint</span><span class="p">;</span>
+            <span class="k">return</span> <span class="s1">&#39;/api/app/&#39;</span> <span class="o">+</span>
+                <span class="o">+</span> <span class="s1">&#39;?&#39;</span>
+                <span class="o">+</span> <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">search</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s1">&#39;&amp;endpoint=&#39;</span>
+                <span class="o">+</span> <span class="nx">stats_endpoint</span><span class="p">;</span>
+        <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>Not used anymore, but could come in handy</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">fetchAdUnits</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">app</span><span class="p">.</span><span class="nx">adunits</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AdUnitCollection</span><span class="p">();</span>
+                <span class="nx">app</span><span class="p">.</span><span class="nx">adunits</span><span class="p">.</span><span class="nx">app_id</span> <span class="o">=</span> <span class="nx">app</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+                <span class="nx">app</span><span class="p">.</span><span class="nx">adunits</span><span class="p">.</span><span class="nx">fetch</span><span class="p">();</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">});</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>Globalize. We should find a better way to do this.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nb">window</span><span class="p">.</span><span class="nx">AdUnit</span> <span class="o">=</span> <span class="nx">AdUnit</span><span class="p">;</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">AdUnitCollection</span> <span class="o">=</span> <span class="nx">AdUnitCollection</span><span class="p">;</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">App</span> <span class="o">=</span> <span class="nx">App</span><span class="p">;</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">AppCollection</span> <span class="o">=</span> <span class="nx">AppCollection</span><span class="p">;</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">AdGroup</span> <span class="o">=</span> <span class="nx">AdGroup</span><span class="p">;</span>
+
+
+<span class="p">})(</span><span class="k">this</span><span class="p">.</span><span class="nx">jQuery</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">Backbone</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">_</span><span class="p">);</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

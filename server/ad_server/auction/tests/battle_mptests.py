@@ -19,12 +19,12 @@ from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
                                           
-from server.ad_server.main import  ( AdClickHandler,
+from ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
                                      )
-from server.ad_server.handlers import adhandler
-from server.ad_server.handlers.adhandler import AdHandler   
+from ad_server.handlers import adhandler
+from ad_server.handlers.adhandler import AdHandler   
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############

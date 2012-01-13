@@ -1,5 +1,5 @@
 from __future__ import with_statement
-import random 
+import random
 import logging
 from datetime import datetime, timedelta, date
 
@@ -23,6 +23,7 @@ from budget.memcache_budget import (remaining_ts_budget,
                                     )
 from budget.models import BudgetSliceLog, BudgetSliceCounter, Budget
 from budget.query_managers import BudgetQueryManager
+from budget.tzinfo import Pacific, utc
 
 """
 A service that determines if a campaign can be shown based upon the defined
@@ -82,7 +83,7 @@ def _get_ts_logs_for_date_range(budget, start_date, end_date, testing=False):
         start_date = start_date.date()
     if isinstance(end_date, datetime):
         end_date = end_date.date()
-        
+
     start_slice = get_slice_from_datetime(start_date, testing)
     end_slice = (get_slice_from_datetime(end_date + ONE_DAY, testing))
     keys = BudgetSliceLog.get_keys_for_slices(budget, xrange(start_slice, end_slice))
@@ -142,11 +143,11 @@ def remaining_daily_budget(budget):
     """ Legacy for testing, also
     for $/day allatonce campaigns maybe """
 
-    # if it's an allatonce with static total, just dump everything, so what's 
+    # if it's an allatonce with static total, just dump everything, so what's
     # left for today is everything that hasn't been spent otherwise
     if budget.delivery_type == 'allatonce' and budget.static_total_budget:
         return budget.daily_budget - total_spent(budget)
-        
+
 
     ts_spend = total_spent(budget) - budget.total_spent
     tot_spend_today = budget.spent_today + ts_spend
@@ -203,7 +204,7 @@ def timeslice_advance(budget, testing=False, advance_to_datetime = None):
     # The memc TS is advanced before timeslice_advance is called by anyone.
     slice_num = memcache_get_slice()
     if advance_to_datetime is None:
-        advance_to_datetime = get_datetime_from_slice(slice_num, budget.testing)
+        advance_to_datetime = get_datetime_from_slice(slice_num, budget.testing).replace(tzinfo = utc)
 
     if not budget:
         return
@@ -220,11 +221,13 @@ def timeslice_advance(budget, testing=False, advance_to_datetime = None):
         # advancing to a date that is before we shoudl start
         elif slice_num:
             budget.curr_slice = slice_num
+            if budget.day_tz == 'Pacific':
+                advance_to_datetime = advance_to_datetime.astimezone(Pacific)
             budget.curr_date = advance_to_datetime.date()
             budget.put()
     else:
 ######################### ONLY DONE WHEN TESTING ########################
-        # Budget is Init'd, but we're advancing more than a single TS.  
+        # Budget is Init'd, but we're advancing more than a single TS.
         if slice_num is not None and testing:
             while budget.curr_slice != slice_num:
                 last_log = budget.last_slice_log
@@ -263,6 +266,11 @@ def _initialize_budget(budget, testing = False, slice_num = None, date=None):
         return
     budget.curr_slice = slice_num
     budget.curr_date = date
+    # If the day_tz is not set, then this is an old budget that
+    # was made to run in the future, as such it hasn't been init'd,
+    # so it can be init'd w/ the Pacific datetime without any problems
+    if not testing and not budget.day_tz:
+        budget.day_tz = 'Pacific'
     budget.put()
 
     new_log = BudgetSliceLog(budget = budget,
@@ -305,14 +313,23 @@ def _update_budgets(budget, slice_num, last_log, spent_this_timeslice=None, test
         Creates current slicelog
         Updates spending and braking fraction in Memcache
         """
-    # Slice_num is the slice_num specified by a global BudgetSliceCounter.  
+    # Slice_num is the slice_num specified by a global BudgetSliceCounter.
     # Keeps everyone on the same page :D
     budget.curr_slice = slice_num
 
     next_day = budget.curr_date + ONE_DAY
+    next_day = datetime(next_day.year, next_day.month, next_day.day,0,0,0)
+    # Add in more tz support if necessary
+    if budget.day_tz == 'Pacific':
+        next_day = next_day.replace(tzinfo = Pacific)
+    elif budget.day_tz == 'UTC':
+        next_day = next_day.replace(tzinfo = utc)
+    else:
+        next_day = next_day.replace(tzinfo = utc)
+
     # Advance the day counter if it makes sense to do so
-    if budget.curr_slice >= get_slice_from_datetime(next_day, testing):
-        budget.curr_date = next_day
+    if budget.curr_slice >= get_slice_from_datetime(next_day.astimezone(utc), testing):
+        budget.curr_date = next_day.date()
     budget.put()
 
     if budget.update:
@@ -338,6 +355,7 @@ def _update_budgets(budget, slice_num, last_log, spent_this_timeslice=None, test
 
     # Update memc with values from the new slice log (since it's the backup for MC anyway)
 
+    logging.warning("New spending for slice: %s is %s" % (budget.curr_slice, new_slice_log.desired_spending))
     memcache.set(ts_key, _to_memcache_int(new_slice_log.desired_spending), namespace = 'budget')
     memcache.set(brake_key, new_slice_log.prev_braking_fraction, namespace = 'budget')
 

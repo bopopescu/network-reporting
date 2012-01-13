@@ -67,6 +67,10 @@ handlers:
 - url: /files/.*
   script: stats/views.py
 
+- url: /m/budget/.*
+  script: ad_server/main.py
+  login: admin
+
 - url: /m/.*
   script: ad_server/main.py
 

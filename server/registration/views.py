@@ -2,8 +2,11 @@
 Views which allow users to create and activate accounts.
 
 """
+
+import logging
+
 from google.appengine.api import mail
-from google.appengine.api import urlfetch  
+from google.appengine.api import urlfetch
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
@@ -78,10 +81,13 @@ def activate(request, activation_key,
                                 'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS },
                               context_instance=context)
 
-def register(request, success_url=None,
+def register(request,
+             success_url=None,
              form_class=MPRegistrationForm,
              template_name='registration/registration_form.html',
-             extra_context=None, auto_login=True):
+             extra_context=None,
+             auto_login=True,
+             account_already_exists=False):
     """
     Allow a new user to register an account.
 
@@ -143,16 +149,17 @@ def register(request, success_url=None,
         # Check reCAPTCHA response
         captcha_success, form.captcha_error_msg = verify_captcha(request)
 
-        if form.is_valid() and captcha_success:
+        if form.is_valid() and (captcha_success or account_already_exists):
             new_user = form.save(domain_override)
 
             # Send welcome email
-            try:
-                mail.send_mail(sender="MoPub, Inc. <olp@mopub.com>",
-                           reply_to="support@mopub.com",
-                           to=new_user.email,
-                           subject="Welcome to MoPub!",
-                           body="""
+            if not account_already_exists:
+                try:
+                    mail.send_mail(sender="MoPub, Inc. <olp@mopub.com>",
+                                   reply_to="support@mopub.com",
+                                   to=new_user.email,
+                                   subject="Welcome to MoPub!",
+                                   body="""
 Hi %s,
 Welcome to MoPub, the easiest way to turn your apps into businesses.  Now you can optimize your mobile ad network relationships or easily serve direct-sold ads into your mobile apps -- all through a simple, open-source client library.
 
@@ -163,8 +170,8 @@ Questions?  Email support@mopub.com or check out our Help FAQ at http://help.mop
 
 Thanks!
 The MoPub Team"""%(new_user.first_name))
-            except:
-                pass
+                except:
+                    pass
 
             # success_url needs to be dynamically generated here; setting a
             # a default value using reverse() will cause circular-import
@@ -219,7 +226,7 @@ def verify_captcha(request):
                 headers={'Content-Type': 'application/x-www-form-urlencoded'})
         except:
             return (False, None)
-        
+
         if response.status_code == 200:
             try:
                 lines = response.content.splitlines()
@@ -234,15 +241,17 @@ def verify_captcha(request):
 
 @login_required
 def settings_change(request,
-                      success_url=None,
-                      form_class=ChangeSettingsForm,
-                      template_name='registration/settings_change_form.html',):
-  return register(request,
-                  success_url=reverse('account_index'),
-                  form_class=form_class,
-                  template_name=template_name,
-                  extra_context=None,
-                  auto_login=False)
+                    success_url=None,
+                    form_class=ChangeSettingsForm,
+                    template_name='registration/settings_change_form.html',):
+
+        return register(request,
+                        success_url=reverse('account_index'),
+                        form_class=form_class,
+                        template_name=template_name,
+                        extra_context=None,
+                        auto_login=False,
+                        account_already_exists=True)
 
 @google_login_required
 def register_google(request,

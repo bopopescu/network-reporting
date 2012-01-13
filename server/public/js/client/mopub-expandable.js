@@ -56,10 +56,14 @@ function mp_cb(data) {
         mopub_site_url += ":"+mopub_url.port;
     // TODO: add version
     var ufid = gen_key();
-    var mopub_ad_url = mopub_site_url + "/m/ad?id="+mopub_ad_unit + "&udid=MOBILEWEBCOOKIE:" + get_session() + '&ufid=' + ufid;
-
+    var mopub_ad_url = mopub_site_url + "/m/ad?id="+mopub_ad_unit + '&ufid=' + ufid;
+    if (window.mopub_sha1_udid != null)
+        mopub_ad_url += "&udid=sha:" + window.mopub_sha1_udid;
+    else
+        mopub_ad_url += "&udid=MOBILEWEBCOOKIE:" + get_session();
     if (window.mopub_keywords != null)
         mopub_ad_url += "&q="+escape(window.mopub_keywords);
+
     mopub_ad_url += '&jsonp=1&callback=mp_cb';
 
     //init holders for variables

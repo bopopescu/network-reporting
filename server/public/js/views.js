@@ -1,10 +1,18 @@
+/*
+ * # views.js
+ * Reusable UI elements written with Backbone.
+ */
+
 (function($, Backbone) {
+
     /*
-     * collection: AdGroups
-     * el: element that will hold the content
-     * title: title that will be an h2 at the top of the content
-     * type: 'network', 'gtee', 'promo', or 'backfill_promo' -- affects which fields are shown
-     * tables: mapping of
+     * ## AdGroupsView
+     * Parameters:
+     * * collection: AdGroups
+     * * el: element that will hold the content
+     * * title: title that will be an h2 at the top of the content
+     * * type: 'network', 'gtee', 'promo', or 'backfill_promo' -- affects which fields are shown
+     * * tables: mapping of... MAPPING OF WHAT? I'M DYING TO KNOW
      */
     var AdGroupsView = Backbone.View.extend({
         initialize: function() {
@@ -12,7 +20,7 @@
         },
         filtered_collection: function() {
             // TODO: uses elements not in this view
-            var status = $("#campaigns-filterOptions").find(':checked').val();
+            var status = $('#campaigns-filterOptions').find(':checked').val();
             var app = $('#campaigns-appFilterOptions').val();
             return new AdGroups(this.collection.reject(function(adgroup) {
                 return (status && status != adgroup.get('status')) ||
@@ -23,11 +31,11 @@
             var adgroups = this.filtered_collection();
 
             // TODO: uses elements not in this view, with multiple views there are conflicts
-            $("#campaigns-filterOptions").buttonset({"disabled": !adgroups.isFullyLoaded()});
+            $('#campaigns-filterOptions').buttonset({'disabled': !adgroups.isFullyLoaded()});
 
             var html;
             if(adgroups.size() === 0) {
-                html = "<h2>No " + this.options.title + "</h2>";
+                html = '<h2>No ' + this.options.title + '</h2>';
             }
             else {
                 html = _.template($('#adgroups-rollup-template').html(), {
@@ -61,6 +69,12 @@
         }
     });
 
+
+    /*
+     * # CollectionGraphView
+     * Renders a collection as a graph
+     */
+
     var CollectionGraphView = Backbone.View.extend({
         initialize: function() {
             this.collection.bind('change', this.render, this);
@@ -75,21 +89,21 @@
         render: function() {
             if(this.collection.isFullyLoaded()) {
                 // Breakdown
-                $("#stats-breakdown-impression_count .all .inner").html(this.collection.get_formatted_stat('impression_count'));
-                $("#stats-breakdown-revenue .all .inner").html(this.collection.get_formatted_stat('revenue'));
-                $("#stats-breakdown-click_count .all .inner").html(this.collection.get_formatted_stat('click_count'));
-                $("#stats-breakdown-ctr .all .inner").html(this.collection.get_formatted_stat('ctr'));
+                $('#stats-breakdown-impression_count .all .inner').html(this.collection.get_formatted_stat('impression_count'));
+                $('#stats-breakdown-revenue .all .inner').html(this.collection.get_formatted_stat('revenue'));
+                $('#stats-breakdown-click_count .all .inner').html(this.collection.get_formatted_stat('click_count'));
+                $('#stats-breakdown-ctr .all .inner').html(this.collection.get_formatted_stat('ctr'));
                 if(this.options.yesterday != null && this.options.today != null) {
                     // yesterday
-                    $("#stats-breakdown-impression_count .yesterday .inner").html(this.collection.get_formatted_stat_for_day('impression_count', this.options.yesterday));
-                    $("#stats-breakdown-revenue .yesterday .inner").html(this.collection.get_formatted_stat_for_day('revenue', this.options.yesterday));
-                    $("#stats-breakdown-click_count .yesterday .inner").html(this.collection.get_formatted_stat_for_day('click_count', this.options.yesterday));
-                    $("#stats-breakdown-ctr .yesterday .inner").html(this.collection.get_formatted_stat_for_day('ctr', this.options.yesterday));
+                    $('#stats-breakdown-impression_count .yesterday .inner').html(this.collection.get_formatted_stat_for_day('impression_count', this.options.yesterday));
+                    $('#stats-breakdown-revenue .yesterday .inner').html(this.collection.get_formatted_stat_for_day('revenue', this.options.yesterday));
+                    $('#stats-breakdown-click_count .yesterday .inner').html(this.collection.get_formatted_stat_for_day('click_count', this.options.yesterday));
+                    $('#stats-breakdown-ctr .yesterday .inner').html(this.collection.get_formatted_stat_for_day('ctr', this.options.yesterday));
                     // today
-                    $("#stats-breakdown-impression_count .today .inner").html(this.collection.get_formatted_stat_for_day('impression_count', this.options.today));
-                    $("#stats-breakdown-revenue .today .inner").html(this.collection.get_formatted_stat_for_day('revenue', this.options.today));
-                    $("#stats-breakdown-click_count .today .inner").html(this.collection.get_formatted_stat_for_day('click_count', this.options.today));
-                    $("#stats-breakdown-ctr .today .inner").html(this.collection.get_formatted_stat_for_day('ctr', this.options.today));
+                    $('#stats-breakdown-impression_count .today .inner').html(this.collection.get_formatted_stat_for_day('impression_count', this.options.today));
+                    $('#stats-breakdown-revenue .today .inner').html(this.collection.get_formatted_stat_for_day('revenue', this.options.today));
+                    $('#stats-breakdown-click_count .today .inner').html(this.collection.get_formatted_stat_for_day('click_count', this.options.today));
+                    $('#stats-breakdown-ctr .today .inner').html(this.collection.get_formatted_stat_for_day('ctr', this.options.today));
                 }
                 // Chart
                 mopub.dashboardStatsChartData = {
@@ -119,14 +133,14 @@
         },
 
         renderInline: function () {
-            var app_row = $("tr.app-row#app-" + this.model.id, this.el);
-            $(".revenue", app_row).text(mopub.Utils.formatCurrency(this.model.get("revenue")));
-            $(".impressions", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
-            $(".ecpm", app_row).text(mopub.Utils.formatCurrency(this.model.get("ecpm")));
-            $(".clicks", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("clicks")));
-            $(".ctr", app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get("ctr")));
-            $(".fill_rate", app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get("fill_rate")));
-            $(".requests", app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("requests")));
+            var app_row = $('tr.app-row#app-' + this.model.id, this.el);
+            $('.revenue', app_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
+            $('.impressions', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('impressions')));
+            $('.ecpm', app_row).text(mopub.Utils.formatCurrency(this.model.get('ecpm')));
+            $('.clicks', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
+            $('.ctr', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
+            $('.fill_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
+            $('.requests', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
 
             return this;
         },
@@ -151,17 +165,17 @@
         event.preventDefault();
         var href = $(this).attr('href').replace('#','');
         Marketplace.fetchAdunitsForApp(href);
-        $(this).text('Hide AdUnits').unbind("click").click(hideAdUnits);
+        $(this).text('Hide AdUnits').unbind('click').click(hideAdUnits);
     }
 
     function hideAdUnits(event){
         event.preventDefault();
         var href = $(this).attr('href').replace('#','');
-        $.each($(".for-app-" + href), function (iter, item) {
+        $.each($('.for-app-' + href), function (iter, item) {
             $(item).remove();
         });
-        $("#app-" + href + " a.view_targeting").removeClass("hidden");
-        $(this).text('Show Adunits').unbind("click").click(showAdUnits);
+        $('#app-' + href + ' a.view_targeting').removeClass('hidden');
+        $(this).text('Show Adunits').unbind('click').click(showAdUnits);
     }
 
 
@@ -185,37 +199,37 @@
          */
         renderInline: function () {
             var current_model = this.model;
-            var adunit_row = $("tr.adunit-row#adunit-" + this.model.id, this.el);
-            $(".revenue", adunit_row).text(mopub.Utils.formatCurrency(this.model.get("revenue")));
-            $(".ecpm", adunit_row).text(mopub.Utils.formatCurrency(this.model.get("ecpm")));
-            $(".impressions", adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("impressions")));
-            $(".price_floor", adunit_row).html('<img class="loading-img hidden" ' +
+            var adunit_row = $('tr.adunit-row#adunit-' + this.model.id, this.el);
+            $('.revenue', adunit_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
+            $('.ecpm', adunit_row).text(mopub.Utils.formatCurrency(this.model.get('ecpm')));
+            $('.impressions', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('impressions')));
+            $('.price_floor', adunit_row).html('<img class="loading-img hidden" ' +
                                                'src="/images/icons-custom/spinner-12.gif">' +
                                                '</img> ' +
                                                '<input id="'+ this.model.id + '" ' +
                                                'type="text" ' +
                                                'class="input-text input-text-number number" ' +
                                                'style="width:50px;margin: -3px 0;" ' +
-                                               'value="' + this.model.get("price_floor") +
+                                               'value="' + this.model.get('price_floor') +
                                                '"> ');
-            $(".targeting", adunit_row).html('<img class="loading-img hidden" ' +
+            $('.targeting', adunit_row).html('<img class="loading-img hidden" ' +
                                              'src="/images/icons-custom/spinner-12.gif"></img> ' +
                                              '<input class="targeting-box" type="checkbox">');
 
-            $(".fill_rate", adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get("fill_rate")));
-            $(".ctr", adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get("ctr")));
-            $(".clicks", adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("clicks")));
-            $(".requests", adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get("requests")));
+            $('.fill_rate', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
+            $('.ctr', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
+            $('.clicks', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
+            $('.requests', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
 
-            if (this.model.get("active")) {
-                $("input.targeting-box", adunit_row).attr('checked', 'checked');
+            if (this.model.get('active')) {
+                $('input.targeting-box', adunit_row).attr('checked', 'checked');
             }
 
             // Add the event handler to submit targeting changes over ajax.
-            $("input.targeting-box", adunit_row).click(function() {
-                var loading_img = $(".targeting .loading-img", adunit_row);
+            $('input.targeting-box', adunit_row).click(function() {
+                var loading_img = $('.targeting .loading-img', adunit_row);
                 loading_img.show();
-                current_model.set({'active': $(this).is(":checked")});
+                current_model.set({'active': $(this).is(':checked')});
                 current_model.save({}, {
                     success: function () {
                         setTimeout(function() {
@@ -227,7 +241,7 @@
 
             // Add the event handler to submit price floor changes over ajax.
             $('.price_floor .input-text', adunit_row).keyup(function() {
-                var loading_img = $(".price_floor .loading-img", adunit_row);
+                var loading_img = $('.price_floor .loading-img', adunit_row);
                 loading_img.show();
                 current_model.set({'price_floor': $(this).val()});
                 current_model.save({}, {
@@ -257,7 +271,7 @@
                 .change(function() {
                     current_model.set({'price_floor': $(this).val()});
                     // Save when they click the save button in the price floor cell
-                    var save_link = $(".save", $(this).parent());
+                    var save_link = $('.save', $(this).parent());
                     save_link.click(function(e) {
                         e.preventDefault();
                         save_link.addClass('disabled').text('Saving...');
@@ -265,7 +279,7 @@
                             success: function () {
                                 setTimeout(function() {
                                     save_link.removeClass('disabled').text('Saved');
-                                    save_link.text("Save");
+                                    save_link.text('Save');
                                 }, 2000);
                             }
                         });
@@ -273,18 +287,18 @@
                 });
 
             // Add the event handler to submit targeting changes over ajax.
-            $("input.targeting-box", renderedContent).click(function() {
+            $('input.targeting-box', renderedContent).click(function() {
                 var targeting = $(this).attr('name');
-                var activation = $(this).is(":checked") ? "On" : "Off";
-                $("label[for='"+ targeting +"']", renderedContent).text(activation);
+                var activation = $(this).is(':checked') ? 'On' : 'Off';
+                $('label[for="' + targeting +'"]', renderedContent).text(activation);
 
-                current_model.set({'active': $(this).is(":checked")});
+                current_model.set({'active': $(this).is(':checked')});
                 current_model.save();
             });
 
             // Add the right background color based on where the app is in the table
             var app_row = $('tr#app-' + this.model.get('app_id'), this.el);
-            var zebra = app_row.hasClass("even") ? "even" : "odd";
+            var zebra = app_row.hasClass('even') ? 'even' : 'odd';
             renderedContent.addClass(zebra);
 
             app_row.after(renderedContent);

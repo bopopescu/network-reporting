@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: windows-1251 -*-
 
 #  Copyright (C) 2005 Roman V. Kiseliov
 #  All rights reserved.
@@ -500,7 +499,7 @@ class CountryRecord(BiffRecord):
 class UseSelfsRecord(BiffRecord):
     """
     This  record  specifies if the formulas in the workbook can use natural
-    language  formulas”.  This  type  of  formula can refer to cells by its
+    language  formulas'.  This  type  of  formula can refer to cells by its
     content or the content of the column or row header cell.
 
     Record USESELFS, BIFF8:
@@ -1340,7 +1339,7 @@ class PanesRecord(BiffRecord):
     [9]         1           Not used (BIFF5-BIFF8 only, not written
                             in BIFF2-BIFF4)
 
-    If the panes are frozen, pane 0 is always active, regardless
+    If the panes are frozen, pane_0 is always active, regardless
     of the cursor position. The correct identifiers for all possible
     combinations of visible panes are shown in the following pictures.
 
@@ -1588,7 +1587,7 @@ class StringRecord(BiffRecord):
         uncompressed = 0x01
         asian_phonetic_settings = 0x04
         rich_text_settings = 0x08
-        
+
         s = s.encode('UTF-16le')
         slen = len(s)/2
         options = uncompressed
@@ -1660,17 +1659,17 @@ class HyperlinkRecord(BiffRecord):
         options = 0x00
         special=None
         textmark=None
-        
+
         #~ assert url is not None or textmark is not None, 'must specify either url or textmark arguments'
-        
+
         if description is not None:
             options |= 0x14
             description = description.encode('UTF-16le') + '\x00\x00'
-        
+
         if target is not None:
             options |= 0x80
             target = target.encode('UTF-16le') + '\x00\x00'
-        
+
         u16url = url.encode('UTF-16le') + '\x00\x00'
         if url[0].isalpha() and url.find(':') > 3:
             # hyperlink containing a URL (6.53.2)
@@ -1681,7 +1680,7 @@ class HyperlinkRecord(BiffRecord):
         elif url[0].isalnum() or url[0] in ('.',):
             # hyperlink to the current workbook (6.53.3)
             options |= 0x01
-            
+
             uplvl_cnt=0
             if url[0].isalpha() and url[1:].startswith(':\\'):
                 # this is an absolute path
@@ -1691,13 +1690,13 @@ class HyperlinkRecord(BiffRecord):
                 while url.startswith('..\\'):
                     url = url[3:]
             url += '\x00'
-            
+
             special  = pack('<4L', 0x00000303, 0x00000000, 0x000000C0, 0x46000000)
             special += pack('<HL%ds'%len(url), uplvl_cnt, len(url), url)
             special += pack('<4s20x', '\xff\xff\xad\xde')
             # I don't understand the first field here, setting to zero is safe
             # till I figure out what it is
-            special += pack('<LL2s%ds'%len(u16url[:-2]), 0, len(u16url[:-2]), 
+            special += pack('<LL2s%ds'%len(u16url[:-2]), 0, len(u16url[:-2]),
                             '\x03\x00', u16url[:-2])
         elif url.startswith('\\\\'):
             # hyperlink to a File with UNC Path (6.53.4)
@@ -1707,10 +1706,10 @@ class HyperlinkRecord(BiffRecord):
             # hyperlink to the current workbook (6.53.5)
             options |= 0x08
             textmark = url[1:]
-        
+
         if textmark is not None:
             textmark = textmark.encode('UTF-16le') + '\x00\x00'
-        
+
         self._rec_data  = pack('<4H', frow, lrow, fcol, lcol)
         # GUID of StdLink
         self._rec_data += pack('<4L', 0x79eac9d0, 0x11cebaf9, 0xaa00828c, 0x0ba94b00)
@@ -1892,10 +1891,10 @@ class RefModeRecord(BiffRecord):
     """
     This record is part of the Calculation Settings Block.
     It stores which method is used to show cell addresses in formulas.
-    The “RC” mode uses numeric indexes for rows and columns,
-    i.e. “R(1)C(-1)”, or “R1C1:R2C2”.
-    The “A1” mode uses characters for columns and numbers for rows,
-    i.e. “B1”, or “$A$1:$B$2”.
+    The "RC" mode uses numeric indexes for rows and columns,
+    i.e. "R(1)C(-1)", or "R1C1:R2C2".
+    The "A1" mode uses characters for columns and numbers for rows,
+    i.e. "B1", or "$A$1:$B$2".
 
     Record REFMODE, BIFF2-BIFF8:
 
@@ -1946,7 +1945,7 @@ class DeltaRecord(BiffRecord):
 class SaveRecalcRecord(BiffRecord):
     """
     This record is part of the Calculation Settings Block.
-    It contains the “Recalculate before save” option in
+    It contains the "Recalculate before save" option in
     Excel's calculation settings dialogue.
 
     Record SAVERECALC, BIFF3-BIFF8:
@@ -2518,10 +2517,10 @@ class NameRecord(BiffRecord):
         else:
             uname = upack1(name)[1:]
         uname_len = len(uname)
-        
+
         #~ self._rec_data = struct.pack('<HBBHHHBBBB%ds%ds' % (uname_len, len(rpn)), options, keyboard_shortcut, uname_len, len(rpn), 0x0000, sheet_index, len(menu_text), len(desc_text), len(help_text), len(status_text), uname, rpn) + menu_text + desc_text + help_text + status_text
         self._rec_data = struct.pack('<HBBHHHBBBBB%ds%ds' % (uname_len, len(rpn)), options, keyboard_shortcut, uname_len, len(rpn), 0x0000, sheet_index, 0x00, len(menu_text), len(desc_text), len(help_text), len(status_text), uname, rpn) + menu_text + desc_text + help_text + status_text
-        
+
         #~ print repr(self.get())
         #~ print repr(self._rec_data)
         #~ print len(self._rec_data)
@@ -2529,9 +2528,9 @@ class NameRecord(BiffRecord):
 class ExternSheetRecord(BiffRecord):
     """
     In BIFF8 the record stores a list with indexes to SUPBOOK
-    records (list of REF structures, 6.100). See 5.10.3 for 
+    records (list of REF structures, 6.100). See 5.10.3 for
     details about external references in BIFF8.
-    
+
     Record EXTERNSHEET, BIFF8:
     Offset          Size      Contents
        0             2        Number of following REF structures (nm)
@@ -2545,7 +2544,7 @@ class ExternSheetRecord(BiffRecord):
 
     def __init__(self, refs=[]):
         BiffRecord.__init__(self)
-        
+
         # do we always need this ref? or only if there are no refs?
         refs.insert(0, (0,0,0))
         #~ ref_data = ''.join([ref.get() for r in refs])
@@ -2559,7 +2558,7 @@ class SupBookRecord(BiffRecord):
     it is used to store DDE and OLE object links, or to indicate
     an internal 3D reference or an add-in function. See 5.10.3
     for details about external references in BIFF8.
-    
+
     """
     _REC_ID = 0x01AE
 
@@ -2570,7 +2569,7 @@ class InternalReferenceSupBookRecord(SupBookRecord):
     """
     In each file occurs a SUPBOOK that is used for internal 3D
     references. It stores the number of sheets of the own document.
-    
+
     Record SUPBOOK for 3D references, BIFF8:
     Offset         Size   Contents
       0             2     Number of sheets in this document
@@ -2580,5 +2579,5 @@ class InternalReferenceSupBookRecord(SupBookRecord):
 
     def __init__(self, num_sheets):
         SupBookRecord.__init__(self)
-        
+
         self._rec_data = struct.pack('<HBB', num_sheets, 0x01, 0x04)

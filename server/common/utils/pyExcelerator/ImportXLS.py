@@ -1,31 +1,30 @@
 #!/usr/bin/env python
-# -*- coding: windows-1251 -*-
 
 #  Copyright (C) 2005 Roman V. Kiseliov
 #  All rights reserved.
-# 
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
 #  are met:
-# 
+#
 #  1. Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-# 
+#
 #  2. Redistributions in binary form must reproduce the above copyright
 #     notice, this list of conditions and the following disclaimer in
 #     the documentation and/or other materials provided with the
 #     distribution.
-# 
+#
 #  3. All advertising materials mentioning features or use of this
 #     software must display the following acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  4. Redistributions of any form whatsoever must retain the following
 #     acknowledgment:
 #     "This product includes software developed by
 #      Roman V. Kiseliov <roman@kiseliov.ru>."
-# 
+#
 #  THIS SOFTWARE IS PROVIDED BY Roman V. Kiseliov ``AS IS'' AND ANY
 #  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -50,7 +49,7 @@ from struct import pack, unpack
 
 
 def parse_xls(filename, encoding = None):
-    
+
     ##########################################################################
 
     def process_BOUNDSHEET(biff8, rec_data):
@@ -59,7 +58,7 @@ def parse_xls(filename, encoding = None):
 
         if biff8:
             chars_num, options = unpack('2B', sheet_name[:2])
-            
+
             chars_start = 2
             runs_num = 0
             asian_phonetic_size = 0
@@ -83,18 +82,18 @@ def parse_xls(filename, encoding = None):
             else:
                 chars_end = chars_start + 2*chars_num
                 result = sheet_name[chars_start:chars_end].decode('utf_16_le', 'replace')
-            
+
             tail_size = 4*runs_num + asian_phonetic_size
         else:
             result = sheet_name[1:].decode(encoding, 'replace')
-        
+
         return result
 
 
     def unpack2str(biff8, label_name): # 2 bytes length str
         if biff8:
             chars_num, options = unpack('<HB', label_name[:3])
-            
+
             chars_start = 3
             runs_num = 0
             asian_phonetic_size = 0
@@ -118,7 +117,7 @@ def parse_xls(filename, encoding = None):
             else:
                 chars_end = chars_start + 2*chars_num
                 result = label_name[chars_start:chars_end].decode('utf_16_le', 'replace')
-            
+
             tail_size = 4*runs_num + asian_phonetic_size
         else:
             result = label_name[2:].decode(encoding, 'replace')
@@ -146,7 +145,7 @@ def parse_xls(filename, encoding = None):
             result = rec_data[8:8+length].decode(encoding, 'replace')
 
         return (row_idx, col_idx, result)
-        
+
 
     def decode_rk(encoded):
         b0, b1, b2, b3 = unpack('4B', encoded)
@@ -161,7 +160,7 @@ def parse_xls(filename, encoding = None):
             result , = unpack('<d', ieee754)
         if is_multed_100:
             result /= 100.0
-        
+
         return result
 
 
@@ -188,7 +187,7 @@ def parse_xls(filename, encoding = None):
         row_idx, col_idx, xf_idx, result = unpack('<3Hd', rec_data)
         return (row_idx, col_idx, result)
 
-    
+
     def process_SST(rec_data, sst_continues):
         # 0x00FC
         total_refs, total_str = unpack('<2I', rec_data[:8])
@@ -270,7 +269,7 @@ def parse_xls(filename, encoding = None):
 
 
     #####################################################################################
-    
+
     import struct
 
     encodings = {
@@ -335,20 +334,20 @@ def parse_xls(filename, encoding = None):
 
     workbook_stream_len = len(workbook_stream)
     stream_pos = 0
-    
-    # Excel's method of data storing is based on 
+
+    # Excel's method of data storing is based on
     # ancient technology "TLV" (Type, Length, Value).
     # In addition, if record size grows to some limit
     # Excel writes CONTINUE records
     while stream_pos < workbook_stream_len and EOFs <= ws_num:
         rec_id, data_size = unpack('<2H', workbook_stream[stream_pos:stream_pos+4])
         stream_pos += 4
-        
+
         rec_data = workbook_stream[stream_pos:stream_pos+data_size]
         stream_pos += data_size
 
         if rec_id == 0x0809: # BOF
-            #print 'BOF', 
+            #print 'BOF',
             BOFs += 1
             ver, substream_type = unpack('<2H', rec_data[:4])
             if substream_type == 0x0005:
@@ -436,7 +435,7 @@ def parse_xls(filename, encoding = None):
                     if ord(rec_data[14]) & 8:
                         # part of shared formula
                         rec_id, data_size = unpack('<2H', workbook_stream[stream_pos:stream_pos+4])
-                        stream_pos += 4                      
+                        stream_pos += 4
                         rec_data = workbook_stream[stream_pos:stream_pos+data_size]
                         stream_pos += data_size
                         if rec_id == 0x0207: # STRING
@@ -445,14 +444,14 @@ def parse_xls(filename, encoding = None):
                             raise Exception("Expected ARRAY, SHRFMLA, TABLEOP* or STRING record")
                     if not got_str:
                         rec_id, data_size = unpack('<2H', workbook_stream[stream_pos:stream_pos+4])
-                        stream_pos += 4                      
+                        stream_pos += 4
                         rec_data = workbook_stream[stream_pos:stream_pos+data_size]
                         stream_pos += data_size
                         if rec_id != 0x0207: # STRING
                             raise Exception("Expected STRING record")
                     values[(r, c)] = unpack2str(biff8, rec_data)
                 elif rec_data[6] == '\x01':
-                    # boolean 
+                    # boolean
                     v = ord(rec_data[8])
                     values[(r, c)] = bool(v)
                 elif rec_data[6] == '\x02':

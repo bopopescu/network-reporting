@@ -5,7 +5,7 @@ cron:
   timezone: America/Los_Angeles
 
 - description: Advance the budget timeslices
-  url: /budget/advance/
+  url: /m/budget/advance/
   schedule: every 5 minutes synchronized
   timezone: America/Los_Angeles
   

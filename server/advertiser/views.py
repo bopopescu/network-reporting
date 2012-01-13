@@ -1,6 +1,7 @@
 import logging
 import datetime
 
+from django.conf import settings
 
 from google.appengine.ext import db
 
@@ -21,6 +22,7 @@ from budget.tzinfo import Pacific, utc
 
 from account.query_managers import AccountQueryManager
 from account.forms import NetworkConfigForm
+from account.models import NetworkConfig
 from advertiser.models import *
 
 # NOTE: don't be tempted to change this to import *
@@ -345,10 +347,11 @@ class CreateCampaignAJAXHandler(RequestHandler):
             initial.update(price_floor=self.account.network_config.price_floor)
         campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
+
         networks = [['admob_native', 'AdMob', False],
                     ["adsense","AdSense",False],
                     ["brightroll","BrightRoll",False],
-                    ["ejam","eJam",False],
+                    ["ejam","TapIt",False],
                     ["iAd","iAd",False],
                     ["inmobi","InMobi",False],
                     ["jumptap","Jumptap",False],
@@ -603,7 +606,7 @@ class CreateAdGroupHandler(RequestHandler):
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
         if campaign_key:
             c = AdGroupQueryManager.get(campaign_key)
-            adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
+            adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, allocation_percentage=100.0)
         if adgroup_key:
             adgroup = AdGroupQueryManager.get(adgroup_key)
             c = adgroup.campaign
@@ -618,7 +621,7 @@ class CreateAdGroupHandler(RequestHandler):
             adunit.checked = adunit.key() in adgroup.site_keys
 
         # TODO: Clean up this hacked shit
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","TapIt",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
         for n in networks:
             if adgroup.network_type == n[0]:
                 n[2] = True
@@ -1532,7 +1535,7 @@ class MarketplaceIndexHandler(RequestHandler):
 
         try:
             blind = self.account.network_config.blind
-        except:
+        except AttributeError:
             blind = False
 
         return render_to_response(self.request,
@@ -1553,7 +1556,7 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'start_date': start_date,
                                       'end_date': end_date,
                                       'date_range': self.date_range,
-                                      'blind': self.account.network_config.blind,
+                                      'blind': blind,
                                   })
 
 
@@ -1645,6 +1648,14 @@ class MarketplaceBlindnessChangeHandler(RequestHandler):
     def post(self):
         try:
             network_config = self.account.network_config
+
+            # Some accounts won't have a network config yet
+            if network_config == None:
+                n = NetworkConfig().put()
+                self.account.network_config = n
+                self.account.put()
+                network_config = n
+
             activate = self.request.POST.get('activate', None)
             if activate == 'true':
                 network_config.blind = True

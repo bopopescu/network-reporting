@@ -217,8 +217,28 @@ $(document).ready(function() {
     campaignAdgroupFormOnLoad();
 
     // Set up the campaign adgroup form for ajax
-    var validator;
-    validator = $('#campaignAdgroupForm').validate({
+
+    $('#campaignAdgroupForm-submit')
+        .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
+        .click(function(e) {
+            e.preventDefault();
+            $('#campaignAdgroupForm').submit();
+        });
+
+    // device targeting
+    $("#device_targeting_False").click(function(){
+        $("#target-by-device").slideUp();
+    });
+    $("#device_targeting_True").click(function() {
+        $("#target-by-device").slideDown();
+    });
+    if($("#device_targeting_True:checked").length === 0) {
+        $("#target-by-device").hide();
+    }
+
+
+    /* new stuff */
+    var validator = $('#campaignAdgroupForm').validate({
         rules: {
 
         },
@@ -253,14 +273,8 @@ $(document).ready(function() {
         }
     })
 
-    $('#campaignAdgroupForm-submit')
-        .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
-        .click(function(e) {
-            e.preventDefault();
-            $('#campaignAdgroupForm').submit();
-        });
-
     // help links
+    // TODO: make sure all of these are necessary, rename?
     $.each(['type', 'priority', 'promo-priority', 'bid', 'keyword'], function(iter, link_type) {
         $('#campaignForm-' + link_type + '-helpLink').click(function(e) {
             e.preventDefault();
@@ -277,18 +291,98 @@ $(document).ready(function() {
         });
     });
 
-    // date fields
-    $('#campaignAdgroupForm input[name="start_date"]').datepicker({ minDate:0 });
-    $('#campaignAdgroupForm input[name="end_date"]').datepicker({ minDate:0 });
+    // date controls
+    $('input[type="text"].date').datepicker();
+
+    $('#all-adunits').change(function() {
+        // select or deselect all adunits
+        $('input[name="site_keys"]').prop('checked', $(this).prop('checked'));
+    });
 
     // device targeting
-    $("#device_targeting_False").click(function(){
-        $("#target-by-device").slideUp();
+    $('input[name="device_targeting"]').change(function() {
+        if($(this).val() == '0') {
+            $('#device_targeting').slideUp();
+        }
+        else {
+            $('#device_targeting').slideDown();
+        }
     });
-    $("#device_targeting_True").click(function() {
-        $("#target-by-device").slideDown();
-    });
-    if($("#device_targeting_True:checked").length === 0) {
-        $("#target-by-device").hide();
+    // update on document ready
+    if($('input[name="device_targeting"]').val() == '0') {
+        $('#device_targeting').hide();
     }
+
+    // change form based on bid_strategy
+    $('select[name="bid_strategy"]').change(function() {
+        bid_strategy = $(this).val();
+        budget_type_options = $('select[name="budget_type"] option');
+        if(bid_strategy == 'cpm') {
+            budget_type_options[0].innerHTML = 'impressions/day';
+            budget_type_options[1].innerHTML = 'total impressions';
+        }
+        else {
+            budget_type_options[0].innerHTML = 'USD/day';
+            budget_type_options[1].innerHTML = 'total USD';
+        }
+    }).change(); // update on document ready
+
+    var pub_ids = {
+        'admob': {'label': 'AdMob Pub ID:', 'placeholder': 'ex: a14cdb1922f35xx'},
+        'admob_native': {'label': 'AdMob Pub ID:', 'placeholder': 'ex: a14cdb1922f35xx'},
+        'adsense': {'label': 'AdSense ID:', 'placeholder': 'ex: ca-mb-pub-5592664190023789'},
+        'brightroll': {'label': 'BrightRoll ID:', 'placeholder': 'ex: 3836789'},
+        'chartboost': {'label': 'ChartBoost ID:', 'placeholder': 'ex: 4cf55942bb93162f4500006g'},
+        'ejam': {'label': 'eJam Zone ID:', 'placeholder': 'ex: 23710'},
+        'greystripe': {'label': 'GreyStripe ID:', 'placeholder': 'ex: 3705265e-1025-4873-9352-7b1e4986xxxx'},
+        'inmobi': {'label': 'InMobi ID:', 'placeholder': 'ex: 4028cb962b75ff06012b792fc5fb6789'},
+        'jumptap': {'label': 'JumpTap ID:', 'placeholder': 'ex: pa_company_inc_app'},
+        'millennial': {'label': 'Millennial ID:', 'placeholder': 'ex: 36789'},
+        'millennial_native': {'label': 'Millennial ID:', 'placeholder': 'ex: 36789'},
+        'mobfox': {'label': 'MobFox ID:', 'placeholder': 'ex: 008048afe367bf4ce82ae95363c4xxxx'},
+    };
+
+    // make necessary changes based on network type
+    $('select[name="network_type"]').change(function() {
+        network_type = $(this).val();
+        $('.network_type_dependant').each(function() {
+            $(this).toggle($(this).hasClass(network_type));
+        });
+        if(network_type in pub_ids) {
+            $('label[for$="_pub_id"]').html(pub_ids[network_type].label)
+            $('input[name$="_pub_id"]').attr('placeholder', pub_ids[network_type].placeholder)
+            $('div.pub_id').show();
+        }
+        else {
+            $('div.pub_id').hide();
+        }
+    }).change(); // update on document ready
+
+    // make necessary changes based on campaign_type
+    $('select[name="campaign_type"]').change(function() {
+        campaign_type = $(this).val();
+        $('.campaign_type_dependant').each(function() {
+            $(this).toggle($(this).hasClass(campaign_type));
+        });
+        if(campaign_type == 'network') {
+            // make necessary changes based on network type
+            $('select[name="network_type"]').change();
+            // update label and help text for bid_strategy and bid
+            $('label[for="id_bid_strategy"]').html('Network Rate');
+            // update bid help link
+            $('#bid-promo-helpLink').attr('id', 'bid-network-helpLink');
+            // update bid_strategy default
+            $('select[name="bid_strategy"]').val('cpc');
+        }
+        else {
+            // update label and help text for bid_strategy and bid
+            $('label[for="id_bid_strategy"]').html('Rate');
+            // update bid_strategy default and trigger update on bid_strategy
+            $('select[name="bid_strategy"]').val('cpm').change();
+            if(campaign_type == 'promo') {
+                // update bid help link
+                $('#bid-network-helpLink').attr('id', 'bid-promo-helpLink');
+            }
+        }
+    }).change(); // update on document ready
 });

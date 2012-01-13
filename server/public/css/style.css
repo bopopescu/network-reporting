@@ -1406,6 +1406,105 @@ input.price_floor_change {
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(82, 168, 236, 0.6);
     color: black; }
 
+/* NEW STUFF */
+form#campaign_and_adgroup fieldset {
+  padding-top: 0;
+  /* form elements */ }
+  form#campaign_and_adgroup fieldset input[type="text"], form#campaign_and_adgroup fieldset textarea {
+    padding: 1px 2px 2px 3px;
+    border: 1px solid #eaeaea;
+    border-top-color: #b9b9b9;
+    background: #fafafa;
+    font-size: 14px;
+    line-height: 16px;
+    width: 290px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px; }
+  form#campaign_and_adgroup fieldset input[type="text"].date {
+    width: 85px; }
+  form#campaign_and_adgroup fieldset input[type="text"].time {
+    width: 48px; }
+  form#campaign_and_adgroup fieldset input[type="text"].number {
+    width: 70px; }
+  form#campaign_and_adgroup fieldset span.radios ul {
+    display: inline-block;
+    list-style-type: none;
+    margin: 0;
+    padding: 0; }
+    form#campaign_and_adgroup fieldset span.radios ul li {
+      display: inline-block;
+      margin: 0;
+      padding: 0; }
+      form#campaign_and_adgroup fieldset span.radios ul li label {
+        margin: 0 15px 0 0; }
+
+ul.form_fields {
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  ul.form_fields > li {
+    margin: 12px 0 0 0;
+    padding: 0; }
+    ul.form_fields > li > label {
+      display: inline-block;
+      width: 175px;
+      margin: 0 12px 0 0;
+      text-align: right;
+      vertical-align: top;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 16px; }
+    ul.form_fields > li > span {
+      display: inline-block;
+      vertical-align: top; }
+
+span#apps_label {
+  display: inline-block;
+  width: 175px;
+  margin: 0 12px 0 0;
+  text-align: right;
+  vertical-align: top; }
+
+ul#apps {
+  display: inline-block;
+  vertical-align: top;
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  ul#apps li {
+    margin: 0;
+    padding: 0; }
+    ul#apps li img {
+      height: 45px;
+      width: 45px;
+      vertical-align: top; }
+    ul#apps li div.details {
+      display: inline-block; }
+      ul#apps li div.details ul {
+        list-style-type: none; }
+
+ul#device_targeting {
+  list-style-type: none;
+  margin: 5px 0 0 50px;
+  padding: 0; }
+  ul#device_targeting li {
+    margin: 0;
+    padding: 0; }
+
+.device_type {
+  display: inline-block;
+  width: 150px; }
+
+ul.device_type {
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  ul.device_type li {
+    display: inline-block;
+    margin: 0;
+    padding: 0; }
+
 /*
  * ## Colors
  */

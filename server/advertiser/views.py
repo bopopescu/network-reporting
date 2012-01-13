@@ -110,7 +110,10 @@ class AdGroupIndexHandler(RequestHandler):
                                       'offline': self.offline,
                                   })
 
-<<<<<<< HEAD
+@login_required
+def adgroups(request,*args,**kwargs):
+    return AdGroupIndexHandler()(request,*args,**kwargs)
+
 ####### Helpers for campaign page #######
 def _sort_guarantee_levels(guaranteed_campaigns):
     """ Sort guaranteed campaigns according to levels """
@@ -132,12 +135,6 @@ def _sort_guarantee_levels(guaranteed_campaigns):
         else:
             level['display'] = False
     return gtee_levels
-=======
-@login_required
-def adgroups(request,*args,**kwargs):
-    return AdGroupIndexHandler()(request,*args,**kwargs)
->>>>>>> 856cef3509512b4d708758e906d2440162856e5a
-
 
 def _sort_campaigns(adgroups):
     """
@@ -159,7 +156,6 @@ def _sort_campaigns(adgroups):
         backfill_promo_campaigns,
     ]
 
-<<<<<<< HEAD
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
     # adgroup2.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
@@ -195,12 +191,6 @@ def _calc_and_attach_osi_success(adgroups):
 
     return adgroups
 
-@login_required
-def adgroups(request,*args,**kwargs):
-    return AdGroupIndexHandler()(request,*args,**kwargs)
-
-=======
->>>>>>> 856cef3509512b4d708758e906d2440162856e5a
 
 class AdGroupArchiveHandler(RequestHandler):
     def get(self):
@@ -220,28 +210,41 @@ def archive(request,*args,**kwargs):
     return AdGroupArchiveHandler()(request,*args,**kwargs)
 
 
-<<<<<<< HEAD
 """ Replaces CreateCampaignAJAXHandler and CreateCampaignHandler """
 class CreateCampaignAndAdGroupHandler(RequestHandler):
     def get(self):
         campaign_form = CampaignForm()
-        logging.warn(CampaignForm.Media)
-        logging.warn(str(CampaignForm.Media))
-        logging.warn(CampaignForm.Media())
-        logging.warn(str(CampaignForm.Media()))
-        logging.warn(campaign_form.Media)
-        logging.warn(str(campaign_form.Media))
-        logging.warn(campaign_form.Media())
-        logging.warn(str(campaign_form.Media()))
-        logging.warn(campaign_form.media)
-        logging.warn(str(campaign_form.media))
         adgroup_form = AdGroupForm()
-        #logging.warn(adgroup_form.media)
+
+        apps = AppQueryManager.get_apps(account=self.account)
+
+
+        """
+        all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        # sorts by app name, then adunit name
+        def adunit_cmp(adunit_1, adunit_2):
+            app_cmp = cmp(adunit_1.app.name, adunit_2.app.name)
+            if not app_cmp:
+                return cmp(adunit_1.name, adunit_2.name)
+            else:
+                return app_cmp
+
+        all_adunits.sort(adunit_cmp)
+
+        adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
+
+        adunit_keys = adgroup_form['site_keys'].value or []
+        adunit_str_keys = [unicode(k) for k in adunit_keys]
+        for adunit in all_adunits:
+            adunit.checked = unicode(adunit.key()) in adunit_str_keys
+        """
+
         return render_to_response(self.request,
                                   'advertiser/create_campaign_and_adgroup.html',
                                   {
                                       'campaign_form': campaign_form,
                                       'adgroup_form': adgroup_form,
+                                      'apps': apps,
                                   })
 
     def post(self):

@@ -273,3 +273,132 @@ input.price_floor_change {
         color: $black;
     }
 }
+
+/* NEW STUFF */
+form#campaign_and_adgroup {
+    fieldset {
+        padding-top: 0;
+        /* form elements */
+        input[type="text"], textarea {
+            padding: 1px 2px 2px 3px;
+            border: 1px solid #eaeaea;
+            border-top-color: #b9b9b9;
+            background: #fafafa;
+            font-size: 14px;
+            line-height: 16px;
+            width: 290px;
+            @include border-radius(3px);
+        }
+        input[type="text"].date {
+            width: 85px;
+        }
+        input[type="text"].time {
+            width: 48px;
+        }
+        input[type="text"].number {
+            width: 70px;
+        }
+        span.radios ul {
+            display: inline-block;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            li {
+                display: inline-block;
+                margin: 0;
+                padding: 0;
+                label {
+                    // font-size: 14px;
+                    margin: 0 15px 0 0;
+                }
+            }
+        }
+    }
+}
+
+
+@mixin left_column {
+    display: inline-block;
+    width: 175px;
+    margin: 0 12px 0 0;
+    text-align: right;
+    vertical-align: top;
+}
+
+@mixin right_column {
+    display: inline-block;
+    vertical-align: top;
+}
+
+
+ul.form_fields {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    > li {
+        margin: 12px 0 0 0;
+        padding: 0;
+        > label {
+            @include left_column;
+            font-size: 14px;
+            font-weight: 300;
+            line-height: 16px;
+        }
+        > span {
+            @include right_column;
+        }
+    }
+}
+
+span#apps_label {
+    @include left_column;
+}
+
+ul#apps {
+    @include right_column;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    li {
+        margin: 0;
+        padding: 0;
+        img {
+            height: 45px;
+            width: 45px;
+            vertical-align: top;
+        }
+        div.details {
+            display: inline-block;
+            ul {
+                list-style-type: none;
+            }
+        }
+    }
+}
+
+ul#device_targeting {
+    list-style-type: none;
+    margin: 5px 0 0 50px;
+    padding: 0;
+    li {
+        margin: 0;
+        padding: 0;
+    }
+}
+
+.device_type {
+    display: inline-block;
+    width: 150px;
+}
+
+ul.device_type {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    li {
+        display: inline-block;
+        margin: 0;
+        padding: 0;
+    }
+}
+

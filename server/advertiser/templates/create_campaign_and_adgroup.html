@@ -17,27 +17,101 @@
     {% endif %}
 {% endblock pageTitle %}
 
+{% block dateButtons %}
+{% endblock dateButtons %}
+
 {% block content %}
-<form action="{% url advertiser_campaign_create %}" method="post">
-    <fieldset class="formFields">
-        <h2>Campaign Details</h2>
-        <p>Campaigns allow you to manage ads that will run on your mobile ad units.</p>
-        <dl>
-            {% for field in campaign_form %}
-            <dt>{{ field.label }}:</dt>
-            <dd>{{ field }}</dd>
-            {% endfor %}
-            {% comment %}
-            <dt>{{ campaign_form.campaign_type.label }}</dt>
-            <dd>
-                <select id="{{ campaign_form.campaign_type.id }}" name="{{ campaign_form.campaign_type.name }}">
-                    <option value="gtee" selected="selected">Guaranteed</option>
-                    <option value="promo">Promotional</option>
-                    <option value="network">Network</option>
-                </select>
+<script type='text/javascript'>
+    //
+    // All this JS is here because it needs render-time info (see immediately below) to properly pre-populate/format the token inputs
+    // Can we move this to a hidden div or use ajax or some such?
+    //
+    var geo_s = 'http://ws.geonames.org/searchJSON?';
+    $(document).ready(function () {
+        var priors = {% if form.geo.value %}{{form.geo.value|safe}}{% else %}[]{% endif %};
+        var city_priors = {{form.cities.value|to_json|safe}};
+        var pre = {type: 'country', data: []};
+        var city_pre = {type: 'city', data: []};
+        //Not being used right now
+        //var state_pre = {type: 'state', data: []};
+        for (var count = 0; count < countries.length; count++) {
+            var dat = countries[count];
+            if ($.inArray(dat.code, priors) != -1) {
+                pre.data.push(dat);
+            }
+            if (pre.length == priors.length)
+                break;
+        }
+        //city is ll:ste:name:ccode;
+        for (var i in city_priors) {
+            if (city_priors.hasOwnProperty(i)) {
+                var datas = city_priors[i].split(':');
+                var ll = datas[0].split(',');
+                var ste = datas[1];
+                var name = datas[2];
+                var ccode = datas[3];
+                city_pre.data.push(
+                        { lat: ll[0],
+                          lng: ll[1],
+                          countryCode: ccode,
+                          adminCode1: ste,
+                          name: name
+                          });
+            }
+        }
+        $('#city_ta').tokenInput(geo_s, {
+            country: 'US',
+            doImmediate: false,
+            hintText: 'Type in a city name',
+            queryParam: 'name_startsWith',
+            featureClass: 'P',
+            prePopulate: city_pre,
+            contentType: 'json',
+            type: 'city',
+            minChars: 3,
+            method: 'get'
+        });
+        //Verify that all cities in city_pre are in the SINGLE country that is pre
 
+        //Need to create data object that is array of dictionary [ {name, id} ]
+        $('#geo_pred_ta').tokenInput(null, {
+            data: countries,
+            hintText: 'Type in a country name',
+            formatResult: function( row ) {
+                return row.name;
+            },
+            formatMatch: function( row, i, max ){
+                return [row.name, row.code];
+            },
+            prePopulate: pre
+        });
+        /* Not doing states atm
+        $('#state_ta').tokenInput(geo_s, {
+            country: 'US',
+            doImmediate: false,
+            queryParam: 'name_startsWith',
+            featureCode: 'ADM1',
+            contentType: 'json',
+            prePopulate: state_pre,
+            type: 'state',
+            minChars: 5,
+            method: 'get'
+        }); */
+    });
+</script>
+
+<form action="{% url advertiser_campaign_create %}" id="campaign_and_adgroup" method="post">
+    <fieldset>
+        <legend>
+            <h2>Campaign Details</h2>
+            <p>Campaigns allow you to manage ads that will run on your mobile ad units.</p>
+        </legend>
+
+        <ul class="form_fields">
+            <li>
+                {{ campaign_form.campaign_type.label_tag }}
+                {{ campaign_form.campaign_type }}
                 <a href="#" id="campaignForm-type-helpLink">What's this?</a>
-
                 <div id="campaignForm-type-helpContent" class="hidden">
                     <h3>Campaign Type</h3>
                     <h4>Guaranteed</h4>
@@ -47,36 +121,223 @@
                     <h4>Network</h4>
                     <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
                 </div>
-            </dd>
+            </li>
 
-            <dt>Priority:</dt>
-            <dd>
-            <select name='gtee_level'>
-            <option value='high' {% ifequal form.gtee_level.value 'high' %}selected{% endifequal %}>High</option>
-            <option value='normal' {% ifequal form.gtee_level.value 'normal' %}selected{% endifequal %}{% if not form.gtee_level.value %}selected{% endif %}>Normal</option>
-            <option value='low' {% ifequal form.gtee_level.value 'low' %}selected{% endifequal %}>Low</option>
-            </select>
-            <a href="#" id="campaignForm-priority-helpLink">What's this?</a>
+            <li class="campaign_type_dependant gtee">
+                {{ campaign_form.gtee_priority.label_tag }}
+                {{ campaign_form.gtee_priority }}
+                <a href="#" id="campaignForm-priority-helpLink">What's this?</a>
+                <div id='campaignForm-priority-helpContent' class='hidden'>
+                    <h3>Priority</h3>
+                    <p>Within a given priority campaigns are run in order of CPM.  By assigning a campaign priority you set it to run before those at a lower priority level.</p>
+                </div>
+            </li>
 
-            <div id='campaignForm-priority-helpContent' class='hidden'>
-            <h3>Priority</h3>
-            <p>Within a given priority campaigns are run in order of CPM.  By assigning a campaign priority you set it to run before those at a lower priority level.</p>
-            </div>
-            </dd>
-            </div>
+            <li class="campaign_type_dependant promo">
+                {{ campaign_form.promo_priority.label_tag }}
+                {{ campaign_form.promo_priority }}
+                <a href="#" id="campaignForm-promo-priority-helpLink">What's this?</a>
+                <div id='campaignForm-promo-priority-helpContent' class='hidden'>
+                    <h3>Priority</h3>
+                    <p>For a promotional campaign, you may pick whether it is prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>).</p>
+                </div>
+            </li>
 
-            <dt>{{ campaign_form.name.label }}</dt>
-            <dd>{{ campaign_form.name }}</dd>
-            {% endcomment %}
-        </dl>
+            <li>
+                {{ campaign_form.name.label_tag }}
+                {{ campaign_form.name }}
+            </li>
+
+            <li>
+                {{ campaign_form.description.label_tag }}
+                {{ campaign_form.description }}
+            </li>
+
+            <li class="campaign_type_dependant gtee promo">
+                {{ campaign_form.start_datetime.label_tag }}
+                {{ campaign_form.start_datetime }} PST
+            </li>
+
+            <li class="campaign_type_dependant gtee promo">
+                {{ campaign_form.end_datetime.label_tag }}
+                {{ campaign_form.end_datetime}} PST
+            </li>
+
+            <li class="campaign_type_dependant network">
+                {{ adgroup_form.network_type.label_tag }}
+                {{ adgroup_form.network_type }}
+            </li>
+
+            <li class="campaign_type_dependant network network_type_dependant custom">
+                {{ adgroup_form.custom_html.label_tag }}
+                {{ adgroup_form.custom_html }}
+                <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
+                <div id='campaignForm-customHtml-helpContent' class='hidden'>
+                    <h3>Custom Network</h3>
+                    MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
+                    <br/>
+                    <br/>
+                    <h4>Example:</h4>
+                    A sample HTML snippet from Glam Media is:
+                    <br/>
+                    <br/>
+                    <code>
+                        &lt;script type="text/javascript"><br/>
+                        window.glam_affiliate_id = 1234567890;<br/>
+                        if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
+                        if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
+                        var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
+                        document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
+                        &lt;/script><br/>
+                    </code>
+                </div>
+            </li>
+
+            <li class="campaign_type_dependant network network_type_dependant custom_native">
+                {{ adgroup_form.custom_method.label_tag }}
+                {{ adgroup_form.custom_method }}
+            </li>
+
+            <li>
+                {{ adgroup_form.bid_strategy.label_tag }}
+                {{ adgroup_form.bid_strategy }} @ {{ adgroup_form.bid }} USD
+                <a class='campaign_type_dependant promo network whatsthis' id='bid-promo-helpLink' href='#'>What's this?</a>
+                <div id='bid-promo-helpContent' class='hidden'>
+                    <h3>Promotional CPM</h3>
+                    <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
+                </div>
+                <div id="bid-network-helpContent" class="hidden">
+                    <h3>Network Rate</h3>
+                    <h4>Cost Per Click</h4>
+                    <p>MoPub uses the CPC from the ad networks along with realtime CTR statistics from your app to calculate eCPM. Because ad network CTR is highly variable, this allows us to constantly display the most profitable ads.</p>
+                    <p>You can find your CPC on the ad network's site.</p>
+                    <h4>Estimated Cost Per Mille</h4>
+                    <p>Using a static CPM disables automatic eCPM calculation. This is useful for users who have a preexisting contract with a specific ad network.</p>
+                </div>
+            </li>
+
+            <li class="campaign_type_dependant gtee">
+                {{ campaign_form.budget.label_tag }}
+                {{ campaign_form.budget }}
+                {{ campaign_form.budget_type }}
+            </li>
+
+            <li class="campaign_type_dependant gtee">
+                {{ campaign_form.budget_strategy.label_tag }}
+                <span class="radios">
+                    {% comment %}
+                    The latest version of Django makes it easy to modify the
+                    RadioSelect widget.  Since it is not simple here, this
+                    wrapper is used to style it.
+                    {% endcomment %}
+                    {{ campaign_form.budget_strategy }}
+                </span>
+            </li>
+        </ul>
     </fieldset>
 
     <fieldset>
-        <h2>Targeting</h2>
-        <p>Choose which ad units this campaign will target.</p>
+        <legend>
+            <h2>Targeting</h2>
+            <p>Choose which ad units this campaign will target.</p>
+        </legend>
+
+        <span id="apps_label">
+            Ad Units:<br />
+            <label>( <input id="all-adunits" type="checkbox" /> All )</label>
+        </span>
+
+        <ul id="apps">
+            {% for app in apps %}
+            <li>
+                <img src="{% url publisher_app_icon app_key=app.key %}" />
+                <div class="details">
+                    <div class="appData-name">{{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span></div>
+                    <ul>
+                        {% for adunit in app.all_adunits %}
+                        <li>
+                            <label><input {% if adunit.key in adgroup_form.site_keys.value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" /> {{ adunit.name }}</label>
+                            <div class="campaign_type_dependant network pub_id">
+                                <label for="id_{{ adunit.key }}_pub_id"></label>
+                                <input id="id_{{ adunit.key }}_pub_id" name="{{ adunit.key }}_pub_id" type="text" />
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
     </fieldset>
 
-    <div class="clear"></div>
+    <fieldset id="advanced">
+        <ul class="form_fields">
+            <li>
+                {{ adgroup_form.allocation_percentage.label_tag }}
+                {{ adgroup_form.allocation_percentage }} % of all {{ adgroup_form.allocation_type }}
+            </li>
+            <li>
+                {{ adgroup_form.daily_frequency_cap.label_tag }}
+                <span>
+                    {{ adgroup_form.daily_frequency_cap }} daily impressions per user<br />
+                    {{ adgroup_form.hourly_frequency_cap }} hourly impressions per user
+                </span>
+            </li>
+            <li>
+                {{ adgroup_form.device_targeting.label_tag }}
+                <span>
+                    <span class="radios">{{ adgroup_form.device_targeting }}</span>
+                    <ul id="device_targeting">
+                        <li>
+                            <ul class="device_type">
+                                <li><label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label></li>
+                                <li><label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label></li>
+                                <li><label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label></li>
+                            </ul>
+                            {{ adgroup_form.ios_version_min.label_tag }}
+                            {{ adgroup_form.ios_version_min }}
+                            {{ adgroup_form.ios_version_max.label_tag }}
+                            {{ adgroup_form.ios_version_max }}
+                        </li>
+                        <li>
+                            <label class="device_type">{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</label>
+                            {{ adgroup_form.android_version_min.label_tag }}
+                            {{ adgroup_form.android_version_min }}
+                            {{ adgroup_form.android_version_max.label_tag }}
+                            {{ adgroup_form.android_version_max }}
+                        </li>
+                        <li>
+                            <label class="device_type">{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</label>
+                            <span class="muted">(All versions)</span>
+                        </li>
+                    </ul>
+                </span>
+            </li>
+            <li>
+                {{ adgroup_form..label_tag }}
+                {{ adgroup_form. }}
+            </li>
+            <li>
+                {{ adgroup_form.keywords.label_tag }}
+                {{ adgroup_form.keywords }}
+                <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
+                <div id='campaignForm-keyword-helpContent' class='hidden'>
+                    <h3>Keywords</h3>
+                    <p>
+                        Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
+                        <br/><br/>
+                        e.g. In order to target 24-year-old males or any 25-year-old you can use special keywords
+                        <br/><br/>
+                        m_age:24 AND m_gender:M
+                        <br/>
+                        m_age:25
+                        <br/><br/>
+                        Note: Keywords should only be used if your app is sending keywords with the ad request.
+                    </p>
+                </div>
+            </li>
+        </ul>
+    </fieldset>
 
     <div class="form-submit">
         <span class="buttonWrap"><a href="#" class="button" id="campaignAdgroupForm-submit">Continue</a></span>

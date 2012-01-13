@@ -50,7 +50,7 @@ from pytz import timezone
 
 from google.appengine.ext import db
 
-TESTING = True
+TESTING = False
 
 MAX = 1000
 BUFFER = 200
@@ -401,8 +401,8 @@ def send_emails(day):
 
     last_account = None
     for login in logins_query:
-        if login.account != last_account:
-            last_account = login.account
+        if login.account.key() != last_account:
+            last_account = login.account.key()
             if login.email or getattr(login.account,
                     'receive_ad_network_emails', False):
                 mappers = AdNetworkMapperManager.get_mappers(login.account)

@@ -27,7 +27,8 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkNetworkStats, \
      AdNetworkAppStats, \
      AdNetworkManagementStats, \
-     STAT_NAMES
+     STAT_NAMES, \
+     MANAGEMENT_STAT_NAMES
 from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager, \
@@ -44,7 +45,7 @@ MOBFOX = 'mobfox'
 IAD_PRETTY = 'iAd'
 IAD = 'iad'
 
-#TODO: Figure out where to put this. Basically ad_network_reports
+# TODO: Figure out where to put this. Basically ad_network_reports
 # package helper functions.
 class AdNetworkReportManager(CachedQueryManager):
     @classmethod
@@ -182,11 +183,16 @@ class AdNetworkLoginManager(CachedQueryManager):
         return query
 
     @classmethod
-    def get_all_login_credentials(cls):
+    def get_all_logins(cls,
+                       order_by_account=False):
         """
-        Return all AdNetworkLoginCredentials entities ordered by account.
+        Return all AdNetworkLoginCredential entities (ordered by account if
+        the order by account flag is set).
         """
-        return AdNetworkLoginCredentials.all().order('account')
+        query = AdNetworkLoginCredentials.all()
+        if order_by_account:
+            return query.order('account')
+        return query
 
     @classmethod
     def get_number_of_accounts(cls):
@@ -228,9 +234,17 @@ class AdNetworkMapperManager(CachedQueryManager):
                     return mapper
 
     @classmethod
+    def get_mappers_by_login(cls,
+                             login):
+        """
+        Return a generator of the AdNetworkAppMappers with this login.
+        """
+        return AdNetworkAppMapper.all().filter('ad_network_login =', login)
+
+    @classmethod
     def get_mappers(cls,
-                               account,
-                               network_name=''):
+                    account,
+                    network_name=''):
         """
         Inner join AdNetworkLoginCredentials with AdNetworkAppMapper.
 
@@ -246,21 +260,23 @@ class AdNetworkMapperManager(CachedQueryManager):
                 yield mapper
 
     @classmethod
-    def get_ad_network_mapper(cls,
-                              ad_network_app_mapper_key=None,
-                              publisher_id=None,
-                              ad_network_name=None):
+    def get_mapper(cls,
+                   mapper_key=None,
+                   publisher_id=None,
+                   ad_network_name=None):
         """Keyword arguments: either an ad_network_app_mapper_key or a
         publisher_id and login_credentials.
 
         Return the corresponding AdNetworkAppMapper.
         """
-        if ad_network_app_mapper_key:
-            return AdNetworkAppMapper.get(ad_network_app_mapper_key)
+        if mapper_key:
+            return AdNetworkAppMapper.get(mapper_key)
         elif publisher_id and ad_network_name:
-            return AdNetworkAppMapper.get_by_publisher_id(publisher_id, ad_network_name)
+            return AdNetworkAppMapper.get_by_publisher_id(publisher_id,
+                    ad_network_name)
         return None
 
+# TODO: Remove bloat
 class AdNetworkStatsManager(CachedQueryManager):
     @classmethod
     def roll_up_unique_stats(cls,
@@ -608,6 +624,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
                  day):
         self.stats_dict = {}
         for network in AD_NETWORK_NAMES.keys():
+            self.day = day
             self.stats_dict[network] = AdNetworkManagementStats(
                     ad_network_name=network,
                     date=day)
@@ -628,6 +645,14 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
                   field):
         setattr(self.stats_dict[ad_network_name], field,
                 getattr(self.stats_dict[ad_network_name], field) + 1)
+
+    def combined(self,
+                 stats_manager):
+        for ad_network_name, stats in stats_manager.stats_dict.iteritems():
+            for stat in MANAGEMENT_STAT_NAMES:
+                setattr(self.stats_dict[ad_network_name], stat, getattr(
+                    self.stats_dict[ad_network_name], stat) + getattr(
+                    stats_manager.stats_dict[ad_network_name], stat))
 
     def put_stats(self):
         for stats in self.stats_dict.values():

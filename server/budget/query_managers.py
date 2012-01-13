@@ -73,6 +73,7 @@ class BudgetQueryManager(QueryManager):
                             delivery_type = camp.budget_strategy,
                             static_total_budget = camp.full_budget,
                             total_spent = total_spent,
+                            day_tz = 'Pacific',
                             )
             budget.put()
             return budget
@@ -84,6 +85,7 @@ class BudgetQueryManager(QueryManager):
                             delivery_type = camp.budget_strategy,
                             static_slice_budget = get_slice_budget_from_daily(camp.budget),
                             total_spent = total_spent,
+                            day_tz = 'Pacific',
                             )
             budget.put()
             return budget

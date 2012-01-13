@@ -11,12 +11,12 @@ def get_os(user_agent_string):
             user_os_name = 'android'
         
         if user_os_name == 'iOS':
-            if "iPod touch" in user_agent_string:
-                user_model = 'iPod touch'
-            elif 'iPhone' in user_agent_string:
-                user_model = 'iPhone'
+            if 'iPod touch' in user_agent_string or "iPod" in user_agent_string:
+                user_model = 'iPod'
             elif 'iPad' in user_agent_string:
                 user_model = 'iPad'
+            elif 'iPhone' in user_agent_string:
+                user_model = 'iPhone'
 
         if user_os_name == 'android':
             num_start = user_agent_string.find('Android')+8

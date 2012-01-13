@@ -1,4 +1,4 @@
-import logging
+import logging, random
 from ad_server.debug_console import trace_logging
 
 
@@ -264,6 +264,19 @@ def freq_filter(type, key_func, udid, now, frq_dict):
         trace_logging.warning("key: %s type: %s imps: %s, freq cap: %s" % (a_key, type.title(), imp_cnt, frq_cap))
         return (not frq_cap or imp_cnt < frq_cap)
     return (real_filter, log_mesg, [])
+
+def alloc_filter(test_value=None):
+
+    log_mesg = "Removed due to allocation cap: %s"
+    def real_filter(a):
+        d100f = test_value or random.random() * 100
+        if a.allocation_percentage:
+            if (d100f < a.allocation_percentage):
+                return True
+            else:
+                return False
+    return (real_filter, log_mesg, [])
+
 
 #this is identical to mega_filter except it logs the adgroup
 def all_freq_filter(*filters):

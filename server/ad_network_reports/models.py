@@ -13,6 +13,7 @@ KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
 STAT_NAMES = ('revenue', 'attempts', 'impressions', 'clicks')
 CALCULATED_STAT_NAMES = ('cpm', 'fill_rate', 'cpc', 'ctr')
+MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped', 'failed_logins')
 
 class LoginStates:
     """
@@ -21,6 +22,7 @@ class LoginStates:
     NOT_SETUP = 0
     WORKING = 1
     ERROR = 2
+
 
 class AdNetworkLoginCredentials(db.Model):
     """

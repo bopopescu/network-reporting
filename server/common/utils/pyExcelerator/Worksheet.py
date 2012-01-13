@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: windows-1251 -*-
 
 #  Copyright (C) 2005 Roman V. Kiseliov
 #  All rights reserved.
@@ -1321,9 +1320,9 @@ class Worksheet(object):
         return result
 
     def __row_blocks_rec(self):
-        # this function takes almost 99% of overall execution time 
+        # this function takes almost 99% of overall execution time
         # when file is saved
-        # return '' 
+        # return ''
         result = []
         i = 0
         used_rows = self.__rows.keys()

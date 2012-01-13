@@ -1,5 +1,3 @@
-import logging, os, re, datetime, hashlib
-
 from django.conf import settings
 
 from urllib import urlencode
@@ -28,11 +26,12 @@ from budget.tzinfo import Pacific, utc
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from account.query_managers import AccountQueryManager
 from account.forms import NetworkConfigForm
+from account.models import NetworkConfig
 from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm, \
                              BaseCreativeForm, TextCreativeForm, \
                              ImageCreativeForm, TextAndTileCreativeForm, \
-                             HtmlCreativeForm
+                             HtmlCreativeForm, ContentFilterForm
 
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager, TextCreativeQueryManager, \
@@ -290,7 +289,7 @@ class CreateCampaignAJAXHander(RequestHandler):
             initial.update(price_floor=self.account.network_config.price_floor)
         campaign_form = campaign_form or CampaignForm(instance=campaign, initial=initial)
         adgroup_form = adgroup_form or AdGroupForm(instance=adgroup)
-        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],\
+        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","TapIt",False],\
             ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],['millennial_native', 'Millennial Media', False],["mobfox","MobFox",False],\
             ['custom','Custom Network', False], ['custom_native','Custom Native Network', False]]
 
@@ -525,7 +524,7 @@ class CreateAdGroupHandler(RequestHandler):
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
         if campaign_key:
             c = AdGroupQueryManager.get(campaign_key)
-            adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, percent_users=100.0)
+            adgroup = AdGroup(name="%s Ad Group" % c.name, campaign=c, bid_strategy="cpm", bid=10.0, allocation_percentage=100.0)
         if adgroup_key:
             adgroup = AdGroupQueryManager.get(adgroup_key)
             c = adgroup.campaign
@@ -540,7 +539,7 @@ class CreateAdGroupHandler(RequestHandler):
             adunit.checked = adunit.key() in adgroup.site_keys
 
         # TODO: Clean up this hacked shit
-        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","eJam",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
+        networks = [["admob","AdMob",False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","TapIt",False],["jumptap","Jumptap",False],["greystripe","GreyStripe",False],["iAd","iAd",False],["inmobi","InMobi",False],["millennial","Millennial Media",False],["mobfox","MobFox",False]]
         for n in networks:
             if adgroup.network_type == n[0]:
                 n[2] = True
@@ -1112,8 +1111,9 @@ class AJAXStatsHandler(RequestHandler):
         else:
             days = StatsModel.lastdays(int(date_range))
 
-        if self.start_date: # this is tarded. the start date is really the end of the date range.
-            end_date = datetime.datetime.strptime(self.start_date, "%Y-%m-%d")
+        # this is tarded. the start date is really the end of the date range.
+        if self.start_date:
+            end_date = self.start_date
         else:
             end_date = datetime.date.today()
 
@@ -1218,11 +1218,11 @@ class CampaignExporter(RequestHandler):
         adgroup = AdGroupQueryManager.get(adgroup_key)
         all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
         f_name_dict = dict(adgroup_title = adgroup.campaign.name,
-                           start = start.strftime('%b %d'),
-                           end   = end.strftime('%b %d, %Y'),
+                           start = start.strftime('%m/%d/%y'),
+                           end   = end.strftime('%m/%d/%y'),
                            )
         # Build
-        f_name = "%(adgroup_title)s CampaignStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = "MoPub Campaign Stats--Name:%(adgroup_title)s--DateRange:%(start)s - %(end)s" % f_name_dict
         f_name = f_name.encode('ascii', 'ignore')
         # Zip up days w/ corresponding stats object and other stuff
         data = map(lambda x: [x[0]] + x[1], zip([day.strftime('%a, %b %d, %Y') for day in days], [campaign_stats(stat, adgroup.campaign.campaign_type) for stat in all_stats]))
@@ -1334,8 +1334,10 @@ class MarketplaceIndexHandler(RequestHandler):
 
         try:
             blind = self.account.network_config.blind
-        except:
+        except AttributeError:
             blind = False
+
+        logging.warn(network_config.filter_level)
 
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
@@ -1353,7 +1355,8 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'start_date': start_date,
                                       'end_date': end_date,
                                       'date_range': self.date_range,
-                                      'blind': self.account.network_config.blind,
+                                      'blind': blind,
+                                      'network_config': network_config
                                   })
 
 
@@ -1413,6 +1416,42 @@ def marketplace_blocklist_change(request,*args,**kwargs):
     return BlocklistHandler()(request,*args,**kwargs)
 
 
+class ContentFilterHandler(RequestHandler):
+    """
+    Ajax handler for changing the marketplace content filter settings.
+    """
+    def post(self):
+        network_config = self.account.network_config
+        filter_level = self.request.POST.get('filter_level', None)
+
+        # If the account doesn't have a network config, make one
+        if not network_config:
+            network_config = NetworkConfig()
+            network_config.put()
+            self.account.network_config = network_config
+            self.account.put()
+
+        # Set the filter level if it was passed
+        if filter_level:
+            if filter_level == "none":
+                network_config.set_no_filter()
+            elif filter_level  == "low":
+                network_config.set_low_filter()
+            elif filter_level == "moderate":
+                network_config.set_moderate_filter()
+            elif filter_level == "strict":
+                network_config.set_strict_filter()
+            else:
+                return JSONResponse({'error': 'Invalid filter level'})
+        else:
+            return JSONResponse({'error': 'No filter level specified (choose one of [none, low, moderate, strict]'})
+
+        return JSONResponse({'success': 'success'})
+
+@login_required
+def marketplace_content_filter(request, *args, **kwargs):
+    return ContentFilterHandler()(request, *args, **kwargs)
+
 class MarketplaceOnOffHandler(RequestHandler):
     """
     Ajax handler for activating/deactivating the marketplace.
@@ -1445,6 +1484,14 @@ class MarketplaceBlindnessChangeHandler(RequestHandler):
     def post(self):
         try:
             network_config = self.account.network_config
+
+            # Some accounts won't have a network config yet
+            if network_config == None:
+                n = NetworkConfig().put()
+                self.account.network_config = n
+                self.account.put()
+                network_config = n
+
             activate = self.request.POST.get('activate', None)
             if activate == 'true':
                 network_config.blind = True

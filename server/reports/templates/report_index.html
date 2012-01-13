@@ -49,10 +49,24 @@
                 do stuff for editing report on the fly
                 {% endcomment %}
                 <th class='dataTable-name'>
+                  {% if report.status != 'Pending' %}
                     <a href='{% url view_report report_key=report.key %}'>{{report.name}}</a>
+                  {% else %}
+                    {{report.name}}
+                  {% endif %}
                 </th>
                 <td class='dataTable-name'>{{report.details|safe}}</td>
-                <td id='{{report.key}}-status' class='dataTable-date'>{% if report.data %}{{report.last_run|date:'N j, Y \<\b\r /\> f a'|safe}}{% else %}{% if report.status %}{{report.status}}{% else %}Pending...{% endif %}{% endif %}</td>
+                <td id='{{report.key}}-status' class='dataTable-date'>
+                  {% if report.data %}
+                    {{report.last_run|date:'N j, Y \<\b\r /\> f a'|safe}}
+                  {% else %}
+                    {% if report.status %}
+                      {{report.status}}
+                    {% else %}
+                      Pending...
+                    {% endif %}
+                  {% endif %}
+                </td>
                 <td class='dataTable-data'>{% if report.sched_interval == 'none' or not report.sched_interval %}{% else %}{{report.sched_interval|capfirst}}{% endif %}</td>
                 <td class='dataTable-data numeric'></td>
             </tr>

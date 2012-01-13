@@ -43,6 +43,7 @@ from ad_server import memcache_mangler
 ###################
 from ad_server.handlers import TestHandler, UDIDHandler, MPXUDIDHandler
 from ad_server.handlers import adhandler
+from ad_server.handlers import budget_handlers
 
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
 from userstore.models import CLICK_EVENT_NO_APP_ID
@@ -139,7 +140,7 @@ class AppOpenHandler(webapp.RequestHandler):
     # /m/open?v=1&udid=26a85bc239152e5fbc221fe5510e6841896dd9f8&id=agltb3B1Yi1pbmNyDAsSBFNpdGUY6ckDDA
     def get(self):
         from common.utils.helpers import get_udid_appid
-        
+
         udid, mobile_appid = get_udid_appid(self.request)
 
         # bail early if udid AND mobile_appid is not provided
@@ -220,7 +221,9 @@ def main():
                                                   ('/m/memshow', memcache_mangler.ShowHandler),
                                                   ('/m/purchase', PurchaseHandler),
                                                   ('/m/purchase_txn', PurchaseHandlerTxn),
-                                                  ('/m/req',AdRequestHandler),],
+                                                  ('/m/req',AdRequestHandler),
+                                                  ('/m/budget/advance/', budget_handlers.BudgetAdvanceHandler),
+                                                  ('/m/budget/advance_worker/', budget_handlers.BudgetAdvanceWorkerHandler)],
                                                   debug=DEBUG)
     run_wsgi_app(application)
     # wsgiref.handlers.CGIHandler().run(application)

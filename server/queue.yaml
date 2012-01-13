@@ -5,10 +5,6 @@ queue:
 - name: admin-dashboard-queue
   rate: 10/s
 
-- name: bulk-log-processor
-  rate: 100/s
-  bucket_size: 100
-
 - name: bulk-log-processor-00
   rate: 100/s
   bucket_size: 100
@@ -69,245 +65,69 @@ queue:
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-00
+
+
+- name: mongo-rt-stats-00
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-01
+- name: mongo-rt-stats-01
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-02
+- name: mongo-rt-stats-02
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-03
+- name: mongo-rt-stats-03
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-04
+- name: mongo-rt-stats-04
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-05
+- name: mongo-rt-stats-05
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-06
+- name: mongo-rt-stats-06
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-07
+- name: mongo-rt-stats-07
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-08
+- name: mongo-rt-stats-08
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-09
+- name: mongo-rt-stats-09
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 1
 
-- name: network-request-10
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
 
-- name: network-request-11
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-12
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-13
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-14
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-15
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-16
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-17
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-18
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-19
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-    
-- name: network-request-20
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-21
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-22
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-23
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-24
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-25
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-26
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-27
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-28
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-29
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-    
-- name: network-request-30
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-31
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-32
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-33
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-34
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-35
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-36
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-37
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-38
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
-
-- name: network-request-39
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 1
 
 - name: gen-rep-00
   rate: 100/s
@@ -387,6 +207,68 @@ queue:
     task_retry_limit: 2
 
 - name: file-finalizer-09
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+
+
+- name: gae-log-fetcher-00
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+- name: gae-log-fetcher-01
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+- name: gae-log-fetcher-02
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+- name: gae-log-fetcher-03
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+- name: gae-log-fetcher-04
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+- name: gae-log-fetcher-05
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+- name: gae-log-fetcher-06
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+- name: gae-log-fetcher-07
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+- name: gae-log-fetcher-08
+  rate: 100/s
+  bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 2
+
+- name: gae-log-fetcher-09
   rate: 100/s
   bucket_size: 100
   retry_parameters:

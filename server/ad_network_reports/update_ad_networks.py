@@ -56,6 +56,8 @@ MAX = 1000
 BUFFER = 200
 
 
+# TODO: Implement pool of processes that handles the update by day and login
+# TODO: Keep stats buffered in memory for emails to prevent seperate queries
 def multiprocess_update_all(start_day=None, end_day=None, email=True,
         processes=1):
     """
@@ -163,11 +165,6 @@ def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1,
     pacific = timezone('US/Pacific')
     yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
-    logins_query = AdNetworkLoginCredentialsManager.get_all_logins()
-    limit = min(range_, MAX)
-    count = limit
-    logins = logins_query.fetch(limit, offset=offset)
-
     # Set start and end dates
     start_day = start_day or yesterday
     end_day = end_day or yesterday
@@ -175,6 +172,11 @@ def update_all(start_day=None, end_day=None, logger=None, offset=0, range_=-1,
     stats_list = []
     # Iterate through date range
     for day in date_magic.gen_days(start_day, end_day):
+        logins_query = AdNetworkLoginCredentialsManager.get_all_logins()
+        limit = min(range_, MAX)
+        count = limit
+        logins = logins_query.fetch(limit, offset=offset)
+
         if logger:
             logger.info("TEST DATE: %s" % day.strftime("%Y %m %d"))
         # Create Management Stats

@@ -25,6 +25,7 @@ from ad_network_reports.mptests.load_test_data import load_test_data
 INCLUDE_IAD = False
 
 # TODO: Improve update testing
+# TODO: figure out a way to verify data that spawned processes created
 class TestUpdate(unittest.TestCase):
     def setUp(self):
         # First, create an instance of the Testbed class.
@@ -46,16 +47,16 @@ class TestUpdate(unittest.TestCase):
         # Call the method we are testing.
         update_all()
 
-        test_network_app_mappers = list(AdNetworkMapperManager.
+        mappers = list(AdNetworkMapperManager.
                 get_mappers(account))
-        print 'App Mapper\'s len: %d' % len(test_network_app_mappers)
-        assert len(test_network_app_mappers) > 0
+        print 'App Mapper\'s len: %d' % len(mappers)
+        assert len(mappers) > 0
 
         # Was a day created for each app for the account?
         pacific = timezone('US/Pacific')
         yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
         print "YESTERDAY: %s" % yesterday.strftime('%Y %m %d')
-        for mapper1 in test_network_app_mappers:
+        for mapper1 in mappers:
             mapper2 = AdNetworkMapperManager.get_mapper(mapper_key=mapper1.key())
             stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =',
                     mapper1).filter('date =', yesterday).get()
@@ -74,13 +75,29 @@ class TestUpdate(unittest.TestCase):
         # Call the method we are testing.
         multiprocess_update_all(processes=3)
 
-        test_network_app_mappers = list(AdNetworkMapperManager.
-                get_mappers(account))
-        print 'App Mapper\'s len: %d' % len(test_network_app_mappers)
-        assert len(test_network_app_mappers) > 0
+        mappers = list(AdNetworkMapperManager.get_mappers(account))
+        print 'App Mapper\'s len: %d' % len(mappers)
+        assert len(mappers) > 0
 
         assert AdNetworkManagementStats.all().count() == len(
                 AD_NETWORK_NAMES.keys())
 
-        # TODO: figure out a way to verify data that spawned processes created
+    def multiprocess_multi_day_update_all_mptest(self):
+        # Create default models.
+        account = load_test_data(include_iad=INCLUDE_IAD)
+
+        four_days_ago = date.today() - timedelta(days=4)
+        two_days_ago = date.today() - timedelta(days=2)
+
+        # Call the method we are testing.
+        multiprocess_update_all(start_day=four_days_ago, end_day=two_days_ago,
+                processes=3)
+
+        mappers = list(AdNetworkMapperManager.
+                get_mappers(account))
+        print 'App Mapper\'s len: %d' % len(mappers)
+        assert len(mappers) > 0
+
+        assert AdNetworkManagementStats.all().count() == len(AD_NETWORK_NAMES.
+                keys()) * ((two_days_ago - four_days_ago).days + 1)
 

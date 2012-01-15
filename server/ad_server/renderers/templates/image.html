@@ -12,9 +12,10 @@
     </style>
     {# TODO: WTF Android centering is screwed up with the 'center' style #}
     {# TODO: More centering woes, let's just get rid of it #}
-    {# <div class="{% if os == 'ios' %}center{% endif %}">     #}
+    <div class="{% if os == 'ios' and version >= 7 %}center{% endif %}">
     <div style="text-align: center">
         {% if creative.url %}<a href="{{creative.url|safe}}" target="_top">{% endif %}<img src="{{image_url}}" width="{{w}}" height="{{h}}"/>{% if creative.url %}</a>{% endif %}
+    </div>
     </div>
     {{ block.super }}
   {% endblock %}

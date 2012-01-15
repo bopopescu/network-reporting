@@ -1337,8 +1337,6 @@ class MarketplaceIndexHandler(RequestHandler):
         except AttributeError:
             blind = False
 
-        logging.warn(network_config.filter_level)
-
         return render_to_response(self.request,
                                   "advertiser/marketplace_index.html",
                                   {

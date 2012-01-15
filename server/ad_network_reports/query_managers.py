@@ -413,7 +413,8 @@ class AdNetworkStatsManager(CachedQueryManager):
                                     'apps_without_pub_ids': apps_for_network}
                     else:
                         data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
-                                'apps_without_pub_ids': apps_for_network}
+                                'apps_without_pub_ids': apps_for_network,
+                                'turned_off': True}
 
             # Sort alphabetically
             data_list = sorted(data_dict.items(), key=lambda data_tuple:
@@ -571,6 +572,10 @@ def create_fake_data(account=None):
 
     # Make sure this isn't used on production datastore.
     if settings.DEBUG:
+        account.ad_network_email = True
+        account.ad_network_recipients = ['magic_monkey@mopub.com']
+        account.put()
+
         last_90_days = date_magic.gen_date_range(90)
 
         app = App(account=account,

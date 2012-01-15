@@ -11,6 +11,7 @@ from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
 from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
 from django.utils import simplejson
 from django.shortcuts import redirect
 from reporting.models import StatsModel
@@ -86,12 +87,23 @@ class AdNetworkReportIndexHandler(RequestHandler):
             form.ad_network = name
             forms.append(form)
 
+        # self.account can't access ad_network_* data
+        account = db.get(self.account.key())
+        # Settings
+        settings = {}
+        settings['email'] = account.ad_network_email
+        if account.ad_network_recipients:
+            settings['recipients'] = ', '.join(account.ad_network_recipients)
+        else:
+            settings['recipients'] = ', '.join(account.emails)
+
         return render_to_response(self.request,
               'ad_network_reports/ad_network_reports_index.html',
               {
                   'start_date' : days[0],
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
+                  'settings': settings,
                   'account_key' : str(self.account.key()),
                   'aggregates' : aggregates,
                   'daily_stats' : simplejson.dumps(
@@ -107,6 +119,25 @@ class AdNetworkReportIndexHandler(RequestHandler):
 @login_required
 def ad_network_reports_index(request, *args, **kwargs):
     return AdNetworkReportIndexHandler()(request, *args, **kwargs)
+
+class AdNetworkSettingsHandler(RequestHandler):
+    def post(self):
+        email = self.request.POST.get('email', False) and True
+        recipients = [recipient.strip() for recipient in self.request.POST.get(
+            'recipients').split(',')]
+
+        # Don't send a put to the db unless something changed
+        if email != self.account.ad_network_email or recipients != \
+                self.account.ad_network_recipients:
+            self.account.ad_network_email = email
+            self.account.ad_network_recipients = recipients
+            self.account.put()
+
+        return TextResponse('done')
+
+@login_required
+def ad_network_settings(request, *args, **kwargs):
+    return AdNetworkSettingsHandler()(request, *args, **kwargs)
 
 class ExportFileHandler(RequestHandler):
     def get(self,

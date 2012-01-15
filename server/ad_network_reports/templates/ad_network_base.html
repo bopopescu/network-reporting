@@ -6,13 +6,16 @@
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li class="active"><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
+
 {% block pageTitle %}
   <div class="breadcrumb">
     <a class="linkIcon breadcrumb-back" href="/ad_network_reports/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Ad Network Revenue Report</a>
     <h1>{{app_name}} on {{ad_network_name}}</h1>
   </div>
 {% endblock pageTitle %}
-{% block titleBarRight %}{% endblock titleBarRight %}
+
+{% block titleBarRight %}
+{% endblock titleBarRight %}
 
 {% block extraScripts %}
   <script type="text/javascript">
@@ -137,44 +140,51 @@
   {% include "partials/datecontrols.html" %}
 {% endblock dateButtons %}
 
+
 {% block content %}
-  {% block graph %}
-  {% if show_graph %}
-    <section class="offset nomargin" id="dashboard-stats">
-      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-      <div class="stats clearfix">
-        <div class="stats-breakdown">
-          <table class="sortable">
-            <tbody>
-              <tr class="active" id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner">{{ aggregates.revenue|currency }}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-              </tr>
-              <tr id="stats-breakdown-impressions">
-                <td class="stats-breakdown-value today"><span class="inner">{{aggregates.impressions|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-              </tr>
-              <tr id="stats-breakdown-clicks">
-                <td class="stats-breakdown-value today"><span
-                        class="inner"><span class="muted
-                            unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-              </tr>
-            </tbody>
-          </table>
+
+  {% block preContent %}
+  {% endblock preContent %}
+
+  <section id="graph">
+    {% block graph %}
+      {% if show_graph %}
+        <section class="offset nomargin" id="dashboard-stats">
+          <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+          <div class="stats clearfix">
+            <div class="stats-breakdown">
+              <table class="sortable">
+                <tbody>
+                  <tr class="active" id="stats-breakdown-revenue">
+                    <td class="stats-breakdown-value today"><span class="inner">{{ aggregates.revenue|currency }}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-impressions">
+                    <td class="stats-breakdown-value today"><span class="inner">{{aggregates.impressions|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-clicks">
+                    <td class="stats-breakdown-value today"><span
+                            class="inner"><span class="muted
+                                unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+          </div>
+        </section>
+          <div style="float:right">Data shown is from the ad networks and may change. <a target="_blank" href="http://help.mopub.com/customer/portal/articles/273229-ad-network-revenue-reporting">Learn more</a></div>
+      {% else %}
+        <div class="alert-message block-message">
+          MoPub can automatically pull ad network revenue data from most ad networks that are supported. To enable reporting for each network, enter your login credentials for the ad networks below.  MoPub will pull data each morning for the previous day.<br/>
+          <br/>
+          <b>Note:</b> Your credentials will be encrypted on the MoPub servers to ensure security.  These credentials will <b>only</b> be used for reading your data and displaying it to you and will not be used for any other purposes. This service is optional and only used for reporting your data.  If you choose not to use this, it will not impact the performance of your apps in MoPub.
         </div>
-        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
-      </div>
-    </section>
-      <div style="float:right">Data shown is from the ad networks and may change. <a target="_blank" href="http://help.mopub.com/customer/portal/articles/273229-ad-network-revenue-reporting">Learn more</a></div>
-  {% else %}
-    <div class="alert-message block-message">
-      MoPub can automatically pull ad network revenue data from most ad networks that are supported. To enable reporting for each network, enter your login credentials for the ad networks below.  MoPub will pull data each morning for the previous day.<br/>
-      <br/>
-      <b>Note:</b> Your credentials will be encrypted on the MoPub servers to ensure security.  These credentials will <b>only</b> be used for reading your data and displaying it to you and will not be used for any other purposes. This service is optional and only used for reporting your data.  If you choose not to use this, it will not impact the performance of your apps in MoPub.
-    </div>
-  {% endif %}
-  {% endblock graph %}
+      {% endif %}
+    {% endblock graph %}
+  </section>
 
   {% block innerContent %}
 

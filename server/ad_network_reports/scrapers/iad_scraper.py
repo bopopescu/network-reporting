@@ -18,6 +18,7 @@ from common.utils.BeautifulSoup import BeautifulSoup
 from datetime import date, datetime, timedelta
 from pyvirtualdisplay import Display
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
 
 from HTMLParser import HTMLParser
 
@@ -28,6 +29,7 @@ class IAdScraper(Scraper):
     STATS_PAGE = 'https://iad.apple.com/itcportal/#app_homepage'
     LOGIN_TITLE = 'iTunes Connect - iAd Network Sign In'
     APPS_TITLE = 'My Apps'
+    TERMS_TITLE = 'Terms of Use'
     SITE_ID_IDENTIFIER = '&siteid='
     # We have to collect the ctr in order to calculate the number of clicks
     APP_STATS = ('revenue', 'requests', 'impressions', 'ctr')
@@ -44,7 +46,6 @@ class IAdScraper(Scraper):
         self.disp.stop()
 
     def authenticate(self):
-        # Must have selenium running or something
         self.disp = Display(visible = 0, size = (1024, 768))
         self.disp.start()
         self.browser = webdriver.Chrome('/usr/bin/chromedriver')
@@ -76,9 +77,21 @@ class IAdScraper(Scraper):
             time.sleep(3)
             count += 1
 
-        if self.browser.title == self.LOGIN_TITLE:
-            raise UnauthorizedLogin(self.browser.find_element_by_css_selector(
-                'span.dserror').text)
+
+        try:
+            # we have to wait for the page to refresh, the last thing that
+            # seems to be updated is the title
+            WebDriverWait(self.browser, 15).until(lambda browser :
+                    browser.title == self.APPS_TITLE)
+        except Exception:
+            if self.browser.title == self.LOGIN_TITLE:
+                raise UnauthorizedLogin("Username or password are incorrect")
+            elif self.browser.title == self.TERMS_TITLE:
+                raise UnauthorizedLogin("You must agree to updated terms of use "
+                        "at https://iad.apple.com/itcportal/#app_homepage")
+            else:
+                raise
+
         # We should now have cookies
 
     def test_login_info(self):
@@ -216,10 +229,10 @@ class IAdScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    #NC.username = 'chesscom'
-    #NC.password = 'Faisal1Chess'
-    NC.username = 'salesreports@optimesoftware.com'
-    NC.password = 'Sales2012'
+    NC.username = 'chesscom'
+    NC.password = 'Faisal1Chess'
+    #NC.username = 'benjamesward+mopub@gmail.com'
+    #NC.password = 'BhFAZT36QGiZFJEyJ6Dm'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
     print SCRAPER.get_site_stats(date(2011,11,30))

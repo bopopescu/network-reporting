@@ -23,3 +23,5 @@ echo "copying 'app.frontend.yaml' -> 'app.yaml'"
 cp app.frontend.yaml app.yaml
 
 popd
+echo "deleting temporary files"
+rm -rf /tmp/server

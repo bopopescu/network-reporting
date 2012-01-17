@@ -87,7 +87,3 @@ handlers:
 
 - url: /offline/.*
   script: reporting/aws_logging/blob_server.py
-
-- url: /.*
-  script: main.py
-  secure: optional

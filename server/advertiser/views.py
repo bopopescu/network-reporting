@@ -1,11 +1,14 @@
 from django.conf import settings
 
+from google.appengine.api import urlfetch
+
 from urllib import urlencode
+import urllib2
 from copy import deepcopy
 
 import base64, binascii
 from google.appengine.api import users, images, files
-from google.appengine.api.urlfetch import fetch
+
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
@@ -1510,7 +1513,26 @@ def marketplace_blindness_change(request, *args, **kwargs):
     return MarketplaceBlindnessChangeHandler()(request, *args, **kwargs)
 
 
+class MarketplaceCreativeProxyHandler(RequestHandler):
+    """
+    Ajax hander that proxies requests for creative data from mongo.
+    This is done so that we can use SSL (users will get https errors
+    when we hit mongo directly over http).
+    """
+    def get(self):
 
+        logging.warn('\n\n\n\n\n\n')
+        url = "http://mpx.mopub.com/stats/creatives"
+        query = "?" + "&".join([key + '=' + value for key, value in self.request.GET.items()])
+        url += query
+        response = urlfetch.fetch(url, method=urlfetch.GET, deadline=20).content
+        logging.warn(response)
+        return HttpResponse(response)
+
+
+@login_required
+def marketplace_creative_proxy(request, *args, **kwargs):
+    return MarketplaceCreativeProxyHandler()(request, *args, **kwargs)
 
 # Network Views
 # At some point in the future, these *could* be branched into their own django app

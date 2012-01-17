@@ -573,6 +573,8 @@ var mopub = mopub || {};
      * Makes the Creatives Performance tab's datatable
      */
     function makeCreativePerformanceTable (pub_id, blocklist, start_date, end_date) {
+        var creative_data_url = window.location.origin + "/campaigns/marketplace/creatives/";
+        logging.warn(creative_data_url);
         var table = $("#report-table").dataTable({
             bProcessing: true,
             // Use jQueryUI to style the table
@@ -598,7 +600,8 @@ var mopub = mopub || {};
             // Sort by revenue descending from the start
             aaSorting: [[2,'desc']],
             // Endpoint to fetch table data
-            sAjaxSource: "http://mpx.mopub.com/stats/creatives",
+            //sAjaxSource: "http://mpx.mopub.com/stats/creatives",
+            sAjaxSource: creative_data_url,
             // Tell datatables how to fetch and parse server data
             fnServerData: function( sUrl, aoData, fnCallback ) {
                 $.ajax({

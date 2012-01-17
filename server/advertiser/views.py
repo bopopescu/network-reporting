@@ -3,7 +3,7 @@ from django.conf import settings
 from google.appengine.api import urlfetch
 
 from urllib import urlencode
-import urllib2
+
 from copy import deepcopy
 
 import base64, binascii
@@ -1520,13 +1520,11 @@ class MarketplaceCreativeProxyHandler(RequestHandler):
     when we hit mongo directly over http).
     """
     def get(self):
-
-        logging.warn('\n\n\n\n\n\n')
         url = "http://mpx.mopub.com/stats/creatives"
         query = "?" + "&".join([key + '=' + value for key, value in self.request.GET.items()])
         url += query
         response = urlfetch.fetch(url, method=urlfetch.GET, deadline=20).content
-        logging.warn(response)
+
         return HttpResponse(response)
 
 

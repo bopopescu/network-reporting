@@ -545,16 +545,25 @@ class AdNetworkStatsManager(CachedQueryManager):
 
 class AdNetworkAggregateManager(CachedQueryManager):
     @classmethod
-    def put_stats(cls,
-                  account,
-                  day,
-                  stats_list,
-                  network=None,
-                  app=None):
-        stats = cls.find_or_create(account, day, network, app)
-        AdNetworkStatsManager.combined_stats(stats,
+    def create_stats(cls,
+                     account,
+                     day,
+                     stats_list,
+                     network=None,
+                     app=None):
+        if network:
+            stats = AdNetworkNetworkStats(account=account,
+                                          ad_network_name=network,
+                                          date=day)
+        elif app:
+            stats = AdNetworkAppStats(account=account,
+                                      application=app,
+                                      date=day)
+        else:
+            raise LookupError("Method needs either an app or a network.")
+        AdNetworkStatsManager.copy_stats(stats,
                 AdNetworkStatsManager.roll_up_stats(stats_list))
-        stats.put()
+        return stats
 
     @classmethod
     def update_stats(cls,
@@ -594,9 +603,9 @@ class AdNetworkAggregateManager(CachedQueryManager):
                                                         app,
                                                         day)
             if create and not stats:
-                    AdNetworkAppStats(account=account,
-                                      application=app,
-                                      date=day)
+                return AdNetworkAppStats(account=account,
+                                         application=app,
+                                         date=day)
             return stats
         raise LookupError("Method needs either an app or a network.")
 

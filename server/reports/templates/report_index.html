@@ -49,7 +49,7 @@
                 do stuff for editing report on the fly
                 {% endcomment %}
                 <th class='dataTable-name'>
-                  {% if report.status != 'Pending' %}
+                  {% if report.data %}
                     <a href='{% url view_report report_key=report.key %}'>{{report.name}}</a>
                   {% else %}
                     {{report.name}}

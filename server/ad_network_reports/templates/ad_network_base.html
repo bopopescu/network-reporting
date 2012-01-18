@@ -50,7 +50,9 @@
             {{start_date.day}});
 
 
-        // populateGraphWithStats({{daily_stats|safe}});
+        {% if daily_stats %}
+          populateGraphWithStats({{daily_stats|safe}});
+        {% endif %}
 
 
         // TODO: put in shared js file with dashboard. Note: latest date allowed in range is yesterday.
@@ -159,15 +161,15 @@
               <table class="sortable">
                 <tbody>
                   <tr class="active" id="stats-breakdown-revenue">
-                    <td class="stats-breakdown-value today"><span class="inner">--</span></td>
+                    <td class="stats-breakdown-value today"><span class="inner">{% if aggregates %}{{aggregates.revenue|currency}}{% else %}--{% endif %}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                   </tr>
                   <tr id="stats-breakdown-impressions">
-                    <td class="stats-breakdown-value today"><span class="inner">--</span></td>
+                    <td class="stats-breakdown-value today"><span class="inner">{% if aggregates %}{{aggregates.impressions|withsep}}{% else %}--{% endif %}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                   </tr>
                   <tr id="stats-breakdown-clicks">
-                    <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">(--)</span> --</span></td>
+                    <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({% if aggregates %}{{aggregates.ctr|percentage}}{% else %}--{% endif %})</span> {% if aggregates %}{{aggregates.clicks|withsep}}{% else %}--{% endif %}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                   </tr>
                 </tbody>

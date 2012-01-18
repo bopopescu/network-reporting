@@ -10,4 +10,4 @@ class BudgetAdvanceWorkerHandler(webapp.RequestHandler):
     def post(self):
         resp = advance_worker(self.request, 
                               key_shard=self.request.get('key_shard'))
-        self.reponse.out.write(resp.content)
+        self.response.out.write(resp.content)

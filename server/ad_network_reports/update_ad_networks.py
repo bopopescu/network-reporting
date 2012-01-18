@@ -237,9 +237,7 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
 
         # Send email informing user that they can now see statistics for the ad
         # network they just signed up for on the ad network index page.
-        emails = ', '.join(getattr(login.account, 'ad_network_emails', []))
-        if not emails:
-            emails = ', '.join(login.account.emails)
+        emails = ', '.join(login.account.emails)
 
         mail.send_mail(sender='olp@mopub.com',
                        reply_to='support@mopub.com',
@@ -407,8 +405,7 @@ def send_emails(day):
     for login in logins_query:
         if login.account.key() != last_account:
             last_account = login.account.key()
-            if login.email or getattr(login.account,
-                    'receive_ad_network_emails', False):
+            if login.account.ad_network_email:
                 mappers = AdNetworkMapperManager.get_mappers(login.account)
                 stats_list = [(mapper, AdNetworkStatsManager. \
                         get_stats_for_mapper_and_days(mapper, (day,))[0]) for
@@ -431,9 +428,7 @@ def send_stats_mail(account, day, stats_list):
     Send email with scrape stats data for the test date organized in a
     table.
     """
-    emails = ', '.join(getattr(account, 'ad_network_emails', []))
-    if not emails:
-        emails = ', '.join(account.emails)
+    emails = ', '.join(getattr(account, 'ad_network_recipients', []))
 
     if emails and stats_list:
         aggregate_stats = AdNetworkStatsManager.roll_up_stats([stats for

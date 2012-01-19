@@ -127,7 +127,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
                   'start_date' : days[0],
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
-                  'show_graph' : (networks and True) or False,
+                  'show_graph' : (apps and True) or False,
                   # Account key needed for form submission to EC2.
                   'settings': settings,
                   'account_key' : str(self.account.key()),

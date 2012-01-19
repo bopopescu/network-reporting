@@ -208,6 +208,20 @@ class AdNetworkLoginManager(CachedQueryManager):
 
 class AdNetworkMapperManager(CachedQueryManager):
     @classmethod
+    def create(cls,
+               network,
+               pub_id,
+               login,
+               app):
+        """
+        Create an AdNetworkAppMapper for the given input data
+        """
+        AdNetworkAppMapper(ad_network_name=network,
+                           publisher_id=pub_id,
+                           ad_network_login=login,
+                           application=app).put()
+
+    @classmethod
     def find_app_for_stats(cls,
                            publisher_id,
                            login_credentials):

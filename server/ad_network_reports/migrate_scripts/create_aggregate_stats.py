@@ -6,7 +6,7 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
 from ad_network_reports.query_managers import AdNetworkStatsManager, \
         AdNetworkLoginManager
 from common.utils import date_magic
-from common.utils.helpers import get_all
+from common.utils.helpers import get_all, put_all
 
 from datetime import date, datetime, timedelta
 from google.appengine.ext import db
@@ -32,14 +32,14 @@ if mode == Modes.NAIVE:
     print "Getting all logins"
     # Get all logins
     logins_dict = {}
-    logins = get_all(AdNetworkLoginCredentials, limit=10000)
+    logins = get_all(AdNetworkLoginCredentials)
     for login in logins:
         logins_dict[login.key()] = login
 
     print "Getting all mappers"
     # Get all mappers
     mappers_dict = {}
-    mappers = get_all(AdNetworkAppMapper, limit=10000)
+    mappers = get_all(AdNetworkAppMapper)
     for mapper in mappers:
         mappers_dict[mapper.key()] = mapper
 
@@ -148,7 +148,7 @@ if mode == Modes.NAIVE:
 
     print "Putting all stats to the db"
     # Put all stats
-    db.put(all_stats)
+    put_all(all_stats)
 
 
 #2

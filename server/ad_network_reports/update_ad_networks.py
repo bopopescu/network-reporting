@@ -54,8 +54,6 @@ from google.appengine.ext import db
 TESTING = False
 
 MAX = 1000
-BUFFER = 200
-
 
 def multiprocess_update_all(start_day=None, end_day=None, email=False,
         processes=1):
@@ -78,14 +76,11 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
     def get_all_accounts_with_logins():
         logins_query = AdNetworkLoginManager.get_all_logins(
                 order_by_account=True)
-        logins = logins_query.fetch(MAX)
         last_account = None
-        while logins:
-            for login in logins:
-                if login.account.key() != last_account:
-                    last_account = login.account.key()
-                    yield login.account
-            logins = bulk_get(login_query, login)
+        for login in logins_query:
+            if login.account.key() != last_account:
+                last_account = login.account.key()
+                yield login.account
 
     days = date_magic.gen_days(start_day, end_day)
 
@@ -161,6 +156,9 @@ def update_account_stats(account, day, email):
             # Create network roll up stats
             aggregate_stats.append(AdNetworkAggregateManager.create_stats(
                 login.account, day, stats_list, network=login.ad_network_name))
+
+        # Put changes to login credentials
+        db.put(account.login_credentials)
 
         app_stats = {}
         apps_by_key = {}

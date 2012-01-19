@@ -208,10 +208,12 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
     start_day = start_day or yesterday
     end_day = end_day or yesterday
 
+    # Collect stats
     stats_list = []
     for day in date_magic.gen_days(start_day, yesterday):
         stats_list += update_login_stats(login, day, from_check=True)
     login.put()
+
 
     if stats_list:
         # Flush stats to db
@@ -232,7 +234,6 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
                                % AD_NETWORK_NAMES[login.ad_network_name])
 
 
-# TODO: Create mapper when publisher id is entered in account settings
 def update_login_stats(login, day, management_stats=None, from_check=False,
         logger=None):
     """

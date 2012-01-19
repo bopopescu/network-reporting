@@ -42,14 +42,15 @@ def prompt_before_executing(original):
         puts('Do you want to call %s with args: %s' % (original.func_name, str(args)))
         answer = raw_input("(y/n) >> ")
         if answer == 'y':
-            original(*args, **kwargs)
+            result = original(*args, **kwargs)
+            print "result was ", result
+            return result
         else:
             puts('Skipped %s' % (original.func_name,))
     return inner
 
 
 # Git stuff
-@prompt_before_executing
 def git(cmd, git_dir=None):
     """
     Calls a git command `cmd` from the repository in `git_dir`.
@@ -153,6 +154,7 @@ def git_branch_name():
     # HACK: the current branch name has a * before its name. I assume this
     # will aways be sorted first alphabetically.
     branches.sort()
+
     return branches[0].lstrip("* ")
 
 
@@ -349,7 +351,7 @@ def main():
 
         except Exception, error:
             puts(colored.red("Deploy failed."))
-            puts(colored.red(error))
+            puts(colored.red(str(error)))
 
 
 if __name__ == "__main__":

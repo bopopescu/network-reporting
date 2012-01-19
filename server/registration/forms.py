@@ -144,6 +144,12 @@ class MPRegistrationForm(MPGoogleRegistrationForm):
     password1 = forms.CharField(widget=mpwidgets.MPPasswordInput,)
     password2 = forms.CharField(widget=mpwidgets.MPPasswordInput,)
 
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if User.get_by_email(email):
+            raise forms.ValidationError('This email address has already been used to register an account.')
+
+
     def save(self, domain_override=""):
         """
         Create the new ``User`` and ``RegistrationProfile``, and

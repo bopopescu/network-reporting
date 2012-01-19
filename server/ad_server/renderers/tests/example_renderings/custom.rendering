@@ -4,6 +4,15 @@
   
   
     
+    <style type='text/css'>
+      .center {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          margin-left: -0px !important;
+          margin-top: -0px !important;
+          }
+    </style>
   
   
   <script type="text/javascript">
@@ -64,11 +73,13 @@
       }
     }, false);
   </script>
-  
+
   </head>
   <body style="margin:0;padding:0;">
     
+  <div class="">
   fake data
+  </div>
   <script type="text/javascript">
     // just call mopubFinishLoad upon window's load
     if (typeof htmlWillCallFinishLoad == "undefined" || !htmlWillCallFinishLoad) { 

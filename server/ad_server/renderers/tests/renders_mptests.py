@@ -10,7 +10,6 @@ import logging
 #### SOMETHING IS BROKEN
 RESET_EXAMPLE = False
 
-
 sys.path.append(os.environ['PWD'])
 import unittest
 

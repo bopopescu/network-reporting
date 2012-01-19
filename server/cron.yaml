@@ -3,6 +3,7 @@ cron:
   url: /admin/sfdc/
   schedule: every 10 minutes
   timezone: America/Los_Angeles
+  target: admin-prep
 
 - description: Advance the budget timeslices
   url: /m/budget/advance/

@@ -22,6 +22,7 @@ class MoceanServerSide(ServerSide):
         data = {'zone': self.get_pub_id(),
                 'ip': self.get_ip(),
                 'ua': self.get_user_agent(),
+                'format': 'html',
                 }
               
         return urllib.urlencode(data)

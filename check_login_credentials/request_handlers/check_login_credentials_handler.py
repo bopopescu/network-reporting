@@ -28,7 +28,7 @@ from google.appengine.api import mail
 from ad_network_reports.ad_networks import AD_NETWORKS, AdNetwork
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AdNetworkReportManager, \
-        AdNetworkLoginCredentialsManager
+        AdNetworkLoginManager
 from ad_network_reports.update_ad_networks import update_login_stats_for_check
 
 from common.utils.connect_to_appengine import setup_remote_api
@@ -99,8 +99,8 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                                    "network: " + ad_network)
                 wants_email = self.get_argument('email', False) and True
                 accounts_login_credentials = set([creds.ad_network_name for
-                    creds in AdNetworkLoginCredentialsManager. \
-                            get_login_credentials(account)])
+                    creds in AdNetworkLoginManager.get_login(
+                        account)])
                 login_credentials = AdNetworkReportManager. \
                         create_login_credentials_and_mappers(account=account,
                                 ad_network_name=

@@ -146,8 +146,10 @@ class MPRegistrationForm(MPGoogleRegistrationForm):
 
     def clean_email(self):
         email = self.cleaned_data['email']
+        # Check to make sure this hasn't been registered yet
         if User.get_by_email(email):
             raise forms.ValidationError('This email address has already been used to register an account.')
+        return email
 
 
     def save(self, domain_override=""):

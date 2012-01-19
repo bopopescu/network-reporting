@@ -1,6 +1,9 @@
 """
 Call this script when you want to deploy frontend code.
 """
+# TODO: Figure out why envoy fucks up commands that have messages
+#       like git tag and git commit
+
 import sys
 import os
 import datetime
@@ -31,25 +34,28 @@ except ImportError:
 
 
 
-def prompt_before_executing(original):
+def prompt_before_executing(original, override=None):
     """
     Decorator that prompts the user before calling the function.
     Useful for debugging, you can run the whole script and pick and choose
     which individual steps you want to be run without having to comment
-    stuff out.
+    stuff out. If the user selects 'n', `override` will be returned if
+    it's set (some functions expect a return value).
     """
     def inner(*args, **kwargs):
         puts('Do you want to call %s with args: %s' % (original.func_name, str(args)))
         answer = raw_input("(y/n) >> ")
         if answer == 'y':
-            original(*args, **kwargs)
+            result = original(*args, **kwargs)
+            print "result was ", result
+            return result
         else:
             puts('Skipped %s' % (original.func_name,))
+            return override
     return inner
 
 
 # Git stuff
-@prompt_before_executing
 def git(cmd, git_dir=None):
     """
     Calls a git command `cmd` from the repository in `git_dir`.
@@ -65,12 +71,12 @@ def git(cmd, git_dir=None):
     return result
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_fetch():
     return git('fetch')
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_fetch_tags():
     """
     Pulls the tag list from origin.
@@ -78,13 +84,13 @@ def git_fetch_tags():
     return git('fetch --tags')
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_push():
     current_branch_name = git_branch_name()
     return git('push origin ' + current_branch_name)
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_push_tag(tag_name):
     """
     Pushes the tag list to origin.
@@ -92,7 +98,7 @@ def git_push_tag(tag_name):
     return git('push origin ' + tag_name)
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_list_deploy_tags():
     """
     Returns the list of deploy tags.
@@ -101,7 +107,7 @@ def git_list_deploy_tags():
     deploy_tags = git("tag -l deploy-*").std_out.strip().split("\n")
     return deploy_tags
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_tag_current_deploy():
     """
     Tags the repo with a new deploy name.
@@ -123,17 +129,27 @@ def git_tag_current_deploy():
     message = "Deployed by %s on %s." % (git_get_user(), datetime.datetime.utcnow())
 
     # Tag the commit
-    result = git("tag " + new_deploy_tag)
+    #command = 'tag -m \'%s\' -a %s' % (message, new_deploy_tag)
+    #result = git(command)
+
+    # XXX: envoy fucks this up, probably because it's not
+    # properly escaping something before executing. Using
+    # subprocess.call instead.
+    from subprocess import call
+    call(["git", "tag", "-m", message, "-a", new_deploy_tag])
 
     return new_deploy_tag
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_commit(message):
-    return git('commit -a -m ' + message)
+    from subprocess import call
+
+    call(["git", "commit", "-a", "-m", message])
+    #return git('commit -a -m "%s"' % message)
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_get_user():
     """
     Gets the git username, useful for lighthouse messages.
@@ -142,7 +158,7 @@ def git_get_user():
     return username
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_branch_name():
     """
     Gets the name of the current git branch.
@@ -153,10 +169,11 @@ def git_branch_name():
     # HACK: the current branch name has a * before its name. I assume this
     # will aways be sorted first alphabetically.
     branches.sort()
+
     return branches[0].lstrip("* ")
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_get_logs_for_changelog():
     """
     Gets a list of abbreviated commits since the last deploy.
@@ -176,7 +193,7 @@ def git_get_logs_for_changelog():
     return log.std_out.split('\n')
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_most_recent_commit_id():
     """
     Gets the commit id of the most recent commit. Useful in getting
@@ -186,7 +203,7 @@ def git_most_recent_commit_id():
     return git('log').std_out.strip().split('\n')[0].replace("commit ", "")
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_list_resolved_tickets():
     """
     Gets a list of resolved ticket numbers by looking between
@@ -212,7 +229,7 @@ def git_list_resolved_tickets():
     return fixed_tickets
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def launch_deploy_process(server=None):
     """
     Launches the appengine deploy process
@@ -224,7 +241,7 @@ def launch_deploy_process(server=None):
 
     server_path = os.path.join(PWD, '..')
 
-    envoy.run('cp ' + server_path + '/frontend.yaml ' + server_path + '/app.yaml')
+    envoy.run('cp ' + server_path + '/app.frontend.yaml ' + server_path + '/app.yaml')
 
     # The user will need to input a username and password for GAE
     # during the deploy process. We use subprocess.call because it
@@ -234,7 +251,7 @@ def launch_deploy_process(server=None):
     envoy.run('rm ' + server_path + '/app.yaml')
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def write_changelog(deploy_tag, fixed_tickets, new_commits):
     """
     Writes a markdown-parseable changelog to the CHANGELOG
@@ -349,7 +366,7 @@ def main():
 
         except Exception, error:
             puts(colored.red("Deploy failed."))
-            puts(colored.red(error))
+            puts(colored.red(str(error)))
 
 
 if __name__ == "__main__":

@@ -67,17 +67,16 @@ def git(cmd, git_dir=None):
         git_dir = "../.."
     git_dir = os.path.join(PWD, git_dir)
     command = "git --git-dir=" + git_dir + "/.git " + cmd
-    print command
     result = envoy.run(command)
     return result
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_fetch():
     return git('fetch')
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_fetch_tags():
     """
     Pulls the tag list from origin.
@@ -85,13 +84,13 @@ def git_fetch_tags():
     return git('fetch --tags')
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_push():
     current_branch_name = git_branch_name()
     return git('push origin ' + current_branch_name)
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_push_tag(tag_name):
     """
     Pushes the tag list to origin.
@@ -99,7 +98,7 @@ def git_push_tag(tag_name):
     return git('push origin ' + tag_name)
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_list_deploy_tags():
     """
     Returns the list of deploy tags.
@@ -108,7 +107,7 @@ def git_list_deploy_tags():
     deploy_tags = git("tag -l deploy-*").std_out.strip().split("\n")
     return deploy_tags
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_tag_current_deploy():
     """
     Tags the repo with a new deploy name.
@@ -142,7 +141,7 @@ def git_tag_current_deploy():
     return new_deploy_tag
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_commit(message):
     from subprocess import call
 
@@ -150,7 +149,7 @@ def git_commit(message):
     #return git('commit -a -m "%s"' % message)
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_get_user():
     """
     Gets the git username, useful for lighthouse messages.
@@ -159,7 +158,7 @@ def git_get_user():
     return username
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_branch_name():
     """
     Gets the name of the current git branch.
@@ -174,7 +173,7 @@ def git_branch_name():
     return branches[0].lstrip("* ")
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_get_logs_for_changelog():
     """
     Gets a list of abbreviated commits since the last deploy.
@@ -194,7 +193,7 @@ def git_get_logs_for_changelog():
     return log.std_out.split('\n')
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_most_recent_commit_id():
     """
     Gets the commit id of the most recent commit. Useful in getting
@@ -204,7 +203,7 @@ def git_most_recent_commit_id():
     return git('log').std_out.strip().split('\n')[0].replace("commit ", "")
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def git_list_resolved_tickets():
     """
     Gets a list of resolved ticket numbers by looking between
@@ -230,7 +229,7 @@ def git_list_resolved_tickets():
     return fixed_tickets
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def launch_deploy_process(server=None):
     """
     Launches the appengine deploy process
@@ -242,7 +241,7 @@ def launch_deploy_process(server=None):
 
     server_path = os.path.join(PWD, '..')
 
-    envoy.run('cp ' + server_path + '/frontend.yaml ' + server_path + '/app.yaml')
+    envoy.run('cp ' + server_path + '/app.frontend.yaml ' + server_path + '/app.yaml')
 
     # The user will need to input a username and password for GAE
     # during the deploy process. We use subprocess.call because it
@@ -252,7 +251,7 @@ def launch_deploy_process(server=None):
     envoy.run('rm ' + server_path + '/app.yaml')
 
 
-@prompt_before_executing
+#@prompt_before_executing
 def write_changelog(deploy_tag, fixed_tickets, new_commits):
     """
     Writes a markdown-parseable changelog to the CHANGELOG

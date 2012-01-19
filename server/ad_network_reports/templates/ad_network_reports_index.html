@@ -1,15 +1,45 @@
 {% extends "ad_network_base.html" %}
 {% load filters %}
 
-{% block adNetworkTitle %}
-{% endblock %}
-
 {% block pageTitle %}
   <div class="breadcrumb">
     <a class="linkIcon breadcrumb-back" href="/campaigns/networks/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
     <h1>Ad Network Revenue Report</h1>
   </div>
 {% endblock pageTitle %}
+
+{% block titleBarRight %}
+  <span class="titlebar-right">
+    <a class="button" id="network-settingsButton" href="#">Edit ad network settings</a>
+  </span>
+{% endblock titleBarRight %}
+
+{% block preContent %}
+  <section id="network-settingsForm" class="hidden">
+    <div>
+      <form accept-charset="ascii" id="networkForm" class="settingsForm">
+        <fieldset id="networkForm-details" class="alt">
+          <div id="settings-form-message" class="hidden alert-message block-message warning"></div>
+          <div>
+            <dl class="formFields" style="margin:0">
+              <dt> E-mail: </dt>
+              <dd> <input name="email" type="checkbox" {% if settings.email %} checked="true" {% endif %}/> &nbsp;Send me a daily ad network revenue report</dd>
+              <dt> Recipients: </dt>
+              <dd>
+                <textarea name="recipients" rows="3" cols="80">{{settings.recipients}}</textarea>
+              </dd>
+            </dl>
+          </div>
+          <div class="form-submit" style="clear:both;">
+            <span class="hidden" id="networkSettingsForm-loading"><img src="/images/loading2.gif"/></span>
+            <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-cancel">Cancel</a></span>
+            <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-submit">Save</a></span>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+{% endblock preContent %}
 
 {% block innerContent %}
   <section id="dashboard-apps">
@@ -131,7 +161,7 @@
                 MoPub received a response for the following apps. Make sure these
                 apps are properly set up in MoPub to view the reports (the MoPub
                 app names exactly match the iAd app names and the iTunes URLs
-                are properly enetered for the apps).
+                are properly entered for the apps).
               {% else %}
                 MoPub received a response for the following ad networks IDs.
                 Make sure these apps are properly set up in MoPub to view the reports.
@@ -144,9 +174,9 @@
         </dl>
         <form class="loginCredentials" id="form-{{network.name}}" autocomplete="off">
           <fieldset>
-              <h2>{{network.pretty_name}} Credentials{% if network.name == "admob" or network.name == "inmobi" %} <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% ifequal network.name "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endifequal %}">(Learn more)</a> {% endif %}</h2>
+              <h2>{{network.pretty_name}} Credentials{% if network.name == ADMOB or network.name == INMOBI %} <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% ifequal network.name ADMOB %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endifequal %}">(Learn more)</a> {% endif %}</h2>
               <dl class="formFields thin" style="margin:0">
-                  {% ifequal network.name "inmobi" %}
+                  {% if network.name == INMOBI %}
                     <dt class="wide"> Access ID: </dt>
                     <dd class="thinner">
                       <input type="text" name="{{network.name}}-username"
@@ -162,30 +192,31 @@
                     </dd>
 
                   {% else %}
-                      {% ifequal network.name "mobfox" %}
+                      {% if network.name == MOBFOX %}
+                        {% if network.state == LoginStates.NOT_SETUP %}
+                          Click 'update' to turn on MobFox revenue reporting.
+                        {% else %}
+                          MobFox revenue reporting is turned on.
+                        {% endif %}
                       {% else %}
                         <dt class="wide"> Username: </dt>
                         <dd class="thinner"> <input type="text" name="{{network.name}}-username" id="id_username" class="input-text input-text-half-width" value="{{network.form.initial.username}}"> {{network.form.username.errors}}</dd>
 
-                        <dt class="wide">{% ifequal network.name "admob" %} API {% endifequal %}Password: </dt>
+                        <dt class="wide">{% ifequal network.name ADMOB %} API {% endifequal %}Password: </dt>
                         <dd class="thinner"> <input type="password" name="{{network.name}}-password"  id="id_password" class="input-text input-text-half-width" value="{{network.form.initial.password}}"> 
                         {{network.form.password.errors}}
                         </dd>
-                      {% endifequal %}
-                  {% endifequal %}
+                      {% endif %}
+                  {% endif %}
 
 
-                  {% if network.name == "admob" %}
+                  {% if network.name == ADMOB %}
                     <dt class="wide"> API Key: </dt>
                     <dd class="thinner"> <input type="text" name="admob-client_key"
                     id="id_admob-client_key" class="input-text
                     input-text-half-width" value="{{network.form.initial.client_key}}"></dd>
                   {% endif %}
 
-                  <dt>
-                    <input name="email" type="checkbox" {% if network.form.initial.email %} checked="{{network.form.initial.email}}" {% endif %} />
-                  </dt>
-                  <dd> Send me daily emails with my network.name stats </dd>
               </dl>
           </fieldset>
         </form>
@@ -257,7 +288,6 @@
   {% endfor %}
   </div>
   </section>
-
 {% endblock innerContent %}
 
 {% block extraScripts %}
@@ -267,7 +297,7 @@
   </script>
   <script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
   <script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
-  <script type="text/javascript" src="/js/mopub-advertiser.js?v=48"></script>
+  <script type="text/javascript" src="/js/mopub-advertiser.js?v=50"></script>
   <script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=4"></script>
   <script>
     $(function () {

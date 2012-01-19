@@ -1,11 +1,15 @@
 import logging
 
+from account.query_managers import AccountQueryManager
+
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.models import LoginStates
 from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
+        ADMOB, \
+        IAD, \
+        INMOBI, \
         MOBFOX, \
         MOBFOX_PRETTY, \
-        IAD_PRETTY, \
         AdNetworkReportManager, \
         AdNetworkLoginManager, \
         AdNetworkMapperManager, \
@@ -24,6 +28,7 @@ from publisher.query_managers import AppQueryManager, \
 
 from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
 from django.utils import simplejson
 from django.shortcuts import redirect
 
@@ -103,6 +108,16 @@ class AdNetworkReportIndexHandler(RequestHandler):
         apps = [app for app in sorted(apps_with_data.itervalues(), key=lambda
             app: app.identifier)]
 
+        # self.account can't access ad_network_* data
+        account = AccountQueryManager.get_account_by_key(self.account.key())
+        # Settings
+        settings = {}
+        settings['email'] = account.ad_network_email
+        if account.ad_network_recipients:
+            settings['recipients'] = ', '.join(account.ad_network_recipients)
+        else:
+            settings['recipients'] = ', '.join(account.emails)
+
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper
         # for the account all get loaded via Ajax.
@@ -112,19 +127,41 @@ class AdNetworkReportIndexHandler(RequestHandler):
                   'start_date' : days[0],
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
-                  'show_graph' : True,
+                  'show_graph' : (apps and True) or False,
                   # Account key needed for form submission to EC2.
+                  'settings': settings,
                   'account_key' : str(self.account.key()),
                   'networks': networks,
                   'apps': apps,
                   'LoginStates': LoginStates,
+                  'ADMOB': ADMOB,
+                  'IAD': IAD,
+                  'INMOBI': INMOBI,
                   'MOBFOX': MOBFOX,
-                  'IAD': IAD_PRETTY
               })
 
 @login_required
 def ad_network_reports_index(request, *args, **kwargs):
     return AdNetworkReportIndexHandler()(request, *args, **kwargs)
+
+class AdNetworkSettingsHandler(RequestHandler):
+    def post(self):
+        email = self.request.POST.get('email', False) and True
+        recipients = [recipient.strip() for recipient in self.request.POST.get(
+            'recipients').split(',')]
+
+        # Don't send a put to the db unless something changed
+        if email != self.account.ad_network_email or recipients != \
+                self.account.ad_network_recipients:
+            self.account.ad_network_email = email
+            self.account.ad_network_recipients = recipients
+            self.account.put()
+
+        return TextResponse('done')
+
+@login_required
+def ad_network_settings(request, *args, **kwargs):
+    return AdNetworkSettingsHandler()(request, *args, **kwargs)
 
 class ExportFileHandler(RequestHandler):
     def get(self,

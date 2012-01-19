@@ -97,6 +97,69 @@ var mopub = mopub || {};
                   setCookie(name,"",-1);
           }
 
+          // checks if email is valid
+          function isValidEmailAddress(emailAddress) {
+              var pattern = new RegExp(/^(\s*)(("[\w-+\s]+")|([\w-+]+(?:\.[\w-+]+)*)|("[\w-+\s]+")([\w-+]+(?:\.[\w-+]+)*))(@((?:[\w-+]+\.)*\w[\w-+]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][\d]\.|1[\d]{2}\.|[\d]{1,2}\.))((25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\.){2}(25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\]?$)/i);
+              return pattern.test(emailAddress);
+          };
+
+          // taken from mopub-dashboard.js #appEditForm (could be combined)
+          $('#networkSettingsForm-submit')
+            .button({
+              icons: { secondary: "ui-icon-circle-triangle-e" }
+            })
+            .click(function(e) {
+              e.preventDefault();
+                $('#networkSettingsForm-loading').show();
+                $('#settings-form-message').hide();
+
+                // check if all emails are valid
+                var valid = true;
+                var list = $('#network-settingsForm textarea').val().split(',');
+                for (var i = 0; i < list.length; i++) {
+                    if (!isValidEmailAddress(list[i])) {
+                        valid = false;
+                    }
+                }
+
+                if (valid) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/ad_network_reports/settings/',
+                        data : $('#networkForm').serialize(),
+                        success : function(resp) {
+                            $('#networkSettingsForm-loading').hide();
+                        },
+                        error : function(jqXHR, textStatus, errorThrown) {
+                            $('#settings-form-message').html("Couldn't update settings.");
+                            $('#settings-form-message').show();
+                            $('#networkSettingsForm-loading').hide();
+                        }
+                    });
+                    //$('#networkForm').submit();
+                } else {
+                    $('#settings-form-message').html("Please enter a valid email address or a list of valid email addresses.");
+                    $('#settings-form-message').show();
+                    $('#networkSettingsForm-loading').hide();
+                }
+            });
+  
+          $('#networkSettingsForm-cancel')
+            .click(function(e) {
+              e.preventDefault();
+              $('#network-settingsForm').slideUp('fast');
+            });
+            
+          $('#network-settingsButton')
+            .button({ icons: { primary: "ui-icon-wrench" } })
+            .click(function(e) {
+              e.preventDefault();
+              if ($('#network-settingsForm').is(':visible'))
+                $('#network-settingsForm').slideUp('fast');
+              else
+                $('#network-settingsForm').slideDown('fast');
+            });
+
           $('#dashboard-sort-network').click(function () {
               deleteCookie('network-reports-tab');
               //$.cookie('network-reports-tab', null);

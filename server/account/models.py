@@ -199,15 +199,16 @@ class Account(db.Model):
     accepted_mpx_tos = db.BooleanProperty(default=False)
 
     # use MongoDB for realtime stats
-    # ex: Outblaze and Mobipeak have too many apps for GAE realtime stats to handle
+    # ex: Outblaze and Mobipeak have too many apps for GAE realtime stats to
+    # handle
     use_mongodb_stats = db.BooleanProperty(default=True)
 
     # use only mongo, not datastore for storing real time stats
     use_only_mongo = db.BooleanProperty(default=False)
 
     # AdNetworkReports account level settings
-    receive_ad_network_emails = db.BooleanProperty(default=False)
-    ad_network_emails = db.StringListProperty(indexed=False, default=[])
+    ad_network_email = db.BooleanProperty(default=False)
+    ad_network_recipients = db.StringListProperty()
 
     # use only mongo to display realtime stats in UI
     display_mongo = db.BooleanProperty(default=True)
@@ -232,7 +233,8 @@ class PaymentInfo(db.Model):
     """
     Customer payment information for RTB
 
-    If 'paypal' is selected for payment preference, we only need their paypal email.
+    If 'paypal' is selected for payment preference, we only need their paypal
+    email.
 
     us_tax_id and ach_routing_number are only required when country == 'US'
 

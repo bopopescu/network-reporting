@@ -169,7 +169,12 @@
 
   <div class="clearfix tab-section" id="settings">
 
-    <h2> Marketplace Settings </h2>
+    <h2>
+      Marketplace Settings
+      <span id="blindness-save-status">
+        <img id="blindness-spinner" class="hidden" src="/images/icons-custom/spinner-12.gif"></img>
+      </span>
+    </h2>
     <div class="well">
 
       <div class="clearfix" style="width: 380px;">
@@ -186,7 +191,10 @@
           <input id="blindness" class="right" type="checkbox" {% if blind %}checked="checked"{% endif %} {% if not marketplace.active %}disabled="disabled"{% endif %}/>
         </div>
         <div class="left">
-          <p>Prevent Marketplace bidders from seeing your application name and ID.<br/><span class="error"> CAUTION: This may significantly reduce your marketplace revenue.</span></p>
+          <p>
+            Prevent Marketplace bidders from seeing your application name and ID.<br/>
+            <span class="error"> CAUTION: This may significantly reduce your marketplace revenue.</span>
+          </p>
         </div>
       </div>
     </div>
@@ -195,9 +203,43 @@
       The MoPub Marketplace has been turned off. Visit the settings page if you'd like to turn it on again.
     </div>
 
+    <h2>
+      Content Filtering
+      <span id="filter-save-status">
+        <img id="filter-spinner" class="hidden" src="/images/icons-custom/spinner-12.gif"></img>
+      </span>
+    </h2>
+    <div class="well">
+      <p>
+        MoPub can filter ads so that only appropriate ads will be displayed to for your audience.
+        Select the filtering level for your ads below.
+        <a href="#"> Learn More </a>
+      </p>
+
+      <ul id="content_filter_levels">
+        <li>
+          <input type="radio" class="content_level level0" value="strict" name="filter" {% ifequal network_config.filter_level 'strict' %}checked='checked'{% endifequal %} />
+          <strong>Strict</strong> - Only allow ads appropriate for family audiences
+        </li>
+        <li>
+          <input type="radio" class="content_level level1" value="moderate" name="filter" {% ifequal network_config.filter_level 'moderate' %}checked='checked'{% endifequal %} />
+          <strong>Moderate</strong> - Allow ads for general audiences
+        </li>
+        <li>
+          <input type="radio" class="content_level level2" value="low" name="filter" {% ifequal network_config.filter_level 'low' %}checked='checked'{% endifequal %}/>
+          <strong>Low</strong> - Allow ads for mature audiences, including alcohol and dating ads
+        </li>
+        <li>
+          <input type="radio" class="content_level level3" value="none" name="filter" {% ifequal network_config.filter_level 'none' %}checked='checked'{% endifequal %}/>
+          <strong>No filtering</strong> - Allow ads including those with provocative or suggestive imagery.
+          MoPub always blocks illegal or deceptive ads.
+        </li>
+      </ul>
+    </div>
 
     <h2>Blocklist</h2>
     <div class="well">
+      <p> Ads will not be served from domains in your blocklist.</p>
       <div class="clearfix" style="width: 560px;">
         <div id="current_blocklist" class="right">
           <h3> Currently Blocked </h3>
@@ -261,6 +303,7 @@
       MarketplaceController.initializeIndex(bootstrapping_data);
     });
   </script>
+  <script type="text/javascript" src="/js/controllers/marketplace.js?v=1"></script>
 {% endblock extraScripts %}
 
 {% block extraCSS %}

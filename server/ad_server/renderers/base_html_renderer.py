@@ -29,6 +29,18 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         self.html_context = {}
         self._setup_html_context()
         
+    def _get_creative_height(self):
+        """
+        Gets creative height from the creative object
+        """
+        return int(self.creative.height) if self.creative.height else 0
+
+    def _get_creative_width(self):
+        """
+        Gets creative width from the creative object
+        """
+        return int(self.creative.width) if self.creative.width else 0
+
     def _setup_html_context(self):
         """
         Initialize the html specific properties necessary for rendering
@@ -39,7 +51,22 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         self.html_context['impression_url'] = self.impression_url
         self.html_context['is_fullscreen'] = self.adunit.is_fullscreen()
         self.html_context['is_tablet'] = self.adunit.is_tablet()
+
+        creative_height = self._get_creative_height()
+        creative_width = self._get_creative_width()
+
+        self.html_context['w'] = creative_width
+        self.html_context['h'] = creative_height
+        self.html_context['w_divided_2'] = creative_width/2
+        self.html_context['h_divided_2'] = creative_height/2
+
+        self.html_context['os'] = self._get_os_type()
+        self.html_context['use_impression_pixel'] = self.\
+                                                _should_use_impression_pixel()
+        self.html_context['use_center_style'] = self.\
+                                                _should_use_center_style()
         
+    def _get_os_type(self):
         # determine user agent
         # TODO: we probably want to have different iphone and android version
         user_agent = self.client_context.user_agent.lower()
@@ -51,9 +78,22 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
             os_type = 'android'
         else:
             os_type = None
-        self.html_context['os'] = os_type
-        self.html_context['use_impression_pixel'] = self.\
-                                                _should_use_impression_pixel()
+        return os_type
+
+    def _should_use_center_style(self):
+        """
+        Due to SDK changes various version of the mopub client can and/or
+        cannot support centering of smaller creatives inside of fullscreen
+        adunits.
+        """
+        os_type = self._get_os_type()
+        # if the creative is explicity 'full' ,
+        # creative_height = creative_width = 0
+        creative_height = self._get_creative_height()
+        creative_width = self._get_creative_width()
+        return self.adunit.is_fullscreen() and creative_width \
+                    and creative_height and os_type == 'ios' \
+                    and self.version >= 7
 
     def _should_use_impression_pixel(self):
         """
@@ -63,9 +103,9 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         Returns True if the HTML should contain an image tag with the
         appropriate impression tracking url
         """
-        os = self.html_context['os']
-        is_fullscreen = self.html_context['is_fullscreen']
-        return (os == 'android' or not is_fullscreen)
+        os_type = self._get_os_type()
+        is_fullscreen = self.adunit.is_fullscreen()
+        return (os_type == 'android' or not is_fullscreen)
         
     def _get_ad_type(self):
         return 'html'

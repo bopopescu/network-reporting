@@ -23,7 +23,8 @@ from account.query_managers import AccountQueryManager
 from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppMapper, \
      AdNetworkScrapeStats, \
-     AdNetworkManagementStats
+     AdNetworkManagementStats, \
+     MANAGEMENT_STAT_NAMES
 from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager, ALL_NETWORKS
@@ -53,7 +54,7 @@ class AdNetworkReportManager(CachedQueryManager):
         account for the given days.
         """
         # Get all the mappers for this account.
-        mappers = list(AdNetworkMapperManager.get_ad_network_mappers(
+        mappers = list(AdNetworkMapperManager.get_mappers(
             account))
 
         aggregates_with_dates = [AdNetworkStatsManager. \
@@ -87,7 +88,7 @@ class AdNetworkReportManager(CachedQueryManager):
             if publisher_id:
                 if include_apps:
                     # example return (App, NetworkConfig.admob_pub_id)
-                    yield (app, publisher_id)
+                    yield (app, publisher_id.strip())
                 else:
                     yield publisher_id
 
@@ -139,7 +140,7 @@ class AdNetworkReportManager(CachedQueryManager):
                 if hasattr(adunit, 'network_config') and getattr(adunit.
                         network_config, '%s_pub_id' % ad_network_name, None):
                     yield getattr(adunit.network_config, '%s_pub_id' %
-                            ad_network_name)
+                            ad_network_name).strip()
 
     @classmethod
     def get_networks_without_credentials(cls,
@@ -171,9 +172,16 @@ class AdNetworkLoginCredentialsManager(CachedQueryManager):
         return AdNetworkLoginCredentials.all().filter('account =', account)
 
     @classmethod
-    def get_all_login_credentials(cls):
-        """Return all AdNetworkLoginCredentials entities ordered by account."""
-        return AdNetworkLoginCredentials.all().order('account')
+    def get_all_logins(cls,
+                       order_by_account=False):
+        """
+        Return all AdNetworkLoginCredential entities (ordered by account if
+        the order by account flag is set).
+        """
+        query = AdNetworkLoginCredentials.all()
+        if order_by_account:
+            return query.order('account')
+        return query
 
 class AdNetworkMapperManager(CachedQueryManager):
     @classmethod
@@ -204,8 +212,16 @@ class AdNetworkMapperManager(CachedQueryManager):
                     return mapper
 
     @classmethod
-    def get_ad_network_mappers(cls,
-                               account):
+    def get_mappers_by_login(cls,
+                             login):
+        """
+        Return a generator of the AdNetworkAppMappers with this login.
+        """
+        return AdNetworkAppMapper.all().filter('ad_network_login =', login)
+
+    @classmethod
+    def get_mappers(cls,
+                    account):
         """
         Inner join AdNetworkLoginCredentials with AdNetworkAppMapper.
 
@@ -218,19 +234,20 @@ class AdNetworkMapperManager(CachedQueryManager):
                 yield mapper
 
     @classmethod
-    def get_ad_network_mapper(cls,
-                              ad_network_app_mapper_key=None,
-                              publisher_id=None,
-                              ad_network_name=None):
+    def get_mapper(cls,
+                   mapper_key=None,
+                   publisher_id=None,
+                   ad_network_name=None):
         """Keyword arguments: either an ad_network_app_mapper_key or a
         publisher_id and login_credentials.
 
         Return the corresponding AdNetworkAppMapper.
         """
-        if ad_network_app_mapper_key:
-            return AdNetworkAppMapper.get(ad_network_app_mapper_key)
+        if mapper_key:
+            return AdNetworkAppMapper.get(mapper_key)
         elif publisher_id and ad_network_name:
-            return AdNetworkAppMapper.get_by_publisher_id(publisher_id, ad_network_name)
+            return AdNetworkAppMapper.get_by_publisher_id(publisher_id,
+                    ad_network_name)
         return None
 
 class AdNetworkStatsManager(CachedQueryManager):
@@ -396,7 +413,8 @@ class AdNetworkStatsManager(CachedQueryManager):
                                     'apps_without_pub_ids': apps_for_network}
                     else:
                         data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
-                                'apps_without_pub_ids': apps_for_network}
+                                'apps_without_pub_ids': apps_for_network,
+                                'turned_off': True}
 
             # Sort alphabetically
             data_list = sorted(data_dict.items(), key=lambda data_tuple:
@@ -498,6 +516,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
                  day):
         self.stats_dict = {}
         for network in AD_NETWORK_NAMES.keys():
+            self.day = day
             self.stats_dict[network] = AdNetworkManagementStats(
                     ad_network_name=network,
                     date=day)
@@ -518,6 +537,14 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
                   field):
         setattr(self.stats_dict[ad_network_name], field,
                 getattr(self.stats_dict[ad_network_name], field) + 1)
+
+    def combined(self,
+                 stats_manager):
+        for ad_network_name, stats in stats_manager.stats_dict.iteritems():
+            for stat in MANAGEMENT_STAT_NAMES:
+                setattr(self.stats_dict[ad_network_name], stat, getattr(
+                    self.stats_dict[ad_network_name], stat) + getattr(
+                    stats_manager.stats_dict[ad_network_name], stat))
 
     def put_stats(self):
         for stats in self.stats_dict.values():
@@ -545,6 +572,10 @@ def create_fake_data(account=None):
 
     # Make sure this isn't used on production datastore.
     if settings.DEBUG:
+        account.ad_network_email = True
+        account.ad_network_recipients = ['magic_monkey@mopub.com']
+        account.put()
+
         last_90_days = date_magic.gen_date_range(90)
 
         app = App(account=account,
@@ -571,7 +602,7 @@ def create_fake_data(account=None):
         login.put()
 
         for day in last_90_days:
-            for mapper in AdNetworkMapperManager.get_ad_network_mappers(
+            for mapper in AdNetworkMapperManager.get_mappers(
                     account):
                 attempts = random.randint(1, 100000)
                 impressions = random.randint(1, attempts)

@@ -8,7 +8,7 @@
 
 {% block extraScripts %}
     <script type="text/javascript">
-        var base_url = '/m/ad?debug_mode=1';
+        var base_url = 'http://ads.mopub.com/m/ad?debug_mode=1';
         var admin = {% if user.is_admin %}true{% else %}false{% endif %};
         var device_to_user_agent = {{device_to_user_agent|safe}};
         var country_to_locale_ip = {{country_to_locale_ip|safe}};

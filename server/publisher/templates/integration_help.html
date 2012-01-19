@@ -1,14 +1,12 @@
 {% extends 'publisher/base.html' %}
 {% load filters %}
+
 {% block pageTitle %}
   <h1>
     {% ifequal status 'welcome' %}
       Step 2: Integrate the code
     {% else %}
-      <a href="{% url publisher_adunit_show adunit_key=site.key %}">
-        {{site.name}}
-      </a>
-      code snippet
+      <a href="{% url publisher_adunit_show adunit_key=site.key %}">{{site.name}}</a> code snippet
     {% endifequal %}
   </h1>
 {% endblock pageTitle %}
@@ -38,12 +36,14 @@
         emulator.
       </div>
     {% endifequal %}
+
     {% ifequal status 'success' %}
       <div class="alert-message success block-message">
         The ad unit was created successfully.  To serve ads to this ad unit, you'll
         need to add the snippet of code below to your app.
       </div>
     {% endifequal %}
+
     <h2>Ad Unit ID</h2>
     <div class="alert-message block-message">
       <code>
@@ -62,7 +62,7 @@
         </li>
       {% endifnotequal %}
       {% ifequal site.app_key.app_type "iphone" %}
-        {% ifequal site.format "full" %}
+        {% if "full" in site.format %}
           <li>
             <p>
               Follow the <a href="https://github.com/mopub/mopub-client/wiki/IntegrationHowToInterstitialsIOS">Interstitial Integration for iOS</a>
@@ -72,8 +72,7 @@
         {% else %}
           <li>
             <p>
-              Add the following code to your view's <code>viewDidLoad</code> method
-              (or another suitable place):
+              Add the following code to your view's <code>viewDidLoad</code> method (or another suitable place):
             </p>
             <div class="alert-message block-message">
               <code>
@@ -83,7 +82,7 @@
 ...
 // For more banner sizes, see the sizing constants in MPConstants.h.
 MPAdView *adView
-        = [[MPAdView alloc] initWithAdUnitId:@"<b>{{site.key}}</b>" size:MOPUB_BANNER_SIZE];
+        = [[MPAdView alloc] initWithAdUnitId:@"<b>{{ site.key }}</b>" size:{{ site.get_code_format }}];
 adView.delegate = self;
 [adView loadAd];
 [self.view addSubview:adView];
@@ -96,20 +95,17 @@ adView.delegate = self;
 - (UIViewController *)viewControllerForPresentingModalView
 {
   return self;
-}</pre>
-              </code>
-            </div>
-          </li>
-        {% endifequal %}
-      {% endifequal %}
-      {% ifequal site.app_key.app_type "android" %}
-        {% ifequal site.format "full" %}
-          <li>
-            <p>
-              Follow the <a href="https://github.com/mopub/mopub-client/wiki/IntegrationHowToInterstitialsAndroid">Interstitial Integration for Android</a>
-              instructions in the code repository.
-            </p>
-            </li>{% else %}
+}
+                  </code>
+                </div>
+              </li>{% endif %}{% endifequal %}
+              {% ifequal site.app_key.app_type "android" %}
+              {% ifequal site.format "full" %}
+              <li>
+                <p>
+                  Follow the <a href="https://github.com/mopub/mopub-client/wiki/IntegrationHowToInterstitialsAndroid">Interstitial Integration for Android</a> instructions in the code repository.
+                </p>
+              </li>{% else %}
               <li>
                 <p>
                   Add the following XML block to your layout definition (eg. main.xml):
@@ -168,10 +164,9 @@ mpv.loadAd();</pre>
             <div class="form-submit">
               <span class="buttonWrap">
               {% ifequal status 'welcome' %}
-                <a href="{% url app_index %}" class="button" id="integration-continue">Continue to Step 3</a>
+                <a href="{% url publisher_index %}" class="button">Continue to Step 3</a>
               {% else %}
-                <a href="{% url publisher_app_show app_key=site.app_key.key %}" id="integration-continue" class="button">Continue</a>
+                <a href="{% url publisher_app_show app_key=site.app_key.key %}" class="button">Continue</a>
               {% endifequal %}</span>
             </div>
-  </section>
-{% endblock content %}
+          </section>{% endblock content %}

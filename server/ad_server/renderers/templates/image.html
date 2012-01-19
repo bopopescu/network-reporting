@@ -1,20 +1,10 @@
 {% extends "html_data.html" %}
 
   {% block body %}
-    <style type='text/css'>
-      .center {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          margin-left: -{{w_divided_2}}px !important;
-          margin-top: -{{h_divided_2}}px !important;
-          }
-    </style>
-    {# TODO: WTF Android centering is screwed up with the 'center' style #}
-    {# TODO: More centering woes, let's just get rid of it #}
-    {# <div class="{% if os == 'ios' %}center{% endif %}">     #}
+    <div class="{% if use_center_style %}center{% endif %}">
     <div style="text-align: center">
         {% if creative.url %}<a href="{{creative.url|safe}}" target="_top">{% endif %}<img src="{{image_url}}" width="{{w}}" height="{{h}}"/>{% if creative.url %}</a>{% endif %}
+    </div>
     </div>
     {{ block.super }}
   {% endblock %}

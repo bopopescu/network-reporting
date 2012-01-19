@@ -1,15 +1,45 @@
 {% extends "ad_network_base.html" %}
 {% load filters %}
 
-{% block adNetworkTitle %}
-{% endblock %}
-
 {% block pageTitle %}
   <div class="breadcrumb">
     <a class="linkIcon breadcrumb-back" href="/campaigns/networks/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
     <h1>Ad Network Revenue Report</h1>
   </div>
 {% endblock pageTitle %}
+
+{% block titleBarRight %}
+  <span class="titlebar-right">
+    <a class="button" id="network-settingsButton" href="#">Edit ad network settings</a>
+  </span>
+{% endblock titleBarRight %}
+
+{% block preContent %}
+  <section id="network-settingsForm" class="hidden">
+    <div>
+      <form accept-charset="ascii" id="networkForm" class="settingsForm">
+        <fieldset id="networkForm-details" class="alt">
+          <div id="settings-form-message" class="hidden alert-message block-message warning"></div>
+          <div>
+            <dl class="formFields" style="margin:0">
+              <dt> E-mail: </dt>
+              <dd> <input name="email" type="checkbox" {% if settings.email %} checked="true" {% endif %}/> &nbsp;Send me a daily ad network revenue report</dd>
+              <dt> Recipients: </dt>
+              <dd>
+                <textarea name="recipients" rows="3" cols="80">{{settings.recipients}}</textarea>
+              </dd>
+            </dl>
+          </div>
+          <div class="form-submit" style="clear:both;">
+            <span class="hidden" id="networkSettingsForm-loading"><img src="/images/loading2.gif"/></span>
+            <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-cancel">Cancel</a></span>
+            <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-submit">Save</a></span>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+{% endblock preContent %}
 
 {% block innerContent %}
   <section id="dashboard-apps">
@@ -151,6 +181,11 @@
 
                   {% else %}
                       {% ifequal form.ad_network "mobfox" %}
+                        {% if network.turned_off %}
+                          Click 'update' to turn on MobFox revenue reporting.
+                        {% else %}
+                          MobFox revenue reporting is turned on.
+                        {% endif %}
                       {% else %}
                         <dt class="wide"> Username: </dt>
                         <dd class="thinner"> <input type="text"
@@ -174,8 +209,6 @@
                     input-text-half-width" value="{{form.initial.client_key}}"></dd>
                   {% endif %}
 
-                  <dt><input name="email" type="checkbox" {% if form.initial.email %} checked="{{form.initial.email}}" {% endif %} /> </dt>
-                  <dd> Send me daily emails with my network stats </dd>
               </dl>
           </fieldset>
         </form>
@@ -278,12 +311,11 @@
   {% endfor %}
   </div>
   </section>
-
 {% endblock innerContent %}
 
 {% block extraScripts %}
   {{ block.super }}
-  <script type="text/javascript" src="/js/controllers/advertiser.js?v=46"></script>
+  <script type="text/javascript" src="/js/controllers/advertiser.js?v=47"></script>
   <script>
     $(function () {
         mopub.Advertiser.initializeAdReportsIndex();

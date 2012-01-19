@@ -36,7 +36,7 @@ var mopub = mopub || {};
             return (impressions/attempts)*100;
         },
         validate: function(attributes) {
-            if (typeof(attributes.price_floor != 'undefined')) {
+            if (typeof(attributes.price_floor) != 'undefined') {
                 var valid_number = Number(attributes.price_floor);
                 if (isNaN(valid_number)) {
                     return "Please enter a valid number for the price floor";
@@ -268,8 +268,7 @@ var mopub = mopub || {};
             $("input.targeting-box", adunit_row).click(function() {
                 var loading_img = $(".targeting .loading-img", adunit_row);
                 loading_img.show();
-                current_model.set({'active': $(this).is(":checked")});
-                current_model.save({}, {
+                var is_valid = current_model.save({'active': $(this).is(":checked")}, {
                     success: function (model, response) {
                         setTimeout(function() {
                             loading_img.hide();
@@ -538,6 +537,7 @@ var mopub = mopub || {};
      * Makes the Creatives Performance tab's datatable
      */
     function makeCreativePerformanceTable (pub_id, blocklist, start_date, end_date) {
+        var creative_data_url = window.location.origin + "/campaigns/marketplace/creatives/";
         var table = $("#report-table").dataTable({
             bProcessing: true,
             // Use jQueryUI to style the table
@@ -563,7 +563,7 @@ var mopub = mopub || {};
             // Sort by revenue descending on table load
             aaSorting: [[2,'desc']],
             // Endpoint to fetch table data
-            sAjaxSource: "http://mpx.mopub.com/stats/creatives",
+            sAjaxSource: creative_data_url,
             // Tell datatables how to fetch and parse server data
             fnServerData: function( sUrl, aoData, fnCallback ) {
                 $.ajax({
@@ -695,12 +695,23 @@ var mopub = mopub || {};
              * Blindness settings
              */
             $("#blindness").click(function () {
-                var blindness_xhr = $.post("/campaigns/marketplace/settings/blindness/", {
+                var loading_img = $("#blindness-spinner").show();
+                var saving = $("#blindness-save-status .saving").show();
+
+                var blindness_xhr = $.post("/campaigns/marketplace/settings/blindness/",{
                     activate: $(this).is(":checked")
                 });
 
                 blindness_xhr.done(function(data){
-                    // put toast here later
+                    loading_img.hide();
+                    saving.hide();
+                    if (data.hasOwnProperty('success')) {
+                        var saved = $("#blindness-save-status .saved").show();
+                        setTimeout(function() { saved.fadeOut(); }, 1000);
+                    } else {
+                        var errored = $("#blindness-save-status .error").show();
+                        setTimeout(function() {errored.fadeOut(); }, 1000);
+                    }
                 });
             });
 
@@ -773,8 +784,11 @@ var mopub = mopub || {};
 
             /*
              * Toasts for the top and bottom lightswitches. Toasts are little flash messages
-             * that let the user know something has happened. We're going to replace
-             * these in the future with the stuff in utilities/toast.js
+             * that let the user know something has happened. These should be rolled up
+             * into their own library and put in mopub.js. For now they're here because
+             * this is the only place they're used.
+             *
+             * # REFACTOR: use the new kind of toast
              */
             $("#top_switch").click(function() {
                 if ( $("#top_switch .switch").hasClass('on') ) {
@@ -795,6 +809,7 @@ var mopub = mopub || {};
             });
 
             /*
+             * ## Blocklist adding/editing
              * Click/form handlers and ajax stuff for the blocklist
              * in the settings tab
              */
@@ -807,7 +822,6 @@ var mopub = mopub || {};
                 });
 
                 blocklist_xhr.done(function (response) {
-                    response = $.parseJSON(response);
                     var domains = response['new'];
                     $.each(domains, function(iter, domain) {
                         addToBlocklist(domain);
@@ -821,13 +835,35 @@ var mopub = mopub || {};
             });
 
             /*
-             * Blocklist removal
+             * ## Blocklist removal
              */
             $("a.blocklist_remove").click(blocklistRemoveClickHandler);
 
+            /*
+             * ## Content filtering
+             */
 
+            $("input.content_level").click(function(){
+                var self = $(this);
+                var filter_level = self.attr('value');
+                var loading_img = $("#filter-spinner").show();
+                var saving = $("#filter-save-status .saving").show();
+                var result = $.post("/campaigns/marketplace/settings/content_filter/", {
+                    filter_level: filter_level
+                });
+                result.success(function(data){
+                    loading_img.hide();
+                    saving.hide();
+                    if (data.hasOwnProperty('success')) {
+                        var saved = $("#filter-save-status .saved").show();
+                        setTimeout(function() { saved.fadeOut(); }, 1000);
 
-
+                    } else {
+                        var errored = $("#filter-save-status .error").show();
+                        setTimeout(function() {errored.fadeOut(); }, 1000);
+                    }
+                });
+            });
 
 
 

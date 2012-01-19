@@ -85,7 +85,6 @@ class AdMobScraper(Scraper):
         return sites
 
     def get_site_stats(self, start_date):
-        logging.warning("TEST DATE FOR ADMOB: %s" % start_date.strftime('%Y %m %d'))
         end_date = start_date
 
         ids = [str(site.identifier) for site in self.get_sites()]

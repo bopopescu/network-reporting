@@ -3152,3 +3152,8 @@ ul.adunits {
   text-align: right; }
 .ad_network_table .add-border td {
   border-bottom: 1px dotted #ddd; }
+
+ul#content_filter_levels {
+  list-style-type: none;
+  margin-left: 5px;
+  padding-left: 1px; }

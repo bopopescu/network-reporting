@@ -11,6 +11,8 @@ from publisher.models import App
 
 KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
+MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped', 'failed_logins')
+
 class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     account = db.ReferenceProperty(Account, required=True,
             collection_name='login_credentials')

@@ -55,7 +55,6 @@
 
         render: function () {
             if(this.model.get("type") == 'network' && this.model.get("sync_date")) {
-                console.log("#" + this.model.id + "-row");
                 $("#" + this.model.id + "-row .network-status span:first").append(this.model.get("sync_date"));
             }
 

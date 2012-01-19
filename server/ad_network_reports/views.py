@@ -283,11 +283,16 @@ class AdNetworkManagementHandler(RequestHandler):
         """
         days = gen_days_for_range(self.start_date, self.date_range)
 
+        # Get dict of management stats where keys are the network names and the
+        # values are the list of management stats over the give days
         management_stats = AdNetworkManagementStatsManager.get_stats(days)
 
+        # Initialize dict of dicts
         networks = {}
         for ad_network_name in management_stats.keys():
             networks[ad_network_name] = {}
+
+        # Fill in management stats for each network
         for name, stats_list in management_stats.iteritems():
             for stat in MANAGEMENT_STAT_NAMES:
                 networks[name][stat] = sum([getattr(stats, stat) for stats in
@@ -297,10 +302,11 @@ class AdNetworkManagementHandler(RequestHandler):
             stats_list.reverse()
             networks[name]['sub_data_list'] = stats_list
 
+        # Calculate aggregate management stats
         aggregates = {}
         for stat in MANAGEMENT_STAT_NAMES:
             aggregates[stat] = sum([stats[stat] for stats in networks.values()])
-        aggregates[FAILED] = sum([stats['failed'] for stats in
+        aggregates[FAILED] = sum([stats[FAILED] for stats in
             networks.values()])
         aggregates[ACCOUNTS] = AdNetworkLoginManager.get_number_of_accounts()
         aggregates[LOGINS] = AdNetworkLoginManager.get_all_logins().count()
@@ -309,6 +315,7 @@ class AdNetworkManagementHandler(RequestHandler):
         for stats_tuple in zip(*management_stats.values()):
             stats_by_date[stats_tuple[0].date] = stats_tuple
 
+        # Calculate daily stats for the graph
         daily_stats = []
         for day in days:
             stats_dict = {}
@@ -325,6 +332,7 @@ class AdNetworkManagementHandler(RequestHandler):
                 stats_dict[FAILED] = 0
             daily_stats.append(stats_dict)
 
+        # Sort the networks by name
         networks = sorted(networks.iteritems(), key=lambda network: network[0])
 
         return render_to_response(self.request,

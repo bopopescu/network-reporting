@@ -143,8 +143,13 @@ def update_account_stats(account, day, email):
         aggregate_stats = []
         mappers = []
         for login in account.login_credentials:
+            management_stats.increment(login.ad_network_name,
+                    'attempted_logins')
+
+            # Get mappers with stats
             mappers_with_stats = update_login_stats(login, day,
                     management_stats, logger=logger)
+
             if mappers_with_stats:
                 mapper_list, stats_list = zip(*mappers_with_stats)
             else:

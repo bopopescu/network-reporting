@@ -1,7 +1,7 @@
 ﻿{% extends "base.html" %}
 {% load filters %}
 {% block navLinks %}
-  <li><a href="{% url app_index %}">Dashboard</a></li>
+  <li><a href="{% url publisher_index %}">Dashboard</a></li>
   <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li class="active"><a href="{% url network_index %}">Networks</a></li>
@@ -135,6 +135,29 @@
 {% endblock pageTitle %}
 
 {% block content %}
+
+  <section id="aggregate-stats">
+    <div id='promo-rollups' class="campaignData-rollup">
+      <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+        <thead>
+          <tr>
+            <th width=33%>Accounts</th>
+            <th width=33%>Logins</th>
+            <th width=33%>Failed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id='promo-total-accounts'>{{aggregates.accounts}}</td>
+            <td id='promo-total-logins'>{{aggregates.logins}}</td>
+            <td id='promo-total-failed'>{{aggregates.failed}}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   {% block graph %}
     <section class="offset nomargin" id="dashboard-stats">
       <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
@@ -174,25 +197,6 @@
     </section>
   {% endblock graph %}
 
-  <div id='promo-rollups' class="campaignData-rollup">
-    <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-      <thead>
-        <tr>
-          <th width=33%>Accounts</th>
-          <th width=33%>Logins</th>
-          <th width=33%>Failed</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td id='promo-total-accounts'>{{aggregates.accounts}}</td>
-          <td id='promo-total-logins'>{{aggregates.logins}}</td>
-          <td id='promo-total-failed'>{{aggregates.failed}}</td>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
 
   <section id="dashboard-apps">
     <div class="appData-columnHeaders">

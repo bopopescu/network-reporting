@@ -303,7 +303,7 @@ class AdNetworkManagementHandler(RequestHandler):
         aggregates[FAILED] = sum([stats['failed'] for stats in
             networks.values()])
         aggregates[ACCOUNTS] = AdNetworkLoginManager.get_number_of_accounts()
-        aggregates[LOGINS] = AdNetworkLoginManager.get_all_login_credentials().count()
+        aggregates[LOGINS] = AdNetworkLoginManager.get_all_logins().count()
 
         stats_by_date = {}
         for stats_tuple in zip(*management_stats.values()):

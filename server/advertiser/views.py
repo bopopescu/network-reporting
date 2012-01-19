@@ -215,10 +215,18 @@ def archive(request,*args,**kwargs):
 """ Replaces CreateCampaignAJAXHandler and CreateCampaignHandler """
 class CreateCampaignAndAdGroupHandler(RequestHandler):
     def get(self):
-        campaign_form = CampaignForm()
-        adgroup_form = AdGroupForm()
-
         apps = AppQueryManager.get_apps(account=self.account)
+
+        site_keys = []
+        for app in apps:
+            for adunit in app.adunits:
+                site_keys.append(adunit.key)
+
+        campaign_form = CampaignForm()
+        adgroup_form = AdGroupForm(site_keys=site_keys)
+
+
+
 
 
         """
@@ -253,22 +261,142 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
         if not self.request.is_ajax():
             raise Http404
 
-        campaign_form = CampaignForm(request.POST)
+        """
+        # We pre-emptively clear the cache for site keys, as they may be updated
+        adunits_to_update = set()
+        if adgroup:
+            adunits_to_update.update(adgroup.site_keys)
+
+        all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        sk_field = adgroup_form.fields['site_keys']
+        sk_field.choices = all_adunits # TODO: doesn't work needed for validation
+        """
+
+        campaign_form = CampaignForm(self.request.POST)
         if campaign_form.is_valid():
             campaign = campaign_form.save()
-            adgroup_form = AdGroupForm(request.POST, instance=Adgroup(campaign=campaign))
+            campaign.account = self.account
+            campaign.save()
+            logging.error(campaign.name)
+            adgroup_form = AdGroupForm(self.request.POST)
             if adgroup_form.is_valid():
                 adgroup = adgroup_form.save()
+                adgroup.campaign = campaign
+                adgroup.save()
+
+                """
+                budget_obj = BudgetQueryManager.update_or_create_budget_for_campaign(campaign)
+                campaign.budget_obj = budget_obj
+
+                #budget_service.update_budget(campaign, save_campaign = False)
+                # And then put in datastore again.
+                CampaignQueryManager.put(campaign)
+
+                adgroup.campaign = campaign
+                # TODO: put this in the adgroup form
+                if not adgroup.campaign.campaign_type == 'network':
+                    adgroup.network_type = None
+
+
+                #put adgroup so creative can have a reference to it
+                AdGroupQueryManager.put(adgroup)
+
+                ##Check if creative exists for this network type, if yes
+                #update, if no, delete old and create new
+                if campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+                    if not has_adgroup_instance: #ensure form posts do not change ownership
+                        creative = adgroup.default_creative()
+                        creative.account = self.account
+                        CreativeQueryManager.put(creative)
+
+                elif campaign.campaign_type == "network":
+                    html_data = None
+                    if adgroup.network_type == 'custom':
+                        html_data = adgroup_form['custom_html'].value
+                    elif adgroup.network_type == 'custom_native':
+                        html_data = adgroup_form['custom_method'].value
+                    #build default creative with custom_html data if custom or none if anything else
+                    creative = adgroup.default_creative(html_data)
+                    if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
+                        #if the adgroup has a creative AND the new creative and old creative are the same class,
+                        #ignore the new creative and set the variable to point to the old one
+                        creative = adgroup.net_creative
+                        if adgroup.network_type == 'custom':
+                            #if the network is a custom one, the creative might be the same, but the data might be new, set the old
+                            #creative to have the (possibly) new data
+                            creative.html_data = html_data
+                        elif adgroup.network_type == 'custom_native':
+                            creative.html_data = html_data
+                    elif adgroup.net_creative:
+                        #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.
+                        #at this point we know that there was an old creative AND it's different from the new creative so
+                        #and delete the old creative just marks as deleted!
+                        CreativeQueryManager.delete(adgroup.net_creative)
+
+                    # the creative should always have the same account as the adgroup
+                    creative.account = adgroup.account
+                    #put the creative so we can reference it
+                    CreativeQueryManager.put(creative)
+                    #set adgroup to reference the correct creative
+                    adgroup.net_creative = creative.key()
+                    #put the adgroup again with the new (or old) creative reference
+                    AdGroupQueryManager.put(adgroup)
+
+                # Update network config information if this is a network type adgroup
+                if campaign.campaign_type == "network":
+                    apps_for_account = AppQueryManager.get_apps(account=self.account)
+                    # Build app level pub_ids
+                    for app in apps_for_account:
+                        app_network_config_data = {}
+                        for (key, value) in self.request.POST.iteritems():
+                            app_key_identifier = key.split('-__-')
+                            if app_key_identifier[0] == str(app.key()):
+                                app_network_config_data[app_key_identifier[1]] = value
+
+                        app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
+                        app_network_config = app_form.save(commit=False)
+                        AppQueryManager.update_config_and_put(app, app_network_config)
+
+                # Delete Cache. We leave this in views.py because we
+                # must delete the adunits that the adgroup used to have as well
+                adunits_to_update.update(adgroup.site_keys)
+                if adunits_to_update:
+                    adunits = AdUnitQueryManager.get(adunits_to_update)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+                # Onboarding: user is done after they set up their first campaign
+                if self.account.status == "step4":
+                    self.account.status = ""
+                    AccountQueryManager.put_accounts(self.account)
+                """
+
+                CampaignQueryManager.put(campaign)
+                AdGroupQueryManager.put(adgroup)
+
+                logging.error(campaign.name)
+
+                campaign = CampaignQueryManager.get(campaign.key())
+
+                logging.error(campaign.name)
+
                 return JSONResponse({
                     'success': True,
-                    'redirect': reverse('advertiser_adgroup', adgroup.key),
+                    'redirect': reverse('advertiser_adgroup_show', args=(adgroup.key(),)),
                 })
-
-        errors = {}
-        for key, value in campaign_form.errors.items():
-            errors[key] = ' '.join([ error for error in value ])
-        for key, value in adgroup_form.errors.items():
-            errors[key] = ' '.join([ error for error in value ])
+            else:
+                errors = {}
+                for key, value in adgroup_form.errors.items():
+                    errors[key] = ' '.join([ error for error in value ])
+        else:
+            errors = {}
+            for key, value in campaign_form.errors.items():
+                # TODO: find a less hacky way to get jQuery validator's
+                # showErrors function to work with the SplitDateTimeWidget
+                if key == 'start_datetime':
+                    key = 'start_datetime_1'
+                elif key == 'end_datetime':
+                    key = 'end_datetime_1'
+                errors[key] = ' '.join([ error for error in value ])
 
         return JSONResponse({
             'errors': errors,
@@ -292,14 +420,93 @@ def create_adgroup(request, *args, **kwargs):
 
 """ Replaces CreateCampaignHandler """
 class EditCampaignAndAdGroupHandler(RequestHandler):
-    pass
+    def get(self, adgroup_key):
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        campaign_form = CampaignForm(instance=adgroup.campaign)
+        adgroup_form = AdGroupForm(instance=adgroup)
+
+        apps = AppQueryManager.get_apps(account=self.account)
+
+
+        """
+        if adgroup_form:
+            # We hide deprecated networks by default.  Show them for pre-existing adgroups though
+            if adgroup_form['network_type'].value == 'admob' or self.request.user.is_staff:
+                networks.append(["admob","AdMob Javascript (deprecated)",False])
+            # Allow admins to create Millennial s2s campaigns
+            if adgroup_form['network_type'].value == 'millennial' or self.request.user.is_staff:
+                networks.append(["millennial","Millennial Server-side (deprecated)",False])
+            if adgroup_form['network_type'].value == 'greystripe':
+                networks.append(["greystripe","GreyStripe (deprecated)",False])
+            for n in networks:
+                if adgroup_form['network_type'].value == n[0]:
+                    n[2] = True
+        elif adgroup:
+            for n in networks:
+                if adgroup.network_type == n[0]:
+                    n[2] = True
+        else:
+            networks[0][2] = True # select the first by default
+        """
+
+        return render_to_response(self.request,
+                                  'advertiser/create_campaign_and_adgroup.html',
+                                  {
+                                      'campaign_form': campaign_form,
+                                      'adgroup_form': adgroup_form,
+                                      'apps': apps,
+                                  })
+
+    def post(self, adgroup_key):
+        if not self.request.is_ajax():
+            raise Http404
+
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+
+        campaign_form = CampaignForm(self.request.POST, instance=adgroup.campaign)
+        if campaign_form.is_valid():
+            campaign = campaign_form.save()
+
+            site_keys = []
+            for app in AppQueryManager.get_apps(account=self.account):
+                for adunit in app.adunits:
+                    site_keys.append(adunit.key)
+
+            adgroup_form = AdGroupForm(self.request.POST, instance=adgroup, site_keys=site_keys)
+            if adgroup_form.is_valid():
+                adgroup = adgroup_form.save()
+                CampaignQueryManager.put(campaign)
+                AdGroupQueryManager.put(adgroup)
+                return JSONResponse({
+                    'success': True,
+                    'redirect': reverse('advertiser_adgroup_show', args=(adgroup.key(),)),
+                })
+            else:
+                errors = {}
+                for key, value in adgroup_form.errors.items():
+                    errors[key] = ' '.join([ error for error in value ])
+        else:
+            errors = {}
+            for key, value in campaign_form.errors.items():
+                # TODO: find a less hacky way to get jQuery validator's
+                # showErrors function to work with the SplitDateTimeWidget
+                if key == 'start_datetime':
+                    key = 'start_datetime_1'
+                elif key == 'end_datetime':
+                    key = 'end_datetime_1'
+                errors[key] = ' '.join([ error for error in value ])
+
+        return JSONResponse({
+            'errors': errors,
+            'success': False,
+        })
 
 @login_required
 def edit_campaign_and_adgroup(request, *args, **kwargs):
     return EditCampaignAndAdGroupHandler()(request, *args, **kwargs)
 
 
-"""
+""" TODO: Use for separating campaigns and adgroups
 class EditCampaignHandler(RequestHandler):
     pass
 
@@ -317,24 +524,8 @@ def edit_adgroup(request, *args, **kwargs):
 """
 
 
-""" TODO: Remove """
+""" TODO: Remove
 class CreateCampaignAJAXHandler(RequestHandler):
-    """
-    Holy christ, refactor
-
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
-    """
     TEMPLATE    = 'advertiser/forms/campaign_create_form.html'
     def get(self,campaign_form=None,adgroup_form=None,
                              campaign=None,adgroup=None):
@@ -575,7 +766,7 @@ class CreateCampaignHandler(RequestHandler):
             if not adgroup:
                 raise Http404("AdGroup does not exist")
 
-        campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
+        campaign_create_form_fragment = CreateCampaignAJAXHandler(self.request).get(adgroup=adgroup)
         return render_to_response(self.request,'advertiser/new.html', {"adgroup_key": adgroup_key,
             "adgroup":adgroup,
             "account": self.account,
@@ -587,22 +778,6 @@ def campaign_adgroup_create(request,*args,**kwargs):
 
 
 class CreateAdGroupHandler(RequestHandler):
-    """
-    Holy christ, refactor
-
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
-    """
     def get(self, campaign_key=None, adgroup_key=None, edit=False, title="Create an Ad Group"):
         if campaign_key:
             c = AdGroupQueryManager.get(campaign_key)
@@ -661,6 +836,7 @@ def campaign_adgroup_new(request,*args,**kwargs):
 def campaign_adgroup_edit(request,*args,**kwargs):
     kwargs.update(title="Edit Ad Group",edit=True)
     return CreateAdGroupHandler()(request,*args,**kwargs)
+"""
 
 
 class AdgroupDetailHandler(RequestHandler):
@@ -793,9 +969,6 @@ class AdgroupDetailHandler(RequestHandler):
                 c.html_fragment = creative_handler.get(creative=c)
         else:
             creative_fragment = None
-        # REFACTOR
-        # In order to make the edit page
-        campaign_create_form_fragment = CreateCampaignAJAXHander(self.request).get(adgroup=adgroup)
 
         today = None
         yesterday = None
@@ -834,28 +1007,44 @@ class AdgroupDetailHandler(RequestHandler):
 
         totals = reduce(lambda x, y: x+y.stats, adunits, StatsModel())
 
-        stats = {
-            'revenue': {
-                'today': today.revenue,
-                'yesterday': yesterday.revenue,
-                'total': totals.revenue
-            },
-            'impressions': {
-                'today': today.impression_count,
-                'yesterday': yesterday.impression_count,
-                'total': totals.impression_count
-            },
-            'conversions': {
-                'today': today.conversion_count,
-                'yesterday': yesterday.conversion_count,
-                'total': totals.conversion_count
-            },
-            'ctr': {
-                'today': today.ctr,
-                'yesterday': yesterday.ctr,
-                'total': totals.ctr
-            },
-        }
+        if today and yesterday:
+            stats = {
+                'revenue': {
+                    'today': today.revenue,
+                    'yesterday': yesterday.revenue,
+                    'total': totals.revenue
+                },
+                'impressions': {
+                    'today': today.impression_count,
+                    'yesterday': yesterday.impression_count,
+                    'total': totals.impression_count
+                },
+                'conversions': {
+                    'today': today.conversion_count,
+                    'yesterday': yesterday.conversion_count,
+                    'total': totals.conversion_count
+                },
+                'ctr': {
+                    'today': today.ctr,
+                    'yesterday': yesterday.ctr,
+                    'total': totals.ctr
+                },
+            }
+        else:
+            stats = {
+                'revenue': {
+                    'total': totals.revenue
+                },
+                'impressions': {
+                    'total': totals.impression_count
+                },
+                'conversions': {
+                    'total': totals.conversion_count
+                },
+                'ctr': {
+                    'total': totals.ctr
+                },
+            }
         return render_to_response(self.request,
                                   'advertiser/adgroup.html',
                                   {
@@ -869,7 +1058,6 @@ class AdgroupDetailHandler(RequestHandler):
                                       'end_date': days[-1],
                                       'date_range': self.date_range,
                                       'creative_fragment':creative_fragment,
-                                      'campaign_create_form_fragment':campaign_create_form_fragment,
                                       'message': message
                                   })
 

@@ -186,7 +186,7 @@
               <h2>Campaign Details</h2>
             {% endif %}
 
-            <div class="stats>
+            <div class="stats">
 
                 <td class="campaignData-icon">
                   <input type="checkbox" name="id" value="{{adgroup.key}}"/>
@@ -195,7 +195,7 @@
                   {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
                 </td>
                 <td class="dataTable-name">
-                  <a href="{% url advertiser_campaign_detail adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
+                  <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
 
                   <span class="muted">
                     {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}

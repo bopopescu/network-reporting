@@ -36,7 +36,7 @@
   <section class="offset nomargin" id="dashboard-stats">
     <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
     <div class="stats">
-      {% stats_breakdown today yesterday app.stats stats_breakdown_includes %}
+      {% stats_breakdown app.stats %}
 
       <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
         <div class="chart-loading-text">Loading ...</div>

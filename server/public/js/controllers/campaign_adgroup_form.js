@@ -131,22 +131,6 @@ $(document).ready(function() {
             }
         }).filter(':checked').click();
 
-        // Toggling for advanced options
-        $('#adgroupForm-advanced-toggleButton')
-            .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
-            .click(function(e) {
-                e.preventDefault();
-                var buttonTextElem = $('.ui-button-text', this);
-                if ($('.adgroupForm-advanced').is(':hidden')) {
-                    $('.adgroupForm-advanced').slideDown('fast');
-                    $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                    $('.ui-button-text', this).text('Hide Advanced Details');
-                } else {
-                    $('.adgroupForm-advanced').slideUp('fast');
-                    $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                    $('.ui-button-text', this).text('Show Advanced Details');
-                }
-            });
 
         // Initialize impression count on form display
         if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
@@ -238,40 +222,41 @@ $(document).ready(function() {
 
 
     /* new stuff */
-    var validator = $('#campaignAdgroupForm').validate({
-        rules: {
-
-        },
+    var validator = $('form#campaign_and_adgroup').validate({
         submitHandler: function(form) {
             $(form).ajaxSubmit({
-                data: { ajax: true },
+                data: {ajax: true},
                 dataType: 'json',
                 success: function(jsonData, statusText, xhr, $form) {
-                    $('#campaignAdgroupForm-loading').hide();
                     if(jsonData.success) {
-                        $('#campaignAdgroupForm-success').show(); // show message
-                        window.location = jsonData.new_page;
-                        $('#campaignAdgroupForm-submit').button({'label':'Success...', 'disabled':true});
+                        window.location = jsonData.redirect;
+                        $('form#campaign_and_adgroup #submit').button({label: 'Success...',
+                                                                       disabled: true});
                     }
                     else {
-                        // $('#campaignAdgroupForm-fragment').html(jsonData.html);
-                        // reimplement the onload event
-                        // campaignAdgroupFormOnLoad();
-                        // clear and reset the hash
-                        //$('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
-                        validator.showErrors(jsonData.errors)
-                        $('#campaignAdgroupForm-submit').button({'label':'Try Again', 'disabled':false});
+                        validator.showErrors(jsonData.errors);
+                        $('form#campaign_and_adgroup #submit').button({label: 'Try Again',
+                                                                       disabled: false});
                     }
                 },
-                error: function(jqXHR, textStatus, errorThrown){
-                    $('#campaignAdgroupForm-submit').button({'label':'Try Again', 'disabled':false});
+                error: function(jqXHR, textStatus, errorThrown) {
+                    $('form#campaign_and_adgroup #submit').button({label: 'Try Again',
+                                                                   disabled: false});
                 },
-                beforeSubmit: function(arr, $form, options){
-                    $('#campaignAdgroupForm-submit').button({'label':'Submitting...', 'disabled':true});
+                beforeSubmit: function(arr, $form, options) {
+                    $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
+                                                                   disabled: true});
                 }
             });
         }
     })
+
+    $('form#campaign_and_adgroup #submit')
+        .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
+        .click(function(e) {
+            e.preventDefault();
+            $('form#campaign_and_adgroup').submit();
+        });
 
     // help links
     // TODO: make sure all of these are necessary, rename?
@@ -385,4 +370,21 @@ $(document).ready(function() {
             }
         }
     }).change(); // update on document ready
+
+    // Toggling for advanced options
+    $('#toggle_advanced')
+        .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
+        .click(function(e) {
+            e.preventDefault();
+            var buttonTextElem = $('.ui-button-text', this);
+            if ($('fieldset#advanced').is(':hidden')) {
+                $('fieldset#advanced').slideDown('fast');
+                $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+                $('.ui-button-text', this).text('Hide Advanced Details');
+            } else {
+                $('fieldset#advanced').slideUp('fast');
+                $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+                $('.ui-button-text', this).text('Show Advanced Details');
+            }
+        }); // TODO: need to update on document ready
 });

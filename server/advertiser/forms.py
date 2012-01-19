@@ -1,6 +1,7 @@
 from __future__ import with_statement
 
 from datetime import datetime
+from common.utils.timezones import Pacific_tzinfo
 
 from advertiser.models import Campaign, AdGroup, Creative, \
                               TextCreative, TextAndTileCreative,\
@@ -235,34 +236,31 @@ class CampaignForm(forms.ModelForm):
                                        initial='normal',
                                        label='Priority:')
     name = forms.CharField(label='Name:',
-                           widget=forms.TextInput(attrs={'placeholder': 'Campaign Name'}))
+                           widget=forms.TextInput(attrs={'class': 'required',
+                                                         'placeholder': 'Campaign Name'}))
     description = forms.CharField(label='Description:',
+                                  required=False,
                                   widget=forms.Textarea(attrs={'cols': 50,
                                                                'rows': 3,
                                                                'placeholder': 'Campaign for My New App'}))
     start_datetime = forms.DateTimeField(label='Start Time:',
+                                         required=False,
                                          widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                             'placeholder': 'MM/DD/YYYY'},
                                                                                 time_attrs={'class': 'time',
                                                                                             'placeholder': 'HH:MM'},
                                                                                 date_format='%m/%d/%Y',
                                                                                 time_format='%H:%M'))
-    end_datetime = forms.DateTimeField(label='End Time:',
+    end_datetime = forms.DateTimeField(label='Stop Time:',
+                                       required=False,
                                        widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                           'placeholder': 'MM/DD/YYYY'},
                                                                               time_attrs={'class': 'time',
                                                                                           'placeholder': 'HH:MM'},
                                                                               date_format='%m/%d/%Y',
                                                                               time_format='%H:%M'))
-    """
-    ADGROUP FIELDS:
-    - network_type
-    - custom_html
-    - custom_method
-    - bid_strategy
-    - bid
-    """
     budget = forms.FloatField(label='Delivery Amount:',
+                              required=False,
                               widget=forms.TextInput(attrs={'class': 'number'}))
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
@@ -278,6 +276,23 @@ class CampaignForm(forms.ModelForm):
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
+    def clean_start_datetime(self):
+        logging.error(self.cleaned_data['start_datetime'])
+        # if no start time is given, use the current time
+        if not self.cleaned_data['start_datetime']:
+            self.cleaned_data['start_datetime'] = datetime.now(Pacific_tzinfo())
+        return self.cleaned_data['start_datetime']
+    def clean(self):
+        logging.error(self.cleaned_data['start_datetime'])
+        # set the correct campaign_type using gtee_prioirty or promo_priority
+        if self.cleaned_data['campaign_type'] == 'gtee':
+            if self.cleaned_data['gtee_priority'] == 'low':
+                self.cleaned_data['campaign_type'] = 'gtee_low'
+            elif self.cleaned_data['gtee_priority'] == 'high':
+                self.cleaned_data['campaign_type'] = 'gtee_high'
+        elif self.cleaned_data['campaign_type'] == 'promo' and self.cleaned_data['promo_priority'] == 'backfill':
+            self.cleaned_data['campaign_type'] == 'backfill_promo'
+        return self.cleaned_data
     # TODO: doesn't work with djangoforms
     class Media:
         js = ('campaign_adgroup_form.js',)
@@ -290,7 +305,6 @@ class CampaignForm(forms.ModelForm):
                   'description',
                   'start_datetime',
                   'end_datetime',
-
                   'budget',
                   'budget_type',
                   'budget_strategy')
@@ -418,58 +432,85 @@ class AdGroupForm(forms.ModelForm):
                                               ('custom_native', 'Custom Native Network')),
                                      label='Network Type:')
     custom_html = forms.CharField(label='Custom HTML:',
+                                  required=False,
                                   widget=forms.Textarea(attrs={'placeholder': 'HTML Custom Content',
                                                                'rows': 3}))
     custom_method = forms.CharField(label='Custom Method:',
+                                    required=False,
                                     widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'),
                                               ('cpc', 'CPC')),
                                      label='Rate:',
                                      initial='cpc')
     bid = forms.FloatField(widget=forms.TextInput(attrs={'class': 'number'}),
-                           initial=0.05)
-    site_keys = forms.MultipleChoiceField()
+                           initial=0.05,
+                           required=False)
+    # site_keys defined in __init__
     allocation_percentage = forms.CharField(initial=100.0,
                                             label='Allocation:',
+                                            required=False,
                                             widget=forms.TextInput(attrs={'class': 'number'}))
     allocation_type = forms.ChoiceField(choices=(('users', 'users'),
                                                  ('requests', 'requests')))
     daily_frequency_cap = forms.IntegerField(initial=0,
                                              label='Frequency Caps:',
+                                             required=False,
                                              widget=forms.TextInput(attrs={'class': 'number'}))
     hourly_frequency_cap = forms.IntegerField(initial=0,
+                                              required=False,
                                               widget=forms.TextInput(attrs={'class': 'number'}))
-    device_targeting = forms.ChoiceField(choices=((0, 'All'),
-                                                  (1, 'Filter by device and OS')),
-                                         initial=0,
-                                         label='Device Targeting:',
-                                         widget=forms.RadioSelect())
-    target_iphone = forms.BooleanField(label='iPhone')
-    target_ipod = forms.BooleanField(label='iPod')
-    target_ipad = forms.BooleanField(label='iPad')
+    device_targeting = forms.TypedChoiceField(choices=((0, 'All'),
+                                                       (1, 'Filter by device and OS')),
+                                              coerce=lambda x: bool(int(x)),
+                                              initial=0,
+                                              label='Device Targeting:',
+                                              widget=forms.RadioSelect)
+    target_iphone = forms.BooleanField(initial=True,
+                                       label='iPhone',
+                                       required=False)
+    target_ipod = forms.BooleanField(initial=True,
+                                     label='iPod',
+                                     required=False)
+    target_ipad = forms.BooleanField(initial=True,
+                                     label='iPad',
+                                     required=False)
     ios_version_min = forms.ChoiceField(choices=IOS_VERSION_CHOICES[1:],
                                         label='Min:')
     ios_version_max = forms.ChoiceField(choices=IOS_VERSION_CHOICES,
                                         label='Max:')
-    target_android = forms.BooleanField(label='Android')
+    target_android = forms.BooleanField(initial=True,
+                                        label='Android',
+                                        required=False)
     android_version_min = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
                                             label='Min:')
     android_version_max = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES,
                                             label='Max:')
-    target_other = forms.BooleanField(label='Other')
-    keywords = forms.CharField(widget=forms.Textarea(attrs={'cols': 50,
+    target_other = forms.BooleanField(initial=True,
+                                      label='Other',
+                                      required=False)
+    keywords = forms.CharField(required=False,
+                               widget=forms.Textarea(attrs={'cols': 50,
                                                             'rows': 3}))
     def __init__(self, *args, **kwargs):
         super(forms.ModelForm, self).__init__(*args, **kwargs)
+        # allows us to set choices on instantiation
+        site_keys = kwargs.get('site_keys', [])
+        self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
+    def clean(self):
+        cleaned_data = super(AdGroupForm, self).clean()
+        #logging.error(cleaned_data)
+        #logging.error(cleaned_data['site_keys'])
+        return cleaned_data
     class Meta:
         model = AdGroup
-        fields = ('network_type',
+        fields = ('name',
+                  'network_type',
                   'custom_html',
-                  'custom_method'
+                  'custom_method',
                   'bid_strategy',
                   'bid',
                   'site_keys',

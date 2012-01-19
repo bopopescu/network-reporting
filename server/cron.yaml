@@ -3,6 +3,7 @@ cron:
   url: /admin/sfdc/
   schedule: every 10 minutes
   timezone: America/Los_Angeles
+  target: admin-prep
 
 - description: Advance the budget timeslices
   url: /m/budget/advance/
@@ -13,6 +14,7 @@ cron:
   url: /reports/daily_sched_runner/
   schedule: every day 0:01
   timezone: America/Los_Angeles
+  target: frontend-0
   
 - description: Periodic dashboard refresh
   url: /admin/prep/

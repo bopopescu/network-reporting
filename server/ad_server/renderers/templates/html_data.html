@@ -70,7 +70,9 @@
 {% endblock head %}
 
 {% block body %}
+  <div class="{% if use_center_style %}center{% endif %}">
   {{html_data|safe}}
+  </div>
   <script type="text/javascript">
     // just call mopubFinishLoad upon window's load
     if (typeof htmlWillCallFinishLoad == "undefined" || !htmlWillCallFinishLoad) { 

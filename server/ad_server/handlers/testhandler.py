@@ -10,7 +10,7 @@ from ad_server.networks.inmobi import InMobiServerSide
 from ad_server.networks.ejam import EjamServerSide
 from ad_server.networks.chartboost import ChartBoostServerSide
 
-from common.utils import simplejson
+from common.utils import helpers, simplejson
 
 from google.appengine.api import urlfetch
 from google.appengine.ext import webapp
@@ -45,8 +45,9 @@ class TestHandler(webapp.RequestHandler):
                                            ll=None,
                                            request_id=None,
                                            now=datetime.datetime.now(),
-                                           user_agent='Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7',        
-                                           experimental=False)
+                                           user_agent=helpers.get_user_agent(self.request),
+                                           experimental=False,
+                                           client_ip=helpers.get_client_ip(self.request))
     
             server_side = ServerSideKlass(client_context, adunit)
             self.response.out.write("URL: %s <br/>PAYLOAD: %s <br/> HEADERS: %s<br/><br/>"%(server_side.url, server_side.payload, server_side.headers))

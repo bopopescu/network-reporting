@@ -16,10 +16,7 @@ inbound_services:
 - warmup
 
 handlers:
-- url: /mapreduce(/.*)?
-  script: mapreduce/main.py
-  login: admin
-
+### BEGIN STATIC ASSETS ###
 - url: /robots.txt
   static_files: public/robots.txt
   upload: public/robots.txt
@@ -30,10 +27,6 @@ handlers:
 - url: /favicon.ico
   static_files: public/images/favicon.ico
   upload: public/images/favicon.ico
-
-# - url: /m/req
-#   static_files: public/dummy/req.txt
-#   upload: public/dummy/req.txt
 
 - url: /css
   static_dir: public/css
@@ -47,10 +40,20 @@ handlers:
 
 - url: /placeholders
   static_dir: public/placeholders
+  
+### END STATIC ASSETS ###
+
+### BEGIN APP ENGINE BUILT-INS ###
+
+- url: /mapreduce(/.*)?
+  script: mapreduce/main.py
+  login: admin
 
 - url: /remote_api
   script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
   login: admin
+
+### END APP ENGINE BUILT-INS ###
 
 - url: /admin/prep
   script: main.py

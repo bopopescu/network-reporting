@@ -6,6 +6,10 @@ urlpatterns = patterns('ad_network_reports.views',
             'ad_network_reports_index',
             name='ad_network_reports_index'),
 
+        url(r'^settings/$',
+            'ad_network_settings',
+            name='ad_network_settings'),
+
         url(r'^export/(?P<f_type>xls|csv)/(?P<sort_type>network|app)/$',
             'export_file',
             name='exporter'),

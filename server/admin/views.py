@@ -202,7 +202,7 @@ def reports_dashboard(request, *args, **kwargs):
 @staff_login_required
 def dashboard(request, *args, **kwargs):
     offline = request.GET.get('offline',False)
-    offline = True if offline == "1" else False
+    offline = False if offline == "0" else True # defaults use offline
     refresh = request.GET.get('refresh',False)
     refresh = True if refresh == "1" else False
     loading = request.GET.get('loading',False)

@@ -29,7 +29,7 @@ from ad_network_reports.ad_networks import AD_NETWORKS, AdNetwork
 from ad_network_reports.forms import LoginInfoForm
 from ad_network_reports.query_managers import AdNetworkReportManager, \
         AdNetworkLoginCredentialsManager
-from ad_network_reports.update_ad_networks import update_ad_networks
+from ad_network_reports.update_ad_networks import update_login_stats_for_check
 
 from common.utils.connect_to_appengine import setup_remote_api
 
@@ -78,7 +78,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 account = db.get(account_key)
                 scraper = AdNetwork(login_credentials).create_scraper()
                 # Password and username aren't encrypted yet so we don't need
-                # to call append_extra info like in update_ad_networks.
+                # to call append_extra info like in update_login_stats_for_check.
                 # They're sent through ssl so this is fine.
                 scraper.test_login_info()
                 logging.info("Returning true.")
@@ -118,13 +118,15 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                     pacific = timezone('US/Pacific')
                     two_weeks_ago = (datetime.now(pacific) -
                             timedelta(days=14)).date()
-                    p = multiprocessing.Process(target=update_ad_networks,
-                            args=(two_weeks_ago, None,
-                                login_credentials))
-                    logging.info(p.daemon)
-                    #p.daemon = True
-                    p.start()
-                    logging.info(p.daemon)
+                    process = multiprocessing.Process(target=update_login_stats_for_check,
+                            args=(login_credentials,
+                                  two_weeks_ago,
+                                  None,
+                                  ))
+                    logging.info(process.daemon)
+                    #process.daemon = True
+                    process.start()
+                    logging.info(process.daemon)
 
                     children = multiprocessing.active_children()
                     logging.info(children)
@@ -135,3 +137,4 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
 
         logging.info("Returning false.")
         self.write(callback + '(false)')
+

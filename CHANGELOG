@@ -1,0 +1,74 @@
+# Deployed Thursday, January 19, 2012
+### Deployed by John Pena
+### Tagged deploy-4
+### Bugs Fixed: ['818', '749', '695', '703']
+### Included Commits: 
+ * 9395735 [#818 state:fixed]
+ * 46ef71a Merge branch 'master' of github.com:mopub/mopub
+ * 0243a30 added a script for deploying the frontend to production [#749 state:fixed]
+ * 61ead88 Use data as a flag for completion rather than the status [#813 state:review-requested assigned:John Pena]
+ * 2d27707 added a clean_email method on the registration form that will make sure the email address hasnt already been used to register an account [#818 state:review-requested assigned:nafis]
+ * 1a3bf19 Merge branch '695-code-snippet'
+ * 971a24e change as discussed in lighthouse [#695 state:fixed]
+ * 956936b Merge branch 'master' of github.com:mopub/mopub
+ * 3563794 only showing the respone data from mpx to admins [#703 state:fixed assigned:nafis]
+ * 8ee2a2f only showing the respone data from mpx to admins
+ * 2b0cc68 Merge branch 'master' of github.com:mopub/mopub
+ * 38a8a3c Updated CHANGELOG [#628 state:resolved] [#795 state:resolved] [#792 state:resolved] [#795 state:resolved]
+ * 108b53c added format to ejam
+ 
+# Deploy 3
+### Included in this deploy:
+* 3fa9714 Merge branch '628-mpx-https-proxy'
+* 3fc36bd removed some logging statements [#628 state:fixed assigned:John Pena]
+* c86f10f added in a request handler that proxies mongo creative requests through appengine [#628 state:review-requested assigned:nafis]
+* 5bd357c default admin to offline
+* d0aa7e7 Merge branch 'master' of github.com:mopub/mopub
+* fae98bb updated the version number so the style change works [#795 state:fixed]
+* 70ebcd2 Merge branch 'master' into center-html
+* 8690f14 using manage.py instead of appcfg
+* dab11b5 Merge branch 'tester-ip'
+* fd11714 Merge branch 'adserver-deployment'
+* 686f76c allowing HTML centering inside of interstitials
+* 99da15e added default user agent and ip support for network tester with override
+* 3b53a16 deleting temp
+* e6344bd Changed version # for mopub-advertiser.js file import
+* 5b18a9b Minor change to update script to reflect change in account schema
+* f05fca6 Merge branch 'master' into ad-network-reports
+* 55cc9ba Added account level settings for ad network reporting (email check box at account level, separate emails for reports)
+* df489aa added comment
+* 835e9ac moving script to /tmp and fixed typo
+* ce45efe fixed typo
+* e240a68 Added test for day range and fixed day range bug
+* 9dc6187 fixed python version
+* b5e6237 fixed python version
+* b8bbefc fixed version
+* ed91766 removed a logging statement that was generating 500s in mpx when network_config didnt exist [#792 state:fixed]
+* c2cbf6a Emails fix
+* cb9dd18 fixed budget worker and centering
+* b5a02fa Merge with master
+* b094bd1 One more test to make DJ XS (J3) happy
+* ea059d1 Removed unneeded logging
+* dff6459 Added iPod targeting
+* 7056e8f Hopefully made finding mappers faster, removed finding app for stats and creating creating mappers to test new speed of script
+* fd37265 Added help msg for update script
+* f41f7c4 Remainder is better dispersed among processes, fixed email and management stats bugs
+* 4e52f4c Fixed unicode problem, added multiprocess queue to handle the shared object management stats among processes
+* 3342fe9 fixed budget advance worker
+* a119275 added deployment scripts
+* e3437a5 fixed admin cron to hit the admin-prep backend and having the tester link always hit ads.mopub.com
+* a1ff61e Fixed unicode error
+* 211a099 Allow ad network reports script to be split amongst a variable number of processes for quicker completion
+* 56589c7 Batch gets and puts for ad network reports update script, split update for a single login and update for all logins into two seperate functions for clearity
+* 0b96d13 Merge branch 'master' of github.com:mopub/mopub
+* 5ff6da0 Made removed links to reports if they're still pending. They now appear as plain text. [#759 state:fixed]
+* 7fa8f7f Fixed budgets.  Please stop breaking them
+* 399018e fixed cron jobs
+* 31bc742 fixed interstitial support for ormmma
+* 2d89918 Merge branch 'master' of github.com:mopub/mopub
+* 0cb7d64 [#730 state:resolved] [#733 state:resolved]
+* f88e597 updated the css version number
+* 0bb029b Merge branch 'master' of github.com:mopub/mopub
+* c586f34 added timezone to /m/req pings
+* e3cca5e Ad network reports email sorting fix
+* 667dbe2 Remove leading and trailing whitespace when handling publisher ids

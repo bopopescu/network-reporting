@@ -3,6 +3,15 @@ import datetime
 
 from django.conf import settings
 
+from google.appengine.api import urlfetch
+
+from urllib import urlencode
+
+from copy import deepcopy
+
+import base64, binascii
+from google.appengine.api import users, images, files
+
 from google.appengine.ext import db
 
 from django.views.decorators.cache import cache_control
@@ -31,7 +40,7 @@ from advertiser.models import *
 from advertiser.forms import CampaignForm, AdGroupForm, \
                              BaseCreativeForm, TextCreativeForm, \
                              ImageCreativeForm, TextAndTileCreativeForm, \
-                             HtmlCreativeForm
+                             HtmlCreativeForm, ContentFilterForm
 
 from advertiser.query_managers import CampaignQueryManager, \
      AdGroupQueryManager, \
@@ -1745,6 +1754,7 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'end_date': end_date,
                                       'date_range': self.date_range,
                                       'blind': blind,
+                                      'network_config': network_config
                                   })
 
 
@@ -1803,6 +1813,42 @@ class BlocklistHandler(RequestHandler):
 def marketplace_blocklist_change(request,*args,**kwargs):
     return BlocklistHandler()(request,*args,**kwargs)
 
+
+class ContentFilterHandler(RequestHandler):
+    """
+    Ajax handler for changing the marketplace content filter settings.
+    """
+    def post(self):
+        network_config = self.account.network_config
+        filter_level = self.request.POST.get('filter_level', None)
+
+        # If the account doesn't have a network config, make one
+        if not network_config:
+            network_config = NetworkConfig()
+            network_config.put()
+            self.account.network_config = network_config
+            self.account.put()
+
+        # Set the filter level if it was passed
+        if filter_level:
+            if filter_level == "none":
+                network_config.set_no_filter()
+            elif filter_level  == "low":
+                network_config.set_low_filter()
+            elif filter_level == "moderate":
+                network_config.set_moderate_filter()
+            elif filter_level == "strict":
+                network_config.set_strict_filter()
+            else:
+                return JSONResponse({'error': 'Invalid filter level'})
+        else:
+            return JSONResponse({'error': 'No filter level specified (choose one of [none, low, moderate, strict]'})
+
+        return JSONResponse({'success': 'success'})
+
+@login_required
+def marketplace_content_filter(request, *args, **kwargs):
+    return ContentFilterHandler()(request, *args, **kwargs)
 
 class MarketplaceOnOffHandler(RequestHandler):
     """
@@ -1864,7 +1910,24 @@ def marketplace_blindness_change(request, *args, **kwargs):
     return MarketplaceBlindnessChangeHandler()(request, *args, **kwargs)
 
 
+class MarketplaceCreativeProxyHandler(RequestHandler):
+    """
+    Ajax hander that proxies requests for creative data from mongo.
+    This is done so that we can use SSL (users will get https errors
+    when we hit mongo directly over http).
+    """
+    def get(self):
+        url = "http://mpx.mopub.com/stats/creatives"
+        query = "?" + "&".join([key + '=' + value for key, value in self.request.GET.items()])
+        url += query
+        response = urlfetch.fetch(url, method=urlfetch.GET, deadline=20).content
 
+        return HttpResponse(response)
+
+
+@login_required
+def marketplace_creative_proxy(request, *args, **kwargs):
+    return MarketplaceCreativeProxyHandler()(request, *args, **kwargs)
 
 # Network Views
 # At some point in the future, these *could* be branched into their own django app

@@ -14,20 +14,28 @@ class ImageRenderer(BaseHtmlRenderer):
     """
     
     TEMPLATE = 'image.html'
-    
+
+    def _get_creative_width(self):
+        """
+        Gets creative width from the image meta data
+        """
+        return self.creative.image_width
+
+    def _get_creative_height(self):
+        """
+        Gets creative width from the image meta data
+        """
+        return self.creative.image_height
+
     def _setup_html_context(self):
         super(ImageRenderer, self)._setup_html_context()
-        img_height = self.creative.image_height
-        img_width = self.creative.image_width
-        
-        self.html_context['w'] = img_width
-        self.html_context['h'] = img_height
-        self.html_context['w_divided_2'] = img_width/2
-        self.html_context['h_divided_2'] = img_height/2
+
         try:
-            image_url = helpers.get_url_for_blob(self.creative.image_blob, ssl=False)
+            image_url = helpers.get_url_for_blob(self.creative.image_blob,
+                                                 ssl=False)
         except InvalidBlobKeyError:
-            logging.error("Could not find blobkey. Perhaps you are on mopub-experimental.")   
+            logging.error("Could not find blobkey. "\
+                          "Perhaps you are on mopub-experimental.")
             image_url = "" 
         except NotImplementedError:
             image_url = "http://localhost:8080/_ah/img/blobby"

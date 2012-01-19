@@ -1,6 +1,9 @@
 """
 Call this script when you want to deploy frontend code.
 """
+# TODO: Figure out why envoy fucks up commands that have messages
+#       like git tag and git commit
+
 import sys
 import os
 import datetime
@@ -31,12 +34,13 @@ except ImportError:
 
 
 
-def prompt_before_executing(original):
+def prompt_before_executing(original, override=None):
     """
     Decorator that prompts the user before calling the function.
     Useful for debugging, you can run the whole script and pick and choose
     which individual steps you want to be run without having to comment
-    stuff out.
+    stuff out. If the user selects 'n', `override` will be returned if
+    it's set (some functions expect a return value).
     """
     def inner(*args, **kwargs):
         puts('Do you want to call %s with args: %s' % (original.func_name, str(args)))
@@ -47,6 +51,7 @@ def prompt_before_executing(original):
             return result
         else:
             puts('Skipped %s' % (original.func_name,))
+            return override
     return inner
 
 
@@ -62,6 +67,7 @@ def git(cmd, git_dir=None):
         git_dir = "../.."
     git_dir = os.path.join(PWD, git_dir)
     command = "git --git-dir=" + git_dir + "/.git " + cmd
+    print command
     result = envoy.run(command)
     return result
 
@@ -124,14 +130,24 @@ def git_tag_current_deploy():
     message = "Deployed by %s on %s." % (git_get_user(), datetime.datetime.utcnow())
 
     # Tag the commit
-    result = git("tag " + new_deploy_tag)
+    #command = 'tag -m \'%s\' -a %s' % (message, new_deploy_tag)
+    #result = git(command)
+
+    # XXX: envoy fucks this up, probably because it's not
+    # properly escaping something before executing. Using
+    # subprocess.call instead.
+    from subprocess import call
+    call(["git", "tag", "-m", message, "-a", new_deploy_tag])
 
     return new_deploy_tag
 
 
 @prompt_before_executing
 def git_commit(message):
-    return git('commit -a -m ' + message)
+    from subprocess import call
+
+    call(["git", "commit", "-a", "-m", message])
+    #return git('commit -a -m "%s"' % message)
 
 
 @prompt_before_executing

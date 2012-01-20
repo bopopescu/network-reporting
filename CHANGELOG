@@ -1,22 +1,78 @@
+# Deployed Friday, January 20, 2012
+### Deployed by John Pena
+### Tagged deploy-5
+### Bugs Fixed: ['825', '794', '828', '831']
+### Included Commits: 
+ * 0c02970 Merge branch '831-mpx-format-currency'
+ * d2dea4f Merge branch '828-wtfloat'
+ * e1c9b60 Merge branch 'master' into ad-network-reports
+ * 8b9e9fb Modified AdNetworkStats dict_ property, fixed iad mapper creation, fixed itunes url entry [#825 state:fixed]
+ * 38c8d3f added back app.yaml and removed it from the gitignore since so many scripts were borked
+ * 7b7d6a6 no longer overwriting test cases for renderers
+ * f4dfe3b fixed tests and now support third party impression tracking for mraid
+ * c4b5b02 Merge branch 'master' into ad-network-reports
+ * 453c542 fixed backend for mraid support
+ * 5c7c25f fixed inmobi for full screen adunits filled bye 300x250s [#794 state:fixed]
+ * 15c1afb ++mopub.js?v
+ * 150e932 Create iAd mapper on iTunes url entry
+ * c92f823 fixed scumbag float rounding [#828 state:fixed]
+ * 2cb3b21 revenue and ecpm numbers in the marketplace table now use mopub.Utils.formatCurrency [#831 state:fixed]
+ * b236834 Fixed bugs caused by re-naming classes and methods in query_managers in check_login_credentials
+ * 4f35f48 Added comments for management stats view, made ad_network_reports.migrate_scripts a package, added missing field in management stat list 'attempted_logins'
+ * f62a2da Merge branch 'master' into ad-network-reports
+ * e77d1d1 fixed registration form
+ * 474eb5c Merge branch 'ad-network-reports-aggregate' of https://github.com/mopub/mopub into ad-network-reports-aggregate
+ * 718243d Improvements to ad network management stats
+ * 9c40dfb Minor changes to update script
+ * b755507 added app.yaml to the gitignore and removed breakpoints from mpdeploy
+ * 5c2d132 [#818 state:resolved] [#749 state:resolved] [#695 state:resolved] [#703 state:resolved]
+ * e24233d Merge
+ * db6aa7e Removed TODO
+ * b24db37 Merge branch 'ad-network-reports-frontend' into ad-network-reports-aggregate
+ * 40c9fe3 Added script to save roll up data at account level for apps and networks
+ * 4e6c5a6 When app pub ids are saved mappers are automatically created
+ * dcf9fb3 Changed js version # (haha... stupid app engine)
+ * aa2b1ef Fixed graph and aggregate stats on app detail page
+ * 73c4091 Merge
+ * 8180e97 Added missing file
+ * ab4727f Added migration scripts for updating entities for ad network reports
+ * 759e3ac Modified update script to save roll up stats at account level for networks and apps
+ * 1461b34 iAd scraper handles terms of use page
+ * 4778e7d Merge, still need to deal with saving roll-up stats using multiprocessing
+ * 975a033 Fixed rebase pointer to js source
+ * 5134c70 Calculating daily stats uses AdNetworkNetworkStats
+ * 0739d1b Apps without pub ids now shown in notes (could be made faster if done via ajax), still need to fix 503 (Service Unavailable) random errors on calls to the roll up service
+ * ce5b79f Ajax loading for ad networks' index page almost complete
+ * afa2d84 Added missing files
+ * 9cd7275 Added missing files
+ * dd95f3f Sort by app stats loads through ajax for the ad network reports index page
+ * e966de0 Ajax load for app roll up stats for the ad network reports index page
+ * 87f2843 Ajax for sorted by networks data on the index page works
+ * 4e9c11e Redesigning the ad_network_reports/ views, templates/ad_network_index and query_managers to be fast with Ajax
+ * 1ffd1bd Added a two nice gen days functions to date_magic, fixed formatCurrency in js/controllers/mopub.js to include commas
+ * a423345 Ajax calls using backbone set up for ad network reports, Still need to strip all the extra crap from views and query_managers that isn't needed now also need to support sort by apps
+ * 15191f8 Ad network management page shows the # of logins attempted and the # of accounts that have turned on ad network reporting
+ * 288d73e Store rolled up stats on the application and network level, Store # of logins attempted for each network each time the update script is run
+ 
 # Deployed Thursday, January 19, 2012
 ### Deployed by John Pena
 ### Tagged deploy-4
 ### Bugs Fixed: ['818', '749', '695', '703']
-### Included Commits: 
- * 9395735 [#818 state:fixed]
- * 46ef71a Merge branch 'master' of github.com:mopub/mopub
- * 0243a30 added a script for deploying the frontend to production [#749 state:fixed]
- * 61ead88 Use data as a flag for completion rather than the status [#813 state:review-requested assigned:John Pena]
- * 2d27707 added a clean_email method on the registration form that will make sure the email address hasnt already been used to register an account [#818 state:review-requested assigned:nafis]
- * 1a3bf19 Merge branch '695-code-snippet'
- * 971a24e change as discussed in lighthouse [#695 state:fixed]
- * 956936b Merge branch 'master' of github.com:mopub/mopub
- * 3563794 only showing the respone data from mpx to admins [#703 state:fixed assigned:nafis]
- * 8ee2a2f only showing the respone data from mpx to admins
- * 2b0cc68 Merge branch 'master' of github.com:mopub/mopub
- * 38a8a3c Updated CHANGELOG [#628 state:resolved] [#795 state:resolved] [#792 state:resolved] [#795 state:resolved]
- * 108b53c added format to ejam
- 
+### Included Commits:
+* 9395735 [#818 state:fixed]
+* 46ef71a Merge branch 'master' of github.com:mopub/mopub
+* 0243a30 added a script for deploying the frontend to production [#749 state:fixed]
+* 61ead88 Use data as a flag for completion rather than the status [#813 state:review-requested assigned:John Pena]
+* 2d27707 added a clean_email method on the registration form that will make sure the email address hasnt already been used to register an account [#818 state:review-requested assigned:nafis]
+* 1a3bf19 Merge branch '695-code-snippet'
+* 971a24e change as discussed in lighthouse [#695 state:fixed]
+* 956936b Merge branch 'master' of github.com:mopub/mopub
+* 3563794 only showing the respone data from mpx to admins [#703 state:fixed assigned:nafis]
+* 8ee2a2f only showing the respone data from mpx to admins
+* 2b0cc68 Merge branch 'master' of github.com:mopub/mopub
+* 38a8a3c Updated CHANGELOG [#628 state:resolved] [#795 state:resolved] [#792 state:resolved] [#795 state:resolved]
+* 108b53c added format to ejam
+
 # Deploy 3
 ### Included in this deploy:
 * 3fa9714 Merge branch '628-mpx-https-proxy'

@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AD_NETWORK_NAMES
-from ad_network_reports.update_ad_networks import update_all, \
+from ad_network_reports.update_ad_networks import update_account_stats, \
         multiprocess_update_all
 from common.utils import date_magic
 from pytz import timezone
@@ -40,15 +40,18 @@ class TestUpdate(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
-    def update_all_mptest(self):
+    def update_account_mptest(self):
         # Create default models.
         account = load_test_data(include_iad=INCLUDE_IAD)
 
-        # Call the method we are testing.
-        update_all()
+        # Get test date (yesterday)
+        pacific = timezone('US/Pacific')
+        yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
-        mappers = list(AdNetworkMapperManager.
-                get_mappers(account))
+        # Call the method we are testing.
+        update_account_stats(account, yesterday, False)
+
+        mappers = list(AdNetworkMapperManager.get_mappers(account))
         print 'App Mapper\'s len: %d' % len(mappers)
         assert len(mappers) > 0
 

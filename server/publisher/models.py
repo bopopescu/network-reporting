@@ -92,6 +92,17 @@ class App(db.Model):
         except Exception:
             return None
 
+    @property
+    def identifier(self):
+        return (self.name.replace(' ', '_') + '-' + self.app_type).lower()
+
+    @property
+    def full_name(self):
+        return self.name + " (" + self.app_type_text() + ")"
+
+    @property
+    def key_(self):
+        return str(self.key())
 
     def get_owner(self):
         return None

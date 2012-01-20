@@ -70,169 +70,162 @@
           <th class="dataTable-data numeric"> Attempts </th>
           <th class="dataTable-data numeric"> Impressions </th>
           <th class="dataTable-data numeric"> CPM </th>
-          <th class="dataTable-data numeric"> Fill Rate</th>
+          <th class="dataTable-data numeric"> Fill Rate </th>
           <th class="dataTable-data numeric"> Clicks </th>
           <th class="dataTable-data numeric"> CPC </th>
           <th class="dataTable-data numeric"> CTR </th>
         </thead>
       </table>
     </div>
-    {% for network_name, network, form in networks %}
+    {% for network in networks %}
     <div class="{% cycle 'appData' 'appData appData-alt' %}">
       <table class="dataTable appData-main">
         <tbody>
-          <tr>
+          <tr id="{{network.name}}-row">
             <td class="networkData-icon">
-              <img src="/images/{{network_name|lower}}-transparent.png"
-              alt="{{network_name}}" width="75" height="25" />
+              <img src="/images/{{network.name}}-transparent.png"
+              alt="{{network.pretty_name}}" width="75" height="25" />
             </td>
-			{% if network.state == 1 or network.state == 2 %}
+            {% if network.state != LoginStates.NOT_SETUP %}
             <td class="network-status dataTable-name">
-                
-                {% ifequal network.state 2 %}
-                <span class="muted">Last synced: {{ network.sync_date|date }}</span>
-                {% endifequal %}
-                <a class="show-status" style="cursor:pointer;" id="{{form.ad_network}}-status">Status</a>
-                {% ifequal network.state 2 %}
+
+                {% if network.state == LoginStates.WORKING %}
+                <span class="muted">Last synced: </span>
+                {% endif %}
+                <a class="show-status" style="cursor:pointer;" id="{{network.name}}-status">Status</a>
+                {% if network.state == LoginStates.WORKING %}
                 <div>
-                    <a class="show-hide button button-small" id={{network.key}} style="width:75px;">Show Apps</a>
+                    <a class="show-hide button button-small" id="{{network.name}}" style="width:75px;">Show Apps</a>
                 </div>
-                {% endifequal %}
+                {% endif %}
             </td>
             {% endif %}
-			{% ifequal network.state 2 %}
-            <td class="dataTable-data numeric">{{ network.revenue|currency }} </td>
-            <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ network.attempts|withsep }} {% endif %}</td>
-            <td class="dataTable-data numeric">{{ network.impressions|withsep }} </td>
-            <td class="dataTable-data numeric">{{ network.cpm|currency }} </td>
-            <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ network.fill_rate|percentage }} {% endif %}</td>
-            <td class="dataTable-data numeric">{{ network.clicks|withsep }} </td>
-            <td class="dataTable-data numeric">{{ network.cpc|currency }} </td>
-            <td class="dataTable-data numeric">{{ network.ctr|percentage }} </td>
-		    {% else %}
-                {% ifequal network.state 0 %}
-                <td class="network-status dataTable-name" colspan="7">
-                    <div class="form-{{form.ad_network}}-enable">
-                       <a class="show-status button button-small" id="{{form.ad_network}}-status">Enable Reporting</a>
-                   </div>
-                </td>
-                {% endifequal %}
-		    {% endifequal %}
+            {% if network.state == LoginStates.WORKING %}
+              <td class="dataTable-data numeric revenue">--</td>
+              {% if network.name != MOBFOX %}
+                <td class="dataTable-data numeric attempts">--</td>
+              {% else %}
+                <td class="dataTable-data numeric"></td>
+              {% endif %}
+              <td class="dataTable-data numeric impressions">--</td>
+              <td class="dataTable-data numeric cpm">--</td>
+              {% if network.name != MOBFOX %}
+                <td class="dataTable-data numeric fill-rate">--</td>
+              {% else %}
+                <td class="dataTable-data numeric"></td>
+              {% endif %}
+              <td class="dataTable-data numeric clicks">--</td>
+              <td class="dataTable-data numeric cpc">--</td>
+              <td class="dataTable-data numeric ctr">--</td>
+            {% else %}
+              {% if network.state == LoginStates.NOT_SETUP %}
+              <td class="network-status dataTable-name" colspan="7">
+                <div class="form-{{network.name}}-enable">
+                 <a class="show-status button button-small" id="{{network.name}}-status">Enable Reporting</a>
+                </div>
+              </td>
+              {% endif %}
+            {% endif %}
           </tr>
         </tbody>
       </table>
-      <div class="{{form.ad_network}}-status hidden">
-        <div class="form-{{form.ad_network}}-message hidden alert-message block-message warning"></div>
+      <div class="{{network.name}}-status hidden">
+        <div class="form-{{network.name}}-message hidden alert-message block-message warning"></div>
         <dl class="formFields thin" style="margin:0">
-          {% if network.state == 2 and network.sync_error %}
-              <dt>Status:</dt>
-              <dd>Last synchronization failed.  Check that your credentials are correct.
-              If this error persists, please contact support@mopub.com.</dd>
+          {% if network.state == LoginStates.ERROR %}
+            <dt>Status:</dt>
+            <dd>Last synchronization failed.  Check that your credentials are correct.
+            If this error persists, please contact support@mopub.com.</dd>
           {% endif %}
-          {% if network.apps_without_pub_ids or network.app_pub_ids %}
-              <dt>Notes:</dt>
-              <dd>
-              {% if network.apps_without_pub_ids %}
-                  {% if network_name == IAD %}
-                      In order to pull revenue data for your apps, MoPub requires that your
-                      app names in MoPub match your app names in iAd and you assign an
-                      iTunes URL for each app. Click 'Edit app settings' for each app and
-                      enter your iTunes URL:
-                      <br/><br/>
-                      {% for app in network.apps_without_pub_ids %}<a href="/inventory/app/{{app.key}}">{{app.name}}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
-                  {% else %}
-                      In order to pull revenue data for your apps, MoPub requires that you
-                      assign your ad network ID for each app.  Set up your network ID on
-                      the <a href="/account/networks/">Ad Network Settings</a> page for the
-                      following apps:
-                      <br/><br/>
-                      {{network.apps_without_pub_ids}}
-                  {% endif %}
-              {% else %}
-                  {% if network_name == IAD %}
-                      MoPub received a response for the following apps. Make sure these
-                      apps are properly set up in MoPub to view the reports (the MoPub
-                      app names exactly match the iAd app names and the iTunes URLs
-                      are properly enetered for the apps).
-                  {% else %}
-                      MoPub received a response for the following ad networks IDs.
-                      Make sure these apps are properly set up in MoPub to view the reports.
-                  {% endif %}
-                  <br/><br/>
-                  {{ network.app_pub_ids }}
+          {% if network.apps_without_pub_ids or network.pub_ids_without_data %}
+            <dt>Notes:</dt>
+            <dd>
+            {% if network.apps_without_pub_ids %}
+              {% if network.name == IAD %}
+                In order to pull revenue data for your apps, MoPub requires that your
+                app names in MoPub match your app names in iAd and you assign an
+                iTunes URL for each app. Click 'Edit app settings' for each app and
+                enter your iTunes URL:
+                <br/><br/>
+                {% for app in network.apps_without_pub_ids %}<a href="/inventory/app/{{app.key}}">{{app.name}}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% else %}
+                In order to pull revenue data for your apps, MoPub requires that you
+                assign your ad network ID for each app.  Set up your network ID on
+                the <a href="/account/networks/">Ad Network Settings</a> page for the
+                following apps:
+                <br/><br/>
+                {% for app in network.apps_without_pub_ids %}{{app.name}}{% if not forloop.last %}, {% endif %}{% endfor %}
               {% endif %}
-              </dd>
+            {% else %}
+              {% if network.name == IAD %}
+                MoPub received a response for the following apps. Make sure these
+                apps are properly set up in MoPub to view the reports (the MoPub
+                app names exactly match the iAd app names and the iTunes URLs
+                are properly entered for the apps).
+              {% else %}
+                MoPub received a response for the following ad networks IDs.
+                Make sure these apps are properly set up in MoPub to view the reports.
+              {% endif %}
+              <br/><br/>
+              {% for id in network.pub_ids_without_data %}{{id}}{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% endif %}
+            </dd>
           {% endif %}
         </dl>
-        <form class="loginCredentials" id="form-{{form.ad_network}}" autocomplete="off">
+        <form class="loginCredentials" id="form-{{network.name}}" autocomplete="off">
           <fieldset>
-              <h2>{{network_name}} Credentials{% if form.ad_network == "admob" or form.ad_network == "inmobi" %} <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% ifequal form.ad_network "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endifequal %}">(Learn more)</a> {% endif %}</h2>
+              <h2>{{network.pretty_name}} Credentials{% if network.name == ADMOB or network.name == INMOBI %} <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% ifequal network.name ADMOB %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endifequal %}">(Learn more)</a> {% endif %}</h2>
               <dl class="formFields thin" style="margin:0">
-                  {% ifequal form.ad_network "inmobi" %}
+                  {% if network.name == INMOBI %}
                     <dt class="wide"> Access ID: </dt>
                     <dd class="thinner">
-                      <input type="text" name="{{form.ad_network}}-username" id="id_username" class="input-text input-text-half-width" value=""> {{form.username.errors}}
+                      <input type="text" name="{{network.name}}-username"
+                      id="id_username" class="input-text input-text-half-width"
+                      value=""> {{network.form.username.errors}}
                     </dd>
 
                     <dt class="wide"> Secret Key: </dt>
                     <dd class="thinner">
-                      <input type="password" name="{{form.ad_network}}-password"  id="id_password" class="input-text input-text-half-width" value="">  {{form.password.errors}}
+                      <input type="password" name="{{network.name}}-password"
+                      id="id_password" class="input-text input-text-half-width"
+                      value="">  {{network.form.password.errors}}
                     </dd>
 
                   {% else %}
-                      {% ifequal form.ad_network "mobfox" %}
-                        {% if network.turned_off %}
+                      {% if network.name == MOBFOX %}
+                        {% if network.state == LoginStates.NOT_SETUP %}
                           Click 'update' to turn on MobFox revenue reporting.
                         {% else %}
                           MobFox revenue reporting is turned on.
                         {% endif %}
                       {% else %}
                         <dt class="wide"> Username: </dt>
-                        <dd class="thinner"> <input type="text"
-                        name="{{form.ad_network}}-username" id="id_username"
-                        class="input-text input-text-half-width"
-                        value="{{form.initial.username}}"> {{form.username.errors}}</dd>
+                        <dd class="thinner"> <input type="text" name="{{network.name}}-username" id="id_username" class="input-text input-text-half-width" value="{{network.form.initial.username}}"> {{network.form.username.errors}}</dd>
 
-                        <dt class="wide">{% ifequal form.ad_network "admob" %} API {% endifequal %}Password: </dt>
-                        <dd class="thinner"> <input type="password"
-                        name="{{form.ad_network}}-password"  id="id_password"
-                        class="input-text input-text-half-width"
-                        value="{{form.initial.password}}">  {{form.password.errors}}</dd>
-                      {% endifequal %}
-                  {% endifequal %}
+                        <dt class="wide">{% ifequal network.name ADMOB %} API {% endifequal %}Password: </dt>
+                        <dd class="thinner"> <input type="password" name="{{network.name}}-password"  id="id_password" class="input-text input-text-half-width" value="{{network.form.initial.password}}"> 
+                        {{network.form.password.errors}}
+                        </dd>
+                      {% endif %}
+                  {% endif %}
 
 
-                  {% if form.ad_network == "admob" %}
+                  {% if network.name == ADMOB %}
                     <dt class="wide"> API Key: </dt>
                     <dd class="thinner"> <input type="text" name="admob-client_key"
                     id="id_admob-client_key" class="input-text
-                    input-text-half-width" value="{{form.initial.client_key}}"></dd>
+                    input-text-half-width" value="{{network.form.initial.client_key}}"></dd>
                   {% endif %}
 
               </dl>
           </fieldset>
         </form>
       </div>
-      {% if network.state == 2 %}
-    <div class="appData-details hidden {{network.key}}-row" style="margin: -10px 0 0 86px">
+      {% if network.state == LoginStates.WORKING %}
+      <div class="appData-details hidden {{network.name}}-row" style="margin: -10px 0 0 86px">
         <div class="appData-details-inner show">
           <table class="dataTable">
-            <tbody>
-              {% for app in network.sub_data_list %}
-              <tr class="show-details sub-rows {% if not forloop.last %} add-border {% endif %}" id="{{app.key}}">
-                  <td class="dataTable-name">
-                    {{app.name}} <a class="hidden details-{{app.key}}" href="{% url ad_network_app_detail app.key %}">Details</a>
-                  </td>
-                  <td class="dataTable-data numeric">{{ app.revenue|currency }}</td>
-                  <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ app.attempts|withsep }}{% endif %}</td>
-                  <td class="dataTable-data numeric">{{ app.impressions|withsep }}</td>
-                  <td class="dataTable-data numeric">{{ app.cpm|currency }}</td>
-                  <td class="dataTable-data numeric">{% if network_name != MOBFOX %}{{ app.fill_rate|percentage }}{% endif %}</td>
-                  <td class="dataTable-data numeric">{{ app.clicks|withsep }}</td>
-                  <td class="dataTable-data numeric">{{ app.cpc|currency }}</td>
-                  <td class="dataTable-data numeric">{{ app.ctr|percentage }}</td>
-                </tr>
-              {% endfor %}
+            <tbody id="app-on-{{network.name}}">
             </tbody>
           </table>
         </div>
@@ -262,47 +255,31 @@
         </thead>
       </table>
     </div>
-    {% for app_name, app in apps %}
+    {% for app in apps %}
     <div class="{% cycle 'appData' 'appData appData-alt' %}">
       <table class="dataTable appData-main">
         <tbody>
-          <tr class="app-row" id="{{app.key}}">
-            <td class="appData-icon"><a href="{% url publisher_app_show app_key=app.key %}"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
-            <td class="dataTable-name">
-                <a href="{% url publisher_app_show app_key=app.key %}">{{app_name.0}}</a>
-                <span class="muted unbold">({{app_name.1}})</span>
-                <img id="{{app.key}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
+          <tr class="app-row" id="{{app.key_}}-row">
+            <td class="appData-icon"><a href="/inventory/app/{{app.key_}}"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td> <td class="dataTable-name">
+                <a href="/inventory/app/{{app.key_}}">{{app.name}}</a>
+                <span class="muted unbold">({{app.app_type_text}})</span>
+                <img id="{{app.identifier}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
             </td>
-            <td class="dataTable-data numeric">{{app.revenue|currency}}</td>
-            <td class="dataTable-data numeric">{{app.attempts|withsep}}</td>
-            <td class="dataTable-data numeric">{{app.impressions|withsep}}</td>
-            <td class="dataTable-data numeric">{{app.cpm|currency}}</td>
-            <td class="dataTable-data numeric">{{app.fill_rate|percentage}}</td>
-            <td class="dataTable-data numeric">{{app.clicks|withsep}}</td>
-            <td class="dataTable-data numeric">{{app.cpc|currency}}</td>
-            <td class="dataTable-data numeric">{{app.ctr|percentage}}</td>
+            <td class="dataTable-data numeric revenue">--</td>
+            <td class="dataTable-data numeric attempts">--</td>
+            <td class="dataTable-data numeric impressions">--</td>
+            <td class="dataTable-data numeric cpm">--</td>
+            <td class="dataTable-data numeric fill-rate">--</td>
+            <td class="dataTable-data numeric clicks">--</td>
+            <td class="dataTable-data numeric cpc">--</td>
+            <td class="dataTable-data numeric ctr">--</td>
           </tr>
         </tbody>
       </table>
       <div class="appData-details">
         <div class="appData-details-inner show">
           <table class="dataTable">
-            <tbody>
-              {% for network in app.sub_data_list %}
-              <tr class="show-details" id="{{network.key}}">
-                <td class="dataTable-name">
-                   {{network.name}} <a class="hidden details-{{network.key}}" href="{% url ad_network_app_detail network.key %}">Details</a>
-                </td>
-                <td class="dataTable-data numeric">{{ network.revenue|currency }}</td>
-                <td class="dataTable-data numeric">{% if network.name != MOBFOX %}{{ network.attempts|withsep }}{% endif %}</td>
-                <td class="dataTable-data numeric">{{ network.impressions|withsep }}</td>
-                <td class="dataTable-data numeric">{{ network.cpm|currency }}</td>
-                <td class="dataTable-data numeric">{% if network.name != MOBFOX %}{{ network.fill_rate|percentage }}{% endif %}</td>
-                <td class="dataTable-data numeric">{{ network.clicks|withsep }}</td>
-                <td class="dataTable-data numeric">{{ network.cpc|currency }}</td>
-                <td class="dataTable-data numeric">{{ network.ctr|percentage }}</td>
-              </tr>
-              {% endfor %}
+            <tbody id="{{app.key_}}-on-networks">
             </tbody>
           </table>
         </div>
@@ -315,12 +292,31 @@
 
 {% block extraScripts %}
   {{ block.super }}
-  <script type="text/javascript" src="/js/mopub-advertiser.js?v=49"></script>
+  <script type="text/html" id="app-on-network-row-template">
+    {% include "partials/app_on_network.html" %}
+  </script>
+  <script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
+  <script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
+  <script type="text/javascript" src="/js/mopub-advertiser.js?v=50"></script>
+  <script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=4"></script>
   <script>
     $(function () {
         mopub.Advertiser.initializeAdReportsIndex();
         account_key = '{{ account_key }}';
         mopub.Advertiser.initializeCredentialsPage(account_key);
+
+        AdNetworkReportsController(
+        [{% for network in networks %} {
+           network: '{{ network.name }}',
+           models: [{% for key in network.pub_ids %}{
+              id: '{{ key }}',
+              network: '{{ network.name }}'},
+          {% endfor %}]},
+        {% endfor %}],
+        [{% for app in apps %}{
+            id: '{{ app.key_ }}',
+          },{% endfor %}],
+        's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}');
     });
   </script>
 {% endblock extraScripts %}

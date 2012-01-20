@@ -14,7 +14,16 @@
     {% if version == 6 and is_tablet or os == 'android' or version >= 7 %}
     <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=no;">
     {% endif %}
-  {% endblock head %}  
+    <style type='text/css'>
+      .center {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          margin-left: -{{w_divided_2}}px !important;
+          margin-top: -{{h_divided_2}}px !important;
+          }
+    </style>
+  {% endblock head %}
   </head>
   <body style="margin:0;padding:0;">
     {% block body %}

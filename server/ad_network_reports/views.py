@@ -1,20 +1,36 @@
 import logging
 
+from account.query_managers import AccountQueryManager
+
 from ad_network_reports.forms import LoginInfoForm
+from ad_network_reports.models import LoginStates
 from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
-        MOBFOX, MOBFOX_PRETTY, IAD_PRETTY, AdNetworkReportManager, \
-        AdNetworkMapperManager, AdNetworkStatsManager, \
-        AdNetworkManagementStatsManager, create_fake_data
+        ADMOB, \
+        IAD, \
+        INMOBI, \
+        MOBFOX, \
+        MOBFOX_PRETTY, \
+        AdNetworkReportManager, \
+        AdNetworkLoginManager, \
+        AdNetworkMapperManager, \
+        AdNetworkStatsManager, \
+        AdNetworkManagementStatsManager, \
+        create_fake_data
+
+from common.utils.date_magic import gen_days_for_range
 from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
+
+from publisher.query_managers import AppQueryManager, \
+        ALL_NETWORKS
+
 from datetime import date, timedelta
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.utils import simplejson
 from django.shortcuts import redirect
-from reporting.models import StatsModel
 
 from google.appengine.ext import db
 
@@ -28,7 +44,10 @@ CLICKS = 'clicks'
 CPC = 'cpc'
 CTR = 'ctr'
 SORT_BY_NETWORK = 'network'
-MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped')
+MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped', 'attempted_logins')
+FAILED = 'failed'
+LOGINS = 'logins'
+ACCOUNTS = 'accounts'
 
 class AdNetworkReportIndexHandler(RequestHandler):
     def get(self):
@@ -39,56 +58,58 @@ class AdNetworkReportIndexHandler(RequestHandler):
         """
         #create_fake_data(self.account)
 
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
 
-        aggregate_stats_list = AdNetworkReportManager. \
-                get_aggregate_stats_list(self.account, days)
+        networks = []
+        apps_with_data = {}
+        for network in sorted(AD_NETWORK_NAMES.keys()):
+            network_data = {}
+            network_data['name'] = network
+            network_data['pretty_name'] = AD_NETWORK_NAMES[network]
+            login = AdNetworkLoginManager.get_login(self.account,
+                    network).get()
+            if login:
+                network_data['pub_ids_without_data'] = login.app_pub_ids
+                network_data['state'] = login.state
+            else:
+                network_data['state'] = LoginStates.NOT_SETUP
 
-        # Get aggregate_list from aggregate_stats_list and pass it to
-        # roll_up_stats.
-        if aggregate_stats_list:
-            aggregates = AdNetworkStatsManager.roll_up_stats(
-                    zip(*aggregate_stats_list)[1])
-        else:
-            aggregates = []
+            # Get list of apps that need pub ids if they want to be included
+            if not login or not login.app_pub_ids:
+                apps_for_network = AppQueryManager.get_apps_without_pub_ids(self.account,
+                        AD_NETWORK_NAMES.keys())
+                apps_for_network = apps_for_network[network] + \
+                        apps_for_network[ALL_NETWORKS]
 
-        # Get the daily stats list.
-        daily_stats = []
-        for date in days:
-            stats_dict = AdNetworkStatsManager.get_stats_for_day(self.account,
-                    date).__dict__
-            stats_dict = dict([(key.replace('_', '', 1), val) for key, val
-                    in stats_dict.iteritems()])
-            daily_stats.append(stats_dict)
+                network_data['apps_without_pub_ids'] = apps_for_network
 
-        networks = AdNetworkStatsManager.roll_up_unique_stats(self.account,
-                aggregate_stats_list, True)
-        apps = AdNetworkStatsManager.roll_up_unique_stats(self.account,
-                aggregate_stats_list, False)
-        if networks:
-            network_names, networks = zip(*networks)
-        else:
-            network_names = []
-            networks = []
+            # Give the template enough information to make the appropriate
+            # queries ajax queries to get all the models for each collection
+            network_data['pub_ids'] = []
+            for mapper in sorted(AdNetworkMapperManager.get_mappers(self.account,
+                    network), key=lambda mapper: mapper.application.name.lower()):
+                network_data['pub_ids'].append(mapper.publisher_id)
+                app = mapper.application
+                apps_with_data[(app.name, app.app_type)] = mapper.application
 
-        forms = []
-        from ad_network_reports.models import AdNetworkLoginCredentials
-        for name in sorted(AD_NETWORK_NAMES.keys()):
+            # Create a form for each network and autopopulate fields.
             try:
-                instance = AdNetworkLoginCredentials. \
-                        get_by_ad_network_name(self.account, name)
-                form = LoginInfoForm(instance=instance, prefix=name)
+                login = AdNetworkLoginCredentials. \
+                        get_by_ad_network_name(self.account, network)
+                form = LoginInfoForm(instance=login, prefix=network)
                 # Encryption doesn't work on app engine...
-                #form.initial['password'] = instance.decoded_password
-                #form.initial['username'] = instance.decoded_password
+                #form.initial['password'] = login.decoded_password
+                #form.initial['username'] = login.decoded_password
             except Exception, error:
-                instance = None
-                form = LoginInfoForm(prefix=name)
-            form.ad_network = name
-            forms.append(form)
+                form = LoginInfoForm(prefix=network)
+            network_data['form'] = form
+            networks.append(network_data)
+
+        apps = [app for app in sorted(apps_with_data.itervalues(), key=lambda
+            app: app.identifier)]
 
         # self.account can't access ad_network_* data
-        account = db.get(self.account.key())
+        account = AccountQueryManager.get_account_by_key(self.account.key())
         # Settings
         settings = {}
         settings['email'] = account.ad_network_email
@@ -97,23 +118,26 @@ class AdNetworkReportIndexHandler(RequestHandler):
         else:
             settings['recipients'] = ', '.join(account.emails)
 
+        # Aggregate stats (rolled up stats at the app and network level for the
+        # account), daily stats needed for the graph and stats for each mapper
+        # for the account all get loaded via Ajax.
         return render_to_response(self.request,
               'ad_network_reports/ad_network_reports_index.html',
               {
                   'start_date' : days[0],
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
+                  'show_graph' : (apps and True) or False,
+                  # Account key needed for form submission to EC2.
                   'settings': settings,
                   'account_key' : str(self.account.key()),
-                  'aggregates' : aggregates,
-                  'daily_stats' : simplejson.dumps(
-                      daily_stats),
+                  'networks': networks,
                   'apps': apps,
-                  'show_graph': apps != [],
-                  'networks': zip(network_names, networks, forms),
-                  'forms': forms,
-                  'MOBFOX': MOBFOX_PRETTY,
-                  'IAD': IAD_PRETTY
+                  'LoginStates': LoginStates,
+                  'ADMOB': ADMOB,
+                  'IAD': IAD,
+                  'INMOBI': INMOBI,
+                  'MOBFOX': MOBFOX,
               })
 
 @login_required
@@ -148,7 +172,7 @@ class ExportFileHandler(RequestHandler):
 
         Return a file with the aggregate stats data sorted by network or app.
         """
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
 
         aggregate_stats_list = AdNetworkReportManager. \
                 get_aggregate_stats_list(self.account, days)
@@ -179,7 +203,7 @@ class AppDetailHandler(RequestHandler):
 
         Return a webpage with the list of stats in a table.
         """
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
 
         ad_network_app_mapper = AdNetworkMapperManager.get_mapper(mapper_key=
                 mapper_key)
@@ -229,7 +253,7 @@ class ExportAppDetailFileHandler(RequestHandler):
         Export data in for the app on the network (what's in the table) to xls
         or csv.
         """
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
 
         stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
                 mapper_key, days)
@@ -257,49 +281,58 @@ class AdNetworkManagementHandler(RequestHandler):
         management stats and login credentials that resulted in error.
         Return a webpage with the list of management stats in a table.
         """
-        days = get_days(self.start_date, self.date_range)
+        days = gen_days_for_range(self.start_date, self.date_range)
 
+        # Get dict of management stats where keys are the network names and the
+        # values are the list of management stats over the give days
         management_stats = AdNetworkManagementStatsManager.get_stats(days)
 
+        # Initialize dict of dicts
         networks = {}
         for ad_network_name in management_stats.keys():
             networks[ad_network_name] = {}
+
+        # Fill in management stats for each network
         for name, stats_list in management_stats.iteritems():
             for stat in MANAGEMENT_STAT_NAMES:
-                networks[name][stat] = reduce(lambda prev, stats: prev +
-                        getattr(stats, stat), [0] + stats_list)
-            networks[name]['failed'] = reduce(lambda prev, stats: prev +
-                    len(stats.failed_logins), [0] + stats_list)
+                networks[name][stat] = sum([getattr(stats, stat) for stats in
+                    stats_list])
+            networks[name][FAILED] = sum([len(stats.failed_logins) for stats
+                in stats_list])
             stats_list.reverse()
             networks[name]['sub_data_list'] = stats_list
 
+        # Calculate aggregate management stats
         aggregates = {}
         for stat in MANAGEMENT_STAT_NAMES:
-            aggregates[stat] = reduce(lambda prev, stats: prev +
-                    stats[stat], [0] + networks.values())
-        aggregates['failed'] = reduce(lambda prev, stats: prev +
-                stats['failed'], [0] + networks.values())
+            aggregates[stat] = sum([stats[stat] for stats in networks.values()])
+        aggregates[FAILED] = sum([stats[FAILED] for stats in
+            networks.values()])
+        aggregates[ACCOUNTS] = AdNetworkLoginManager.get_number_of_accounts()
+        aggregates[LOGINS] = AdNetworkLoginManager.get_all_logins().count()
 
         stats_by_date = {}
         for stats_tuple in zip(*management_stats.values()):
             stats_by_date[stats_tuple[0].date] = stats_tuple
 
+        # Calculate daily stats for the graph
         daily_stats = []
         for day in days:
             stats_dict = {}
             if day in stats_by_date:
                 stats_tuple = stats_by_date[day]
                 for stat in MANAGEMENT_STAT_NAMES:
-                    stats_dict[stat] = int(reduce(lambda prev, stats: prev +
-                            getattr(stats, stat), [0] + list(stats_tuple)))
-                stats_dict['failed'] = int(reduce(lambda prev, stats: prev +
-                        len(stats.failed_logins), [0] + list(stats_tuple)))
+                    stats_dict[stat] = int(sum([getattr(stats, stat) for stats
+                        in stats_tuple]))
+                stats_dict[FAILED] = int(sum([len(stats.failed_logins) for
+                    stats in stats_tuple]))
             else:
                 for stat in MANAGEMENT_STAT_NAMES:
                     stats_dict[stat] = 0
-                stats_dict['failed'] = 0
+                stats_dict[FAILED] = 0
             daily_stats.append(stats_dict)
 
+        # Sort the networks by name
         networks = sorted(networks.iteritems(), key=lambda network: network[0])
 
         return render_to_response(self.request,
@@ -316,17 +349,4 @@ class AdNetworkManagementHandler(RequestHandler):
 @staff_login_required
 def ad_network_management(request, *args, **kwargs):
     return AdNetworkManagementHandler()(request, *args, **kwargs)
-
-def get_days(start_date,
-             date_range):
-    """
-    Take a start date and a date range.
-
-    Return a list of days, [datetime.date,...], objects for the given range.
-    """
-    if start_date:
-        days = StatsModel.get_days(start_date, date_range)
-    else:
-        days = StatsModel.lastdays(date_range, 1)
-    return days
 

@@ -12,6 +12,7 @@ from common.utils.timezones import Pacific_tzinfo
 from account.models import Account, PaymentRecord
 from account.forms import AccountForm, NetworkConfigForm, PaymentInfoForm
 from account.query_managers import AccountQueryManager, PaymentRecordQueryManager
+from ad_network_reports.query_managers import AdNetworkMapperManager
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager, AppQueryManager
 import logging
 from common.utils.request_handler import RequestHandler
@@ -103,6 +104,14 @@ class AdNetworkSettingsHandler(RequestHandler):
         network_config_form = NetworkConfigForm(data=self.request.POST, instance=self.account.network_config)
 
         if account_form.is_valid():
+            PUB_ID = '_pub_id'
+            # Index AdNetworkLoginCredentials by ad network name
+            account = AccountQueryManager.get_account_by_key(self.account.key())
+            logins = account.login_credentials
+            logins_dict = {}
+            for login in logins:
+                logins_dict[login.ad_network_name] = login
+
             account = account_form.save(commit=False)
             network_config = network_config_form.save(commit=False)
             AccountQueryManager.update_config_and_put(account, network_config)
@@ -115,6 +124,14 @@ class AdNetworkSettingsHandler(RequestHandler):
                     app_key_identifier = key.split('-__-')
                     if app_key_identifier[0] == str(app.key()):
                         app_network_config_data[app_key_identifier[1]] = value
+                        # Create an AdNetworkAppMapper if there exists a login
+                        # for the network (safe to re-create if it already
+                        # exists)
+                        network = app_key_identifier[1][:-len(PUB_ID)]
+                        if value and network in logins_dict:
+                            AdNetworkMapperManager.create(network=network,
+                                    pub_id=value, login=logins_dict[network],
+                                    app=app)
 
                 app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
                 app_network_config = app_form.save(commit=False)

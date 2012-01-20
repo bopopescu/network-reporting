@@ -11,9 +11,25 @@ from publisher.models import App
 
 KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
-MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped', 'failed_logins')
+STAT_NAMES = ('revenue', 'attempts', 'impressions', 'clicks')
+CALCULATED_STAT_NAMES = ('cpm', 'fill_rate', 'cpc', 'ctr')
+MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped', 'attempted_logins', \
+        'failed_logins')
 
-class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
+class LoginStates:
+    """
+    Login credential states
+    """
+    NOT_SETUP = 0
+    WORKING = 1
+    ERROR = 2
+
+
+class AdNetworkLoginCredentials(db.Model):
+    """
+    key:
+    (account,ad_network_name)
+    """
     account = db.ReferenceProperty(Account, required=True,
             collection_name='login_credentials')
     ad_network_name = db.StringProperty(required=True)
@@ -36,6 +52,8 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
 
     # List of application publisher ids that aren't tracked in MoPub.
     app_pub_ids = db.StringListProperty(default=[])
+
+    state = db.IntegerProperty(default=LoginStates.WORKING)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
@@ -85,7 +103,11 @@ class AdNetworkLoginCredentials(db.Model): #(account,ad_network_name)
     def get_by_ad_network_name(cls, account, ad_network_name):
         return cls.get_by_key_name('k:%s:%s' % (account.key(), ad_network_name))
 
-class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
+class AdNetworkAppMapper(db.Model):
+    """
+    key:
+    (ad_network_name,publisher_id)
+    """
     ad_network_name = db.StringProperty(required=True)
     publisher_id = db.StringProperty(required=True)
 
@@ -120,9 +142,7 @@ class AdNetworkAppMapper(db.Model): #(ad_network_name,publisher_id)
 
         return stats == None
 
-class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
-    ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
-                                             collection_name='ad_network_stats')
+class AdNetworkStats(db.Model):
     date = db.DateProperty()
 
     # stats info for a specific day
@@ -130,15 +150,6 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
     attempts = db.IntegerProperty(default=0)
     impressions = db.IntegerProperty(default=0)
     clicks = db.IntegerProperty(default=0)
-
-    def __init__(self, *args, **kwargs):
-        if not kwargs.get('key', None):
-            if kwargs.get('ad_network_app_mapper', None) and kwargs.get('date',
-                    None):
-                kwargs['key_name'] = ('k:%s:%s' % (kwargs[
-                    'ad_network_app_mapper'].key(),
-                    kwargs['date'].strftime('%Y-%m-%d')))
-        super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
 
     @property
     def cpm(self):
@@ -168,6 +179,40 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
             return self.clicks / float(self.impressions)
         return 0.0
 
+    @property
+    def dict_(self):
+        """
+        Override __dict__ property to return a dict of the stats.
+
+        Basically it removes all the app engine entity crap.
+        """
+        # TODO: Remove reference properties too probably in children
+        stats_dict = super(AdNetworkStats, self).__dict__['_entity']
+        if not stats_dict:
+            stats_dict = super(AdNetworkStats, self).__dict__
+            stats_dict = dict([(key.replace('_', '', 1), val) for key, val in
+                stats_dict.iteritems()])
+        for stat in CALCULATED_STAT_NAMES:
+            stats_dict[stat] = getattr(self, stat)
+        return stats_dict
+
+class AdNetworkScrapeStats(AdNetworkStats):
+    """
+    key:
+    (AdNetworkAppMapper, date)
+    """
+    ad_network_app_mapper = db.ReferenceProperty(AdNetworkAppMapper,
+            collection_name='ad_network_stats')
+
+    def __init__(self, *args, **kwargs):
+        if not kwargs.get('key', None):
+            if kwargs.get('ad_network_app_mapper', None) and kwargs.get('date',
+                    None):
+                kwargs['key_name'] = ('k:%s:%s' % (kwargs[
+                    'ad_network_app_mapper'].key(),
+                    kwargs['date'].strftime('%Y-%m-%d')))
+        super(AdNetworkScrapeStats, self).__init__(*args, **kwargs)
+
     @classmethod
     def get_by_app_mapper_and_day(cls, app_mapper, day):
         return cls.get_by_key_name('k:%s:%s' % (app_mapper.key(),
@@ -191,8 +236,58 @@ class AdNetworkScrapeStats(db.Model): #(AdNetworkAppMapper, date)
             return final_stats_list, None
         return final_stats_list
 
+class AdNetworkNetworkStats(AdNetworkStats):
+    """
+    key:
+    (Account, ad_network_name, date)
+    """
+    account = db.ReferenceProperty(Account, required=True,
+            collection_name='ad_network_network_stats')
+    ad_network_name = db.StringProperty(required=True)
+
+    def __init__(self, *args, **kwargs):
+        if not kwargs.get('key', None):
+            if kwargs.get('account', None) and kwargs.get('ad_network_name', \
+                    None) and kwargs.get('date', None):
+                kwargs['key_name'] = ('k:%s:%s:%s' % (kwargs[
+                    'account'].key(), kwargs['ad_network_name'],
+                    kwargs['date'].strftime('%Y-%m-%d')))
+        super(AdNetworkNetworkStats, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def get_by_network_and_day(cls, account, network, day):
+        return cls.get_by_key_name('k:%s:%s:%s' % (account.key(),
+            network, day.strftime('%Y-%m-%d')))
+
+class AdNetworkAppStats(AdNetworkStats):
+    """
+    key:
+    (Account, App, date)
+    """
+    account = db.ReferenceProperty(Account, required=True,
+            collection_name='ad_network_app_stats')
+    application = db.ReferenceProperty(App, required=True,
+            collection_name='ad_network_stats')
+
+    def __init__(self, *args, **kwargs):
+        if not kwargs.get('key', None):
+            if kwargs.get('account', None) and kwargs.get('application', \
+                    None) and kwargs.get('date', None):
+                kwargs['key_name'] = ('k:%s:%s:%s' % (kwargs[
+                    'account'].key(), kwargs['application'].key(),
+                    kwargs['date'].strftime('%Y-%m-%d')))
+        super(AdNetworkAppStats, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def get_by_app_and_day(cls, account, app, day):
+        return cls.get_by_key_name('k:%s:%s:%s' % (account.key(),
+            app.key(), day.strftime('%Y-%m-%d')))
 
 class AdNetworkManagementStats(db.Model): #(date)
+    """
+    key:
+    (date)
+    """
     ad_network_name = db.StringProperty(required=True)
     date = db.DateProperty(required=True)
 
@@ -200,6 +295,7 @@ class AdNetworkManagementStats(db.Model): #(date)
     updated = db.IntegerProperty(default=0)
     mapped = db.IntegerProperty(default=0)
 
+    attempted_logins = db.IntegerProperty(default=0)
     failed_logins = db.StringListProperty(default=[])
 
     def __init__(self, *args, **kwargs):
@@ -207,6 +303,13 @@ class AdNetworkManagementStats(db.Model): #(date)
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['ad_network_name'],
                 kwargs['date'].strftime('%Y-%m-%d')))
         super(AdNetworkManagementStats, self).__init__(*args, **kwargs)
+
+    @property
+    def success_rate(self):
+        if attempted_logins:
+            return attempted_logins - len(failed_logins) / \
+                    float(attempted_logins)
+        return 0
 
     @classmethod
     def get_by_day(cls,ad_network_name, day):

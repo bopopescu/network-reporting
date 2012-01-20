@@ -1,8 +1,7 @@
 from urllib import urlencode
 from urllib2 import urlopen
-
+from common.utils import date_magic
 import datetime
-
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager, \
@@ -10,10 +9,12 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
 from publisher.query_managers import AppQueryManager,\
      AdUnitQueryManager, \
      AdUnitContextQueryManager
-
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 from common.constants import MPX_DSP_IDS
 import logging
+
+from reporting.query_managers import StatsModelQueryManager
+from reporting.models import StatsModel, GEO_COUNTS
 
 try:
     import json
@@ -132,12 +133,6 @@ class MarketplaceStatsFetcher(object):
                       "clicks": stats['clk'],
                       "ecpm": currency(ecpm(stats['pub_rev'], stats['imp'])),
                       "ctr": percentage(ctr(stats['clk'], stats['imp']))}
-            # hack, this is fixed in origin/backboning, take this out on merge
-            if counts['revenue'] == "---":
-                counts['revenue'] = "$0.00"
-            if counts['ecpm'] == "---":
-                counts['ecpm'] = "$0.00"
-
             stats_dict[id] = counts
         return stats_dict
 
@@ -334,7 +329,7 @@ class AdNetworkStatsFetcher(object):
 
     @classmethod
     def get_app_on_network_stats(cls, network, days, pub_id):
-        mapper = AdNetworkMapperManager.get_ad_network_mapper(publisher_id=pub_id,
+        mapper = AdNetworkMapperManager.get_mapper(publisher_id=pub_id,
                 ad_network_name=network)
         stats = AdNetworkStatsManager.get_stats_for_mapper_and_days(mapper,
                 days)[0]
@@ -365,21 +360,11 @@ class AdNetworkStatsFetcher(object):
 # Helper/Utility functions
 
 def _transform_stats(stats_dict):
-    counts = {
-        "revenue": currency(stats_dict['rev']),
-        "revenue_float": stats_dict['rev'],
-        "impressions": int(stats_dict['imp']),
-        "clicks": stats_dict.get('clk', 0), # no clk currently from /stats/pub
-        "ecpm": currency(ecpm(stats_dict['rev'], stats_dict['imp'])),
-        "ecpm_float": ecpm(stats_dict['rev'], stats_dict['imp']),
-        "ctr": percentage(ctr(stats_dict.get('clk', 0), stats_dict['imp']))
-    }
-    # hack, this is fixed in origin/backboning, take this out on merge
-    if counts['revenue'] == "---":
-        counts['revenue'] = "$0.00"
-    if counts['ecpm'] == "---":
-        counts['ecpm'] = "$0.00"
-    return counts
+    return {"revenue": stats_dict['rev'],
+            "impressions": int(stats_dict['imp']),
+            "clicks": stats_dict.get('clk', 0), # no clk currently from /stats/pub
+            "ecpm": ecpm(stats_dict['rev'], stats_dict['imp']),
+            "ctr": ctr(stats_dict.get('clk', 0), stats_dict['imp'])}
 
 
 def _fetch_and_decode(url):
@@ -395,22 +380,3 @@ def _fetch_and_decode(url):
 
 class MPStatsAPIException(Exception):
     pass
-
-
-def get_width_and_height(adunit):
-    if adunit.format == "full" and not adunit.landscape:
-        adunit_width = 320
-        adunit_height = 480
-    elif adunit.format == "full" and adunit.landscape:
-        adunit_width = 480
-        adunit_height = 320
-    elif adunit.format == "full_tablet" and not adunit.landscape:
-        adunit_width = 768
-        adunit_height = 1024
-    elif adunit.format == "full_tablet" and adunit.landscape:
-        adunit_width = 1024
-        adunit_height = 768
-    else:
-        adunit_width = adunit.get_width()
-        adunit_height = adunit.get_height()
-    return adunit_width, adunit_height

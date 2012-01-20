@@ -589,7 +589,7 @@ window.logging.warn = window.console.log;
     };
 
     mopub.Utils.formatCurrency = function(num) {
-        return "$" + num.toFixed(2);
+        return "$" + mopub.Utils.formatNumberWithCommas(num.toFixed(2));
     };
 
     mopub.Utils.formatNumberAsPercentage = function(string) {

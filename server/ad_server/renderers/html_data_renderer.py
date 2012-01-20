@@ -18,16 +18,18 @@ class HtmlDataRenderer(BaseHtmlRenderer):
         super(HtmlDataRenderer, self)._setup_html_context()
         self.html_context['html_data'] = self.creative.html_data
         self.html_context['random_val'] = self.random_val
+        if self._is_mraid():
+            self.html_context['use_impression_pixel'] = False
 
-    def _setup_headers(self):
-        super(HtmlDataRenderer, self)._setup_headers()
-        # TODO: clean this up
-        # for ORMMA HTML we need to pass
-        # banner: 'ormma' as the adtype, None as full_ad_type
-        # interstitial: 'interstitial' as the adtype, 'ormma' as full_ad_type
-        if getattr(self.creative, 'ormma_html', False):
-            if self.adunit.is_fullscreen():
-                self.header_context.ad_type = "interstitial"
-                self.header_context.full_ad_type = ORMMA_ADTYPE
-            else:
-                self.header_context.ad_type = ORMMA_ADTYPE
+    def _is_mraid(self):
+        return getattr(self.creative, 'ormma_html', False)
+
+    def _get_ad_type(self):
+        if self._is_mraid():
+            return 'mraid'
+        return super(HtmlDataRenderer, self)._get_ad_type()
+
+    def _get_template(self):
+        if self._is_mraid():
+            return 'mraid.html'
+        return super(HtmlDataRenderer, self)._get_template()

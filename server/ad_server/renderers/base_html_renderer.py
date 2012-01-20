@@ -115,6 +115,9 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         self.header_context.ad_type = self._get_ad_type()
         self.header_context.full_ad_type = None
         
+    def _get_template(self):
+        return self.TEMPLATE
+
     def _setup_content(self):
         """
         Uses the html_context and self.TEMPLATE to generate creative html.
@@ -124,7 +127,8 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         override self.TEMPLATE to provide more flexibility/customization
         """
         path = os.path.join(os.path.dirname(__file__), 
-                            'templates', 
-                            self.TEMPLATE)
+                            'templates',
+                            self._get_template()
+                            )
         self.rendered_creative = template.render(path, self.html_context)
     

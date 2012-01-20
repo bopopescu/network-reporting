@@ -1,0 +1,40 @@
+<html>test mraid data</html>
+
+<span style="display:none">
+  <img src="http://www.google.com/pingme&amp;rand=0932jfios"/>
+</span>
+
+<script type="text/javascript">
+  function trackImpressionHelper(){
+    var urls = new Array();
+    var i = 0;
+    
+  
+    
+    urls[i++]="http://www.google.com/pingme&rand=0932jfios"
+    
+    
+    var hiddenSpan = document.createElement('span')
+    hiddenSpan.style.display = 'none';
+
+    var i=0;
+    for (var i=0;i<urls.length;i++)
+    {
+      var img = document.createElement('img')
+      img.src = urls[i];
+      hiddenSpan.appendChild(img);
+    }    
+
+    var body = document.getElementsByTagName('body')[0] ;
+    body.appendChild(hiddenSpan);
+  }
+</script>
+
+<script type="text/javascript">
+
+trackImpressionHelper();
+
+function webviewDidAppear(){
+   
+}
+</script>

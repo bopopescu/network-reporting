@@ -127,6 +127,8 @@ class MarketplaceStatsFetcher(object):
 
         stats_dict = {}
         for id, stats in response_dict.iteritems():
+            # REFACTOR: formatting revenue as a string should happen client-side
+            # or in the template
             counts = {"revenue": currency(stats['pub_rev']),
                       "impressions": int(stats['imp']),
                       "clicks": stats['clk'],

@@ -75,6 +75,7 @@ def awesome_number_formatter(value):
 def currency(value):
     if value:
         try:
+            value = round(value, 2)
             return "$%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
         except Exception:
             return "$0.00"
@@ -121,7 +122,10 @@ def upper(s):
 def withsep(value):
     if value:
         try:
-            return re.sub(r'(\d{3})(?=\d)', r'\1,', str(value)[::-1])[::-1]
+            match = re.sub(r'(\d{3})(?=\d)', r'\1,', str(value)[::-1])[::-1]
+            if match:
+                return match
+            return "0"
         except Exception:
             return "0"
     else:

@@ -45,6 +45,8 @@ from account.models import NetworkConfig
 
 ## Query Managers
 from account.query_managers import AccountQueryManager
+from ad_network_reports.query_managers import AdNetworkMapperManager, \
+        AdNetworkLoginManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
 from common.utils.query_managers import CachedQueryManager
@@ -916,8 +918,7 @@ def create_iad_mapper(account, app):
     Create AdNetworkAppMapper for iad if itunes url is input and iad
     AdNetworkLoginCredentials exist
     """
-    if app.url and app.app_type in ('iphone', 'ipad'):
-        #logging.info("Ad
+    if app.iad_pub_id:
         login = AdNetworkLoginManager.get_login(account, network='iad').get()
         if login:
             AdNetworkMapperManager.create(network='iad',

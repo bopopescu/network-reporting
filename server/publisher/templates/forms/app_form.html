@@ -41,7 +41,6 @@
   </dt>
   <dd class="appForm-platformDependent iphone">
     <input type="url" class="input-text iphone {% if form.url.errors %}form-error{% endif %}" name="{{form.url.name}}" value="{{form.url.value}}" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" />
-    <input type="url" class="input-text mweb {% if form.url.errors %}form-error{% endif %}" name="{{form.url.name}}" value="{{form.url.value}}" id="appForm-url" />
     {% for error in form.url.errors %}
     <div class="form-error-text">{{error}}</div>
     {% endfor %}

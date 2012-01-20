@@ -174,13 +174,13 @@ class AdNetworkLoginManager(CachedQueryManager):
     @classmethod
     def get_login(cls,
                   account,
-                  network_name=''):
+                  network=''):
         """
         Return AdNetworkLoginCredentials entities for the given account.
         """
         query = AdNetworkLoginCredentials.all().filter('account =', account)
-        if network_name:
-            return query.filter('ad_network_name =', network_name)
+        if network:
+            return query.filter('ad_network_name =', network)
         return query
 
     @classmethod

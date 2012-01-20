@@ -184,14 +184,13 @@ class AdNetworkStats(db.Model):
         """
         Override __dict__ property to return a dict of the stats.
 
-        Basically it removes all the app engine entity crap.
+        Basically it removes all the app engine entity crap and includes the
+        calculated properties.
         """
-        # TODO: Remove reference properties too probably in children
-        stats_dict = super(AdNetworkStats, self).__dict__['_entity']
-        if not stats_dict:
-            stats_dict = super(AdNetworkStats, self).__dict__
-            stats_dict = dict([(key.replace('_', '', 1), val) for key, val in
-                stats_dict.iteritems()])
+        stats_dict = {}
+        stats_dict['date'] = getattr(self, 'date', None)
+        for stat in STAT_NAMES:
+            stats_dict[stat] = getattr(self, stat)
         for stat in CALCULATED_STAT_NAMES:
             stats_dict[stat] = getattr(self, stat)
         return stats_dict

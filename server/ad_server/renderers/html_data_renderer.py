@@ -18,6 +18,8 @@ class HtmlDataRenderer(BaseHtmlRenderer):
         super(HtmlDataRenderer, self)._setup_html_context()
         self.html_context['html_data'] = self.creative.html_data
         self.html_context['random_val'] = self.random_val
+        if self._is_mraid():
+            self.html_context['use_impression_pixel'] = False
 
     def _is_mraid(self):
         return getattr(self.creative, 'ormma_html', False)

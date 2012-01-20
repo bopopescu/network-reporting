@@ -8,7 +8,7 @@ import logging
 #### IF THESE TESTS ARE FAILING, SET THIS TO TRUE, RUN AGAIN, THEN SET 
 #### BACK TO FALSE AND TRY AGAIN.  IF THEY STILL FAIL THEN 
 #### SOMETHING IS BROKEN
-RESET_EXAMPLE = False
+RESET_EXAMPLE = True
 
 sys.path.append(os.environ['PWD'])
 import unittest
@@ -322,13 +322,54 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         # are correct for fullscreen tablets
         # (i.e. the meta tag)
         old_format = self.adunit.format
-        self.adunit.format = 'full_tablet'
+        self.adunit.format = '320x50'
 
         self._compare_rendering_with_examples("html_adtype", suffix="")
 
         self.adunit.format = old_format
 
         self.on_fail_exclude_adgroups = _on_fail_exclude_adgroups
+
+    def mptest_html_full_adtype(self):
+        """ Make a one-off test for html creatives. """
+
+        adgroup = AdGroup(account=self.account,
+                          campaign=self.campaign,
+                          site_keys=[self.adunit.key()],
+                          bid_strategy="cpm",
+                          bid=100.0)
+        adgroup.put()
+
+        self.creative = HtmlCreative(key_name="key_name",
+                                     name="image dummy",
+                                     ad_type="html",
+                                     html_data="test html data",
+                                     format="320x50",
+                                     format_predicates=["format=320x50"],
+                                     tracking_url="http://www.google.com/",
+                                     ad_group=adgroup,
+                                     launchpage="http://www.google.com2/")
+
+        self.creative.image_width = 320
+        self.creative.image_height = 50
+        self.creative.put()
+
+        _on_fail_exclude_adgroups = [e for e in self.on_fail_exclude_adgroups]
+        self.on_fail_exclude_adgroups = []
+
+
+        # For this test we want to makes sure that the templates
+        # are correct for fullscreen tablets
+        # (i.e. the meta tag)
+        old_format = self.adunit.format
+        self.adunit.format = 'full_tablet'
+
+        self._compare_rendering_with_examples("html_full", suffix="")
+
+        self.adunit.format = old_format
+
+        self.on_fail_exclude_adgroups = _on_fail_exclude_adgroups
+
 
     def mptest_mraid_html_adtype(self):
         """ Make a one-off test for mraid creatives. """
@@ -368,6 +409,47 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         self.adunit.format = old_format
 
         self.on_fail_exclude_adgroups = _on_fail_exclude_adgroups
+
+    def mptest_mraid_html_full_adtype(self):
+        """ Make a one-off test for mraid creatives. """
+
+        adgroup = AdGroup(account=self.account,
+                          campaign=self.campaign,
+                          site_keys=[self.adunit.key()],
+                          bid_strategy="cpm",
+                          bid=100.0)
+        adgroup.put()
+
+        self.creative = HtmlCreative(key_name="key_name",
+                                     name="image dummy",
+                                     ad_type="html",
+                                     html_data="<html>test mraid data</html>",
+                                     format="full",
+                                     format_predicates=["format=320x50"],
+                                     tracking_url="http://www.google.com/pingme",
+                                     ad_group=adgroup,
+                                     ormma_html=True,
+                                     launchpage="http://www.google.com2/")
+
+        self.creative.image_width = 320
+        self.creative.image_height = 50
+        self.creative.put()
+
+        _on_fail_exclude_adgroups = [e for e in self.on_fail_exclude_adgroups]
+        self.on_fail_exclude_adgroups = []
+
+        # For this test we want to makes sure that the templates
+        # are correct for fullscreen tablets
+        # (i.e. the meta tag)
+        self.adunit.format = 'full'
+        old_format = self.adunit.format
+
+        self._compare_rendering_with_examples("mraid_full", suffix="")
+
+        self.adunit.format = old_format
+
+        self.on_fail_exclude_adgroups = _on_fail_exclude_adgroups
+
 
     # image, text and text_icon adtypes are not tested as defaults
     def mptest_image_adtype(self):

@@ -14,7 +14,7 @@ class InMobiServerSide(ServerSide):
     
     def __init__(self,request,adunit,*args,**kwargs):
         self.url_params = {}
-        return super(InMobiServerSide,self).__init__(request,adunit,*args,**kwargs)
+        super(InMobiServerSide,self).__init__(request,adunit,*args,**kwargs)
   
     def get_user_agent(self):
         ua = super(InMobiServerSide, self).get_user_agent()
@@ -106,7 +106,7 @@ class InMobiServerSide(ServerSide):
         if re.match("^<!--.*--\>$", response.content) == None and len(response.content) != 0:
             # TODO: do any sort of manipulation here that we want, like resizing the image, LAME
             self.parse_xml(response.content)
-            self.creative_width, self.creative_height = self.adunit.get_width(),self.adunit.get_height()
+            self.creative_width, self.creative_height = self.url_params['width'], self.url_params['height']
             if 'image_url' in self.url_params:
                 return banner_template.safe_substitute(self.url_params)
             elif 'link_text' in self.url_params:

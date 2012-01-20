@@ -121,6 +121,14 @@ class App(db.Model):
     def owner_name(self):
         return None
 
+    @property
+    def iad_pub_id(self):
+        if getattr(self, 'url', None) and re.match(IAD_URL, self.url):
+            ids = re.findall('/id[0-9]*\?', app.url)
+            if ids:
+                pub_id = ids[0][len('/id'):-1]
+                return pub_id
+
     def toJSON(self):
         d = to_dict(self, ignore = ['icon', 'account', 'network_config'])
         d.update(icon_url=self.icon_url)

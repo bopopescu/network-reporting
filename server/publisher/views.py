@@ -243,6 +243,8 @@ class AppCreateHandler(RequestHandler):
             # update the database
             AppQueryManager.put(app)
 
+            create_iad_mapper(self.account, app)
+
             adunit.app_key = app
 
             AdUnitQueryManager.put(adunit)
@@ -257,7 +259,6 @@ class AppCreateHandler(RequestHandler):
             if self.account.status == "new":
                 self.account.status = "step4"  # skip to step 4 (add campaigns), but show step 2 (integrate)
                 # create a network f
-                # TODO (Tiago): add the itunes info here for iOS apps for iAd syncing
                 network_config = NetworkConfig()
                 AccountQueryManager.update_config_and_put(account, network_config)
 
@@ -736,7 +737,10 @@ class AppUpdateAJAXHandler(RequestHandler):
                 account = app_form.instance.account
             app = app_form.save(commit=False)
             app.account = account
+
             AppQueryManager.put(app)
+
+            create_iad_mapper(self.account, app)
 
             json_dict.update(success=True)
 
@@ -905,3 +909,19 @@ def enable_marketplace(adunit, account):
     mpx_creative.adgroup = mpx_adgroup
     mpx_creative.account = account
     CreativeQueryManager.put(mpx_creative)
+
+## Helpers
+def create_iad_mapper(account, app):
+    """
+    Create AdNetworkAppMapper for iad if itunes url is input and iad
+    AdNetworkLoginCredentials exist
+    """
+    if app.url and app.app_type in ('iphone', 'ipad'):
+        #logging.info("Ad
+        login = AdNetworkLoginManager.get_login(account, network='iad').get()
+        if login:
+            AdNetworkMapperManager.create(network='iad',
+                                          pub_id=app.iad_pub_id,
+                                          login=login,
+                                          app=app)
+

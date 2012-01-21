@@ -1,18 +1,21 @@
-# from appengine_django import InstallAppengineHelperForDjango
-# InstallAppengineHelperForDjango()
+#from appengine_django import InstallAppengineHelperForDjango
+#InstallAppengineHelperForDjango()
 
-
+import copy
 import string
 import random
 import datetime as dt
 
 from account.query_managers import AccountQueryManager
+from reporting.query_managers import StatsModelQueryManager
 
 from registration.models import *
 from advertiser.models import *
 from publisher.models import *
 from account.models import *
 from budget.models import *
+from reporting.models import *
+
 
 APP_INDEX = 0
 ADUNIT_INDEX = 0
@@ -50,6 +53,13 @@ def get_random_color():
 
 def select_rand(array):
     return array[random.randint(0,len(array)-1)]
+
+def select_rand_subset(array):
+    num_elements = random.randint(1,len(array)-1)
+    cloned = copy.copy(array)
+    random.shuffle(cloned)
+    return cloned[:num_elements]
+    
 
 def get_random_date():
     today = dt.date.today()
@@ -147,29 +157,93 @@ def generate_account(username="rob@mopub.com",password="test",email="rob@mopub.c
     return account
 
 def generate_networkconfig():
-    return NetworkConfig()
+    networkconfig = NetworkConfig()
+    networkconfig.put()
+    return networkconfig
 
 def generate_marketplace_config():
-    return MarketplaceConfig()
+    marketplace_config = MarketPlaceConfig()
+    marketplace_config.put()
+    return marketplace_config
 
+
+def generate_stats_model(publisher,advertiser,account,date):
+    request_count = random.randint(0,10000)
+    impression_count = int(random.random()*request_count)
+    click_count = int(random.random()*impression_count)
+    conversion_count = int(random.random()*click_count)
+
+    user_count = int(request_count*.75)
+    request_user_count = user_count
+    impression_user_count =int(request_user_count*random.random())
+    click_user_count = int(impression_user_count *random.random())
+
+    stats_model = StatsModel(publisher = publisher,
+                             advertiser = advertiser,
+                             account = account,
+                             date = date,
+                             request_count  =request_count,
+                             impression_count = impression_count,
+                             click_count = click_count,
+                             conversion_count = conversion_count,
+                             user_count = user_count,
+                             request_user_count = request_user_count,
+                             impression_user_count = impression_user_count,
+                             click_user_count = click_user_count)
+                             
+    return stats_model
+    
 
 def main():
-    account = generate_account("rob@mopub.com","test","rob@mopub.com")
-    app = generate_app(account)
-    adunits = []
-    for i in range(1):
-        adunits.append(generate_adunit(app,account))
+    NUM_ACCOUNTS = 1
+    NUM_APPS = 2 #ONLY SUPPORT ONE ACCOUNT FOR NOW
+    NUM_CAMPAIGNS_PER_APP = 2
+    NUM_ADUNITS_PER_APP = 2
+
+    APP_STATS_SINCE = datetime.datetime(2012,1,10)
     
-    site_keys = [a.key() for a in AdUnit.all()]
 
-    campaigns = []
-    adgroups = []
-    budgets = []
-    for i in range(1):
-        budget = generate_budget()
-        campaign = generate_campaign(account,budget)
-        adgroup = generate_adgroup(campaign,site_keys,account)
+    account = generate_account("rob@mopub.com","test","rob@mopub.com")
 
+    apps = []
+    for i in range(NUM_APPS):
+        apps.append(generate_app(account))
 
+    adunits_per_app = dict([(app,[]) for app in apps])
+    campaigns_per_app = dict([(app,[]) for app in apps])
+    for app in apps:
+        for i in range(NUM_ADUNITS_PER_APP):
+            adunits_per_app[app].append(generate_adunit(app,account))
+
+        all_site_keys = [a.key() for a in AdUnit.all()]
+
+        for i in range(NUM_CAMPAIGNS_PER_APP):
+            budget = generate_budget()
+            campaign = generate_campaign(account,budget)
+            campaigns_per_app[app].append(campaign)
+            adgroup = generate_adgroup(campaign,
+                                       select_rand_subset(all_site_keys),
+                                       account)
+                                          
+
+    cur_date = APP_STATS_SINCE
+    today = dt.datetime.now()
+    day = dt.timedelta(days=1)
+
+    s = StatsModelQueryManager(account=account)
+
+    for app in apps:
+        cur_date = APP_STATS_SINCE
+        while cur_date<today:
+            stats= [generate_stats_model(app,
+                                  campaign,
+                                  account,
+                                  cur_date)                    
+             for campaign in campaigns_per_app[app]]
+            s.put_stats(stats=stats)
+            
+            cur_date+=day
+        
+            
 if __name__=="__main__":
     main()

@@ -488,22 +488,45 @@ class AdGroupForm(forms.ModelForm):
     target_other = forms.BooleanField(initial=True,
                                       label='Other',
                                       required=False)
+    region_targeting = forms.ChoiceField(choices=(('all', 'Everywhere'),
+                                                  ('city', 'City')),
+                                         initial='all',
+                                         label='Region Targeting:',
+                                         widget=forms.RadioSelect)
+    geo_predicates
+    cities = forms.Field(required=False,
+                         widget=forms.SelectMultiple)
     keywords = forms.CharField(required=False,
                                widget=forms.Textarea(attrs={'cols': 50,
                                                             'rows': 3}))
     def __init__(self, *args, **kwargs):
-        super(forms.ModelForm, self).__init__(*args, **kwargs)
+        data = args[0] if len(args) > 0 else kwargs.get('data', None)
+        initial = args[4] if len(args) > 4 else kwargs.get('initial', None)
+        instance = args[8] if len(args) > 8 else kwargs.get('instance', None)
+
+        if not data and ((initial and initial.get('cities', [])) or
+                         (instance and instance.cities)):
+
+
         # allows us to set choices on instantiation
-        site_keys = kwargs.get('site_keys', [])
+        site_keys = kwargs.pop('site_keys', [])
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
     def clean(self):
+        """
+        geo:US
+        location-targeting:city
+        cities:35.9940329,-78.898619:NC:Durham:US
+        """
         cleaned_data = super(AdGroupForm, self).clean()
-        #logging.error(cleaned_data)
-        #logging.error(cleaned_data['site_keys'])
+        logging.error(cleaned_data)
+        # don't store targeted cities unless region targeting for cities is selected
+        if(cleaned_data['region_targeting'] != 'city'):
+            cleaned_data['cities'] = []
         return cleaned_data
     class Meta:
         model = AdGroup
@@ -528,7 +551,9 @@ class AdGroupForm(forms.ModelForm):
                   'android_version_min',
                   'android_version_max',
                   'target_other',
-                  # geo targeting
+                  'region_targeting',
+
+                  'cities',
                   'keywords')
 
 

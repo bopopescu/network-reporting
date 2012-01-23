@@ -228,7 +228,7 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
 
         site_keys = []
         for app in apps:
-            for adunit in app.adunits:
+            for adunit in app.all_adunits:
                 site_keys.append(adunit.key)
 
         campaign_form = CampaignForm()
@@ -458,10 +458,14 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
             networks[0][2] = True # select the first by default
         """
 
+        # TODO: find better way to access form data so we don't have to pass in
+        # campaign and adgroup
         return render_to_response(self.request,
                                   'advertiser/create_campaign_and_adgroup.html',
                                   {
+                                      'campaign': adgroup.campaign,
                                       'campaign_form': campaign_form,
+                                      'adgroup': adgroup,
                                       'adgroup_form': adgroup_form,
                                       'apps': apps,
                                   })
@@ -469,6 +473,8 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
     def post(self, adgroup_key):
         if not self.request.is_ajax():
             raise Http404
+
+        logging.error(request.POST)
 
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
@@ -478,7 +484,7 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
 
             site_keys = []
             for app in AppQueryManager.get_apps(account=self.account):
-                for adunit in app.adunits:
+                for adunit in app.all_adunits:
                     site_keys.append(adunit.key)
 
             adgroup_form = AdGroupForm(self.request.POST, instance=adgroup, site_keys=site_keys)

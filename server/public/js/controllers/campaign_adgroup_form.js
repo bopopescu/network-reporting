@@ -119,17 +119,6 @@ $(document).ready(function() {
           }
         }).change();
 
-        // Show location-dependent fields when location targeting is turned on
-        $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
-            var loc_targ = $(this).val();
-            $('.locationDependent', '#campaignAdgroupForm').hide();
-            $('.' + loc_targ + '.locationDependent', '#campaignAdgroupForm').show();
-            if ($(this).val() == 'all') {
-                $('li.token-input-city span.token-input-delete-token').each(function() {
-                    $(this).click();
-                });
-            }
-        }).filter(':checked').click();
 
 
         // Initialize impression count on form display
@@ -387,4 +376,86 @@ $(document).ready(function() {
                 $('.ui-button-text', this).text('Show Advanced Details');
             }
         }); // TODO: need to update on document ready
+
+    /* GEO TARGETING */
+    var geo_s = 'http://ws.geonames.org/searchJSON?';
+    var pre = {type: 'country', data: []};
+    var city_pre = {type: 'city', data: []};
+    //Not being used right now
+    //var state_pre = {type: 'state', data: []};
+    for (var count = 0; count < countries.length; count++) {
+        var dat = countries[count];
+        if ($.inArray(dat.code, priors) != -1) {
+            pre.data.push(dat);
+        }
+        if (pre.length == priors.length)
+            break;
+    }
+    //city is ll:ste:name:ccode;
+    for (var i in city_priors) {
+        if (city_priors.hasOwnProperty(i)) {
+            var datas = city_priors[i].split(':');
+            var ll = datas[0].split(',');
+            var ste = datas[1];
+            var name = datas[2];
+            var ccode = datas[3];
+            city_pre.data.push(
+                    { lat: ll[0],
+                      lng: ll[1],
+                      countryCode: ccode,
+                      adminCode1: ste,
+                      name: name
+                      });
+        }
+    }
+    $('#city_ta').tokenInput(geo_s, {
+        country: 'US',
+        doImmediate: false,
+        hintText: 'Type in a city name',
+        queryParam: 'name_startsWith',
+        featureClass: 'P',
+        prePopulate: city_pre,
+        contentType: 'json',
+        type: 'city',
+        minChars: 3,
+        method: 'get'
+    });
+    //Verify that all cities in city_pre are in the SINGLE country that is pre
+
+    //Need to create data object that is array of dictionary [ {name, id} ]
+    $('#geo_pred_ta').tokenInput(null, {
+        data: countries,
+        hintText: 'Type in a country name',
+        formatResult: function( row ) {
+            return row.name;
+        },
+        formatMatch: function( row, i, max ){
+            return [row.name, row.code];
+        },
+        prePopulate: pre
+    });
+    /* Not doing states atm
+    $('#state_ta').tokenInput(geo_s, {
+        country: 'US',
+        doImmediate: false,
+        queryParam: 'name_startsWith',
+        featureCode: 'ADM1',
+        contentType: 'json',
+        prePopulate: state_pre,
+        type: 'state',
+        minChars: 5,
+        method: 'get'
+    }); */
+
+    // Show location-dependent fields when location targeting is turned on
+    $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
+        var loc_targ = $(this).val();
+        $('.locationDependent', '#campaignAdgroupForm').hide();
+        $('.' + loc_targ + '.locationDependent', '#campaignAdgroupForm').show();
+        if ($(this).val() == 'all') {
+            $('li.token-input-city span.token-input-delete-token').each(function() {
+                $(this).click();
+            });
+        }
+    }).filter(':checked').click();
 });

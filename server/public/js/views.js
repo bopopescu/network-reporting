@@ -117,7 +117,7 @@
                 this.show_chart();
             }
         }
-    })
+    });
 
     /*
      * ## AppView
@@ -229,8 +229,7 @@
             $('input.targeting-box', adunit_row).click(function() {
                 var loading_img = $('.targeting .loading-img', adunit_row);
                 loading_img.show();
-                current_model.set({'active': $(this).is(':checked')});
-                current_model.save({}, {
+                current_model.save({'active': $(this).is(':checked')}, {
                     success: function () {
                         setTimeout(function() {
                             loading_img.hide();
@@ -241,17 +240,27 @@
 
             // Add the event handler to submit price floor changes over ajax.
             $('.price_floor .input-text', adunit_row).keyup(function() {
-                var loading_img = $('.price_floor .loading-img', adunit_row);
+                var input_field = $(this);
+                input_field.removeClass('error');
+                var loading_img = $(".price_floor .loading-img", adunit_row);
                 loading_img.show();
-                current_model.set({'price_floor': $(this).val()});
-                current_model.save({}, {
-                    success: function () {
-                        setTimeout(function() {
-                            loading_img.hide();
-                        }, 2000);
-                    }
+
+                var promise = current_model.save({
+                    price_floor: $(this).val()
                 });
+                if (promise) {
+                    promise.success(function() {
+                        loading_img.hide();
+                    });
+                    promise.error(function() {
+                        loading_img.hide();
+                    });
+                } else {
+                    loading_img.hide();
+                    input_field.addClass('error');
+                }
             });
+
 
             return this;
         },

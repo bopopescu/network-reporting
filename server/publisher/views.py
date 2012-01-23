@@ -160,6 +160,12 @@ class AppIndexHandler(RequestHandler):
                 'yesterday': yesterday.ctr,
                 'total': totals.ctr
             },
+            'clicks': {
+                'today': today.click_count,
+                'yesterday': yesterday.click_count,
+                'total': totals.click_count
+            },
+
         }
 
         return render_to_response(self.request,

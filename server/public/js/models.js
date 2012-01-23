@@ -243,6 +243,14 @@
             revenue: 0,
             stats_endpoint: 'all'
         },
+        validate: function(attributes) {
+            if (typeof(attributes.price_floor) != 'undefined') {
+                var valid_number = Number(attributes.price_floor);
+                if (isNaN(valid_number)) {
+                    return "Please enter a valid number for the price floor";
+                }
+            }
+        },
         url: function() {
             // window.location.search.substring(1) is used to preserve date ranges from the url
             // this makes the fetching work with the datepicker.

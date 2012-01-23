@@ -43,9 +43,9 @@
       <tbody>
         <tr style="border:none;">
           {% if totals %}
-            <td> {{ totals.revenue|default_if_none:"$0"|withsep }} </td>
-            <td> {{ totals.impressions|default_if_none:"0"|withsep }} </td>
-            <td> {{ totals.ecpm|default_if_none:"$0" }} </td>
+            <td> {{ totals.revenue|currency|default_if_none:"$0.00"|withsep }} </td>
+            <td> {{ totals.impressions|default_if_none:"0" }} </td>
+            <td> {{ totals.ecpm|currency|default_if_none:"$0.00" }} </td>
           {% else %}
             <td> $0.00 </td>
             <td> 0 </td>
@@ -317,7 +317,6 @@
       MarketplaceController.initializeIndex(bootstrapping_data);
     });
   </script>
-  <script type="text/javascript" src="/js/controllers/marketplace.js?v=1"></script>
 {% endblock extraScripts %}
 
 {% block extraCSS %}

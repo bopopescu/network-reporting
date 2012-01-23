@@ -329,13 +329,6 @@ def update_login_stats(login, day, management_stats=None, from_check=False,
         mapper = mappers.get(publisher_id, None)
 
         if not mapper:
-#            # Check if the app has been added to MoPub prior to last
-#            # update.
-#            mapper = AdNetworkMapperManager. \
-#                    find_app_for_stats(publisher_id, login)
-#            if not mapper:
-#                # App is not registered in MoPub but is still in the ad
-#                # network.
             if logger:
                 logger.info("%(account)s has pub id %(pub_id)s on "
                         "%(network)s that\'s NOT in MoPub" %
@@ -344,16 +337,6 @@ def update_login_stats(login, day, management_stats=None, from_check=False,
                                   network=login.ad_network_name))
             login.app_pub_ids.append(publisher_id)
             continue
-#            else:
-#                if management_stats:
-#                    management_stats.increment(login.ad_network_name, 'mapped')
-#                    logging.info("%(account)s has pub id %(pub_id)s on "
-#                            "%(network)s that was FOUND in MoPub and "
-#                            "mapped" %
-#                                 dict(account=login.account.
-#                                     key(),
-#                                      pub_id=publisher_id,
-#                                      network=login.ad_network_name))
         else:
             if logger:
                 logger.info("%(account)s has pub id %(pub_id)s on "

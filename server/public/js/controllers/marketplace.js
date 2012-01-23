@@ -4,7 +4,7 @@
 var mopub = mopub || {};
 
 // depends underscore, backbone, jquery, mopub.chart, mopub.util
-(function($, Backbone) {
+(function($, Backbone, _) {
 
     /*
      * ## AdUnit
@@ -966,4 +966,4 @@ var mopub = mopub || {};
 
     window.MarketplaceController = MarketplaceController;
 
-})(this.jQuery);
+})(this.jQuery, this.Backbone, this._);

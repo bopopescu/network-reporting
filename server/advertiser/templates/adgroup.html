@@ -32,6 +32,8 @@
   {% endif %}
 {% endblock dateButtons %}
 
+
+
 {% block titleBarRight %}
   {% if not account.status %}
     <!-- MixPanel Tracking -->
@@ -83,32 +85,27 @@
 
   {% if not apps %}
     <div class="alert-message block-message">
-      This campaign is not targeted at any <strong>Ad Units</strong>.
-      In order for this campaign to deliver, you will need to target
-      at least one Ad Unit.
+      This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
     </div>
   {% endif %}
-
   {% if not creatives %}
     <div class="alert-message block-message">
-      This campaign needs to have at least one <strong>Creative</strong>
-      in order to serve.  Set up a creative below.
+      This campaign needs to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
     </div>
   {% endif %}
-
+  {% if campaign.marketplace %}
+    <div class="alert-message block-message">
+      The revenue numbers reported for the marketplace may be incorrect.  For now, the revenue number should be disregarded.  This error will be fixed on Wednesday, October 26.  If you would like accurate revenue numbers in the meantime, email support@mopub.com and we can generate revenue reports for you.
+    </div>
+  {% endif %}
   {% if message  %}
     <div class="alert-message block-message error">
-      {{ message|safe }}
+      {{message|safe}}
     </div>
   {% endif %}
-
   <div class="separated" id="chartWrapper">
     <section class="offset nomargin" id="dashboard-stats">
-
-      <h3 class="stats-chart-title">
-        Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
-      </h3>
-
+      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
       <div class="stats">
         <div class="stats-breakdown">
           <table>
@@ -186,89 +183,7 @@
               <h2>Campaign Details</h2>
             {% endif %}
 
-            <div class="stats">
-
-                <td class="campaignData-icon">
-                  <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                  {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                  {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                  {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                </td>
-                <td class="dataTable-name">
-                  <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
-
-                  <span class="muted">
-                    {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                      {{adgroup.campaign.start_datetime|format_date_compact}} - {{adgroup.campaign.end_datetime|format_date_compact}}.
-                    {% endif %}
-
-                    {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                      Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
-                    {% endif %}
-
-                    {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                      Ends {{adgroup.campaign.end_datetime|format_date_compact}}.
-                    {% endif %}
-
-                    {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                      All dates.
-                    {% endif %}
-
-                    {% ifequal adgroup.campaign.budget_type 'daily' %}
-                      {% if adgroup.campaign.budget %}
-                        {{adgroup.campaign.budget|currency}} daily budget.
-                      {% else %}
-                        Unlimited budget.
-                      {% endif %}
-                    {% endifequal %}
-
-                    {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
-                      {{adgroup.campaign.full_budget|withsep}} campaign budget.
-                    {% endifequal %}
-                  </span>
-
-                </td>
-
-                <td class="dataTable-data numeric gtee-rev rev">--</td>
-
-                <td class="dataTable-data numeric">
-                  <div class="status">--</div>
-                  <div class="dataTable-data dataTable-pace pace"></div>
-                </td>
-
-                {% if adgroup.cpc %}
-                  <td class="dataTable-data numeric dataTable-ecpm">
-                    <div class="dataTable-campaign-ecpm ecpm">--</div>
-                  </td>
-                {% else %}
-                  <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
-                {% endif %}
-
-                <td class="dataTable-goals">
-                    <div class="dataTable-data numeric">
-                        {% if adgroup.budget_goal %}
-                          {% if adgroup.cpc %}${% endif %}{{adgroup.budget_goal|withsep}}
-                        {% if adgroup.cpc %}
-                          <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">USD</div>
-                        {% else %}
-                          <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">Impressions</div>
-                        {% endif %}
-                        {% else %}--{% endif %}
-                    </div>
-                </td>
-                <td class="dataTable-data numeric gtee-imp imp">--</td>
-                <td class="dataTable-data numeric">
-                    <div class="gtee-clk clk">--</div>
-                    <div class="gtee-ctr ctr muted">--</div>
-                </td>
-                <td class="dataTable-data numeric">
-                  <div class="gtee-conv conv">--</div>
-                  <div class="gtee-conve_rate conv_rate muted">--</div>
-                </td>
-              </tr>
-
-
-              {% comment %}
+            <div>
               {% if campaign.network %}
 
                 {% if adgroup.active %}
@@ -312,7 +227,7 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td> {{ campaign.start_datetime|format_date_time }} </td>
+                        <td> {{ campaign.start_datetime|format_date_time|default:"None" }} </td>
                         <td> {{ campaign.end_datetime|format_date_time|default:"None" }} </td>
                         <td> {{campaign.budget.total_spent|currency }} </td>
                         <td>
@@ -333,7 +248,7 @@
                   </table>
                 </div>
                 {% endif %}
-                {% endcomment %}
+
               {% if user.is_admin %}
                 <a href="/budget/view/{{adgroup.key}}"> Admin Budget View</a>
               {% endif %}
@@ -698,8 +613,9 @@
 {% endblock content %}
 
 
+
 {% block extraScripts %}
-  <script src="/js/mopub-advertiser.js?v=85"></script>
+  <script src="/js/controllers/advertiser.js?v=1"></script>
   <script type="text/javascript">
     $(function() {
       // chart data

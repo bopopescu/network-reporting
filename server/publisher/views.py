@@ -830,7 +830,6 @@ class AdUnitShowHandler(RequestHandler):
                                       'marketplace': marketplace_campaigns,
                                       'network': network_campaigns,
                                       'backfill_promo': backfill_promo_campaigns,
-                                      'backfill_marketplace': backfill_marketplace_campaigns,
                                       'marketplace_activated': marketplace_activated
                                   })
 

@@ -55,7 +55,7 @@
       }
     }
 
-    {% if not is_fullscreen or os == 'android' %}{# Our Android SDKs with v <= 4 expect that the impression pixel will be dropped immediately when the page loads. If the pixel is instead dropped upon webviewDidAppear, these SDKs will fail to track any impressions! #}
+    {% if not is_fullscreen or os == 'android' or os == 'mweb' %}{# Our Android SDKs with v <= 4 expect that the impression pixel will be dropped immediately when the page loads. If the pixel is instead dropped upon webviewDidAppear, these SDKs will fail to track any impressions! #}
       if(typeof trackImpressionHelper == 'function') {
         trackImpressionHelper();
       }

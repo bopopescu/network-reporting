@@ -71,14 +71,11 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         # TODO: we probably want to have different iphone and android version
         user_agent = self.client_context.user_agent.lower()
 
-        # sets os to 'ios' for ipad and iphone
-        if 'iphone' in user_agent or 'ipad' in user_agent:
-            os_type = 'ios'
-        elif 'android' in user_agent:
-            os_type = 'android'
-        else:
-            os_type = None
-        return os_type
+        app_type = self.adunit.app.app_type
+
+        if app_type in ['iphone', 'ipad']:
+            return 'ios'
+        return app_type
 
     def _should_use_center_style(self):
         """
@@ -105,7 +102,7 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         """
         os_type = self._get_os_type()
         is_fullscreen = self.adunit.is_fullscreen()
-        return (os_type == 'android' or not is_fullscreen)
+        return (os_type in ['mweb', 'android'] or not is_fullscreen)
         
     def _get_ad_type(self):
         return 'html'

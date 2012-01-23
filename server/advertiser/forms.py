@@ -20,6 +20,7 @@ from common.utils import forms as mpforms
 from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
 from django import forms
+from django.forms.util import ErrorList
 from django.core.urlresolvers import reverse
 from google.appengine.ext import db
 from google.appengine.api import images, files
@@ -230,11 +231,13 @@ class CampaignForm(forms.ModelForm):
                                                ('normal', 'Normal'),
                                                ('low', 'Low')),
                                       initial='normal',
-                                      label='Priority:')
+                                      label='Priority:',
+                                      required=False)
     promo_priority = forms.ChoiceField(choices=(('normal', 'Normal'),
                                                 ('backfill', 'Backfill')),
                                        initial='normal',
-                                       label='Priority:')
+                                       label='Priority:',
+                                       required=False)
     name = forms.CharField(label='Name:',
                            widget=forms.TextInput(attrs={'class': 'required',
                                                          'placeholder': 'Campaign Name'}))
@@ -269,30 +272,48 @@ class CampaignForm(forms.ModelForm):
                                                  ('allatonce', 'All at once')),
                                         label='Delivery Speed:',
                                         initial='evenly',
-                                        widget=forms.RadioSelect())
+                                        widget=forms.RadioSelect)
     def __init__(self, *args, **kwargs):
+        # TODO: change instance datetimes from UTC to Pacific
+
         super(forms.ModelForm, self).__init__(*args, **kwargs)
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
     def clean_start_datetime(self):
-        logging.error(self.cleaned_data['start_datetime'])
         # if no start time is given, use the current time
-        if not self.cleaned_data['start_datetime']:
-            self.cleaned_data['start_datetime'] = datetime.now(Pacific_tzinfo())
-        return self.cleaned_data['start_datetime']
+        return self.cleaned_data['start_datetime'] or datetime.now(Pacific_tzinfo())
     def clean(self):
-        logging.error(self.cleaned_data['start_datetime'])
-        # set the correct campaign_type using gtee_prioirty or promo_priority
-        if self.cleaned_data['campaign_type'] == 'gtee':
-            if self.cleaned_data['gtee_priority'] == 'low':
-                self.cleaned_data['campaign_type'] = 'gtee_low'
-            elif self.cleaned_data['gtee_priority'] == 'high':
-                self.cleaned_data['campaign_type'] = 'gtee_high'
-        elif self.cleaned_data['campaign_type'] == 'promo' and self.cleaned_data['promo_priority'] == 'backfill':
-            self.cleaned_data['campaign_type'] == 'backfill_promo'
-        return self.cleaned_data
+        cleaned_data = self.cleaned_data
+        if 'campaign_type' in cleaned_data:
+            # set the correct campaign_type using gtee_prioirty or promo_priority
+            if cleaned_data['campaign_type'] == 'gtee':
+                if cleaned_data.get('gtee_priority', None):
+                    gtee_priority = cleaned_data['gtee_priority']
+                    if gtee_priority == 'low':
+                        cleaned_data['campaign_type'] = 'gtee_low'
+                    elif gtee_priority == 'high':
+                        cleaned_data['campaign_type'] = 'gtee_high'
+                else:
+                    if 'gtee_priority' not in self._errors:
+                        self._errors['gtee_priority'] = ErrorList()
+                    self._errors['gtee_priority'].append('This field is required')
+            elif cleaned_data['campaign_type'] == 'promo':
+                if cleaned_data.get('promo_priority', None):
+                    if cleaned_data['promo_priority'] == 'backfill':
+                        cleaned_data['campaign_type'] = 'backfill_promo'
+                else:
+                    if 'promo_priority' not in self._errors:
+                        self._errors['promo_priority'] = ErrorList()
+                    self._errors['promo_priority'].append('This field is required')
+        return cleaned_data
+    # It is not standard to override a ModelForm's save method, but we need to
+    # change the tzinfo of the datetimes because we display in Pacific and
+    # store in UTC.  Can this be done in the model?
+    def save(self, *args, **kwargs):
+        # TODO: change datetimes from Pacific to UTC
+        return super(CampaignForm, self).save(*args, **kwargs)
     # TODO: doesn't work with djangoforms
     class Media:
         js = ('campaign_adgroup_form.js',)
@@ -524,7 +545,6 @@ class AdGroupForm(forms.ModelForm):
         cities:35.9940329,-78.898619:NC:Durham:US
         """
         cleaned_data = super(AdGroupForm, self).clean()
-        logging.error(cleaned_data)
         # don't store targeted cities unless region targeting for cities is selected
         if(cleaned_data['region_targeting'] != 'city'):
             cleaned_data['cities'] = []

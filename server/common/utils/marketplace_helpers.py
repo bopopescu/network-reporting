@@ -3,6 +3,14 @@ from urllib2 import urlopen
 
 import datetime
 
+from ad_network_reports.query_managers import AdNetworkMapperManager, \
+        AdNetworkStatsManager, \
+        AdNetworkAggregateManager, \
+        AD_NETWORK_NAMES
+from publisher.query_managers import AppQueryManager,\
+     AdUnitQueryManager, \
+     AdUnitContextQueryManager
+
 from common_templates.templatetags.filters import currency, percentage, percentage_rounded
 from common.constants import MPX_DSP_IDS
 import logging
@@ -16,9 +24,69 @@ except ImportError:
         from django.utils import simplejson as json
 
 
-# +1 to ensure no division by 0
-ctr = lambda clicks, impressions: (clicks/float(impressions+1))
-ecpm = lambda revenue, impressions: (revenue/float(impressions+1))*1000
+ctr = lambda clicks, impressions: (clicks/float(impressions) if impressions
+        else 0)
+ecpm = lambda revenue, impressions: (revenue/float(impressions)*1000 if
+        impressions else 0)
+fill_rate = lambda requests, impressions: (impressions/float(requests) if
+        requests else 0)
+
+class AbstractStatsFetcher(object):
+
+    def __init__(self, pub_id):
+        self.pub_id = str(pub_id)
+
+    def get_app_stats(self, app_key, start, end, daily=False):
+        raise NotImplementedError('Implement this method fool')
+
+    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+        raise NotImplementedError('Implement this method fool')
+
+    def get_account_stats(self, start, end, daily=False):
+        raise NotImplementedError('Implement this method fool')
+
+
+class SummedStatsFetcher(AbstractStatsFetcher):
+    def _get_publisher_stats(self, publisher, start, end, *args, **kwargs):
+        days = date_magic.gen_days(start, end)
+        query_manager = StatsModelQueryManager(publisher.account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=None,
+                                                 days=days)
+        stat_totals = {'revenue': sum([stat.revenue for stat in stats]),
+                       'ctr': 0.0,
+                       'ecpm': 0.0,
+                       'impressions': sum([stat.impression_count for stat in stats]),
+                       'clicks': sum([stat.click_count for stat in stats]),
+                       'requests': sum([stat.request_count for stat in stats]),}
+        stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
+        stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
+        stat_totals['fill_rate'] = fill_rate(stat_totals['requests'], stat_totals['impressions'])
+
+        return stat_totals
+
+    def get_app_stats(self, app_key, start, end, *args, **kwargs):
+        app = AppQueryManager.get(app_key)
+        app_stats = self._get_publisher_stats(app, start, end)
+        logging.warn('app_stats')
+        logging.warn(app_stats)
+        return app_stats
+
+    def get_adunit_stats(self, adunit_key, start, end, daily=False):
+        adunit = AdUnitQueryManager.get(adunit_key)
+        adunit_stats = self._get_publisher_stats(adunit, start, end)
+        logging.warn('adunit_stats')
+        logging.warn(adunit_stats)
+        return adunit_stats
+
+
+class DirectSoldStatsFetcher(AbstractStatsFetcher):
+    pass
+
+
+class NetworkStatsFetcher(AbstractStatsFetcher):
+    pass
+
 
 class MarketplaceStatsFetcher(object):
     _base_url = "http://mpx.mopub.com/2stats" # TODO: change back to stats not 2stats
@@ -59,6 +127,8 @@ class MarketplaceStatsFetcher(object):
 
         stats_dict = {}
         for id, stats in response_dict.iteritems():
+            # REFACTOR: formatting revenue as a string should happen client-side
+            # or in the template
             counts = {"revenue": currency(stats['pub_rev']),
                       "impressions": int(stats['imp']),
                       "clicks": stats['clk'],
@@ -244,6 +314,57 @@ class MarketplaceStatsFetcher(object):
             limit = 3
 
         return {}
+
+
+class AdNetworkStatsFetcher(object):
+    @classmethod
+    def get_account_roll_up_stats(cls, account, days):
+        stats_list = [AdNetworkAggregateManager.find_or_create(account, day,
+                network=network, create=False) for day in days for network in
+                AD_NETWORK_NAMES.keys()]
+        stats = AdNetworkStatsManager.roll_up_stats([stats for stats in
+                stats_list if stats != None])
+        logging.info(stats.dict_)
+        return stats.dict_
+
+
+    @classmethod
+    def get_daily_stats(cls, account, days):
+        return [AdNetworkAggregateManager.get_stats_for_day(account, day)
+                .dict_ for day in days]
+
+
+    @classmethod
+    def get_app_on_network_stats(cls, network, days, pub_id):
+        mapper = AdNetworkMapperManager.get_ad_network_mapper(publisher_id=pub_id,
+                ad_network_name=network)
+        stats = AdNetworkStatsManager.get_stats_for_mapper_and_days(mapper,
+                days)[0]
+        stats_dict = stats.dict_
+        app = mapper.application
+        stats_dict['app_name'] = app.full_name
+        stats_dict['network_name'] = AD_NETWORK_NAMES[mapper.ad_network_name]
+        stats_dict['mapper_key'] = str(mapper.key())
+        stats_dict['app_key'] = app.key_
+        return stats_dict
+
+
+    @classmethod
+    def get_roll_up_stats(cls, account, days, network=None, app=None):
+        stats_list = [stats for stats in [AdNetworkAggregateManager.
+                find_or_create(account, day, network=network, app=app,
+                    create=False) for day in days] if stats != None]
+        stats = AdNetworkStatsManager.roll_up_stats(stats_list)
+        stats_dict = stats.dict_
+
+        if network and stats_list:
+            # Get the last sync date
+            sync_date = stats_list[-1].date
+            stats_dict['sync_date'] = sync_date.strftime('%b %d, %Y');
+
+        return stats_dict
+
+# Helper/Utility functions
 
 def _transform_stats(stats_dict):
     counts = {

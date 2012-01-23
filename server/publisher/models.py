@@ -6,6 +6,7 @@ from account.models import Account, NetworkConfig
 from advertiser.models import Creative
 
 import datetime
+import re
 import time
 import logging
 
@@ -13,6 +14,9 @@ import logging
 # A mobile app, which can have multiple Sites on which ads can be displayed
 #
 class App(db.Model):
+    APPLE_DEVICES = ('iphone', 'ipad')
+    IAD_URL = 'http://itunes.apple.com.*'
+
     CATEGORY_CHOICES = (
         u'not_selected',
         u'books',
@@ -92,6 +96,17 @@ class App(db.Model):
         except Exception:
             return None
 
+    @property
+    def identifier(self):
+        return (self.name.replace(' ', '_') + '-' + self.app_type).lower()
+
+    @property
+    def full_name(self):
+        return self.name + " (" + self.app_type_text() + ")"
+
+    @property
+    def key_(self):
+        return str(self.key())
 
     def get_owner(self):
         return None
@@ -109,6 +124,15 @@ class App(db.Model):
     @property
     def owner_name(self):
         return None
+
+    @property
+    def iad_pub_id(self):
+        if self.app_type in self.APPLE_DEVICES and getattr(self, 'url', None) and \
+                re.match(self.IAD_URL, self.url):
+            ids = re.findall('/id[0-9]*\?', self.url)
+            if ids:
+                pub_id = ids[0][len('/id'):-1]
+                return pub_id
 
     def toJSON(self):
         d = to_dict(self, ignore = ['icon', 'account', 'network_config'])

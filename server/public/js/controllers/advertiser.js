@@ -190,16 +190,6 @@ var mopub = mopub || {};
             $('.tab-section.'+$(this).val()).show();
           });
 
-          $('.show-details').mouseover(function () {
-              var key = $(this).attr('id');
-              $('.details-' + key).removeClass('hidden');
-          });
-
-          $('.show-details').mouseout(function () {
-              var key = $(this).attr('id');
-              $('.details-' + key).addClass('hidden');
-          });
-
           $('.show-hide').click(function () {
               var key = $(this).attr('id');
               var rows = $('.' + key + '-row');

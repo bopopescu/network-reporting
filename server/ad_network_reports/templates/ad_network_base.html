@@ -21,33 +21,38 @@
   <script type="text/javascript">
     var mopub = mopub || {};
 
+    // Populate the graph with revenue, impressions and clicks stats
+    function populateGraphWithStats(dailyStats) {
+        mopub.dashboardStatsChartData = {
+            pointStart: mopub.graphStartDate,
+            pointInterval: 86400000,
+            revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
+            impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
+            clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "clicks")}],
+        };
+
+        mopub.Chart.setupDashboardStatsChart('area');
+    }
+
     $(function() {
         // Use breakdown to switch charts
         $('.stats-breakdown tr').click(function(e) {
-          $('#dashboard-stats-chart').fadeOut(100, function() {
-            mopub.Chart.setupDashboardStatsChart('line');
-            $(this).show();
-          });
+            $('#dashboard-stats .stats-breakdown .active').removeClass('active');
+            $(this).addClass('active');
+            $('#dashboard-stats-chart').fadeOut(100, function() {
+                mopub.Chart.setupDashboardStatsChart('line');
+                $(this).show();
+            });
         });
 
         mopub.graphStartDate = Date.UTC({{start_date.year}},
             {{start_date.month|add:"-1"}},
             {{start_date.day}});
 
-        // Populate the graph with revenue, impressions and clicks stats
-        function populateGraphWithStats(dailyStats) {
-            mopub.dashboardStatsChartData = {
-                pointStart: mopub.graphStartDate,
-                pointInterval: 86400000,
-                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
-                impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
-                clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "clicks")}],
-            };
 
-            mopub.Chart.setupDashboardStatsChart('area');
-        }
-
-        populateGraphWithStats({{daily_stats|safe}});
+        {% if daily_stats %}
+          populateGraphWithStats({{daily_stats|safe}});
+        {% endif %}
 
 
         // TODO: put in shared js file with dashboard. Note: latest date allowed in range is yesterday.
@@ -97,7 +102,7 @@
           $('.stats-breakdown-value.'+$(this).val()).show();
         });
 
-        // set up custom dateOptions modal dialog
+        // set up custom dateOptions model dialog
         $('#dashboard-dateOptions-custom-from').datepicker({
           defaultDate: '-15d',
           maxDate: '-1d',
@@ -156,17 +161,15 @@
               <table class="sortable">
                 <tbody>
                   <tr class="active" id="stats-breakdown-revenue">
-                    <td class="stats-breakdown-value today"><span class="inner">{{ aggregates.revenue|currency }}</span></td>
+                    <td class="stats-breakdown-value today"><span class="inner">{% if aggregates %}{{aggregates.revenue|currency}}{% else %}--{% endif %}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
                   </tr>
                   <tr id="stats-breakdown-impressions">
-                    <td class="stats-breakdown-value today"><span class="inner">{{aggregates.impressions|withsep}}</span></td>
+                    <td class="stats-breakdown-value today"><span class="inner">{% if aggregates %}{{aggregates.impressions|withsep}}{% else %}--{% endif %}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
                   </tr>
                   <tr id="stats-breakdown-clicks">
-                    <td class="stats-breakdown-value today"><span
-                            class="inner"><span class="muted
-                                unbold">({{aggregates.ctr|percentage}})</span> {{aggregates.clicks|withsep}}</span></td>
+                    <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({% if aggregates %}{{aggregates.ctr|percentage}}{% else %}--{% endif %})</span> {% if aggregates %}{{aggregates.clicks|withsep}}{% else %}--{% endif %}</span></td>
                     <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
                   </tr>
                 </tbody>

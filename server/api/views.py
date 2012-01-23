@@ -1,5 +1,6 @@
 __doc__ = """
-API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
+API for fetching JSON serialized data for Apps, AdUnits, AdGroups, and
+AdNetworkReports.
 """
 from advertiser.query_managers import AdGroupQueryManager
 from publisher.query_managers import AdUnitQueryManager, \
@@ -17,6 +18,9 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      SummedStatsFetcher, \
      NetworkStatsFetcher, \
      DirectSoldStatsFetcher
+     DirectSoldStatsFetcher, \
+     AdNetworkStatsFetcher
+
 from common.utils import date_magic
 from common.utils.timezones import Pacific_tzinfo
 from common_templates.templatetags.filters import campaign_status
@@ -27,6 +31,10 @@ from django.utils import simplejson
 import datetime
 import logging
 
+
+class Types:
+    APP = 'app'
+    NETWORK = 'network'
 
 class AppService(RequestHandler):
     """
@@ -172,7 +180,7 @@ class AdUnitService(RequestHandler):
 
                 return JSONResponse(response)
             else:
-                return JSONResponse({'error':'No parameters provided'})
+                return JSONResponse({'error': 'No parameters provided'})
         except Exception, e:
             logging.warn("ADUNITS FETCH ERROR " + str(e))
             return JSONResponse({'error': str(e)})
@@ -300,3 +308,149 @@ class AdGroupService(RequestHandler):
 @login_required
 def adgroup_service(request, *args, **kwargs):
     return AdGroupService()(request, use_cache=False, *args, **kwargs)
+
+
+class CreativeService(RequestHandler):
+    """
+    API Service for delivering serialized Creative data
+    """
+    def get(self, creative_key=None):
+
+        logging.warn(self.request.GET)
+
+        mpxstats = MarketplaceStatsFetcher(self.account.key())
+
+        end_date = datetime.datetime.today()
+        start_date = end_date - datetime.timedelta(13)
+        # url = "http://mpx.mopub.com/stats/creatives?pub_id=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw&dsp_id=4e8d03fb71729f4a1d000000"
+        # response = urllib2.urlopen(url).read()
+        # data = simplejson.loads(response)
+
+        creative_data = mpxstats.get_all_creatives(start_date, end_date)
+
+        creatives = []
+        for creative in creative_data:
+            creatives.append([
+                creative["creative"]["url"],
+                creative["creative"]["ad_dmn"],
+                creative["stats"]["pub_rev"],
+                currency(creative['stats']['ecpm']),
+                creative["stats"]["imp"],
+                #creative["stats"]["clk"],
+                #percentage_rounded(creative['stats']['ctr']),
+            ])
+
+        return JSONResponse({
+            'aaData': creatives
+        })
+
+
+    def post(self):
+        pass
+
+    def put(self):
+        pass
+
+    def delete(self):
+        pass
+
+
+@login_required
+def adgroup_service(request, *args, **kwargs):
+    return AdGroupService()(request, use_cache=False, *args, **kwargs)
+
+## Ad Network Services
+#
+
+class AccountRollUpService(RequestHandler):
+    """
+    API Service for delivering serialized precalculated roll up stats at the
+    account level
+    """
+
+    def get(self):
+
+        # Formulate the date range
+        days = get_days(self.request)
+
+        # Return rolled up stats at the accout level
+        return JSONResponse(AdNetworkStatsFetcher.get_account_roll_up_stats(
+            self.account, days))
+
+
+@login_required
+def account_roll_up_service(request, *args, **kwargs):
+    return AccountRollUpService()(request, use_cache=False, *args, **kwargs)
+
+class DailyStatsService(RequestHandler):
+    """
+    API Service for delivering serialized chart data for the ad network revenue
+    reporting index page
+    """
+    def get(self):
+
+        # Formulate the date range
+        days = get_days(self.request)
+
+        # Get only stats for that app
+        return JSONResponse(AdNetworkStatsFetcher.get_daily_stats(
+            self.account, days))
+
+
+@login_required
+def daily_stats_service(request, *args, **kwargs):
+    return DailyStatsService()(request, use_cache=False, *args, **kwargs)
+
+class RollUpService(RequestHandler):
+    """
+    API Service for delivering serialized precalculated roll up stats for ad
+    networks
+    """
+
+    def get(self, type_, id_):
+
+        # Formulate the date range
+        days = get_days(self.request)
+
+        # Return stats rolled up stats for the network and account
+        if type_ == Types.APP:
+            return JSONResponse(AdNetworkStatsFetcher.get_roll_up_stats(
+                self.account, days, app=AppQueryManager.get_app_by_key(id_)))
+        elif type_ == Types.NETWORK:
+            return JSONResponse(AdNetworkStatsFetcher.get_roll_up_stats(
+                self.account, days, network=id_))
+
+
+@login_required
+def roll_up_service(request, *args, **kwargs):
+    return RollUpService()(request, use_cache=False, *args, **kwargs)
+
+class AppOnNetworkService(RequestHandler):
+    """
+    API Service for delivering serialized app on network data
+    """
+    def get(self, network, pub_id):
+
+        # Formulate the date range
+        days = get_days(self.request)
+
+        # Get only stats for that app
+        return JSONResponse(AdNetworkStatsFetcher.get_app_on_network_stats(
+            network, days, pub_id))
+
+
+@login_required
+def app_on_network_service(request, *args, **kwargs):
+    return AppOnNetworkService()(request, use_cache=False, *args, **kwargs)
+
+## Helper Functions
+#
+def get_days(request):
+    if request.GET.get('s', None):
+        year, month, day = str(request.GET.get('s')).split('-')
+        start_date = datetime.date(int(year), int(month), int(day))
+    else:
+        start_date = datetime.date.today()
+    days_in_range = int(request.GET.get('r'))
+
+    return date_magic.gen_days_for_range(start_date, days_in_range)

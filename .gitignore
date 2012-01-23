@@ -16,7 +16,6 @@ server/reporting/aws_logging/*.stats
 server/reporting/aws_logging/*.txt
 server/common/wurfl/*.xml
 server/scripts/*.pkl
-server/app.yaml
 counts.csv
 
 server/public/css/.sass-cache/

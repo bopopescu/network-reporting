@@ -46,6 +46,8 @@ from account.models import NetworkConfig
 
 ## Query Managers
 from account.query_managers import AccountQueryManager
+from ad_network_reports.query_managers import AdNetworkMapperManager, \
+        AdNetworkLoginManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
 from common.utils.query_managers import CachedQueryManager
@@ -314,6 +316,9 @@ class CreateAppHandler(RequestHandler):
 
             # update the database
             AppQueryManager.put(app)
+
+            create_iad_mapper(self.account, app)
+
             adunit.app_key = app
             AdUnitQueryManager.put(adunit)
 
@@ -886,7 +891,10 @@ class AppUpdateAJAXHandler(RequestHandler):
                 account = app_form.instance.account
             app = app_form.save(commit=False)
             app.account = account
+
             AppQueryManager.put(app)
+
+            create_iad_mapper(self.account, app)
 
             json_dict.update(success=True)
 
@@ -1126,6 +1134,7 @@ def enable_marketplace(adunit, account):
     mpx_creative.account = account
     CreativeQueryManager.put(mpx_creative)
 
+
 def add_demo_campaign(site):
     """
     Helper method that creates a demo campaign.
@@ -1200,3 +1209,19 @@ def add_demo_campaign(site):
                          name="Demo HTML Creative",
                          html_data=default_creative_html)
     CreativeQueryManager.put(h)
+
+## Helpers
+def create_iad_mapper(account, app):
+    """
+    Create AdNetworkAppMapper for iad if itunes url is input and iad
+    AdNetworkLoginCredentials exist
+    """
+    if app.iad_pub_id:
+        login = AdNetworkLoginManager.get_login(account, network='iad').get()
+        if login:
+            AdNetworkMapperManager.create(network='iad',
+                                          pub_id=app.iad_pub_id,
+                                          login=login,
+                                          app=app)
+
+

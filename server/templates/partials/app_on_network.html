@@ -1,0 +1,21 @@
+<tr id="<%= key %>" class="details-row">
+  <td class="dataTable-name">
+    <%= name %> <a class="hidden details-<%= key %>" href="<%= url %>">Details</a>
+  </td>
+  <td class="dataTable-data numeric"><%= revenue %></td>
+  <td class="dataTable-data numeric">
+  <% if(network != 'MobFox') { %>
+    <%= attempts %>
+  <% } %>
+  </td>
+  <td class="dataTable-data numeric"><%= impressions %></td>
+  <td class="dataTable-data numeric"><%= cpm %></td>
+  <td class="dataTable-data numeric">
+  <% if(network != 'MobFox') { %>
+    <%= fill_rate %>
+  <% } %>
+  </td>
+  <td class="dataTable-data numeric"><%= clicks %></td>
+  <td class="dataTable-data numeric"><%= cpc %></td>
+  <td class="dataTable-data numeric"><%= ctr %></td>
+</tr>

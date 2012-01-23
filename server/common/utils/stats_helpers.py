@@ -2,6 +2,12 @@ from urllib import urlencode
 from urllib2 import urlopen
 from common.utils import date_magic
 import datetime
+
+from ad_network_reports.query_managers import AdNetworkMapperManager, \
+        AdNetworkStatsManager, \
+        AdNetworkAggregateManager, \
+        AD_NETWORK_NAMES
+
 from publisher.query_managers import AppQueryManager,\
      AdUnitQueryManager, \
      AdUnitContextQueryManager
@@ -20,11 +26,13 @@ except ImportError:
     except ImportError:
         from django.utils import simplejson as json
 
+ctr = lambda clicks, impressions: (clicks/float(impressions) if impressions
+        else 0)
+ecpm = lambda revenue, impressions: (revenue/float(impressions)*1000 if
+        impressions else 0)
+fill_rate = lambda requests, impressions: (impressions/float(requests) if
+        requests else 0)
 
-# +1 to ensure no division by 0
-ctr = lambda clicks, impressions: (clicks/float(impressions+1))
-ecpm = lambda revenue, impressions: (revenue/float(impressions+1))*1000
-fill_rate = lambda requests, impressions: (impressions/float(requests+1))
 
 class AbstractStatsFetcher(object):
 
@@ -301,6 +309,56 @@ class MarketplaceStatsFetcher(object):
             limit = 3
 
         return {}
+
+
+class AdNetworkStatsFetcher(object):
+    @classmethod
+    def get_account_roll_up_stats(cls, account, days):
+        stats_list = [AdNetworkAggregateManager.find_or_create(account, day,
+                network=network, create=False) for day in days for network in
+                AD_NETWORK_NAMES.keys()]
+        stats = AdNetworkStatsManager.roll_up_stats([stats for stats in
+                stats_list if stats != None])
+        logging.info(stats.dict_)
+        return stats.dict_
+
+
+    @classmethod
+    def get_daily_stats(cls, account, days):
+        return [AdNetworkAggregateManager.get_stats_for_day(account, day)
+                .dict_ for day in days]
+
+
+    @classmethod
+    def get_app_on_network_stats(cls, network, days, pub_id):
+        mapper = AdNetworkMapperManager.get_mapper(publisher_id=pub_id,
+                ad_network_name=network)
+        stats = AdNetworkStatsManager.get_stats_for_mapper_and_days(mapper,
+                days)[0]
+        stats_dict = stats.dict_
+        app = mapper.application
+        stats_dict['app_name'] = app.full_name
+        stats_dict['network_name'] = AD_NETWORK_NAMES[mapper.ad_network_name]
+        stats_dict['mapper_key'] = str(mapper.key())
+        stats_dict['app_key'] = app.key_
+        return stats_dict
+
+
+    @classmethod
+    def get_roll_up_stats(cls, account, days, network=None, app=None):
+        stats_list = [stats for stats in [AdNetworkAggregateManager.
+                find_or_create(account, day, network=network, app=app,
+                    create=False) for day in days] if stats != None]
+        stats = AdNetworkStatsManager.roll_up_stats(stats_list)
+        stats_dict = stats.dict_
+
+        if network and stats_list:
+            # Get the last sync date
+            sync_date = stats_list[-1].date
+            stats_dict['sync_date'] = sync_date.strftime('%b %d, %Y');
+
+        return stats_dict
+
 
 # Helper/Utility functions
 

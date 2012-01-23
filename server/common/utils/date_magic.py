@@ -1,4 +1,5 @@
 from datetime import datetime, time, date, timedelta
+from common.utils.timezones import Pacific_tzinfo
 
 DAYS_IN_MONTHS = (31,28,31,30,31,30,31,31,30,31,30,31)
 
@@ -117,6 +118,29 @@ def gen_days(start, end, hours=False):
         return reduce(lambda x,y: x+y, get_hours(days))
     else:
         return days
+
+def gen_days_for_range(start, date_range):
+    """
+    Take a start date and a date range.
+
+    Return a list of days, [datetime.date,...], objects for the given range.
+    """
+    if start:
+        return [start + timedelta(days=x) for x in range(0,
+              date_range)]
+    else:
+        days = gen_last_days(date_range, 1)
+    return days
+
+def gen_last_days(date_range=7, omit=0):
+    """
+    Set omit=1 to eliminates partial days contributing to totals or appearing
+    in graphs
+    """
+    today = datetime.now(Pacific_tzinfo()).date().today() - timedelta(days=omit)
+    days = [today - timedelta(days=x) for x in range(0, date_range)]
+    days.reverse()
+    return days
 
 def gen_date_range(n, hours=False):
     today = date.today()

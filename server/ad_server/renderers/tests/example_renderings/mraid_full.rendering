@@ -1,9 +1,5 @@
 <html>test mraid data</html>
 
-<span style="display:none">
-  <img src="http://www.google.com/pingme&amp;rand=0932jfios"/>
-</span>
-
 <script type="text/javascript">
   function trackImpressionHelper(){
     var urls = new Array();
@@ -31,6 +27,7 @@
 </script>
 
 <script type="text/javascript">
+
 
 function webviewDidAppear(){
 

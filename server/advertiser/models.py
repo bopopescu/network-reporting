@@ -67,6 +67,7 @@ class Campaign(db.Model):
     # Determines whether we smooth during a day
     budget_strategy = db.StringProperty(choices=['evenly','allatonce'], default="allatonce")
 
+    # DEPRECATED
     # start and end dates
     start_date = db.DateProperty()
     end_date = db.DateProperty()
@@ -757,7 +758,7 @@ class MobFoxCreative(Creative):
     @property
     def multi_format(self):
         return ('728x90', '320x50')
-        
+
 class NullCreative(Creative):
     pass
 

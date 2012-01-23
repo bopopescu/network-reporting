@@ -62,6 +62,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
 
         networks = []
         apps_with_data = {}
+        apps_for_network = None
         for network in sorted(AD_NETWORK_NAMES.keys()):
             network_data = {}
             network_data['name'] = network
@@ -76,12 +77,14 @@ class AdNetworkReportIndexHandler(RequestHandler):
 
             # Get list of apps that need pub ids if they want to be included
             if not login or not login.app_pub_ids:
-                apps_for_network = AppQueryManager.get_apps_without_pub_ids(self.account,
-                        AD_NETWORK_NAMES.keys())
-                apps_for_network = apps_for_network[network] + \
+                if not apps_for_network:
+                    apps_for_network = AppQueryManager.get_apps_without_pub_ids(
+                            self.account,
+                            AD_NETWORK_NAMES.keys())
+                apps_list = apps_for_network[network] + \
                         apps_for_network[ALL_NETWORKS]
 
-                network_data['apps_without_pub_ids'] = apps_for_network
+                network_data['apps_without_pub_ids'] = apps_list
 
             # Give the template enough information to make the appropriate
             # queries ajax queries to get all the models for each collection

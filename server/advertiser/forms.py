@@ -493,7 +493,7 @@ class AdGroupForm(forms.ModelForm):
                                          initial='all',
                                          label='Region Targeting:',
                                          widget=forms.RadioSelect)
-    geo_predicates
+    #geo_predicates
     cities = forms.Field(required=False,
                          widget=forms.SelectMultiple)
     keywords = forms.CharField(required=False,
@@ -504,9 +504,10 @@ class AdGroupForm(forms.ModelForm):
         initial = args[4] if len(args) > 4 else kwargs.get('initial', None)
         instance = args[8] if len(args) > 8 else kwargs.get('instance', None)
 
+        """
         if not data and ((initial and initial.get('cities', [])) or
                          (instance and instance.cities)):
-
+        """
 
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])

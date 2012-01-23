@@ -17,7 +17,6 @@ from common.ragendja.template import JSONResponse
 from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      SummedStatsFetcher, \
      NetworkStatsFetcher, \
-     DirectSoldStatsFetcher
      DirectSoldStatsFetcher, \
      AdNetworkStatsFetcher
 

@@ -4,7 +4,7 @@
 var mopub = mopub || {};
 
 // depends underscore, backbone, jquery, mopub.chart, mopub.util
-(function($, Backbone, _) {
+(function($, _) {
 
     /*
      * ## Marketplace utility methods
@@ -634,4 +634,4 @@ var mopub = mopub || {};
 
     window.MarketplaceController = MarketplaceController;
 
-})(this.jQuery, this.Backbone, this._);
+})(this.jQuery, this._);

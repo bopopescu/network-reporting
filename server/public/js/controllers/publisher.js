@@ -83,123 +83,7 @@ var mopub = mopub || {};
     }
 
 
-    /*
-     * ## Dashboard Controller
-     */
-    var DashboardController = {
-        initializeIndex: function (bootstrapping_data) {
-            //initInventoryPage();
-            populateGraphWithAccountStats(bootstrapping_data.account_stats,
-                                         bootstrapping_data.start_date);
-
-            fetchAppStats(bootstrapping_data.app_keys);
-            _.each(bootstrapping_data.app_keys, function(app_key) {
-                fetchAdunitStats(app_key);
-            });
-        },
-        initializeGeo: function (bootstrapping_data) {
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-            // fill this in
-        },
-        initializeAppDetail: function (bootstrapping_data) {
-            // fill this in
-        },
-        initializeAdUnitDetail: function (bootstrapping_data) {
-            // fill this in
-        },
-        initializeAppCreate: function (bootstrapping_data) {
-            // fill this in
-        },
-        initializeAdUnitCreate: function (bootstrapping_data) {
-            // fill this in
-        },
-    };
-
-    window.DashboardController = DashboardController;
-
-
-    // BELOW NEEDS TO BE REFACTORED
-    // dom ready
-    $(document).ready(function() {
-
-
-        /*----------------------------------------/
-          / TODO: Re-organize AJAX stuff            /
-          /----------------------------------------*/
-        var options = {
-            data: { ajax: true },
-            dataType: 'json',
-            success: function(jsonData, statusText, xhr, $form) {
-                $('#appEditForm-loading').hide();
-
-                if (jsonData.success) {
-                    window.location.reload();
-                } else {
-                    $('.form-error-text', "#appForm").remove();
-                    $.each(jsonData.errors, function (iter, item) {
-                        var name = item[0];
-                        var error_div = $("<div>").append(item[1]).addClass('form-error-text');
-
-                        $("input[name=" + name + "]", "#appForm")
-                            .addClass('error')
-                            .parent().append(error_div);
-
-                        $("select[name=" + name + "]", "#appForm")
-                            .addClass('error')
-                            .parent().append(error_div);
-
-
-                    });
-
-                    // reimplement the onload event
-                    appFormOnload();
-                    window.location.hash = '';
-                    window.location.hash = 'appForm';
-                }
-            }
-        };
-        // Added on a class to differenitate from the the app creation page
-        $('#appForm.appEditForm').ajaxForm(options);
-
-        options = {
-            data: { ajax: true },
-            dataType: 'json',
-            success: function(jsonData, statusText, xhr, $form) {
-                $('#adunitForm-loading').hide();
-                if (jsonData.success) {
-                    window.location.reload();
-                } else {
-
-                    // reimplement the onload event
-                    appFormOnload();
-                    setupAdUnitForm();
-                    window.location.hash = '';
-                    window.location.hash = 'adunitForm';
-                }
-            }
-        };
-
-        $('#adunitAddForm').ajaxForm(options);
-
-
-        /*---------------------------------------/
-          / Chart
-          /---------------------------------------*/
-
-
-        // Use breakdown to switch charts
-        $('.stats-breakdown tr').click(function(e) {
-            $('#dashboard-stats-chart').fadeOut(100, function() {
-                mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-                $(this).show();
-            });
-        });
-
-        /*---------------------------------------/
-          / UI
-          /---------------------------------------*/
-
-        // set up dateOptions
+    function initializeDateButtons () {
         $('#dashboard-dateOptions input').click(function() {
             var option = $(this).val();
             if(option == 'custom') {
@@ -231,13 +115,127 @@ var mopub = mopub || {};
                         }
                     ]
                 });
-            }
-            else {
+            } else {
                 // Tell server about selected option to get new data
                 var location = document.location.href.replace(/\?.*/,'');
                 document.location.href = location+'?r=' + option;
             }
         });
+    }
+
+
+    /*
+     * This function groups together a couple of pieces of functionality that are used on
+     * all of the publisher pages (inventory, app, adunit stuff)
+     */
+    function initializeCommon () {
+
+        initializeDateButtons();
+
+        // Use breakdown to switch charts
+        $('.stats-breakdown tr').click(function(e) {
+            $('#dashboard-stats-chart').fadeOut(100, function() {
+                mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+                $(this).show();
+            });
+        });
+
+        $('#appForm.appEditForm').ajaxForm({
+            data: { ajax: true },
+            dataType: 'json',
+            success: function(jsonData, statusText, xhr, $form) {
+                $('#appEditForm-loading').hide();
+
+                if (jsonData.success) {
+                    window.location.reload();
+                } else {
+                    $('.form-error-text', "#appForm").remove();
+                    $.each(jsonData.errors, function (iter, item) {
+                        var name = item[0];
+                        var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+
+                        $("input[name=" + name + "]", "#appForm")
+                            .addClass('error')
+                            .parent().append(error_div);
+
+                        $("select[name=" + name + "]", "#appForm")
+                            .addClass('error')
+                            .parent().append(error_div);
+                    });
+                    // reimplement the onload event
+                    appFormOnload();
+                    window.location.hash = '';
+                    window.location.hash = 'appForm';
+                }
+            }
+        });
+
+        $('#adunitAddForm').ajaxForm({
+            data: { ajax: true },
+            dataType: 'json',
+            success: function(jsonData, statusText, xhr, $form) {
+                $('#adunitForm-loading').hide();
+                if (jsonData.success) {
+                    window.location.reload();
+                } else {
+
+                    // reimplement the onload event
+                    appFormOnload();
+                    setupAdUnitForm();
+                    window.location.hash = '';
+                    window.location.hash = 'adunitForm';
+                }
+            }
+        });
+
+    }
+
+
+
+    /*
+     * ## Dashboard Controller
+     */
+    var DashboardController = {
+        initializeIndex: function (bootstrapping_data) {
+            initializeCommon();
+            populateGraphWithAccountStats(bootstrapping_data.account_stats,
+                                         bootstrapping_data.start_date);
+
+            fetchAppStats(bootstrapping_data.app_keys);
+            _.each(bootstrapping_data.app_keys, function(app_key) {
+                fetchAdunitStats(app_key);
+            });
+        },
+        initializeGeo: function (bootstrapping_data) {
+            initializeCommon();
+            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+            // fill this in
+        },
+        initializeAppDetail: function (bootstrapping_data) {
+            initializeCommon();
+            // fill this in
+        },
+        initializeAdUnitDetail: function (bootstrapping_data) {
+            initializeCommon();
+            // fill this in
+        },
+        initializeAppCreate: function (bootstrapping_data) {
+            initializeCommon();
+            // fill this in
+        },
+        initializeAdUnitCreate: function (bootstrapping_data) {
+            initializeCommon();
+            // fill this in
+        },
+    };
+
+    window.DashboardController = DashboardController;
+
+
+    // BELOW NEEDS TO BE REFACTORED
+    $(document).ready(function() {
+
+
 
         // set up stats breakdown dateOptions
         $('#stats-breakdown-dateOptions input').click(function() {

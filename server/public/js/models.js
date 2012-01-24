@@ -325,8 +325,17 @@
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
             var app = response[0];
-            console.log(response[0]);
-            return response[0];
+            console.log(app.app_type == 'iphone');
+            if (app.app_type == 'iphone') {
+                app.app_type = 'iOS';
+            }
+            if (app.app_type == 'android') {
+                app.app_type = 'Android';
+            }
+            if (app.app_type == 'mweb') {
+                app.app_type = 'Mobile Web';
+            }
+            return app;
         }
     });
 

@@ -264,7 +264,10 @@ class CampaignForm(forms.ModelForm):
                                                                               time_format='%H:%M'))
     budget = forms.FloatField(label='Delivery Amount:',
                               required=False,
-                              widget=forms.TextInput(attrs={'class': 'number'}))
+                              widget=forms.TextInput(attrs={'class': 'number budget_type_dependent daily'}))
+    full_budget = forms.FloatField(label='Delivery Amount:',
+                                   required=False,
+                                   widget=forms.TextInput(attrs={'class': 'number budget_type_dependent full_campaign'}))
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily')
@@ -285,7 +288,7 @@ class CampaignForm(forms.ModelForm):
         # if no start time is given, use the current time
         return self.cleaned_data['start_datetime'] or datetime.now(Pacific_tzinfo())
     def clean(self):
-        cleaned_data = self.cleaned_data
+        cleaned_data = super(CampaignForm, self).clean()
         if 'campaign_type' in cleaned_data:
             # set the correct campaign_type using gtee_prioirty or promo_priority
             if cleaned_data['campaign_type'] == 'gtee':
@@ -307,6 +310,12 @@ class CampaignForm(forms.ModelForm):
                     if 'promo_priority' not in self._errors:
                         self._errors['promo_priority'] = ErrorList()
                     self._errors['promo_priority'].append('This field is required')
+        if cleaned_data.get('budget_type', None):
+            if cleaned_data['budget_type'] == 'daily':
+                cleaned_data['full_budget'] = None
+            else:
+                cleaned_data['budget'] = None
+
         return cleaned_data
     # It is not standard to override a ModelForm's save method, but we need to
     # change the tzinfo of the datetimes because we display in Pacific and
@@ -464,8 +473,7 @@ class AdGroupForm(forms.ModelForm):
                                      label='Rate:',
                                      initial='cpc')
     bid = forms.FloatField(widget=forms.TextInput(attrs={'class': 'number'}),
-                           initial=0.05,
-                           required=False)
+                           initial=0.05)
     # site_keys defined in __init__
     allocation_percentage = forms.CharField(initial=100.0,
                                             label='Allocation:',
@@ -546,7 +554,7 @@ class AdGroupForm(forms.ModelForm):
         """
         cleaned_data = super(AdGroupForm, self).clean()
         # don't store targeted cities unless region targeting for cities is selected
-        if(cleaned_data['region_targeting'] != 'city'):
+        if cleaned_data.get('region_targeting', None) != 'city':
             cleaned_data['cities'] = []
         return cleaned_data
     class Meta:

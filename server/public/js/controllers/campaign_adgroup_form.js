@@ -212,6 +212,9 @@ $(document).ready(function() {
 
     /* new stuff */
     var validator = $('form#campaign_and_adgroup').validate({
+        errorPlacement: function(error, element) {
+            element.closest('li > div').append(error);
+        },
         submitHandler: function(form) {
             $(form).ajaxSubmit({
                 data: {ajax: true},
@@ -358,6 +361,14 @@ $(document).ready(function() {
                 $('#bid-network-helpLink').attr('id', 'bid-promo-helpLink');
             }
         }
+    }).change(); // update on document ready
+
+    //
+    $('select[name="budget_type"]').change(function() {
+        budget_type = $(this).val();
+        $('.budget_type_dependent').each(function() {
+            $(this).toggle($(this).hasClass(budget_type));
+        });
     }).change(); // update on document ready
 
     // Toggling for advanced options

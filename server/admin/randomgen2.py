@@ -221,10 +221,10 @@ def generate_stats_model(publisher,advertiser,account,date):
     
 
 def generate_creative(account,adgroup):
-    creative = Creative(active=True,
-                        account = account,
-                        ad_group = adgroup,
-                        name=get_creative_name())
+    creative = TextCreative(active=True,
+                            account = account,
+                            ad_group = adgroup,
+                            name=get_creative_name())
     creative.put()
     return creative
     
@@ -237,7 +237,7 @@ def main():
     NUM_CREATIVES_PER_ADGROUP = 1
     NUM_ADUNITS_PER_APP = 2
 
-    APP_STATS_SINCE = dt.datetime(2012,1,10)
+    APP_STATS_SINCE = dt.datetime(2012,1,18)
 
     account = generate_account("rob@mopub.com","test","rob@mopub.com")
 
@@ -278,6 +278,14 @@ def main():
                                   account,
                                   cur_date)                    
              for campaign in campaigns_per_app[app]]
+            s.put_stats(stats=stats)
+
+            stats= [generate_stats_model(adunit,
+                                         campaign,
+                                         account,
+                                         cur_date)                    
+                    for campaign in campaigns_per_app[app] 
+                    for adunit in adunits_per_app[app]]
             s.put_stats(stats=stats)
             
             cur_date+=day

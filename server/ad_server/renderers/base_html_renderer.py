@@ -67,10 +67,10 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
                                                 _should_use_center_style()
         
     def _get_os_type(self):
-        # determine user agent
-        # TODO: we probably want to have different iphone and android version
-        user_agent = self.client_context.user_agent.lower()
-
+        """
+        Gets the os type based on how the app was registered in our
+        system.
+        """
         app_type = self.adunit.app.app_type
 
         if app_type in ['iphone', 'ipad']:

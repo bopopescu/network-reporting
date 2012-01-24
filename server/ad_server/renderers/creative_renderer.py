@@ -194,6 +194,7 @@ class BaseCreativeRenderer(object):
 
         if self.creative.launchpage:
             self.header_context.launch_page = self.creative.launchpage
+        self.header_context.fail_url = self.fail_url
 
     def _get_ad_type(self):
         """

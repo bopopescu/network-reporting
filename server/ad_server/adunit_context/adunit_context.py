@@ -120,7 +120,9 @@ class AdUnitContext(object):
                 creative.ad_group = [ag for ag in adgroups 
                         if ag.key() == Creative.ad_group.get_value_for_datastore(creative)][0]
                 creative.image_url = cls._get_image_url(creative)
-                real_crtvs.append(creative)
+                # only store creatives actually targeted to this adunit
+                if adunit.key() in creative.ad_group.site_keys:
+                    real_crtvs.append(creative)
             except IndexError, e:
                 pass
         return real_crtvs

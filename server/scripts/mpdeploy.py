@@ -2,7 +2,7 @@
 Call this script when you want to deploy frontend code.
 """
 # TODO: Figure out why envoy fucks up commands that have messages
-#       like git tag and git commit
+# like git tag and git commit
 
 import sys
 import os

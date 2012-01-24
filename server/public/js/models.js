@@ -243,6 +243,14 @@
             revenue: 0,
             stats_endpoint: 'all'
         },
+        validate: function(attributes) {
+            if (typeof(attributes.price_floor) != 'undefined') {
+                var valid_number = Number(attributes.price_floor);
+                if (isNaN(valid_number)) {
+                    return "Please enter a valid number for the price floor";
+                }
+            }
+        },
         url: function() {
             // window.location.search.substring(1) is used to preserve date ranges from the url
             // this makes the fetching work with the datepicker.
@@ -316,7 +324,18 @@
         parse: function (response) {
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
-            return response[0];
+            var app = response[0];
+            console.log(app.app_type == 'iphone');
+            if (app.app_type == 'iphone') {
+                app.app_type = 'iOS';
+            }
+            if (app.app_type == 'android') {
+                app.app_type = 'Android';
+            }
+            if (app.app_type == 'mweb') {
+                app.app_type = 'Mobile Web';
+            }
+            return app;
         }
     });
 

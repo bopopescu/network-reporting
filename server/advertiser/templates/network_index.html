@@ -31,7 +31,51 @@
 
       {# Controls and stats breakdown for the top realtime stats #}
       <div class="stats">
+        {% comment %}
         {% stats_breakdown stats %}
+        {% endcomment %}
+
+        <div class="stats">
+        <div class="stats-breakdown">
+          <table>
+            <tbody>
+              <tr class="active" id="stats-breakdown-impressions">
+                <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+              </tr>
+              <tr id="stats-breakdown-clicks">
+                <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+              </tr>
+              <tr id="stats-breakdown-ctr">
+                <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stats-breakdown-buttons">
+          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+            <label for="stats-breakdown-dateOptions-option-0">Today</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+            <label for="stats-breakdown-dateOptions-option-2">All</label>
+          </span>
+        </div>
+
+
+
+        {% comment %}
+          end stats breakdown
+        {% endcomment %}
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
       </div>
 

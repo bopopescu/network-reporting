@@ -160,6 +160,12 @@ class AppIndexHandler(RequestHandler):
                 'yesterday': yesterday.ctr,
                 'total': totals.ctr
             },
+            'clicks': {
+                'today': today.click_count,
+                'yesterday': yesterday.click_count,
+                'total': totals.click_count
+            },
+
         }
 
         return render_to_response(self.request,
@@ -830,7 +836,6 @@ class AdUnitShowHandler(RequestHandler):
                                       'marketplace': marketplace_campaigns,
                                       'network': network_campaigns,
                                       'backfill_promo': backfill_promo_campaigns,
-                                      'backfill_marketplace': backfill_marketplace_campaigns,
                                       'marketplace_activated': marketplace_activated
                                   })
 

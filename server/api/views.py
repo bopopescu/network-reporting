@@ -82,6 +82,7 @@ class AppService(RequestHandler):
             # get stats for each app
             for app in apps:
                 app.update(stats.get_app_stats(str(app['id']), start_date, end_date))
+                logging.warn(app['app_type'])
 
             return JSONResponse(apps)
 

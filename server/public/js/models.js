@@ -324,6 +324,8 @@
         parse: function (response) {
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
+            var app = response[0];
+            console.log(response[0]);
             return response[0];
         }
     });

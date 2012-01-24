@@ -20,6 +20,7 @@ from reporting.models import *
 APP_INDEX = 0
 ADUNIT_INDEX = 0
 CAMPAIGN_INDEX = 0
+CREATIVE_INDEX = 0
 ADGROUP_INDEX= 0
 APP_TYPES = ['iphone','android','ipad','mweb']
 COLOR_ALPH = string.digits + "ABCDEF"
@@ -27,11 +28,29 @@ CAMPAIGN_TYPES = ['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_
 NETWORK_TYPES = ["dummy","adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"]
 BID_STRATEGIES = ['cpc','cpm','cpa']
 
+NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
+                               'adsense':'adsense_pub_id',
+                               'iAd':'',
+                               'admob':'admob_pub_id',
+                               'millenial':'millenial_pub_id',
+                               'ejam':'ejam_pub_id',
+                               'chartboost':'chartboost_pub_id',
+                               'appnexus':'appnexus_pub_id',
+                               'inmobi':'inmobi_pub_id',
+                               'jumptap':'jumptap_pub_id',
+                               'brightroll':'brightroll_pub_id',
+                               'greystripe':'greystripe_pub_id'}                               
 
 def get_adgroup_name():
     global ADGROUP_INDEX
     ADGROUP_INDEX+=1
     return "adgroup%s" % ADGROUP_INDEX
+
+
+def get_creative_name():
+    global CREATIVE_INDEX
+    CREATIVE_INDEX+=1
+    return "creative%s" % CREATIVE_INDEX
 
 def get_app_name():
     global APP_INDEX
@@ -113,9 +132,15 @@ def generate_budget():
                   
 
 def generate_adgroup(campaign,site_keys,account):
+    rand_network_type = select_rand(NETWORK_TYPES)
     adgroup = AdGroup(campaign=campaign,network_type=select_rand(NETWORK_TYPES),bid_strategy=select_rand(BID_STRATEGIES),
                       account=account,site_keys=site_keys,name=get_adgroup_name())
     adgroup.put()
+    if rand_network_type in NETWORK_TYPE_TO_PUB_ID_ATTR.keys():
+        network_config = account.network_config
+        setattr(network_config,NETWORK_TYPE_TO_PUB_ID_ATTR[rand_network_type],"fillerid")
+        a = AccountQueryManager()
+        a.update_config_and_put(account,network_config)
     return adgroup
     
 
@@ -137,21 +162,22 @@ def generate_campaign(account,budget):
     return campaign
 
 '''generates user and account'''
-def generate_account(username="rob@mopub.com",password="test",email="rob@mopub.com",marketplace_config=None,networkconfig=None):
+def generate_account(username="rob@mopub.com",password="test",email="rob@mopub.com",marketplace_config=None,network_config=None):
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()
         marketplace_config.put()
-    if not networkconfig:
-        networkconfig = NetworkConfig()
-        networkconfig.put()
+    if not network_config:
+        network_config = NetworkConfig()
+        network_config.put()
 
     manager = RegistrationManager()
     user = manager.create_active_user(send_email=False,username=username,password=password,email=email)
     manager.create_profile(user)
     
     account = AccountQueryManager().get_current_account(user=user)
+    account.active = True
     account.marketplace_config = marketplace_config
-    account.networkconfig = networkconfig
+    account.network_config = network_config
 
     account.put()
     return account
@@ -182,7 +208,7 @@ def generate_stats_model(publisher,advertiser,account,date):
                              advertiser = advertiser,
                              account = account,
                              date = date,
-                             request_count  =request_count,
+                             request_count = request_count,
                              impression_count = impression_count,
                              click_count = click_count,
                              conversion_count = conversion_count,
@@ -190,18 +216,28 @@ def generate_stats_model(publisher,advertiser,account,date):
                              request_user_count = request_user_count,
                              impression_user_count = impression_user_count,
                              click_user_count = click_user_count)
-                             
+
     return stats_model
     
 
+def generate_creative(account,adgroup):
+    creative = Creative(active=True,
+                        account = account,
+                        ad_group = adgroup,
+                        name=get_creative_name())
+    creative.put()
+    return creative
+    
+
+
 def main():
     NUM_ACCOUNTS = 1
-    NUM_APPS = 2 #ONLY SUPPORT ONE ACCOUNT FOR NOW
+    NUM_APPS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
     NUM_CAMPAIGNS_PER_APP = 2
+    NUM_CREATIVES_PER_ADGROUP = 1
     NUM_ADUNITS_PER_APP = 2
 
-    APP_STATS_SINCE = datetime.datetime(2012,1,10)
-    
+    APP_STATS_SINCE = dt.datetime(2012,1,10)
 
     account = generate_account("rob@mopub.com","test","rob@mopub.com")
 
@@ -224,6 +260,8 @@ def main():
             adgroup = generate_adgroup(campaign,
                                        select_rand_subset(all_site_keys),
                                        account)
+            for i in range(NUM_CREATIVES_PER_ADGROUP):
+                generate_creative(account,adgroup)
                                           
 
     cur_date = APP_STATS_SINCE
@@ -234,7 +272,7 @@ def main():
 
     for app in apps:
         cur_date = APP_STATS_SINCE
-        while cur_date<today:
+        while cur_date<=today:
             stats= [generate_stats_model(app,
                                   campaign,
                                   account,

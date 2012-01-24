@@ -12,7 +12,7 @@ from google.appengine.ext.remote_api import remote_api_stub
 
 
 def auth_func():
-  return raw_input('Username:'), getpass.getpass('Password:')
+  return "testuser","testpassword"
 
 class Command(BaseCommand):
   """ Start up an interactive console backed by your app using remote_api """

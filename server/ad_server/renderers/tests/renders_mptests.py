@@ -467,6 +467,8 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         self.creative.image_height = 50
         self.creative.put()
 
+        self.creative.image_url = 'http://localhost:8080/_ah/img/blobby=s0'
+
         self._compare_rendering_with_examples("image_adtype", suffix="")
 
     # def mptest_text_adtype(self):
@@ -499,6 +501,9 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
 
 
         self.creative.put()
+
+        self.creative.image_url = 'http://localhost:8080/_ah/img/blobby=s0'
+
         self._compare_rendering_with_examples("text_icon_adtype", suffix="")
 
     def mptest_macro_test(self):

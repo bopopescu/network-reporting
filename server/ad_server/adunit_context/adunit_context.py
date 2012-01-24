@@ -1,6 +1,7 @@
 from common.utils.query_managers import CachedQueryManager
 
 from google.appengine.ext import db
+from google.appengine.api.images import InvalidBlobKeyError
 
 from publisher.models import App
 from publisher.models import Site as AdUnit
@@ -12,6 +13,8 @@ from google.appengine.api import memcache
 from ad_server.debug_console import trace_logging
 
 from common.constants import MAX_OBJECTS
+from common.utils import helpers
+
 
 class AdUnitContext(object):
     """All the adunit information necessary
@@ -116,10 +119,28 @@ class AdUnitContext(object):
             try:
                 creative.ad_group = [ag for ag in adgroups 
                         if ag.key() == Creative.ad_group.get_value_for_datastore(creative)][0]
+                creative.image_url = cls._get_image_url(creative)
                 real_crtvs.append(creative)
             except IndexError, e:
                 pass
         return real_crtvs
+    @classmethod
+    def _get_image_url(cls, creative):
+        if not hasattr(creative, 'image_blob'):
+            return ""
+
+        image_url = helpers.get_url_for_blob(creative.image_blob,
+                                             ssl=False)
+        try:
+            image_url = helpers.get_url_for_blob(creative.image_blob,
+                                                 ssl=False)
+        except InvalidBlobKeyError:
+            trace_logging.error("Could not find blobkey. "\
+                       "Perhaps you are on mopub-experimental.")
+            image_url = ""
+        except NotImplementedError:
+            image_url = "http://localhost:8080/_ah/img/blobby"
+        return image_url
 
     @classmethod
     def fetch_campaigns(cls, adgroups):  

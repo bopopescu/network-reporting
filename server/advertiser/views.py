@@ -1086,6 +1086,7 @@ class AdServerTestHandler(RequestHandler):
             'SK': ('sk-SK', '213.151.218.130')    ,
             'UK': ('ua-UK', '92.244.103.199')     ,
             'SL': ('si-SL', '93.103.136.7')       ,
+            'AU': ('en-AU', '114.30.96.10')       ,
         }
 
         adunits = AdUnitQueryManager.get_adunits(account=self.account)

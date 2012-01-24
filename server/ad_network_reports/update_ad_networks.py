@@ -213,7 +213,7 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
 
     # Collect stats
     stats_list = []
-    for day in date_magic.gen_days(start_day, yesterday):
+    for day in date_magic.gen_days(start_day, end_day):
         stats_list += update_login_stats(login, day, from_check=True)
     login.put()
 

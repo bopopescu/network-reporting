@@ -286,7 +286,12 @@ def main():
                                          cur_date)                    
                     for campaign in campaigns_per_app[app] 
                     for adunit in adunits_per_app[app]]
-            s.put_stats(stats=stats)
+
+            req_stats = [generate_stats_model(adunit,None,account,cur_date) for adunit in adunits_per_app[app]]
+            for stat in req_stats:
+                stat.impression_count = stat.click_count = stat.conversion_count = 0
+          
+            s.put_stats(stats=stats+req_stats)
             
             cur_date+=day
         

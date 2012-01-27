@@ -130,9 +130,8 @@ class AdUnitContext(object):
     def _get_image_url(cls, creative):
         if not hasattr(creative, 'image_blob'):
             return ""
-
-        image_url = helpers.get_url_for_blob(creative.image_blob,
-                                             ssl=False)
+        if not creative.image_blob:
+            return ""
         try:
             image_url = helpers.get_url_for_blob(creative.image_blob,
                                                  ssl=False)

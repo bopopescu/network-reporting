@@ -25,7 +25,7 @@ ADGROUP_INDEX= 0
 APP_TYPES = ['iphone','android','ipad','mweb']
 COLOR_ALPH = string.digits + "ABCDEF"
 CAMPAIGN_TYPES = ['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace', 'backfill_marketplace']
-NETWORK_TYPES = ["dummy","adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"]
+NETWORK_TYPES = ["adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"]
 BID_STRATEGIES = ['cpc','cpm','cpa']
 
 NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
@@ -133,10 +133,14 @@ def generate_budget():
 
 def generate_adgroup(campaign,site_keys,account):
     rand_network_type = select_rand(NETWORK_TYPES)
-    adgroup = AdGroup(campaign=campaign,network_type=select_rand(NETWORK_TYPES),bid_strategy=select_rand(BID_STRATEGIES),
-                      account=account,site_keys=site_keys,name=get_adgroup_name())
+    adgroup = AdGroup(campaign=campaign,
+                      network_type=rand_network_type if campaign.campaign_type=="network" else None,
+                      bid_strategy=select_rand(BID_STRATEGIES),
+                      account=account,
+                      site_keys=site_keys,
+                      name=get_adgroup_name())
     adgroup.put()
-    if rand_network_type in NETWORK_TYPE_TO_PUB_ID_ATTR.keys():
+    if rand_network_type in NETWORK_TYPE_TO_PUB_ID_ATTR.keys() and campaign.campaign_type=="network":
         network_config = account.network_config
         setattr(network_config,NETWORK_TYPE_TO_PUB_ID_ATTR[rand_network_type],"fillerid")
         a = AccountQueryManager()
@@ -145,7 +149,7 @@ def generate_adgroup(campaign,site_keys,account):
     
 
 '''creates a budget, campaign, and adgroup'''
-def generate_campaign(account,budget):
+def generate_campaign(account,budget,campaign_type=None):
     start_date = get_random_date()
     end_date = get_random_date()
     if start_date> end_date:
@@ -154,7 +158,7 @@ def generate_campaign(account,budget):
         end_date = temp    
     campaign = Campaign(name=get_campaign_name(),
                         budget_obj = budget,
-                        campaign_type = select_rand(CAMPAIGN_TYPES),
+                        campaign_type = campaign_type if campaign_type else select_rand(CAMPAIGN_TYPES),
                         account = account,
                         start_date = start_date,
                         end_date = end_date)
@@ -221,10 +225,14 @@ def generate_stats_model(publisher,advertiser,account,date):
     
 
 def generate_creative(account,adgroup):
+    creative_name = get_creative_name()
     creative = TextCreative(active=True,
                             account = account,
                             ad_group = adgroup,
-                            name=get_creative_name())
+                            headline = "%s %s" % (creative_name,"headline"),
+                            line1 = "%s %s" % (creative_name,"line1"), 
+                            line2 = "%s %s" % (creative_name,"line2"), 
+                            name=creative_name)
     creative.put()
     return creative
     
@@ -247,6 +255,7 @@ def main():
 
     adunits_per_app = dict([(app,[]) for app in apps])
     campaigns_per_app = dict([(app,[]) for app in apps])
+    creatives_per_campaign = {}
     for app in apps:
         for i in range(NUM_ADUNITS_PER_APP):
             adunits_per_app[app].append(generate_adunit(app,account))
@@ -255,13 +264,19 @@ def main():
 
         for i in range(NUM_CAMPAIGNS_PER_APP):
             budget = generate_budget()
-            campaign = generate_campaign(account,budget)
+            if i==0:
+                #create at least 1 network campaign
+                campaign = generate_campaign(account,budget,"network")
+            else:
+                campaign = generate_campaign(account,budget)
+
+            creatives_per_campaign[campaign] = []
             campaigns_per_app[app].append(campaign)
             adgroup = generate_adgroup(campaign,
                                        select_rand_subset(all_site_keys),
                                        account)
             for i in range(NUM_CREATIVES_PER_ADGROUP):
-                generate_creative(account,adgroup)
+                creatives_per_campaign[campaign].append(generate_creative(account,adgroup))
                                           
 
     cur_date = APP_STATS_SINCE
@@ -280,12 +295,13 @@ def main():
              for campaign in campaigns_per_app[app]]
             s.put_stats(stats=stats)
 
-            stats= [generate_stats_model(adunit,
-                                         campaign,
-                                         account,
-                                         cur_date)                    
-                    for campaign in campaigns_per_app[app] 
-                    for adunit in adunits_per_app[app]]
+            for campaign in campaigns_per_app[app]:
+                stats= [generate_stats_model(adunit,
+                                             creative,
+                                             account,
+                                             cur_date)                    
+                        for creative in creatives_per_campaign[campaign]
+                        for adunit in adunits_per_app[app]]
 
             req_stats = [generate_stats_model(adunit,None,account,cur_date) for adunit in adunits_per_app[app]]
             for stat in req_stats:

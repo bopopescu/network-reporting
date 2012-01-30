@@ -67,18 +67,15 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
                                                 _should_use_center_style()
         
     def _get_os_type(self):
-        # determine user agent
-        # TODO: we probably want to have different iphone and android version
-        user_agent = self.client_context.user_agent.lower()
+        """
+        Gets the os type based on how the app was registered in our
+        system.
+        """
+        app_type = self.adunit.app.app_type
 
-        # sets os to 'ios' for ipad and iphone
-        if 'iphone' in user_agent or 'ipad' in user_agent:
-            os_type = 'ios'
-        elif 'android' in user_agent:
-            os_type = 'android'
-        else:
-            os_type = None
-        return os_type
+        if app_type in ['iphone', 'ipad']:
+            return 'ios'
+        return app_type
 
     def _should_use_center_style(self):
         """
@@ -105,7 +102,7 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         """
         os_type = self._get_os_type()
         is_fullscreen = self.adunit.is_fullscreen()
-        return (os_type == 'android' or not is_fullscreen)
+        return (os_type in ['mweb', 'android'] or not is_fullscreen)
         
     def _get_ad_type(self):
         return 'html'
@@ -115,6 +112,9 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         self.header_context.ad_type = self._get_ad_type()
         self.header_context.full_ad_type = None
         
+    def _get_template(self):
+        return self.TEMPLATE
+
     def _setup_content(self):
         """
         Uses the html_context and self.TEMPLATE to generate creative html.
@@ -124,7 +124,8 @@ class BaseHtmlRenderer(BaseCreativeRenderer):
         override self.TEMPLATE to provide more flexibility/customization
         """
         path = os.path.join(os.path.dirname(__file__), 
-                            'templates', 
-                            self.TEMPLATE)
+                            'templates',
+                            self._get_template()
+                            )
         self.rendered_creative = template.render(path, self.html_context)
     

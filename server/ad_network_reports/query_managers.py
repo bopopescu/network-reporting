@@ -28,7 +28,8 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppStats, \
      AdNetworkManagementStats, \
      STAT_NAMES, \
-     MANAGEMENT_STAT_NAMES
+     MANAGEMENT_STAT_NAMES, \
+     FAILED_LOGINS
 from common.utils.query_managers import CachedQueryManager
 from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager, \
@@ -174,13 +175,13 @@ class AdNetworkLoginManager(CachedQueryManager):
     @classmethod
     def get_login(cls,
                   account,
-                  network_name=''):
+                  network=''):
         """
         Return AdNetworkLoginCredentials entities for the given account.
         """
         query = AdNetworkLoginCredentials.all().filter('account =', account)
-        if network_name:
-            return query.filter('ad_network_name =', network_name)
+        if network:
+            return query.filter('ad_network_name =', network)
         return query
 
     @classmethod
@@ -291,7 +292,6 @@ class AdNetworkMapperManager(CachedQueryManager):
                     ad_network_name)
         return None
 
-# TODO: Remove bloat
 class AdNetworkStatsManager(CachedQueryManager):
     @classmethod
     def roll_up_unique_stats(cls,
@@ -335,31 +335,20 @@ class AdNetworkStatsManager(CachedQueryManager):
             ...
         }
 
-        Make these generated data dict's lists then insert missing networks (if
-        kwarg networks=True) and sort them alphabetically.
-
         Return the sorted list of lists which contain the rolled up stats for
         the account.
         """
-        # Can't get timezone (pytz) on app engine without jumping through some
-        # large hoops so we do a rough check.
-        yesterday = (datetime.now() - timedelta(days=1)).date()
-
         data_dict = {}
         for mapper, stats, sync_date in aggregate_stats_list:
-            application = mapper.application
+            app = mapper.application
             if networks:
                 attr = AD_NETWORK_NAMES[mapper.ad_network_name]
-                name = '%s (%s)' % (application.name, application. \
-                        app_type_text())
-                key = str(mapper.key())
+                name = app.full_name
             else:
-                attr = (application.name, application.app_type_text())
+                attr = app.full_name
                 name = AD_NETWORK_NAMES[mapper.ad_network_name]
-                key = application.key()
             sub_data = {
                 'name': name,
-                'key': mapper.key(),
                 'revenue': stats.revenue,
                 'attempts': stats.attempts,
                 'impressions': stats.impressions,
@@ -369,9 +358,7 @@ class AdNetworkStatsManager(CachedQueryManager):
                 'ctr': stats.ctr,
                 'cpc': stats.cpc,
             }
-            if networks:
-                sub_data['id'] = mapper.publisher_id
-            if not data_dict.has_key(attr):
+            if attr not in data_dict:
                 data_dict[attr] = {
                     'sub_data_list': [],
                     'revenue': 0.0,
@@ -383,21 +370,7 @@ class AdNetworkStatsManager(CachedQueryManager):
                     'clicks': 0,
                     'ctr': 0.0,
                     'cpc': 0.0,
-                    'key': key,
                 }
-                if networks:
-                    data_dict[attr]['state'] = 2
-                    data_dict[attr]['sync_date'] = sync_date
-                    data_dict[attr]['sync_error'] = not sync_date or yesterday \
-                            - sync_date >= timedelta(days=2)
-                    login_credentials = AdNetworkLoginManager. \
-                            get_login(account).filter(
-                                    'ad_network_name =',
-                                    mapper.ad_network_name).get()
-                    data_dict[attr]['app_pub_ids'] = ', '.join(
-                            login_credentials.app_pub_ids)
-                else:
-                    data_dict[attr]['icon_url'] = application.icon_url
             data_dict[attr]['sub_data_list'].append(sub_data)
             data_dict[attr]['revenue'] += sub_data['revenue']
             data_dict[attr]['attempts'] += sub_data['attempts']
@@ -424,67 +397,11 @@ class AdNetworkStatsManager(CachedQueryManager):
                 data['ctr'] = (data['clicks'] /
                         float(data['impressions']))
 
-        # Add all ad networks. If there are apps without pub ids set for the
-        # network this list in the data_dict for the network.
-        if networks:
-            apps_without_pub_ids = AppQueryManager.get_apps_without_pub_ids(
-                    account, AD_NETWORK_NAMES.keys())
-
-            for network in AD_NETWORK_NAMES.keys():
-                if AD_NETWORK_NAMES[network] not in data_dict:
-                    login_credentials =  AdNetworkLoginManager. \
-                            get_login(account).filter(
-                                    'ad_network_name =', network).get()
-                    apps_without_pub_ids_for_network = apps_without_pub_ids[
-                            network] + apps_without_pub_ids[ALL_NETWORKS]
-
-                    # iAd displays a link to each app in the front-end message
-                    # so in this case the front-end requires more information
-                    # than simply the app's name.
-                    if network == IAD:
-                        apps_for_network = apps_without_pub_ids_for_network
-                    else:
-                        apps_for_network = ', '.join([app.name for app in
-                            apps_without_pub_ids_for_network])
-
-                    if login_credentials:
-                        app_pub_ids = ', '.join(login_credentials.app_pub_ids)
-                        if app_pub_ids:
-                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 1,
-                                    'app_pub_ids': app_pub_ids}
-                        else:
-                            data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
-                                    'apps_without_pub_ids': apps_for_network}
-                    else:
-                        data_dict[AD_NETWORK_NAMES[network]] = {'state': 0,
-                                'apps_without_pub_ids': apps_for_network,
-                                'turned_off': True}
-
-            # Sort alphabetically
-            data_list = sorted(data_dict.items(), key=lambda data_tuple:
-                    data_tuple[0].lower())
-        else:
-            # Sort alphabetically
-            data_list = sorted(data_dict.items(), key=lambda data_tuple:
-                    data_tuple[0][0].lower() + data_tuple[0][1].lower())
+        # Sort alphabetically
+        data_list = sorted(data_dict.items(), key=lambda data_tuple:
+                data_tuple[0].lower())
 
         return data_list
-
-    #TODO: Delete unused method
-    @classmethod
-    def _get_stats_for_network_and_day(cls,
-                                       mappers,
-                                       day):
-        """Get rolled up stats for the given date and ad network name.
-
-        Return rolled up stats.
-        """
-        stats_list = []
-        for mapper in mappers:
-            for stats in AdNetworkScrapeStats.all().filter('date =',
-                    day).filter('ad_network_app_mapper =', mapper):
-                stats_list.append(stats)
-        return(cls.roll_up_stats(stats_list))
 
     @classmethod
     def get_stats_for_mapper_and_days(cls,
@@ -556,7 +473,6 @@ class AdNetworkStatsManager(CachedQueryManager):
             else:
                 setattr(stats1, stat, getattr(stats1, stat) + getattr(stats2,
                     stat))
-
 
 
 class AdNetworkAggregateManager(CachedQueryManager):
@@ -674,7 +590,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
     def combined(self,
                  stats_manager):
         for ad_network_name, stats in stats_manager.stats_dict.iteritems():
-            for stat in MANAGEMENT_STAT_NAMES:
+            for stat in (list(MANAGEMENT_STAT_NAMES) + [FAILED_LOGINS]):
                 setattr(self.stats_dict[ad_network_name], stat, getattr(
                     self.stats_dict[ad_network_name], stat) + getattr(
                     stats_manager.stats_dict[ad_network_name], stat))
@@ -691,6 +607,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
             management_stats[ad_network_name] = AdNetworkManagementStats. \
                     get_by_days(ad_network_name, days)
         return management_stats
+
 
 def create_fake_data(account=None):
     """
@@ -783,10 +700,8 @@ def create_fake_data(account=None):
                                         date=day,
                                         found=random.randint(1, 100000),
                                         updated=random.randint(1, 100000),
-                                        mapped=random.randint(1, 100000),
                                         attempted_logins=random.randint(1, 100))
-
-                if network == login.ad_network_name:
-                    stats.failed_logins = [str(login.key())]
+                for count in range(random.randint(0, 10)):
+                    stats.failed_logins.append(str(random.randint(1, 100000)))
                 stats.put()
 

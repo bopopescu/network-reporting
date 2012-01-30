@@ -13,8 +13,8 @@ KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
 STAT_NAMES = ('revenue', 'attempts', 'impressions', 'clicks')
 CALCULATED_STAT_NAMES = ('cpm', 'fill_rate', 'cpc', 'ctr')
-MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped', 'attempted_logins', \
-        'failed_logins')
+MANAGEMENT_STAT_NAMES = ('found', 'updated', 'attempted_logins')
+FAILED_LOGINS = 'failed_logins'
 
 class LoginStates:
     """
@@ -184,14 +184,13 @@ class AdNetworkStats(db.Model):
         """
         Override __dict__ property to return a dict of the stats.
 
-        Basically it removes all the app engine entity crap.
+        Basically it removes all the app engine entity crap and includes the
+        calculated properties.
         """
-        # TODO: Remove reference properties too probably in children
-        stats_dict = super(AdNetworkStats, self).__dict__['_entity']
-        if not stats_dict:
-            stats_dict = super(AdNetworkStats, self).__dict__
-            stats_dict = dict([(key.replace('_', '', 1), val) for key, val in
-                stats_dict.iteritems()])
+        stats_dict = {}
+        stats_dict['date'] = getattr(self, 'date', None)
+        for stat in STAT_NAMES:
+            stats_dict[stat] = getattr(self, stat)
         for stat in CALCULATED_STAT_NAMES:
             stats_dict[stat] = getattr(self, stat)
         return stats_dict
@@ -293,7 +292,6 @@ class AdNetworkManagementStats(db.Model): #(date)
 
     found = db.IntegerProperty(default=0)
     updated = db.IntegerProperty(default=0)
-    mapped = db.IntegerProperty(default=0)
 
     attempted_logins = db.IntegerProperty(default=0)
     failed_logins = db.StringListProperty(default=[])

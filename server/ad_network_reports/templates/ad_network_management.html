@@ -25,15 +25,15 @@
             {{start_date.month|add:"-1"}},
             {{start_date.day}});
 
-        // Populate the graph with found, updated, mapped, and failed stats
+        // Populate the graph with attempted_logins, failed, found, and updated stats
         function populateGraphWithStats(dailyStats) {
             mopub.dashboardStatsChartData = {
                 pointStart: mopub.graphStartDate,
                 pointInterval: 86400000,
+                attempted_logins: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "attempted_logins")}],
+                failed: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "failed")}],
                 found: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "found")}],
                 updated: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "updated")}],
-                mapped: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "mapped")}],
-                failed: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "failed")}],
             };
 
             mopub.Chart.setupDashboardStatsChart('area');
@@ -141,17 +141,18 @@
       <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
         <thead>
           <tr>
-            <th width=33%>Accounts</th>
-            <th width=33%>Logins</th>
-            <th width=33%>Failed</th>
+            <th width=25%>Current Totals</th>
+            <th width=25%>Accounts</th>
+            <th width=25%>Logins</th>
+            <th width=25%>Failed</th>
           </tr>
         </thead>
         <tbody>
           <tr>
+            <td></td>
             <td id='promo-total-accounts'>{{aggregates.accounts}}</td>
             <td id='promo-total-logins'>{{aggregates.logins}}</td>
-            <td id='promo-total-failed'>{{aggregates.failed}}</td>
-            <td></td>
+            <td id='promo-total-failed'>{% with daily_stats|last as stats %}{{stats.failed}}{% endwith %}</td>
           </tr>
         </tbody>
       </table>
@@ -165,6 +166,18 @@
         <div class="stats-breakdown">
           <table class="sortable">
             <tbody>
+              <tr id="stats-breakdown-attempted_logins">
+                <td class="stats-breakdown-value today">
+                  <span class="inner">{{ aggregates.attempted_logins|withsep }}</span>
+                </td>
+                <th class="stats-breakdown-name"><span class="inner">Logins</span></th>
+              </tr>
+              <tr id="stats-breakdown-failed">
+                <td class="stats-breakdown-value today">
+                  <span class="inner">{{ aggregates.failed|withsep }}</span>
+                </td>
+                <th class="stats-breakdown-name"><span class="inner">Failed</span></th>
+              </tr>
               <tr class="active" id="stats-breakdown-found">
                 <td class="stats-breakdown-value today">
                   <span class="inner">{{ aggregates.found|withsep }}</span>
@@ -176,18 +189,6 @@
                   <span class="inner">{{aggregates.updated|withsep}}</span>
                 </td>
                 <th class="stats-breakdown-name"><span class="inner">Updated</span></th>
-              </tr>
-              <tr id="stats-breakdown-mapped">
-                <td class="stats-breakdown-value today">
-                  <span class="inner">{{ aggregates.mapped|withsep }}</span>
-                </td>
-                <th class="stats-breakdown-name"><span class="inner">Mapped</span></th>
-              </tr>
-              <tr id="stats-breakdown-failed">
-                <td class="stats-breakdown-value today">
-                  <span class="inner">{{ aggregates.failed|withsep }}</span>
-                </td>
-                <th class="stats-breakdown-name"><span class="inner">Failed</span></th>
               </tr>
             </tbody>
           </table>
@@ -205,10 +206,9 @@
           <th class="networkData-icon" style="width:75px"></th>
           <th class="dataTable-data numeric"> Date </th>
           <th class="dataTable-data numeric"> Logins </th>
+          <th class="dataTable-data numeric"> Failed </th>
           <th class="dataTable-data numeric"> Found </th>
           <th class="dataTable-data numeric"> Updated </th>
-          <th class="dataTable-data numeric"> Mapped </th>
-          <th class="dataTable-data numeric"> Failed </th>
         </thead>
       </table>
     </div>
@@ -225,10 +225,9 @@
               <a class="show-hide button button-small" id={{network_name}} style="width:75px;">Show Stats</a>
             </td>
             <td class="dataTable-data numeric">{{ network.attempted_logins }} </td>
+            <td class="dataTable-data numeric">{{ network.failed }} </td>
             <td class="dataTable-data numeric">{{ network.found }} </td>
             <td class="dataTable-data numeric">{{ network.updated }} </td>
-            <td class="dataTable-data numeric">{{ network.mapped }} </td>
-            <td class="dataTable-data numeric">{{ network.failed }} </td>
           </tr>
         </tbody>
       </table>
@@ -243,10 +242,9 @@
               <tr class="show-details sub-rows {% if not forloop.last %} add-border {% endif %}">
                   <td class="dataTable-data numeric">{{ stats.date|format_date_compact }}</td>
                   <td class="dataTable-data numeric">{{ stats.attempted_logins }}</td>
+                  <td class="dataTable-data numeric">{{ stats.failed_logins|length }}</td>
                   <td class="dataTable-data numeric">{{ stats.found }}</td>
                   <td class="dataTable-data numeric">{{ stats.updated }}</td>
-                  <td class="dataTable-data numeric">{{ stats.mapped }}</td>
-                  <td class="dataTable-data numeric">{{ stats.failed_logins|length }}</td>
                 </tr>
               {% endfor %}
             </tbody>

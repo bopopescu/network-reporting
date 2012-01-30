@@ -1,0 +1,14 @@
+{{html_data|safe}}
+
+{% include "track_impression_helper.html" %}
+<script type="text/javascript">
+{% if not is_fullscreen %}
+trackImpressionHelper();
+{% endif %}
+
+function webviewDidAppear(){
+{% if is_fullscreen %}
+  trackImpressionHelper();
+{% endif %}   
+}
+</script>

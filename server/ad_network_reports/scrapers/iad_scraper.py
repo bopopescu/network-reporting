@@ -167,8 +167,9 @@ class IAdScraper(Scraper):
         # Handle pagination
         nextPage = True
         while nextPage:
-            time.sleep(3)
-            # read the shit
+            # Wait for ajax
+            time.sleep(6)
+            # Read the page
             page = None
             while page is None:
                 try:
@@ -231,8 +232,8 @@ if __name__ == '__main__':
     NC = NetworkConfidential()
     #NC.username = 'chesscom'
     #NC.password = 'Faisal1Chess'
-    NC.username = 'd.podlipsky@gmail.com'
-    NC.password = 'Marketing107110'
+    NC.username = '2_acrossair@acrossair.com'
+    NC.password = 'imano@314'
     #NC.username = 'salesreports@optimesoftware.com'
     #NC.password = 'Sales2012'
     NC.ad_network_name = 'iad'

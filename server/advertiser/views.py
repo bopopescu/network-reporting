@@ -778,12 +778,13 @@ def campaign_adgroup_show(request,*args,**kwargs):
 class PauseAdGroupHandler(RequestHandler):
     def post(self):
         action = self.request.POST.get("action", "pause")
-        adgroups = []
         update_objs = []
+        adgroups = []
         update_creatives = []
-        for id_ in self.request.POST.getlist('id') or []:
-            a = AdGroupQueryManager.get(id_)
-            adgroups.append(a)
+        ids = self.request.POST.getlist('id') or []
+        if ids:
+            adgroups = AdGroupQueryManager.get(ids)
+        for a in adgroups:
             if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False

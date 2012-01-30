@@ -24,8 +24,15 @@ class BudgetQueryManager(QueryManager):
         # Update budget
         if camp.budget_obj:
             budget = camp.budget_obj
+            # if the budget and the campaign have differing activity levels sync them
             if camp.active != budget.active:
                 budget.active = camp.active
+                budget.put()
+            # if the campaign is now deleted and the budget says it's still active, 
+            # make the budget not active.  This will be fine if the campaign becomes undeleted
+            # because then the activity levels will differ and everything will be right again
+            if camp.deleted and budget.active:
+                budget.active = False
                 budget.put()
 
             update_dict = {}

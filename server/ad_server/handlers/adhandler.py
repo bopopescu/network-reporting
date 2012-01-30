@@ -92,8 +92,10 @@ class AdHandler(webapp.RequestHandler):
         if self.request.get('jsonp', '0') == '1':
             jsonp = True
             callback = self.request.get('callback')
+            failure_callback = self.request.get('failure_callback', None)
         else:
             callback = None
+            failure_callback = None
             jsonp = False
 
 
@@ -212,7 +214,7 @@ class AdHandler(webapp.RequestHandler):
             self.response.headers.add_header("X-Adtype", "clear")
             self.response.headers.add_header("X-Backfill", "clear")
             # We must add refresh always because if one given request
-            # does not return an ad, the client should continue trying 
+            # does not return an ad, the client should continue trying
             # again.
             refresh = adunit.refresh_interval
             if refresh:
@@ -262,7 +264,13 @@ class AdHandler(webapp.RequestHandler):
                 click_url = creative_renderer.click_url
             except UnboundLocalError:
                 click_url = ''
-            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(click_url), ufid=str(ufid))))
+            if rendered_creative:
+                self.response.out.write('%s(%s)' % (callback,
+                    dict(ad=str(rendered_creative),
+                         click_url=str(click_url),
+                         ufid=str(ufid))))
+            else:
+                self.response.out.write('%s()' % (failure_callback or callback))
         elif not (debug):
             self.response.out.write(rendered_creative)
         else:

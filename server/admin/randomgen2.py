@@ -202,6 +202,7 @@ def generate_stats_model(publisher,advertiser,account,date):
     impression_count = int(random.random()*request_count)
     click_count = int(random.random()*impression_count)
     conversion_count = int(random.random()*click_count)
+    revenue = click_count*.5
 
     user_count = int(request_count*.75)
     request_user_count = user_count
@@ -211,6 +212,7 @@ def generate_stats_model(publisher,advertiser,account,date):
     stats_model = StatsModel(publisher = publisher,
                              advertiser = advertiser,
                              account = account,
+                             revenue = revenue,
                              date = date,
                              request_count = request_count,
                              impression_count = impression_count,
@@ -229,6 +231,7 @@ def generate_creative(account,adgroup):
     creative = TextCreative(active=True,
                             account = account,
                             ad_group = adgroup,
+                            ad_type = "text",
                             headline = "%s %s" % (creative_name,"headline"),
                             line1 = "%s %s" % (creative_name,"line1"), 
                             line2 = "%s %s" % (creative_name,"line2"), 
@@ -241,9 +244,9 @@ def generate_creative(account,adgroup):
 def main():
     NUM_ACCOUNTS = 1
     NUM_APPS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
-    NUM_CAMPAIGNS_PER_APP = 2
+    NUM_CAMPAIGNS_PER_APP = 3
     NUM_CREATIVES_PER_ADGROUP = 1
-    NUM_ADUNITS_PER_APP = 2
+    NUM_ADUNITS_PER_APP = 3
 
     APP_STATS_SINCE = dt.datetime(2012,1,18)
 
@@ -256,7 +259,9 @@ def main():
     adunits_per_app = dict([(app,[]) for app in apps])
     campaigns_per_app = dict([(app,[]) for app in apps])
     creatives_per_campaign = {}
+ 
     for app in apps:
+        #
         for i in range(NUM_ADUNITS_PER_APP):
             adunits_per_app[app].append(generate_adunit(app,account))
 
@@ -267,6 +272,9 @@ def main():
             if i==0:
                 #create at least 1 network campaign
                 campaign = generate_campaign(account,budget,"network")
+            elif i==1:
+                #create at least 1 marketplace campaign
+                campaign = generate_campaign(account,budget,"marketplace")
             else:
                 campaign = generate_campaign(account,budget)
 
@@ -288,13 +296,6 @@ def main():
     for app in apps:
         cur_date = APP_STATS_SINCE
         while cur_date<=today:
-            stats= [generate_stats_model(app,
-                                  campaign,
-                                  account,
-                                  cur_date)                    
-             for campaign in campaigns_per_app[app]]
-            s.put_stats(stats=stats)
-
             for campaign in campaigns_per_app[app]:
                 stats= [generate_stats_model(adunit,
                                              creative,
@@ -303,11 +304,11 @@ def main():
                         for creative in creatives_per_campaign[campaign]
                         for adunit in adunits_per_app[app]]
 
-            req_stats = [generate_stats_model(adunit,None,account,cur_date) for adunit in adunits_per_app[app]]
-            for stat in req_stats:
-                stat.impression_count = stat.click_count = stat.conversion_count = 0
+                req_stats = [generate_stats_model(adunit,None,account,cur_date) for adunit in adunits_per_app[app]]
+                for stat in req_stats:
+                    stat.impression_count = stat.click_count = stat.conversion_count = 0
           
-            s.put_stats(stats=stats+req_stats)
+                s.put_stats(stats=stats+req_stats)
             
             cur_date+=day
         

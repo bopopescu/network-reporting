@@ -278,7 +278,6 @@ class CampaignForm(forms.ModelForm):
                                         widget=forms.RadioSelect)
     def __init__(self, *args, **kwargs):
         # TODO: change instance datetimes from UTC to Pacific
-
         super(forms.ModelForm, self).__init__(*args, **kwargs)
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
@@ -460,7 +459,8 @@ class AdGroupForm(forms.ModelForm):
                                               ('mobfox', 'MobFox'),
                                               ('custom', 'Custom Network'),
                                               ('custom_native', 'Custom Native Network')),
-                                     label='Network Type:')
+                                     label='Network Type:',
+                                     required=False)
     custom_html = forms.CharField(label='Custom HTML:',
                                   required=False,
                                   widget=forms.Textarea(attrs={'placeholder': 'HTML Custom Content',
@@ -475,7 +475,7 @@ class AdGroupForm(forms.ModelForm):
     bid = forms.FloatField(widget=forms.TextInput(attrs={'class': 'number'}),
                            initial=0.05)
     # site_keys defined in __init__
-    allocation_percentage = forms.CharField(initial=100.0,
+    allocation_percentage = forms.FloatField(initial=100.0,
                                             label='Allocation:',
                                             required=False,
                                             widget=forms.TextInput(attrs={'class': 'number'}))
@@ -488,10 +488,10 @@ class AdGroupForm(forms.ModelForm):
     hourly_frequency_cap = forms.IntegerField(initial=0,
                                               required=False,
                                               widget=forms.TextInput(attrs={'class': 'number'}))
-    device_targeting = forms.TypedChoiceField(choices=((0, 'All'),
-                                                       (1, 'Filter by device and OS')),
+    device_targeting = forms.TypedChoiceField(choices=(('0', 'All'),
+                                                       ('1', 'Filter by device and OS')),
                                               coerce=lambda x: bool(int(x)),
-                                              initial=0,
+                                              initial='0',
                                               label='Device Targeting:',
                                               widget=forms.RadioSelect)
     target_iphone = forms.BooleanField(initial=True,
@@ -504,16 +504,20 @@ class AdGroupForm(forms.ModelForm):
                                      label='iPad',
                                      required=False)
     ios_version_min = forms.ChoiceField(choices=IOS_VERSION_CHOICES[1:],
-                                        label='Min:')
+                                        label='Min:',
+                                        required=False)
     ios_version_max = forms.ChoiceField(choices=IOS_VERSION_CHOICES,
-                                        label='Max:')
+                                        label='Max:',
+                                        required=False)
     target_android = forms.BooleanField(initial=True,
                                         label='Android',
                                         required=False)
     android_version_min = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
-                                            label='Min:')
+                                            label='Min:',
+                                            required=False)
     android_version_max = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES,
-                                            label='Max:')
+                                            label='Max:',
+                                            required=False)
     target_other = forms.BooleanField(initial=True,
                                       label='Other',
                                       required=False)

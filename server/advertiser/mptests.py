@@ -112,18 +112,23 @@ class TestAdGroupForm(unittest.TestCase):
         self.testbed.init_memcache_stub()
 
         self.default_data = {
+            'bid_strategy': 'cpm',
+            'bid': .1,
+            'allocation_type': 'users',
+            'device_targeting': '0',
+            'region_targeting': 'all',
         }
 
     def tearDown(self):
         self.testbed.deactivate()
-        """
+
     def test_network_type_mptest(self):
         campaign = Campaign(campaign_type='network', name='Test Campaign')
         campaign.save()
 
-        data = {
-            'campaign': campaign,
-        }
+        data = copy.deepcopy(self.default_data)
+        data['campaign'] = campaign
+
         form = AdGroupForm(data)
         self.assertFalse(form.is_valid(), 'is_valid returned True on a network campaign with no network type.')
 
@@ -131,4 +136,4 @@ class TestAdGroupForm(unittest.TestCase):
         self.assertTrue(form.is_valid(), form._errors)
 
     def test_bid_mptest(self):
-        """
+        pass

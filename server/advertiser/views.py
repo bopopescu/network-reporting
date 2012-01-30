@@ -289,6 +289,7 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
             logging.error(campaign.name)
             adgroup_form = AdGroupForm(self.request.POST)
             if adgroup_form.is_valid():
+                # TODO: need to make sure a network type is selected if the campaign is a network campaign
                 adgroup = adgroup_form.save()
                 adgroup.campaign = campaign
                 adgroup.save()

@@ -7,8 +7,8 @@ backends:
   
 - name: admin-prep
   options: public
-  class: B4
-  instances: 2
+  class: B8
+  instances: 1
 
 - name: frontend-0
   instances: 20

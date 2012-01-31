@@ -1,7 +1,6 @@
 /*
  * # MoPub Dashboard Javascript
- *
- * Client-side functionality for the following pages:
+ * ## Client-side functionality for the following pages:
  * * Inventory/Dashboard
  * * App detail
  * * Adunit detail
@@ -11,6 +10,7 @@
  */
 
 var mopub = mopub || {};
+
 (function($, Backbone, _){
 
     /*
@@ -148,10 +148,10 @@ var mopub = mopub || {};
                 }
 
                 var $custom_onlys = $(".custom_only");
-                if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
+                if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" ||
+                    $(this).attr("id") == "appForm-adUnitFormat-custom") {
                     $custom_onlys.show();
-                }
-                else{
+                } else {
                     $custom_onlys.hide();
                 }
 
@@ -169,43 +169,45 @@ var mopub = mopub || {};
                     $('input[type="radio"]', formatContainer).click();
                 });
             });
-            // Set up format selection UI for tablet
-            $('#adForm-tablet-formats').each(function(){
-                var container = $(this);
-                //bind radio buttons to images
-                $(this).find('input[type="radio"]').click(function(e){
-                    var index = $(this).parent().index();
-                    var images = $("#adForm-images-container");
-                    images.children().hide();
-                    var image = images.children()[index];
-                    $(image).show().css({ opacity: 1 });
 
-                    var $full_onlys = $(".full_only");
-                    var $banner_onlys = $(".banner_only");
-                    if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
-                        $(this).attr("id") == "appForm-adUnitFormat-full"){
-                        $full_onlys.show();
-                        $banner_onlys.hide();
-                    }
-                    else{
-                        $full_onlys.hide();
-                        $banner_onlys.show();
-                    }
+        // Set up format selection UI for tablet
+        $('#adForm-tablet-formats').each(function(){
+            var container = $(this);
+            //bind radio buttons to images
+            $(this).find('input[type="radio"]').click(function(e) {
+                var index = $(this).parent().index();
+                var images = $("#adForm-images-container");
+                images.children().hide();
+                var image = images.children()[index];
+                $(image).show().css({ opacity: 1 });
 
-                    var $custom_onlys = $(".custom_only");
-                    if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
-                        $custom_onlys.show();
-                    }
-                    else{
-                        $custom_onlys.hide();
-                    }
+                var $full_onlys = $(".full_only");
+                var $banner_onlys = $(".banner_only");
+                if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
+                    $(this).attr("id") == "appForm-adUnitFormat-full"){
+                    $full_onlys.show();
+                    $banner_onlys.hide();
+                } else {
+                    $full_onlys.hide();
+                    $banner_onlys.show();
+                }
 
-                }).first().click(); //initialize by activating the first
-            });
-            //initialize checked elements
-            $("#adunit-device_format_phone").parent().children().filter(':checked').click().each(function(){
+                var $custom_onlys = $(".custom_only");
+                if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" ||
+                    $(this).attr("id") == "appForm-adUnitFormat-custom"){
+                    $custom_onlys.show();
+                } else {
+                    $custom_onlys.hide();
+                }
+
+            }).first().click(); //initialize by activating the first
+        });
+
+        //initialize checked elements
+        $("#adunit-device_format_phone").parent().children()
+            .filter(':checked').click().each(function() {
                 var deviceFormat = $(this).val(); //either tablet or phone
-                var container = "#adForm-"+deviceFormat+"-container";
+                var container = "#adForm-" + deviceFormat + "-container";
                 $(container).find('.possible-format').click();
             });
         }
@@ -227,17 +229,19 @@ var mopub = mopub || {};
                             text: 'Set dates',
                             css: { fontWeight: '600' },
                             click: function() {
-                                var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
-                                var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
-                                var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+                                var from_date = $('#dashboard-dateOptions-custom-from').datepicker("getDate");
+                                var to_date = $('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                                var num_days = Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
 
-                                var from_day=from_date.getDate();
-                                var from_month=from_date.getMonth()+1;
-                                var from_year=from_date.getFullYear();
+                                var from_day = from_date.getDate();
+                                var from_month = from_date.getMonth() + 1; // months are indexed from 0
+                                var from_year = from_date.getFullYear();
 
                                 $(this).dialog("close");
                                 var location = document.location.href.replace(/\?.*/,'');
-                                document.location.href = location+'?r='+num_days+'&s='+from_year+"-"+from_month+"-"+from_day;
+                                document.location.href = location
+                                    + '?r=' + num_days
+                                    + '&s=' + from_year + "-" + from_month + "-" + from_day;
                             }
                         },
                         {
@@ -251,7 +255,7 @@ var mopub = mopub || {};
             } else {
                 // Tell server about selected option to get new data
                 var location = document.location.href.replace(/\?.*/,'');
-                document.location.href = location+'?r=' + option;
+                document.location.href = location + '?r=' + option;
             }
         });
 
@@ -282,7 +286,10 @@ var mopub = mopub || {};
             onSelect: function(selectedDate) {
                 var other = $('#dashboard-dateOptions-custom-from');
                 var instance = $(this).data("datepicker");
-                var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+                var date = $.datepicker.parseDate(instance.settings.dateFormat ||
+                                                  $.datepicker._defaults.dateFormat,
+                                                  selectedDate,
+                                                  instance.settings);
                 other.datepicker('option', 'maxDate', date);
             }
         });
@@ -290,6 +297,11 @@ var mopub = mopub || {};
 
     }
 
+    /*
+     * ## initializeDeleteForm
+     * Deleting apps/adunits is done with a form that's submitted via a dialog.
+     * The ajax submitting of the form and the dialog popup are done here.
+     */
     function initializeDeleteForm() {
         $('#dashboard-delete-link').click(function(e){
             e.preventDefault();
@@ -313,6 +325,10 @@ var mopub = mopub || {};
         });
     }
 
+    /*
+     * ## initializeiOSAppSearch
+     * Sets up the iTunes app store searching functionality for creating new apps.
+     */
     function initializeiOSAppSearch() {
         // Search button
         $('#appForm-search-button')
@@ -338,20 +354,21 @@ var mopub = mopub || {};
                 });
                 var name = $('#appForm input[name="name"]').val();
                 var script = document.createElement("script");
-                script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?' + 'entity=software&limit=10&callback=loadedArtwork&term='+name;
+                script.src = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'
+                    + 'entity=software&limit=10&callback=loadedArtwork&term='
+                    + name;
                 var head = document.getElementsByTagName("head")[0];
                 (head || document.body).appendChild( script );
             });
     }
 
     /*
+     * # initializeCommon
      * This function groups together a couple of pieces of functionality that are used on
      * all of the publisher pages (inventory, app, adunit stuff)
      */
     function initializeCommon () {
-
         initializeDateButtons();
-
         // Use breakdown to switch charts
         $('.stats-breakdown tr').click(function(e) {
             $('#dashboard-stats-chart').fadeOut(100, function() {
@@ -360,7 +377,6 @@ var mopub = mopub || {};
             });
         });
     }
-
 
 
     /*
@@ -400,8 +416,6 @@ var mopub = mopub || {};
                         id.hide();
                     });
             });
-
-
         },
         initializeGeo: function (bootstrapping_data) {
             initializeCommon();
@@ -575,7 +589,9 @@ var mopub = mopub || {};
                 });
 
             $('#adunitAddForm').ajaxForm({
-                data: { ajax: true },
+                data: {
+                    ajax: true
+                },
                 dataType: 'json',
                 success: function(jsonData, statusText, xhr, $form) {
                     $('#adunitForm-loading').hide();
@@ -597,11 +613,14 @@ var mopub = mopub || {};
                 .click(function(e) {
                     e.preventDefault();
                     $('#adserverTest').dialog({
-                        buttons: { "Close": function() { $(this).dialog("close"); } }
+                        buttons: {
+                            "Close": function() {
+                                $(this).dialog("close");
+                            }
+                        }
                     });
                     $('#adserverTest-iFrame').attr('src',$('#adserverTest-iFrame-src').text());
                 });
-
         },
         initializeAppCreate: function (bootstrapping_data) {
             initializeCommon();
@@ -707,7 +726,7 @@ var mopub = mopub || {};
 
 })(this.jQuery, this.Backbone, this._);
 
-
+/* REFACTOR */
 var artwork_json;
 
 // fuck you
@@ -779,6 +798,5 @@ function selectArtwork(index) {
                               .attr("src",app.artworkUrl60)
                               .width(40)
                               .height(40)
-                              .append($("<span />"))
-                             );
+                              .append($("<span />")) );
 }

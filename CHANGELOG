@@ -1,37 +1,55 @@
+# Deployed Tuesday, January 31, 2012
+### Deployed by John Pena
+### Tagged deploy-7
+### Bugs Fixed: []
+### Included Commits: 
+ * 319a0d0 Merge branch 'master' of github.com:mopub/mopub
+ * 5253f6c Add check for budget end object
+ * a4614b6 [#838 state:resolved] [#822 state:resolved] [#834 state:resolved] [#810 state:resolved]
+ 
+# Deployed Tuesday, January 31, 2012
+### Deployed by John Pena
+### Tagged deploy-7
+### Bugs Fixed: []
+### Included Commits:
+* 319a0d0 Merge branch 'master' of github.com:mopub/mopub
+* 5253f6c Add check for budget end object
+* a4614b6 [#838 state:resolved] [#822 state:resolved] [#834 state:resolved] [#810 state:resolved]
+
 # Deployed Monday, January 30, 2012
 ### Deployed by Nafis Jamal
 ### Tagged deploy-6
 ### Bugs Fixed: ['838', '822', '834', '810']
-### Included Commits: 
- * d9a6538 using offline for users instead of realtime
- * a50106c Merge branch '809-input-disabled'
- * 12180ee Merge branch '769-timezone-offset'
- * 48ae1e8 Merge branch '815-sched-crash'
- * ac55cac Changed how budgets are updated by making them do stuff whenever the CampaignQueryManager puts the campaigns, added in pause/create/delete tests [#843 state:review-requested assigned:nafis ]
- * b8a2755 fixed image url for adunit_context
- * 981904f [#733 state:resolved] [#795 state:resolved] [#792 state:resolved] [#759 state:resolved] [#730 state:resolved] [#749 state:resolved] [#758 state:resolved] [#695 state:resolved]
- * df40a8f Merge branch 'master' of https://github.com/mopub/mopub
- * ebacdbf Increased sleep time for pulling page stats to wait for ajax for iAd, fixed day span for pulling stats for a single login
- * eaf0f82 Merge branch 'master' of github.com:mopub/mopub
- * c6e6f6c only putting creatives targetted at the particular adunit in the adunit context
- * 6cbf93e Enable MRAID Ad checkbox for HTML Creatives
- * 5bb1697 caching image url from blob store
- * 6364144 added australi to tester [#838 state:fixed]
- * ac8751a added comment
- * d4b7f36 first commint
- * c6369c8 always passing fail url
- * a6d2cda New report now only applies to scheduled reports, remove the sched flag, rename variables so it makes more sense [#815 state:review-requested]
- * b4c98b7 Made ad network reports index page a bit faster
- * c649a38 Fixed what was probably an unoptimized get (lots of keys = helllllll) as well as removed TZINFO from budget start/stop [#769 state:review-requested]
- * 613b1f0 Merge branch 'master' into ad-network-reports
- * 2d66028 Improved management stats page, removed some bloat from query managers and the update script, made export select consistent with publisher's export select
- * 4c67cc9 fixed mraid test
- * 8452b87 subclassing WSGIHandler so that we get user email in the error emails on 500s [#822 state:fixed]
- * e095861 turn flag for uniq user counts to offline=False for UI dashboard [#834 state:fixed]
- * 692a983 [#810 state:fixed]
- * f7fc8bb [#825 state:resolved] [#794 state:resolved] [#828 state:resolved] [#831 state:resolved]
- * 0f2fe7d Re-enable buttons before posting [#809 state:review-requested assigned:pena]
- 
+### Included Commits:
+* d9a6538 using offline for users instead of realtime
+* a50106c Merge branch '809-input-disabled'
+* 12180ee Merge branch '769-timezone-offset'
+* 48ae1e8 Merge branch '815-sched-crash'
+* ac55cac Changed how budgets are updated by making them do stuff whenever the CampaignQueryManager puts the campaigns, added in pause/create/delete tests [#843 state:review-requested assigned:nafis ]
+* b8a2755 fixed image url for adunit_context
+* 981904f [#733 state:resolved] [#795 state:resolved] [#792 state:resolved] [#759 state:resolved] [#730 state:resolved] [#749 state:resolved] [#758 state:resolved] [#695 state:resolved]
+* df40a8f Merge branch 'master' of https://github.com/mopub/mopub
+* ebacdbf Increased sleep time for pulling page stats to wait for ajax for iAd, fixed day span for pulling stats for a single login
+* eaf0f82 Merge branch 'master' of github.com:mopub/mopub
+* c6e6f6c only putting creatives targetted at the particular adunit in the adunit context
+* 6cbf93e Enable MRAID Ad checkbox for HTML Creatives
+* 5bb1697 caching image url from blob store
+* 6364144 added australi to tester [#838 state:fixed]
+* ac8751a added comment
+* d4b7f36 first commint
+* c6369c8 always passing fail url
+* a6d2cda New report now only applies to scheduled reports, remove the sched flag, rename variables so it makes more sense [#815 state:review-requested]
+* b4c98b7 Made ad network reports index page a bit faster
+* c649a38 Fixed what was probably an unoptimized get (lots of keys = helllllll) as well as removed TZINFO from budget start/stop [#769 state:review-requested]
+* 613b1f0 Merge branch 'master' into ad-network-reports
+* 2d66028 Improved management stats page, removed some bloat from query managers and the update script, made export select consistent with publisher's export select
+* 4c67cc9 fixed mraid test
+* 8452b87 subclassing WSGIHandler so that we get user email in the error emails on 500s [#822 state:fixed]
+* e095861 turn flag for uniq user counts to offline=False for UI dashboard [#834 state:fixed]
+* 692a983 [#810 state:fixed]
+* f7fc8bb [#825 state:resolved] [#794 state:resolved] [#828 state:resolved] [#831 state:resolved]
+* 0f2fe7d Re-enable buttons before posting [#809 state:review-requested assigned:pena]
+
 # Deployed Friday, January 20, 2012
 ### Deployed by John Pena
 ### Tagged deploy-5

@@ -145,6 +145,9 @@ def git_tag_current_deploy():
 def git_commit(message):
     from subprocess import call
 
+    if message == '':
+        message = 'Deployed without finding any bug fixes.'
+
     call(["git", "commit", "-a", "-m", message])
     #return git('commit -a -m "%s"' % message)
 

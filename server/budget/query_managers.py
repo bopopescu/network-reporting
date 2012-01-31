@@ -24,8 +24,15 @@ class BudgetQueryManager(QueryManager):
         # Update budget
         if camp.budget_obj:
             budget = camp.budget_obj
+            # if the budget and the campaign have differing activity levels sync them
             if camp.active != budget.active:
                 budget.active = camp.active
+                budget.put()
+            # if the campaign is now deleted and the budget says it's still active, 
+            # make the budget not active.  This will be fine if the campaign becomes undeleted
+            # because then the activity levels will differ and everything will be right again
+            if camp.deleted and budget.active:
+                budget.active = False
                 budget.put()
 
             update_dict = {}
@@ -40,10 +47,19 @@ class BudgetQueryManager(QueryManager):
                 camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo = None)
             if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
                 camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo = None)
+            
+            #Do the same thing above, but for budgets
+            budget_start = camp.budget_obj.start_datetime
+            budget_end = camp.budget_obj.end_datetime
 
-            if not camp.start_datetime == camp.budget_obj.start_datetime:
+            if budget_start.tzinfo is not None:
+                budget_start = budget_start.astimezone(utc).replace(tzinfo=None)
+            if budget_end and budget_end.tzinfo is not None:
+                budget_end = budget_end.astimezone(utc).replace(tzinfo=None)
+
+            if not camp.start_datetime == budget_start:
                 update_dict['start_datetime'] = camp.start_datetime
-            if not camp.end_datetime == camp.budget_obj.end_datetime:
+            if not camp.end_datetime == budget_end:
                 update_dict['end_datetime'] = camp.end_datetime
 
             if not camp.budget_strategy == camp.budget_obj.delivery_type:

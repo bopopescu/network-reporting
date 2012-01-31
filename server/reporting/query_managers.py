@@ -96,8 +96,8 @@ class StatsModelQueryManager(CachedQueryManager):
         self.all_stats_deltas = [StatsModel()]
         self.include_geo = include_geo
 
-    def get_stats_for_apps(self, apps, num_days=30):
-        days = StatsModel.lastdays(num_days)
+    def get_stats_for_apps(self, apps, days=None, num_days=30):
+        days = days or StatsModel.lastdays(num_days)
         account_app_dict = {}
         # we bucket the apps per account since we know
         # behind the scenes this is how our data is stored
@@ -204,7 +204,7 @@ class StatsModelQueryManager(CachedQueryManager):
         # if going to use mongo we want offline = False in case we need to pull the unique user counts info
         # Note: fixing uniq user stats updater bug moving forward starting 1/20/2012
         if not offline and self.account_obj and self.account_obj.display_mongo and use_mongo:
-            parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=False))
+            parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=True))
 
         if publishers:
             keys = [db.Key.from_path(StatsModel.kind(),

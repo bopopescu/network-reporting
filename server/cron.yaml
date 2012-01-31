@@ -16,11 +16,12 @@ cron:
   timezone: America/Los_Angeles
   target: frontend-0
   
-- description: Periodic dashboard refresh
-  url: /admin/prep/
-  schedule: every 30 minutes
-  timezone: America/Los_Angeles
-  target: admin-prep
+# Removing for now because we are only doing offline
+# - description: Periodic dashboard refresh
+#   url: /admin/prep/
+#   schedule: every 30 minutes
+#   timezone: America/Los_Angeles
+#   target: admin-prep
   
 - description: Periodic dashboard refresh (offline)
   url: /admin/prep/?offline=1

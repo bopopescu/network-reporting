@@ -23,12 +23,6 @@ class Command(BaseCommand):
     host = "localhost:8000"
     app_id = "dev~mopub-inc"
 
-#     app_id = argv[2]
-#     if len(argv) > 3:
-#       host = argv[3]
-#     else:
-#       host = '%s.appspot.com' % app_id
-
     remote_api_stub.ConfigureRemoteDatastore(app_id, 
                                              '/remote_api',
                                              auth_func,
@@ -36,7 +30,7 @@ class Command(BaseCommand):
       
 
 
-    from admin.randomgen2 import main
+    from admin.randomgen import main
     main()
   
 

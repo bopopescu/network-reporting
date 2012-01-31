@@ -3,8 +3,19 @@
  * Reusable UI elements written with Backbone.
  */
 
-(function($, Backbone) {
+/*jslint browser:true,
+  fragment: true,
+  maxlen: 110,
+  nomen: true,
+  indent: 4,
+  vars: true,
+  white: true
+ */
 
+var mopub = window.mopub || {};
+
+(function($, Backbone, _) {
+    "use strict";
     /*
      * ## AdGroupsView
      * Parameters:
@@ -23,8 +34,8 @@
             var status = $('#campaigns-filterOptions').find(':checked').val();
             var app = $('#campaigns-appFilterOptions').val();
             return new AdGroups(this.collection.reject(function(adgroup) {
-                return (status && status != adgroup.get('status')) ||
-                       (app && adgroup.get('apps').indexOf(app) == -1);
+                return (status && status !== adgroup.get('status')) ||
+                       (app && adgroup.get('apps').indexOf(app) === -1);
             }));
         },
         render: function() {
@@ -34,16 +45,16 @@
             $('#campaigns-filterOptions').buttonset({'disabled': !adgroups.isFullyLoaded()});
 
             var html;
-            if(adgroups.size() === 0) {
+            if (adgroups.size() === 0) {
                 html = '<h2>No ' + this.options.title + '</h2>';
-            }
-            else {
+            } else {
                 html = _.template($('#adgroups-rollup-template').html(), {
                     adgroups: adgroups,
                     title: this.options.title,
                     type: this.options.type
                 });
-                if(this.options.tables) {
+
+                if (this.options.tables) {
                     var type = this.options.type;
                     _.each(this.options.tables, function(filter, title) {
                         var filtered_adgroups = new AdGroups(adgroups.filter(filter));
@@ -55,8 +66,7 @@
                             });
                         }
                     });
-                }
-                else {
+                } else {
                     html += _.template($('#adgroups-table-template').html(), {
                         adgroups: adgroups,
                         title: 'Name',
@@ -82,28 +92,38 @@
 
         show_chart: function() {
             if(this.collection.isFullyLoaded()) {
-                mopub.Chart.setupDashboardStatsChart( ($('#dashboard-stats .stats-breakdown .active').attr('id') == 'stats-breakdown-ctr') ? 'line' : 'area');
+                var active_chart = $('#dashboard-stats .stats-breakdown .active');
+                var use_ctr = active_chart.attr('id') === 'stats-breakdown-ctr';
+                mopub.Chart.setupDashboardStatsChart(use_ctr ? 'line' : 'area');
             }
         },
 
         render: function() {
             if(this.collection.isFullyLoaded()) {
-                // Breakdown
-                $('#stats-breakdown-impression_count .all .inner').html(this.collection.get_formatted_stat('impression_count'));
-                $('#stats-breakdown-revenue .all .inner').html(this.collection.get_formatted_stat('revenue'));
-                $('#stats-breakdown-click_count .all .inner').html(this.collection.get_formatted_stat('click_count'));
-                $('#stats-breakdown-ctr .all .inner').html(this.collection.get_formatted_stat('ctr'));
-                if(this.options.yesterday != null && this.options.today != null) {
-                    // yesterday
-                    $('#stats-breakdown-impression_count .yesterday .inner').html(this.collection.get_formatted_stat_for_day('impression_count', this.options.yesterday));
-                    $('#stats-breakdown-revenue .yesterday .inner').html(this.collection.get_formatted_stat_for_day('revenue', this.options.yesterday));
-                    $('#stats-breakdown-click_count .yesterday .inner').html(this.collection.get_formatted_stat_for_day('click_count', this.options.yesterday));
-                    $('#stats-breakdown-ctr .yesterday .inner').html(this.collection.get_formatted_stat_for_day('ctr', this.options.yesterday));
-                    // today
-                    $('#stats-breakdown-impression_count .today .inner').html(this.collection.get_formatted_stat_for_day('impression_count', this.options.today));
-                    $('#stats-breakdown-revenue .today .inner').html(this.collection.get_formatted_stat_for_day('revenue', this.options.today));
-                    $('#stats-breakdown-click_count .today .inner').html(this.collection.get_formatted_stat_for_day('click_count', this.options.today));
-                    $('#stats-breakdown-ctr .today .inner').html(this.collection.get_formatted_stat_for_day('ctr', this.options.today));
+
+                var metrics = ['impression_count', 'revenue', 'click_count', 'ctr'];
+
+                // Render the stats breakdown for "all""
+                $.each(metrics, function(iter, metric){
+                    var selector = '#stats-breakdown-' + metric + ' .all .inner';
+                    $(selector).html(this.collection.get_formatted_stat(metric));
+                });
+
+                if (this.options.yesterday !== null && this.options.today !== null) {
+
+                    // Render the stats breakdown for yesterday
+                    $.each(metrics, function(iter, metric){
+                        var selector = '#stats-breakdown-' + metric + ' .yesterday .inner';
+                        $(selector).html(this.collection.get_formatted_stat(metric),
+                                         this.options.yesterday);
+                    });
+
+                    // Render the stats breakdown for yesterday
+                    $.each(metrics, function(iter, metric){
+                        var selector = '#stats-breakdown-' + metric + ' .today .inner';
+                        $(selector).html(this.collection.get_formatted_stat(metric),
+                                         this.options.today);
+                    });
                 }
                 // Chart
                 mopub.dashboardStatsChartData = {
@@ -133,6 +153,7 @@
         },
 
         renderInline: function () {
+            /*jslint maxlen: 200 */
             var app_row = $('tr.app-row#app-' + this.model.id, this.el);
             $('.revenue', app_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
             $('.impressions', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('impressions')));
@@ -141,6 +162,7 @@
             $('.ctr', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
             $('.fill_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
             $('.requests', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
+            /*jslint maxlen: 110 */
 
             return this;
         },
@@ -149,36 +171,10 @@
 
             // When we render an appview, we also attach a handler to fetch
             // and render it's adunits when a link is clicked.
-            $('a.adunits', renderedContent).click(showAdUnits);
             $('tbody', this.el).append(renderedContent);
             return this;
         }
     });
-
-    /*
-     * ## AppView helpers
-     *
-     * Utility methods for AppView that control the showing/hiding
-     * of adunits underneath an app row.
-     */
-    function showAdUnits(event){
-        event.preventDefault();
-        var href = $(this).attr('href').replace('#','');
-        Marketplace.fetchAdunitsForApp(href);
-        $(this).text('Hide AdUnits').unbind('click').click(hideAdUnits);
-    }
-
-    function hideAdUnits(event){
-        event.preventDefault();
-        var href = $(this).attr('href').replace('#','');
-        $.each($('.for-app-' + href), function (iter, item) {
-            $(item).remove();
-        });
-        $('#app-' + href + ' a.view_targeting').removeClass('hidden');
-        $(this).text('Show Adunits').unbind('click').click(showAdUnits);
-    }
-
-
 
     /*
      * ## AdUnitView
@@ -198,6 +194,7 @@
          * for changing AdUnit attributes over ajax.
          */
         renderInline: function () {
+            /*jslint maxlen: 200 */
             var current_model = this.model;
             var adunit_row = $('tr.adunit-row#adunit-' + this.model.id, this.el);
             $('.revenue', adunit_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
@@ -220,6 +217,7 @@
             $('.ctr', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
             $('.clicks', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
             $('.requests', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
+            /*jslint maxlen: 110 */
 
             if (this.model.get('active')) {
                 $('input.targeting-box', adunit_row).attr('checked', 'checked');
@@ -321,4 +319,4 @@
     window.AdGroupsView = AdGroupsView;
     window.CollectionGraphView = CollectionGraphView;
 
-})(this.jQuery, this.Backbone);
+}(this.jQuery, this.Backbone, this._));

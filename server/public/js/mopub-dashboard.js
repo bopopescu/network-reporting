@@ -625,6 +625,22 @@ var mopub = mopub || {};
         $(this).selectmenu('index', 0);
     });
 
+    // Do Dashboard export						
+    $('#publisher-dashboard-exportSelect')
+     .change(function(e) {
+		e.preventDefault();
+        var val = $(this).val();
+        if (val != 'exp') {
+            $('#dashboardExportForm')
+                .find('#appExportType')
+                .val(val)
+                .end()
+                .submit();
+        }
+        $(this).selectmenu('index', 0);
+    });
+
+
     // Hide unneeded li entry
     $('#publisher-app-exportSelect-menu').find('li').first().hide();
 

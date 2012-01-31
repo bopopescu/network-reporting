@@ -16,6 +16,7 @@ urlpatterns = patterns('publisher.views',
   url(r'^$','index',name='publisher_index'),
   url( r'^export/(?P<f_type>xls|csv)/(?P<key_type>adunit|app|adgroup|account)/(?P<key>[-\w\.]+)/$', 'export_file', name='exporter' ),
   url(r'^app_export$', 'app_export', name='app_export'),
+  url(r'^dashboard_export$', 'dashboard_export', name='dashboard_export'),
 )
 
 url(r'^show/(?P<campaign_key>[-\w\.]+)$','campaign_show',name='advertiser_campaign_show'),

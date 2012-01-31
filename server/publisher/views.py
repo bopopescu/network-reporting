@@ -896,9 +896,43 @@ class AppExportHandler(RequestHandler):
         return sswriter.export_writer(file_type, f_name, titles, data)
 
 
+class DashboardExportHandler(RequestHandler):
+    def post(self, file_type, start, end):
+        start = datetime.strptime(start,'%m%d%y')
+        end = datetime.strptime(end,'%m%d%y')
+        days = date_magic.gen_days(start, end)
+
+        data = []
+
+        apps = AppQueryManager.get_apps(self.account)
+        for app in apps:
+            stats = StatsModelQueryManager(self.account,
+                                           offline=self.offline).get_stats_for_days(publisher=app,days = days)            
+            summed_stats = sum(stats,StatsModel())
+            data.append([app.name,"all"]+app_stats(summed_stats))
+            adunits = AdUnitQueryManager.get_adunits(app=app)
+            for adunit in adunits:
+                stats = StatsModelQueryManager(self.account,
+                                               offline=self.offline).get_stats_for_days(publisher=adunit,days=days)            
+                summed_stats = sum(stats,StatsModel())
+                data.append([app.name,adunit.name]+app_stats(summed_stats))                    
+        
+        f_name_dict = dict(start = start.strftime('%b %d'),
+                           end   = end.strftime('%b %d, %Y'),
+                           )
+
+        f_name = "DashboardStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = f_name.encode('ascii', 'ignore')
+        titles = ['App','Ad Unit', 'Requests', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
+        return sswriter.export_writer(file_type, f_name, titles, data)
+
+
 
 def app_export(request, *args, **kwargs):
     return AppExportHandler()(request, *args, **kwargs)
+
+def dashboard_export(request, *args, **kwargs):
+    return DashboardExportHandler()(request, *args, **kwargs)
 
 
 def enable_marketplace(adunit, account):

@@ -96,8 +96,8 @@ class StatsModelQueryManager(CachedQueryManager):
         self.all_stats_deltas = [StatsModel()]
         self.include_geo = include_geo
 
-    def get_stats_for_apps(self, apps, num_days=30):
-        days = StatsModel.lastdays(num_days)
+    def get_stats_for_apps(self, apps, days=None, num_days=30):
+        days = days or StatsModel.lastdays(num_days)
         account_app_dict = {}
         # we bucket the apps per account since we know
         # behind the scenes this is how our data is stored

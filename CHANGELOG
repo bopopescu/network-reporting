@@ -1,59 +1,93 @@
+# Deployed Monday, January 30, 2012
+### Deployed by Nafis Jamal
+### Tagged deploy-6
+### Bugs Fixed: ['838', '822', '834', '810']
+### Included Commits: 
+ * d9a6538 using offline for users instead of realtime
+ * a50106c Merge branch '809-input-disabled'
+ * 12180ee Merge branch '769-timezone-offset'
+ * 48ae1e8 Merge branch '815-sched-crash'
+ * ac55cac Changed how budgets are updated by making them do stuff whenever the CampaignQueryManager puts the campaigns, added in pause/create/delete tests [#843 state:review-requested assigned:nafis ]
+ * b8a2755 fixed image url for adunit_context
+ * 981904f [#733 state:resolved] [#795 state:resolved] [#792 state:resolved] [#759 state:resolved] [#730 state:resolved] [#749 state:resolved] [#758 state:resolved] [#695 state:resolved]
+ * df40a8f Merge branch 'master' of https://github.com/mopub/mopub
+ * ebacdbf Increased sleep time for pulling page stats to wait for ajax for iAd, fixed day span for pulling stats for a single login
+ * eaf0f82 Merge branch 'master' of github.com:mopub/mopub
+ * c6e6f6c only putting creatives targetted at the particular adunit in the adunit context
+ * 6cbf93e Enable MRAID Ad checkbox for HTML Creatives
+ * 5bb1697 caching image url from blob store
+ * 6364144 added australi to tester [#838 state:fixed]
+ * ac8751a added comment
+ * d4b7f36 first commint
+ * c6369c8 always passing fail url
+ * a6d2cda New report now only applies to scheduled reports, remove the sched flag, rename variables so it makes more sense [#815 state:review-requested]
+ * b4c98b7 Made ad network reports index page a bit faster
+ * c649a38 Fixed what was probably an unoptimized get (lots of keys = helllllll) as well as removed TZINFO from budget start/stop [#769 state:review-requested]
+ * 613b1f0 Merge branch 'master' into ad-network-reports
+ * 2d66028 Improved management stats page, removed some bloat from query managers and the update script, made export select consistent with publisher's export select
+ * 4c67cc9 fixed mraid test
+ * 8452b87 subclassing WSGIHandler so that we get user email in the error emails on 500s [#822 state:fixed]
+ * e095861 turn flag for uniq user counts to offline=False for UI dashboard [#834 state:fixed]
+ * 692a983 [#810 state:fixed]
+ * f7fc8bb [#825 state:resolved] [#794 state:resolved] [#828 state:resolved] [#831 state:resolved]
+ * 0f2fe7d Re-enable buttons before posting [#809 state:review-requested assigned:pena]
+ 
 # Deployed Friday, January 20, 2012
 ### Deployed by John Pena
 ### Tagged deploy-5
 ### Bugs Fixed: ['825', '794', '828', '831']
-### Included Commits: 
- * 0c02970 Merge branch '831-mpx-format-currency'
- * d2dea4f Merge branch '828-wtfloat'
- * e1c9b60 Merge branch 'master' into ad-network-reports
- * 8b9e9fb Modified AdNetworkStats dict_ property, fixed iad mapper creation, fixed itunes url entry [#825 state:fixed]
- * 38c8d3f added back app.yaml and removed it from the gitignore since so many scripts were borked
- * 7b7d6a6 no longer overwriting test cases for renderers
- * f4dfe3b fixed tests and now support third party impression tracking for mraid
- * c4b5b02 Merge branch 'master' into ad-network-reports
- * 453c542 fixed backend for mraid support
- * 5c7c25f fixed inmobi for full screen adunits filled bye 300x250s [#794 state:fixed]
- * 15c1afb ++mopub.js?v
- * 150e932 Create iAd mapper on iTunes url entry
- * c92f823 fixed scumbag float rounding [#828 state:fixed]
- * 2cb3b21 revenue and ecpm numbers in the marketplace table now use mopub.Utils.formatCurrency [#831 state:fixed]
- * b236834 Fixed bugs caused by re-naming classes and methods in query_managers in check_login_credentials
- * 4f35f48 Added comments for management stats view, made ad_network_reports.migrate_scripts a package, added missing field in management stat list 'attempted_logins'
- * f62a2da Merge branch 'master' into ad-network-reports
- * e77d1d1 fixed registration form
- * 474eb5c Merge branch 'ad-network-reports-aggregate' of https://github.com/mopub/mopub into ad-network-reports-aggregate
- * 718243d Improvements to ad network management stats
- * 9c40dfb Minor changes to update script
- * b755507 added app.yaml to the gitignore and removed breakpoints from mpdeploy
- * 5c2d132 [#818 state:resolved] [#749 state:resolved] [#695 state:resolved] [#703 state:resolved]
- * e24233d Merge
- * db6aa7e Removed TODO
- * b24db37 Merge branch 'ad-network-reports-frontend' into ad-network-reports-aggregate
- * 40c9fe3 Added script to save roll up data at account level for apps and networks
- * 4e6c5a6 When app pub ids are saved mappers are automatically created
- * dcf9fb3 Changed js version # (haha... stupid app engine)
- * aa2b1ef Fixed graph and aggregate stats on app detail page
- * 73c4091 Merge
- * 8180e97 Added missing file
- * ab4727f Added migration scripts for updating entities for ad network reports
- * 759e3ac Modified update script to save roll up stats at account level for networks and apps
- * 1461b34 iAd scraper handles terms of use page
- * 4778e7d Merge, still need to deal with saving roll-up stats using multiprocessing
- * 975a033 Fixed rebase pointer to js source
- * 5134c70 Calculating daily stats uses AdNetworkNetworkStats
- * 0739d1b Apps without pub ids now shown in notes (could be made faster if done via ajax), still need to fix 503 (Service Unavailable) random errors on calls to the roll up service
- * ce5b79f Ajax loading for ad networks' index page almost complete
- * afa2d84 Added missing files
- * 9cd7275 Added missing files
- * dd95f3f Sort by app stats loads through ajax for the ad network reports index page
- * e966de0 Ajax load for app roll up stats for the ad network reports index page
- * 87f2843 Ajax for sorted by networks data on the index page works
- * 4e9c11e Redesigning the ad_network_reports/ views, templates/ad_network_index and query_managers to be fast with Ajax
- * 1ffd1bd Added a two nice gen days functions to date_magic, fixed formatCurrency in js/controllers/mopub.js to include commas
- * a423345 Ajax calls using backbone set up for ad network reports, Still need to strip all the extra crap from views and query_managers that isn't needed now also need to support sort by apps
- * 15191f8 Ad network management page shows the # of logins attempted and the # of accounts that have turned on ad network reporting
- * 288d73e Store rolled up stats on the application and network level, Store # of logins attempted for each network each time the update script is run
- 
+### Included Commits:
+* 0c02970 Merge branch '831-mpx-format-currency'
+* d2dea4f Merge branch '828-wtfloat'
+* e1c9b60 Merge branch 'master' into ad-network-reports
+* 8b9e9fb Modified AdNetworkStats dict_ property, fixed iad mapper creation, fixed itunes url entry [#825 state:fixed]
+* 38c8d3f added back app.yaml and removed it from the gitignore since so many scripts were borked
+* 7b7d6a6 no longer overwriting test cases for renderers
+* f4dfe3b fixed tests and now support third party impression tracking for mraid
+* c4b5b02 Merge branch 'master' into ad-network-reports
+* 453c542 fixed backend for mraid support
+* 5c7c25f fixed inmobi for full screen adunits filled bye 300x250s [#794 state:fixed]
+* 15c1afb ++mopub.js?v
+* 150e932 Create iAd mapper on iTunes url entry
+* c92f823 fixed scumbag float rounding [#828 state:fixed]
+* 2cb3b21 revenue and ecpm numbers in the marketplace table now use mopub.Utils.formatCurrency [#831 state:fixed]
+* b236834 Fixed bugs caused by re-naming classes and methods in query_managers in check_login_credentials
+* 4f35f48 Added comments for management stats view, made ad_network_reports.migrate_scripts a package, added missing field in management stat list 'attempted_logins'
+* f62a2da Merge branch 'master' into ad-network-reports
+* e77d1d1 fixed registration form
+* 474eb5c Merge branch 'ad-network-reports-aggregate' of https://github.com/mopub/mopub into ad-network-reports-aggregate
+* 718243d Improvements to ad network management stats
+* 9c40dfb Minor changes to update script
+* b755507 added app.yaml to the gitignore and removed breakpoints from mpdeploy
+* 5c2d132 [#818 state:resolved] [#749 state:resolved] [#695 state:resolved] [#703 state:resolved]
+* e24233d Merge
+* db6aa7e Removed TODO
+* b24db37 Merge branch 'ad-network-reports-frontend' into ad-network-reports-aggregate
+* 40c9fe3 Added script to save roll up data at account level for apps and networks
+* 4e6c5a6 When app pub ids are saved mappers are automatically created
+* dcf9fb3 Changed js version # (haha... stupid app engine)
+* aa2b1ef Fixed graph and aggregate stats on app detail page
+* 73c4091 Merge
+* 8180e97 Added missing file
+* ab4727f Added migration scripts for updating entities for ad network reports
+* 759e3ac Modified update script to save roll up stats at account level for networks and apps
+* 1461b34 iAd scraper handles terms of use page
+* 4778e7d Merge, still need to deal with saving roll-up stats using multiprocessing
+* 975a033 Fixed rebase pointer to js source
+* 5134c70 Calculating daily stats uses AdNetworkNetworkStats
+* 0739d1b Apps without pub ids now shown in notes (could be made faster if done via ajax), still need to fix 503 (Service Unavailable) random errors on calls to the roll up service
+* ce5b79f Ajax loading for ad networks' index page almost complete
+* afa2d84 Added missing files
+* 9cd7275 Added missing files
+* dd95f3f Sort by app stats loads through ajax for the ad network reports index page
+* e966de0 Ajax load for app roll up stats for the ad network reports index page
+* 87f2843 Ajax for sorted by networks data on the index page works
+* 4e9c11e Redesigning the ad_network_reports/ views, templates/ad_network_index and query_managers to be fast with Ajax
+* 1ffd1bd Added a two nice gen days functions to date_magic, fixed formatCurrency in js/controllers/mopub.js to include commas
+* a423345 Ajax calls using backbone set up for ad network reports, Still need to strip all the extra crap from views and query_managers that isn't needed now also need to support sort by apps
+* 15191f8 Ad network management page shows the # of logins attempted and the # of accounts that have turned on ad network reporting
+* 288d73e Store rolled up stats on the application and network level, Store # of logins attempted for each network each time the update script is run
+
 # Deployed Thursday, January 19, 2012
 ### Deployed by John Pena
 ### Tagged deploy-4

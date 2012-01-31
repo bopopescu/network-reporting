@@ -22,7 +22,7 @@
       <form action="{% url publisher_app_update_ajax app_key=app.key %}" enctype='multipart/form-data' method="POST" accept-charset="utf-8" id="appForm" class="appEditForm">
         <fieldset id="appForm-details" class="alt">
           <div id="appForm-fragment">
-          {{app_form_fragment}}
+          {{ app_form_fragment }}
           </div>
           <div class="form-submit">
             <span class="hidden" id="appEditForm-loading"><img src="/images/loading2.gif"/></span>
@@ -90,6 +90,7 @@
       <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
         <div class="chart-loading-text">Loading ...</div>
         <div class="chart-error-text">Could not load chart</div>
+        {# WHY #}
         <script type="text/javascript">
           // chart data
           mopub.dashboardStatsChartData = {
@@ -566,7 +567,6 @@
                           {% endfor %}
                       </tbody>
                   </table>
-                  <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
               </div>
           </section>
 
@@ -582,3 +582,14 @@
               </div>
           </div>
 {% endblock content %}
+
+{% block extraScripts %}
+  <script src="/js/controllers/publisher.js?v=34"></script>
+  <script type="text/javascript">
+    $(function() {
+      DashboardController.initializeAppDetail({
+        // not needed yet
+      });
+    });
+  </script>
+{% endblock extraScripts %}

@@ -1,5 +1,13 @@
 /*
- * # MoPub Dashboard
+ * # MoPub Dashboard Javascript
+ *
+ * Client-side functionality for the following pages:
+ * * Inventory/Dashboard
+ * * App detail
+ * * Adunit detail
+ * * App creation
+ * * Sign up flow
+ * * Geographical targeting (deprecated)
  */
 
 var mopub = mopub || {};
@@ -37,6 +45,7 @@ var mopub = mopub || {};
     }
 
     /*
+     * ## fetchAppStats
      * Fetches all app stats using a list of app keys and renders
      * them into table rows that have already been created in the
      * page. Useful for decreasing page load time along with `fetchAdunitStats`.
@@ -53,9 +62,10 @@ var mopub = mopub || {};
     }
 
     /*
-     * Fetches AdUnit stats over ajax and renders them in already existing table rows.
-     * This method is useful for decreasing page load time. Uses a parent app's key
-     * to bootstrap the fetch.
+     * ## fetchAdunitStats
+     * Fetches AdUnit stats for an app over ajax and renders them in already
+     * existing table rows. This method is useful for decreasing page load time.
+     * Uses a parent app's key to bootstrap the fetch.
      */
     function fetchAdunitStats (app_key) {
         var adunits = new AdUnitCollection();
@@ -83,10 +93,133 @@ var mopub = mopub || {};
     }
 
 
+    /*
+     * ## initializeAppForm
+     * Loads all click handlers/visual stuff/ajax loading for
+     * the app form.
+     */
+    function initializeAppForm() {
+        $('input[name="app_type"]').click(function(e) {
+            $('#appForm .appForm-platformDependent')
+                .removeClass('iphone')
+                .removeClass('android')
+                .removeClass('mweb')
+                .addClass($(this).val());
+        }).filter(':checked').click(); // make sure we're in sync when the page loads
+    }
+
+    /*
+     * ## initializeAdunitForm
+     * Loads all click handlers/visual stuff/ajax loading for
+     * the app form.
+     */
+    function initializeAdunitForm() {
+        // Set up device format selection UI
+        $("#adunit-device_format_phone").parent().buttonset();
+        $('#adunit-device_format_phone').click(function(e){
+            $('#adForm-tablet-container').hide();
+            $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
+        });
+
+        $('#adunit-device_format_tablet').click(function(e){
+            $('#adForm-phone-container').hide();
+            $('#adForm-tablet-container').show().find('input[type="radio"]')[0].click();
+        });
+
+        // Set up format selection UI for phone
+        $('#adForm-phone-formats').each(function() {
+            var container = $(this);
+            $('input[type="radio"]', container).click(function(e) {
+                var radio = $(this);
+                var formatContainer = radio.parents('.adForm-format');
+                $('.adForm-format-image').css({ opacity: 0.5 });
+                $('.adForm-format-image', formatContainer).css({ opacity: 1 });
+
+                var $full_onlys = $(".full_only");
+                var $banner_onlys = $(".banner_only");
+                if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
+                    $(this).attr("id") == "appForm-adUnitFormat-full"){
+                    $full_onlys.show();
+                    $banner_onlys.hide();
+                }
+                else{
+                    $full_onlys.hide();
+                    $banner_onlys.show();
+                }
+
+                var $custom_onlys = $(".custom_only");
+                if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
+                    $custom_onlys.show();
+                }
+                else{
+                    $custom_onlys.hide();
+                }
+
+                }).filter(':checked').click();
+
+                $('.adForm-format-image', container).click(function(e) {
+                    var image = $(this);
+                    var formatContainer = image.parents('.adForm-format');
+                    $('input[type="radio"]', formatContainer).click();
+                });
+
+                $('.adForm-format-details input[type="text"]', container).focus(function() {
+                    var input = $(this);
+                    var formatContainer = input.parents('.adForm-format');
+                    $('input[type="radio"]', formatContainer).click();
+                });
+            });
+            // Set up format selection UI for tablet
+            $('#adForm-tablet-formats').each(function(){
+                var container = $(this);
+                //bind radio buttons to images
+                $(this).find('input[type="radio"]').click(function(e){
+                    var index = $(this).parent().index();
+                    var images = $("#adForm-images-container");
+                    images.children().hide();
+                    var image = images.children()[index];
+                    $(image).show().css({ opacity: 1 });
+
+                    var $full_onlys = $(".full_only");
+                    var $banner_onlys = $(".banner_only");
+                    if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
+                        $(this).attr("id") == "appForm-adUnitFormat-full"){
+                        $full_onlys.show();
+                        $banner_onlys.hide();
+                    }
+                    else{
+                        $full_onlys.hide();
+                        $banner_onlys.show();
+                    }
+
+                    var $custom_onlys = $(".custom_only");
+                    if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
+                        $custom_onlys.show();
+                    }
+                    else{
+                        $custom_onlys.hide();
+                    }
+
+                }).first().click(); //initialize by activating the first
+            });
+            //initialize checked elements
+            $("#adunit-device_format_phone").parent().children().filter(':checked').click().each(function(){
+                var deviceFormat = $(this).val(); //either tablet or phone
+                var container = "#adForm-"+deviceFormat+"-container";
+                $(container).find('.possible-format').click();
+            });
+        }
+
+    /*
+     * ## initializeDateButtons
+     * Loads all click handlers/visual stuff for the date buttons. Used
+     * on a ton of pages, probably could be refactored by someone brave
+     * enough.
+     */
     function initializeDateButtons () {
         $('#dashboard-dateOptions input').click(function() {
             var option = $(this).val();
-            if(option == 'custom') {
+            if (option == 'custom') {
                 $('#dashboard-dateOptions-custom-modal').dialog({
                     width: 570,
                     buttons: [
@@ -121,120 +254,6 @@ var mopub = mopub || {};
                 document.location.href = location+'?r=' + option;
             }
         });
-    }
-
-
-    /*
-     * This function groups together a couple of pieces of functionality that are used on
-     * all of the publisher pages (inventory, app, adunit stuff)
-     */
-    function initializeCommon () {
-
-        initializeDateButtons();
-
-        // Use breakdown to switch charts
-        $('.stats-breakdown tr').click(function(e) {
-            $('#dashboard-stats-chart').fadeOut(100, function() {
-                mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-                $(this).show();
-            });
-        });
-
-        $('#appForm.appEditForm').ajaxForm({
-            data: { ajax: true },
-            dataType: 'json',
-            success: function(jsonData, statusText, xhr, $form) {
-                $('#appEditForm-loading').hide();
-
-                if (jsonData.success) {
-                    window.location.reload();
-                } else {
-                    $('.form-error-text', "#appForm").remove();
-                    $.each(jsonData.errors, function (iter, item) {
-                        var name = item[0];
-                        var error_div = $("<div>").append(item[1]).addClass('form-error-text');
-
-                        $("input[name=" + name + "]", "#appForm")
-                            .addClass('error')
-                            .parent().append(error_div);
-
-                        $("select[name=" + name + "]", "#appForm")
-                            .addClass('error')
-                            .parent().append(error_div);
-                    });
-                    // reimplement the onload event
-                    appFormOnload();
-                    window.location.hash = '';
-                    window.location.hash = 'appForm';
-                }
-            }
-        });
-
-        $('#adunitAddForm').ajaxForm({
-            data: { ajax: true },
-            dataType: 'json',
-            success: function(jsonData, statusText, xhr, $form) {
-                $('#adunitForm-loading').hide();
-                if (jsonData.success) {
-                    window.location.reload();
-                } else {
-
-                    // reimplement the onload event
-                    appFormOnload();
-                    setupAdUnitForm();
-                    window.location.hash = '';
-                    window.location.hash = 'adunitForm';
-                }
-            }
-        });
-
-    }
-
-
-
-    /*
-     * ## Dashboard Controller
-     */
-    var DashboardController = {
-        initializeIndex: function (bootstrapping_data) {
-            initializeCommon();
-            populateGraphWithAccountStats(bootstrapping_data.account_stats,
-                                         bootstrapping_data.start_date);
-
-            fetchAppStats(bootstrapping_data.app_keys);
-            _.each(bootstrapping_data.app_keys, function(app_key) {
-                fetchAdunitStats(app_key);
-            });
-        },
-        initializeGeo: function (bootstrapping_data) {
-            initializeCommon();
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-            // fill this in
-        },
-        initializeAppDetail: function (bootstrapping_data) {
-            initializeCommon();
-            // fill this in
-        },
-        initializeAdUnitDetail: function (bootstrapping_data) {
-            initializeCommon();
-            // fill this in
-        },
-        initializeAppCreate: function (bootstrapping_data) {
-            initializeCommon();
-            // fill this in
-        },
-        initializeAdUnitCreate: function (bootstrapping_data) {
-            initializeCommon();
-            // fill this in
-        },
-    };
-
-    window.DashboardController = DashboardController;
-
-
-    // BELOW NEEDS TO BE REFACTORED
-    $(document).ready(function() {
-
 
 
         // set up stats breakdown dateOptions
@@ -250,10 +269,13 @@ var mopub = mopub || {};
             onSelect: function(selectedDate) {
                 var other = $('#dashboard-dateOptions-custom-to');
                 var instance = $(this).data("datepicker");
-                var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+                var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat,
+                                                  selectedDate,
+                                                  instance.settings);
                 other.datepicker('option', 'minDate', date);
             }
         });
+
         $('#dashboard-dateOptions-custom-to').datepicker({
             defaultDate: '-1d',
             maxDate: '0d',
@@ -265,204 +287,33 @@ var mopub = mopub || {};
             }
         });
 
-        // set up buttons
-        $('#dashboard-apps-addAppButton').button({ icons: { primary: "ui-icon-circle-plus" } });
-        $('#dashboard-apps-editAppButton')
-            .button({ icons: { primary: "ui-icon-wrench" } })
-            .click(function(e) {
-                e.preventDefault();
-                if ($('#dashboard-appEditForm').is(':visible'))
-                    $('#dashboard-appEditForm').slideUp('fast');
-                else
-                    $('#dashboard-appEditForm').slideDown('fast');
-            });
-        $('#dashboard-apps-addAdUnitButton')
-            .button({ icons: { primary: "ui-icon-circle-plus" } })
-            .click(function(e) {
-                e.preventDefault();
-                if ($('#dashboard-adunitAddForm').is(':visible'))
-                    $('#dashboard-adunitAddForm').slideUp('fast');
-                else
-                    $('#dashboard-adunitAddForm').slideDown('fast');
-            });
-        $('#dashboard-apps-editAdUnitButton')
-            .button({ icons: { primary: "ui-icon-wrench" } })
-            .click(function(e) {
-                e.preventDefault();
-                if ($('#dashboard-adunitEditForm').is(':visible'))
-                    $('#dashboard-adunitEditForm').slideUp('fast');
-                else
-                    $('#dashboard-adunitEditForm').slideDown('fast');
-            });
 
-        $('#appEditForm-submit')
-            .button({
-                icons: { secondary: "ui-icon-circle-triangle-e" }
-            })
-            .click(function(e) {
-                e.preventDefault();
-                $('#appEditForm-loading').show();
-                $('#appForm').submit();
-            });
+    }
 
-        $('#appEditForm-cancel')
-            .click(function(e) {
-                e.preventDefault();
-                $('#dashboard-appEditForm').slideUp('fast');
-            });
-        $('#adunitAddForm-submit')
-            .button({
-                icons: { secondary: "ui-icon-circle-triangle-e" }
-            })
-            .click(function(e) {
-                e.preventDefault();
-                $('#adunitForm-loading').show();
-                $('#adunitAddForm').submit();
-            });
-        $('#adunitAddForm-cancel')
-            .click(function(e) {
-                e.preventDefault();
-                $('#dashboard-adunitAddForm').slideUp('fast', function() {
-                    $('#dashboard-apps-addAdUnitButton').show();
-                });
-            });
-        $('#adunitEditForm-submit')
-            .button({
-                icons: { secondary: "ui-icon-circle-triangle-e" }
-            })
-                .click(function(e) {
-                    e.preventDefault();
-                    $('#adunitForm-loading').show();
-                    $('#adunitAddForm').submit();
-                });
-        $('#adunitEditForm-cancel')
-            .click(function(e) {
-                e.preventDefault();
-                $('#dashboard-adunitEditForm').slideUp('fast');
-            });
-
-        // set up showing/hiding of app details
-        $('.appData-details').each(function() {
-            var details = $(this);
-            var data = $('.appData-details-inner', details);
-            var button = $('.appData-details-toggleButton', details);
-
-            function getButtonTextElement() {
-                var buttonTextElement = $('.ui-button-text', button);
-                if(buttonTextElement.length === 0) {buttonTextElement = button;}
-                return buttonTextElement;
-            }
-
-            function didShowData() {
-                data.removeClass('hide');
-                data.addClass('show');
-                button.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                getButtonTextElement().text('Hide details');
-            }
-
-            function didHideData() {
-                data.removeClass('show');
-                data.addClass('hide');
-                button.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                getButtonTextElement().text('Show details');
-            }
-
-            if(data.hasClass('show')) {
-                didShowData();
-            }
-            else {
-                data.hide();
-                didHideData();
-            }
-
-            button.click(function(e) {
-                e.preventDefault();
-                if(data.hasClass('show')) {
-                    data.slideUp('fast');
-                    didHideData();
-                }
-                else {
-                    data.slideDown('fast');
-                    didShowData();
-                }
-            });
-        });
-
-        $('.appData-id').each(function() {
-            var id = $(this)
-            var td = id.parents('tr');
-            td.hover(
-                function() {
-                    id.show();
-                },
-                function() {
-                    id.hide();
-                });
-        });
-
-
-        /*---------------------------------------/
-          / App Details Form
-          /---------------------------------------*/
-
-        // Submit button
-        $('#appForm-submit')
-            .button({
-                icons: { secondary: "ui-icon-circle-triangle-e" }
-            })
-            .click(function(e) {
-                e.preventDefault();
-                $('#appForm').submit();
-            });
-
-        // Platform-dependent URL/package name switching
-        function appFormOnload() {
-            $('input[name="app_type"]').click(function(e) {
-                $('#appForm .appForm-platformDependent')
-                    .removeClass('iphone')
-                    .removeClass('android')
-                    .removeClass('mweb')
-                    .addClass($(this).val());
-            }).filter(':checked').click(); // make sure we're in sync when the page loads
-        }
-        appFormOnload();
-
-        $('#appForm-market-search-button')
-            .button({ icons: { primary: 'ui-icon-search' }})
-            .click(function(e) {
-                e.preventDefault();
-                $('#searchAppStore-loading').show();
-                $('#dashboard-searchAppStore-custom-modal').dialog({
-                    buttons: [
-                        {
-                            text: 'Cancel',
-                            click: function() {
-                                $('#searchAppStore-results').html('');
-                                $(this).dialog('close');
-                            }
+    function initializeDeleteForm() {
+        $('#dashboard-delete-link').click(function(e){
+            e.preventDefault();
+            $('#dashboard-delete-modal').dialog({
+                buttons: [
+                    {
+                        text: 'Delete',
+                        click: function() {
+                            $(this).dialog('close');
+                            $('#dashboard-deleteForm').submit();
                         }
-                    ]
-                });
-                var name = $('#appForm input[name="name"]').val();
-                $.ajax( {
-                    url: '/android_market_search/' + name,
-                    success: loadedArtwork,
-                    dataType: 'json'
-                });
+                    },
+                    {
+                        text: 'Cancel',
+                        click: function() {
+                            $(this).dialog('close');
+                        }
+                    }
+                ]
             });
-
-        $('#appForm input[name="app_type"]').click(function(e) {
-            $('#appForm .appForm-platformDependent')
-                .removeClass('iphone')
-                .removeClass('android')
-                .addClass($(this).val());
-        }).filter(':checked').click();
-
-        $('input[name="name"]').change(function() {
-            var name = $.trim($(this).val());
-            $('#appForm-adUnitName').val(name + ' banner ad');
         });
+    }
 
+    function initializeiOSAppSearch() {
         // Search button
         $('#appForm-search-button')
             .button({ icons: { primary: "ui-icon-search" }})
@@ -491,214 +342,375 @@ var mopub = mopub || {};
                 var head = document.getElementsByTagName("head")[0];
                 (head || document.body).appendChild( script );
             });
+    }
 
-        if ($('#appForm-name').val() === '') {
-            $('#appForm-search-button').button("disable");
-            $('#appForm-search').button("disable");
-            $('#appForm-market-search-button').button("disable");
-            $('#appForm-market-search').button("disable");
-        }
+    /*
+     * This function groups together a couple of pieces of functionality that are used on
+     * all of the publisher pages (inventory, app, adunit stuff)
+     */
+    function initializeCommon () {
 
-        $('#appForm-name').keyup(function(e) {
-            // Show/hide the app search button
-            var name = $.trim($(this).val());
-            var type = $('input:radio[name="app_type"]:checked').val();
+        initializeDateButtons();
 
-            if (name.length) {
-                $('#appForm-search-button').button("enable");
-                $('#appForm-market-search-button').button('enable');
-            }
-            else {
-                $('#appForm-search-button').button("disable");
-                $('#appForm-market-search-button').button('disable');
-            }
-            if (e.keyCode == 13) {
-                if (type == 'iphone') {
-                    $('#appForm-search-button').click();
+        // Use breakdown to switch charts
+        $('.stats-breakdown tr').click(function(e) {
+            $('#dashboard-stats-chart').fadeOut(100, function() {
+                mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+                $(this).show();
+            });
+        });
+    }
+
+
+
+    /*
+     * ## Dashboard Controller
+     */
+    var DashboardController = {
+        initializeIndex: function (bootstrapping_data) {
+
+            // Adds click handlers for the top date buttons and stats breakdown
+            // date buttons, and click handlers for the stats breakdown graph-
+            // changing
+            initializeCommon();
+
+            // Populate the graph
+            populateGraphWithAccountStats(bootstrapping_data.account_stats,
+                                          bootstrapping_data.start_date);
+
+            // Populate the app/adunit stats table
+            fetchAppStats(bootstrapping_data.app_keys);
+            _.each(bootstrapping_data.app_keys, function(app_key) {
+                fetchAdunitStats(app_key);
+            });
+
+            // Add icon to the 'Add an app' button
+            // Remove later with new button treatment
+            $('#dashboard-apps-addAppButton')
+                .button({ icons: { primary: "ui-icon-circle-plus" } });
+
+            $('.appData-id').each(function() {
+                var id = $(this);
+                var td = id.parents('tr');
+                td.hover(
+                    function() {
+                        id.show();
+                    },
+                    function() {
+                        id.hide();
+                    });
+            });
+
+
+        },
+        initializeGeo: function (bootstrapping_data) {
+            initializeCommon();
+            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+
+        },
+        initializeAppDetail: function (bootstrapping_data) {
+            initializeCommon();
+            initializeAppForm();
+            initializeAdunitForm();
+            initializeDeleteForm();
+            initializeiOSAppSearch();
+            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+
+            // Controls for the App Edit form
+            $('#appForm.appEditForm').ajaxForm({
+                data: { ajax: true },
+                dataType: 'json',
+                success: function(jsonData, statusText, xhr, $form) {
+                    $('#appEditForm-loading').hide();
+
+                    if (jsonData.success) {
+                        window.location.reload();
+                    } else {
+                        $('.form-error-text', "#appForm").remove();
+                        $.each(jsonData.errors, function (iter, item) {
+                            var name = item[0];
+                            var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+
+                            $("input[name=" + name + "]", "#appForm")
+                                .addClass('error')
+                                .parent().append(error_div);
+
+                            $("select[name=" + name + "]", "#appForm")
+                                .addClass('error')
+                                .parent().append(error_div);
+                        });
+                        // reimplement the onload event
+                        initializeAppForm();
+                        window.location.hash = '';
+                        window.location.hash = 'appForm';
+                    }
                 }
+            });
+
+            $('#appEditForm-submit')
+                .button({
+                    icons: { secondary: "ui-icon-circle-triangle-e" }
+                })
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#appEditForm-loading').show();
+                    $('#appForm').submit();
+                });
+
+            $('#appEditForm-cancel')
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#dashboard-appEditForm').slideUp('fast');
+                });
+
+            $('#dashboard-apps-editAppButton')
+                .button({
+                    icons: { primary: "ui-icon-wrench" }
+                })
+                .click(function(e) {
+                    e.preventDefault();
+                    if ($('#dashboard-appEditForm').is(':visible')) {
+                        $('#dashboard-appEditForm').slideUp('fast');
+                    } else {
+                        $('#dashboard-appEditForm').slideDown('fast');
+                    }
+                });
+
+            $('#dashboard-apps-addAdUnitButton')
+                .button({
+                    icons: { primary: "ui-icon-circle-plus" }
+                })
+                .click(function(e) {
+                    e.preventDefault();
+                    if ($('#dashboard-adunitAddForm').is(':visible'))
+                        $('#dashboard-adunitAddForm').slideUp('fast');
+                    else
+                        $('#dashboard-adunitAddForm').slideDown('fast');
+                });
+
+            $('#adunitAddForm-submit')
+                .button({
+                    icons: { secondary: "ui-icon-circle-triangle-e" }
+                })
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#adunitForm-loading').show();
+                    $('#adunitAddForm').submit();
+                });
+
+            $('#adunitAddForm-cancel')
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#dashboard-adunitAddForm').slideUp('fast', function() {
+                        $('#dashboard-apps-addAdUnitButton').show();
+                    });
+                });
+
+            $('#adunitAddForm').ajaxForm({
+                data: { ajax: true },
+                dataType: 'json',
+                success: function(jsonData, statusText, xhr, $form) {
+                    $('#adunitForm-loading').hide();
+                    if (jsonData.success) {
+                        window.location.reload();
+                    } else {
+
+                        // reimplement the onload event
+                        initializeAppForm();
+                        initializeAdunitForm();
+                        window.location.hash = '';
+                        window.location.hash = 'adunitForm';
+                    }
+                }
+            });
+
+            // Do Campaign Export Select stuff
+            $('#publisher-app-exportSelect')
+                .change(function(e) {
+                    e.preventDefault();
+                    var val = $(this).val();
+                    if (val != 'exp') {
+                    $('#appExportForm')
+                            .find('#appExportType')
+                            .val(val)
+                            .end()
+                            .submit();
+                    }
+                    $(this).selectmenu('index', 0);
+                });
+
+            // Hide unneeded li entry
+            $('#publisher-app-exportSelect-menu').find('li').first().hide();
+
+        },
+        initializeAdunitDetail: function (bootstrapping_data) {
+            initializeCommon();
+            initializeAdunitForm();
+            initializeDeleteForm();
+            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+
+            $('#dashboard-apps-editAdUnitButton')
+                .button({ icons: { primary: "ui-icon-wrench" } })
+                .click(function(e) {
+                    e.preventDefault();
+                    if ($('#dashboard-adunitEditForm').is(':visible'))
+                        $('#dashboard-adunitEditForm').slideUp('fast');
+                    else
+                        $('#dashboard-adunitEditForm').slideDown('fast');
+                });
+
+            $('#adunitEditForm-submit')
+                .button({
+                    icons: { secondary: "ui-icon-circle-triangle-e" }
+                })
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#adunitForm-loading').show();
+                    $('#adunitAddForm').submit();
+                });
+            $('#adunitEditForm-cancel')
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#dashboard-adunitEditForm').slideUp('fast');
+                });
+
+            $('#adunitAddForm').ajaxForm({
+                data: { ajax: true },
+                dataType: 'json',
+                success: function(jsonData, statusText, xhr, $form) {
+                    $('#adunitForm-loading').hide();
+                    if (jsonData.success) {
+                        window.location.reload();
+                    } else {
+
+                        // reimplement the onload event
+                        initializeAppForm();
+                        initializeAdunitForm();
+                        window.location.hash = '';
+                        window.location.hash = 'adunitForm';
+                    }
+                }
+            });
+
+            $('#advertisers-testAdServer')
+                .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#adserverTest').dialog({
+                        buttons: { "Close": function() { $(this).dialog("close"); } }
+                    });
+                    $('#adserverTest-iFrame').attr('src',$('#adserverTest-iFrame-src').text());
+                });
+
+        },
+        initializeAppCreate: function (bootstrapping_data) {
+            initializeCommon();
+            initializeAppForm();
+            initializeAdunitForm();
+            initializeiOSAppSearch();
+
+            $('#appForm-submit')
+                .button({
+                    icons: { secondary: "ui-icon-circle-triangle-e" }
+                })
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#appForm').submit();
+                });
+
+            $('#appForm input[name="app_type"]').click(function(e) {
+                $('#appForm .appForm-platformDependent')
+                    .removeClass('iphone')
+                    .removeClass('android')
+                    .addClass($(this).val());
+            }).filter(':checked').click();
+
+            $('input[name="name"]').change(function() {
+                var name = $.trim($(this).val());
+                $('#appForm-adUnitName').val(name + ' banner ad');
+            });
+
+            // Search button
+            $('#appForm-search-button')
+                .button({ icons: { primary: "ui-icon-search" }})
+                .click(function(e) {
+                    e.preventDefault();
+                    if ($(this).button( "option", "disabled" )) {
+                        return;
+                    }
+
+                    $('#searchAppStore-loading').show();
+
+                    $('#dashboard-searchAppStore-custom-modal').dialog({
+                        buttons: [
+                            {
+                                text: 'Cancel',
+                                click: function() {
+                                    $('#searchAppStore-results').html('');
+                                    $(this).dialog("close");
+                                }
+                            }
+                        ]
+                    });
+                    var name = $('#appForm input[name="name"]').val();
+                    var script = document.createElement("script");
+                    script.src = 'http://ax.itunes.apple.com'
+                        + '/WebObjects/MZStoreServices.woa/wa/wsSearch'+
+                        + '?entity=software&limit=10&callback=loadedArtwork&term='
+                        + name;
+                    var head = document.getElementsByTagName("head")[0];
+                    (head || document.body).appendChild( script );
+                });
+
+            if ($('#appForm-name').val() === '') {
+                $('#appForm-search-button').button("disable");
+                $('#appForm-search').button("disable");
+                $('#appForm-market-search-button').button("disable");
+                $('#appForm-market-search').button("disable");
+            }
+
+            $('#appForm-name').keyup(function(e) {
+                // Show/hide the app search button
+                var name = $.trim($(this).val());
+                var type = $('input:radio[name="app_type"]:checked').val();
+
+                if (name.length) {
+                    $('#appForm-search-button').button("enable");
+                    $('#appForm-market-search-button').button('enable');
+                }
+                else {
+                    $('#appForm-search-button').button("disable");
+                    $('#appForm-market-search-button').button('disable');
+                }
+                if (e.keyCode == 13) {
+                    if (type == 'iphone') {
+                        $('#appForm-search-button').click();
+                    }
                 else if (type == 'android') {
                     $('#appForm-market-search-button').click();
                 }
-            }
-        });
-
-        // Change icon
-        $('#appForm-changeIcon-link').click(function (e) {
-            e.preventDefault();
-            $(this).hide();
-            $('#appForm-icon-upload').show();
-            $('#appForm input[name="img_url"]').val('');
-        });
-
-        // Delete link
-        $('#dashboard-delete-link').click(function(e){
-            e.preventDefault();
-            $('#dashboard-delete-modal').dialog({
-                buttons: [
-                    {
-                        text: 'Delete',
-                        click: function() {
-                            $(this).dialog('close');
-                            $('#dashboard-deleteForm').submit();
-                        }
-                    },
-                    {
-                        text: 'Cancel',
-                        click: function() {
-                            $(this).dialog('close');
-                        }
-                    }
-                ]
-            });
-        });
-
-        /*---------------------------------------/
-          / Ad Unit Form
-          /---------------------------------------*/
-
-        function setupAdUnitForm() {
-            // Set up device format selection UI
-            $("#adunit-device_format_phone").parent().buttonset();
-            $('#adunit-device_format_phone').click(function(e){
-                $('#adForm-tablet-container').hide();
-                    $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
-            });
-
-            $('#adunit-device_format_tablet').click(function(e){
-                $('#adForm-phone-container').hide();
-                    $('#adForm-tablet-container').show().find('input[type="radio"]')[0].click();
-            });
-
-            // Set up format selection UI for phone
-            $('#adForm-phone-formats').each(function() {
-                var container = $(this);
-                $('input[type="radio"]', container).click(function(e) {
-                    var radio = $(this);
-                    var formatContainer = radio.parents('.adForm-format');
-                    $('.adForm-format-image').css({ opacity: 0.5 });
-                    $('.adForm-format-image', formatContainer).css({ opacity: 1 });
-
-                    var $full_onlys = $(".full_only");
-                    var $banner_onlys = $(".banner_only");
-                    if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
-                        $(this).attr("id") == "appForm-adUnitFormat-full"){
-                        $full_onlys.show();
-                        $banner_onlys.hide();
-                    }
-                    else{
-                        $full_onlys.hide();
-                        $banner_onlys.show();
-                    }
-
-                    var $custom_onlys = $(".custom_only");
-                    if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
-                        $custom_onlys.show();
-                    }
-                    else{
-                        $custom_onlys.hide();
-                    }
-
-                }).filter(':checked').click();
-
-                $('.adForm-format-image', container).click(function(e) {
-                    var image = $(this);
-                    var formatContainer = image.parents('.adForm-format');
-                    $('input[type="radio"]', formatContainer).click();
-                });
-
-                $('.adForm-format-details input[type="text"]', container).focus(function() {
-                    var input = $(this);
-                    var formatContainer = input.parents('.adForm-format');
-                    $('input[type="radio"]', formatContainer).click();
-                });
-            });
-            // Set up format selection UI for tablet
-            $('#adForm-tablet-formats').each(function(){
-                var container = $(this);
-                //bind radio buttons to images
-                $(this).find('input[type="radio"]').click(function(e){
-                    var index = $(this).parent().index();
-                    var images = $("#adForm-images-container");
-                    images.children().hide();
-                    var image = images.children()[index]
-                    $(image).show().css({ opacity: 1 });
-
-                    var $full_onlys = $(".full_only");
-                    var $banner_onlys = $(".banner_only");
-                    if ($(this).attr("id") == "appForm-adUnitFormat-full-tablet" ||
-                        $(this).attr("id") == "appForm-adUnitFormat-full"){
-                        $full_onlys.show();
-                        $banner_onlys.hide();
-                    }
-                    else{
-                        $full_onlys.hide();
-                        $banner_onlys.show();
-                    }
-
-                    var $custom_onlys = $(".custom_only");
-                    if ($(this).attr("id") == "appForm-adUnitFormat-tablet-custom" || $(this).attr("id") == "appForm-adUnitFormat-custom"){
-                        $custom_onlys.show();
-                    }
-                    else{
-                        $custom_onlys.hide();
-                    }
-
-                }).first().click(); //initialize by activating the first
-            });
-            //initialize checked elements
-            $("#adunit-device_format_phone").parent().children().filter(':checked').click().each(function(){
-                var deviceFormat = $(this).val(); //either tablet or phone
-                var container = "#adForm-"+deviceFormat+"-container";
-                $(container).find('.possible-format').click();
-            });
-        }
-        setupAdUnitForm();
-
-        // /*---------------------------------------/
-        // / Stats Geo Breakdown
-        // /---------------------------------------*/
-
-        $('#advertisers-testAdServer')
-            .button({ icons : {secondary : 'ui-icon-circle-triangle-e'} })
-            .click(function(e) {
-                e.preventDefault();
-                $('#adserverTest').dialog({
-                    buttons: { "Close": function() { $(this).dialog("close"); } }
-                });
-                $('#adserverTest-iFrame').attr('src',$('#adserverTest-iFrame-src').text());
-            });
-        // Do Campaign Export Select stuff
-        $('#publisher-app-exportSelect')
-            .change(function(e) {
-                e.preventDefault();
-                var val = $(this).val();
-                if (val != 'exp') {
-                    $('#appExportForm')
-                        .find('#appExportType')
-                        .val(val)
-                        .end()
-                        .submit();
                 }
-                $(this).selectmenu('index', 0);
             });
 
-        // Hide unneeded li entry
-        $('#publisher-app-exportSelect-menu').find('li').first().hide();
 
-
-        if (mopub.isDashboardPage) {
-            // setTimeout is a workaround for Chrome: without it, the loading indicator doesn't
-            // disappear until all "onload" AJAX requests are complete.
-            //setTimeout(initInventoryPage, 0);
-        } else {
-            mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+            $('#appForm-changeIcon-link').click(function (e) {
+                e.preventDefault();
+                $(this).hide();
+                $('#appForm-icon-upload').show();
+                $('#appForm input[name="img_url"]').val('');
+            });
         }
-    });
+    };
+
+    window.DashboardController = DashboardController;
+
+
 })(this.jQuery, this.Backbone, this._);
 
 
 var artwork_json;
 
+// fuck you
 function loadedArtwork(json) {
     if (!$('#dashboard-searchAppStore-custom-modal').dialog("isOpen"))
         return;
@@ -708,7 +720,7 @@ function loadedArtwork(json) {
     $('#dashboard-searchAppStore-custom-modal').dialog("close");
 
     artwork_json = json;
-    var resultCount = json['resultCount'];
+        var resultCount = json['resultCount'];
     if (resultCount == 0) {
         $('#searchAppStore-results').append("<div class='adForm-appSearch-text' />")
             .append("No results found");
@@ -721,23 +733,24 @@ function loadedArtwork(json) {
         }
         var app = json['results'][i];
 
-        $('#searchAppStore-results').append($("<div class='adForm-appSearch' />")
-                                            .append($("<div class='adForm-appSearch-img' />")
-                                                    .append($("<img />")
-                                                            .attr("src",app['artworkUrl60'])
-                                                            .width(40)
-                                                            .height(40)
-                                                           )
-                                                    .append($("<span />"))
-                                                   )
-                                            .append($("<div class='adForm-appSearch-text' />")
-                                                    .append($("<span />")
-                                                            .append($("<a href=\"#\" onclick=\"selectArtwork("+i+");return false\";>"+app['trackName']+"</a>"))
-                                                            .append("<br />"+app['artistName'])
-                                                           )
-                                                   )
-                                            .append($("<div class='clear' />"))
-                                           );
+        $('#searchAppStore-results')
+            .append($("<div class='adForm-appSearch' />")
+                    .append($("<div class='adForm-appSearch-img' />")
+                            .append($("<img />")
+                                    .attr("src",app['artworkUrl60'])
+                                    .width(40)
+                                    .height(40)
+                                   )
+                            .append($("<span />"))
+                           )
+                    .append($("<div class='adForm-appSearch-text' />")
+                            .append($("<span />")
+                                    .append($("<a href=\"#\" onclick=\"selectArtwork("+i+");return false\";>"+app['trackName']+"</a>"))
+                                    .append("<br />"+app['artistName'])
+                                   )
+                           )
+                    .append($("<div class='clear' />"))
+                   );
     }
 
     $('#dashboard-searchAppStore-custom-modal').dialog("open");

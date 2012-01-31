@@ -466,3 +466,14 @@
   <a class="button button-small" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>
 </div>
 {% endblock content %}
+
+{% block extraScripts %}
+  <script src="/js/controllers/publisher.js?v=34"></script>
+  <script type="text/javascript">
+    $(function() {
+      DashboardController.initializeAdunitDetail({
+        // not needed yet
+      });
+    });
+  </script>
+{% endblock extraScripts %}

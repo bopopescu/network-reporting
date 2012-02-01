@@ -150,19 +150,19 @@ class AdGroup(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
 
     # the priority level at which this ad group should be auctioned
-    network_type = db.StringProperty(choices=["dummy",
+    network_type = db.StringProperty(choices=["dummy",  # ?
                                               "adsense",
                                               "iAd",
-                                              "admob",
-                                              "millennial",
+                                              "admob",  # deprecated, but may still be used by some accounts
+                                              "millennial",  # deprecated, but may still be used by some accounts
                                               "ejam",
-                                              "chartboost",
-                                              "appnexus",
+                                              "chartboost",  # deprecated
+                                              "appnexus",  # deprecated
                                               "inmobi",
                                               "mobfox",
                                               "jumptap",
                                               "brightroll",
-                                              "greystripe",
+                                              "greystripe",  # deprecated, but may still be used by some accounts
                                               "custom",
                                               "custom_native",
                                               "admob_native",

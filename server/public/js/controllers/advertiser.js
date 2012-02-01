@@ -73,12 +73,13 @@ var mopub = mopub || {};
           // Make 'Sort by network', 'Sort by app' sticky
           // NOTE: Would be cleaner if we had the jQuery cookie plugin
           function setCookie(name,value,days) {
+              var expires;
               if (days) {
                   var date = new Date();
                   date.setTime(date.getTime()+(days*24*60*60*1000));
-                  var expires = "; expires="+date.toGMTString();
+                  expires = "; expires="+date.toGMTString();
               }
-              else var expires = "";
+              else expires = "";
               document.cookie = name+"="+value+expires+"; path=/";
           }
 
@@ -88,7 +89,7 @@ var mopub = mopub || {};
               for(var i=0;i < ca.length;i++) {
                   var c = ca[i];
                   while (c.charAt(0)==' ') c = c.substring(1,c.length);
-                  if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+                  if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
               }
               return null;
           }
@@ -101,7 +102,7 @@ var mopub = mopub || {};
           function isValidEmailAddress(emailAddress) {
               var pattern = new RegExp(/^(\s*)(("[\w-+\s]+")|([\w-+]+(?:\.[\w-+]+)*)|("[\w-+\s]+")([\w-+]+(?:\.[\w-+]+)*))(@((?:[\w-+]+\.)*\w[\w-+]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][\d]\.|1[\d]{2}\.|[\d]{1,2}\.))((25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\.){2}(25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\]?$)/i);
               return pattern.test(emailAddress);
-          };
+          }
 
           // taken from mopub-dashboard.js #appEditForm (could be combined)
           $('#networkSettingsForm-submit')
@@ -143,13 +144,13 @@ var mopub = mopub || {};
                     $('#networkSettingsForm-loading').hide();
                 }
             });
-  
+
           $('#networkSettingsForm-cancel')
             .click(function(e) {
               e.preventDefault();
               $('#network-settingsForm').slideUp('fast');
             });
-            
+
           $('#network-settingsButton')
             .button({ icons: { primary: "ui-icon-wrench" } })
             .click(function(e) {
@@ -174,7 +175,7 @@ var mopub = mopub || {};
             $('#dashboard-sort-app').click();
             $('.apps').addClass('active');
             $('.networks').removeClass('active');
-          }          
+          }
 
           $('.show-status').click(function () {
               var key = $(this).attr('id');
@@ -193,7 +194,7 @@ var mopub = mopub || {};
           $('.show-hide').click(function () {
               var key = $(this).attr('id');
               var rows = $('.' + key + '-row');
-              var button = $(this).children('span')
+              var button = $(this).children('span');
               $.each(rows, function (iter, row) {
                   if ($(row).is(":visible")) {
                       $(row).slideUp('fast');
@@ -226,7 +227,7 @@ var mopub = mopub || {};
                   success: function(valid) {
                       // Upon success notify the user
                       if (valid) {
-                          $('.' + key + '-enable').html("Pending")
+                          $('.' + key + '-enable').html("Pending");
                           $(message).html("Check back in a couple minutes to see your ad network revenue report. You will receive an email when it is ready.");
                       } else {
                           $(message).html("Invalid login information.");
@@ -543,32 +544,32 @@ var mopub = mopub || {};
 
           if ($("#adgroupForm-budget_type-select").val() == "full_campaign" && $("input[name='campaign_type']").filter(':checked').val() == "gtee") {
               if ($("input[name='budget_strategy']").filter(":checked").val() == "evenly") {
-                  if ($('#campaignAdgroupForm input[name="start_date"]').val() == '') {
+                  if ($('#campaignAdgroupForm input[name="start_date"]').val() === '') {
                       $('#campaignAdgroupForm input[name="start_date"]').addClass('form-error');
                       $('#fullCampaignError-date').show();
                       success = false;
                   }
 
-                  if ($('#campaignAdgroupForm input[name="end_date"]').val() == '') {
+                  if ($('#campaignAdgroupForm input[name="end_date"]').val() === '') {
                       $('#campaignAdgroupForm input[name="end_date"]').addClass('form-error');
                       $('#fullCampaignError-date').show();
                       success = false;
                   }
               }
 
-              if ($('#campaignAdgroupForm input[name="full_budget"]').val() == '') {
+              if ($('#campaignAdgroupForm input[name="full_budget"]').val() === '') {
                   $('#campaignAdgroupForm input[name="full_budget"]').addClass('form-error');
                   $('#campaignAdgroupForm input[name="full_impressions"]').addClass('form-error');
                   $('#fullCampaignError-budget').show();
                   success = false;
               }
 
-              if ($('#campaignAdgroupForm input[name="name"]').val() == '') {
+              if ($('#campaignAdgroupForm input[name="name"]').val() === '') {
                   $('#campaignAdgroupForm input[name="name"]').addClass('form-error');
                   $('#fullCampaignError-name').show();
                   success = false;
               }
-              if ($('#campaignAdgroupForm input[name="bid"]').val() == '') {
+              if ($('#campaignAdgroupForm input[name="bid"]').val() === '') {
                   $('#campaignAdgroupForm input[name="bid"]').addClass('form-error');
                   $('#fullCampaignError-bid').show();
                   success = false;
@@ -774,7 +775,7 @@ var mopub = mopub || {};
         var height = parseInt($("#"+creative_key+"-preview iframe").attr("height"));
         $("#"+creative_key+"-preview iframe").attr('src', creative_src);
         $("#"+creative_key+"-preview").dialog({
-          buttons: [{text: 'Close',click: function() {$(this).dialog("close")}}],
+          buttons: [{text: 'Close',click: function() {$(this).dialog("close");}}],
           width: width+100,
           height: height+130
         });
@@ -856,7 +857,7 @@ var mopub = mopub || {};
       });
 
 
-    function refreshAlternatingColor(){
+    function refreshAlternatingColor() {
         $('.campaignData').removeClass('campaignData-alt');
         $('table').each(function(){
             $(this).find('.campaignData:visible:odd').addClass('campaignData-alt');
@@ -1131,12 +1132,12 @@ var mopub = mopub || {};
         }
       }
       results.on_schedule = onScheduleHtml;
-      
+
       results.pace = htmlForPacing(results);
-            
+
       return results;
     }
-    
+
         function htmlForPacing(results) {
             if (results.pace_type) {
                color = "";
@@ -1149,7 +1150,7 @@ var mopub = mopub || {};
                 } else {
                     color = "red";
                 }
-                return '<div style="color:' + color + '; font-size:9px;">' + results.pace_type + ': ' + 
+                return '<div style="color:' + color + '; font-size:9px;">' + results.pace_type + ': ' +
                     mopub.Utils.formatNumberAsPercentage(results.pace) + '</div>';
             }
         }

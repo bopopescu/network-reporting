@@ -821,8 +821,10 @@ class BaseModelForm(forms.BaseForm):
         if opts.exclude and name in opts.exclude:
           continue
         object_data[name] = prop.get_value_for_form(instance)
+      logging.error(object_data)
     if initial is not None:
       object_data.update(initial)
+      logging.error(initial)
     kwargs = dict(data=data, files=files, auto_id=auto_id,
                   prefix=prefix, initial=object_data,
                   error_class=error_class, label_suffix=label_suffix)

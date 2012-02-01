@@ -1,5 +1,6 @@
 {% extends 'advertiser/base.html' %}
 
+{% load fields %}
 {% load filters %}
 
 {% block extraScripts %}
@@ -205,15 +206,19 @@
             <li>
                 <img src="{% url publisher_app_icon app_key=app.key %}" />
                 <div class="details">
-                    <div class="appData-name">{{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span></div>
+                    <label for="id_app_{{ app.key }}_pub_id">
+                        <span class="app_name">{{ app.name }}</span>
+                        <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                    </label>
+                    <input id="id_app_{{ app.key }}_pub_id" name="app_{{ app.key }}_pub_id" type="text" />
                     <ul>
                         {% for adunit in app.all_adunits %}
                         <li>
-                            <label><input {% if adunit.key in adgroup_form.site_keys.value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" /> {{ adunit.name }}</label>
-                            <div class="campaign_type_dependant network pub_id">
-                                <label for="id_{{ adunit.key }}_pub_id"></label>
-                                <input id="id_{{ adunit.key }}_pub_id" name="{{ adunit.key }}_pub_id" type="text" />
-                            </div>
+                            <label>
+                                <input {% if adunit.key in adgroup_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" />
+                                <span class="adunit_name">{{ adunit.name }}</span>
+                            </label>
+                            <input id="id_adunit_{{ adunit.key }}_pub_id" name="adunit_{{ adunit.key }}_pub_id" type="text" />
                         </li>
                         {% endfor %}
                     </ul>
@@ -241,7 +246,16 @@
             <li>
                 {{ adgroup_form.device_targeting.label_tag }}
                 <div>
-                    <span class="radios">{{ adgroup_form.device_targeting }}</span>
+                    {% comment %}
+                    This field should be rendered using a Django widget, but
+                    there is no good option in 1.2 for a Boolean RadioSelect.
+                    {% endcomment %}
+                    <span class="radios">
+                        <ul>
+                            <li><label for="id_device_targeting_0"><input type="radio" id="id_device_targeting_0" value="0" name="device_targeting" {% if not adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> All</label></li>
+                            <li><label for="id_device_targeting_1"><input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> Filter by device and OS</label></li>
+                        </ul>
+                    </span>
                     <ul id="device_targeting">
                         <li>
                             <ul class="device_type">

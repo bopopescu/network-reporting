@@ -13,7 +13,9 @@ sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 from common.utils.timezones import Pacific_tzinfo
 from advertiser.models import Campaign, AdGroup
-from advertiser.forms import CampaignForm, AdGroupForm
+from advertiser.forms import (CampaignForm, AdGroupForm, BaseCreativeForm,
+                              TextCreativeForm, TextAndTileCreativeForm,
+                              HtmlCreativeForm, ImageCreativeForm)
 
 
 class TestCampaignForm(unittest.TestCase):
@@ -137,3 +139,20 @@ class TestAdGroupForm(unittest.TestCase):
 
     def test_bid_mptest(self):
         pass
+
+class TestCreativeForm(unittest.TestCase):
+
+    def setUp(self):
+        # First, create an instance of the Testbed class.
+        self.testbed = testbed.Testbed()
+        # Then activate the testbed, which prepares the service stubs for use.
+        self.testbed.activate()
+        # Next, declare which service stubs you want to use.
+        self.testbed.init_datastore_v3_stub()
+        self.testbed.init_memcache_stub()
+
+    def tearDown(self):
+        self.testbed.deactivate()
+
+        def test_base_creative_mptest(self):
+            form = BaseCreativeForm()

@@ -66,6 +66,7 @@ from ad_server.optimizer.optimizer import DEFAULT_CTR
 
 CAMPAIGN_LEVELS = ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo']
 
+
 class AdGroupIndexHandler(RequestHandler):
 
     def get(self):
@@ -121,9 +122,11 @@ class AdGroupIndexHandler(RequestHandler):
                                       'offline': self.offline,
                                   })
 
+
 @login_required
-def adgroups(request,*args,**kwargs):
-    return AdGroupIndexHandler()(request,*args,**kwargs)
+def adgroups(request, *args, **kwargs):
+    return AdGroupIndexHandler()(request, *args, **kwargs)
+
 
 ####### Helpers for campaign page #######
 def _sort_guarantee_levels(guaranteed_campaigns):
@@ -134,8 +137,8 @@ def _sort_guarantee_levels(guaranteed_campaigns):
     for level in levels:
         this_level = gtee_str % level if level else "gtee"
         name = level if level else 'normal'
-        level_camps = filter(lambda x:x.campaign.campaign_type == this_level, guaranteed_campaigns)
-        gtee_levels.append(dict(name = name, adgroups = level_camps))
+        level_camps = filter(lambda x: x.campaign.campaign_type == this_level, guaranteed_campaigns)
+        gtee_levels.append(dict(name=name, adgroups=level_camps))
 
     # Determine which gtee_levels to display
     for level in gtee_levels:
@@ -147,25 +150,26 @@ def _sort_guarantee_levels(guaranteed_campaigns):
             level['display'] = False
     return gtee_levels
 
+
 def _sort_campaigns(adgroups):
     """
     Helper for the adgroup_index page which probably could be refactored
     """
     promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
-    promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    promo_campaigns = sorted(promo_campaigns, lambda x, y: cmp(y.bid, x.bid))
 
     guaranteed_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
-    guaranteed_campaigns = sorted(guaranteed_campaigns, lambda x,y: cmp(y.bid, x.bid))
+    guaranteed_campaigns = sorted(guaranteed_campaigns, lambda x, y: cmp(y.bid, x.bid))
 
     backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
-    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-
+    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x, y: cmp(y.bid, x.bid))
 
     return [
         promo_campaigns,
         guaranteed_campaigns,
         backfill_promo_campaigns,
     ]
+
 
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
@@ -179,6 +183,7 @@ def _calc_app_level_stats(adgroups):
     #          StatsModel(day=3)+StatsModel(day=3)+StatsModel(day=3)]
     all_daily_stats = zip(*[adgroup.all_stats for adgroup in adgroups])
     return [sum(daily_stats, StatsModel()) for daily_stats in all_daily_stats]
+
 
 def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
     """ Requires that adgroups already have attached stats """
@@ -194,6 +199,7 @@ def _calc_and_attach_e_cpm(adgroups_with_stats, app_level_summed_stats):
             adgroup.summed_stats.e_cpm = adgroup.cpm
 
     return adgroups_with_stats
+
 
 def _calc_and_attach_osi_success(adgroups):
     for adgroup in adgroups:
@@ -213,50 +219,23 @@ class AdGroupArchiveHandler(RequestHandler):
         return render_to_response(self.request,
                                   'advertiser/archived_adgroups.html',
                                   {
-                                      'archived_adgroups':archived_adgroups,
+                                      'archived_adgroups': archived_adgroups,
                                   })
 
+
 @login_required
-def archive(request,*args,**kwargs):
-    return AdGroupArchiveHandler()(request,*args,**kwargs)
+def archive(request, *args, **kwargs):
+    return AdGroupArchiveHandler()(request, *args, **kwargs)
 
 
-""" Replaces CreateCampaignAJAXHandler and CreateCampaignHandler """
 class CreateCampaignAndAdGroupHandler(RequestHandler):
+    """ Replaces CreateCampaignAJAXHandler and CreateCampaignHandler """
+
     def get(self):
-        apps = AppQueryManager.get_apps(account=self.account)
-
-        site_keys = []
-        for app in apps:
-            for adunit in app.all_adunits:
-                site_keys.append(adunit.key)
-
         campaign_form = CampaignForm()
-        adgroup_form = AdGroupForm(site_keys=site_keys)
+        adgroup_form = AdGroupForm()
 
-
-
-
-
-        """
-        all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
-        # sorts by app name, then adunit name
-        def adunit_cmp(adunit_1, adunit_2):
-            app_cmp = cmp(adunit_1.app.name, adunit_2.app.name)
-            if not app_cmp:
-                return cmp(adunit_1.name, adunit_2.name)
-            else:
-                return app_cmp
-
-        all_adunits.sort(adunit_cmp)
-
-        adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
-
-        adunit_keys = adgroup_form['site_keys'].value or []
-        adunit_str_keys = [unicode(k) for k in adunit_keys]
-        for adunit in all_adunits:
-            adunit.checked = unicode(adunit.key()) in adunit_str_keys
-        """
+        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
         return render_to_response(self.request,
                                   'advertiser/create_campaign_and_adgroup.html',
@@ -270,31 +249,18 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
         if not self.request.is_ajax():
             raise Http404
 
-        """
-        # We pre-emptively clear the cache for site keys, as they may be updated
-        adunits_to_update = set()
-        if adgroup:
-            adunits_to_update.update(adgroup.site_keys)
+        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
-        all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
-        sk_field = adgroup_form.fields['site_keys']
-        sk_field.choices = all_adunits # TODO: doesn't work needed for validation
-        """
+        site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
 
         campaign_form = CampaignForm(self.request.POST)
         if campaign_form.is_valid():
             campaign = campaign_form.save()
             campaign.account = self.account
             campaign.save()
-            logging.error(campaign.name)
-            adgroup_form = AdGroupForm(self.request.POST)
+            adgroup_form = AdGroupForm(self.request.POST, site_keys=site_keys)
             if adgroup_form.is_valid():
-                # TODO: need to make sure a network type is selected if the campaign is a network campaign
-                adgroup = adgroup_form.save()
-                adgroup.campaign = campaign
-                adgroup.save()
-
-                """
                 budget_obj = BudgetQueryManager.update_or_create_budget_for_campaign(campaign)
                 campaign.budget_obj = budget_obj
 
@@ -302,24 +268,18 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
                 # And then put in datastore again.
                 CampaignQueryManager.put(campaign)
 
+                # TODO: need to make sure a network type is selected if the campaign is a network campaign
+                adgroup = adgroup_form.save()
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':
                     adgroup.network_type = None
-
+                adgroup.save()
 
                 #put adgroup so creative can have a reference to it
                 AdGroupQueryManager.put(adgroup)
 
-                ##Check if creative exists for this network type, if yes
-                #update, if no, delete old and create new
-                if campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
-                    if not has_adgroup_instance: #ensure form posts do not change ownership
-                        creative = adgroup.default_creative()
-                        creative.account = self.account
-                        CreativeQueryManager.put(creative)
-
-                elif campaign.campaign_type == "network":
+                if campaign.campaign_type == "network":
                     html_data = None
                     if adgroup.network_type == 'custom':
                         html_data = adgroup_form['custom_html'].value
@@ -352,42 +312,54 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
                     #put the adgroup again with the new (or old) creative reference
                     AdGroupQueryManager.put(adgroup)
 
-                # Update network config information if this is a network type adgroup
-                if campaign.campaign_type == "network":
-                    apps_for_account = AppQueryManager.get_apps(account=self.account)
-                    # Build app level pub_ids
-                    for app in apps_for_account:
-                        app_network_config_data = {}
-                        for (key, value) in self.request.POST.iteritems():
-                            app_key_identifier = key.split('-__-')
-                            if app_key_identifier[0] == str(app.key()):
-                                app_network_config_data[app_key_identifier[1]] = value
+                    # NetworkConfig for Account
+                    if adgroup.network_type in ['admob_native', 'adsense',
+                                                'brightroll', 'ejam', 'inmobi',
+                                                'jumptap', 'millennial_native',
+                                                'mobfox']:
+                        # get rid of '_native' in admob_native, millennial_native
+                        network_type = adgroup.network_type.replace('_native', '')
+                        key = "%s_pub_id" % network_type
+                        network_config_data = {}
+                        network_config_data[key] = self.request.POST.get('account_pub_id', '')
+                        network_config_form = NetworkConfigForm(data=network_config_data, instance=self.account.network_config)
+                        network_config = network_config_form.save(commit=False)
+                        AccountQueryManager.update_config_and_put(self.account, network_config)
 
-                        app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
-                        app_network_config = app_form.save(commit=False)
-                        AppQueryManager.update_config_and_put(app, app_network_config)
+                        # NetworkConfig for Apps
+                        if adgroup.network_type != 'adsense':
+                            for app in apps:
+                                logging.error(app.network_config.admob_pub_id)
+                                logging.error(app.network_config.brightroll_pub_id)
+                                setattr(app.network_config, key, self.request.POST.get("app_%s_pub_id" % app.key(), ''))
+                                logging.error(app.network_config.admob_pub_id)
+                                logging.error(app.network_config.brightroll_pub_id)
+                                AppQueryManager.update_config_and_put(app, app.network_config)
+                                logging.error(app.network_config.admob_pub_id)
+                                logging.error(app.network_config.brightroll_pub_id)
+
+                            # NetworkConfig for AdUnits
+                            if adgroup.network_type in ['admob_native', 'jumptap', 'millennial_native']:
+                                for adunit in adunits:
+                                    network_config_data = {}
+                                    network_config_data[key] = self.request.POST.get("adunit_%s_pub_id" % adunit.key(), '')
+                                    network_config_form = NetworkConfigForm(data=network_config_data, instance=adunit.network_config)
+                                    network_config = network_config_form.save(commit=False)
+                                    AdUnitQueryManager.update_config_and_put(adunit, network_config)
 
                 # Delete Cache. We leave this in views.py because we
                 # must delete the adunits that the adgroup used to have as well
-                adunits_to_update.update(adgroup.site_keys)
-                if adunits_to_update:
-                    adunits = AdUnitQueryManager.get(adunits_to_update)
+                if adgroup.site_keys:
+                    adunits = AdUnitQueryManager.get(adgroup.site_keys)
                     AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
                 # Onboarding: user is done after they set up their first campaign
                 if self.account.status == "step4":
                     self.account.status = ""
                     AccountQueryManager.put_accounts(self.account)
-                """
 
                 CampaignQueryManager.put(campaign)
                 AdGroupQueryManager.put(adgroup)
-
-                logging.error(campaign.name)
-
-                campaign = CampaignQueryManager.get(campaign.key())
-
-                logging.error(campaign.name)
 
                 return JSONResponse({
                     'success': True,
@@ -396,7 +368,7 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
             else:
                 errors = {}
                 for key, value in adgroup_form.errors.items():
-                    errors[key] = ' '.join([ error for error in value ])
+                    errors[key] = ' '.join([error for error in value])
         else:
             errors = {}
             for key, value in campaign_form.errors.items():
@@ -406,7 +378,7 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
                     key = 'start_datetime_1'
                 elif key == 'end_datetime':
                     key = 'end_datetime_1'
-                errors[key] = ' '.join([ error for error in value ])
+                errors[key] = ' '.join([error for error in value])
 
         return JSONResponse({
             'errors': errors,
@@ -435,29 +407,21 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
         campaign_form = CampaignForm(instance=adgroup.campaign)
         adgroup_form = AdGroupForm(instance=adgroup)
 
-        apps = AppQueryManager.get_apps(account=self.account)
-
-
         """
-        if adgroup_form:
-            # We hide deprecated networks by default.  Show them for pre-existing adgroups though
-            if adgroup_form['network_type'].value == 'admob' or self.request.user.is_staff:
-                networks.append(["admob","AdMob Javascript (deprecated)",False])
-            # Allow admins to create Millennial s2s campaigns
-            if adgroup_form['network_type'].value == 'millennial' or self.request.user.is_staff:
-                networks.append(["millennial","Millennial Server-side (deprecated)",False])
-            if adgroup_form['network_type'].value == 'greystripe':
-                networks.append(["greystripe","GreyStripe (deprecated)",False])
-            for n in networks:
-                if adgroup_form['network_type'].value == n[0]:
-                    n[2] = True
-        elif adgroup:
-            for n in networks:
-                if adgroup.network_type == n[0]:
-                    n[2] = True
-        else:
-            networks[0][2] = True # select the first by default
+        # We hide deprecated networks by default.  Show them for pre-existing adgroups though
+        if adgroup.network_type == 'admob' or self.request.user.is_staff:
+            networks.append(["admob","AdMob Javascript (deprecated)",False])
+        # Allow admins to create Millennial s2s campaigns
+        if adgroup_form['network_type'].value == 'millennial' or self.request.user.is_staff:
+            networks.append(["millennial","Millennial Server-side (deprecated)",False])
+        if adgroup_form['network_type'].value == 'greystripe':
+            networks.append(["greystripe","GreyStripe (deprecated)",False])
+        for n in networks:
+            if adgroup_form['network_type'].value == n[0]:
+                n[2] = True
         """
+
+        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
         # TODO: find better way to access form data so we don't have to pass in
         # campaign and adgroup

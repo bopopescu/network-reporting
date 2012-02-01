@@ -16,6 +16,8 @@ from common.utils import helpers
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
 
+from google.appengine.ext.db import Key
+
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
@@ -276,6 +278,7 @@ class CampaignForm(forms.ModelForm):
                                         label='Delivery Speed:',
                                         initial='evenly',
                                         widget=forms.RadioSelect)
+
     def __init__(self, *args, **kwargs):
         # TODO: change instance datetimes from UTC to Pacific
         super(forms.ModelForm, self).__init__(*args, **kwargs)
@@ -283,9 +286,11 @@ class CampaignForm(forms.ModelForm):
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
+
     def clean_start_datetime(self):
         # if no start time is given, use the current time
         return self.cleaned_data['start_datetime'] or datetime.now(Pacific_tzinfo())
+
     def clean(self):
         cleaned_data = super(CampaignForm, self).clean()
         if 'campaign_type' in cleaned_data:
@@ -316,15 +321,18 @@ class CampaignForm(forms.ModelForm):
                 cleaned_data['budget'] = None
 
         return cleaned_data
+
     # It is not standard to override a ModelForm's save method, but we need to
     # change the tzinfo of the datetimes because we display in Pacific and
     # store in UTC.  Can this be done in the model?
     def save(self, *args, **kwargs):
         # TODO: change datetimes from Pacific to UTC
         return super(CampaignForm, self).save(*args, **kwargs)
+
     # TODO: doesn't work with djangoforms
     class Media:
         js = ('campaign_adgroup_form.js',)
+
     class Meta:
         model = Campaign
         fields = ('campaign_type',
@@ -459,67 +467,48 @@ class AdGroupForm(forms.ModelForm):
                                               ('mobfox', 'MobFox'),
                                               ('custom', 'Custom Network'),
                                               ('custom_native', 'Custom Native Network')),
-                                     label='Network Type:',
-                                     required=False)
-    custom_html = forms.CharField(label='Custom HTML:',
-                                  required=False,
+                                     label='Network Type:', required=False)
+    custom_html = forms.CharField(label='Custom HTML:', required=False,
                                   widget=forms.Textarea(attrs={'placeholder': 'HTML Custom Content',
                                                                'rows': 3}))
-    custom_method = forms.CharField(label='Custom Method:',
-                                    required=False,
+    custom_method = forms.CharField(label='Custom Method:', required=False,
                                     widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
-    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'),
-                                              ('cpc', 'CPC')),
-                                     label='Rate:',
-                                     initial='cpc')
+    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
+                                     label='Rate:', initial='cpc')
     bid = forms.FloatField(widget=forms.TextInput(attrs={'class': 'number'}),
                            initial=0.05)
     # site_keys defined in __init__
-    allocation_percentage = forms.FloatField(initial=100.0,
-                                            label='Allocation:',
-                                            required=False,
-                                            widget=forms.TextInput(attrs={'class': 'number'}))
-    allocation_type = forms.ChoiceField(choices=(('users', 'users'),
-                                                 ('requests', 'requests')))
-    daily_frequency_cap = forms.IntegerField(initial=0,
-                                             label='Frequency Caps:',
+    allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
                                              required=False,
                                              widget=forms.TextInput(attrs={'class': 'number'}))
-    hourly_frequency_cap = forms.IntegerField(initial=0,
-                                              required=False,
+    allocation_type = forms.ChoiceField(choices=(('users', 'users'),
+                                                 ('requests', 'requests')))
+    daily_frequency_cap = forms.IntegerField(initial=0, label='Frequency Caps:',
+                                             required=False,
+                                             widget=forms.TextInput(attrs={'class': 'number'}))
+    hourly_frequency_cap = forms.IntegerField(initial=0, required=False,
                                               widget=forms.TextInput(attrs={'class': 'number'}))
     device_targeting = forms.TypedChoiceField(choices=(('0', 'All'),
                                                        ('1', 'Filter by device and OS')),
                                               coerce=lambda x: bool(int(x)),
-                                              initial='0',
+                                              initial=False,
                                               label='Device Targeting:',
                                               widget=forms.RadioSelect)
-    target_iphone = forms.BooleanField(initial=True,
-                                       label='iPhone',
+    target_iphone = forms.BooleanField(initial=True, label='iPhone',
                                        required=False)
-    target_ipod = forms.BooleanField(initial=True,
-                                     label='iPod',
-                                     required=False)
-    target_ipad = forms.BooleanField(initial=True,
-                                     label='iPad',
-                                     required=False)
+    target_ipod = forms.BooleanField(initial=True, label='iPod', required=False)
+    target_ipad = forms.BooleanField(initial=True, label='iPad', required=False)
     ios_version_min = forms.ChoiceField(choices=IOS_VERSION_CHOICES[1:],
-                                        label='Min:',
-                                        required=False)
+                                        label='Min:', required=False)
     ios_version_max = forms.ChoiceField(choices=IOS_VERSION_CHOICES,
-                                        label='Max:',
-                                        required=False)
-    target_android = forms.BooleanField(initial=True,
-                                        label='Android',
+                                        label='Max:', required=False)
+    target_android = forms.BooleanField(initial=True, label='Android',
                                         required=False)
     android_version_min = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES[1:],
-                                            label='Min:',
-                                            required=False)
+                                            label='Min:', required=False)
     android_version_max = forms.ChoiceField(choices=ANDROID_VERSION_CHOICES,
-                                            label='Max:',
-                                            required=False)
-    target_other = forms.BooleanField(initial=True,
-                                      label='Other',
+                                            label='Max:', required=False)
+    target_other = forms.BooleanField(initial=True, label='Other',
                                       required=False)
     region_targeting = forms.ChoiceField(choices=(('all', 'Everywhere'),
                                                   ('city', 'City')),
@@ -527,11 +516,11 @@ class AdGroupForm(forms.ModelForm):
                                          label='Region Targeting:',
                                          widget=forms.RadioSelect)
     #geo_predicates
-    cities = forms.Field(required=False,
-                         widget=forms.SelectMultiple)
+    cities = forms.Field(required=False, widget=forms.SelectMultiple)
     keywords = forms.CharField(required=False,
                                widget=forms.Textarea(attrs={'cols': 50,
                                                             'rows': 3}))
+
     def __init__(self, *args, **kwargs):
         data = args[0] if len(args) > 0 else kwargs.get('data', None)
         initial = args[4] if len(args) > 4 else kwargs.get('initial', None)
@@ -550,6 +539,7 @@ class AdGroupForm(forms.ModelForm):
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
+
     def clean(self):
         """
         geo:US
@@ -560,7 +550,10 @@ class AdGroupForm(forms.ModelForm):
         # don't store targeted cities unless region targeting for cities is selected
         if cleaned_data.get('region_targeting', None) != 'city':
             cleaned_data['cities'] = []
+        if cleaned_data.get('site_keys', []):
+            cleaned_data['site_keys'] = [Key(site_key) for site_key in cleaned_data['site_keys']]
         return cleaned_data
+
     class Meta:
         model = AdGroup
         fields = ('name',
@@ -590,9 +583,10 @@ class AdGroupForm(forms.ModelForm):
                   'keywords')
 
 
-class AbstractCreativeForm(mpforms.MPModelForm):
-    def save(self,commit=True):
-        obj = super(AbstractCreativeForm,self).save(commit=False)
+class AbstractCreativeForm(forms.ModelForm):
+
+    def save(self, commit=True):
+        obj = super(AbstractCreativeForm, self).save(commit=False)
         if not obj.conv_appid and obj.url:
             obj.conv_appid = self._get_appid(obj.url)
 
@@ -600,7 +594,7 @@ class AbstractCreativeForm(mpforms.MPModelForm):
             obj.put()
         return obj
 
-    def _get_appid(self,url):
+    def _get_appid(self, url):
         # extracts the itunes appid from the url
         # http://itunes.apple.com/il/app/imosaic-project/id335853048?mt=8
         # in this case: 335853048
@@ -632,13 +626,14 @@ class AbstractCreativeForm(mpforms.MPModelForm):
         # return None if nothing was found
         return None
 
+
 class BaseCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/base_creative_form.html'
 
     class Meta:
         model = Creative
-        fields = ('ad_type','name','tracking_url','url','display_url',
-                  'format','custom_height','custom_width','landscape',
+        fields = ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
+                  'format', 'custom_height', 'custom_width', 'landscape',
                   'conv_appid', 'launchpage')
 
     def clean_name(self):
@@ -654,34 +649,38 @@ class BaseCreativeForm(AbstractCreativeForm):
                 raise forms.ValidationError("You need to specify a protocol (like http://) at the beginning of your url")
         return url
 
+
 class TextCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_creative_form.html'
 
     class Meta:
         model = TextCreative
-        fields = ('headline','line1','line2') + \
-                 ('ad_type','name','tracking_url','url','display_url',
-                  'format','custom_height','custom_width','landscape',
+        fields = ('headline', 'line1', 'line2') + \
+                 ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
+                  'format', 'custom_height', 'custom_width', 'landscape',
                   'conv_appid', 'launchpage')
+
 
 class TextAndTileCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
 
-    image_url = forms.URLField(verify_exists=False,required=False)
+    image_url = forms.URLField(verify_exists=False, required=False)
     image_file = forms.FileField(required=False)
 
     class Meta:
         model = TextAndTileCreative
         fields = ('action_icon', 'color', 'font_color', 'gradient') + \
-                 ('line1','line2', 'ad_type','name','tracking_url','url','format','custom_height','custom_width','landscape', 'conv_appid', 'launchpage')
+                 ('line1', 'line2', 'ad_type', 'name', 'tracking_url', 'url',
+                  'format', 'custom_height', 'custom_width', 'landscape',
+                  'conv_appid', 'launchpage')
 
-    def __init__(self, *args,**kwargs):
-        instance = kwargs.get('instance',None)
-        initial = kwargs.get('initial',None)
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        initial = kwargs.get('initial', None)
 
         if instance:
             if instance.image_blob:
-                image_url = helpers.get_url_for_blob(instance.image_blob) #reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+                image_url = helpers.get_url_for_blob(instance.image_blob)  # reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
             else:
                 image_url = ''
             if not initial:

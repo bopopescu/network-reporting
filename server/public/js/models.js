@@ -78,6 +78,12 @@ var mopub = mopub || {};
         }
     }
 
+    var ModelHelpers = {
+        calculate_ctr: calculate_ctr,
+        calculate_fill_rate: calculate_fill_rate,
+        format_stat: format_stat
+    };
+
     /*
      * ## AdGroup model
      * This will most likely need to be refactored soon when we change how
@@ -398,6 +404,6 @@ var mopub = mopub || {};
     window.AppCollection = AppCollection;
     window.AdGroup = AdGroup;
     window.AdGroups = AdGroups;
-
+    window.ModelHelpers = ModelHelpers;
 
 }(this.jQuery, this.Backbone, this._));

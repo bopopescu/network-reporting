@@ -261,7 +261,7 @@ def export_writer(file_type, file_name, row_titles, row_data):
     if file_type == 'xls':
         response = HttpResponse(mimetype = 'application/vnd.ms-excel')
         row_writer, writer = make_xls_writers()
-    response['Content-disposition'] = 'attachment; filename=%s' % file_name
+    response['Content-disposition'] = 'attachment; filename="%s"' % file_name
     row_writer(row_titles)
     for row in row_data:
         row_writer(row)

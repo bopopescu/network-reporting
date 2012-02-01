@@ -108,7 +108,7 @@ code .this { color: #19469D; }</style>
 		</script>
 	</head>
 	<body>
-<table id="source"><tbody><tr><td><h1>Javascript Documentation</h1></td><td></td></tr><tr class="filename"><td><h2 id="server/public/js/models.js"><a href="#">models</a></h2></td><td>server/public/js/models.js</td></tr><tr class="code">
+<table id="source"><tbody><tr><td><h1>Javascript Documentation</h1></td><td></td></tr><tr class="filename"><td><h2 id="models.js"><a href="#">models</a></h2></td><td>models.js</td></tr><tr class="code">
 <td class="docs">
 <h1>models.js</h1>
 
@@ -373,6 +373,14 @@ AdGroups work on the backend.
             <span class="variable">revenue</span>: <span class="number integer">0</span>,
             <span class="variable">stats_endpoint</span>: <span class="string">'all'</span>
         },
+        <span class="variable">validate</span>: <span class="keyword">function</span>(<span class="variable">attributes</span>) {
+            <span class="keyword">if</span> (<span class="keyword">typeof</span>(<span class="variable">attributes</span>.<span class="variable">price_floor</span>) != <span class="string">'undefined'</span>) {
+                <span class="keyword">var</span> <span class="variable">valid_number</span> = <span class="class">Number</span>(<span class="variable">attributes</span>.<span class="variable">price_floor</span>);
+                <span class="keyword">if</span> (<span class="variable">isNaN</span>(<span class="variable">valid_number</span>)) {
+                    <span class="keyword">return</span> &<span class="variable">quot</span>;<span class="class">Please</span> <span class="variable">enter</span> <span class="variable">a</span> <span class="variable">valid</span> <span class="variable">number</span> <span class="keyword">for</span> <span class="variable">the</span> <span class="variable">price</span> <span class="variable">floor</span>&<span class="variable">quot</span>;;
+                }
+            }
+        },
         <span class="variable">url</span>: <span class="keyword">function</span>() {
             <span class="comment">// window.location.search.substring(1) is used to preserve date ranges from the url</span>
             <span class="comment">// this makes the fetching work with the datepicker.</span>
@@ -454,7 +462,18 @@ functions.
         <span class="variable">parse</span>: <span class="keyword">function</span> (<span class="variable">response</span>) {
             <span class="comment">// The api returns everything from this url as a list,</span>
             <span class="comment">// so that you can request one or all apps.</span>
-            <span class="keyword">return</span> <span class="variable">response</span>[<span class="number integer">0</span>];
+            <span class="keyword">var</span> <span class="variable">app</span> = <span class="variable">response</span>[<span class="number integer">0</span>];
+            <span class="variable">console</span>.<span class="variable">log</span>(<span class="variable">app</span>.<span class="variable">app_type</span> == <span class="string">'iphone'</span>);
+            <span class="keyword">if</span> (<span class="variable">app</span>.<span class="variable">app_type</span> == <span class="string">'iphone'</span>) {
+                <span class="variable">app</span>.<span class="variable">app_type</span> = <span class="string">'iOS'</span>;
+            }
+            <span class="keyword">if</span> (<span class="variable">app</span>.<span class="variable">app_type</span> == <span class="string">'android'</span>) {
+                <span class="variable">app</span>.<span class="variable">app_type</span> = <span class="string">'Android'</span>;
+            }
+            <span class="keyword">if</span> (<span class="variable">app</span>.<span class="variable">app_type</span> == <span class="string">'mweb'</span>) {
+                <span class="variable">app</span>.<span class="variable">app_type</span> = <span class="string">'Mobile Web'</span>;
+            }
+            <span class="keyword">return</span> <span class="variable">app</span>;
         }
     });</code></pre>
 </td>
@@ -502,7 +521,7 @@ functions.
 
 })(<span class="this">this</span>.<span class="variable">jQuery</span>, <span class="this">this</span>.<span class="class">Backbone</span>, <span class="this">this</span>.<span class="variable">_</span>);</code></pre>
 </td>
-</tr><tr class="filename"><td><h2 id="server/public/js/views.js"><a href="#">views</a></h2></td><td>server/public/js/views.js</td></tr><tr class="code">
+</tr><tr class="filename"><td><h2 id="views.js"><a href="#">views</a></h2></td><td>views.js</td></tr><tr class="code">
 <td class="docs">
 <h1>views.js</h1>
 
@@ -629,7 +648,7 @@ functions.
                 <span class="this">this</span>.<span class="variable">show_chart</span>();
             }
         }
-    })</code></pre>
+    });</code></pre>
 </td>
 </tr>
 <tr class="code">
@@ -755,8 +774,7 @@ for changing AdUnit attributes over ajax.
             $(<span class="string">'input.targeting-box'</span>, <span class="variable">adunit_row</span>).<span class="variable">click</span>(<span class="keyword">function</span>() {
                 <span class="keyword">var</span> <span class="variable">loading_img</span> = $(<span class="string">'.targeting .loading-img'</span>, <span class="variable">adunit_row</span>);
                 <span class="variable">loading_img</span>.<span class="variable">show</span>();
-                <span class="variable">current_model</span>.<span class="variable">set</span>({<span class="string">'active'</span>: $(<span class="this">this</span>).<span class="variable">is</span>(<span class="string">':checked'</span>)});
-                <span class="variable">current_model</span>.<span class="variable">save</span>({}, {
+                <span class="variable">current_model</span>.<span class="variable">save</span>({<span class="string">'active'</span>: $(<span class="this">this</span>).<span class="variable">is</span>(<span class="string">':checked'</span>)}, {
                     <span class="variable">success</span>: <span class="keyword">function</span> () {
                         <span class="variable">setTimeout</span>(<span class="keyword">function</span>() {
                             <span class="variable">loading_img</span>.<span class="variable">hide</span>();
@@ -767,17 +785,27 @@ for changing AdUnit attributes over ajax.
 
             <span class="comment">// Add the event handler to submit price floor changes over ajax.</span>
             $(<span class="string">'.price_floor .input-text'</span>, <span class="variable">adunit_row</span>).<span class="variable">keyup</span>(<span class="keyword">function</span>() {
-                <span class="keyword">var</span> <span class="variable">loading_img</span> = $(<span class="string">'.price_floor .loading-img'</span>, <span class="variable">adunit_row</span>);
+                <span class="keyword">var</span> <span class="variable">input_field</span> = $(<span class="this">this</span>);
+                <span class="variable">input_field</span>.<span class="variable">removeClass</span>(<span class="string">'error'</span>);
+                <span class="keyword">var</span> <span class="variable">loading_img</span> = $(&<span class="variable">quot</span>;.<span class="variable">price_floor</span> .<span class="variable">loading</span>-<span class="variable">img</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>);
                 <span class="variable">loading_img</span>.<span class="variable">show</span>();
-                <span class="variable">current_model</span>.<span class="variable">set</span>({<span class="string">'price_floor'</span>: $(<span class="this">this</span>).<span class="variable">val</span>()});
-                <span class="variable">current_model</span>.<span class="variable">save</span>({}, {
-                    <span class="variable">success</span>: <span class="keyword">function</span> () {
-                        <span class="variable">setTimeout</span>(<span class="keyword">function</span>() {
-                            <span class="variable">loading_img</span>.<span class="variable">hide</span>();
-                        }, <span class="number integer">2000</span>);
-                    }
+
+                <span class="keyword">var</span> <span class="variable">promise</span> = <span class="variable">current_model</span>.<span class="variable">save</span>({
+                    <span class="variable">price_floor</span>: $(<span class="this">this</span>).<span class="variable">val</span>()
                 });
+                <span class="keyword">if</span> (<span class="variable">promise</span>) {
+                    <span class="variable">promise</span>.<span class="variable">success</span>(<span class="keyword">function</span>() {
+                        <span class="variable">loading_img</span>.<span class="variable">hide</span>();
+                    });
+                    <span class="variable">promise</span>.<span class="variable">error</span>(<span class="keyword">function</span>() {
+                        <span class="variable">loading_img</span>.<span class="variable">hide</span>();
+                    });
+                } <span class="keyword">else</span> {
+                    <span class="variable">loading_img</span>.<span class="variable">hide</span>();
+                    <span class="variable">input_field</span>.<span class="variable">addClass</span>(<span class="string">'error'</span>);
+                }
             });
+
 
             <span class="keyword">return</span> <span class="this">this</span>;
         },</code></pre>
@@ -845,7 +873,7 @@ it's app's row.
 })(<span class="this">this</span>.<span class="variable">jQuery</span>, <span class="this">this</span>.<span class="class">Backbone</span>);
 </code></pre>
 </td>
-</tr><tr class="filename"><td><h2 id="server/public/js/controllers/marketplace.js"><a href="#">marketplace</a></h2></td><td>server/public/js/controllers/marketplace.js</td></tr><tr class="code">
+</tr><tr class="filename"><td><h2 id="controllers/marketplace.js"><a href="#">marketplace</a></h2></td><td>controllers/marketplace.js</td></tr><tr class="code">
 <td class="docs">
 <h1>Mopub Marketplace JS</h1>
 </td>
@@ -853,404 +881,7 @@ it's app's row.
 <pre><code><span class="keyword">var</span> <span class="variable">mopub</span> = <span class="variable">mopub</span> || {};
 
 <span class="comment">// depends underscore, backbone, jquery, mopub.chart, mopub.util</span>
-(<span class="keyword">function</span>($, <span class="class">Backbone</span>) {</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>AdUnit</h2>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">AdUnit</span> = <span class="class">Backbone</span>.<span class="class">Model</span>.<span class="variable">extend</span>({
-        <span class="comment">// If we don't set defaults, the templates will explode</span>
-        <span class="variable">defaults</span> : {
-            <span class="variable">active</span>: <span class="variable">false</span>,
-            <span class="variable">attempts</span>: <span class="number integer">0</span>,
-            <span class="variable">clicks</span>: <span class="number integer">0</span>,
-            <span class="variable">ctr</span>: <span class="number integer">0</span>,
-            <span class="variable">ecpm</span>: <span class="number integer">0</span>,
-            <span class="variable">fill_rate</span>: <span class="number integer">0</span>,
-            <span class="variable">impressions</span>: <span class="number integer">0</span>,
-            <span class="variable">name</span>: <span class="string">''</span>,
-            <span class="variable">price_floor</span>: <span class="number integer">0</span>,
-            <span class="variable">revenue</span>: <span class="number integer">0</span>
-        },
-        <span class="variable">calcCtr</span>: <span class="keyword">function</span> () {
-            <span class="keyword">return</span> (<span class="this">this</span>.<span class="variable">get</span>(<span class="string">'clicks'</span>) / (<span class="this">this</span>.<span class="variable">get</span>(<span class="string">'impressions'</span>)+<span class="number integer">1</span>));
-        },
-        <span class="variable">calcEcpm</span>: <span class="keyword">function</span> () {
-            <span class="keyword">return</span> (<span class="this">this</span>.<span class="variable">get</span>(<span class="string">'revenue'</span>) / (<span class="this">this</span>.<span class="variable">get</span>(<span class="string">'impressions'</span>)+<span class="number integer">1</span>)*<span class="number integer">1000</span>);
-        },
-        <span class="variable">calcFillRate</span>: <span class="keyword">function</span> () {
-            <span class="keyword">if</span> (<span class="variable">attempts</span> === <span class="number integer">0</span>) {
-                <span class="keyword">return</span> <span class="number float">0.0</span>;
-            }
-            <span class="keyword">return</span> (<span class="variable">impressions</span>/<span class="variable">attempts</span>)*<span class="number integer">100</span>;
-        },
-        <span class="variable">validate</span>: <span class="keyword">function</span>(<span class="variable">attributes</span>) {
-            <span class="keyword">if</span> (<span class="keyword">typeof</span>(<span class="variable">attributes</span>.<span class="variable">price_floor</span> != <span class="string">'undefined'</span>)) {
-                <span class="keyword">var</span> <span class="variable">valid_number</span> = <span class="class">Number</span>(<span class="variable">attributes</span>.<span class="variable">price_floor</span>);
-                <span class="keyword">if</span> (<span class="variable">isNaN</span>(<span class="variable">valid_number</span>)) {
-                    <span class="keyword">return</span> &<span class="variable">quot</span>;<span class="class">Please</span> <span class="variable">enter</span> <span class="variable">a</span> <span class="variable">valid</span> <span class="variable">number</span> <span class="keyword">for</span> <span class="variable">the</span> <span class="variable">price</span> <span class="variable">floor</span>&<span class="variable">quot</span>;;
-                }
-            }
-        },
-        <span class="variable">url</span>: <span class="keyword">function</span>() {
-            <span class="keyword">return</span> <span class="string">'/api/app/'</span> + <span class="this">this</span>.<span class="variable">app_id</span> + <span class="string">'/adunits/'</span> + <span class="this">this</span>.<span class="variable">id</span> + <span class="string">'?'</span> + <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">search</span>.<span class="variable">substring</span>(<span class="number integer">1</span>);
-        }
-    });</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>AdUnitCollection</h2>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">AdUnitCollection</span> = <span class="class">Backbone</span>.<span class="class">Collection</span>.<span class="variable">extend</span>({
-        <span class="variable">model</span>: <span class="class">AdUnit</span>,
-        <span class="variable">url</span>: <span class="keyword">function</span>() {
-            <span class="keyword">return</span> <span class="string">'/api/app/'</span> + <span class="this">this</span>.<span class="variable">app_id</span> + <span class="string">'/adunits/?'</span> + <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">search</span>.<span class="variable">substring</span>(<span class="number integer">1</span>);
-        }
-    });</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>App</h2>
-
-<p>We might consider turning derivative values (ecpm, fill_rate, ctr) into
-functions.
-     </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">App</span> = <span class="class">Backbone</span>.<span class="class">Model</span>.<span class="variable">extend</span>({
-        <span class="variable">defaults</span> : {
-            <span class="variable">name</span>: <span class="string">''</span>,
-            <span class="variable">url</span>:<span class="string">'#'</span>,
-            <span class="variable">revenue</span>: <span class="number integer">0</span>,
-            <span class="variable">attempts</span>: <span class="number integer">0</span>,
-            <span class="variable">icon_url</span>: &<span class="variable">quot</span>;<span class="regexp">/placeholders/image</span>.<span class="variable">gif</span>&<span class="variable">quot</span>;,
-            <span class="variable">impressions</span>: <span class="number integer">0</span>,
-            <span class="variable">fill_rate</span>: <span class="number integer">0</span>,
-            <span class="variable">clicks</span>: <span class="number integer">0</span>,
-            <span class="variable">price_floor</span>: <span class="number integer">0</span>,
-            <span class="variable">app_type</span>: <span class="string">'iOS'</span>,
-            <span class="variable">ecpm</span>: <span class="number integer">0</span>,
-            <span class="variable">ctr</span>: <span class="number integer">0</span>
-        },
-        <span class="variable">url</span>: <span class="keyword">function</span> () {
-            <span class="keyword">return</span> <span class="string">'/api/app/'</span> + <span class="this">this</span>.<span class="variable">id</span> + &<span class="variable">quot</span>;?&<span class="variable">quot</span>;  + <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">search</span>.<span class="variable">substring</span>(<span class="number integer">1</span>);
-        },
-        <span class="variable">parse</span>: <span class="keyword">function</span> (<span class="variable">response</span>) {
-            <span class="comment">// The api returns everything from this url as a list,</span>
-            <span class="comment">// so that you can request one or all apps.</span>
-            <span class="keyword">return</span> <span class="variable">response</span>[<span class="number integer">0</span>];
-        }
-    });</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>AppCollection</h2>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">AppCollection</span> = <span class="class">Backbone</span>.<span class="class">Collection</span>.<span class="variable">extend</span>({
-        <span class="variable">model</span>: <span class="class">App</span>,
-        <span class="comment">// If an app key isn't passed to the url, it'll return a list of all of the apps for the account</span>
-        <span class="variable">url</span>: <span class="string">'/api/app/'</span>,
-        <span class="comment">// Not used anymore, but could come in handy</span>
-        <span class="variable">fetchAdUnits</span>: <span class="keyword">function</span>() {
-            <span class="this">this</span>.<span class="variable">each</span>(<span class="keyword">function</span> (<span class="variable">app</span>) {
-                <span class="variable">app</span>.<span class="variable">adunits</span> = <span class="keyword">new</span> <span class="class">AdUnitCollection</span>();
-                <span class="variable">app</span>.<span class="variable">adunits</span>.<span class="variable">app_id</span> = <span class="variable">app</span>.<span class="variable">id</span>;
-                <span class="variable">app</span>.<span class="variable">adunits</span>.<span class="variable">fetch</span>();
-            });
-        }
-    });</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>Creative</h2>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">Creative</span> = <span class="class">Backbone</span>.<span class="class">Model</span>.<span class="variable">extend</span>({
-        <span class="variable">defaults</span>: {
-            <span class="variable">revenue</span>: <span class="number integer">0</span>,
-            <span class="variable">ecpm</span>: <span class="number integer">0</span>,
-            <span class="variable">impressions</span>: <span class="number integer">0</span>,
-            <span class="variable">clicks</span>: <span class="number integer">0</span>,
-            <span class="variable">ctr</span>: <span class="number integer">0</span>,
-            <span class="variable">creative_url</span>: &<span class="variable">quot</span>;#&<span class="variable">quot</span>;,
-            <span class="variable">ad_domain</span>: <span class="string">'#'</span>,
-            <span class="variable">domain_blocked</span>: <span class="variable">false</span>
-        },
-        <span class="variable">url</span>: <span class="keyword">function</span>() {
-            <span class="keyword">return</span> <span class="string">'/api/creative/'</span> + <span class="this">this</span>.<span class="variable">id</span> + &<span class="variable">quot</span>;?&<span class="variable">quot</span>; +  <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">search</span>.<span class="variable">substring</span>(<span class="number integer">1</span>);
-        }
-    });</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>CreativeCollection</h2>
-
-<p>This is kind of jankity. Right now creatives are 'collected' by DSP,
-and its the best way
-     </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">CreativeCollection</span> = <span class="class">Backbone</span>.<span class="class">Collection</span>.<span class="variable">extend</span>({
-        <span class="variable">model</span>: <span class="class">Creative</span>,
-        <span class="variable">url</span>: <span class="keyword">function</span> () {
-            <span class="keyword">return</span> <span class="string">'/api/dsp/'</span> + <span class="this">this</span>.<span class="variable">dsp_key</span> + &<span class="variable">quot</span>;?&<span class="variable">quot</span>; + <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">search</span>.<span class="variable">substring</span>(<span class="number integer">1</span>);
-        }
-    });</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>AppView</h2>
-
-<p>See templates/partials/app.html to see how this is rendered in HTML.
-This renders an app as a table row. It also adds the call to load
-adunits over ajax and put them in the table.
-     </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">AppView</span> = <span class="class">Backbone</span>.<span class="class">View</span>.<span class="variable">extend</span>({
-
-        <span class="variable">initialize</span>: <span class="keyword">function</span> () {
-            <span class="this">this</span>.<span class="variable">template</span> = <span class="variable">_</span>.<span class="variable">template</span>($(<span class="string">'#app-template'</span>).<span class="variable">html</span>());
-        },
-
-        <span class="variable">renderInline</span>: <span class="keyword">function</span> () {
-            <span class="keyword">var</span> <span class="variable">app_row</span> = $(&<span class="variable">quot</span>;<span class="variable">tr</span>.<span class="variable">app</span>-<span class="variable">row</span>#<span class="variable">app</span>-&<span class="variable">quot</span>; + <span class="this">this</span>.<span class="variable">model</span>.<span class="variable">id</span>, <span class="this">this</span>.<span class="variable">el</span>);
-            $(&<span class="variable">quot</span>;.<span class="variable">revenue</span>&<span class="variable">quot</span>;, <span class="variable">app_row</span>).<span class="variable">text</span>(<span class="variable">mopub</span>.<span class="class">Utils</span>.<span class="variable">formatNumberWithCommas</span>(<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">get</span>(&<span class="variable">quot</span>;<span class="variable">revenue</span>&<span class="variable">quot</span>;)));
-            $(&<span class="variable">quot</span>;.<span class="variable">impressions</span>&<span class="variable">quot</span>;, <span class="variable">app_row</span>).<span class="variable">text</span>(<span class="variable">mopub</span>.<span class="class">Utils</span>.<span class="variable">formatNumberWithCommas</span>(<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">get</span>(&<span class="variable">quot</span>;<span class="variable">impressions</span>&<span class="variable">quot</span>;)));
-            $(&<span class="variable">quot</span>;.<span class="variable">ecpm</span>&<span class="variable">quot</span>;, <span class="variable">app_row</span>).<span class="variable">text</span>(<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">get</span>(&<span class="variable">quot</span>;<span class="variable">ecpm</span>&<span class="variable">quot</span>;));
-            <span class="comment">// $(&quot;.clicks&quot;, app_row).text(this.model.get(&quot;clicks&quot;));</span>
-            <span class="comment">// $(&quot;.ctr&quot;, app_row).text(this.model.get(&quot;ctr&quot;));</span></code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p> Don't load this dynamically for now
-            var adunit<em>show</em>link = $('a.adunits', app<em>row);
-            adunit</em>show<em>link.click(showAdUnits).click();
-            $('a.edit</em>price<em>floor', app</em>row).click(function(e) {
-                e.preventDefault();
-                adunit<em>show</em>link.click();
-            });
-            $('a.view<em>targeting', app</em>row).click(function(e) {
-                e.preventDefault();
-                adunit<em>show</em>link.click();
-                $(this).addClass('hidden');
-            });</p>
-
-<hr></hr>
-</td>
-<td class="code">
-<pre><code><span class="keyword">return</span> <span class="this">this</span>;
-        },
-        <span class="variable">render</span>: <span class="keyword">function</span> () {
-            <span class="keyword">var</span> <span class="variable">renderedContent</span> = $(<span class="this">this</span>.<span class="variable">template</span>(<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">toJSON</span>()));
-
-            <span class="comment">// When we render an appview, we also attach a handler to fetch</span>
-            <span class="comment">// and render it's adunits when a link is clicked.</span>
-            $(<span class="string">'a.adunits'</span>, <span class="variable">renderedContent</span>).<span class="variable">click</span>(<span class="variable">showAdUnits</span>);
-            $(<span class="string">'tbody'</span>, <span class="this">this</span>.<span class="variable">el</span>).<span class="variable">append</span>(<span class="variable">renderedContent</span>);
-            <span class="keyword">return</span> <span class="this">this</span>;
-        }
-    });</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>CreativeView</h2>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">CreativeView</span> = <span class="class">Backbone</span>.<span class="class">View</span>.<span class="variable">extend</span>({
-        <span class="variable">initialize</span>: <span class="keyword">function</span>() {
-            <span class="this">this</span>.<span class="variable">template</span> = <span class="variable">_</span>.<span class="variable">template</span>($(&<span class="variable">quot</span>;#<span class="variable">creative</span>-<span class="variable">row</span>-<span class="variable">template</span>&<span class="variable">quot</span>;).<span class="variable">html</span>());
-        },
-
-        <span class="variable">render</span>: <span class="keyword">function</span> () {
-            <span class="keyword">var</span> <span class="variable">renderedContent</span> = $(<span class="this">this</span>.<span class="variable">template</span>(<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">toJSON</span>()));
-
-            <span class="comment">// Here: attach event handlers for stuff in the creative table row</span>
-
-            $(&<span class="variable">quot</span>;<span class="variable">tbody</span>&<span class="variable">quot</span>;, <span class="this">this</span>.<span class="variable">el</span>).<span class="variable">append</span>(<span class="variable">renderedContent</span>);
-            <span class="keyword">return</span> <span class="this">this</span>;
-        }
-    });</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>showAdUnits/hideAdUnits</h2>
-
-<p>Utility methods for AppView that control the showing/hiding
-of adunits underneath an app row.
-     </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">function</span> <span class="variable">showAdUnits</span>(<span class="variable">event</span>){
-        <span class="variable">event</span>.<span class="variable">preventDefault</span>();
-        <span class="keyword">var</span> <span class="variable">href</span> = $(<span class="this">this</span>).<span class="variable">attr</span>(<span class="string">'href'</span>).<span class="variable">replace</span>(<span class="string">'#'</span>,<span class="string">''</span>);
-        <span class="class">Marketplace</span>.<span class="variable">fetchAdunitsForApp</span>(<span class="variable">href</span>);
-        $(<span class="this">this</span>).<span class="variable">text</span>(<span class="string">'Hide AdUnits'</span>).<span class="variable">unbind</span>(&<span class="variable">quot</span>;<span class="variable">click</span>&<span class="variable">quot</span>;).<span class="variable">click</span>(<span class="variable">hideAdUnits</span>);
-    }
-
-    <span class="keyword">function</span> <span class="variable">hideAdUnits</span>(<span class="variable">event</span>){
-        <span class="variable">event</span>.<span class="variable">preventDefault</span>();
-        <span class="keyword">var</span> <span class="variable">href</span> = $(<span class="this">this</span>).<span class="variable">attr</span>(<span class="string">'href'</span>).<span class="variable">replace</span>(<span class="string">'#'</span>,<span class="string">''</span>);
-        $.<span class="variable">each</span>($(&<span class="variable">quot</span>;.<span class="keyword">for</span>-<span class="variable">app</span>-&<span class="variable">quot</span>; + <span class="variable">href</span>), <span class="keyword">function</span> (<span class="variable">iter</span>, <span class="variable">item</span>) {
-            $(<span class="variable">item</span>).<span class="variable">remove</span>();
-        });
-        $(&<span class="variable">quot</span>;#<span class="variable">app</span>-&<span class="variable">quot</span>; + <span class="variable">href</span> + &<span class="variable">quot</span>; <span class="variable">a</span>.<span class="variable">view_targeting</span>&<span class="variable">quot</span>;).<span class="variable">removeClass</span>(&<span class="variable">quot</span>;<span class="variable">hidden</span>&<span class="variable">quot</span>;);
-        $(<span class="this">this</span>).<span class="variable">text</span>(<span class="string">'Show Adunits'</span>).<span class="variable">unbind</span>(&<span class="variable">quot</span>;<span class="variable">click</span>&<span class="variable">quot</span>;).<span class="variable">click</span>(<span class="variable">showAdUnits</span>);
-    }</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<h2>AdUnitView</h2>
-
-<p>See templates/partials/adunit.html to see how this is rendered in HTML
-Renders an adunit as a row in a table. Also ads the event handler to
-submit the price floor change over ajax when the price_floor field is changed.
-     </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">AdUnitView</span> = <span class="class">Backbone</span>.<span class="class">View</span>.<span class="variable">extend</span>({
-
-        <span class="variable">initialize</span>: <span class="keyword">function</span> () {
-            <span class="this">this</span>.<span class="variable">template</span> = <span class="variable">_</span>.<span class="variable">template</span>($(<span class="string">'#adunit-template'</span>).<span class="variable">html</span>());
-        },</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p>Render the AdUnit into a table row that already exists. Adds handlers
-for changing AdUnit attributes over ajax.
-         </p>
-</td>
-<td class="code">
-<pre><code><span class="variable">renderInline</span>: <span class="keyword">function</span> () {
-            <span class="keyword">var</span> <span class="variable">current_model</span> = <span class="this">this</span>.<span class="variable">model</span>;
-            <span class="keyword">var</span> <span class="variable">adunit_row</span> = $(&<span class="variable">quot</span>;<span class="variable">tr</span>.<span class="variable">adunit</span>-<span class="variable">row</span>#<span class="variable">adunit</span>-&<span class="variable">quot</span>; + <span class="this">this</span>.<span class="variable">model</span>.<span class="variable">id</span>, <span class="this">this</span>.<span class="variable">el</span>);
-
-            $(&<span class="variable">quot</span>;.<span class="variable">revenue</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>).<span class="variable">text</span>(<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">get</span>(&<span class="variable">quot</span>;<span class="variable">revenue</span>&<span class="variable">quot</span>;));
-            $(&<span class="variable">quot</span>;.<span class="variable">ecpm</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>).<span class="variable">text</span>(<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">get</span>(&<span class="variable">quot</span>;<span class="variable">ecpm</span>&<span class="variable">quot</span>;));
-            $(&<span class="variable">quot</span>;.<span class="variable">impressions</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>).<span class="variable">text</span>(<span class="variable">mopub</span>.<span class="class">Utils</span>.<span class="variable">formatNumberWithCommas</span>(<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">get</span>(&<span class="variable">quot</span>;<span class="variable">impressions</span>&<span class="variable">quot</span>;)));
-            $(&<span class="variable">quot</span>;.<span class="variable">price_floor</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>).<span class="variable">html</span>(<span class="string">'&lt;img class=&quot;loading-img hidden&quot; src=&quot;/images/icons-custom/spinner-12.gif&quot;&gt;&lt;/img&gt; '</span> +
-                                               <span class="string">'&lt;input id=&quot;'</span> +
-                                               <span class="this">this</span>.<span class="variable">model</span>.<span class="variable">id</span> +
-                                               <span class="string">'&quot; type=&quot;text&quot; class=&quot;input-text input-text-number number&quot; style=&quot;width:50px;margin: -3px 0;&quot; value=&quot;'</span> +
-                                               <span class="this">this</span>.<span class="variable">model</span>.<span class="variable">get</span>(&<span class="variable">quot</span>;<span class="variable">price_floor</span>&<span class="variable">quot</span>;) +
-                                               <span class="string">'&quot;&gt; '</span>);
-            $(&<span class="variable">quot</span>;.<span class="variable">targeting</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>).<span class="variable">html</span>(<span class="string">'&lt;img class=&quot;loading-img hidden&quot;  src=&quot;/images/icons-custom/spinner-12.gif&quot;&gt;&lt;/img&gt; '</span> +
-                                             <span class="string">'&lt;input class=&quot;targeting-box&quot; type=&quot;checkbox&quot;&gt;'</span>);
-
-            <span class="keyword">if</span> (<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">get</span>(&<span class="variable">quot</span>;<span class="variable">active</span>&<span class="variable">quot</span>;)) {
-                $(&<span class="variable">quot</span>;<span class="variable">input</span>.<span class="variable">targeting</span>-<span class="variable">box</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>).<span class="variable">attr</span>(<span class="string">'checked'</span>, <span class="string">'checked'</span>);
-            }
-
-            <span class="comment">// Add the event handler to submit targeting changes over ajax.</span>
-            $(&<span class="variable">quot</span>;<span class="variable">input</span>.<span class="variable">targeting</span>-<span class="variable">box</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>).<span class="variable">click</span>(<span class="keyword">function</span>() {
-                <span class="keyword">var</span> <span class="variable">loading_img</span> = $(&<span class="variable">quot</span>;.<span class="variable">targeting</span> .<span class="variable">loading</span>-<span class="variable">img</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>);
-                <span class="variable">loading_img</span>.<span class="variable">show</span>();
-                <span class="variable">current_model</span>.<span class="variable">set</span>({<span class="string">'active'</span>: $(<span class="this">this</span>).<span class="variable">is</span>(&<span class="variable">quot</span>;:<span class="variable">checked</span>&<span class="variable">quot</span>;)});
-                <span class="variable">current_model</span>.<span class="variable">save</span>({}, {
-                    <span class="variable">success</span>: <span class="keyword">function</span> (<span class="variable">model</span>, <span class="variable">response</span>) {
-                        <span class="variable">setTimeout</span>(<span class="keyword">function</span>() {
-                            <span class="variable">loading_img</span>.<span class="variable">hide</span>();
-                        }, <span class="number integer">2000</span>);
-                    }
-                });
-            });
-
-            <span class="comment">// Add the event handler to submit price floor changes over ajax.</span>
-            $(<span class="string">'.price_floor .input-text'</span>, <span class="variable">adunit_row</span>).<span class="variable">keyup</span>(<span class="keyword">function</span>() {
-                <span class="keyword">var</span> <span class="variable">input_field</span> = $(<span class="this">this</span>);
-                <span class="variable">input_field</span>.<span class="variable">removeClass</span>(<span class="string">'error'</span>);
-                <span class="keyword">var</span> <span class="variable">loading_img</span> = $(&<span class="variable">quot</span>;.<span class="variable">price_floor</span> .<span class="variable">loading</span>-<span class="variable">img</span>&<span class="variable">quot</span>;, <span class="variable">adunit_row</span>);
-                <span class="variable">loading_img</span>.<span class="variable">show</span>();
-
-                <span class="keyword">var</span> <span class="variable">promise</span> = <span class="variable">current_model</span>.<span class="variable">save</span>({
-                    <span class="variable">price_floor</span>: $(<span class="this">this</span>).<span class="variable">val</span>()
-                });
-                <span class="keyword">if</span> (<span class="variable">promise</span>) {
-                    <span class="variable">promise</span>.<span class="variable">success</span>(<span class="keyword">function</span>() {
-                        <span class="variable">loading_img</span>.<span class="variable">hide</span>();
-                    });
-                    <span class="variable">promise</span>.<span class="variable">error</span>(<span class="keyword">function</span>() {
-                        <span class="variable">loading_img</span>.<span class="variable">hide</span>();
-                    });
-                } <span class="keyword">else</span> {
-                    <span class="variable">loading_img</span>.<span class="variable">hide</span>();
-                    <span class="variable">input_field</span>.<span class="variable">addClass</span>(<span class="string">'error'</span>);
-                }
-            });
-
-            <span class="keyword">return</span> <span class="this">this</span>;
-        },</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p>Render the adunit model in the template. This assumes that the table
-row for the app has already been rendered. This will render underneath
-it's app's row.
-         </p>
-</td>
-<td class="code">
-<pre><code><span class="variable">render</span>: <span class="keyword">function</span> () {
-            <span class="comment">// render the adunit and attach it to the table after it's adunit's row</span>
-            <span class="keyword">var</span> <span class="variable">current_model</span> = <span class="this">this</span>.<span class="variable">model</span>;
-            <span class="keyword">var</span> <span class="variable">renderedContent</span> = $(<span class="this">this</span>.<span class="variable">template</span>(<span class="this">this</span>.<span class="variable">model</span>.<span class="variable">toJSON</span>()));
-
-            <span class="comment">// Add the event handler to submit price floor changes over ajax.</span>
-            $(<span class="string">'.price_floor_change'</span>, <span class="variable">renderedContent</span>)
-                .<span class="variable">change</span>(<span class="keyword">function</span>() {
-                    <span class="variable">current_model</span>.<span class="variable">set</span>({<span class="string">'price_floor'</span>: $(<span class="this">this</span>).<span class="variable">val</span>()});
-                    <span class="comment">// Save when they click the save button in the price floor cell</span>
-                    <span class="keyword">var</span> <span class="variable">save_link</span> = $(&<span class="variable">quot</span>;.<span class="variable">save</span>&<span class="variable">quot</span>;, $(<span class="this">this</span>).<span class="variable">parent</span>());
-                        <span class="variable">save_link</span>.<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
-                            <span class="variable">e</span>.<span class="variable">preventDefault</span>();
-                            <span class="variable">save_link</span>.<span class="variable">addClass</span>(<span class="string">'disabled'</span>).<span class="variable">text</span>(<span class="string">'Saving...'</span>);
-                            <span class="variable">current_model</span>.<span class="variable">save</span>({}, {
-                                <span class="variable">success</span>: <span class="keyword">function</span> () {
-                                    <span class="variable">setTimeout</span>(<span class="keyword">function</span>() {
-                                        <span class="variable">save_link</span>.<span class="variable">removeClass</span>(<span class="string">'disabled'</span>).<span class="variable">text</span>(<span class="string">'Saved'</span>);
-                                        <span class="variable">save_link</span>.<span class="variable">text</span>(&<span class="variable">quot</span>;<span class="class">Save</span>&<span class="variable">quot</span>;);
-                                    }, <span class="number integer">2000</span>);
-                                }
-                            });
-                        });
-                });
-
-            <span class="comment">// Add the event handler to submit targeting changes over ajax.</span>
-            $(&<span class="variable">quot</span>;<span class="variable">input</span>.<span class="variable">targeting</span>-<span class="variable">box</span>&<span class="variable">quot</span>;, <span class="variable">renderedContent</span>).<span class="variable">click</span>(<span class="keyword">function</span>() {
-                <span class="keyword">var</span> <span class="variable">targeting</span> = $(<span class="this">this</span>).<span class="variable">attr</span>(<span class="string">'name'</span>);
-                <span class="keyword">var</span> <span class="variable">activation</span> = $(<span class="this">this</span>).<span class="variable">is</span>(&<span class="variable">quot</span>;:<span class="variable">checked</span>&<span class="variable">quot</span>;) ? &<span class="variable">quot</span>;<span class="class">On</span>&<span class="variable">quot</span>; : &<span class="variable">quot</span>;<span class="class">Off</span>&<span class="variable">quot</span>;;
-                $(&<span class="variable">quot</span>;<span class="keyword">label</span>[<span class="keyword">for</span>=<span class="string">'&quot;+ targeting +&quot;'</span>]&<span class="variable">quot</span>;, <span class="variable">renderedContent</span>).<span class="variable">text</span>(<span class="variable">activation</span>);
-
-                <span class="variable">current_model</span>.<span class="variable">set</span>({<span class="string">'active'</span>: $(<span class="this">this</span>).<span class="variable">is</span>(&<span class="variable">quot</span>;:<span class="variable">checked</span>&<span class="variable">quot</span>;)});
-                <span class="variable">current_model</span>.<span class="variable">save</span>();
-            });
-
-            <span class="comment">// Add the right background color based on where the app is in the table</span>
-            <span class="keyword">var</span> <span class="variable">app_row</span> = $(<span class="string">'tr#app-'</span> + <span class="this">this</span>.<span class="variable">model</span>.<span class="variable">get</span>(<span class="string">'app_id'</span>), <span class="this">this</span>.<span class="variable">el</span>);
-            <span class="keyword">var</span> <span class="variable">zebra</span> = <span class="variable">app_row</span>.<span class="variable">hasClass</span>(&<span class="variable">quot</span>;<span class="variable">even</span>&<span class="variable">quot</span>;) ? &<span class="variable">quot</span>;<span class="variable">even</span>&<span class="variable">quot</span>; : &<span class="variable">quot</span>;<span class="variable">odd</span>&<span class="variable">quot</span>;;
-            <span class="variable">renderedContent</span>.<span class="variable">addClass</span>(<span class="variable">zebra</span>);
-
-            <span class="variable">app_row</span>.<span class="variable">after</span>(<span class="variable">renderedContent</span>);
-
-            <span class="keyword">return</span> <span class="this">this</span>;
-        }
-    });</code></pre>
+(<span class="keyword">function</span>($, <span class="variable">_</span>) {</code></pre>
 </td>
 </tr>
 <tr class="code">
@@ -1471,6 +1102,7 @@ only when no errors are returned from the server. Fix this.
 </td>
 <td class="code">
 <pre><code><span class="keyword">function</span> <span class="variable">makeCreativePerformanceTable</span> (<span class="variable">pub_id</span>, <span class="variable">blocklist</span>, <span class="variable">start_date</span>, <span class="variable">end_date</span>) {
+        <span class="keyword">var</span> <span class="variable">creative_data_url</span> = <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">origin</span> + &<span class="variable">quot</span>;<span class="regexp">/campaigns/marketplace</span><span class="regexp">/creatives/</span>&<span class="variable">quot</span>;;
         <span class="keyword">var</span> <span class="variable">table</span> = $(&<span class="variable">quot</span>;#<span class="variable">report</span>-<span class="variable">table</span>&<span class="variable">quot</span>;).<span class="variable">dataTable</span>({
             <span class="variable">bProcessing</span>: <span class="variable">true</span>,
             <span class="comment">// Use jQueryUI to style the table</span>
@@ -1496,7 +1128,7 @@ only when no errors are returned from the server. Fix this.
             <span class="comment">// Sort by revenue descending on table load</span>
             <span class="variable">aaSorting</span>: [[<span class="number integer">2</span>,<span class="string">'desc'</span>]],
             <span class="comment">// Endpoint to fetch table data</span>
-            <span class="variable">sAjaxSource</span>: &<span class="variable">quot</span>;<span class="variable">http</span>:<span class="comment">//mpx.mopub.com/stats/creatives&quot;,</span>
+            <span class="variable">sAjaxSource</span>: <span class="variable">creative_data_url</span>,
             <span class="comment">// Tell datatables how to fetch and parse server data</span>
             <span class="variable">fnServerData</span>: <span class="keyword">function</span>( <span class="variable">sUrl</span>, <span class="variable">aoData</span>, <span class="variable">fnCallback</span> ) {
                 $.<span class="variable">ajax</span>({
@@ -1636,12 +1268,23 @@ anchor + click event to remove it over Ajax.
 </td>
 <td class="code">
 <pre><code>$(&<span class="variable">quot</span>;#<span class="variable">blindness</span>&<span class="variable">quot</span>;).<span class="variable">click</span>(<span class="keyword">function</span> () {
-                <span class="keyword">var</span> <span class="variable">blindness_xhr</span> = $.<span class="variable">post</span>(&<span class="variable">quot</span>;<span class="regexp">/campaigns/marketplace</span><span class="regexp">/settings/blindness</span>/&<span class="variable">quot</span>;, {
+                <span class="keyword">var</span> <span class="variable">loading_img</span> = $(&<span class="variable">quot</span>;#<span class="variable">blindness</span>-<span class="variable">spinner</span>&<span class="variable">quot</span>;).<span class="variable">show</span>();
+                <span class="keyword">var</span> <span class="variable">saving</span> = $(&<span class="variable">quot</span>;#<span class="variable">blindness</span>-<span class="variable">save</span>-<span class="variable">status</span> .<span class="variable">saving</span>&<span class="variable">quot</span>;).<span class="variable">show</span>();
+
+                <span class="keyword">var</span> <span class="variable">blindness_xhr</span> = $.<span class="variable">post</span>(&<span class="variable">quot</span>;<span class="regexp">/campaigns/marketplace</span><span class="regexp">/settings/blindness</span>/&<span class="variable">quot</span>;,{
                     <span class="variable">activate</span>: $(<span class="this">this</span>).<span class="variable">is</span>(&<span class="variable">quot</span>;:<span class="variable">checked</span>&<span class="variable">quot</span>;)
                 });
 
                 <span class="variable">blindness_xhr</span>.<span class="variable">done</span>(<span class="keyword">function</span>(<span class="variable">data</span>){
-                    <span class="comment">// put toast here later</span>
+                    <span class="variable">loading_img</span>.<span class="variable">hide</span>();
+                    <span class="variable">saving</span>.<span class="variable">hide</span>();
+                    <span class="keyword">if</span> (<span class="variable">data</span>.<span class="variable">hasOwnProperty</span>(<span class="string">'success'</span>)) {
+                        <span class="keyword">var</span> <span class="variable">saved</span> = $(&<span class="variable">quot</span>;#<span class="variable">blindness</span>-<span class="variable">save</span>-<span class="variable">status</span> .<span class="variable">saved</span>&<span class="variable">quot</span>;).<span class="variable">show</span>();
+                        <span class="variable">setTimeout</span>(<span class="keyword">function</span>() { <span class="variable">saved</span>.<span class="variable">fadeOut</span>(); }, <span class="number integer">1000</span>);
+                    } <span class="keyword">else</span> {
+                        <span class="keyword">var</span> <span class="variable">errored</span> = $(&<span class="variable">quot</span>;#<span class="variable">blindness</span>-<span class="variable">save</span>-<span class="variable">status</span> .<span class="variable">error</span>&<span class="variable">quot</span>;).<span class="variable">show</span>();
+                        <span class="variable">setTimeout</span>(<span class="keyword">function</span>() {<span class="variable">errored</span>.<span class="variable">fadeOut</span>(); }, <span class="number integer">1000</span>);
+                    }
                 });
             });</code></pre>
 </td>
@@ -1732,9 +1375,11 @@ clicks the Marketplace On/Off switch, all of them get turned off.
 <tr class="code">
 <td class="docs">
 <p>Toasts for the top and bottom lightswitches. Toasts are little flash messages
-that let the user know something has happened. We're going to replace
-these in the future with the stuff in utilities/toast.js
-             </p>
+that let the user know something has happened. These should be rolled up
+into their own library and put in mopub.js. For now they're here because
+this is the only place they're used.</p>
+
+<h1>REFACTOR: use the new kind of toast</h1>
 </td>
 <td class="code">
 <pre><code>$(&<span class="variable">quot</span>;#<span class="variable">top_switch</span>&<span class="variable">quot</span>;).<span class="variable">click</span>(<span class="keyword">function</span>() {
@@ -1758,6 +1403,8 @@ these in the future with the stuff in utilities/toast.js
 </tr>
 <tr class="code">
 <td class="docs">
+<h2>Blocklist adding/editing</h2>
+
 <p>Click/form handlers and ajax stuff for the blocklist
 in the settings tab
              </p>
@@ -1772,7 +1419,6 @@ in the settings tab
                 });
 
                 <span class="variable">blocklist_xhr</span>.<span class="variable">done</span>(<span class="keyword">function</span> (<span class="variable">response</span>) {
-                    <span class="variable">response</span> = $.<span class="variable">parseJSON</span>(<span class="variable">response</span>);
                     <span class="keyword">var</span> <span class="variable">domains</span> = <span class="variable">response</span>[<span class="string">'new'</span>];
                     $.<span class="variable">each</span>(<span class="variable">domains</span>, <span class="keyword">function</span>(<span class="variable">iter</span>, <span class="variable">domain</span>) {
                         <span class="variable">addToBlocklist</span>(<span class="variable">domain</span>);
@@ -1788,11 +1434,38 @@ in the settings tab
 </tr>
 <tr class="code">
 <td class="docs">
-<p>Blocklist removal
-             </p>
+<h2>Blocklist removal</h2>
 </td>
 <td class="code">
 <pre><code>$(&<span class="variable">quot</span>;<span class="variable">a</span>.<span class="variable">blocklist_remove</span>&<span class="variable">quot</span>;).<span class="variable">click</span>(<span class="variable">blocklistRemoveClickHandler</span>);</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>Content filtering</h2>
+</td>
+<td class="code">
+<pre><code>$(&<span class="variable">quot</span>;<span class="variable">input</span>.<span class="variable">content_level</span>&<span class="variable">quot</span>;).<span class="variable">click</span>(<span class="keyword">function</span>(){
+                <span class="keyword">var</span> <span class="variable">self</span> = $(<span class="this">this</span>);
+                <span class="keyword">var</span> <span class="variable">filter_level</span> = <span class="variable">self</span>.<span class="variable">attr</span>(<span class="string">'value'</span>);
+                <span class="keyword">var</span> <span class="variable">loading_img</span> = $(&<span class="variable">quot</span>;#<span class="variable">filter</span>-<span class="variable">spinner</span>&<span class="variable">quot</span>;).<span class="variable">show</span>();
+                <span class="keyword">var</span> <span class="variable">saving</span> = $(&<span class="variable">quot</span>;#<span class="variable">filter</span>-<span class="variable">save</span>-<span class="variable">status</span> .<span class="variable">saving</span>&<span class="variable">quot</span>;).<span class="variable">show</span>();
+                <span class="keyword">var</span> <span class="variable">result</span> = $.<span class="variable">post</span>(&<span class="variable">quot</span>;<span class="regexp">/campaigns/marketplace</span><span class="regexp">/settings/content</span><span class="variable">_filter</span>/&<span class="variable">quot</span>;, {
+                    <span class="variable">filter_level</span>: <span class="variable">filter_level</span>
+                });
+                <span class="variable">result</span>.<span class="variable">success</span>(<span class="keyword">function</span>(<span class="variable">data</span>){
+                    <span class="variable">loading_img</span>.<span class="variable">hide</span>();
+                    <span class="variable">saving</span>.<span class="variable">hide</span>();
+                    <span class="keyword">if</span> (<span class="variable">data</span>.<span class="variable">hasOwnProperty</span>(<span class="string">'success'</span>)) {
+                        <span class="keyword">var</span> <span class="variable">saved</span> = $(&<span class="variable">quot</span>;#<span class="variable">filter</span>-<span class="variable">save</span>-<span class="variable">status</span> .<span class="variable">saved</span>&<span class="variable">quot</span>;).<span class="variable">show</span>();
+                        <span class="variable">setTimeout</span>(<span class="keyword">function</span>() { <span class="variable">saved</span>.<span class="variable">fadeOut</span>(); }, <span class="number integer">1000</span>);
+
+                    } <span class="keyword">else</span> {
+                        <span class="keyword">var</span> <span class="variable">errored</span> = $(&<span class="variable">quot</span>;#<span class="variable">filter</span>-<span class="variable">save</span>-<span class="variable">status</span> .<span class="variable">error</span>&<span class="variable">quot</span>;).<span class="variable">show</span>();
+                        <span class="variable">setTimeout</span>(<span class="keyword">function</span>() {<span class="variable">errored</span>.<span class="variable">fadeOut</span>(); }, <span class="number integer">1000</span>);
+                    }
+                });
+            });</code></pre>
 </td>
 </tr>
 <tr class="code">
@@ -1912,7 +1585,869 @@ it already exists in two other files. Obvo refactor.
 
     <span class="variable">window</span>.<span class="class">MarketplaceController</span> = <span class="class">MarketplaceController</span>;
 
-})(<span class="this">this</span>.<span class="variable">jQuery</span>);
+})(<span class="this">this</span>.<span class="variable">jQuery</span>, <span class="this">this</span>.<span class="variable">_</span>);
+</code></pre>
+</td>
+</tr><tr class="filename"><td><h2 id="controllers/publisher.js"><a href="#">publisher</a></h2></td><td>controllers/publisher.js</td></tr><tr class="code">
+<td class="docs">
+<h1>MoPub Dashboard Javascript</h1>
+
+<h2>Client-side functionality for the following pages:</h2>
+
+<ul><li>Inventory/Dashboard</li><li>App detail</li><li>Adunit detail</li><li>App creation</li><li>Sign up flow</li><li>Geographical targeting (deprecated)</li></ul>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="variable">mopub</span> = <span class="variable">mopub</span> || {};
+
+(<span class="keyword">function</span>($, <span class="class">Backbone</span>, <span class="variable">_</span>){</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>Helpers for DashboardController</h2>
+</td>
+<td class="code">
+
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Refactor/remove
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">getCurrentChartSeriesType</span>() {
+        <span class="keyword">var</span> <span class="variable">activeBreakdownsElem</span> = $(<span class="string">'#dashboard-stats .stats-breakdown .active'</span>);
+        <span class="keyword">if</span> (<span class="variable">activeBreakdownsElem</span>.<span class="variable">attr</span>(<span class="string">'id'</span>) == <span class="string">'stats-breakdown-ctr'</span>) <span class="keyword">return</span> <span class="string">'line'</span>;
+        <span class="keyword">else</span> <span class="keyword">return</span> <span class="string">'area'</span>;
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Refactor/remove
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">populateGraphWithAccountStats</span>(<span class="variable">stats</span>, <span class="variable">start_date</span>) {
+        <span class="keyword">var</span> <span class="variable">dailyStats</span> = <span class="variable">stats</span>[&<span class="variable">quot</span>;<span class="variable">all_stats</span>&<span class="variable">quot</span>;][&<span class="variable">quot</span>;||&<span class="variable">quot</span>;][&<span class="variable">quot</span>;<span class="variable">daily_stats</span>&<span class="variable">quot</span>;];
+
+        <span class="variable">mopub</span>.<span class="variable">dashboardStatsChartData</span> = {
+            <span class="variable">pointStart</span>: <span class="variable">start_date</span>,
+            <span class="variable">pointInterval</span>: <span class="number integer">86400000</span>,
+            <span class="variable">requests</span>: [{ &<span class="variable">quot</span>;<span class="class">Total</span>&<span class="variable">quot</span>;: <span class="variable">mopub</span>.<span class="class">Stats</span>.<span class="variable">statArrayFromDailyStats</span>(<span class="variable">dailyStats</span>, &<span class="variable">quot</span>;<span class="variable">request_count</span>&<span class="variable">quot</span>;)}],
+            <span class="variable">impressions</span>: [{ &<span class="variable">quot</span>;<span class="class">Total</span>&<span class="variable">quot</span>;: <span class="variable">mopub</span>.<span class="class">Stats</span>.<span class="variable">statArrayFromDailyStats</span>(<span class="variable">dailyStats</span>, &<span class="variable">quot</span>;<span class="variable">impression_count</span>&<span class="variable">quot</span>;)}],
+            <span class="variable">clicks</span>: [{ &<span class="variable">quot</span>;<span class="class">Total</span>&<span class="variable">quot</span>;: <span class="variable">mopub</span>.<span class="class">Stats</span>.<span class="variable">statArrayFromDailyStats</span>(<span class="variable">dailyStats</span>, &<span class="variable">quot</span>;<span class="variable">click_count</span>&<span class="variable">quot</span>;)}],
+            <span class="variable">users</span>: [{ &<span class="variable">quot</span>;<span class="class">Total</span>&<span class="variable">quot</span>;: <span class="variable">mopub</span>.<span class="class">Stats</span>.<span class="variable">statArrayFromDailyStats</span>(<span class="variable">dailyStats</span>, &<span class="variable">quot</span>;<span class="variable">user_count</span>&<span class="variable">quot</span>;)}]
+        };
+
+        <span class="variable">mopub</span>.<span class="class">Chart</span>.<span class="variable">setupDashboardStatsChart</span>(<span class="variable">getCurrentChartSeriesType</span>());
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>fetchAppStats</h2>
+
+<p>Fetches all app stats using a list of app keys and renders
+them into table rows that have already been created in the
+page. Useful for decreasing page load time along with <code>fetchAdunitStats</code>.
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">fetchAppStats</span> (<span class="variable">app_keys</span>) {
+        <span class="variable">_</span>.<span class="variable">each</span>(<span class="variable">app_keys</span>, <span class="keyword">function</span>(<span class="variable">app_key</span>) {
+            <span class="keyword">var</span> <span class="variable">app</span> = <span class="keyword">new</span> <span class="class">App</span>({<span class="variable">id</span>: <span class="variable">app_key</span>, <span class="variable">stats_endpoint</span>: <span class="string">'all'</span>});
+            <span class="variable">app</span>.<span class="variable">bind</span>(<span class="string">'change'</span>, <span class="keyword">function</span>(<span class="variable">current_app</span>) {
+                <span class="keyword">var</span> <span class="variable">appView</span> = <span class="keyword">new</span> <span class="class">AppView</span>({ <span class="variable">model</span>: <span class="variable">current_app</span>, <span class="variable">el</span>: <span class="string">'#dashboard-apps'</span> });
+                <span class="variable">appView</span>.<span class="variable">renderInline</span>();
+            });
+            <span class="variable">app</span>.<span class="variable">fetch</span>();
+        });
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>fetchAdunitStats</h2>
+
+<p>Fetches AdUnit stats for an app over ajax and renders them in already
+existing table rows. This method is useful for decreasing page load time.
+Uses a parent app's key to bootstrap the fetch.
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">fetchAdunitStats</span> (<span class="variable">app_key</span>) {
+        <span class="keyword">var</span> <span class="variable">adunits</span> = <span class="keyword">new</span> <span class="class">AdUnitCollection</span>();
+        <span class="variable">adunits</span>.<span class="variable">app_id</span> = <span class="variable">app_key</span>;
+        <span class="variable">adunits</span>.<span class="variable">stats_endpoint</span> = <span class="string">'all'</span>;
+        <span class="comment">// Once the adunits have been fetched from the server,</span>
+        <span class="comment">// render them as well as the app's price floor range</span>
+        <span class="variable">adunits</span>.<span class="variable">bind</span>(<span class="string">'reset'</span>, <span class="keyword">function</span>(<span class="variable">adunits_collection</span>) {
+            <span class="comment">// Create the views and render each adunit row</span>
+            <span class="variable">_</span>.<span class="variable">each</span>(<span class="variable">adunits_collection</span>.<span class="variable">models</span>, <span class="keyword">function</span>(<span class="variable">adunit</span>) {
+                <span class="keyword">var</span> <span class="variable">adunitView</span> = <span class="keyword">new</span> <span class="class">AdUnitView</span>({ <span class="variable">model</span>: <span class="variable">adunit</span>, <span class="variable">el</span>: <span class="string">'#dashboard-apps'</span> });
+                <span class="variable">adunitView</span>.<span class="variable">renderInline</span>();
+            });
+        });
+
+        <span class="variable">adunits</span>.<span class="variable">fetch</span>({
+            <span class="variable">success</span>: <span class="keyword">function</span>(<span class="variable">data</span>){
+                <span class="comment">// Trigger any event handlers that have been attached to the table.</span>
+                <span class="comment">// Shouldn't this only trigger for the table that the adunit stats are</span>
+                <span class="comment">// being placed in?</span>
+                $(<span class="string">'table'</span>).<span class="variable">trigger</span>(<span class="string">'update'</span>);
+                $(&<span class="variable">quot</span>;#&<span class="variable">quot</span>; + <span class="variable">app_key</span> + &<span class="variable">quot</span>;-<span class="variable">img</span>&<span class="variable">quot</span>;).<span class="variable">hide</span>();
+            }
+        });
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>initializeAppForm</h2>
+
+<p>Loads all click handlers/visual stuff/ajax loading for
+the app form.
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">initializeAppForm</span>() {
+        $(<span class="string">'input[name=&quot;app_type&quot;]'</span>).<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+            $(<span class="string">'#appForm .appForm-platformDependent'</span>)
+                .<span class="variable">removeClass</span>(<span class="string">'iphone'</span>)
+                .<span class="variable">removeClass</span>(<span class="string">'android'</span>)
+                .<span class="variable">removeClass</span>(<span class="string">'mweb'</span>)
+                .<span class="variable">addClass</span>($(<span class="this">this</span>).<span class="variable">val</span>());
+        }).<span class="variable">filter</span>(<span class="string">':checked'</span>).<span class="variable">click</span>(); <span class="comment">// make sure we're in sync when the page loads</span>
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>initializeAdunitForm</h2>
+
+<p>Loads all click handlers/visual stuff/ajax loading for
+the app form.
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">initializeAdunitForm</span>() {
+        <span class="comment">// Set up device format selection UI</span>
+        $(&<span class="variable">quot</span>;#<span class="variable">adunit</span>-<span class="variable">device_format_phone</span>&<span class="variable">quot</span>;).<span class="variable">parent</span>().<span class="variable">buttonset</span>();
+        $(<span class="string">'#adunit-device_format_phone'</span>).<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>){
+            $(<span class="string">'#adForm-tablet-container'</span>).<span class="variable">hide</span>();
+            $(<span class="string">'#adForm-phone-container'</span>).<span class="variable">show</span>().<span class="variable">find</span>(<span class="string">'input[type=&quot;radio&quot;]'</span>)[<span class="number integer">0</span>].<span class="variable">click</span>();
+        });
+
+        $(<span class="string">'#adunit-device_format_tablet'</span>).<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>){
+            $(<span class="string">'#adForm-phone-container'</span>).<span class="variable">hide</span>();
+            $(<span class="string">'#adForm-tablet-container'</span>).<span class="variable">show</span>().<span class="variable">find</span>(<span class="string">'input[type=&quot;radio&quot;]'</span>)[<span class="number integer">0</span>].<span class="variable">click</span>();
+        });
+
+        <span class="comment">// Set up format selection UI for phone</span>
+        $(<span class="string">'#adForm-phone-formats'</span>).<span class="variable">each</span>(<span class="keyword">function</span>() {
+            <span class="keyword">var</span> <span class="variable">container</span> = $(<span class="this">this</span>);
+            $(<span class="string">'input[type=&quot;radio&quot;]'</span>, <span class="variable">container</span>).<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                <span class="keyword">var</span> <span class="variable">radio</span> = $(<span class="this">this</span>);
+                <span class="keyword">var</span> <span class="variable">formatContainer</span> = <span class="variable">radio</span>.<span class="variable">parents</span>(<span class="string">'.adForm-format'</span>);
+                $(<span class="string">'.adForm-format-image'</span>).<span class="variable">css</span>({ <span class="variable">opacity</span>: <span class="number float">0.5</span> });
+                $(<span class="string">'.adForm-format-image'</span>, <span class="variable">formatContainer</span>).<span class="variable">css</span>({ <span class="variable">opacity</span>: <span class="number integer">1</span> });
+
+                <span class="keyword">var</span> $<span class="variable">full_onlys</span> = $(&<span class="variable">quot</span>;.<span class="variable">full_only</span>&<span class="variable">quot</span>;);
+                <span class="keyword">var</span> $<span class="variable">banner_onlys</span> = $(&<span class="variable">quot</span>;.<span class="variable">banner_only</span>&<span class="variable">quot</span>;);
+                <span class="keyword">if</span> ($(<span class="this">this</span>).<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">id</span>&<span class="variable">quot</span>;) == &<span class="variable">quot</span>;<span class="variable">appForm</span>-<span class="variable">adUnitFormat</span>-<span class="variable">full</span>-<span class="variable">tablet</span>&<span class="variable">quot</span>; ||
+                    $(<span class="this">this</span>).<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">id</span>&<span class="variable">quot</span>;) == &<span class="variable">quot</span>;<span class="variable">appForm</span>-<span class="variable">adUnitFormat</span>-<span class="variable">full</span>&<span class="variable">quot</span>;){
+                    $<span class="variable">full_onlys</span>.<span class="variable">show</span>();
+                    $<span class="variable">banner_onlys</span>.<span class="variable">hide</span>();
+                }
+                <span class="keyword">else</span>{
+                    $<span class="variable">full_onlys</span>.<span class="variable">hide</span>();
+                    $<span class="variable">banner_onlys</span>.<span class="variable">show</span>();
+                }
+
+                <span class="keyword">var</span> $<span class="variable">custom_onlys</span> = $(&<span class="variable">quot</span>;.<span class="variable">custom_only</span>&<span class="variable">quot</span>;);
+                <span class="keyword">if</span> ($(<span class="this">this</span>).<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">id</span>&<span class="variable">quot</span>;) == &<span class="variable">quot</span>;<span class="variable">appForm</span>-<span class="variable">adUnitFormat</span>-<span class="variable">tablet</span>-<span class="variable">custom</span>&<span class="variable">quot</span>; ||
+                    $(<span class="this">this</span>).<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">id</span>&<span class="variable">quot</span>;) == &<span class="variable">quot</span>;<span class="variable">appForm</span>-<span class="variable">adUnitFormat</span>-<span class="variable">custom</span>&<span class="variable">quot</span>;) {
+                    $<span class="variable">custom_onlys</span>.<span class="variable">show</span>();
+                } <span class="keyword">else</span> {
+                    $<span class="variable">custom_onlys</span>.<span class="variable">hide</span>();
+                }
+
+                }).<span class="variable">filter</span>(<span class="string">':checked'</span>).<span class="variable">click</span>();
+
+                $(<span class="string">'.adForm-format-image'</span>, <span class="variable">container</span>).<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="keyword">var</span> <span class="variable">image</span> = $(<span class="this">this</span>);
+                    <span class="keyword">var</span> <span class="variable">formatContainer</span> = <span class="variable">image</span>.<span class="variable">parents</span>(<span class="string">'.adForm-format'</span>);
+                    $(<span class="string">'input[type=&quot;radio&quot;]'</span>, <span class="variable">formatContainer</span>).<span class="variable">click</span>();
+                });
+
+                $(<span class="string">'.adForm-format-details input[type=&quot;text&quot;]'</span>, <span class="variable">container</span>).<span class="variable">focus</span>(<span class="keyword">function</span>() {
+                    <span class="keyword">var</span> <span class="variable">input</span> = $(<span class="this">this</span>);
+                    <span class="keyword">var</span> <span class="variable">formatContainer</span> = <span class="variable">input</span>.<span class="variable">parents</span>(<span class="string">'.adForm-format'</span>);
+                    $(<span class="string">'input[type=&quot;radio&quot;]'</span>, <span class="variable">formatContainer</span>).<span class="variable">click</span>();
+                });
+            });
+
+        <span class="comment">// Set up format selection UI for tablet</span>
+        $(<span class="string">'#adForm-tablet-formats'</span>).<span class="variable">each</span>(<span class="keyword">function</span>(){
+            <span class="keyword">var</span> <span class="variable">container</span> = $(<span class="this">this</span>);
+            <span class="comment">//bind radio buttons to images</span>
+            $(<span class="this">this</span>).<span class="variable">find</span>(<span class="string">'input[type=&quot;radio&quot;]'</span>).<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                <span class="keyword">var</span> <span class="variable">index</span> = $(<span class="this">this</span>).<span class="variable">parent</span>().<span class="variable">index</span>();
+                <span class="keyword">var</span> <span class="variable">images</span> = $(&<span class="variable">quot</span>;#<span class="variable">adForm</span>-<span class="variable">images</span>-<span class="variable">container</span>&<span class="variable">quot</span>;);
+                <span class="variable">images</span>.<span class="variable">children</span>().<span class="variable">hide</span>();
+                <span class="keyword">var</span> <span class="variable">image</span> = <span class="variable">images</span>.<span class="variable">children</span>()[<span class="variable">index</span>];
+                $(<span class="variable">image</span>).<span class="variable">show</span>().<span class="variable">css</span>({ <span class="variable">opacity</span>: <span class="number integer">1</span> });
+
+                <span class="keyword">var</span> $<span class="variable">full_onlys</span> = $(&<span class="variable">quot</span>;.<span class="variable">full_only</span>&<span class="variable">quot</span>;);
+                <span class="keyword">var</span> $<span class="variable">banner_onlys</span> = $(&<span class="variable">quot</span>;.<span class="variable">banner_only</span>&<span class="variable">quot</span>;);
+                <span class="keyword">if</span> ($(<span class="this">this</span>).<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">id</span>&<span class="variable">quot</span>;) == &<span class="variable">quot</span>;<span class="variable">appForm</span>-<span class="variable">adUnitFormat</span>-<span class="variable">full</span>-<span class="variable">tablet</span>&<span class="variable">quot</span>; ||
+                    $(<span class="this">this</span>).<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">id</span>&<span class="variable">quot</span>;) == &<span class="variable">quot</span>;<span class="variable">appForm</span>-<span class="variable">adUnitFormat</span>-<span class="variable">full</span>&<span class="variable">quot</span>;){
+                    $<span class="variable">full_onlys</span>.<span class="variable">show</span>();
+                    $<span class="variable">banner_onlys</span>.<span class="variable">hide</span>();
+                } <span class="keyword">else</span> {
+                    $<span class="variable">full_onlys</span>.<span class="variable">hide</span>();
+                    $<span class="variable">banner_onlys</span>.<span class="variable">show</span>();
+                }
+
+                <span class="keyword">var</span> $<span class="variable">custom_onlys</span> = $(&<span class="variable">quot</span>;.<span class="variable">custom_only</span>&<span class="variable">quot</span>;);
+                <span class="keyword">if</span> ($(<span class="this">this</span>).<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">id</span>&<span class="variable">quot</span>;) == &<span class="variable">quot</span>;<span class="variable">appForm</span>-<span class="variable">adUnitFormat</span>-<span class="variable">tablet</span>-<span class="variable">custom</span>&<span class="variable">quot</span>; ||
+                    $(<span class="this">this</span>).<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">id</span>&<span class="variable">quot</span>;) == &<span class="variable">quot</span>;<span class="variable">appForm</span>-<span class="variable">adUnitFormat</span>-<span class="variable">custom</span>&<span class="variable">quot</span>;){
+                    $<span class="variable">custom_onlys</span>.<span class="variable">show</span>();
+                } <span class="keyword">else</span> {
+                    $<span class="variable">custom_onlys</span>.<span class="variable">hide</span>();
+                }
+
+            }).<span class="variable">first</span>().<span class="variable">click</span>(); <span class="comment">//initialize by activating the first</span>
+        });
+
+        <span class="comment">//initialize checked elements</span>
+        $(&<span class="variable">quot</span>;#<span class="variable">adunit</span>-<span class="variable">device_format_phone</span>&<span class="variable">quot</span>;).<span class="variable">parent</span>().<span class="variable">children</span>()
+            .<span class="variable">filter</span>(<span class="string">':checked'</span>).<span class="variable">click</span>().<span class="variable">each</span>(<span class="keyword">function</span>() {
+                <span class="keyword">var</span> <span class="variable">deviceFormat</span> = $(<span class="this">this</span>).<span class="variable">val</span>(); <span class="comment">//either tablet or phone</span>
+                <span class="keyword">var</span> <span class="variable">container</span> = &<span class="variable">quot</span>;#<span class="variable">adForm</span>-&<span class="variable">quot</span>; + <span class="variable">deviceFormat</span> + &<span class="variable">quot</span>;-<span class="variable">container</span>&<span class="variable">quot</span>;;
+                $(<span class="variable">container</span>).<span class="variable">find</span>(<span class="string">'.possible-format'</span>).<span class="variable">click</span>();
+            });
+        }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>initializeDateButtons</h2>
+
+<p>Loads all click handlers/visual stuff for the date buttons. Used
+on a ton of pages, probably could be refactored by someone brave
+enough.
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">initializeDateButtons</span> () {
+        $(<span class="string">'#dashboard-dateOptions input'</span>).<span class="variable">click</span>(<span class="keyword">function</span>() {
+            <span class="keyword">var</span> <span class="variable">option</span> = $(<span class="this">this</span>).<span class="variable">val</span>();
+            <span class="keyword">if</span> (<span class="variable">option</span> == <span class="string">'custom'</span>) {
+                $(<span class="string">'#dashboard-dateOptions-custom-modal'</span>).<span class="variable">dialog</span>({
+                    <span class="variable">width</span>: <span class="number integer">570</span>,
+                    <span class="variable">buttons</span>: [
+                        {
+                            <span class="variable">text</span>: <span class="string">'Set dates'</span>,
+                            <span class="variable">css</span>: { <span class="variable">fontWeight</span>: <span class="string">'600'</span> },
+                            <span class="variable">click</span>: <span class="keyword">function</span>() {
+                                <span class="keyword">var</span> <span class="variable">from_date</span> = $(<span class="string">'#dashboard-dateOptions-custom-from'</span>).<span class="variable">datepicker</span>(&<span class="variable">quot</span>;<span class="variable">getDate</span>&<span class="variable">quot</span>;);
+                                <span class="keyword">var</span> <span class="variable">to_date</span> = $(<span class="string">'#dashboard-dateOptions-custom-to'</span>).<span class="variable">datepicker</span>(&<span class="variable">quot</span>;<span class="variable">getDate</span>&<span class="variable">quot</span>;);
+                                <span class="keyword">var</span> <span class="variable">num_days</span> = <span class="class">Math</span>.<span class="variable">ceil</span>((<span class="variable">to_date</span>.<span class="variable">getTime</span>()-<span class="variable">from_date</span>.<span class="variable">getTime</span>())/(<span class="number integer">86400000</span>)) + <span class="number integer">1</span>;
+
+                                <span class="keyword">var</span> <span class="variable">from_day</span> = <span class="variable">from_date</span>.<span class="variable">getDate</span>();
+                                <span class="keyword">var</span> <span class="variable">from_month</span> = <span class="variable">from_date</span>.<span class="variable">getMonth</span>() + <span class="number integer">1</span>; <span class="comment">// months are indexed from 0</span>
+                                <span class="keyword">var</span> <span class="variable">from_year</span> = <span class="variable">from_date</span>.<span class="variable">getFullYear</span>();
+
+                                $(<span class="this">this</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">close</span>&<span class="variable">quot</span>;);
+                                <span class="keyword">var</span> <span class="variable">location</span> = <span class="variable">document</span>.<span class="variable">location</span>.<span class="variable">href</span>.<span class="variable">replace</span>(<span class="regexp">/\?.*/</span>,<span class="string">''</span>);
+                                <span class="variable">document</span>.<span class="variable">location</span>.<span class="variable">href</span> = <span class="variable">location</span>
+                                    + <span class="string">'?r='</span> + <span class="variable">num_days</span>
+                                    + <span class="string">'&amp;s='</span> + <span class="variable">from_year</span> + &<span class="variable">quot</span>;-&<span class="variable">quot</span>; + <span class="variable">from_month</span> + &<span class="variable">quot</span>;-&<span class="variable">quot</span>; + <span class="variable">from_day</span>;
+                            }
+                        },
+                        {
+                            <span class="variable">text</span>: <span class="string">'Cancel'</span>,
+                            <span class="variable">click</span>: <span class="keyword">function</span>() {
+                                $(<span class="this">this</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">close</span>&<span class="variable">quot</span>;);
+                            }
+                        }
+                    ]
+                });
+            } <span class="keyword">else</span> {
+                <span class="comment">// Tell server about selected option to get new data</span>
+                <span class="keyword">var</span> <span class="variable">location</span> = <span class="variable">document</span>.<span class="variable">location</span>.<span class="variable">href</span>.<span class="variable">replace</span>(<span class="regexp">/\?.*/</span>,<span class="string">''</span>);
+                <span class="variable">document</span>.<span class="variable">location</span>.<span class="variable">href</span> = <span class="variable">location</span> + <span class="string">'?r='</span> + <span class="variable">option</span>;
+            }
+        });
+
+
+        <span class="comment">// set up stats breakdown dateOptions</span>
+        $(<span class="string">'#stats-breakdown-dateOptions input'</span>).<span class="variable">click</span>(<span class="keyword">function</span>() {
+            $(<span class="string">'.stats-breakdown-value'</span>).<span class="variable">hide</span>();
+            $(<span class="string">'.stats-breakdown-value.'</span>+$(<span class="this">this</span>).<span class="variable">val</span>()).<span class="variable">show</span>();
+        });
+
+        <span class="comment">// set up custom dateOptions modal dialog</span>
+        $(<span class="string">'#dashboard-dateOptions-custom-from'</span>).<span class="variable">datepicker</span>({
+            <span class="variable">defaultDate</span>: <span class="string">'-15d'</span>,
+            <span class="variable">maxDate</span>: <span class="string">'0d'</span>,
+            <span class="variable">onSelect</span>: <span class="keyword">function</span>(<span class="variable">selectedDate</span>) {
+                <span class="keyword">var</span> <span class="variable">other</span> = $(<span class="string">'#dashboard-dateOptions-custom-to'</span>);
+                <span class="keyword">var</span> <span class="variable">instance</span> = $(<span class="this">this</span>).<span class="variable">data</span>(&<span class="variable">quot</span>;<span class="variable">datepicker</span>&<span class="variable">quot</span>;);
+                <span class="keyword">var</span> <span class="variable">date</span> = $.<span class="variable">datepicker</span>.<span class="variable">parseDate</span>(<span class="variable">instance</span>.<span class="variable">settings</span>.<span class="variable">dateFormat</span> || $.<span class="variable">datepicker</span>.<span class="variable">_defaults</span>.<span class="variable">dateFormat</span>,
+                                                  <span class="variable">selectedDate</span>,
+                                                  <span class="variable">instance</span>.<span class="variable">settings</span>);
+                <span class="variable">other</span>.<span class="variable">datepicker</span>(<span class="string">'option'</span>, <span class="string">'minDate'</span>, <span class="variable">date</span>);
+            }
+        });
+
+        $(<span class="string">'#dashboard-dateOptions-custom-to'</span>).<span class="variable">datepicker</span>({
+            <span class="variable">defaultDate</span>: <span class="string">'-1d'</span>,
+            <span class="variable">maxDate</span>: <span class="string">'0d'</span>,
+            <span class="variable">onSelect</span>: <span class="keyword">function</span>(<span class="variable">selectedDate</span>) {
+                <span class="keyword">var</span> <span class="variable">other</span> = $(<span class="string">'#dashboard-dateOptions-custom-from'</span>);
+                <span class="keyword">var</span> <span class="variable">instance</span> = $(<span class="this">this</span>).<span class="variable">data</span>(&<span class="variable">quot</span>;<span class="variable">datepicker</span>&<span class="variable">quot</span>;);
+                <span class="keyword">var</span> <span class="variable">date</span> = $.<span class="variable">datepicker</span>.<span class="variable">parseDate</span>(<span class="variable">instance</span>.<span class="variable">settings</span>.<span class="variable">dateFormat</span> ||
+                                                  $.<span class="variable">datepicker</span>.<span class="variable">_defaults</span>.<span class="variable">dateFormat</span>,
+                                                  <span class="variable">selectedDate</span>,
+                                                  <span class="variable">instance</span>.<span class="variable">settings</span>);
+                <span class="variable">other</span>.<span class="variable">datepicker</span>(<span class="string">'option'</span>, <span class="string">'maxDate'</span>, <span class="variable">date</span>);
+            }
+        });
+
+
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>initializeDeleteForm</h2>
+
+<p>Deleting apps/adunits is done with a form that's submitted via a dialog.
+The ajax submitting of the form and the dialog popup are done here.
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">initializeDeleteForm</span>() {
+        $(<span class="string">'#dashboard-delete-link'</span>).<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>){
+            <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+            $(<span class="string">'#dashboard-delete-modal'</span>).<span class="variable">dialog</span>({
+                <span class="variable">buttons</span>: [
+                    {
+                        <span class="variable">text</span>: <span class="string">'Delete'</span>,
+                        <span class="variable">click</span>: <span class="keyword">function</span>() {
+                            $(<span class="this">this</span>).<span class="variable">dialog</span>(<span class="string">'close'</span>);
+                            $(<span class="string">'#dashboard-deleteForm'</span>).<span class="variable">submit</span>();
+                        }
+                    },
+                    {
+                        <span class="variable">text</span>: <span class="string">'Cancel'</span>,
+                        <span class="variable">click</span>: <span class="keyword">function</span>() {
+                            $(<span class="this">this</span>).<span class="variable">dialog</span>(<span class="string">'close'</span>);
+                        }
+                    }
+                ]
+            });
+        });
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>initializeiOSAppSearch</h2>
+
+<p>Sets up the iTunes app store searching functionality for creating new apps.
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">initializeiOSAppSearch</span>() {
+        <span class="comment">// Search button</span>
+        $(<span class="string">'#appForm-search-button'</span>)
+            .<span class="variable">button</span>({ <span class="variable">icons</span>: { <span class="variable">primary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">search</span>&<span class="variable">quot</span>; }})
+            .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                <span class="keyword">if</span> ($(<span class="this">this</span>).<span class="variable">button</span>( &<span class="variable">quot</span>;<span class="variable">option</span>&<span class="variable">quot</span>;, &<span class="variable">quot</span>;<span class="variable">disabled</span>&<span class="variable">quot</span>; )) {
+                    <span class="keyword">return</span>;
+                }
+
+                $(<span class="string">'#searchAppStore-loading'</span>).<span class="variable">show</span>();
+
+                $(<span class="string">'#dashboard-searchAppStore-custom-modal'</span>).<span class="variable">dialog</span>({
+                    <span class="variable">buttons</span>: [
+                        {
+                            <span class="variable">text</span>: <span class="string">'Cancel'</span>,
+                            <span class="variable">click</span>: <span class="keyword">function</span>() {
+                                $(<span class="string">'#searchAppStore-results'</span>).<span class="variable">html</span>(<span class="string">''</span>);
+                                $(<span class="this">this</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">close</span>&<span class="variable">quot</span>;);
+                            }
+                        }
+                    ]
+                });
+                <span class="keyword">var</span> <span class="variable">name</span> = $(<span class="string">'#appForm input[name=&quot;name&quot;]'</span>).<span class="variable">val</span>();
+                <span class="keyword">var</span> <span class="variable">script</span> = <span class="variable">document</span>.<span class="variable">createElement</span>(&<span class="variable">quot</span>;<span class="variable">script</span>&<span class="variable">quot</span>;);
+                <span class="variable">script</span>.<span class="variable">src</span> = <span class="string">'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?'</span>
+                    + <span class="string">'entity=software&amp;limit=10&amp;callback=loadedArtwork&amp;term='</span>
+                    + <span class="variable">name</span>;
+                <span class="keyword">var</span> <span class="variable">head</span> = <span class="variable">document</span>.<span class="variable">getElementsByTagName</span>(&<span class="variable">quot</span>;<span class="variable">head</span>&<span class="variable">quot</span>;)[<span class="number integer">0</span>];
+                (<span class="variable">head</span> || <span class="variable">document</span>.<span class="variable">body</span>).<span class="variable">appendChild</span>( <span class="variable">script</span> );
+            });
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h1>initializeCommon</h1>
+
+<p>This function groups together a couple of pieces of functionality that are used on
+all of the publisher pages (inventory, app, adunit stuff)
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">function</span> <span class="variable">initializeCommon</span> () {
+        <span class="variable">initializeDateButtons</span>();
+        <span class="comment">// Use breakdown to switch charts</span>
+        $(<span class="string">'.stats-breakdown tr'</span>).<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+            $(<span class="string">'#dashboard-stats-chart'</span>).<span class="variable">fadeOut</span>(<span class="number integer">100</span>, <span class="keyword">function</span>() {
+                <span class="variable">mopub</span>.<span class="class">Chart</span>.<span class="variable">setupDashboardStatsChart</span>(<span class="variable">getCurrentChartSeriesType</span>());
+                $(<span class="this">this</span>).<span class="variable">show</span>();
+            });
+        });
+    }</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<h2>Dashboard Controller</h2>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">DashboardController</span> = {
+        <span class="variable">initializeIndex</span>: <span class="keyword">function</span> (<span class="variable">bootstrapping_data</span>) {
+
+            <span class="comment">// Adds click handlers for the top date buttons and stats breakdown</span>
+            <span class="comment">// date buttons, and click handlers for the stats breakdown graph-</span>
+            <span class="comment">// changing</span>
+            <span class="variable">initializeCommon</span>();
+
+            <span class="comment">// Populate the graph</span>
+            <span class="variable">populateGraphWithAccountStats</span>(<span class="variable">bootstrapping_data</span>.<span class="variable">account_stats</span>,
+                                          <span class="variable">bootstrapping_data</span>.<span class="variable">start_date</span>);
+
+            <span class="comment">// Populate the app/adunit stats table</span>
+            <span class="variable">fetchAppStats</span>(<span class="variable">bootstrapping_data</span>.<span class="variable">app_keys</span>);
+            <span class="variable">_</span>.<span class="variable">each</span>(<span class="variable">bootstrapping_data</span>.<span class="variable">app_keys</span>, <span class="keyword">function</span>(<span class="variable">app_key</span>) {
+                <span class="variable">fetchAdunitStats</span>(<span class="variable">app_key</span>);
+            });
+
+            <span class="comment">// Add icon to the 'Add an app' button</span>
+            <span class="comment">// Remove later with new button treatment</span>
+            $(<span class="string">'#dashboard-apps-addAppButton'</span>)
+                .<span class="variable">button</span>({ <span class="variable">icons</span>: { <span class="variable">primary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">circle</span>-<span class="variable">plus</span>&<span class="variable">quot</span>; } });
+
+            $(<span class="string">'.appData-id'</span>).<span class="variable">each</span>(<span class="keyword">function</span>() {
+                <span class="keyword">var</span> <span class="variable">id</span> = $(<span class="this">this</span>);
+                <span class="keyword">var</span> <span class="variable">td</span> = <span class="variable">id</span>.<span class="variable">parents</span>(<span class="string">'tr'</span>);
+                <span class="variable">td</span>.<span class="variable">hover</span>(
+                    <span class="keyword">function</span>() {
+                        <span class="variable">id</span>.<span class="variable">show</span>();
+                    },
+                    <span class="keyword">function</span>() {
+                        <span class="variable">id</span>.<span class="variable">hide</span>();
+                    });
+            });
+
+
+        },
+        <span class="variable">initializeGeo</span>: <span class="keyword">function</span> (<span class="variable">bootstrapping_data</span>) {
+            <span class="variable">initializeCommon</span>();
+            <span class="variable">mopub</span>.<span class="class">Chart</span>.<span class="variable">setupDashboardStatsChart</span>(<span class="variable">getCurrentChartSeriesType</span>());
+
+        },
+        <span class="variable">initializeAppDetail</span>: <span class="keyword">function</span> (<span class="variable">bootstrapping_data</span>) {
+            <span class="variable">initializeCommon</span>();
+            <span class="variable">initializeAppForm</span>();
+            <span class="variable">initializeAdunitForm</span>();
+            <span class="variable">initializeDeleteForm</span>();
+            <span class="variable">initializeiOSAppSearch</span>();
+            <span class="variable">mopub</span>.<span class="class">Chart</span>.<span class="variable">setupDashboardStatsChart</span>(<span class="variable">getCurrentChartSeriesType</span>());
+
+            <span class="comment">// Controls for the App Edit form</span>
+            $(<span class="string">'#appForm.appEditForm'</span>).<span class="variable">ajaxForm</span>({
+                <span class="variable">data</span>: { <span class="variable">ajax</span>: <span class="variable">true</span> },
+                <span class="variable">dataType</span>: <span class="string">'json'</span>,
+                <span class="variable">success</span>: <span class="keyword">function</span>(<span class="variable">jsonData</span>, <span class="variable">statusText</span>, <span class="variable">xhr</span>, $<span class="variable">form</span>) {
+                    $(<span class="string">'#appEditForm-loading'</span>).<span class="variable">hide</span>();
+
+                    <span class="keyword">if</span> (<span class="variable">jsonData</span>.<span class="variable">success</span>) {
+                        <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">reload</span>();
+                    } <span class="keyword">else</span> {
+                        $(<span class="string">'.form-error-text'</span>, &<span class="variable">quot</span>;#<span class="variable">appForm</span>&<span class="variable">quot</span>;).<span class="variable">remove</span>();
+                        $.<span class="variable">each</span>(<span class="variable">jsonData</span>.<span class="variable">errors</span>, <span class="keyword">function</span> (<span class="variable">iter</span>, <span class="variable">item</span>) {
+                            <span class="keyword">var</span> <span class="variable">name</span> = <span class="variable">item</span>[<span class="number integer">0</span>];
+                            <span class="keyword">var</span> <span class="variable">error_div</span> = $(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">div</span>&<span class="variable">gt</span>;&<span class="variable">quot</span>;).<span class="variable">append</span>(<span class="variable">item</span>[<span class="number integer">1</span>]).<span class="variable">addClass</span>(<span class="string">'form-error-text'</span>);
+
+                            $(&<span class="variable">quot</span>;<span class="variable">input</span>[<span class="variable">name</span>=&<span class="variable">quot</span>; + <span class="variable">name</span> + &<span class="variable">quot</span>;]&<span class="variable">quot</span>;, &<span class="variable">quot</span>;#<span class="variable">appForm</span>&<span class="variable">quot</span>;)
+                                .<span class="variable">addClass</span>(<span class="string">'error'</span>)
+                                .<span class="variable">parent</span>().<span class="variable">append</span>(<span class="variable">error_div</span>);
+
+                            $(&<span class="variable">quot</span>;<span class="variable">select</span>[<span class="variable">name</span>=&<span class="variable">quot</span>; + <span class="variable">name</span> + &<span class="variable">quot</span>;]&<span class="variable">quot</span>;, &<span class="variable">quot</span>;#<span class="variable">appForm</span>&<span class="variable">quot</span>;)
+                                .<span class="variable">addClass</span>(<span class="string">'error'</span>)
+                                .<span class="variable">parent</span>().<span class="variable">append</span>(<span class="variable">error_div</span>);
+                        });
+                        <span class="comment">// reimplement the onload event</span>
+                        <span class="variable">initializeAppForm</span>();
+                        <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">hash</span> = <span class="string">''</span>;
+                        <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">hash</span> = <span class="string">'appForm'</span>;
+                    }
+                }
+            });
+
+            $(<span class="string">'#appEditForm-submit'</span>)
+                .<span class="variable">button</span>({
+                    <span class="variable">icons</span>: { <span class="variable">secondary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">circle</span>-<span class="variable">triangle</span>-<span class="variable">e</span>&<span class="variable">quot</span>; }
+                })
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    $(<span class="string">'#appEditForm-loading'</span>).<span class="variable">show</span>();
+                    $(<span class="string">'#appForm'</span>).<span class="variable">submit</span>();
+                });
+
+            $(<span class="string">'#appEditForm-cancel'</span>)
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    $(<span class="string">'#dashboard-appEditForm'</span>).<span class="variable">slideUp</span>(<span class="string">'fast'</span>);
+                });
+
+            $(<span class="string">'#dashboard-apps-editAppButton'</span>)
+                .<span class="variable">button</span>({
+                    <span class="variable">icons</span>: { <span class="variable">primary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">wrench</span>&<span class="variable">quot</span>; }
+                })
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    <span class="keyword">if</span> ($(<span class="string">'#dashboard-appEditForm'</span>).<span class="variable">is</span>(<span class="string">':visible'</span>)) {
+                        $(<span class="string">'#dashboard-appEditForm'</span>).<span class="variable">slideUp</span>(<span class="string">'fast'</span>);
+                    } <span class="keyword">else</span> {
+                        $(<span class="string">'#dashboard-appEditForm'</span>).<span class="variable">slideDown</span>(<span class="string">'fast'</span>);
+                    }
+                });
+
+            $(<span class="string">'#dashboard-apps-addAdUnitButton'</span>)
+                .<span class="variable">button</span>({
+                    <span class="variable">icons</span>: { <span class="variable">primary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">circle</span>-<span class="variable">plus</span>&<span class="variable">quot</span>; }
+                })
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    <span class="keyword">if</span> ($(<span class="string">'#dashboard-adunitAddForm'</span>).<span class="variable">is</span>(<span class="string">':visible'</span>))
+                        $(<span class="string">'#dashboard-adunitAddForm'</span>).<span class="variable">slideUp</span>(<span class="string">'fast'</span>);
+                    <span class="keyword">else</span>
+                        $(<span class="string">'#dashboard-adunitAddForm'</span>).<span class="variable">slideDown</span>(<span class="string">'fast'</span>);
+                });
+
+            $(<span class="string">'#adunitAddForm-submit'</span>)
+                .<span class="variable">button</span>({
+                    <span class="variable">icons</span>: { <span class="variable">secondary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">circle</span>-<span class="variable">triangle</span>-<span class="variable">e</span>&<span class="variable">quot</span>; }
+                })
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    $(<span class="string">'#adunitForm-loading'</span>).<span class="variable">show</span>();
+                    $(<span class="string">'#adunitAddForm'</span>).<span class="variable">submit</span>();
+                });
+
+            $(<span class="string">'#adunitAddForm-cancel'</span>)
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    $(<span class="string">'#dashboard-adunitAddForm'</span>).<span class="variable">slideUp</span>(<span class="string">'fast'</span>, <span class="keyword">function</span>() {
+                        $(<span class="string">'#dashboard-apps-addAdUnitButton'</span>).<span class="variable">show</span>();
+                    });
+                });
+
+            $(<span class="string">'#adunitAddForm'</span>).<span class="variable">ajaxForm</span>({
+                <span class="variable">data</span>: { <span class="variable">ajax</span>: <span class="variable">true</span> },
+                <span class="variable">dataType</span>: <span class="string">'json'</span>,
+                <span class="variable">success</span>: <span class="keyword">function</span>(<span class="variable">jsonData</span>, <span class="variable">statusText</span>, <span class="variable">xhr</span>, $<span class="variable">form</span>) {
+                    $(<span class="string">'#adunitForm-loading'</span>).<span class="variable">hide</span>();
+                    <span class="keyword">if</span> (<span class="variable">jsonData</span>.<span class="variable">success</span>) {
+                        <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">reload</span>();
+                    } <span class="keyword">else</span> {
+
+                        <span class="comment">// reimplement the onload event</span>
+                        <span class="variable">initializeAppForm</span>();
+                        <span class="variable">initializeAdunitForm</span>();
+                        <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">hash</span> = <span class="string">''</span>;
+                        <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">hash</span> = <span class="string">'adunitForm'</span>;
+                    }
+                }
+            });
+
+            <span class="comment">// Do Campaign Export Select stuff</span>
+            $(<span class="string">'#publisher-app-exportSelect'</span>)
+                .<span class="variable">change</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    <span class="keyword">var</span> <span class="variable">val</span> = $(<span class="this">this</span>).<span class="variable">val</span>();
+                    <span class="keyword">if</span> (<span class="variable">val</span> != <span class="string">'exp'</span>) {
+                    $(<span class="string">'#appExportForm'</span>)
+                            .<span class="variable">find</span>(<span class="string">'#appExportType'</span>)
+                            .<span class="variable">val</span>(<span class="variable">val</span>)
+                            .<span class="variable">end</span>()
+                            .<span class="variable">submit</span>();
+                    }
+                    $(<span class="this">this</span>).<span class="variable">selectmenu</span>(<span class="string">'index'</span>, <span class="number integer">0</span>);
+                });
+
+            <span class="comment">// Hide unneeded li entry</span>
+            $(<span class="string">'#publisher-app-exportSelect-menu'</span>).<span class="variable">find</span>(<span class="string">'li'</span>).<span class="variable">first</span>().<span class="variable">hide</span>();
+
+        },
+        <span class="variable">initializeAdunitDetail</span>: <span class="keyword">function</span> (<span class="variable">bootstrapping_data</span>) {
+            <span class="variable">initializeCommon</span>();
+            <span class="variable">initializeAdunitForm</span>();
+            <span class="variable">initializeDeleteForm</span>();
+            <span class="variable">mopub</span>.<span class="class">Chart</span>.<span class="variable">setupDashboardStatsChart</span>(<span class="variable">getCurrentChartSeriesType</span>());
+
+            $(<span class="string">'#dashboard-apps-editAdUnitButton'</span>)
+                .<span class="variable">button</span>({ <span class="variable">icons</span>: { <span class="variable">primary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">wrench</span>&<span class="variable">quot</span>; } })
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    <span class="keyword">if</span> ($(<span class="string">'#dashboard-adunitEditForm'</span>).<span class="variable">is</span>(<span class="string">':visible'</span>))
+                        $(<span class="string">'#dashboard-adunitEditForm'</span>).<span class="variable">slideUp</span>(<span class="string">'fast'</span>);
+                    <span class="keyword">else</span>
+                        $(<span class="string">'#dashboard-adunitEditForm'</span>).<span class="variable">slideDown</span>(<span class="string">'fast'</span>);
+                });
+
+            $(<span class="string">'#adunitEditForm-submit'</span>)
+                .<span class="variable">button</span>({
+                    <span class="variable">icons</span>: { <span class="variable">secondary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">circle</span>-<span class="variable">triangle</span>-<span class="variable">e</span>&<span class="variable">quot</span>; }
+                })
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    $(<span class="string">'#adunitForm-loading'</span>).<span class="variable">show</span>();
+                    $(<span class="string">'#adunitAddForm'</span>).<span class="variable">submit</span>();
+                });
+            $(<span class="string">'#adunitEditForm-cancel'</span>)
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    $(<span class="string">'#dashboard-adunitEditForm'</span>).<span class="variable">slideUp</span>(<span class="string">'fast'</span>);
+                });
+
+            $(<span class="string">'#adunitAddForm'</span>).<span class="variable">ajaxForm</span>({
+                <span class="variable">data</span>: {
+                    <span class="variable">ajax</span>: <span class="variable">true</span>
+                },
+                <span class="variable">dataType</span>: <span class="string">'json'</span>,
+                <span class="variable">success</span>: <span class="keyword">function</span>(<span class="variable">jsonData</span>, <span class="variable">statusText</span>, <span class="variable">xhr</span>, $<span class="variable">form</span>) {
+                    $(<span class="string">'#adunitForm-loading'</span>).<span class="variable">hide</span>();
+                    <span class="keyword">if</span> (<span class="variable">jsonData</span>.<span class="variable">success</span>) {
+                        <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">reload</span>();
+                    } <span class="keyword">else</span> {
+
+                        <span class="comment">// reimplement the onload event</span>
+                        <span class="variable">initializeAppForm</span>();
+                        <span class="variable">initializeAdunitForm</span>();
+                        <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">hash</span> = <span class="string">''</span>;
+                        <span class="variable">window</span>.<span class="variable">location</span>.<span class="variable">hash</span> = <span class="string">'adunitForm'</span>;
+                    }
+                }
+            });
+
+            $(<span class="string">'#advertisers-testAdServer'</span>)
+                .<span class="variable">button</span>({ <span class="variable">icons</span> : {<span class="variable">secondary</span> : <span class="string">'ui-icon-circle-triangle-e'</span>} })
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    $(<span class="string">'#adserverTest'</span>).<span class="variable">dialog</span>({
+                        <span class="variable">buttons</span>: {
+                            &<span class="variable">quot</span>;<span class="class">Close</span>&<span class="variable">quot</span>;: <span class="keyword">function</span>() {
+                                $(<span class="this">this</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">close</span>&<span class="variable">quot</span>;);
+                            }
+                        }
+                    });
+                    $(<span class="string">'#adserverTest-iFrame'</span>).<span class="variable">attr</span>(<span class="string">'src'</span>,$(<span class="string">'#adserverTest-iFrame-src'</span>).<span class="variable">text</span>());
+                });
+        },
+        <span class="variable">initializeAppCreate</span>: <span class="keyword">function</span> (<span class="variable">bootstrapping_data</span>) {
+            <span class="variable">initializeCommon</span>();
+            <span class="variable">initializeAppForm</span>();
+            <span class="variable">initializeAdunitForm</span>();
+            <span class="variable">initializeiOSAppSearch</span>();
+
+            $(<span class="string">'#appForm-submit'</span>)
+                .<span class="variable">button</span>({
+                    <span class="variable">icons</span>: { <span class="variable">secondary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">circle</span>-<span class="variable">triangle</span>-<span class="variable">e</span>&<span class="variable">quot</span>; }
+                })
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    $(<span class="string">'#appForm'</span>).<span class="variable">submit</span>();
+                });
+
+            $(<span class="string">'#appForm input[name=&quot;app_type&quot;]'</span>).<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                $(<span class="string">'#appForm .appForm-platformDependent'</span>)
+                    .<span class="variable">removeClass</span>(<span class="string">'iphone'</span>)
+                    .<span class="variable">removeClass</span>(<span class="string">'android'</span>)
+                    .<span class="variable">addClass</span>($(<span class="this">this</span>).<span class="variable">val</span>());
+            }).<span class="variable">filter</span>(<span class="string">':checked'</span>).<span class="variable">click</span>();
+
+            $(<span class="string">'input[name=&quot;name&quot;]'</span>).<span class="variable">change</span>(<span class="keyword">function</span>() {
+                <span class="keyword">var</span> <span class="variable">name</span> = $.<span class="variable">trim</span>($(<span class="this">this</span>).<span class="variable">val</span>());
+                $(<span class="string">'#appForm-adUnitName'</span>).<span class="variable">val</span>(<span class="variable">name</span> + <span class="string">' banner ad'</span>);
+            });
+
+            <span class="comment">// Search button</span>
+            $(<span class="string">'#appForm-search-button'</span>)
+                .<span class="variable">button</span>({ <span class="variable">icons</span>: { <span class="variable">primary</span>: &<span class="variable">quot</span>;<span class="variable">ui</span>-<span class="variable">icon</span>-<span class="variable">search</span>&<span class="variable">quot</span>; }})
+                .<span class="variable">click</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                    <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                    <span class="keyword">if</span> ($(<span class="this">this</span>).<span class="variable">button</span>( &<span class="variable">quot</span>;<span class="variable">option</span>&<span class="variable">quot</span>;, &<span class="variable">quot</span>;<span class="variable">disabled</span>&<span class="variable">quot</span>; )) {
+                        <span class="keyword">return</span>;
+                    }
+
+                    $(<span class="string">'#searchAppStore-loading'</span>).<span class="variable">show</span>();
+
+                    $(<span class="string">'#dashboard-searchAppStore-custom-modal'</span>).<span class="variable">dialog</span>({
+                        <span class="variable">buttons</span>: [
+                            {
+                                <span class="variable">text</span>: <span class="string">'Cancel'</span>,
+                                <span class="variable">click</span>: <span class="keyword">function</span>() {
+                                    $(<span class="string">'#searchAppStore-results'</span>).<span class="variable">html</span>(<span class="string">''</span>);
+                                    $(<span class="this">this</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">close</span>&<span class="variable">quot</span>;);
+                                }
+                            }
+                        ]
+                    });
+                    <span class="keyword">var</span> <span class="variable">name</span> = $(<span class="string">'#appForm input[name=&quot;name&quot;]'</span>).<span class="variable">val</span>();
+                    <span class="keyword">var</span> <span class="variable">script</span> = <span class="variable">document</span>.<span class="variable">createElement</span>(&<span class="variable">quot</span>;<span class="variable">script</span>&<span class="variable">quot</span>;);
+                    <span class="variable">script</span>.<span class="variable">src</span> = <span class="string">'http://ax.itunes.apple.com'</span>
+                        + <span class="string">'/WebObjects/MZStoreServices.woa/wa/wsSearch'</span>+
+                        + <span class="string">'?entity=software&amp;limit=10&amp;callback=loadedArtwork&amp;term='</span>
+                        + <span class="variable">name</span>;
+                    <span class="keyword">var</span> <span class="variable">head</span> = <span class="variable">document</span>.<span class="variable">getElementsByTagName</span>(&<span class="variable">quot</span>;<span class="variable">head</span>&<span class="variable">quot</span>;)[<span class="number integer">0</span>];
+                    (<span class="variable">head</span> || <span class="variable">document</span>.<span class="variable">body</span>).<span class="variable">appendChild</span>( <span class="variable">script</span> );
+                });
+
+            <span class="keyword">if</span> ($(<span class="string">'#appForm-name'</span>).<span class="variable">val</span>() === <span class="string">''</span>) {
+                $(<span class="string">'#appForm-search-button'</span>).<span class="variable">button</span>(&<span class="variable">quot</span>;<span class="variable">disable</span>&<span class="variable">quot</span>;);
+                $(<span class="string">'#appForm-search'</span>).<span class="variable">button</span>(&<span class="variable">quot</span>;<span class="variable">disable</span>&<span class="variable">quot</span>;);
+                $(<span class="string">'#appForm-market-search-button'</span>).<span class="variable">button</span>(&<span class="variable">quot</span>;<span class="variable">disable</span>&<span class="variable">quot</span>;);
+                $(<span class="string">'#appForm-market-search'</span>).<span class="variable">button</span>(&<span class="variable">quot</span>;<span class="variable">disable</span>&<span class="variable">quot</span>;);
+            }
+
+            $(<span class="string">'#appForm-name'</span>).<span class="variable">keyup</span>(<span class="keyword">function</span>(<span class="variable">e</span>) {
+                <span class="comment">// Show/hide the app search button</span>
+                <span class="keyword">var</span> <span class="variable">name</span> = $.<span class="variable">trim</span>($(<span class="this">this</span>).<span class="variable">val</span>());
+                <span class="keyword">var</span> <span class="variable">type</span> = $(<span class="string">'input:radio[name=&quot;app_type&quot;]:checked'</span>).<span class="variable">val</span>();
+
+                <span class="keyword">if</span> (<span class="variable">name</span>.<span class="variable">length</span>) {
+                    $(<span class="string">'#appForm-search-button'</span>).<span class="variable">button</span>(&<span class="variable">quot</span>;<span class="variable">enable</span>&<span class="variable">quot</span>;);
+                    $(<span class="string">'#appForm-market-search-button'</span>).<span class="variable">button</span>(<span class="string">'enable'</span>);
+                }
+                <span class="keyword">else</span> {
+                    $(<span class="string">'#appForm-search-button'</span>).<span class="variable">button</span>(&<span class="variable">quot</span>;<span class="variable">disable</span>&<span class="variable">quot</span>;);
+                    $(<span class="string">'#appForm-market-search-button'</span>).<span class="variable">button</span>(<span class="string">'disable'</span>);
+                }
+                <span class="keyword">if</span> (<span class="variable">e</span>.<span class="variable">keyCode</span> == <span class="number integer">13</span>) {
+                    <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'iphone'</span>) {
+                        $(<span class="string">'#appForm-search-button'</span>).<span class="variable">click</span>();
+                    }
+                <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">type</span> == <span class="string">'android'</span>) {
+                    $(<span class="string">'#appForm-market-search-button'</span>).<span class="variable">click</span>();
+                }
+                }
+            });
+
+
+            $(<span class="string">'#appForm-changeIcon-link'</span>).<span class="variable">click</span>(<span class="keyword">function</span> (<span class="variable">e</span>) {
+                <span class="variable">e</span>.<span class="variable">preventDefault</span>();
+                $(<span class="this">this</span>).<span class="variable">hide</span>();
+                $(<span class="string">'#appForm-icon-upload'</span>).<span class="variable">show</span>();
+                $(<span class="string">'#appForm input[name=&quot;img_url&quot;]'</span>).<span class="variable">val</span>(<span class="string">''</span>);
+            });
+        }
+    };
+
+    <span class="variable">window</span>.<span class="class">DashboardController</span> = <span class="class">DashboardController</span>;
+
+
+})(<span class="this">this</span>.<span class="variable">jQuery</span>, <span class="this">this</span>.<span class="class">Backbone</span>, <span class="this">this</span>.<span class="variable">_</span>);</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p> REFACTOR </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="variable">artwork_json</span>;
+
+<span class="comment">// fuck you</span>
+<span class="keyword">function</span> <span class="variable">loadedArtwork</span>(<span class="variable">json</span>) {
+    <span class="keyword">if</span> (!$(<span class="string">'#dashboard-searchAppStore-custom-modal'</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">isOpen</span>&<span class="variable">quot</span>;))
+        <span class="keyword">return</span>;
+
+    $(<span class="string">'#searchAppStore-results'</span>).<span class="variable">html</span>(<span class="string">''</span>);
+    $(<span class="string">'#searchAppStore-loading'</span>).<span class="variable">hide</span>();
+    $(<span class="string">'#dashboard-searchAppStore-custom-modal'</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">close</span>&<span class="variable">quot</span>;);
+
+    <span class="variable">artwork_json</span> = <span class="variable">json</span>;
+        <span class="keyword">var</span> <span class="variable">resultCount</span> = <span class="variable">json</span>[<span class="string">'resultCount'</span>];
+    <span class="keyword">if</span> (<span class="variable">resultCount</span> == <span class="number integer">0</span>) {
+        $(<span class="string">'#searchAppStore-results'</span>).<span class="variable">append</span>(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">div</span> <span class="keyword">class</span>=<span class="string">'adForm-appSearch-text'</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;)
+            .<span class="variable">append</span>(&<span class="variable">quot</span>;<span class="class">No</span> <span class="variable">results</span> <span class="variable">found</span>&<span class="variable">quot</span>;);
+        $(<span class="string">'#dashboard-searchAppStore-custom-modal'</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">open</span>&<span class="variable">quot</span>;);
+        <span class="keyword">return</span>;
+    }
+    <span class="keyword">for</span> (<span class="keyword">var</span> <span class="variable">i</span>=<span class="number integer">0</span>;<span class="variable">i</span>&<span class="variable">lt</span>;<span class="variable">resultCount</span>;<span class="variable">i</span>++) {
+        <span class="keyword">if</span> (<span class="variable">i</span> &<span class="variable">gt</span>; <span class="number integer">10</span> ) {
+            <span class="keyword">break</span>;
+        }
+        <span class="keyword">var</span> <span class="variable">app</span> = <span class="variable">json</span>[<span class="string">'results'</span>][<span class="variable">i</span>];
+
+        $(<span class="string">'#searchAppStore-results'</span>)
+            .<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">div</span> <span class="keyword">class</span>=<span class="string">'adForm-appSearch'</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;)
+                    .<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">div</span> <span class="keyword">class</span>=<span class="string">'adForm-appSearch-img'</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;)
+                            .<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">img</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;)
+                                    .<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">src</span>&<span class="variable">quot</span>;,<span class="variable">app</span>[<span class="string">'artworkUrl60'</span>])
+                                    .<span class="variable">width</span>(<span class="number integer">40</span>)
+                                    .<span class="variable">height</span>(<span class="number integer">40</span>)
+                                   )
+                            .<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">span</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;))
+                           )
+                    .<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">div</span> <span class="keyword">class</span>=<span class="string">'adForm-appSearch-text'</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;)
+                            .<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">span</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;)
+                                    .<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">a</span> <span class="variable">href</span>=\&<span class="variable">quot</span>;#\&<span class="variable">quot</span>; <span class="variable">onclick</span>=\&<span class="variable">quot</span>;<span class="variable">selectArtwork</span>(&<span class="variable">quot</span>;+<span class="variable">i</span>+&<span class="variable">quot</span>;);<span class="keyword">return</span> <span class="variable">false</span>\&<span class="variable">quot</span>;;&<span class="variable">gt</span>;&<span class="variable">quot</span>;+<span class="variable">app</span>[<span class="string">'trackName'</span>]+&<span class="variable">quot</span>;&<span class="variable">lt</span>;/<span class="variable">a</span>&<span class="variable">gt</span>;&<span class="variable">quot</span>;))
+                                    .<span class="variable">append</span>(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">br</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;+<span class="variable">app</span>[<span class="string">'artistName'</span>])
+                                   )
+                           )
+                    .<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">div</span> <span class="keyword">class</span>=<span class="string">'clear'</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;))
+                   );
+    }
+
+    $(<span class="string">'#dashboard-searchAppStore-custom-modal'</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">open</span>&<span class="variable">quot</span>;);
+}
+
+<span class="keyword">function</span> <span class="variable">selectArtwork</span>(<span class="variable">index</span>) {
+    $(<span class="string">'#searchAppStore-results'</span>).<span class="variable">html</span>(<span class="string">''</span>);
+    $(<span class="string">'#appForm-icon'</span>).<span class="variable">html</span>(<span class="string">''</span>);
+    $(<span class="string">'#dashboard-searchAppStore-custom-modal'</span>).<span class="variable">dialog</span>(&<span class="variable">quot</span>;<span class="variable">close</span>&<span class="variable">quot</span>;);
+
+    <span class="keyword">var</span> <span class="variable">app</span> = <span class="variable">artwork_json</span>.<span class="variable">results</span>[<span class="variable">index</span>];
+    <span class="keyword">var</span> <span class="variable">type</span> = $(<span class="string">'input:radio[name=&quot;app_type&quot;]:checked'</span>).<span class="variable">val</span>();
+
+    <span class="keyword">var</span> <span class="variable">form</span> = $(<span class="string">'app_form'</span>);
+    $(<span class="string">'#appForm input[name=&quot;name&quot;]'</span>).<span class="variable">val</span>(<span class="variable">app</span>[<span class="string">'trackName'</span>]);
+    $(<span class="string">'#appForm input[name=&quot;description&quot;]'</span>).<span class="variable">val</span>(<span class="variable">app</span>[<span class="string">'description'</span>]);
+    <span class="keyword">if</span> ( <span class="variable">type</span> == <span class="string">'iphone'</span> )
+        $(<span class="string">'#appForm input[name=&quot;url&quot;]'</span>).<span class="variable">val</span>(<span class="variable">app</span>[<span class="string">'trackViewUrl'</span>]);
+    <span class="keyword">else</span> <span class="keyword">if</span> ( <span class="variable">type</span> == <span class="string">'android'</span> )
+        $(<span class="string">'#appForm input[name=&quot;package&quot;]'</span>).<span class="variable">val</span>(<span class="variable">app</span>[<span class="string">'trackViewUrl'</span>]);
+    $(<span class="string">'#appForm input[name=&quot;img_url&quot;]'</span>).<span class="variable">val</span>(<span class="variable">app</span>[<span class="string">'artworkUrl60'</span>]);
+    $(<span class="string">'#appForm select[name=&quot;primary_category&quot;]'</span>).<span class="variable">val</span>(<span class="variable">app</span>[<span class="string">'primaryGenreName'</span>].<span class="variable">toLowerCase</span>());
+    $(<span class="string">'#appForm select[name=&quot;secondary_category&quot;]'</span>).<span class="variable">val</span>(<span class="variable">app</span>[<span class="string">'genres'</span>][<span class="number integer">1</span>].<span class="variable">toLowerCase</span>());
+
+    $(<span class="string">'#appForm-icon'</span>).<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">img</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;)
+                              .<span class="variable">attr</span>(&<span class="variable">quot</span>;<span class="variable">src</span>&<span class="variable">quot</span>;,<span class="variable">app</span>.<span class="variable">artworkUrl60</span>)
+                              .<span class="variable">width</span>(<span class="number integer">40</span>)
+                              .<span class="variable">height</span>(<span class="number integer">40</span>)
+                              .<span class="variable">append</span>($(&<span class="variable">quot</span>;&<span class="variable">lt</span>;<span class="variable">span</span> /&<span class="variable">gt</span>;&<span class="variable">quot</span>;)) );
+}
 </code></pre>
 </td>
 </tr>	</body>

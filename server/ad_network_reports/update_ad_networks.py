@@ -51,7 +51,10 @@ from pytz import timezone
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
+# Override the default 'utf-8' email charset to avoid having the message body
+# encoded in base-64 when using utf-8
+import email.Charset
+email.Charset.add_charset( 'utf-8', email.Charset.SHORTEST, None, None )
 
 from google.appengine.ext import db
 
@@ -192,17 +195,30 @@ def update_account_stats(account, day, email):
         if email:
             logging.info("Sending email to account %s" % account.key())
             send_stats_mail(account, day, zip(mappers, all_stats))
-
         # Return management stats
         return management_stats
     except Exception as exception:
         exc_traceback = sys.exc_info()[2]
 
+        error_msg = "Couldn't get get stats for \"%s\" account on day %s.\n\n" \
+                     "Error:\n%s\n\nTraceback:\n%s" % \
+                     (account.key(), day, exception, repr(traceback.extract_tb(
+                         exc_traceback)))
+
         # Record error in logfile
-        logger.error("Couldn't get get stats for \"%s\" account on day %s.\n\n"
-                     "Error:\n%s\n\nTraceback:\n%s" %
-                     (account, day, exception, repr(traceback.extract_tb(
-                         exc_traceback))))
+        logger.error(error_msg)
+
+        # Email admin the error
+        msg = MIMEText(error_msg)
+        msg['Subject'] = "Ad Network Update Error on %s" % \
+                day.strftime("%m/%d/%y")
+        msg['To'] = ADMIN_EMAIL
+
+        # Send the message via our own SMTP server, but don't include the
+        # envelope header.
+        s = smtplib.SMTP(SMTP_SERVER)
+        s.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, msg.as_string())
+        s.quit()
         raise
 
 
@@ -472,7 +488,7 @@ def send_stats_mail(account, day, stats_list):
         msg['From'] = from_
         # Create the body of the message (a plain-text and an HTML version).
         text = "Learn more at https://app.mopub.com/ad_network_reports/"
-        html = """
+        html = ("""
         <table width=100%%>
             <thead>
                 <th>APP NAME</th>
@@ -497,15 +513,15 @@ def send_stats_mail(account, day, stats_list):
                     <td><b>%(ctr).2f%%</b></td>
                     <td><b>%(cpm).2f</b></td>
                 </tr>
-                            """ % {'revenue': aggregate_stats.revenue,
-                                   'attempts': aggregate_stats.attempts,
-                                   'impressions': aggregate_stats.impressions,
-                                   'fill_rate': aggregate_stats.fill_rate,
-                                   'clicks': aggregate_stats.clicks,
-                                   'ctr': aggregate_stats.ctr * 100,
-                                   'cpm': aggregate_stats.cpm} +
-                            email_body +
-                            """
+                """ % {'revenue': aggregate_stats.revenue,
+                       'attempts': aggregate_stats.attempts,
+                       'impressions': aggregate_stats.impressions,
+                       'fill_rate': aggregate_stats.fill_rate,
+                       'clicks': aggregate_stats.clicks,
+                       'ctr': aggregate_stats.ctr * 100,
+                       'cpm': aggregate_stats.cpm})
+        html += email_body
+        html += """
             </tbody>
         </table>
 
@@ -514,7 +530,8 @@ def send_stats_mail(account, day, stats_list):
 
         # Record the MIME types of both parts - text/plain and text/html.
         part1 = MIMEText(text, 'plain')
-        part2 = MIMEText(html, 'html')
+        part2 = MIMEText(html.encode('iso-8859-15', 'replace'), 'html',
+                _charset='iso-8859-15')
 
         # Attach parts into message container.
         # According to RFC 2046, the last part of a multipart message, in this
@@ -526,7 +543,8 @@ def send_stats_mail(account, day, stats_list):
         s = smtplib.SMTP(SMTP_SERVER)
         # sendmail function takes 3 arguments: sender's address, recipient's
         # address and message to send - here it is sent as one string.
-        s.sendmail(from_, to + [REPORTING_EMAIL, ADMIN_EMAIL], msg.as_string())
+        s.sendmail(from_, to + [ADMIN_EMAIL] + ([] if TESTING else
+            [REPORTING_EMAIL]), msg.as_string())
         s.quit()
 
 

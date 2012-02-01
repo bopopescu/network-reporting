@@ -54,7 +54,7 @@ class BudgetQueryManager(QueryManager):
 
             if budget_start.tzinfo is not None:
                 budget_start = budget_start.astimezone(utc).replace(tzinfo=None)
-            if budget_end.tzinfo is not None:
+            if budget_end and budget_end.tzinfo is not None:
                 budget_end = budget_end.astimezone(utc).replace(tzinfo=None)
 
             if not camp.start_datetime == budget_start:

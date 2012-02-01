@@ -71,7 +71,7 @@ class MPWSGIHandler(django.core.handlers.wsgi.WSGIHandler):
         return callback(request, **param_dict)
 
     def _get_user_email(self, request):
-        return request.user.email if request.user.is_authenticated else 'Anonymous'
+        return request.user.email if request.user.is_authenticated() else 'Anonymous'
 
 def main():
     # Create a Django application for WSGI.

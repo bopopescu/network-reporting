@@ -111,7 +111,7 @@ def dashboard_prep(request, *args, **kwargs):
     
     # go and do it
     for app in apps:
-        app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],num_days=NUM_DAYS)
+        app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],days=days)
         yesterday = app_stats[-2]
         
         for app_stat in app_stats:

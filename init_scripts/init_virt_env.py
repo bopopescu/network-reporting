@@ -13,7 +13,7 @@ def main():
     print call_command('sudo easy_install pip')
     print call_command('sudo pip install virtualenv')
     if not os.path.exists(virt_home_dir):
-        print call_command('virtualenv --no-site-packages --distribute %s -p python2.7' % virt_home_dir)
+        print call_command('virtualenv --no-site-packages --distribute %s -p python2.5' % virt_home_dir)
     print call_command('pip install -E %s -r requirements.txt' % virt_home_dir)
     
     # symbolic link the

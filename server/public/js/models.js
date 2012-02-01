@@ -3,8 +3,20 @@
  *
  * Backbone models
  */
-(function($, Backbone, _) {
 
+/*jslint browser:true,
+  fragment: true,
+  maxlen: 110,
+  nomen: true,
+  indent: 4,
+  vars: true,
+  white: true
+ */
+
+var mopub = mopub || {};
+
+(function ($, Backbone, _) {
+    "use strict";
 
     /*
      * ## Campaigns
@@ -20,23 +32,6 @@
         }
     });
 
-    var GuaranteedCampaign = Campaign.extend({
-
-    });
-
-    var PromoCampaign = Campaign.extend({
-
-    });
-
-    var NetworkCampaign = Campaign.extend({
-
-    });
-
-    var Targeting = Backbone.Model.extend({
-        // for future use?
-    });
-
-
     /*
      * ## AdGroups
      */
@@ -44,38 +39,50 @@
     /*
      * Helper functions for stats
      */
-    function calculate_ctr (impression_count, click_count) {
-        if(impression_count === null || click_count === null) return null;
+    function calculate_ctr(impression_count, click_count) {
+        if (impression_count === null || click_count === null) {
+            return null;
+        }
         return (impression_count === 0) ? 0 : click_count / impression_count;
     }
 
-    function calculate_fill_rate (request_count, impression_count) {
-        if(request_count === null || impression_count === null) return null;
+    function calculate_fill_rate(request_count, impression_count) {
+        if (request_count === null || impression_count === null) {
+            return null;
+        }
         return (request_count === 0) ? 0 : impression_count / request_count;
     }
 
-    function format_stat (stat, value) {
-        if(value === null) return '--';
-        switch(stat) {
-            case 'click_count':
-            case 'conversion_count':
-            case 'goal':
-            case 'impression_count':
-            case 'request_count':
-                return mopub.Utils.formatNumberWithCommas(value);
-            case 'cpm':
-            case 'revenue':
-                return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
-            case 'conv_rate':
-            case 'ctr':
-            case 'fill_rate':
-                return mopub.Utils.formatNumberAsPercentage(value);
-            case 'status':
-                return value;
-            default:
-                throw 'Unsupported stat "' + stat + '".';
+    function format_stat(stat, value) {
+        if (value === null) {
+            return '--';
+        }
+        switch (stat) {
+          case 'click_count':
+          case 'conversion_count':
+          case 'goal':
+          case 'impression_count':
+          case 'request_count':
+            return mopub.Utils.formatNumberWithCommas(value);
+          case 'cpm':
+          case 'revenue':
+            return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
+          case 'conv_rate':
+          case 'ctr':
+          case 'fill_rate':
+            return mopub.Utils.formatNumberAsPercentage(value);
+          case 'status':
+            return value;
+        default:
+            throw 'Unsupported stat "' + stat + '".';
         }
     }
+
+    var ModelHelpers = {
+        calculate_ctr: calculate_ctr,
+        calculate_fill_rate: calculate_fill_rate,
+        format_stat: format_stat
+    };
 
     /*
      * ## AdGroup model
@@ -85,7 +92,9 @@
 
     var AdGroup = Backbone.Model.extend({
         get_stat: function(stat) {
-            if(!this.has(stat)) return null;
+            if (!this.has(stat)) {
+                return null;
+            }
             return this.get(stat);
         },
 
@@ -94,11 +103,17 @@
         },
 
         get_stat_for_day: function(stat, day) {
-            if(!this.has(daily_stats)) return null;
-            var daily_stats = this.get(daily_stats);
-            if(day >= daily_stats.length) return null;
+            if (!this.has("daily_stats")) {
+                return null;
+            }
+            var daily_stats = this.get("daily_stats");
+            if (day >= daily_stats.length) {
+                return null;
+            }
             var day_stats = daily_stats[day];
-            if(!stat in day_stats) return null;
+            if (!stat in day_stats) {
+                return null;
+            }
             return day_stats[stat];
         },
 
@@ -116,7 +131,9 @@
 
         get_stat_sum: function(stat) {
             return this.reduce(function(memo, adgroup) {
-                if(memo === null || !adgroup.has(stat)) return null;
+                if (memo === null || !adgroup.has(stat)) {
+                    return null;
+                }
                 return memo + adgroup.get(stat);
             }, 0);
         },
@@ -124,9 +141,11 @@
         get_stat: function(stat) {
             switch(stat) {
                 case 'ctr':
-                    return calculate_ctr(this.get_stat('impression_count'), this.get_stat('click_count'));
+                    return calculate_ctr(this.get_stat('impression_count'),
+                                         this.get_stat('click_count'));
                 case 'fill_rate':
-                    return calculate_fill_rate(this.get_stat('request_count'), this.get_stat('impression_count'));
+                    return calculate_fill_rate(this.get_stat('request_count'),
+                                               this.get_stat('impression_count'));
                 case 'click_count':
                 case 'conversion_count':
                 case 'impression_count':
@@ -144,11 +163,13 @@
 
         get_stat_sum_for_day: function(stat, day) {
             return this.reduce(function(memo, adgroup) {
-                if(memo === null ||
-                   !adgroup.has('daily_stats') ||
-                   day >= adgroup.get('daily_stats').length ||
-                   !(stat in adgroup.get('daily_stats')[day]))
+                if (memo === null ||
+                    !adgroup.has('daily_stats') ||
+                    day >= adgroup.get('daily_stats').length ||
+                    !(stat in adgroup.get('daily_stats')[day])) {
                     return null;
+                }
+
                 return memo + adgroup.get('daily_stats')[day][stat];
             }, 0);
         },
@@ -156,9 +177,11 @@
         get_stat_for_day: function(stat, day) {
             switch(stat) {
                 case 'ctr':
-                    return calculate_ctr(this.get_stat_for_day('impression_count', day), this.get_stat_for_day('click_count', day));
+                    return calculate_ctr(this.get_stat_for_day('impression_count', day),
+                                         this.get_stat_for_day('click_count', day));
                 case 'fill_rate':
-                    return calculate_fill_rate(this.get_stat_for_day('request_count', day), this.get_stat_for_day('impression_count', day));
+                    return calculate_fill_rate(this.get_stat_for_day('request_count', day),
+                                               this.get_stat_for_day('impression_count', day));
                 case 'click_count':
                 case 'conversion_count':
                 case 'impression_count':
@@ -176,15 +199,18 @@
 
         get_total_daily_stats: function(stat) {
             var total_daily_stats = [];
-            for(var day in this.at(0).get('daily_stats')) {
+            var day;
+            for(day in this.at(0).get('daily_stats')) {
                 total_daily_stats.push(this.get_stat_for_day(stat, day));
             }
             return total_daily_stats;
         },
 
         get_chart_data: function(stat) {
-            var adgroups = this.filter(function(adgroup) { return adgroup.has(stat) && adgroup.has('daily_stats'); });
-            if(adgroups.length == 0) {
+            var adgroups = this.filter(function(adgroup) {
+                return adgroup.has(stat) && adgroup.has('daily_stats');
+            });
+            if (adgroups.length === 0) {
                 return [];
             }
             var sorted_adgroups = _.sortBy(adgroups, function(adgroup) {
@@ -200,11 +226,15 @@
                 });
                 return adgroup_data;
             });
-            if(other_adgroups.size()) {
-                chart_data.push({ 'Others': other_adgroups.get_total_daily_stats(stat) });
+            if (other_adgroups.size()) {
+                chart_data.push({
+                    'Others': other_adgroups.get_total_daily_stats(stat)
+                });
             }
-            if(stat == 'ctr') {
-                chart_data.push({ 'MoPub Optimized': this.get_total_daily_stats('ctr') });
+            if (stat === 'ctr') {
+                chart_data.push({
+                    'MoPub Optimized': this.get_total_daily_stats('ctr')
+                });
             }
             return chart_data;
         },
@@ -219,7 +249,9 @@
 
         isFullyLoaded: function() {
             // TODO: make this less hacky
-            return this.reduce(function(memo, adgroup) { return memo && adgroup.has('impression_count') }, true);
+            return this.reduce(function(memo, adgroup) {
+                return memo && adgroup.has('impression_count');
+            }, true);
         }
     });
 
@@ -244,7 +276,7 @@
             stats_endpoint: 'all'
         },
         validate: function(attributes) {
-            if (typeof(attributes.price_floor) != 'undefined') {
+            if (typeof(attributes.price_floor) !== 'undefined') {
                 var valid_number = Number(attributes.price_floor);
                 if (isNaN(valid_number)) {
                     return "Please enter a valid number for the price floor";
@@ -299,7 +331,7 @@
             name: '',
             url:'#',
             icon_url: "/placeholders/image.gif",
-            app_type: 'iOS',
+            app_type: '',
             active: false,
             attempts: 0,
             clicks: 0,
@@ -325,14 +357,14 @@
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
             var app = response[0];
-            console.log(app.app_type == 'iphone');
-            if (app.app_type == 'iphone') {
+
+            if (app.app_type === 'iphone') {
                 app.app_type = 'iOS';
             }
-            if (app.app_type == 'android') {
+            if (app.app_type === 'android') {
                 app.app_type = 'Android';
             }
-            if (app.app_type == 'mweb') {
+            if (app.app_type === 'mweb') {
                 app.app_type = 'Mobile Web';
             }
             return app;
@@ -344,14 +376,13 @@
      */
     var AppCollection = Backbone.Collection.extend({
         model: App,
-        // If an app key isn't passed to the url, it'll return a list of all of the apps for the account
+        // If an app key isn't passed to the url, it'll return a list
+        // of all of the apps for the account
         url: function() {
             var stats_endpoint = this.stats_endpoint;
             return '/api/app/' +
-                + '?'
-                + window.location.search.substring(1)
-                + '&endpoint='
-                + stats_endpoint;
+                '?' + window.location.search.substring(1) +
+                '&endpoint=' + stats_endpoint;
         },
         // Not used anymore, but could come in handy
         fetchAdUnits: function() {
@@ -373,6 +404,6 @@
     window.AppCollection = AppCollection;
     window.AdGroup = AdGroup;
     window.AdGroups = AdGroups;
+    window.ModelHelpers = ModelHelpers;
 
-
-})(this.jQuery, this.Backbone, this._);
+}(this.jQuery, this.Backbone, this._));

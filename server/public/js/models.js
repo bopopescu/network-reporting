@@ -15,7 +15,6 @@
 
 var mopub = mopub || {};
 
-
 (function ($, Backbone, _) {
     "use strict";
 
@@ -32,23 +31,6 @@ var mopub = mopub || {};
             active: false
         }
     });
-
-    var GuaranteedCampaign = Campaign.extend({
-
-    });
-
-    var PromoCampaign = Campaign.extend({
-
-    });
-
-    var NetworkCampaign = Campaign.extend({
-
-    });
-
-    var Targeting = Backbone.Model.extend({
-        // for future use?
-    });
-
 
     /*
      * ## AdGroups
@@ -343,7 +325,7 @@ var mopub = mopub || {};
             name: '',
             url:'#',
             icon_url: "/placeholders/image.gif",
-            app_type: 'iOS',
+            app_type: '',
             active: false,
             attempts: 0,
             clicks: 0,
@@ -369,7 +351,7 @@ var mopub = mopub || {};
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
             var app = response[0];
-            console.log(app.app_type === 'iphone');
+
             if (app.app_type === 'iphone') {
                 app.app_type = 'iOS';
             }

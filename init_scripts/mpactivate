@@ -1,2 +1,2 @@
 source $1/bin/activate
-alias pylint='pylint --rcfile=$1/bin/.pylintrc'
+alias pylint="pylint --rcfile=$1/bin/.pylintrc"

@@ -164,11 +164,21 @@ class IAdScraper(Scraper):
         self.set_dates(start_date, end_date)
         records = []
 
+        def loaded(browser):
+            """
+            Return True when page has finished loading stats otherwise return
+            False.
+            """
+            return not self.browser.find_elements_by_xpath("//img[@src=" \
+                    "'https://iad.apple.com/itcportal/itcportal/ajax-loader" \
+                    ".gif']")
+
         # Handle pagination
         nextPage = True
         while nextPage:
             # Wait for ajax
-            time.sleep(6)
+            time.sleep(1)
+            WebDriverWait(self.browser, 15).until(loaded)
             # Read the page
             page = None
             while page is None:

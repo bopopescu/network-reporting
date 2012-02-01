@@ -143,17 +143,20 @@ class IAdScraper(Scraper):
         else:
             button = 'td>div.datePickerNextButton'
         # GO ALL THE WAY
-        while curr_date.month != test_date.month and curr_date.year != \
+        while curr_date.month != test_date.month or curr_date.year != \
                 test_date.year:
             self.browser.find_element_by_css_selector(button).click()
-            curr_date = self.get_cal_date()
             time.sleep(1)
+            curr_date = self.get_cal_date()
         time.sleep(2)
         days = self.browser.find_elements_by_css_selector('.datePickerDay')
+        start = False
         for day in days:
             if 'datePickDayIsFiller' in day.get_attribute('class'):
                 continue
-            if day.text == str(test_date.day):
+            if day.text == '1':
+                start = True
+            elif start and day.text == str(test_date.day):
                 day.click()
                 break
 
@@ -242,11 +245,11 @@ if __name__ == '__main__':
     NC = NetworkConfidential()
     #NC.username = 'chesscom'
     #NC.password = 'Faisal1Chess'
-    NC.username = '2_acrossair@acrossair.com'
-    NC.password = 'imano@314'
-    #NC.username = 'salesreports@optimesoftware.com'
-    #NC.password = 'Sales2012'
+    #NC.username = '2_acrossair@acrossair.com'
+    #NC.password = 'imano@314'
+    NC.username = 'salesreports@optimesoftware.com'
+    NC.password = 'Sales2012'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
-    print SCRAPER.get_site_stats(date(2011,11,30))
+    print SCRAPER.get_site_stats(date(2012,1,28))
 

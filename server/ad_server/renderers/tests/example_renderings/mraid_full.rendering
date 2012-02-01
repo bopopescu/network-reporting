@@ -31,7 +31,9 @@
 
 function webviewDidAppear(){
 
-  trackImpressionHelper();
+  if(typeof trackImpressionHelper == 'function') {
+    trackImpressionHelper();
+  }
    
 }
 </script>

@@ -17,6 +17,7 @@ from advertiser.models import Creative, TextCreative, \
 
 from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
+from budget.query_managers import BudgetQueryManager
 
 import copy
 
@@ -136,6 +137,12 @@ class CampaignQueryManager(QueryManager):
     @classmethod
     @wraps_first_arg
     def put(cls, campaigns):
+        if not isinstance(campaigns, list):
+            campaigns = [campaigns]
+        for camp in campaigns:
+            budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
+            camp.budget_obj = budg_obj
+
         put_response = db.put(campaigns)
 
         # Clear cache

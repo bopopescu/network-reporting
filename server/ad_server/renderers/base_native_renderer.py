@@ -19,4 +19,3 @@ class BaseNativeRenderer(BaseCreativeRenderer):
         
     def _setup_headers(self):
         super(BaseNativeRenderer, self)._setup_headers()
-        self.header_context.fail_url = self.fail_url

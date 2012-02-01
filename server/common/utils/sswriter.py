@@ -207,7 +207,7 @@ def write_ad_network_stats(f_type, response, row_writer, writer, d_str,
 
     if networks:
         for network, network_stats in all_stats:
-            if network_stats and network_stats['state'] == 2:
+            if network_stats:
                 row_writer([network])
                 if network in stat_names:
                     network_stat_names = stat_names[network]
@@ -224,7 +224,7 @@ def write_ad_network_stats(f_type, response, row_writer, writer, d_str,
                         app_stat_names])
     else:
         for app, app_stats in all_stats:
-            row_writer(['%s (%s)' % (app[0].encode('utf8'), app[1])])
+            row_writer([app.encode('utf8')])
             app_stat_names = stat_names[DEFAULT]
             row_writer(app_stat_names)
             row_writer([encode_and_filter(app_stats, stat) for stat in

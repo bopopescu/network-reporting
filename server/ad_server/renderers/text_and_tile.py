@@ -15,14 +15,17 @@ class TextAndTileRenderer(BaseHtmlRenderer):
     
     def _setup_html_context(self):
         super(TextAndTileRenderer, self)._setup_html_context()
-        try:
-            image_url = helpers.get_url_for_blob(self.creative.image_blob, ssl=False)
-        except InvalidBlobKeyError:
-            logging.error("Could not find blobkey. Perhaps you are on mopub-experimental.")   
-            image_url = ""
-        except NotImplementedError:
-            image_url = "http://localhost:8080/_ah/img/blobby"
-            
+        if hasattr(self.creative, 'image_url'):
+            image_url = self.creative.image_url
+        else:
+            try:
+                image_url = helpers.get_url_for_blob(self.creative.image_blob,
+                                                     ssl=False)
+            except InvalidBlobKeyError:
+                logging.error("Could not find blobkey."\
+                              " Perhaps you are on mopub-experimental.")
+                image_url = ""
+            except NotImplementedError:
+                image_url = "http://localhost:8080/_ah/img/blobby"
+
         self.html_context["image_url"] = image_url
-        
-        

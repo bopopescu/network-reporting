@@ -167,8 +167,9 @@ class IAdScraper(Scraper):
         # Handle pagination
         nextPage = True
         while nextPage:
-            time.sleep(3)
-            # read the shit
+            # Wait for ajax
+            time.sleep(6)
+            # Read the page
             page = None
             while page is None:
                 try:

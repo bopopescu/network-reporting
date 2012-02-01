@@ -625,6 +625,10 @@ var mopub = mopub || {};
         $(this).selectmenu('index', 0);
     });
 
+	// Hide unneeded li entry
+	$('#publisher-app-exportSelect-menu').find('li').first().hide();
+
+
     // Do Dashboard export						
     $('#publisher-dashboard-exportSelect')
      .change(function(e) {
@@ -642,7 +646,7 @@ var mopub = mopub || {};
 
 
     // Hide unneeded li entry
-    $('#publisher-app-exportSelect-menu').find('li').first().hide();
+    $('#publisher-dashboard-exportSelect-menu').find('li').first().hide();
 
     // *********************************************************************
     // Begin -- Inventory AJAX

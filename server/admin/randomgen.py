@@ -277,6 +277,8 @@ def generate_creative(account,adgroup):
     
 
 
+
+#Example Method to generate data. See top configuration contants for customizing result
 def main():
     account = generate_account(USERNAME,PASSWORD,USERNAME)
 

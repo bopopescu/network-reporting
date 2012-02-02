@@ -906,16 +906,18 @@ class DashboardExportHandler(RequestHandler):
 
         apps = AppQueryManager.get_apps(self.account)
         for app in apps:
+            resource_id = app.package if app.app_type=="android" else app.url
             stats = StatsModelQueryManager(self.account,
                                            offline=self.offline).get_stats_for_days(publisher=app,days = days)            
             summed_stats = sum(stats,StatsModel())
-            data.append([app.name,"all"]+app_stats(summed_stats))
+            data.append([app.name,"all",app.key(),resource_id]+app_stats(summed_stats)+["N/A",app.app_type_text()])                    
             adunits = AdUnitQueryManager.get_adunits(app=app)
             for adunit in adunits:
+                ad_size = adunit.format if adunit.format!="custom" else "%sx%s" % (adunit.custom_width,adunit.custom_height)
                 stats = StatsModelQueryManager(self.account,
                                                offline=self.offline).get_stats_for_days(publisher=adunit,days=days)            
                 summed_stats = sum(stats,StatsModel())
-                data.append([app.name,adunit.name]+app_stats(summed_stats))                    
+                data.append([app.name,adunit.name,adunit.key(),resource_id]+app_stats(summed_stats)+[ad_size,app.app_type_text()])                    
         
         f_name_dict = dict(start = start.strftime('%b %d'),
                            end   = end.strftime('%b %d, %Y'),
@@ -923,7 +925,7 @@ class DashboardExportHandler(RequestHandler):
 
         f_name = "DashboardStats,  %(start)s - %(end)s" % f_name_dict
         f_name = f_name.encode('ascii', 'ignore')
-        titles = ['App','Ad Unit', 'Requests', 'Impressions', 'Fill Rate', 'Clicks', 'CTR']
+        titles = ['App','Ad Unit','Pub ID','Resource ID', 'Requests', 'Impressions', 'Fill Rate', 'Clicks', 'CTR','Ad Size','Platform',]
         return sswriter.export_writer(file_type, f_name, titles, data)
 
 

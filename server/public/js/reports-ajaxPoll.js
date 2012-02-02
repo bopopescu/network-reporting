@@ -4,10 +4,12 @@ function checkReport(retry_num) {
     //If exists returns data, otherwise returns False
     var id = $('#reportKey').val();
 
-    $.ajax({
-       url: '/reports/check/'+id+'/?retry='+retry_num,
-       success: writeReport
-    });
+    if (id){
+        $.ajax({
+           url: '/reports/check/'+id+'/?retry='+retry_num,
+           success: writeReport
+        });
+    }
 }
 
 function writeReport(report) {

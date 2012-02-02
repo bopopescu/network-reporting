@@ -150,13 +150,10 @@ class IAdScraper(Scraper):
             curr_date = self.get_cal_date()
         time.sleep(2)
         days = self.browser.find_elements_by_css_selector('.datePickerDay')
-        start = False
         for day in days:
-            if 'datePickDayIsFiller' in day.get_attribute('class'):
+            if 'datePickerDayIsFiller' in day.get_attribute('class'):
                 continue
-            if day.text == '1':
-                start = True
-            elif start and day.text == str(test_date.day):
+            if day.text == str(test_date.day):
                 day.click()
                 break
 
@@ -251,5 +248,5 @@ if __name__ == '__main__':
     NC.password = 'Sales2012'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
-    print SCRAPER.get_site_stats(date(2012,1,28))
+    print SCRAPER.get_site_stats(date(2012,1,31))
 

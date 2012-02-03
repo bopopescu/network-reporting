@@ -17,7 +17,7 @@
 from common.ragendja.settings_pre import *
 
 NEW_UI = True
-
+DEBUG = False
 DEFAULT_FROM_EMAIL = 'olp@mopub.com'
 SERVER_EMAIL = 'olp@mopub.com'
 
@@ -160,3 +160,9 @@ LOGIN_REQUIRED_PREFIXES = (
 ACCOUNT_ACTIVATION_DAYS = 14
 
 from common.ragendja.settings_post import *
+
+#add additional settings for local machine settings
+try:
+    from local_settings import *
+except ImportError:
+    pass

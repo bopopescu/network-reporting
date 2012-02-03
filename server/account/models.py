@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from google.appengine.ext import db
@@ -201,7 +202,7 @@ class Account(db.Model):
     # use MongoDB for realtime stats
     # ex: Outblaze and Mobipeak have too many apps for GAE realtime stats to
     # handle
-    use_mongodb_stats = db.BooleanProperty(default=True)
+    use_mongodb_stats = db.BooleanProperty(default=False if settings.DEBUG else True)
 
     # use only mongo, not datastore for storing real time stats
     use_only_mongo = db.BooleanProperty(default=False)
@@ -211,7 +212,7 @@ class Account(db.Model):
     ad_network_recipients = db.StringListProperty()
 
     # use only mongo to display realtime stats in UI
-    display_mongo = db.BooleanProperty(default=True)
+    display_mongo = db.BooleanProperty(default=False if settings.DEBUG else True)
 
 
     @property

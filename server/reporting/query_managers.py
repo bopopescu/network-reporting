@@ -1,3 +1,5 @@
+from django.conf import settings
+
 import datetime
 import logging
 import time
@@ -169,7 +171,7 @@ class StatsModelQueryManager(CachedQueryManager):
                            country=None,
                            offline=False,
                            date_fmt='date',
-                           use_mongo=True):
+                           use_mongo=False if settings.DEBUG else True):
         """
         Gets the stats for a specific pairing. Definitions:
         advertiser_group: Either Campaign, AdGroup or Creative

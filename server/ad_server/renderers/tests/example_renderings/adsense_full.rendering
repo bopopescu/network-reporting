@@ -25,26 +25,29 @@
   
 
 <script type="text/javascript">
-  function trackImpressionHelper(){
-    var urls = new Array();
-    var i = 0;
+  // namespace function
+  if (trackImpressionHelper == null || typeof(trackImpressionHelper) != "function") {
+    function trackImpressionHelper(){
+      var urls = new Array();
+      var i = 0;
+      
     
-  
-    
-    
-    var hiddenSpan = document.createElement('span')
-    hiddenSpan.style.display = 'none';
+      
+      
+      var hiddenSpan = document.createElement('span')
+      hiddenSpan.style.display = 'none';
 
-    var i=0;
-    for (var i=0;i<urls.length;i++)
-    {
-      var img = document.createElement('img')
-      img.src = urls[i];
-      hiddenSpan.appendChild(img);
-    }    
+      var i=0;
+      for (var i=0;i<urls.length;i++)
+      {
+        var img = document.createElement('img')
+        img.src = urls[i];
+        hiddenSpan.appendChild(img);
+      }    
 
-    var body = document.getElementsByTagName('body')[0] ;
-    body.appendChild(hiddenSpan);
+      var body = document.getElementsByTagName('body')[0] ;
+      body.appendChild(hiddenSpan);
+    }
   }
 </script>
 

@@ -1,7 +1,7 @@
 <html>test mraid data</html>
 
 <script type="text/javascript">
-  // namespace function
+  // Define trackImpressionsHelper if it hasn't been defined
   if (trackImpressionHelper == null || typeof(trackImpressionHelper) != "function") {
     function trackImpressionHelper(){
       var urls = new Array();

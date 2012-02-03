@@ -1,12 +1,49 @@
+# Deployed Friday, February 03, 2012
+### Deployed by Nafis Jamal
+### Tagged deploy-8
+### Bugs Fixed: ['857', '759']
+### Included Commits: 
+ * 116008e no longer deleting app.yaml
+ * b69bbfb redirecting to mopub-hrd instead of mopub-experimental
+ * 99c8ea1 Merge branch 'master' into ad-server-miniclip
+ * 0622694 Improved comments
+ * f238b15 added millennial full tablet support [#857 state:fixed]
+ * 067f2cb Reset test renderings for ad_server
+ * 26ff0c0 Mraid fix for tracking impressions for Miniclip
+ * 14a67c4 Namespaced trackImpressionsHelper in track_impression_helper.html
+ * 6952632 Miniclip support
+ * ff6c2a4 Merge branch 'master' into ad-network-reports
+ * 8e874f2 iAd scraper date change fix
+ * c4cba7d Export button size and placement fix for firefox
+ * 6cc117e iAd scraper date change fix
+ * 33e68be bumped versions
+ * f6b3b36 [#759 state:fixed]
+ * 0d87809 Html is now encoded in iso-8859-15 which prevents encoding errors for non-ascii chars, admin gets emailed if an error occurs with the update (a traceback is included)
+ * ade67a5 added back app.yaml
+ * 2f82cbf fixed time range in admin graph
+ * 1c31a98 Emails sent from EC2 through sendgrid
+ * b83b481 iAd scraper knows when ajax has finished loading new data for date to scrape stats off page
+ * b9f8196 Merge branch 'master' of github.com:mopub/mopub
+ * d610b5c removed logging and fixed start_date bug
+ * bda43f1 Merge branch 'master' of https://github.com/mopub/mopub
+ * 8801d0d MobFox scraper handles & in xml response by converting it to &amp;
+ * be3933a added logging
+ * 4a6dbc7 [#854 state:resolved]
+ * 5a706ce fixed admin bug
+ * ff1c36c Merge branch 'master' of github.com:mopub/mopub
+ * b2e77a1 fixed anonymous user email
+ * 397c4e8 Deployed without finding any bug fixes.
+ * 0ad53ce Increased backend size, decreased instance count to 1, and fixed statsmodel query for days [#850 state:review-requested assigned:Nafis]
+ 
 # Deployed Tuesday, January 31, 2012
 ### Deployed by John Pena
 ### Tagged deploy-7
 ### Bugs Fixed: []
-### Included Commits: 
- * 319a0d0 Merge branch 'master' of github.com:mopub/mopub
- * 5253f6c Add check for budget end object
- * a4614b6 [#838 state:resolved] [#822 state:resolved] [#834 state:resolved] [#810 state:resolved]
- 
+### Included Commits:
+* 319a0d0 Merge branch 'master' of github.com:mopub/mopub
+* 5253f6c Add check for budget end object
+* a4614b6 [#838 state:resolved] [#822 state:resolved] [#834 state:resolved] [#810 state:resolved]
+
 # Deployed Tuesday, January 31, 2012
 ### Deployed by John Pena
 ### Tagged deploy-7

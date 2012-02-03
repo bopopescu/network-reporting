@@ -140,7 +140,7 @@ class AdHandler(webapp.RequestHandler):
         # If we are not already on the experimental server, redirect some fraction
         rand_dec = random.random() # Between 0 and 1
         if (not experimental and rand_dec < experimental_fraction):
-            return self._redirect_to_experimental("mopub-experimental", adunit_id)
+            return self._redirect_to_experimental("mopub-hrd", adunit_id)
 
         stats_accumulator.log(self.request, event=stats_accumulator.REQ_EVENT, adunit=adunit)
 
@@ -281,7 +281,7 @@ class AdHandler(webapp.RequestHandler):
         # Create new id for alternate server
         old_key = db.Key(adunit_id)
         new_key = db.Key.from_path(old_key.kind(), old_key.id_or_name(), _app=experimental_app_name )
-        new_id = str(new_key)
+        new_id = str(old_key)
 
         query_string = self.request.url.split("/m/ad?")[1] + "&exp=1"
         exp_url = "http://" + experimental_app_name + ".appspot.com/m/ad?" + query_string

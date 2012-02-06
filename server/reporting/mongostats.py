@@ -25,7 +25,7 @@ def api_fetch(start_date, end_date,
         url = _generate_api_url(start_date, end_date, 
                                 account_key, publisher_key, 
                                 advertiser_key)
-        response = urllib2.urlopen(url, timeout=10).read()
+        response = urllib2.urlopen(url).read()
 
     try:
         response_dict = json.loads(response)

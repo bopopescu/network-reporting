@@ -56,7 +56,10 @@ class MobFoxScraper(object):
             line = response.read()
             if line.find("error") != -1:
                 raise MobFoxError(line)
-            self.dom = minidom.parseString(line)
+
+            line = line.encode("utf-8")
+            line = line.replace('&', '&amp;')
+            self.dom = minidom.parseString(line).childNodes[0]
 
             try:
                 nsr = NetworkScrapeRecord(revenue = float(self.get_value(
@@ -77,7 +80,7 @@ class MobFoxScraper(object):
     def get_value(self, name):
         nodes = self.dom.getElementsByTagName(name)[0].childNodes
         if nodes:
-            return nodes[0].nodeValue
+            return nodes[0].nodeValue.replace('&amp;', '&')
         else:
             return 0
 
@@ -89,7 +92,8 @@ class MobFoxError(Exception):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    publisher_ids = ['ddcc935d2bc034b2823e04b24ff544a9',
-            'e884e3c21a498d57f7d1cb1400c5ab9b']
+    #publisher_ids = ['ddcc935d2bc034b2823e04b24ff544a9',
+            #'e884e3c21a498d57f7d1cb1400c5ab9b']
+    publisher_ids = ['8c30c9feeb78a3eb85074baa3f91fd4d']
     SCRAPER = MobFoxScraper((NC, publisher_ids))
     print SCRAPER.get_site_stats(date.today() - timedelta(days=1))

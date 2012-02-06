@@ -301,6 +301,9 @@ a.disabled {
 .alternating-color:nth-child(even) {
   background: #ffffff; }
 
+.export-selectMenu {
+  width: 100px; }
+
 /*
  * Corner rounding
  */
@@ -1168,6 +1171,9 @@ a.disabled {
 .alternating-color:nth-child(even) {
   background: #ffffff; }
 
+.export-selectMenu {
+  width: 100px; }
+
 /*
  * Corner rounding
  */
@@ -1586,6 +1592,9 @@ a.disabled {
 .alternating-color:nth-child(even) {
   background: #ffffff; }
 
+.export-selectMenu {
+  width: 100px; }
+
 /*
  * Corner rounding
  */
@@ -1930,6 +1939,9 @@ a.disabled {
 
 .alternating-color:nth-child(even) {
   background: #ffffff; }
+
+.export-selectMenu {
+  width: 100px; }
 
 /*
  * Corner rounding

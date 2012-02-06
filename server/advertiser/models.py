@@ -675,7 +675,7 @@ class MillennialNativeCreative(MillennialCreative):
 
     @property
     def multi_format(self):
-        return ('728x90', '320x50', '300x250', 'full' ,)
+        return ('728x90', '320x50', '300x250', 'full' , 'full_tablet')
 
 class ChartBoostCreative(Creative):
 

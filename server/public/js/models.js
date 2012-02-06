@@ -368,6 +368,16 @@ var mopub = mopub || {};
                 app.app_type = 'Mobile Web';
             }
             return app;
+        },
+        get_summed: function (attr) {
+            if (typeof(this.get(attr)) !== 'undefined') {
+                var series = this.get(attr);
+                var sum = _.reduce(series, function(memo, num){
+                    return memo + num;
+                }, 0);
+                return sum;
+            }
+            return null;
         }
     });
 
@@ -396,7 +406,8 @@ var mopub = mopub || {};
 
 
     /*
-     * Globalize. We should find a better way to do this.
+     * EXPOSE HIS JUNK
+     * (We should find a better way to do this.)
      */
     window.AdUnit = AdUnit;
     window.AdUnitCollection = AdUnitCollection;

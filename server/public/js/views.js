@@ -99,30 +99,31 @@ var mopub = window.mopub || {};
         },
 
         render: function() {
-            if(this.collection.isFullyLoaded()) {
+            var this_view = this;
+            if (this_view.collection.isFullyLoaded()) {
 
                 var metrics = ['impression_count', 'revenue', 'click_count', 'ctr'];
 
                 // Render the stats breakdown for "all""
                 $.each(metrics, function(iter, metric){
                     var selector = '#stats-breakdown-' + metric + ' .all .inner';
-                    $(selector).html(this.collection.get_formatted_stat(metric));
+                    $(selector).html(this_view.collection.get_formatted_stat(metric));
                 });
 
-                if (this.options.yesterday !== null && this.options.today !== null) {
+                if (this_view.options.yesterday !== null && this_view.options.today !== null) {
 
                     // Render the stats breakdown for yesterday
                     $.each(metrics, function(iter, metric){
                         var selector = '#stats-breakdown-' + metric + ' .yesterday .inner';
-                        $(selector).html(this.collection.get_formatted_stat(metric),
-                                         this.options.yesterday);
+                        $(selector).html(this_view.collection.get_formatted_stat(metric),
+                                         this_view.options.yesterday);
                     });
 
                     // Render the stats breakdown for yesterday
                     $.each(metrics, function(iter, metric){
                         var selector = '#stats-breakdown-' + metric + ' .today .inner';
-                        $(selector).html(this.collection.get_formatted_stat(metric),
-                                         this.options.today);
+                        $(selector).html(this_view.collection.get_formatted_stat(metric),
+                                         this_view.options.today);
                     });
                 }
                 // Chart

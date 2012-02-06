@@ -1,6 +1,12 @@
+/*
+ * # Tests for models.js
+ */
+
+/*
+ * ## Tests for App Model
+ */
 describe("App Model", function() {
     beforeEach(function() {
-
         this.server = sinon.fakeServer.create();
 
         this.addMatchers({
@@ -99,18 +105,119 @@ describe("App Model", function() {
 
 });
 
-
-describe("App Collection", function() {
-    beforeEach(function() {
-        this.server = sinon.fakeServer.create();
-    });
-
-});
-
-
+/*
+ * # AdUnit Tests
+ */
 describe("AdUnit Model", function() {
     beforeEach(function() {
         this.server = sinon.fakeServer.create();
+
+        this.addMatchers({
+            toContainAttrs: function(expected) {
+                for (attribute in expected) {
+                    var actual = this.actual;
+                    if (!actual.hasOwnProperty(attribute)) {
+                        return false;
+                    }
+                    if (actual[attribute] !== expected[attribute]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    });
+
+    afterEach(function() {
+        this.server.restore();
+    });
+
+    it("should only validate if the price floor is a number", function(){
+        var adunit = new AdUnit();
+        var status = adunit.set({
+            price_floor: 0.5
+        });
+
+        expect(status).toBeTruthy();
+
+        status = adunit.set({
+            price_floor: "0.5"
+        });
+
+        expect(status).toBeTruthy();
+
+        status = adunit.set({
+            price_floor: "0.5a"
+        });
+
+        expect(status).toEqual(false);
+    });
+});
+
+
+
+/*
+ * # AppCollection tests
+ */
+describe("App Collection", function() {
+    beforeEach(function() {
+        this.server = sinon.fakeServer.create();
+
+        this.addMatchers({
+            toContainAttrs: function(expected) {
+                for (attribute in expected) {
+                    var actual = this.actual;
+                    if (!actual.hasOwnProperty(attribute)) {
+                        return false;
+                    }
+                    if (actual[attribute] !== expected[attribute]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    });
+
+    afterEach(function() {
+        this.server.restore();
+    });
+
+    it("should fetch collections for each of its adunits", function () {
+
+        function makeAdUnit(appid) {
+            return '{"id": ' + appid +',"app_type": "mweb"}';
+        }
+
+        this.server.respondWith(
+            "GET",
+            "/api/app/?&endpoint=all",
+            [
+                200,
+                {"Content-Type": "application/json"},
+                '[{"id": 1,"app_type": "mweb"}, {"id": 2,"app_type": "android"}, {"id": 3,"app_type": "iphone"}]'
+            ]
+        );
+
+        var callback = sinon.spy();
+        var apps = new AppCollection();
+        apps.bind('update', callback);
+        apps.fetch();
+        this.server.respond();
+
+        this.server.respondWith(
+            "GET", /\/api\/app\/(\d+)\/adunits\/?&endpoint=all/,
+            function (xhr, id) {
+                xhr.respond(200,
+                            {"Content-Type": "application/json"},
+                            '[' + makeAdUnit(id) + ']');
+            }
+        );
+
+        apps.fetchAdUnits();
+        this.server.respond();
+
+        expect(apps.adunits.length).toEqual(3);
     });
 
 });
@@ -119,8 +226,26 @@ describe("AdUnit Model", function() {
 describe("AdUnit Collection", function() {
     beforeEach(function() {
         this.server = sinon.fakeServer.create();
+
+        this.addMatchers({
+            toContainAttrs: function(expected) {
+                for (attribute in expected) {
+                    var actual = this.actual;
+                    if (!actual.hasOwnProperty(attribute)) {
+                        return false;
+                    }
+                    if (actual[attribute] !== expected[attribute]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
     });
 
+    afterEach(function() {
+        this.server.restore();
+    });
 });
 
 
@@ -128,6 +253,25 @@ describe("AdUnit Collection", function() {
 describe("AdGroup Model", function() {
     beforeEach(function() {
         this.server = sinon.fakeServer.create();
+
+        this.addMatchers({
+            toContainAttrs: function(expected) {
+                for (attribute in expected) {
+                    var actual = this.actual;
+                    if (!actual.hasOwnProperty(attribute)) {
+                        return false;
+                    }
+                    if (actual[attribute] !== expected[attribute]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    });
+
+    afterEach(function() {
+        this.server.restore();
     });
 
 });
@@ -135,6 +279,25 @@ describe("AdGroup Model", function() {
 describe("AdGroups Collection", function() {
     beforeEach(function() {
         this.server = sinon.fakeServer.create();
+
+        this.addMatchers({
+            toContainAttrs: function(expected) {
+                for (attribute in expected) {
+                    var actual = this.actual;
+                    if (!actual.hasOwnProperty(attribute)) {
+                        return false;
+                    }
+                    if (actual[attribute] !== expected[attribute]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    });
+
+    afterEach(function() {
+        this.server.restore();
     });
 
 });
@@ -143,6 +306,25 @@ describe("AdGroups Collection", function() {
 describe("Campaign Model", function() {
     beforeEach(function() {
         this.server = sinon.fakeServer.create();
+
+        this.addMatchers({
+            toContainAttrs: function(expected) {
+                for (attribute in expected) {
+                    var actual = this.actual;
+                    if (!actual.hasOwnProperty(attribute)) {
+                        return false;
+                    }
+                    if (actual[attribute] !== expected[attribute]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    });
+
+    afterEach(function() {
+        this.server.restore();
     });
 
 });

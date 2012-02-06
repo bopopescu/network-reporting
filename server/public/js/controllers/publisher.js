@@ -1,5 +1,5 @@
 /*
- * # MoPub Dashboard Javascript
+ * # MoPub Publisher/Inventory Javascript
  * ## Client-side functionality for the following pages:
  * * Inventory/Dashboard
  * * App detail
@@ -114,16 +114,21 @@ var mopub = mopub || {};
      * the app form.
      */
     function initializeAdunitForm() {
+
         // Set up device format selection UI
-        $("#adunit-device_format_phone").parent().buttonset();
-        $('#adunit-device_format_phone').click(function(e){
-            $('#adForm-tablet-container').hide();
-            $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
-        });
+        $("#adunit-device_format_phone")
+            .parent()
+            .buttonset()
+            .click(function(e){
+                $('#adForm-tablet-container').hide();
+                $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
+            });
 
         $('#adunit-device_format_tablet').click(function(e){
             $('#adForm-phone-container').hide();
-            $('#adForm-tablet-container').show().find('input[type="radio"]')[0].click();
+            $('#adForm-tablet-container')
+                .show()
+                .find('input[type="radio"]')[0].click();
         });
 
         // Set up format selection UI for phone
@@ -141,8 +146,7 @@ var mopub = mopub || {};
                     $(this).attr("id") == "appForm-adUnitFormat-full"){
                     $full_onlys.show();
                     $banner_onlys.hide();
-                }
-                else{
+                } else {
                     $full_onlys.hide();
                     $banner_onlys.show();
                 }
@@ -582,6 +586,7 @@ var mopub = mopub || {};
                     $('#adunitForm-loading').show();
                     $('#adunitAddForm').submit();
                 });
+
             $('#adunitEditForm-cancel')
                 .click(function(e) {
                     e.preventDefault();
@@ -725,6 +730,7 @@ var mopub = mopub || {};
 
 
 })(this.jQuery, this.Backbone, this._);
+
 
 /* REFACTOR */
 var artwork_json;

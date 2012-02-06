@@ -1,14 +1,22 @@
+# Deployed Monday, February 06, 2012
+### Deployed by Nafis Jamal
+### Tagged deploy-10
+### Bugs Fixed: []
+### Included Commits: 
+ * 1cc590c added timeout to mongostats
+ * d166c56 Deployed without finding any bug fixes.
+ 
 # Deployed Friday, February 03, 2012
 ### Deployed by Nafis Jamal
 ### Tagged deploy-9
 ### Bugs Fixed: []
-### Included Commits: 
- * 17d0fd3 Merge branch 'master' of github.com:mopub/mopub
- * 740b2ec updated max objects
- * 02975ad Merge branch 'master' of github.com:mopub/mopub
- * 583fa42 merging fixtures-patch with master
- * 8256b3f [#857 state:resolved] [#759 state:resolved]
- 
+### Included Commits:
+* 17d0fd3 Merge branch 'master' of github.com:mopub/mopub
+* 740b2ec updated max objects
+* 02975ad Merge branch 'master' of github.com:mopub/mopub
+* 583fa42 merging fixtures-patch with master
+* 8256b3f [#857 state:resolved] [#759 state:resolved]
+
 # Deployed Friday, February 03, 2012
 ### Deployed by Nafis Jamal
 ### Tagged deploy-8

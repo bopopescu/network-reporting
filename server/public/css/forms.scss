@@ -375,12 +375,43 @@ ul#apps {
         img {
             height: 45px;
             width: 45px;
+            margin-right: 11px;
             vertical-align: top;
+            -webkit-border-radius: 6px;
+            -moz-border-radius: 6px;
+            border-radius: 6px;
         }
         div.details {
             display: inline-block;
+            > label {
+                font-size: 14px;
+                font-weight: 600;
+                display: inline-block;
+                width: 200px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            input[type="text"] {
+                width: 200px;
+            }
             ul {
                 list-style-type: none;
+                overflow: auto;
+                max-height: 200px;
+                margin: 0 0 17px 0;
+                padding: 0;
+                li {
+                    margin-bottom: 10px;
+                    label {
+                        margin-left: 10px;
+                        display: inline-block;
+                        width: 190px;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
+                }
             }
         }
     }

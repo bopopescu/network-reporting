@@ -211,6 +211,11 @@ $(document).ready(function() {
 
 
     /* new stuff */
+
+    if (window.location.hash.substring(1) !== '') {
+        $('select[name="campaign_type"]').val(window.location.hash.substring(1));
+    }
+
     var validator = $('form#campaign_and_adgroup').validate({
         errorPlacement: function(error, element) {
             element.closest('li > div').append(error);
@@ -305,18 +310,14 @@ $(document).ready(function() {
     }).change(); // update on document ready
 
     var pub_ids = {
-        'admob': {'label': 'AdMob Pub ID:', 'placeholder': 'ex: a14cdb1922f35xx'},
-        'admob_native': {'label': 'AdMob Pub ID:', 'placeholder': 'ex: a14cdb1922f35xx'},
-        'adsense': {'label': 'AdSense ID:', 'placeholder': 'ex: ca-mb-pub-5592664190023789'},
-        'brightroll': {'label': 'BrightRoll ID:', 'placeholder': 'ex: 3836789'},
-        'chartboost': {'label': 'ChartBoost ID:', 'placeholder': 'ex: 4cf55942bb93162f4500006g'},
-        'ejam': {'label': 'eJam Zone ID:', 'placeholder': 'ex: 23710'},
-        'greystripe': {'label': 'GreyStripe ID:', 'placeholder': 'ex: 3705265e-1025-4873-9352-7b1e4986xxxx'},
-        'inmobi': {'label': 'InMobi ID:', 'placeholder': 'ex: 4028cb962b75ff06012b792fc5fb6789'},
-        'jumptap': {'label': 'JumpTap ID:', 'placeholder': 'ex: pa_company_inc_app'},
-        'millennial': {'label': 'Millennial ID:', 'placeholder': 'ex: 36789'},
-        'millennial_native': {'label': 'Millennial ID:', 'placeholder': 'ex: 36789'},
-        'mobfox': {'label': 'MobFox ID:', 'placeholder': 'ex: 008048afe367bf4ce82ae95363c4xxxx'},
+        'admob_native': 'admob_pub_id',
+        'adsense': 'adsense_pub_id',
+        'brightroll': 'brightroll_pub_id',
+        'ejam': 'ejam_pub_id',
+        'inmobi': 'inmobi_pub_id',
+        'jumptap': 'jumptap_pub_id',
+        'millennial_native': 'millennial_pub_id',
+        'mobfox': 'mobfox_pub_id'
     };
 
     // make necessary changes based on network type
@@ -325,15 +326,34 @@ $(document).ready(function() {
         $('.network_type_dependant').each(function() {
             $(this).toggle($(this).hasClass(network_type));
         });
-        if(network_type in pub_ids) {
-            $('label[for$="_pub_id"]').html(pub_ids[network_type].label)
-            $('input[name$="_pub_id"]').attr('placeholder', pub_ids[network_type].placeholder)
-            $('div.pub_id').show();
+
+        // show either empty input box or
+    }).change(); // update on document ready
+
+    var network_type = $('select[name="network_type"]').val();
+    var pub_id = pub_ids[network_type];
+
+    // hide all pub_id inputs
+    $('input[name$="_pub_id"]').hide();
+
+    // for each appropriate input, show either the input, or the two spans
+    $('input[name$="'+pub_id+'"]').each(function() {
+        if($(this).val()) {
+            $(this).siblings('span[class$="_pub_id"]').html($(this).val()).show();
+            $(this).siblings('span.c').show();
         }
         else {
-            $('div.pub_id').hide();
+            $(this).show();
+            $(this).siblings('span[class$="_pub_id"]').hide();
+            $(this).siblings('span.change').hide();
         }
-    }).change(); // update on document ready
+    });
+
+    $('span.change_pub_id').click(function() {
+        network_type = $('select[name="network_type"]').val();
+
+        $(this).hide().prev('span').hide();
+    });
 
     // make necessary changes based on campaign_type
     $('select[name="campaign_type"]').change(function() {
@@ -469,4 +489,5 @@ $(document).ready(function() {
             });
         }
     }).filter(':checked').click();
+
 });

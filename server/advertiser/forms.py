@@ -327,7 +327,13 @@ class CampaignForm(forms.ModelForm):
     # store in UTC.  Can this be done in the model?
     def save(self, *args, **kwargs):
         # TODO: change datetimes from Pacific to UTC
-        return super(CampaignForm, self).save(*args, **kwargs)
+        campaign = super(CampaignForm, self).save(*args, **kwargs)
+
+        # budget
+        budget_obj = BudgetQueryManager.update_or_create_budget_for_campaign(campaign)
+        campaign.budget_obj = budget_obj
+
+        return campaign
 
     # TODO: doesn't work with djangoforms
     class Media:
@@ -522,19 +528,28 @@ class AdGroupForm(forms.ModelForm):
                                                             'rows': 3}))
 
     def __init__(self, *args, **kwargs):
-        data = args[0] if len(args) > 0 else kwargs.get('data', None)
-        initial = args[4] if len(args) > 4 else kwargs.get('initial', None)
+        #data = args[0] if len(args) > 0 else kwargs.get('data', None)
+        #initial = args[4] if len(args) > 4 else kwargs.get('initial', None)
         instance = args[8] if len(args) > 8 else kwargs.get('instance', None)
 
-        """
-        if not data and ((initial and initial.get('cities', [])) or
-                         (instance and instance.cities)):
-        """
+        is_staff = kwargs.pop('is_staff', False)
 
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
+
         super(forms.ModelForm, self).__init__(*args, **kwargs)
+
+        if is_staff or instance and instance.network_type == 'admob':
+            self.fields['network_type'].choices.append(('admob', 'AdMob Javascript (deprecated)'))
+
+        if is_staff or instance and instance.network_type == 'millennial':
+            self.fields['network_type'].choices.append(('millennial', 'Millennial Server-side (deprecated)'))
+
+        if is_staff or instance and instance.network_type == 'greystripe':
+            self.fields['network_type'].choices.append(('greystripe', 'GreyStripe (deprecated)'))
+
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
+
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields

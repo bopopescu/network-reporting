@@ -1489,11 +1489,38 @@ ul#apps {
     ul#apps li img {
       height: 45px;
       width: 45px;
-      vertical-align: top; }
+      margin-right: 11px;
+      vertical-align: top;
+      -webkit-border-radius: 6px;
+      -moz-border-radius: 6px;
+      border-radius: 6px; }
     ul#apps li div.details {
       display: inline-block; }
+      ul#apps li div.details > label {
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-block;
+        width: 200px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis; }
+      ul#apps li div.details input[type="text"] {
+        width: 200px; }
       ul#apps li div.details ul {
-        list-style-type: none; }
+        list-style-type: none;
+        overflow: auto;
+        max-height: 200px;
+        margin: 0 0 17px 0;
+        padding: 0; }
+        ul#apps li div.details ul li {
+          margin-bottom: 10px; }
+          ul#apps li div.details ul li label {
+            margin-left: 10px;
+            display: inline-block;
+            width: 190px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis; }
 
 ul#device_targeting {
   list-style-type: none;

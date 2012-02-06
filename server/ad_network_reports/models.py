@@ -13,8 +13,8 @@ KEY = 'V("9L^4z!*QCF\%"7-/j&W}BZmDd7o.<'
 
 STAT_NAMES = ('revenue', 'attempts', 'impressions', 'clicks')
 CALCULATED_STAT_NAMES = ('cpm', 'fill_rate', 'cpc', 'ctr')
-MANAGEMENT_STAT_NAMES = ('found', 'updated', 'mapped', 'attempted_logins', \
-        'failed_logins')
+MANAGEMENT_STAT_NAMES = ('found', 'updated', 'attempted_logins')
+FAILED_LOGINS = 'failed_logins'
 
 class LoginStates:
     """
@@ -292,7 +292,6 @@ class AdNetworkManagementStats(db.Model): #(date)
 
     found = db.IntegerProperty(default=0)
     updated = db.IntegerProperty(default=0)
-    mapped = db.IntegerProperty(default=0)
 
     attempted_logins = db.IntegerProperty(default=0)
     failed_logins = db.StringListProperty(default=[])

@@ -63,7 +63,6 @@ class AdSenseRenderer(BaseHtmlRenderer):
         # "Gallowadsafemedium":,
         }
         self.header_context.native_params = json.dumps(params)
-        self.header_context.fail_url = self.fail_url
         self.header_context.format = '300x250_as'
         self.header_context.background_color = "0000FF"
         

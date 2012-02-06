@@ -25,8 +25,6 @@ import common.utils.test.setup
 from multiprocessing import Pool
 import unicodedata, re
 
-from google.appengine.api import mail
-
 from datetime import date, datetime, timedelta
 
 from ad_network_reports.ad_networks import AdNetwork
@@ -49,11 +47,25 @@ from common.utils.connect_to_appengine import setup_remote_api
 from publisher.query_managers import AppQueryManager
 from pytz import timezone
 
+# Email imports
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+# Override the default 'utf-8' email charset to avoid having the message body
+# encoded in base-64 when using utf-8
+import email.Charset
+email.Charset.add_charset( 'utf-8', email.Charset.SHORTEST, None, None )
+
 from google.appengine.ext import db
 
 TESTING = False
 
 MAX = 1000
+
+SMTP_SERVER = 'localhost'
+ADMIN_EMAIL = 'tiago@mopub.com'
+SUPPORT_EMAIL = 'support@mopub.com'
+REPORTING_EMAIL = 'report-monitoring@mopub.com'
 
 def multiprocess_update_all(start_day=None, end_day=None, email=False,
         processes=1):
@@ -183,17 +195,30 @@ def update_account_stats(account, day, email):
         if email:
             logging.info("Sending email to account %s" % account.key())
             send_stats_mail(account, day, zip(mappers, all_stats))
-
         # Return management stats
         return management_stats
     except Exception as exception:
         exc_traceback = sys.exc_info()[2]
 
+        error_msg = "Couldn't get get stats for \"%s\" account on day %s.\n\n" \
+                     "Error:\n%s\n\nTraceback:\n%s" % \
+                     (account.key(), day, exception, repr(traceback.extract_tb(
+                         exc_traceback)))
+
         # Record error in logfile
-        logger.error("Couldn't get get stats for \"%s\" account on day %s.\n\n"
-                     "Error:\n%s\n\nTraceback:\n%s" %
-                     (account, day, exception, repr(traceback.extract_tb(
-                         exc_traceback))))
+        logger.error(error_msg)
+
+        # Email admin the error
+        msg = MIMEText(error_msg)
+        msg['Subject'] = "Ad Network Update Error on %s" % \
+                day.strftime("%m/%d/%y")
+        msg['To'] = ADMIN_EMAIL
+
+        # Send the message via our own SMTP server, but don't include the
+        # envelope header.
+        s = smtplib.SMTP(SMTP_SERVER)
+        s.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, msg.as_string())
+        s.quit()
         raise
 
 
@@ -213,7 +238,7 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
 
     # Collect stats
     stats_list = []
-    for day in date_magic.gen_days(start_day, yesterday):
+    for day in date_magic.gen_days(start_day, end_day):
         stats_list += update_login_stats(login, day, from_check=True)
     login.put()
 
@@ -224,17 +249,22 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
 
         # Send email informing user that they can now see statistics for the ad
         # network they just signed up for on the ad network index page.
-        emails = ', '.join(login.account.emails)
+        msg = MIMEText("Your ad network revenue report for %s is now ready. " \
+                "Access it here: https://app.mopub.com/ad_network_reports.\n" \
+                "\nIf you have any questions, please reach out to us at " \
+                "support@mopub.com" % AD_NETWORK_NAMES[login.ad_network_name])
+        from_ = SUPPORT_EMAIL
+        to = [] if TESTING else login.account.emails
 
-        mail.send_mail(sender='olp@mopub.com',
-                       reply_to='support@mopub.com',
-                       to='tiago@mopub.com' if TESTING else emails,
-                       bcc='tiago@mopub.com',
-                       subject="Finished Collecting Stats",
-                       body="Your ad network revenue report for %s is now ready. " \
-                               "Access it here: https://app.mopub.com/ad_network_reports.\n\n" \
-                               "If you have any questions, please reach out to us at support@mopub.com" \
-                               % AD_NETWORK_NAMES[login.ad_network_name])
+        msg['Subject'] = "Finished Collecting Stats"
+        msg['From'] = from_
+        msg['To'] = ', '.join(to)
+
+        # Send the message via our own SMTP server, but don't include the
+        # envelope header.
+        s = smtplib.SMTP(SMTP_SERVER)
+        s.sendmail(from_, to + [ADMIN_EMAIL], msg.as_string())
+        s.quit()
 
 
 def update_login_stats(login, day, management_stats=None, from_check=False,
@@ -289,17 +319,20 @@ def update_login_stats(login, day, management_stats=None, from_check=False,
                         login.account.key(),
                         login.ad_network_name))
         exc_traceback = sys.exc_info()[2]
-        # Email tiago the traceback
-        mail.send_mail(sender='olp@mopub.com',
-                       to='tiago@mopub.com',
-                       subject=("Ad Network Scrape Error on %s" %
-                           day.strftime("%m/%d/%y")),
-                       body=("Couldn't get get stats for %s network "
-                           "for \"%s\" account. Error:\n %s\n\n"
-                           "Traceback:\n%s" % (login.
-                               ad_network_name, login.
-                               account.key(), e, repr(traceback.
-                                   extract_tb(exc_traceback)))))
+        # Email admin the traceback
+        msg = MIMEText("Couldn't get get stats for %s network for \"%s\" " \
+                "account. Error:\n %s\n\nTraceback:\n%s" % (login. \
+                    ad_network_name, login.account.key(), e, repr(traceback. \
+                        extract_tb(exc_traceback))))
+        msg['Subject'] = "Ad Network Scrape Error on %s" % \
+                day.strftime("%m/%d/%y")
+        msg['To'] = ADMIN_EMAIL
+
+        # Send the message via our own SMTP server, but don't include the
+        # envelope header.
+        s = smtplib.SMTP(SMTP_SERVER)
+        s.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, msg.as_string())
+        s.quit()
         return []
 
     # Get all mappers for login and put them in a dict for quick access
@@ -329,13 +362,6 @@ def update_login_stats(login, day, management_stats=None, from_check=False,
         mapper = mappers.get(publisher_id, None)
 
         if not mapper:
-#            # Check if the app has been added to MoPub prior to last
-#            # update.
-#            mapper = AdNetworkMapperManager. \
-#                    find_app_for_stats(publisher_id, login)
-#            if not mapper:
-#                # App is not registered in MoPub but is still in the ad
-#                # network.
             if logger:
                 logger.info("%(account)s has pub id %(pub_id)s on "
                         "%(network)s that\'s NOT in MoPub" %
@@ -344,16 +370,6 @@ def update_login_stats(login, day, management_stats=None, from_check=False,
                                   network=login.ad_network_name))
             login.app_pub_ids.append(publisher_id)
             continue
-#            else:
-#                if management_stats:
-#                    management_stats.increment(login.ad_network_name, 'mapped')
-#                    logging.info("%(account)s has pub id %(pub_id)s on "
-#                            "%(network)s that was FOUND in MoPub and "
-#                            "mapped" %
-#                                 dict(account=login.account.
-#                                     key(),
-#                                      pub_id=publisher_id,
-#                                      network=login.ad_network_name))
         else:
             if logger:
                 logger.info("%(account)s has pub id %(pub_id)s on "
@@ -419,7 +435,7 @@ def send_stats_mail(account, day, stats_list):
     Send email with scrape stats data for the test date organized in a
     table.
     """
-    emails = ', '.join(getattr(account, 'ad_network_recipients', []))
+    emails = getattr(account, 'ad_network_recipients', [])
 
     if emails and stats_list:
         aggregate_stats = AdNetworkStatsManager.roll_up_stats([stats for
@@ -460,56 +476,76 @@ def send_stats_mail(account, day, stats_list):
             </tr>
             """) % stats_dict)
 
-        # CSS doesn't work with Gmail so use horrible html style tags ex. <b>
-        mail.send_mail(sender='olp@mopub.com',
-                reply_to='support@mopub.com',
-                to='tiago@mopub.com' if TESTING else emails,
-                bcc='tiago@mopub.com' if TESTING else
-                    'tiago@mopub.com, report-monitoring@mopub.com',
-                subject=("Ad Network Revenue Reporting for %s" %
-                                day.strftime("%m/%d/%y")),
-                body=("Learn more at https://app.mopub.com/"
-                    "ad_network_reports/"),
-                html=(
-                """
-<table width=100%%>
-    <thead>
-        <th>APP NAME</th>
-        <th>AD NETWORK</th>
-        <th>REVENUE</th>
-        <th>ATTEMPTS</th>
-        <th>IMPRESSIONS</th>
-        <th>FILLRATE</th>
-        <th>CLICKS</th>
-        <th>CTR</th>
-        <th>CPM</th>
-    </thead>
-    <tbody>
-        <tr>
-            <td><b>TOTAL</b></td>
-            <td></td>
-            <td><b>$%(revenue).2f</b></td>
-            <td><b>%(attempts)d</b></td>
-            <td><b>%(impressions)d</b></td>
-            <td><b>%(fill_rate).2f%%</b></td>
-            <td><b>%(clicks)d</b></td>
-            <td><b>%(ctr).2f%%</b></td>
-            <td><b>%(cpm).2f</b></td>
-        </tr>
-                    """ % {'revenue': aggregate_stats.revenue,
-                           'attempts': aggregate_stats.attempts,
-                           'impressions': aggregate_stats.impressions,
-                           'fill_rate': aggregate_stats.fill_rate,
-                           'clicks': aggregate_stats.clicks,
-                           'ctr': aggregate_stats.ctr * 100,
-                           'cpm': aggregate_stats.cpm} +
-                    email_body +
-                    """
-    </tbody>
-</table>
+        to = [] if TESTING else emails
+        from_ = SUPPORT_EMAIL
 
-Learn more at https://app.mopub.com/ad_network_reports/
-"""))
+        # Create message container - the correct MIME type is
+        # multipart/alternative.
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "Ad Network Revenue Reporting for %s" % \
+                day.strftime("%m/%d/%y")
+        msg['To'] = ', '.join(to)
+        msg['From'] = from_
+        # Create the body of the message (a plain-text and an HTML version).
+        text = "Learn more at https://app.mopub.com/ad_network_reports/"
+        html = ("""
+        <table width=100%%>
+            <thead>
+                <th>APP NAME</th>
+                <th>AD NETWORK</th>
+                <th>REVENUE</th>
+                <th>ATTEMPTS</th>
+                <th>IMPRESSIONS</th>
+                <th>FILLRATE</th>
+                <th>CLICKS</th>
+                <th>CTR</th>
+                <th>CPM</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>TOTAL</b></td>
+                    <td></td>
+                    <td><b>$%(revenue).2f</b></td>
+                    <td><b>%(attempts)d</b></td>
+                    <td><b>%(impressions)d</b></td>
+                    <td><b>%(fill_rate).2f%%</b></td>
+                    <td><b>%(clicks)d</b></td>
+                    <td><b>%(ctr).2f%%</b></td>
+                    <td><b>%(cpm).2f</b></td>
+                </tr>
+                """ % {'revenue': aggregate_stats.revenue,
+                       'attempts': aggregate_stats.attempts,
+                       'impressions': aggregate_stats.impressions,
+                       'fill_rate': aggregate_stats.fill_rate,
+                       'clicks': aggregate_stats.clicks,
+                       'ctr': aggregate_stats.ctr * 100,
+                       'cpm': aggregate_stats.cpm})
+        html += email_body
+        html += """
+            </tbody>
+        </table>
+
+        Learn more at https://app.mopub.com/ad_network_reports/
+        """
+
+        # Record the MIME types of both parts - text/plain and text/html.
+        part1 = MIMEText(text, 'plain')
+        part2 = MIMEText(html.encode('iso-8859-15', 'replace'), 'html',
+                _charset='iso-8859-15')
+
+        # Attach parts into message container.
+        # According to RFC 2046, the last part of a multipart message, in this
+        # case the HTML message, is best and preferred.
+        msg.attach(part1)
+        msg.attach(part2)
+
+        # Send the message via local SMTP server.
+        s = smtplib.SMTP(SMTP_SERVER)
+        # sendmail function takes 3 arguments: sender's address, recipient's
+        # address and message to send - here it is sent as one string.
+        s.sendmail(from_, to + [ADMIN_EMAIL] + ([] if TESTING else
+            [REPORTING_EMAIL]), msg.as_string())
+        s.quit()
 
 
 def create_logger(name, file_path):

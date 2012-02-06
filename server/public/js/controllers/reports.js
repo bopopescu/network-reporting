@@ -152,6 +152,12 @@
          .button()
          .click(function(e) {
              e.preventDefault();
+            if($('#start-input').datepicker('isDisabled')) {
+                $('#start-input').datepicker('enable');
+            }
+            if($('#end-input').datepicker('isDisabled')) {
+                $('#end-input').datepicker('enable');
+            }
             $(this).parents('form').submit();
          });
 

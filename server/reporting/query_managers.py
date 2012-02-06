@@ -1,3 +1,5 @@
+from django.conf import settings
+
 import datetime
 import logging
 import time
@@ -96,13 +98,8 @@ class StatsModelQueryManager(CachedQueryManager):
         self.all_stats_deltas = [StatsModel()]
         self.include_geo = include_geo
 
-    def get_stats_for_apps(self, apps, num_days=30):
-        """
-        What form are these results in? It's really hard to tell
-        without live data.
-        (wtf)
-        """
-        days = StatsModel.lastdays(num_days)
+    def get_stats_for_apps(self, apps, days=None, num_days=30):
+        days = days or StatsModel.lastdays(num_days)
         account_app_dict = {}
         # we bucket the apps per account since we know
         # behind the scenes this is how our data is stored
@@ -113,7 +110,7 @@ class StatsModelQueryManager(CachedQueryManager):
 
         stats = []
         for account,apps in account_app_dict.iteritems():
-            stats += self.get_stats_for_days(publishers=apps,account=account,num_days=num_days,use_mongo=False)
+            stats += self.get_stats_for_days(publishers=apps,account=account,days=days,use_mongo=False)
 
         return stats
 
@@ -181,7 +178,7 @@ class StatsModelQueryManager(CachedQueryManager):
                            country=None,
                            offline=False,
                            date_fmt='date',
-                           use_mongo=True):
+                           use_mongo=False if settings.DEBUG else True):
         """
         Gets the stats for a specific pairing. Definitions:
         advertiser_group: Either Campaign, AdGroup or Creative
@@ -216,7 +213,7 @@ class StatsModelQueryManager(CachedQueryManager):
         # if going to use mongo we want offline = False in case we need to pull the unique user counts info
         # Note: fixing uniq user stats updater bug moving forward starting 1/20/2012
         if not offline and self.account_obj and self.account_obj.display_mongo and use_mongo:
-            parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=False))
+            parent = db.Key.from_path(StatsModel.kind(),StatsModel.get_key_name(account=account,offline=True))
 
         if publishers:
             keys = [db.Key.from_path(StatsModel.kind(),

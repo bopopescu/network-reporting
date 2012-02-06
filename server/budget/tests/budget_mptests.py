@@ -26,6 +26,7 @@ from nose.tools import eq_,assert_almost_equal
 from nose.tools import with_setup
 from budget import budget_service
 from google.appengine.api import memcache
+from advertiser.query_managers import CampaignQueryManager
 from budget.models import (Budget,
                            BudgetSliceLog,
                            )
@@ -142,6 +143,62 @@ class TestBudgetUnitTests(unittest.TestCase):
         c_g = group_query.get()
         c_g.bid = 10000.0
         c_g.put()
+
+    def mptest_create_budget(self):
+        test_c_1 = Campaign(name="HerpDerp",
+                            start_datetime = datetime.datetime(2000,1,1,0),
+                            end_datetime = datetime.datetime(2000,5,5,0),
+                            budget = 288.0,
+                            budget_type = 'daily',
+                            budget_strategy = 'evenly',
+                            active = True)
+
+        test_c_2 = Campaign(name="HerpDerp2",
+                            start_datetime = datetime.datetime(2000,1,1,0),
+                            end_datetime = datetime.datetime(2000,5,5,0),
+                            full_budget = 288.0,
+                            budget_strategy = 'evenly',
+                            active = True)
+        test_c_3 = Campaign(name="HerpDerp3",
+                            start_datetime = datetime.datetime(2000,1,1,0),
+                            end_datetime = datetime.datetime(2000,5,5,0),
+                            active = True)
+        test_camps = [test_c_1, test_c_2, test_c_3]
+        CampaignQueryManager.put(test_camps)
+        assert test_c_1.budget_obj.static_slice_budget == 1
+        assert test_c_2.budget_obj.static_total_budget == 288
+        assert test_c_3.budget_obj is None
+
+
+    
+    def mptest_pause_campaign(self):
+        test_c_1 = Campaign(name="HerpDerp",
+                    start_datetime = datetime.datetime(2000,1,1,0),
+                    end_datetime = datetime.datetime(2000,5,5,0),
+                    budget = 288.0,
+                    budget_type = 'daily',
+                    budget_strategy = 'evenly',
+                    active = True)
+        CampaignQueryManager.put(test_c_1)
+        assert test_c_1.budget_obj.active
+        test_c_1.active = False
+        CampaignQueryManager.put(test_c_1)
+        assert not test_c_1.budget_obj.active
+
+    
+    def mptest_delete_campaign(self):
+        test_c_1 = Campaign(name="HerpDerp",
+                    start_datetime = datetime.datetime(2000,1,1,0),
+                    end_datetime = datetime.datetime(2000,5,5,0),
+                    budget = 288.0,
+                    budget_type = 'daily',
+                    budget_strategy = 'evenly',
+                    active = True)
+        CampaignQueryManager.put(test_c_1)
+        assert test_c_1.budget_obj.active
+        test_c_1.deleted = True
+        CampaignQueryManager.put(test_c_1)
+        assert not test_c_1.budget_obj.active
 
     def mptest_load_campaigns(self):
         eq_(5000,self.aao_c.budget_obj.static_total_budget)

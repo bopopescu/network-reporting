@@ -1,27 +1,30 @@
 <script type="text/javascript">
-  function trackImpressionHelper(){
-    var urls = new Array();
-    var i = 0;
-    {% if use_impression_pixel %}
-      urls[i++]="{{impression_url|safe}}";
-    {% endif %}
-  
-    {% if creative.tracking_url %}
-    urls[i++]="{{creative.tracking_url|safe}}&rand={{random_val}}"
-    {% endif %}
+  // Define trackImpressionsHelper if it hasn't been defined
+  if (trackImpressionHelper == null || typeof(trackImpressionHelper) != "function") {
+    function trackImpressionHelper(){
+      var urls = new Array();
+      var i = 0;
+      {% if use_impression_pixel %}
+        urls[i++]="{{impression_url|safe}}";
+      {% endif %}
     
-    var hiddenSpan = document.createElement('span')
-    hiddenSpan.style.display = 'none';
+      {% if creative.tracking_url %}
+      urls[i++]="{{creative.tracking_url|safe}}&rand={{random_val}}"
+      {% endif %}
+      
+      var hiddenSpan = document.createElement('span')
+      hiddenSpan.style.display = 'none';
 
-    var i=0;
-    for (var i=0;i<urls.length;i++)
-    {
-      var img = document.createElement('img')
-      img.src = urls[i];
-      hiddenSpan.appendChild(img);
-    }    
+      var i=0;
+      for (var i=0;i<urls.length;i++)
+      {
+        var img = document.createElement('img')
+        img.src = urls[i];
+        hiddenSpan.appendChild(img);
+      }    
 
-    var body = document.getElementsByTagName('body')[0] ;
-    body.appendChild(hiddenSpan);
+      var body = document.getElementsByTagName('body')[0] ;
+      body.appendChild(hiddenSpan);
+    }
   }
 </script>

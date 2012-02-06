@@ -109,6 +109,8 @@ var mopub = mopub || {};
                         "id='" + app_key + "'> "
                         + "Edit Price Floor</a>");
 
+            // Display the range of price floors for the app. (This is no longer
+            // used, but left in because it could be used again in the future).
             if (high == low) {
                 $(".app-row#app-" + app_key + " .price_floor").html("All $" + high);
             } else {
@@ -503,6 +505,7 @@ var mopub = mopub || {};
                 var result = $.post("/campaigns/marketplace/settings/content_filter/", {
                     filter_level: filter_level
                 });
+
                 result.success(function(data){
                     loading_img.hide();
                     saving.hide();
@@ -544,9 +547,9 @@ var mopub = mopub || {};
             mopub.dashboardStatsChartData = {
                 pointStart: mopub.graphStartDate,
                 pointInterval: 86400000,
-                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue_float")}],
+                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
                 impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
-                ecpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ecpm_float")}]
+                ecpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ecpm")}]
             };
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
 

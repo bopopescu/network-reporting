@@ -2,7 +2,7 @@
 Call this script when you want to deploy frontend code.
 """
 # TODO: Figure out why envoy fucks up commands that have messages
-#       like git tag and git commit
+# like git tag and git commit
 
 import sys
 import os
@@ -145,6 +145,9 @@ def git_tag_current_deploy():
 def git_commit(message):
     from subprocess import call
 
+    if message == '':
+        message = 'Deployed without finding any bug fixes.'
+
     call(["git", "commit", "-a", "-m", message])
     #return git('commit -a -m "%s"' % message)
 
@@ -248,7 +251,7 @@ def launch_deploy_process(server=None):
     # redirects stdout/stdin to/from the user.
     call(['appcfg.py', 'backends', server_path, 'update', server])
 
-    envoy.run('rm ' + server_path + '/app.yaml')
+    # envoy.run('rm ' + server_path + '/app.yaml')
 
 
 #@prompt_before_executing

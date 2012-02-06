@@ -20,7 +20,8 @@ if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/google_appengine/lib/webob')
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 
-sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+else:
+    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
 import common.utils.test.setup
 from google.appengine.ext import db
 from google.appengine.api import mail

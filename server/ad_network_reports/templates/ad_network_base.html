@@ -125,7 +125,7 @@
         });
 
         $("#ad-network-exportSelect").change(function() {
-            if ($(this).val()) {
+            if ($(this).val() != 'exp') {
                 if ('/ad_network_reports/' == $(location).attr('pathname')) {
                     if ($('.networks').css('display') == 'block') {
                         window.open($(this).val() + '/network');
@@ -136,7 +136,10 @@
                     window.open($(this).val());
                 }
             }
+            $(this).selectmenu('index', 0);
         });
+
+        $('#ad-network-exportSelect-menu').find('li').first().hide();
     });
   </script>
 {% endblock extraScripts %}
@@ -192,15 +195,15 @@
   {% block innerContent %}
 
     <section id="dashboard-apps">
-      <h2>{{app_name}} on {{ad_network_name}}</h2>
       <div class="buttonBank buttonBank-right">
-          <select name='exportSelect' id='ad-network-exportSelect' class='selectmenu'>
-              <option value="">Export</option>
+          <select name='exportSelect' id='ad-network-exportSelect' class='selectmenu export-selectMenu'>
+              <option value="exp">Export</option>
               <option value="/ad_network_reports/export/xls/{{mapper_key}}">XLS</option>
               <option value="/ad_network_reports/export/csv/{{mapper_key}}">CSV</option>
           </select>
       </div>
-      <div class="appData-details noneg">
+      <h2>{{app_name}} on {{ad_network_name}}</h2>
+      <div class="appData-details noneg" style="clear:both;">
         <table class="dataTable appData-main">
           <thead>
             <th class="dataTable-name big"></th>

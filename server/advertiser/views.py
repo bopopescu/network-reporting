@@ -638,14 +638,6 @@ class CreateCampaignAJAXHandler(RequestHandler):
 
                 # TODO: clean this up in case the campaign succeeds and the adgroup fails
                 CampaignQueryManager.put(campaign)
-                #
-
-                budget_obj = BudgetQueryManager.update_or_create_budget_for_campaign(campaign)
-                campaign.budget_obj = budget_obj
-
-                #budget_service.update_budget(campaign, save_campaign = False)
-                # And then put in datastore again.
-                CampaignQueryManager.put(campaign)
 
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
@@ -1112,12 +1104,13 @@ class PauseAdGroupHandler(RequestHandler):
     """
     def post(self):
         action = self.request.POST.get("action", "pause")
-        adgroups = []
         update_objs = []
+        adgroups = []
         update_creatives = []
-        for id_ in self.request.POST.getlist('id') or []:
-            a = AdGroupQueryManager.get(id_)
-            adgroups.append(a)
+        ids = self.request.POST.getlist('id') or []
+        if ids:
+            adgroups = AdGroupQueryManager.get(ids)
+        for a in adgroups:
             if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False
@@ -1160,7 +1153,6 @@ class PauseAdGroupHandler(RequestHandler):
                     for creative in a.creatives:
                         creative.deleted = True
                         update_creatives.append(creative)
-                BudgetQueryManager.update_or_create_budget_for_campaign(a.campaign)
 
 
         if update_objs:
@@ -1425,6 +1417,7 @@ class AdServerTestHandler(RequestHandler):
             'SK': ('sk-SK', '213.151.218.130')    ,
             'UK': ('ua-UK', '92.244.103.199')     ,
             'SL': ('si-SL', '93.103.136.7')       ,
+            'AU': ('en-AU', '114.30.96.10')       ,
         }
 
         adunits = AdUnitQueryManager.get_adunits(account=self.account)

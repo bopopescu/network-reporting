@@ -92,8 +92,10 @@ class AdHandler(webapp.RequestHandler):
         if self.request.get('jsonp', '0') == '1':
             jsonp = True
             callback = self.request.get('callback')
+            failure_callback = self.request.get('failure_callback', None)
         else:
             callback = None
+            failure_callback = None
             jsonp = False
 
 
@@ -138,7 +140,7 @@ class AdHandler(webapp.RequestHandler):
         # If we are not already on the experimental server, redirect some fraction
         rand_dec = random.random() # Between 0 and 1
         if (not experimental and rand_dec < experimental_fraction):
-            return self._redirect_to_experimental("mopub-experimental", adunit_id)
+            return self._redirect_to_experimental("mopub-hrd", adunit_id)
 
         stats_accumulator.log(self.request, event=stats_accumulator.REQ_EVENT, adunit=adunit)
 
@@ -212,7 +214,7 @@ class AdHandler(webapp.RequestHandler):
             self.response.headers.add_header("X-Adtype", "clear")
             self.response.headers.add_header("X-Backfill", "clear")
             # We must add refresh always because if one given request
-            # does not return an ad, the client should continue trying 
+            # does not return an ad, the client should continue trying
             # again.
             refresh = adunit.refresh_interval
             if refresh:
@@ -262,7 +264,13 @@ class AdHandler(webapp.RequestHandler):
                 click_url = creative_renderer.click_url
             except UnboundLocalError:
                 click_url = ''
-            self.response.out.write('%s(%s)' % (callback, dict(ad=str(rendered_creative or ''), click_url = str(click_url), ufid=str(ufid))))
+            if rendered_creative:
+                self.response.out.write('%s(%s)' % (callback,
+                    dict(ad=str(rendered_creative),
+                         click_url=str(click_url),
+                         ufid=str(ufid))))
+            else:
+                self.response.out.write('%s()' % (failure_callback or callback))
         elif not (debug):
             self.response.out.write(rendered_creative)
         else:
@@ -273,7 +281,7 @@ class AdHandler(webapp.RequestHandler):
         # Create new id for alternate server
         old_key = db.Key(adunit_id)
         new_key = db.Key.from_path(old_key.kind(), old_key.id_or_name(), _app=experimental_app_name )
-        new_id = str(new_key)
+        new_id = str(old_key)
 
         query_string = self.request.url.split("/m/ad?")[1] + "&exp=1"
         exp_url = "http://" + experimental_app_name + ".appspot.com/m/ad?" + query_string

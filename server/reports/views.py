@@ -196,9 +196,9 @@ class ScheduledRunner(RequestHandler):
             now = datetime.datetime.now().date()
         else:
             now = datetime.datetime.strptime(now, '%y%m%d')
-        reps = ScheduledReport.all().filter('next_sched_date =', now)
-        for rep in reps:
-            man.new_report(rep, sched=True)
+        scheds = ScheduledReport.all().filter('next_sched_date =', now)
+        for sched in scheds:
+            man.new_report(sched)
         return HttpResponse("Scheduled reports have been created")
 
 def sched_runner(request, *args, **kwargs):

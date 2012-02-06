@@ -5,8 +5,8 @@ import datetime
 import logging
 
 
-#### IF THESE TESTS ARE FAILING, SET THIS TO TRUE, RUN AGAIN, THEN SET 
-#### BACK TO FALSE AND TRY AGAIN.  IF THEY STILL FAIL THEN 
+#### IF THESE TESTS ARE FAILING, SET THIS TO TRUE, RUN AGAIN, THEN SET
+#### BACK TO FALSE AND TRY AGAIN.  IF THEY STILL FAIL THEN
 #### SOMETHING IS BROKEN
 RESET_EXAMPLE = False
 
@@ -467,6 +467,8 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
         self.creative.image_height = 50
         self.creative.put()
 
+        self.creative.image_url = 'http://localhost:8080/_ah/img/blobby=s0'
+
         self._compare_rendering_with_examples("image_adtype", suffix="")
 
     # def mptest_text_adtype(self):
@@ -499,6 +501,9 @@ class RenderingTests(RenderingTestBase, unittest.TestCase):
 
 
         self.creative.put()
+
+        self.creative.image_url = 'http://localhost:8080/_ah/img/blobby=s0'
+
         self._compare_rendering_with_examples("text_icon_adtype", suffix="")
 
     def mptest_macro_test(self):

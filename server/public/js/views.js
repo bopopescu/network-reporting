@@ -126,16 +126,17 @@ var mopub = window.mopub || {};
                                          this_view.options.today);
                     });
                 }
+
                 // Chart
                 mopub.dashboardStatsChartData = {
-                    pointStart: this.options.start_date,
+                    pointStart: this_view.options.start_date,
                     pointInterval: 86400000,
-                    impression_count: this.collection.get_chart_data('impression_count'),
-                    revenue: this.collection.get_chart_data('revenue'),
-                    click_count: this.collection.get_chart_data('click_count'),
-                    ctr: this.collection.get_chart_data('ctr')
+                    impression_count: this_view.collection.get_chart_data('impression_count'),
+                    revenue: this_view.collection.get_chart_data('revenue'),
+                    click_count: this_view.collection.get_chart_data('click_count'),
+                    ctr: this_view.collection.get_chart_data('ctr')
                 };
-                this.show_chart();
+                this_view.show_chart();
             }
         }
     });

@@ -4,8 +4,8 @@
 
 {% block pageTitle %}
   <div class="breadcrumb">
-    <a class="linkIcon breadcrumb-back" href="{% url app_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Dashboard</a>
-    <h1>App: {{app.name}}</h1>
+    <br />
+    <h1><a href="{% url app_index %}">Apps</a> / {{app.name}}</h1>
   </div>
 {% endblock pageTitle %}
 

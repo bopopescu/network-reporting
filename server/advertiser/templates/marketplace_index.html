@@ -107,25 +107,30 @@
             <th class="dataTable-data numeric">Revenue</th>
             <th class="dataTable-data numeric">Impressions</th>
             <th class="dataTable-data numeric">eCPM</th>
-            <th class="dataTable-data numeric" style="width:100px;"><a href="#" id="price-floor-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> Price Floor CPM</th>
+            <th class="dataTable-data numeric" style="width:100px;">
+              <a href="#" id="price-floor-helpLink" class="whatsthis">
+                <div class="whatsthis-icon"></div>
+              </a>
+              Price Floor CPM
+            </th>
             <th class="dataTable-data numeric">Enabled</th>
           </tr>
         </thead>
       </table>
     </div>
-    {% for a in apps %}
-    <div class="{% cycle 'appData' 'appData appData-alt' %}" id="appData-{{a.key}}">
-      <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+    {% for app in apps %}
+    <div class="{% cycle 'appData' 'appData appData-alt' %}" id="appData-{{ app.key }}">
+      <table class="dataTable appData-main" id="dashboard-app-{{ forloop.counter0 }}-main">
         <tbody>
-          <tr class="app-row" id="app-{{a.key}}" style="border:none;">
+          <tr class="app-row" id="app-{{ app.key }}" style="border:none;">
             <td class="appData-icon">
-              <img src="{{ a.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" />
+              <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" />
             </td>
             <td class="dataTable-name" style="width:475px;">
               <span class="inner" style="width:475px;">
-                  <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
-                  <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span>
-                  <img id="{{a.key}}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+                  <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }}</a>
+                  <span class="muted unbold">({{ app.app_type_text }})</span>
+                  <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
               </span>
             </td>
             <td class="dataTable-data numeric revenue">--</td>
@@ -136,18 +141,22 @@
           </tr>
         </tbody>
       </table>
-      <div class="appData-details" id="dashboard-app-{{forloop.counter0}}-details">
+      <div class="appData-details" id="dashboard-app-{{ forloop.counter0 }}-details">
         <div class="appData-details-inner show">
           <table class="dataTable">
             <tbody>
-              {% for au in a.adunits %}
-              <tr class="adunit-row incomplete for-app-{{a.key}}" id="adunit-{{au.key}}" style="border:none;">
-                <th class="dataTable-name" style="width:475px;"><span class="inner" style="width:475px;"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+              {% for adunit in app.adunits %}
+              <tr class="adunit-row incomplete for-app-{{ app.key }}" id="adunit-{{adunit.key}}" style="border:none;">
+                <th class="dataTable-name" style="width:475px;">
+                  <span class="inner" style="width:475px;">
+                    <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
+                  </span>
+                </th>
                 <td class="dataTable-data numeric revenue" style="border:none;">--</td>
                 <td class="dataTable-data numeric impressions" style="border:none;">--</td>
                 <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
                 <td class="dataTable-data numeric price_floor" style="border:none;width:100px">
-                  <input id="{{au.key}}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
+                  <input id="{{ adunit.key }}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
                 </td>
                 <td class="dataTable-data numeric targeting" style="border:none;"></td>
               </tr>

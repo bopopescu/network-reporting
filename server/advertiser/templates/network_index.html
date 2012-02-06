@@ -120,19 +120,29 @@
   <script type="text/javascript" src="/js/controllers/networks.js?v=0"></script>
   <script>
     $(function() {
-      NetworksController(
-        [{% for adgroup in network_adgroups %}{
-          id: '{{ adgroup.key }}',
-          active: {% if adgroup.active %}true{% else %}false{% endif %},
-          name: '{{ adgroup.name }}',
-          bid_strategy: '{{ adgroup.bid_strategy }}',
-          details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
-          network_type: '{{ adgroup.network_type }}'}{% if not forloop.last %},{% endif %}{% endfor %}],
-        Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }}),
-        {% if today != None %}{{ today }}{% else %}null{% endif %},
-        {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %},
-        's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}{% if offline %}&offline=1{% endif %}'
-      );
+
+      NetworksController.initialize({
+        adgroups_data: [
+            {% for adgroup in network_adgroups %}{
+              id: '{{ adgroup.key }}',
+              active: {% if adgroup.active %}true{% else %}false{% endif %},
+              name: '{{ adgroup.name }}',
+              bid_strategy: '{{ adgroup.bid_strategy }}',
+              details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
+              network_type: '{{ adgroup.network_type }}'}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+            ],
+
+        graph_start_date: Date.UTC({{ start_date.year }},
+                                   {{ start_date.month|add:"-1" }},
+                                   {{ start_date.day }}),
+
+        today: {% if today != None %}{{ today }}{% else %}null{% endif %},
+
+        yesterday: {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %},
+
+        ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}{% if offline %}&offline=1{% endif %}'
+        });
     });
   </script>
 {% endblock extraScripts %}

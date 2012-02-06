@@ -3,9 +3,19 @@
 ### Tagged deploy-10
 ### Bugs Fixed: []
 ### Included Commits: 
+ * 610d416 removed timeout
+ * 629baca Deployed without finding any bug fixes.
  * 1cc590c added timeout to mongostats
  * d166c56 Deployed without finding any bug fixes.
  
+# Deployed Monday, February 06, 2012
+### Deployed by Nafis Jamal
+### Tagged deploy-10
+### Bugs Fixed: []
+### Included Commits:
+* 1cc590c added timeout to mongostats
+* d166c56 Deployed without finding any bug fixes.
+
 # Deployed Friday, February 03, 2012
 ### Deployed by Nafis Jamal
 ### Tagged deploy-9

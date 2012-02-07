@@ -1204,20 +1204,20 @@ var mopub = mopub || {};
       marketplaceFetch = createCampaignStatsFetchObject(marketplaceIds, argsDict);
       marketplaceFetch.campaignType = CampaignTypeEnum.Marketplace;
 
-            bfMarketplaceFetch = createCampaignStatsFetchObject(bfMarketplaceIds, argsDict);
-            bfMarketplaceFetch.campaignType = CampaignTypeEnum.BackfillMarketplace;
+      bfMarketplaceFetch = createCampaignStatsFetchObject(bfMarketplaceIds, argsDict);
+      bfMarketplaceFetch.campaignType = CampaignTypeEnum.BackfillMarketplace;
 
-            var fetches = [gteeFetch,
-                           promoFetch,
-                           networkFetch,
-                           bfillFetch,
-                           marketplaceFetch,
-                           bfMarketplaceFetch];
-            $.each(fetches, function(index, fetch) {
-                setSectionLoadingSpinnerHidden(fetch.campaignType, false);
-                fetch.start();
-            });
-        }
+      var fetches = [gteeFetch,
+                     promoFetch,
+                     networkFetch,
+                     bfillFetch,
+                     marketplaceFetch,
+                     bfMarketplaceFetch];
+      $.each(fetches, function(index, fetch) {
+          setSectionLoadingSpinnerHidden(fetch.campaignType, false);
+          fetch.start();
+      });
+    }
 
         function getNumDaysToFetch() {
             var daysRadioVal = $("input[name=dashboard-dateOptions-option]:checked").val();

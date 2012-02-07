@@ -2373,6 +2373,9 @@ a.disabled {
   .highlight.notice {
     background-color: #a6e1ff; }
 
+.mopub-data {
+  color: green; }
+
 /*
  * Plugins
  */

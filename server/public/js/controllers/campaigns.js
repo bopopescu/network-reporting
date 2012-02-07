@@ -1,5 +1,52 @@
 (function($) {
 
+    function initializeDailyCounts() {
+        $('.appData-details').each(function() {
+            var details = $(this);
+            var data = $('.appData-details-inner', details);
+            var button = $('.appData-details-toggleButton', details);
+
+            function getButtonTextElement() {
+                var buttonTextElement = $('.ui-button-text', button);
+                if(buttonTextElement.length === 0) {buttonTextElement = button;}
+                return buttonTextElement;
+            }
+
+            function didShowData() {
+                data.removeClass('hide');
+                data.addClass('show');
+                button.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+                getButtonTextElement().text('Hide details');
+            }
+
+            function didHideData() {
+                data.removeClass('show');
+                data.addClass('hide');
+                button.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+                getButtonTextElement().text('Show details');
+            }
+
+            if (data.hasClass('show')) {
+                didShowData();
+            } else {
+                data.hide();
+                didHideData();
+            }
+
+            button.click(function(e) {
+                e.preventDefault();
+                if (data.hasClass('show')) {
+                    data.slideUp('fast');
+                    didHideData();
+                } else {
+                    data.slideDown('fast');
+                    didShowData();
+                }
+            });
+        });
+    }
+
+
     function manageCreative(action){
         $('#creativeManagementForm-action').val(action);
         var $form = $('#creativeManagementForm');
@@ -109,95 +156,95 @@
                 });
             });
 
-            // Creative form ajax options
-            $('#creativeCreateForm').ajaxForm({
-                data: { ajax: true },
-                dataType : 'json',
-                success: function(jsonData) {
+        // Creative form ajax options
+        $('#creativeCreateForm').ajaxForm({
+            data: { ajax: true },
+            dataType : 'json',
+            success: function(jsonData) {
 
-                    $('#creativeCreateForm-loading').hide();
-                    if (jsonData.success) {
-                        $('#creativeCreateForm-success').show();
-                        window.location.reload();
-                    } else {
-                        $.each(jsonData.errors, function (iter, item) {
-                            $('.form-error-text', "#creativeCreateForm").remove();
-                            var name = item[0];
-                            var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+                $('#creativeCreateForm-loading').hide();
+                if (jsonData.success) {
+                    $('#creativeCreateForm-success').show();
+                    window.location.reload();
+                } else {
+                    $.each(jsonData.errors, function (iter, item) {
+                        $('.form-error-text', "#creativeCreateForm").remove();
+                        var name = item[0];
+                        var error_div = $("<div>").append(item[1]).addClass('form-error-text');
 
-                            $("input[name=" + name + "]", "#creativeCreateForm")
-                                .addClass('error')
-                                .parent().append(error_div);
+                        $("input[name=" + name + "]", "#creativeCreateForm")
+                            .addClass('error')
+                            .parent().append(error_div);
 
-                        });
-                        // reimplement the onload event
-                        initializeCreativeForm();
-                        window.location.hash = '';
-                        window.location.hash = 'advertiser-creativeAddForm';
-                        $('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
-                    }
-                },
-                error: function(jqXHR, textStatus, errorThrown){
-
+                    });
+                    // reimplement the onload event
+                    initializeCreativeForm();
+                    window.location.hash = '';
+                    window.location.hash = 'advertiser-creativeAddForm';
+                    $('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
                 }
-            });
+            },
+            error: function(jqXHR, textStatus, errorThrown){
+
+            }
+        });
 
 
-            $('.creativeEditForm').each(function(i){
+        $('.creativeEditForm').each(function(i){
                 var $this = $(this);
                 var options = {
                     data: { ajax : true },
                     dataType: 'json',
                     success: function(jsonData, statusText, xhr, $form){
                         $form.find('.creativeEditForm-loading').hide();
-                            if (jsonData.success){
-                                $form.find('.creativeCreateForm-success').show();
-                                $form.parent();
-                                $form.find('.creativeCreateForm-success').hide();
-                                window.location.reload();
-                            } else {
-                                //$form.find('.creativeEditForm-fragment').html($.decodeHtml(jsonData.html));
-                                $('.form-error-text', $form).remove();
-                                $.each(jsonData.errors, function (iter, item) {
+                        if (jsonData.success){
+                            $form.find('.creativeCreateForm-success').show();
+                            $form.parent();
+                            $form.find('.creativeCreateForm-success').hide();
+                            window.location.reload();
+                        } else {
+                            //$form.find('.creativeEditForm-fragment').html($.decodeHtml(jsonData.html));
+                            $('.form-error-text', $form).remove();
+                            $.each(jsonData.errors, function (iter, item) {
 
-                                    var name = item[0];
-                                    var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+                                var name = item[0];
+                                var error_div = $("<div>").append(item[1]).addClass('form-error-text');
 
-                                    $("input[name=" + name + "]", $form)
-                                        .addClass('error')
-                                        .parent().append(error_div);
+                                $("input[name=" + name + "]", $form)
+                                    .addClass('error')
+                                    .parent().append(error_div);
 
-                                });
-                                // re-implement onload
-                                $('.creativeEditForm input[name="ad_type"]')
-                                    .click(function(e){
-                                        $(this).parents('form') // gets the form to which this belongs
-                                            .find('.adTypeDependent').hide().end()
-                                            .find('.'+$(this).val()).show().end();
-                                    }).filter(':checked').click();
-                                window.location.hash = '';
-                                window.location.hash = $form.prev("a").attr('name');
-                            }
+                            });
+                            // re-implement onload
+                            $('.creativeEditForm input[name="ad_type"]')
+                                .click(function(e){
+                                    $(this).parents('form') // gets the form to which this belongs
+                                        .find('.adTypeDependent').hide().end()
+                                        .find('.'+$(this).val()).show().end();
+                                }).filter(':checked').click();
+                            window.location.hash = '';
+                            window.location.hash = $form.prev("a").attr('name');
+                        }
                     }
                 };
-                $(this).ajaxForm(options);
+            $(this).ajaxForm(options);
+        });
+
+        $('.creativeEditForm-submit')
+            .button()
+            .click(function(e) {
+                e.preventDefault();
+                $(this).parents('form').find('.creativeEditForm-loading').show();
+                $(this).parents('form').submit();
             });
 
-            $('.creativeEditForm-submit')
-                .button()
-                .click(function(e) {
-                    e.preventDefault();
-                    $(this).parents('form').find('.creativeEditForm-loading').show();
-                    $(this).parents('form').submit();
-                });
-
-            $('.creativeEditForm-cancel')
-                .button()
-                .click(function(e) {
-                    e.preventDefault();
-                    $(this).parents('.advertiser-creativeEditForm')
-                        .dialog('close');
-                });
+        $('.creativeEditForm-cancel')
+            .button()
+            .click(function(e) {
+                e.preventDefault();
+                $(this).parents('.advertiser-creativeEditForm')
+                    .dialog('close');
+            });
     }
 
 
@@ -302,6 +349,7 @@
 
             initializeCreativeForm();
             initializeChart();
+            initializeDailyCounts();
 
             // Set up the click handler for the campaign status menu
             // in the top left of the page.
@@ -450,5 +498,7 @@
 
         }
     };
+
     window.CampaignsController = CampaignsController;
+
 })(this.jQuery);

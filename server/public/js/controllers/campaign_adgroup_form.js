@@ -212,6 +212,7 @@ $(document).ready(function() {
 
     /* new stuff */
 
+    // select the appropriate campaign_type from the hash
     if (window.location.hash.substring(1) !== '') {
         $('select[name="campaign_type"]').val(window.location.hash.substring(1));
     }
@@ -246,7 +247,7 @@ $(document).ready(function() {
                 }
             });
         }
-    })
+    });
 
     $('form#campaign_and_adgroup #submit')
         .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
@@ -322,37 +323,73 @@ $(document).ready(function() {
 
     // make necessary changes based on network type
     $('select[name="network_type"]').change(function() {
-        network_type = $(this).val();
+        var network_type = $(this).val();
+        var pub_id = pub_ids[network_type];
+
         $('.network_type_dependant').each(function() {
             $(this).toggle($(this).hasClass(network_type));
         });
 
-        // show either empty input box or
+        // for each appropriate input, show either the input or the span and button
+        $('ul#apps > li').each(function() {
+            console.log(this);
+            var span = $(this).children('div').children('span');
+            console.log(span);
+            span.children().hide();
+            var input = span.children('input[name$="'+pub_id+'"]');
+            var value = input.val();
+            console.log(value);
+            if(value) {
+                input.siblings('span.pub_id').html(value).show();
+                input.siblings('a.pub_id').show();
+            }
+            else {
+                input.show();
+            }
+            $(this).children('div').children('ul.adunits').children('li').children('span').each(function() {
+                var span = $(this);
+                span.children().hide();
+                var input = span.children('input[name$="'+pub_id+'"]');
+                if(input.length) {
+                    var value = input.val();
+                    if(value) {
+                        input.siblings('span.pub_id').html(value).show();
+                    }
+                    else {
+                        input.siblings('span.pub_id').html('Default').show();
+                    }
+                    input.siblings('a.pub_id').show();
+                }
+            });
+        });
+
+        $('a.pub_id').click(function() {
+            $(this).siblings('input[name$="'+pub_id+'"]').show();
+            $(this).prev('span').hide();
+            $(this).hide();
+        });
+
+        /*
+        // for adunits without an app pub_id, hide input
+        $('ul.adunits li').each(function() {
+            console.log($(this).closest('div').children('span').children('input[name$="'+pub_id+'"]').val());
+            console.log(!$(this).closest('div').children('span').children('input[name$="'+pub_id+'"]').val());
+            if(!$(this).closest('div').children('span').children('input[name$="'+pub_id+'"]').val()) {
+                $(this).children('input').hide();
+                $(this).children('span.pub_id').html('Default').show();
+                $(this).children('button.pub_id').show();
+            }
+        });*/
     }).change(); // update on document ready
 
-    var network_type = $('select[name="network_type"]').val();
-    var pub_id = pub_ids[network_type];
+    $('button.pub_id').click(function() {
+        var network_type = $('select[name="network_type"]').val();
+        var pub_id = pub_ids[network_type];
 
-    // hide all pub_id inputs
-    $('input[name$="_pub_id"]').hide();
-
-    // for each appropriate input, show either the input, or the two spans
-    $('input[name$="'+pub_id+'"]').each(function() {
-        if($(this).val()) {
-            $(this).siblings('span[class$="_pub_id"]').html($(this).val()).show();
-            $(this).siblings('span.c').show();
-        }
-        else {
-            $(this).show();
-            $(this).siblings('span[class$="_pub_id"]').hide();
-            $(this).siblings('span.change').hide();
-        }
-    });
-
-    $('span.change_pub_id').click(function() {
-        network_type = $('select[name="network_type"]').val();
-
-        $(this).hide().prev('span').hide();
+        $(this).siblings('input').hide();
+        $(this).prev('span').hide();
+        $(this).hide();
+        $(this).siblings('input[name$="'+pub_id+'"]').show();
     });
 
     // make necessary changes based on campaign_type

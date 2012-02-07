@@ -93,8 +93,6 @@
                 {{ account_network_config_form.jumptap_pub_id.label_tag }}
                 <div>
                     {{ account_network_config_form.jumptap_pub_id }}
-                    <span class="pub_id">{{ account_network_config_form.jumptap_pub_id|display_value }}</span>
-                    <span class="change">change</span>
                 </div>
             </li>
 
@@ -192,24 +190,27 @@
             {% for app in apps %}
             <li>
                 <img src="{% url publisher_app_icon app_key=app.key %}" />
-                <div class="details">
-                    <label for="id_app_{{ app.key }}_pub_id">
-                        <span class="app_name">{{ app.name }}</span>
-                        <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                <div>
+                    <label>
+                        {{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
                     </label>
-                    {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                    <span class="app_pub_id"></span>
-                    <span class="change">change</span>
-                    <ul>
+                    <span class="campaign_type_dependant network">
+                        {% for field in app.network_config_form %}{{ field }}{% endfor %}
+                        <span class="pub_id"></span>
+                        <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                    </span>
+                    <ul class="adunits">
                         {% for adunit in app.adunits %}
                         <li>
                             <label>
                                 <input {% if adunit.key in adgroup_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" />
-                                <span class="adunit_name">{{ adunit.name }}</span>
+                                {{ adunit.name }}
                             </label>
-                            {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
-                            <span class="adunit_pub_id"></span>
-                            <span class="change">change</span>
+                            <span class="campaign_type_dependant network">
+                                {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
+                                <span class="pub_id"></span>
+                                <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                            </span>
                         </li>
                         {% endfor %}
                     </ul>

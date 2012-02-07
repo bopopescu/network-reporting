@@ -427,8 +427,6 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
         if not self.request.is_ajax():
             raise Http404
 
-        logging.error(request.POST)
-
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
         campaign_form = CampaignForm(self.request.POST, instance=adgroup.campaign)

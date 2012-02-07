@@ -58,7 +58,7 @@
         <tr id="stats-breakdown-clicks">
           <td class="stats-breakdown-value today">
             <span class="inner">
-              {% if stats.ctr.today %}
+              {% if stats.ctr.today >= 0 %}
                 <span class="muted unbold">({{stats.ctr.today|percentage}})</span>
               {% endif %}
               {{stats.clicks.today|withsep}}
@@ -66,7 +66,7 @@
           </td>
           <td class="stats-breakdown-value yesterday">
             <span class="inner">
-              {% if stats.ctr.yesterday %}
+              {% if stats.ctr.yesterday  >= 0 %}
                 <span class="muted unbold">({{stats.ctr.yesterday|percentage}})</span>
               {% endif %}
               {{stats.clicks.yesterday|withsep}}
@@ -74,7 +74,7 @@
           </td>
           <td class="stats-breakdown-value all">
           <span class="inner">
-            {% if stats.ctr.total %}
+            {% if stats.ctr.total >= 0 %}
               <span class="muted unbold">({{stats.ctr.total|percentage}})</span>
             {% endif %}
             {{stats.clicks.total|withsep}}

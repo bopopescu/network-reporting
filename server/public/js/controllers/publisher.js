@@ -108,6 +108,11 @@ var mopub = mopub || {};
         }).filter(':checked').click(); // make sure we're in sync when the page loads
     }
 
+    /*
+     * ## initializeDailyCounts
+     * Initializes click handlers in the daily counts section for the
+     * app/adunit detail pages.
+     */
     function initializeDailyCounts() {
         $('.appData-details').each(function() {
             var details = $(this);
@@ -116,7 +121,9 @@ var mopub = mopub || {};
 
             function getButtonTextElement() {
                 var buttonTextElement = $('.ui-button-text', button);
-                if(buttonTextElement.length === 0) {buttonTextElement = button;}
+                if (buttonTextElement.length === 0) {
+                    buttonTextElement = button;
+                }
                 return buttonTextElement;
             }
 
@@ -167,7 +174,9 @@ var mopub = mopub || {};
             .buttonset()
             .click(function(e){
                 $('#adForm-tablet-container').hide();
-                $('#adForm-phone-container').show().find('input[type="radio"]')[0].click();
+                $('#adForm-phone-container')
+                    .show()
+                    .find('input[type="radio"]')[0].click();
             });
 
         $('#adunit-device_format_tablet').click(function(e){
@@ -343,8 +352,6 @@ var mopub = mopub || {};
                 other.datepicker('option', 'maxDate', date);
             }
         });
-
-
     }
 
     /*
@@ -486,12 +493,17 @@ var mopub = mopub || {};
                 data: { ajax: true },
                 dataType: 'json',
                 success: function(jsonData, statusText, xhr, $form) {
+
+                    // Hide the loading spinner
                     $('#appEditForm-loading').hide();
 
+                    // Reload the page if the form save was successful
                     if (jsonData.success) {
                         window.location.reload();
                     } else {
+                        // Remove the existing errors before we add the new ones.
                         $('.form-error-text', "#appForm").remove();
+
                         $.each(jsonData.errors, function (iter, item) {
                             var name = item[0];
                             var error_div = $("<div>").append(item[1]).addClass('form-error-text');
@@ -512,6 +524,8 @@ var mopub = mopub || {};
                 }
             });
 
+            // When the 'submit' button is clicked, show the loading spinner
+            // and submit the form.
             $('#appEditForm-submit')
                 .button({
                     icons: { secondary: "ui-icon-circle-triangle-e" }
@@ -522,12 +536,14 @@ var mopub = mopub || {};
                     $('#appForm').submit();
                 });
 
+            // When the 'cancel' button is clicked, hide the form by sliding it up
             $('#appEditForm-cancel')
                 .click(function(e) {
                     e.preventDefault();
                     $('#dashboard-appEditForm').slideUp('fast');
                 });
 
+            //
             $('#dashboard-apps-editAppButton')
                 .button({
                     icons: { primary: "ui-icon-wrench" }
@@ -579,7 +595,6 @@ var mopub = mopub || {};
                     if (jsonData.success) {
                         window.location.reload();
                     } else {
-
                         // reimplement the onload event
                         initializeAppForm();
                         initializeAdunitForm();

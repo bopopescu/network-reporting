@@ -150,7 +150,7 @@
           budget_type: '{{ adgroup.campaign.budget_type }}',
           budget: {% if adgroup.campaign.budget_type == "daily" %}{% if adgroup.campaign.budget %}{{ adgroup.campaign.budget }}{% else %}null{% endif %}{% else %}{% if adgroup.campaign.full_budget %}{{ adgroup.campaign.full_budget }}{% else %}null{% endif %}{% endif %},
           goal: {% if adgroup.budget_goal %}{{ adgroup.budget_goal }}{% else %}null{% endif %},
-          bid: {{ adgroup.bid }},
+          bid: {{ adgroup.bid|default_if_none:"null" }},
           bid_strategy: '{{ adgroup.bid_strategy }}',
           apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}],
           promo_adgroups_data: [{% for adgroup in promo_adgroups %}{

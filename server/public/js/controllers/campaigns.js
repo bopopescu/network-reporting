@@ -453,7 +453,11 @@
             $('#campaign-status-options')
                 .change(function(e) {
                     var val = $(this).val();
-                    $('#fake-campaignForm').find('#action').attr('value', val).end().submit();
+                    $('#fake-campaignForm')
+                        .find('#action')
+                        .attr('value', val)
+                        .end()
+                        .submit();
                 });
 
             // Delete redunundant first option

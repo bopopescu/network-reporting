@@ -222,10 +222,10 @@
     var CampaignsController = {
         initializeDirectSold: function(bootstrapping_data) {
 
-                var gtee_adgroups_data = bootstrapping_data.gtee_adgroups_data,
-            promo_adgroups_data = bootstrapping_data.promo_adgroups_data,
-            backfill_promo_adgroups_data = bootstrapping_data.backfill_promo_adgroups_data,
-            ajax_query_string = bootstrapping_data.ajax_query_string;
+            var gtee_adgroups_data = bootstrapping_data.gtee_adgroups_data,
+                promo_adgroups_data = bootstrapping_data.promo_adgroups_data,
+                backfill_promo_adgroups_data = bootstrapping_data.backfill_promo_adgroups_data,
+                ajax_query_string = bootstrapping_data.ajax_query_string;
 
             // Guaranteed
             var gtee_adgroups = new AdGroups(gtee_adgroups_data);
@@ -298,6 +298,8 @@
         },
 
         initializeAdGroupDetail: function(bootstrapping_data) {
+            var kind = bootstrapping_data.kind;
+
             initializeCreativeForm();
             initializeChart();
 
@@ -409,6 +411,24 @@
             // Delete redunundant first option
             $('#campaign-status-options-menu').find('li').first().hide();
 
+            // Do Campaign Export Select stuff
+            $('#advertiser-adgroups-exportSelect')
+                .change(function(e) {
+                    e.preventDefault();
+                    var val = $(this).val();
+                    if (val != 'exp') {
+                        $('#campaignExportForm')
+                            .find('#campaignExportType')
+                            .val(val)
+                            .end()
+                            .submit();
+                    }
+                    $(this).selectmenu('index', 0);
+                });
+
+            // Hide unneeded li entry
+            $('#advertiser-adgroups-exportSelect-menu').find('li').first().hide();
+
             // Set up device targeting
             $("#device_targeting_False").click(function(){
                 $("#target-by-device").slideUp();
@@ -422,7 +442,7 @@
                 $("#target-by-device").hide();
             }
 
-            if ($(".creativeData").length === 0) {
+            if ($(".creativeData").length === 0 && kind != 'network') {
                 $('#chartWrapper').hide();
                 $('#advertiser-creativeData').hide();
                 $('#advertiser-adgroups-addCreativeButton').click();

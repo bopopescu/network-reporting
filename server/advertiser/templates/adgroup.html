@@ -689,7 +689,9 @@
         {% endif %}
       };
 
-      CampaignsController.initializeAdGroupDetail();
+      CampaignsController.initializeAdGroupDetail({
+         kind: {% if campaign.network %}'network'{% else %}'direct'{% endif %}
+      });
     });
   </script>
 {% endblock %}

@@ -301,22 +301,31 @@
   <script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=4"></script>
   <script>
     $(function () {
-        mopub.Advertiser.initializeAdReportsIndex();
-        account_key = '{{ account_key }}';
-        mopub.Advertiser.initializeCredentialsPage(account_key);
+        var account_key = '{{ account_key }}';
+        AdNetworkReportsController.initializeCredentialsPage(account_key);
 
-        AdNetworkReportsController(
-        [{% for network in networks %} {
-           network: '{{ network.name }}',
-           models: [{% for key in network.pub_ids %}{
-              id: '{{ key }}',
-              network: '{{ network.name }}'},
-          {% endfor %}]},
-        {% endfor %}],
-        [{% for app in apps %}{
-            id: '{{ app.key_ }}',
-          },{% endfor %}],
-        's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}');
+        AdNetworkReportsController.initializeAdReportsIndex({
+        networks_data: [
+        {% for network in networks %}
+          {
+            network: '{{ network.name }}',
+            models: [
+              {% for key in network.pub_ids %}
+                {
+                  id: '{{ key }}',
+                  network: '{{ network.name }}'},
+                {% endfor %}
+                ]
+          },
+        {% endfor %} ],
+        apps_data: [
+          {% for app in apps %}
+            {
+              id: '{{ app.key_ }}',
+            },
+          {% endfor %} ],
+        ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'
+      });
     });
   </script>
 {% endblock extraScripts %}

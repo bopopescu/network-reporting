@@ -492,7 +492,7 @@ class ShowAppHandler(RequestHandler):
 
         today = app.all_stats[-1]
         try:
-            yesterday = [-2]
+            yesterday = app.all_stats[-2]
         except IndexError:
             yesterday = StatsModel()
         app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())

@@ -42,35 +42,35 @@
       {% stats_breakdown app.stats %}
       {% endcomment %}
 
-                  <div class="stats-breakdown">
-                <table>
-                  <tbody>
-                    <tr class="active" id="stats-breakdown-requests">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.request_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-impressions">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.impression_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{app.stats.ctr|percentage}})</span> {{app.stats.click_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-users">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.user_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                    </tr>
-                  </tbody>
-                </table>
+      <div class="stats-breakdown">
+        <table>
+          <tbody>
+            <tr class="active" id="stats-breakdown-requests">
+              <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
+              <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
+              <td class="stats-breakdown-value all"><span class="inner">{{app.stats.request_count|withsep}}</span></td>
+              <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
+            </tr>
+            <tr id="stats-breakdown-impressions">
+              <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
+              <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
+              <td class="stats-breakdown-value all"><span class="inner">{{app.stats.impression_count|withsep}}</span></td>
+              <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+            </tr>
+            <tr id="stats-breakdown-clicks">
+              <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
+              <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
+              <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{app.stats.ctr|percentage}})</span> {{app.stats.click_count|withsep}}</span></td>
+              <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+            </tr>
+            <tr id="stats-breakdown-users">
+              <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
+              <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
+              <td class="stats-breakdown-value all"><span class="inner">{{app.stats.user_count|withsep}}</span></td>
+              <th class="stats-breakdown-name"><span class="inner">Users</span></th>
+            </tr>
+          </tbody>
+        </table>
               </div>
               <div class="stats-breakdown-buttons">
                 <span class="buttonset button-small" id="stats-breakdown-dateOptions">
@@ -567,6 +567,7 @@
                           {% endfor %}
                       </tbody>
                   </table>
+                  <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
               </div>
           </section>
 

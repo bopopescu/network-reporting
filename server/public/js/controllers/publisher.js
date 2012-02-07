@@ -108,6 +108,52 @@ var mopub = mopub || {};
         }).filter(':checked').click(); // make sure we're in sync when the page loads
     }
 
+    function initializeDailyCounts() {
+        $('.appData-details').each(function() {
+            var details = $(this);
+            var data = $('.appData-details-inner', details);
+            var button = $('.appData-details-toggleButton', details);
+
+            function getButtonTextElement() {
+                var buttonTextElement = $('.ui-button-text', button);
+                if(buttonTextElement.length === 0) {buttonTextElement = button;}
+                return buttonTextElement;
+            }
+
+            function didShowData() {
+                data.removeClass('hide');
+                data.addClass('show');
+                button.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+                getButtonTextElement().text('Hide details');
+            }
+
+            function didHideData() {
+                data.removeClass('show');
+                data.addClass('hide');
+                button.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+                getButtonTextElement().text('Show details');
+            }
+
+            if (data.hasClass('show')) {
+                didShowData();
+            } else {
+                data.hide();
+                didHideData();
+            }
+
+            button.click(function(e) {
+                e.preventDefault();
+                if (data.hasClass('show')) {
+                    data.slideUp('fast');
+                    didHideData();
+                } else {
+                    data.slideDown('fast');
+                    didShowData();
+                }
+            });
+        });
+    }
+
     /*
      * ## initializeAdunitForm
      * Loads all click handlers/visual stuff/ajax loading for
@@ -432,6 +478,7 @@ var mopub = mopub || {};
             initializeAdunitForm();
             initializeDeleteForm();
             initializeiOSAppSearch();
+            initializeDailyCounts();
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
 
             // Controls for the App Edit form
@@ -565,6 +612,7 @@ var mopub = mopub || {};
             initializeCommon();
             initializeAdunitForm();
             initializeDeleteForm();
+            initializeDailyCounts();
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
 
             $('#dashboard-apps-editAdUnitButton')

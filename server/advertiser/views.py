@@ -698,6 +698,8 @@ class AdgroupDetailHandler(RequestHandler):
                     'total': totals.ctr
                 },
             }
+        logging.warn('\n\n\n\n\n\n\n')
+        logging.warn(stats)
         return render_to_response(self.request,
                                   'advertiser/adgroup.html',
                                   {
@@ -705,7 +707,10 @@ class AdgroupDetailHandler(RequestHandler):
                                       'apps': apps.values(),
                                       'adgroup': adgroup,
                                       'creatives': creatives,
-                                      'stats': stats,
+                                      #'stats': stats,
+                                      'today': today,
+                                      'yesterday': yesterday,
+                                      'totals': totals,
                                       'graph_adunits': graph_adunits,
                                       'start_date': days[0],
                                       'end_date': days[-1],

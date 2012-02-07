@@ -109,7 +109,10 @@
           onSelect: function(selectedDate) {
             var other = $('#dashboard-dateOptions-custom-to');
             var instance = $(this).data("datepicker");
-            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+            var date = $.datepicker.parseDate(instance.settings.dateFormat ||
+                                              $.datepicker._defaults.dateFormat,
+                                              selectedDate,
+                                              instance.settings);
             other.datepicker('option', 'minDate', date);
           }
         });
@@ -119,7 +122,10 @@
           onSelect: function(selectedDate) {
             var other = $('#dashboard-dateOptions-custom-from');
             var instance = $(this).data("datepicker");
-            var date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
+            var date = $.datepicker.parseDate(instance.settings.dateFormat ||
+                                              $.datepicker._defaults.dateFormat,
+                                              selectedDate,
+                                              instance.settings);
             other.datepicker('option', 'maxDate', date);
           }
         });

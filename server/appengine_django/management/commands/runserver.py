@@ -61,8 +61,15 @@ def start_dev_appserver():
   args.extend(['--allow_skipped_files'])
 
   # Pass the application specific datastore location to the server.
-  p = get_datastore_paths()
-  args.extend(["--datastore_path", p[0], "--history_path", p[1]])
+  ds_path,hist_path = get_datastore_paths()
+  if hasattr(settings,'DATASTORE_PATH'):
+    ds_path = settings.DATASTORE_PATH
+  if hasattr(settings,'HISTORY_PATH'):
+    hist_path = settings.HISTORY_PATH
+
+  args.extend(["--datastore_path", ds_path, "--history_path", hist_path])
+
+  
 
   # Append the current working directory to the arguments.
   dev_appserver_main.main([progname] + args + [os.getcwdu()])

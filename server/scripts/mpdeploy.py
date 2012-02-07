@@ -251,7 +251,7 @@ def launch_deploy_process(server=None):
     # redirects stdout/stdin to/from the user.
     call(['appcfg.py', 'backends', server_path, 'update', server])
 
-    envoy.run('rm ' + server_path + '/app.yaml')
+    # envoy.run('rm ' + server_path + '/app.yaml')
 
 
 #@prompt_before_executing

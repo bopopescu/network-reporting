@@ -322,7 +322,7 @@ span.radios ul {
 
 form#campaign_and_adgroup {
     fieldset {
-        padding-top: 0;
+        padding: 0 25px 25px 25px;
     }
 }
 
@@ -445,3 +445,6 @@ ul.device_type {
     }
 }
 
+#toggle_advanced {
+    margin: 25px;
+}

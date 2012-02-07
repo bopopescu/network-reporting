@@ -332,13 +332,11 @@ $(document).ready(function() {
 
         // for each appropriate input, show either the input or the span and button
         $('ul#apps > li').each(function() {
-            console.log(this);
             var span = $(this).children('div').children('span');
-            console.log(span);
             span.children().hide();
             var input = span.children('input[name$="'+pub_id+'"]');
             var value = input.val();
-            console.log(value);
+            $(this).children('div').children('label').attr('for', input.attr('id'));
             if(value) {
                 input.siblings('span.pub_id').html(value).show();
                 input.siblings('a.pub_id').show();
@@ -364,22 +362,12 @@ $(document).ready(function() {
         });
 
         $('a.pub_id').click(function() {
+            var network_type = $('select[name="network_type"]').val();
+            var pub_id = pub_ids[network_type];
             $(this).siblings('input[name$="'+pub_id+'"]').show();
             $(this).prev('span').hide();
             $(this).hide();
         });
-
-        /*
-        // for adunits without an app pub_id, hide input
-        $('ul.adunits li').each(function() {
-            console.log($(this).closest('div').children('span').children('input[name$="'+pub_id+'"]').val());
-            console.log(!$(this).closest('div').children('span').children('input[name$="'+pub_id+'"]').val());
-            if(!$(this).closest('div').children('span').children('input[name$="'+pub_id+'"]').val()) {
-                $(this).children('input').hide();
-                $(this).children('span.pub_id').html('Default').show();
-                $(this).children('button.pub_id').show();
-            }
-        });*/
     }).change(); // update on document ready
 
     $('button.pub_id').click(function() {

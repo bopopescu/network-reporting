@@ -1,6 +1,5 @@
 from __future__ import with_statement
 import urllib2 as urllib
-import logging
 
 from google.appengine.ext import db
 from google.appengine.api import images, files

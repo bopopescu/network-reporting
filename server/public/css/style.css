@@ -1454,7 +1454,7 @@ span.radios ul {
       margin: 0 15px 0 0; }
 
 form#campaign_and_adgroup fieldset {
-  padding-top: 0; }
+  padding: 0 25px 25px 25px; }
 
 ul.form_fields {
   list-style-type: none;
@@ -1549,6 +1549,9 @@ ul.device_type {
     display: inline-block;
     margin: 0;
     padding: 0; }
+
+#toggle_advanced {
+  margin: 25px; }
 
 /*
  * ## Colors

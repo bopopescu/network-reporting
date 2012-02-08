@@ -71,23 +71,15 @@ class SummedStatsFetcher(AbstractStatsFetcher):
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         app = AppQueryManager.get(app_key)
         app_stats = self._get_publisher_stats(app, start, end)
-        logging.warn('app_stats')
-        logging.warn(app_stats)
         return app_stats
 
     def get_adunit_stats(self, adunit_key, start, end, daily=False):
         adunit = AdUnitQueryManager.get(adunit_key)
         adunit_stats = self._get_publisher_stats(adunit, start, end)
-        logging.warn('adunit_stats')
-        logging.warn(adunit_stats)
         return adunit_stats
 
 
 class DirectSoldStatsFetcher(AbstractStatsFetcher):
-    pass
-
-
-class NetworkStatsFetcher(AbstractStatsFetcher):
     pass
 
 

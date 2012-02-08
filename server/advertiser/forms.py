@@ -29,7 +29,7 @@ from google.appengine.api import images, files
 from publisher.models import Site as AdUnit
 
 from budget.query_managers import BudgetQueryManager
-from budget.tzinfo import Pacific, utc
+from budget.tzinfo import Pacific, UTC, utc
 import logging
 import re
 import urlparse
@@ -103,16 +103,41 @@ class CampaignForm(forms.ModelForm):
                                         widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
-        # TODO: change instance datetimes from UTC to Pacific
+        instance = args[8] if len(args) > 8 else kwargs.get('instance', None)
+
+        # start_datetime and end_datetimes are stored in UTC but should be
+        # displayed in Pacific Time
+        if instance:
+            if instance.start_datetime:
+                start_datetime = instance.start_datetime.replace(tzinfo=UTC())
+                instance.start_datetime = start_datetime.astimezone(Pacific_tzinfo())
+            if instance.end_datetime:
+                end_datetime = instance.end_datetime.replace(tzinfo=UTC())
+                instance.end_datetime = end_datetime.astimezone(Pacific_tzinfo())
+
         super(forms.ModelForm, self).__init__(*args, **kwargs)
+
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
 
     def clean_start_datetime(self):
-        # if no start time is given, use the current time
-        return self.cleaned_data['start_datetime'] or datetime.now(Pacific_tzinfo())
+        start_datetime = self.cleaned_data.get('start_datetime', None)
+        if start_datetime:
+            # start_datetime is entered in Pacific Time
+            start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo())
+        else:
+            # if no start time is given, use the current time
+            start_datetime = datetime.now(Pacific_tzinfo())
+        return start_datetime
+
+    def clean_end_datetime(self):
+        end_datetime = self.cleaned_data.get('end_datetime', None)
+        if end_datetime:
+            # end_datetime is entered in Pacific Time
+            end_datetime = end_datetime.replace(tzinfo=Pacific_tzinfo())
+        return end_datetime
 
     def clean(self):
         cleaned_data = super(CampaignForm, self).clean()
@@ -196,8 +221,8 @@ class AdGroupForm(forms.ModelForm):
                                     widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
                                      label='Rate:', initial='cpc')
-    bid = forms.FloatField(widget=forms.TextInput(attrs={'class': 'number'}),
-                           initial=0.05)
+    bid = forms.FloatField(initial=0.05,
+                           widget=forms.TextInput(attrs={'class': 'number'}))
     # site_keys defined in __init__
     allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
                                              required=False,

@@ -1,4 +1,6 @@
 $(document).ready(function() {
+    /*
+
     function calculateAndShowBudget() {
         $('#campaignAdgroupForm-budget-display').hide();
         $('#campaignAdgroupForm-budget-display_full').hide();
@@ -208,7 +210,7 @@ $(document).ready(function() {
     if($("#device_targeting_True:checked").length === 0) {
         $("#target-by-device").hide();
     }
-
+    */
 
     /* new stuff */
 
@@ -393,8 +395,8 @@ $(document).ready(function() {
             $('label[for="id_bid_strategy"]').html('Network Rate');
             // update bid help link
             $('#bid-promo-helpLink').attr('id', 'bid-network-helpLink');
-            // update bid_strategy default
-            $('select[name="bid_strategy"]').val('cpc');
+            // update bid_strategy default and trigger update on bid_strategy
+            $('select[name="bid_strategy"]').val('cpc').change();
         }
         else {
             // update label and help text for bid_strategy and bid

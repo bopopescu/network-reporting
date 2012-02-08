@@ -1,6 +1,5 @@
 $(document).ready(function() {
     /*
-
     function calculateAndShowBudget() {
         $('#campaignAdgroupForm-budget-display').hide();
         $('#campaignAdgroupForm-budget-display_full').hide();
@@ -212,8 +211,6 @@ $(document).ready(function() {
     }
     */
 
-    /* new stuff */
-
     // select the appropriate campaign_type from the hash
     if (window.location.hash.substring(1) !== '') {
         $('select[name="campaign_type"]').val(window.location.hash.substring(1));
@@ -395,14 +392,10 @@ $(document).ready(function() {
             $('label[for="id_bid_strategy"]').html('Network Rate');
             // update bid help link
             $('#bid-promo-helpLink').attr('id', 'bid-network-helpLink');
-            // update bid_strategy default and trigger update on bid_strategy
-            $('select[name="bid_strategy"]').val('cpc').change();
         }
         else {
             // update label and help text for bid_strategy and bid
             $('label[for="id_bid_strategy"]').html('Rate');
-            // update bid_strategy default and trigger update on bid_strategy
-            $('select[name="bid_strategy"]').val('cpm').change();
             if(campaign_type == 'promo') {
                 // update bid help link
                 $('#bid-network-helpLink').attr('id', 'bid-promo-helpLink');
@@ -410,7 +403,6 @@ $(document).ready(function() {
         }
     }).change(); // update on document ready
 
-    //
     $('select[name="budget_type"]').change(function() {
         budget_type = $(this).val();
         $('.budget_type_dependent').each(function() {

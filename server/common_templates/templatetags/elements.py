@@ -18,3 +18,12 @@ def inventory_table(inventory):
 @register.inclusion_tag("partials/stats_breakdown.html")
 def stats_breakdown(stats):
     return {'stats': stats }
+
+
+@register.inclusion_tag("partials/status_icon.html")
+def status_icon(adgroup):
+    """
+    Returns an image tag based on the adgroup's status
+    (deleted/active/inactive/paused).
+    """
+    return {'adgroup': adgroup }

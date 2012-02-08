@@ -13,6 +13,7 @@
 
 {% block dateButtons %}{% endblock dateButtons %}
 
+
 {% block titleBarRight %}
   {% ifequal account.status "new" %}
     <!-- MixPanel Tracking -->
@@ -29,6 +30,7 @@
   {% endifequal %}
 {% endblock titleBarRight %}
 
+
 {% block content %}
   <section>
     <div class="content-main">
@@ -44,14 +46,23 @@
           You can add more apps and ad units later.
         </div>
       {% endifequal %}
-      <form enctype='multipart/form-data' action="" method="POST" accept-charset="utf-8" id="appForm" class="validate">
+
+      <form enctype='multipart/form-data'
+            action=""
+            method="POST"
+            accept-charset="utf-8"
+            id="appForm"
+            class="validate">
         {% if app_key %}
           <input type="hidden" name="app_key" value="{{app_key}}"/>
         {% endif %}
         <fieldset id="appForm-details" class="alt">
-          <legend>App Details</legend>
+          <legend>
+            App Details
+          </legend>
           {{ app_form.as_template }}
         </fieldset>
+
         <fieldset id="appForm-ad" class="adForm">
           <legend>Ad Unit</legend>
           <p>
@@ -63,7 +74,9 @@
           {{ adunit_form.as_template }}
         </fieldset>
         <div class="form-submit">
-          <span id="appForm-loading" class="hidden"><img src="/images/loading2.gif"/></span>
+          <span id="appForm-loading" class="hidden">
+            <img src="/images/loading2.gif"/>
+          </span>
           <span class="buttonWrap">
             <a href="#" class="button" id="appForm-submit">Continue</a>
           </span>

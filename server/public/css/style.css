@@ -1454,7 +1454,7 @@ span.radios ul {
       margin: 0 15px 0 0; }
 
 form#campaign_and_adgroup fieldset {
-  padding-top: 0; }
+  padding: 0 25px 25px 25px; }
 
 ul.form_fields {
   list-style-type: none;
@@ -1466,6 +1466,7 @@ ul.form_fields {
     ul.form_fields > li > label {
       display: inline-block;
       margin: 0 12px 0 0;
+      padding: 0;
       text-align: right;
       vertical-align: top;
       width: 175px;
@@ -1479,6 +1480,7 @@ ul.form_fields {
 span#apps_label {
   display: inline-block;
   margin: 0 12px 0 0;
+  padding: 0;
   text-align: right;
   vertical-align: top;
   width: 175px; }
@@ -1489,17 +1491,43 @@ ul#apps {
   list-style-type: none;
   margin: 0;
   padding: 0; }
-  ul#apps li {
-    margin: 0;
+  ul#apps > li {
+    margin: 0 0 10px 0;
     padding: 0; }
-    ul#apps li img {
+    ul#apps > li > img {
       height: 45px;
       width: 45px;
+      margin-right: 11px;
+      vertical-align: top;
+      -moz-border-radius: 6px;
+      -webkit-border-radius: 6px;
+      border-radius: 6px; }
+    ul#apps > li > div {
+      display: inline-block;
       vertical-align: top; }
-    ul#apps li div.details {
-      display: inline-block; }
-      ul#apps li div.details ul {
-        list-style-type: none; }
+      ul#apps > li > div label {
+        font-size: 14px;
+        display: inline-block;
+        height: 28px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis; }
+      ul#apps > li > div > label {
+        font-weight: 600;
+        width: 200px; }
+      ul#apps > li > div input[type="text"] {
+        width: 200px; }
+      ul#apps > li > div ul {
+        list-style-type: none;
+        overflow: auto;
+        max-height: 200px;
+        margin: 0;
+        padding: 0px 20px; }
+        ul#apps > li > div ul li {
+          height: 28px;
+          margin: 0; }
+          ul#apps > li > div ul li label {
+            width: 180px; }
 
 ul#device_targeting {
   list-style-type: none;
@@ -1521,6 +1549,9 @@ ul.device_type {
     display: inline-block;
     margin: 0;
     padding: 0; }
+
+#toggle_advanced {
+  margin: 25px; }
 
 /*
  * ## Colors

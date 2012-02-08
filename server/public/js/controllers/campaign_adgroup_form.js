@@ -211,6 +211,12 @@ $(document).ready(function() {
 
 
     /* new stuff */
+
+    // select the appropriate campaign_type from the hash
+    if (window.location.hash.substring(1) !== '') {
+        $('select[name="campaign_type"]').val(window.location.hash.substring(1));
+    }
+
     var validator = $('form#campaign_and_adgroup').validate({
         errorPlacement: function(error, element) {
             element.closest('li > div').append(error);
@@ -241,7 +247,7 @@ $(document).ready(function() {
                 }
             });
         }
-    })
+    });
 
     $('form#campaign_and_adgroup #submit')
         .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
@@ -305,35 +311,74 @@ $(document).ready(function() {
     }).change(); // update on document ready
 
     var pub_ids = {
-        'admob': {'label': 'AdMob Pub ID:', 'placeholder': 'ex: a14cdb1922f35xx'},
-        'admob_native': {'label': 'AdMob Pub ID:', 'placeholder': 'ex: a14cdb1922f35xx'},
-        'adsense': {'label': 'AdSense ID:', 'placeholder': 'ex: ca-mb-pub-5592664190023789'},
-        'brightroll': {'label': 'BrightRoll ID:', 'placeholder': 'ex: 3836789'},
-        'chartboost': {'label': 'ChartBoost ID:', 'placeholder': 'ex: 4cf55942bb93162f4500006g'},
-        'ejam': {'label': 'eJam Zone ID:', 'placeholder': 'ex: 23710'},
-        'greystripe': {'label': 'GreyStripe ID:', 'placeholder': 'ex: 3705265e-1025-4873-9352-7b1e4986xxxx'},
-        'inmobi': {'label': 'InMobi ID:', 'placeholder': 'ex: 4028cb962b75ff06012b792fc5fb6789'},
-        'jumptap': {'label': 'JumpTap ID:', 'placeholder': 'ex: pa_company_inc_app'},
-        'millennial': {'label': 'Millennial ID:', 'placeholder': 'ex: 36789'},
-        'millennial_native': {'label': 'Millennial ID:', 'placeholder': 'ex: 36789'},
-        'mobfox': {'label': 'MobFox ID:', 'placeholder': 'ex: 008048afe367bf4ce82ae95363c4xxxx'},
+        'admob_native': 'admob_pub_id',
+        'adsense': 'adsense_pub_id',
+        'brightroll': 'brightroll_pub_id',
+        'ejam': 'ejam_pub_id',
+        'inmobi': 'inmobi_pub_id',
+        'jumptap': 'jumptap_pub_id',
+        'millennial_native': 'millennial_pub_id',
+        'mobfox': 'mobfox_pub_id'
     };
 
     // make necessary changes based on network type
     $('select[name="network_type"]').change(function() {
-        network_type = $(this).val();
+        var network_type = $(this).val();
+        var pub_id = pub_ids[network_type];
+
         $('.network_type_dependant').each(function() {
             $(this).toggle($(this).hasClass(network_type));
         });
-        if(network_type in pub_ids) {
-            $('label[for$="_pub_id"]').html(pub_ids[network_type].label)
-            $('input[name$="_pub_id"]').attr('placeholder', pub_ids[network_type].placeholder)
-            $('div.pub_id').show();
-        }
-        else {
-            $('div.pub_id').hide();
-        }
+
+        // for each appropriate input, show either the input or the span and button
+        $('ul#apps > li').each(function() {
+            var span = $(this).children('div').children('span');
+            span.children().hide();
+            var input = span.children('input[name$="'+pub_id+'"]');
+            var value = input.val();
+            $(this).children('div').children('label').attr('for', input.attr('id'));
+            if(value) {
+                input.siblings('span.pub_id').html(value).show();
+                input.siblings('a.pub_id').show();
+            }
+            else {
+                input.show();
+            }
+            $(this).children('div').children('ul.adunits').children('li').children('span').each(function() {
+                var span = $(this);
+                span.children().hide();
+                var input = span.children('input[name$="'+pub_id+'"]');
+                if(input.length) {
+                    var value = input.val();
+                    if(value) {
+                        input.siblings('span.pub_id').html(value).show();
+                    }
+                    else {
+                        input.siblings('span.pub_id').html('Default').show();
+                    }
+                    input.siblings('a.pub_id').show();
+                }
+            });
+        });
+
+        $('a.pub_id').click(function() {
+            var network_type = $('select[name="network_type"]').val();
+            var pub_id = pub_ids[network_type];
+            $(this).siblings('input[name$="'+pub_id+'"]').show();
+            $(this).prev('span').hide();
+            $(this).hide();
+        });
     }).change(); // update on document ready
+
+    $('button.pub_id').click(function() {
+        var network_type = $('select[name="network_type"]').val();
+        var pub_id = pub_ids[network_type];
+
+        $(this).siblings('input').hide();
+        $(this).prev('span').hide();
+        $(this).hide();
+        $(this).siblings('input[name$="'+pub_id+'"]').show();
+    });
 
     // make necessary changes based on campaign_type
     $('select[name="campaign_type"]').change(function() {
@@ -469,4 +514,5 @@ $(document).ready(function() {
             });
         }
     }).filter(':checked').click();
+
 });

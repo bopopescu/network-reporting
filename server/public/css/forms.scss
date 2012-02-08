@@ -322,7 +322,7 @@ span.radios ul {
 
 form#campaign_and_adgroup {
     fieldset {
-        padding-top: 0;
+        padding: 0 25px 25px 25px;
     }
 }
 
@@ -330,6 +330,7 @@ form#campaign_and_adgroup {
 @mixin left_column {
     display: inline-block;
     margin: 0 12px 0 0;
+    padding: 0;
     text-align: right;
     vertical-align: top;
     width: 175px;
@@ -369,18 +370,50 @@ ul#apps {
     list-style-type: none;
     margin: 0;
     padding: 0;
-    li {
-        margin: 0;
+    > li {
+        margin: 0 0 10px 0;
         padding: 0;
-        img {
+        > img {
             height: 45px;
             width: 45px;
+            margin-right: 11px;
             vertical-align: top;
+            -moz-border-radius: 6px;
+            -webkit-border-radius: 6px;
+            border-radius: 6px;
         }
-        div.details {
-            display: inline-block;
+        > div {
+            @include right_column;
+            label {
+                font-size: 14px;
+                display: inline-block;
+                height: 28px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            > label {
+                font-weight: 600;
+                width: 200px;
+            }
+            input[type="text"] {
+                width: 200px;
+            }
+            button.pub_id {
+            }
             ul {
                 list-style-type: none;
+                overflow: auto;
+                max-height: 200px;
+                margin: 0;
+                padding: 0px 20px;
+                li {
+                    height: 28px;
+                    margin: 0;
+                    label {
+                        width: 180px;
+                    }
+                }
             }
         }
     }
@@ -412,3 +445,6 @@ ul.device_type {
     }
 }
 
+#toggle_advanced {
+    margin: 25px;
+}

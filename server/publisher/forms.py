@@ -1,6 +1,5 @@
 from __future__ import with_statement
 import urllib2 as urllib
-import logging
 
 from google.appengine.ext import db
 from google.appengine.api import images, files
@@ -64,33 +63,25 @@ class AppForm(mpforms.MPModelForm):
         model = App
         fields = ('name', 'app_type', 'url', 'package', 'description', 'adsense_app_name', 'primary_category', 'secondary_category')
 
-    def save(self,commit=True):
-        obj = super(AppForm,self).save(commit=False)
+    def save(self, commit=True):
+        obj = super(AppForm, self).save(commit=False)
         if self.cleaned_data['img_url']:
+            # TODO: add error handling
             if not self.cleaned_data['img_url'] == self.initial.get('img_url'):
-                try:
-                    response = urllib.urlopen(self.cleaned_data['img_url'])
-                    img = response.read()
-
-                    obj.icon_blob = self.store_icon(img)
-                    obj.icon = db.Blob(img) # TODO: stop this!
-
-                except Exception, e: # TODO: appropriately handle the failure
-                    raise Exception('WTF: %s'%e)
+                response = urllib.urlopen(self.cleaned_data['img_url'])
+                img = response.read()
+                # why no resize?
+                obj.icon_blob = self.store_icon(img)
+                obj.icon = db.Blob(img)  # TODO: stop this! why?
             else:
-                logging.info("keeping same icon because the new is same as old")
-                obj.icon = self.instance.icon # sets the icon to the original
+                obj.icon = self.instance.icon  # sets the icon to the original
         elif self.cleaned_data['img_file']:
-            try:
-                img = self.cleaned_data['img_file'].read()
-                icon = images.resize( img, 60, 60)
-
-                obj.icon_blob = self.store_icon(icon)
-                obj.icon = db.Blob(icon)
-            except Exception, e: # TODO: appropriate handle the failure
-                raise Exception('WTF2: %s'%e)
-        elif self.instance: # if neither img_url or img_file come in just use the old value
-            logging.info("keeping same icon because no new provided")
+            # TODO: add error handling
+            img = self.cleaned_data['img_file'].read()
+            icon = images.resize(img, 60, 60)
+            obj.icon_blob = self.store_icon(icon)
+            obj.icon = db.Blob(icon)  # TODO: stop this! why?
+        elif self.instance:  # if neither img_url or img_file come in just use the old value
             obj.icon = self.instance.icon
         if commit:
             obj.put()

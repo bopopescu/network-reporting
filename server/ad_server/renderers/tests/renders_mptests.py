@@ -3,6 +3,7 @@ import os
 import sys
 import datetime
 import logging
+import simplejson
 
 
 #### IF THESE TESTS ARE FAILING, SET THIS TO TRUE, RUN AGAIN, THEN SET
@@ -52,6 +53,25 @@ from ad_server.renderers.header_context import HeaderContext
 CREATIVE_KEY = 'agltb3B1Yi1pbmNyFgsSCENyZWF0aXZlIghrZXlfbmFtZQw'
 APP_KEY = ''
 ADUNIT_KEY = 'agltb3B1Yi1pbmNyEgsSBFNpdGUiCGtleV9uYW1lDA'
+
+def deep_dict_eq(dict1, dict2, keys_that_have_json_vals):
+    """ Compare two dictionaries to determine equality. Properly loads and compares JSON values, 
+    assuming that their corresponding keys are passed in as a list."""
+    
+    # Given a key, return whether the two dictionaries have the same value
+    # Works properly for json values, if they are passed in to deep_dict_eq()
+    def values_equal_for_key(key):
+        if key in keys_that_have_json_vals:
+            return simplejson.loads(dict1[key]) == simplejson.loads(dict2[key])
+        else:
+            return dict1[key] == dict2[key]
+    
+    # Dictionaries are only equal if they have the same keys
+    if set(dict1.keys()) != set(dict2.keys()):
+        return False
+    
+    # Short-circuit and return False if the values differ for any key
+    return all([values_equal_for_key(key) for key in dict1.keys()])
 
 class RenderingTestBase(object):
     """ This does not inherit from TestCase because we use Nose's
@@ -220,7 +240,8 @@ class RenderingTestBase(object):
         print "running file name: %s" % name
         print header_context
         print example_headers
-        eq_(header_context, example_headers)
+        # Modified to use deep_dict_eq (as to appropriately load X-Nativeparams)
+        ok_(deep_dict_eq(header_context._dict, example_headers._dict, ['X-Nativeparams']))
 
 
 

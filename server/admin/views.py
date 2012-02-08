@@ -30,7 +30,7 @@ from reports.models import Report
 from account.query_managers import AccountQueryManager, UserQueryManager
 from publisher.query_managers import AppQueryManager
 from reporting.query_managers import StatsModelQueryManager
-from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
+from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 from google.appengine.api import taskqueue
 

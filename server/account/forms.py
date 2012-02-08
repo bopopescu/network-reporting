@@ -51,13 +51,12 @@ inheritance seems not to work with djangoforms.
 
 class AccountNetworkConfigForm(forms.ModelForm):
 
-    jumptap_pub_id = forms.CharField(label='Jumptap Pub ID:', required=False,
-                                     widget=forms.TextInput(attrs={'placeholder': 'Jumptap Pub ID'}))
+    jumptap_pub_id = forms.CharField(label='Jumptap Publisher Alias:',
+                                     required=False,
+                                     widget=forms.TextInput)
 
     def __init__(self, *args, **kwargs):
         super(AccountNetworkConfigForm, self).__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = "pub_id %s" % field_name
 
     def clean(self):
         cleaned_data = self.cleaned_data
@@ -72,22 +71,20 @@ class AccountNetworkConfigForm(forms.ModelForm):
 
 class AppNetworkConfigForm(forms.ModelForm):
 
-    admob_pub_id = forms.CharField(label='AdMob Pub ID:', required=False,
-                                   widget=forms.TextInput(attrs={'placeholder': 'AdMob Pub ID'}))
-    brightroll_pub_id = forms.CharField(label='Brightroll Pub ID:',
-                                        required=False,
-                                        widget=forms.TextInput(attrs={'placeholder': 'Brightroll Pub ID'}))
-    ejam_pub_id = forms.CharField(label='eJam Pub ID:', required=False,
-                                  widget=forms.TextInput(attrs={'placeholder': 'eJam Pub ID'}))
-    inmobi_pub_id = forms.CharField(label='InMobi Pub ID:', required=False,
-                                    widget=forms.TextInput(attrs={'placeholder': 'InMobi Pub ID'}))
-    jumptap_pub_id = forms.CharField(label='Jumptap Pub ID:', required=False,
-                                     widget=forms.TextInput(attrs={'placeholder': 'Jumptap Pub ID'}))
-    millennial_pub_id = forms.CharField(label='Millennial Pub ID:',
-                                        required=False,
-                                        widget=forms.TextInput(attrs={'placeholder': 'Millennial Pub ID'}))
-    mobfox_pub_id = forms.CharField(label='MobFox Pub ID:', required=False,
-                                    widget=forms.TextInput(attrs={'placeholder': 'MobFox Pub ID'}))
+    admob_pub_id = forms.CharField(required=False,
+                                   widget=forms.TextInput(attrs={'placeholder': 'AdMob Publisher ID'}))
+    brightroll_pub_id = forms.CharField(required=False,
+                                        widget=forms.TextInput(attrs={'placeholder': 'Brightroll Publisher ID'}))
+    ejam_pub_id = forms.CharField(required=False,
+                                  widget=forms.TextInput(attrs={'placeholder': 'eJam Publisher ID'}))
+    inmobi_pub_id = forms.CharField(required=False,
+                                    widget=forms.TextInput(attrs={'placeholder': 'InMobi App ID'}))
+    jumptap_pub_id = forms.CharField(required=False,
+                                     widget=forms.TextInput(attrs={'placeholder': 'Jumptap Site Alias'}))
+    millennial_pub_id = forms.CharField(required=False,
+                                        widget=forms.TextInput(attrs={'placeholder': 'Millennial APID'}))
+    mobfox_pub_id = forms.CharField(required=False,
+                                    widget=forms.TextInput(attrs={'placeholder': 'MobFox Publisher Site ID'}))
 
     def __init__(self, *args, **kwargs):
         super(AppNetworkConfigForm, self).__init__(*args, **kwargs)
@@ -109,13 +106,12 @@ class AppNetworkConfigForm(forms.ModelForm):
 
 class AdUnitNetworkConfigForm(forms.ModelForm):
 
-    admob_pub_id = forms.CharField(label='AdMob Pub ID:', required=False,
-                                   widget=forms.TextInput(attrs={'placeholder': 'AdMob Pub ID'}))
-    jumptap_pub_id = forms.CharField(label='Jumptap Pub ID:', required=False,
-                                     widget=forms.TextInput(attrs={'placeholder': 'Jumptap Pub ID'}))
-    millennial_pub_id = forms.CharField(label='Millennial Pub ID:',
-                                        required=False,
-                                        widget=forms.TextInput(attrs={'placeholder': 'Millennial Pub ID'}))
+    admob_pub_id = forms.CharField(required=False,
+                                   widget=forms.TextInput(attrs={'placeholder': 'AdMob Publisher ID'}))
+    jumptap_pub_id = forms.CharField(required=False,
+                                     widget=forms.TextInput(attrs={'placeholder': 'Jumptap Ad Spot Alias'}))
+    millennial_pub_id = forms.CharField(required=False,
+                                        widget=forms.TextInput(attrs={'placeholder': 'Millennial Publisher ID'}))
 
     def __init__(self, *args, **kwargs):
         super(AdUnitNetworkConfigForm, self).__init__(*args, **kwargs)

@@ -517,7 +517,7 @@ class AdgroupDetailHandler(RequestHandler):
         # in the page
         if adgroup.campaign.network():
             if self.start_date and self.date_range:
-                end_date = self.start_date + datetime.timedelta(int(self.date_range)-1)
+                end_date = self.start_date + datetime.timedelta(int(self.date_range) - 1)
                 days = date_magic.gen_days(self.start_date, end_date)
             else:
                 days = date_magic.gen_date_range(self.date_range)
@@ -544,7 +544,6 @@ class AdgroupDetailHandler(RequestHandler):
 
             days = date_magic.gen_days(start_date, end_date)
 
-
         # We want to limit the number of stats we have to fetch.
         # We've determined 90 is a good max.
         if len(days) > 90:
@@ -565,16 +564,16 @@ class AdgroupDetailHandler(RequestHandler):
             del self.request.flash['message']
 
         # Load stats
-        adgroup.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
-        adgroup.stats = reduce(lambda x, y: x+y, adgroup.all_stats, StatsModel())
+        adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+        adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
 
         # Load creatives and populate
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
         creatives = list(creatives)
         for c in creatives:
-            c.all_stats = StatsModelQueryManager(self.account,offline=self.offline).get_stats_for_days(advertiser=c, days=days)
-            c.stats = reduce(lambda x, y: x+y, c.all_stats, StatsModel())
+            c.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=c, days=days)
+            c.stats = reduce(lambda x, y: x + y, c.all_stats, StatsModel())
             # TODO: Should fix DB so that format is always there
             if not c.format:
                 c.format = "320x50"
@@ -588,34 +587,33 @@ class AdgroupDetailHandler(RequestHandler):
             if not app:
                 app = AppQueryManager.get(au.app_key.key())
                 app.adunits = [au]
-                app.all_stats = StatsModelQueryManager(self.account,offline=self.offline).\
+                app.all_stats = StatsModelQueryManager(self.account, offline=self.offline).\
                                         get_stats_for_days(publisher=app,
                                                            advertiser=adgroup,
                                                            days=days)
-                app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
+                app.stats = reduce(lambda x, y: x + y, app.all_stats, StatsModel())
                 apps[au.app_key.key()] = app
             else:
                 app.adunits += [au]
 
-            stats_manager = StatsModelQueryManager(self.account,offline=self.offline)
+            stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
             au.all_stats = stats_manager.get_stats_for_days(publisher=au,
                                                             advertiser=adgroup,
                                                             days=days)
-            au.stats = reduce(lambda x, y: x+y, au.all_stats, StatsModel())
-
+            au.stats = reduce(lambda x, y: x + y, au.all_stats, StatsModel())
 
         # Figure out the top 4 ad units for the graph
         adunits = sorted(adunits, key=lambda adunit: adunit.stats.impression_count, reverse=True)
         graph_adunits = adunits[0:4]
         if len(adunits) > 4:
-              graph_adunits[3] = Site(name='Others')
-              graph_adunits[3].all_stats = [reduce(lambda x, y: x+y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
+            graph_adunits[3] = Site(name='Others')
+            graph_adunits[3].all_stats = [reduce(lambda x, y: x + y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
 
         # Load creatives if we are supposed to
         if not (adgroup.campaign.campaign_type in ['network', 'marketplace', 'backfill_marketplace']):
             # In order to have add creative
             creative_handler = AddCreativeHandler(self.request)
-            creative_fragment = creative_handler.get() # return the creative fragment
+            creative_fragment = creative_handler.get()  # return the creative fragment
 
             # In order to have each creative be editable
             for c in creatives:
@@ -628,37 +626,36 @@ class AdgroupDetailHandler(RequestHandler):
 
         # Only pass back today/yesterday if the last 2 days in the date range are actually today/yesterday
         if end_date == datetime.datetime.now(Pacific_tzinfo()).date():
-            today = reduce(lambda x, y: x+y, [a.all_stats[-1] for a in graph_adunits], StatsModel())
+            today = reduce(lambda x, y: x + y, [a.all_stats[-1] for a in graph_adunits], StatsModel())
             try:
-                yesterday = reduce(lambda x, y: x+y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
+                yesterday = reduce(lambda x, y: x + y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
             except:
                 pass
 
         message = []
-        if adgroup.network_type and not 'custom' in adgroup.network_type and adgroup.network_type!='iAd':
+        if adgroup.network_type and not 'custom' in adgroup.network_type and adgroup.network_type != 'iAd':
             # gets rid of _native_ in admob_native_pub_id to become admob_pub_id
             if '_native' in adgroup.network_type:
-                adgroup_network_type = adgroup.network_type.replace('_native','')
+                adgroup_network_type = adgroup.network_type.replace('_native', '')
             else:
                 adgroup_network_type = adgroup.network_type
 
             if (self.account.network_config \
-                and not getattr(self.account.network_config, adgroup_network_type+'_pub_id')) \
+                and not getattr(self.account.network_config, adgroup_network_type + '_pub_id')) \
                 or not self.account.network_config:
 
                 for app in apps.values():
                     if (app.network_config \
-                        and not getattr(app.network_config,adgroup_network_type+'_pub_id')) \
+                        and not getattr(app.network_config, adgroup_network_type + '_pub_id')) \
                         or not app.network_config:
 
-                        message.append("The application "+app.name+" needs to have a <strong>"+adgroup_network_type.title()+" Network ID</strong> in order to serve. Specify a "+adgroup_network_type.title()+" Network ID on <a href=%s>your account's ad network settings</a> page."%reverse("ad_network_settings"))
+                        message.append("The application " + app.name + " needs to have a <strong>" + adgroup_network_type.title() + " Network ID</strong> in order to serve. Specify a " + adgroup_network_type.title() + " Network ID on <a href=%s>your account's ad network settings</a> page." % reverse("ad_network_settings"))
         if message == []:
             message = None
         else:
             message = "<br/>".join(message)
 
-
-        totals = reduce(lambda x, y: x+y.stats, adunits, StatsModel())
+        totals = reduce(lambda x, y: x + y.stats, adunits, StatsModel())
 
         if today and yesterday:
             stats = {
@@ -715,7 +712,7 @@ class AdgroupDetailHandler(RequestHandler):
                                       'start_date': days[0],
                                       'end_date': days[-1],
                                       'date_range': self.date_range,
-                                      'creative_fragment':creative_fragment,
+                                      'creative_fragment': creative_fragment,
                                       'message': message
                                   })
 
@@ -838,7 +835,6 @@ class PauseAdGroupHandler(RequestHandler):
                         creative.deleted = True
                         update_creatives.append(creative)
 
-
         if update_objs:
             AdGroupQueryManager.put(update_objs)
             camp_objs = []
@@ -892,19 +888,19 @@ class AddCreativeHandler(RequestHandler):
         text_tile_creative_form = text_tile_creative_form or TextAndTileCreativeForm(instance=text_tile_creative)
         html_creative_form = html_creative_form or HtmlCreativeForm(instance=html_creative)
 
+        # text_creative_form is unused in the template, why?
         return self.render(base_creative_form=base_creative_form,
                                     text_creative_form=text_creative_form,
                                     image_creative_form=image_creative_form,
                                     text_tile_creative_form=text_tile_creative_form,
                                     html_creative_form=html_creative_form)
 
-    def render(self,template=None,**kwargs):
+    def render(self, template=None, **kwargs):
         template_name = template or self.TEMPLATE
-        return render_to_string(self.request,template_name=template_name,data=kwargs)
+        return render_to_string(self.request, template_name=template_name, data=kwargs)
 
-    def json_response(self,json_dict):
+    def json_response(self, json_dict):
         return JSONResponse(json_dict)
-
 
     def post(self):
         """
@@ -947,15 +943,13 @@ class AddCreativeHandler(RequestHandler):
             elif creative.ad_type == "html":
                 html_creative = HtmlCreativeQueryManager.get(creative.key())
 
+        base_creative_form = BaseCreativeForm(data=self.request.POST, instance=creative)
+        text_creative_form = TextCreativeForm(data=self.request.POST, instance=text_creative)
+        image_creative_form = ImageCreativeForm(data=self.request.POST, files=self.request.FILES, instance=image_creative)
+        text_tile_creative_form = TextAndTileCreativeForm(data=self.request.POST, files=self.request.FILES, instance=text_tile_creative)
+        html_creative_form = HtmlCreativeForm(data=self.request.POST, instance=html_creative)
 
-        base_creative_form = BaseCreativeForm(data=self.request.POST,instance=creative)
-        text_creative_form = TextCreativeForm(data=self.request.POST,instance=text_creative)
-        image_creative_form = ImageCreativeForm(data=self.request.POST,files=self.request.FILES,instance=image_creative)
-        text_tile_creative_form = TextAndTileCreativeForm(data=self.request.POST,files=self.request.FILES,instance=text_tile_creative)
-        html_creative_form = HtmlCreativeForm(data=self.request.POST,instance=html_creative)
-
-
-        jsonDict = {'success':False,'errors':[]}
+        jsonDict = {'success': False, 'errors': []}
         if base_creative_form.is_valid():
             base_creative = base_creative_form.save(commit=False)
             ad_type = base_creative.ad_type
@@ -970,7 +964,7 @@ class AddCreativeHandler(RequestHandler):
 
             if creative_form.is_valid():
 
-                if not creative_form.instance: #ensure form posts do not change ownership
+                if not creative_form.instance:  # ensure form posts do not change ownership
                     account = self.account
                 else:
                     account = creative_form.instance.account
@@ -982,7 +976,7 @@ class AddCreativeHandler(RequestHandler):
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)
 
-        flatten_errors = lambda frm : [(k, unicode(v[0])) for k, v in frm.errors.items()]
+        flatten_errors = lambda frm: [(k, unicode(v[0])) for k, v in frm.errors.items()]
         grouped_errors = flatten_errors(base_creative_form)
         if creative_form:
             grouped_errors.extend(flatten_errors(creative_form))
@@ -1001,7 +995,7 @@ class DisplayCreativeHandler(RequestHandler):
         c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image":
 
-            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>'%helpers.get_url_for_blob(c.image_blob))
+            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>' % helpers.get_url_for_blob(c.image_blob))
             # return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "text_icon":
             c.icon_url = helpers.get_url_for_blob(c.image_blob)
@@ -1009,14 +1003,14 @@ class DisplayCreativeHandler(RequestHandler):
             return render_to_response(self.request, 'advertiser/text_tile.html', {'c': c})
             #return HttpResponse(c.image,content_type='image/png')
         if c and c.ad_type == "html":
-            return HttpResponse("<html><body style='margin:0px;'>"+c.html_data+"</body></html");
+            return HttpResponse("<html><body style='margin:0px;'>" + c.html_data + "</body></html")
 
 
 class CreativeImageHandler(RequestHandler):
-    def get(self,creative_key):
+    def get(self, creative_key):
         c = CreativeQueryManager.get(creative_key)
         if c and c.image:
-            return HttpResponse(c.image,content_type='image/png')
+            return HttpResponse(c.image, content_type='image/png')
         raise Http404
 
 
@@ -1032,12 +1026,12 @@ class CreativeManagementHandler(RequestHandler):
     def post(self):
         adgroup_key = self.request.POST.get('adgroup_key')
         keys = self.request.POST.getlist('key')
-        action = self.request.POST.get('action','pause')
+        action = self.request.POST.get('action', 'pause')
         update_objs = []
         # TODO: bulk get before for loop
         for creative_key in keys:
             c = CreativeQueryManager.get(creative_key)
-            if c != None and c.ad_group.campaign.account == self.account: # TODO: clean up dereferences
+            if c != None and c.ad_group.campaign.account == self.account:  # TODO: clean up dereferences
                 if action == "pause":
                     c.deleted = False
                     c.active = False
@@ -1055,7 +1049,7 @@ class CreativeManagementHandler(RequestHandler):
             # db.put(update_objs)
             CreativeQueryManager.put(update_objs)
 
-        return HttpResponseRedirect(reverse('advertiser_adgroup_show',kwargs={'adgroup_key':adgroup_key}))
+        return HttpResponseRedirect(reverse('advertiser_adgroup_show', kwargs={'adgroup_key': adgroup_key}))
 
 
 @login_required
@@ -1073,43 +1067,43 @@ class AdServerTestHandler(RequestHandler):
             'chrome': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13',
         }
         country_to_locale_ip = {
-            'US': ('en-US', '204.28.127.10')      ,
-            'FR': ('fr-FR', '96.20.81.147')       ,
-            'HR': ('hr-HR', '93.138.74.115')      ,
-            'DE': ('de-DE', '212.183.113.32')     ,
-            'DA': ('dk-DA', '62.107.177.124')     ,
-            'FI': ('fi-FI', '91.152.79.118')      ,
-            'JA': ('jp-JA', '110.163.227.87')     ,
-            'HD': ('us-HD', '59.181.77.74')       ,
-            'HE': ('il-HE', '99.8.113.207')       ,
-            'RU': ('ru-RU', '83.149.3.32')        ,
-            'NL': ('nl-NL', '77.251.143.68')      ,
-            'PT': ('br-PT', '189.104.89.115')     ,
-            'NB': ('no-NB', '88.89.244.197')      ,
-            'TR': ('tr-TR', '78.180.93.4')        ,
-            'NE': ('go-NE', '0.1.0.2')            ,
-            'TH': ('th-TH', '24.52.71.42')        ,
-            'RO': ('ro-RO', '85.186.180.111')     ,
-            'IS': ('is-IS', '194.144.110.171')    ,
-            'PL': ('pl-PL', '193.34.3.100')       ,
-            'EL': ('gr-EL', '62.38.244.73')       ,
-            'EN': ('us-EN', '174.255.120.125')    ,
-            'ZH': ('tw-ZH', '124.190.51.251')     ,
-            'MS': ('my-MS', '120.141.166.6')      ,
-            'CA': ('es-CA', '95.17.76.100')       ,
-            'IT': ('it-IT', '151.56.174.44')      ,
-            'AR': ('sa-AR', '188.55.13.170')      ,
-            'IN': ('id-IN', '114.57.226.18')      ,
-            'CS': ('cz-CS', '90.180.148.68')      ,
-            'HU': ('hu-HU', '85.66.221.12')       ,
-            'ID': ('id-ID', '180.214.232.8')      ,
-            'ES': ('ec-ES', '190.10.214.187')     ,
-            'KO': ('kr-KO', '112.170.242.147')    ,
-            'SV': ('se-SV', '90.225.96.11')       ,
-            'SK': ('sk-SK', '213.151.218.130')    ,
-            'UK': ('ua-UK', '92.244.103.199')     ,
-            'SL': ('si-SL', '93.103.136.7')       ,
-            'AU': ('en-AU', '114.30.96.10')       ,
+            'US': ('en-US', '204.28.127.10'),
+            'FR': ('fr-FR', '96.20.81.147'),
+            'HR': ('hr-HR', '93.138.74.115'),
+            'DE': ('de-DE', '212.183.113.32'),
+            'DA': ('dk-DA', '62.107.177.124'),
+            'FI': ('fi-FI', '91.152.79.118'),
+            'JA': ('jp-JA', '110.163.227.87'),
+            'HD': ('us-HD', '59.181.77.74'),
+            'HE': ('il-HE', '99.8.113.207'),
+            'RU': ('ru-RU', '83.149.3.32'),
+            'NL': ('nl-NL', '77.251.143.68'),
+            'PT': ('br-PT', '189.104.89.115'),
+            'NB': ('no-NB', '88.89.244.197'),
+            'TR': ('tr-TR', '78.180.93.4'),
+            'NE': ('go-NE', '0.1.0.2'),
+            'TH': ('th-TH', '24.52.71.42'),
+            'RO': ('ro-RO', '85.186.180.111'),
+            'IS': ('is-IS', '194.144.110.171'),
+            'PL': ('pl-PL', '193.34.3.100'),
+            'EL': ('gr-EL', '62.38.244.73'),
+            'EN': ('us-EN', '174.255.120.125'),
+            'ZH': ('tw-ZH', '124.190.51.251'),
+            'MS': ('my-MS', '120.141.166.6'),
+            'CA': ('es-CA', '95.17.76.100'),
+            'IT': ('it-IT', '151.56.174.44'),
+            'AR': ('sa-AR', '188.55.13.170'),
+            'IN': ('id-IN', '114.57.226.18'),
+            'CS': ('cz-CS', '90.180.148.68'),
+            'HU': ('hu-HU', '85.66.221.12'),
+            'ID': ('id-ID', '180.214.232.8'),
+            'ES': ('ec-ES', '190.10.214.187'),
+            'KO': ('kr-KO', '112.170.242.147'),
+            'SV': ('se-SV', '90.225.96.11'),
+            'SK': ('sk-SK', '213.151.218.130'),
+            'UK': ('ua-UK', '92.244.103.199'),
+            'SL': ('si-SL', '93.103.136.7'),
+            'AU': ('en-AU', '114.30.96.10'),
         }
 
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
@@ -1151,7 +1145,7 @@ class AJAXStatsHandler(RequestHandler):
 
         if start_date:
             s = start_date.split('-')
-            start_date = datetime.date(int(s[0]),int(s[1]),int(s[2]))
+            start_date = datetime.date(int(s[0]), int(s[1]), int(s[2]))
             days = StatsModel.get_days(start_date, int(date_range))
         else:
             days = StatsModel.lastdays(int(date_range))
@@ -1166,7 +1160,6 @@ class AJAXStatsHandler(RequestHandler):
             start_date = end_date - datetime.timedelta(int(self.date_range) - 1)
         else:
             start_date = end_date - datetime.timedelta(13)
-
 
         advs = self.params.getlist('adv')
         pubs = self.params.getlist('pub')
@@ -1185,7 +1178,7 @@ class AJAXStatsHandler(RequestHandler):
                                                                                         advertiser=adv,
                                                                                         days=days)
 
-                key = "%s||%s"%(pub or '',adv or '')
+                key = "%s||%s" % (pub or '', adv or '')
                 stats_dict[key] = {}
                 stats_dict[key]['daily_stats'] = [s.to_dict() for s in stats]
                 summed_stats = sum(stats, StatsModel())
@@ -1201,13 +1194,13 @@ class AJAXStatsHandler(RequestHandler):
                         # TODO: overwrite clicks as well
                         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
                         try:
-                            mpx_stats = stats_fetcher.get_account_stats( start_date, end_date)
-                        except MPStatsAPIException, e:
+                            mpx_stats = stats_fetcher.get_account_stats(start_date, end_date)
+                        except MPStatsAPIException:
                             mpx_stats = {}
-                        summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
+                        summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$', '').replace(',', ''))
                         summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
 
-                        summed_stats.cpm = summed_stats.cpm # no-op
+                        summed_stats.cpm = summed_stats.cpm  # no-op
                     else:
                         summed_stats.cpm = adgroup.cpm
 
@@ -1234,9 +1227,7 @@ class AJAXStatsHandler(RequestHandler):
                 else:
                     adv_name = ''
 
-                stats_dict[key]['name'] = "%s||%s"%(pub_name, adv_name)
-
-
+                stats_dict[key]['name'] = "%s||%s" % (pub_name, adv_name)
 
         response_dict = {}
         response_dict['status'] = 200
@@ -1257,9 +1248,9 @@ class CampaignExporter(RequestHandler):
         days = date_magic.gen_days(start, end)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
-        f_name_dict = dict(adgroup_title = adgroup.campaign.name,
-                           start = start.strftime('%m/%d/%y'),
-                           end   = end.strftime('%m/%d/%y'),
+        f_name_dict = dict(adgroup_title=adgroup.campaign.name,
+                           start=start.strftime('%m/%d/%y'),
+                           end=end.strftime('%m/%d/%y'),
                            )
         # Build
         f_name = "MoPub Campaign Stats--Name:%(adgroup_title)s--DateRange:%(start)s - %(end)s" % f_name_dict
@@ -1347,15 +1338,6 @@ class MarketplaceIndexHandler(RequestHandler):
         except MPStatsAPIException, e:
             mpx_stats = {}
 
-        # Get total stats for the rollup/table footer
-        creative_totals = {
-            'imp': 0,
-            'clk': 0,
-            'ctr': 0,
-            'ecpm': 0,
-            'pub_rev': 0
-        }
-
         # Set up the blocklist
         blocklist = []
         network_config = self.account.network_config
@@ -1405,7 +1387,7 @@ class MarketplaceIndexHandler(RequestHandler):
                                       'adunit_keys': adunit_keys,
                                       'pub_key': self.account.key(),
                                       'mpx_stats': simplejson.dumps(mpx_stats),
-                                      'stats_breakdown_includes': ['revenue','impressions','ecpm'],
+                                      'stats_breakdown_includes': ['revenue', 'impressions', 'ecpm'],
                                       'totals': mpx_stats,
                                       'today_stats': today_stats,
                                       'yesterday_stats': yesterday_stats,
@@ -1435,7 +1417,7 @@ class BlocklistHandler(RequestHandler):
         try:
             # Get the blocklist urls and the action
             blocklist_urls = self.request.POST.get('blocklist')
-            blocklist = blocklist_urls.replace(',',' ').split()
+            blocklist = blocklist_urls.replace(',', ' ').split()
             blocklist_action = self.request.POST.get('action')
 
             # Set the network config
@@ -1458,7 +1440,7 @@ class BlocklistHandler(RequestHandler):
                 for url in blocklist:
                     if network_config.blocklist.count(url):
                         network_config.blocklist.remove(url)
-                AccountQueryManager().update_config_and_put(account=self.account,network_config=network_config)
+                AccountQueryManager().update_config_and_put(account=self.account, network_config=network_config)
                 return JSONResponse({'success': 'blocklist item(s) removed'})
 
             # If they didn't pass the action, it's an error.
@@ -1494,7 +1476,7 @@ class ContentFilterHandler(RequestHandler):
         if filter_level:
             if filter_level == "none":
                 network_config.set_no_filter()
-            elif filter_level  == "low":
+            elif filter_level == "low":
                 network_config.set_low_filter()
             elif filter_level == "moderate":
                 network_config.set_moderate_filter()
@@ -1617,19 +1599,19 @@ class NetworkIndexHandler(RequestHandler):
         # Today might be None
         stats = {
             'impressions': {
-                'today': "---", #today.impression_count,
-                'yesterday': "---", #yesterday.impression_count,
-                'total': "---" #totals.impression_count,
+                'today': "---",  # today.impression_count,
+                'yesterday': "---",  # yesterday.impression_count,
+                'total': "---"  # totals.impression_count,
             },
             'clicks': {
-                'today': "---", #today.click_count,
-                'yesterday': "---", #yesterday.click_count,
-                'total': "---" #totals.click_count
+                'today': "---",  # today.click_count,
+                'yesterday': "---",  # yesterday.click_count,
+                'total': "---"  # totals.click_count
             },
             'ctr': {
-                'today': "---", #today.ctr,
-                'yesterday': "---", #yesterday.ctr,
-                'total': "---" #totals.ctr
+                'today': "---",  # today.ctr,
+                'yesterday': "---",  # yesterday.ctr,
+                'total': "---"  # totals.ctr
             },
         }
 

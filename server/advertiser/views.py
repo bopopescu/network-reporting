@@ -706,6 +706,7 @@ class AdgroupDetailHandler(RequestHandler):
                                       'campaign': adgroup.campaign,
                                       'apps': apps.values(),
                                       'adgroup': adgroup,
+                                      'adgroup_key': adgroup_key,
                                       'creatives': creatives,
                                       #'stats': stats,
                                       'today': today,

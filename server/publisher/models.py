@@ -210,6 +210,7 @@ class Site(db.Model):
 
     def toJSON(self):
         d = to_dict(self, ignore = ['account', 'network_config', 'app_key'])
+        d['app_key'] = str(self.app_key.key())
         return d
 
     def is_fullscreen(self):

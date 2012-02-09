@@ -81,6 +81,7 @@
 {% endblock titleBarRight %}
 
 
+
 {% block content %}
 
   {% if not apps %}
@@ -253,26 +254,31 @@
   </section>
 
   <section id="dashboard-apps">
-    <h2>Targeting Breakdown <span class="muted">({{start_date|format_date_compact}} to {{end_date|format_date_compact}})</span></h2>
+    <h2>
+      Targeting Breakdown
+      <span class="muted">({{start_date|format_date_compact}} to {{end_date|format_date_compact}})</span>
+    </h2>
     <div class="appData-columnHeaders">
       <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
         <thead>
           <tr>
             <th class="appData-icon"></th>
             <th class="dataTable-name"></th>
-            {% if campaign.gtee or campaign.marketplace %}
+            {% if campaign.gtee %}
               <th class="dataTable-data numeric">&nbsp;</th>
               <th class="dataTable-data numeric">Impressions</th>
               <th class="dataTable-data numeric">Clicks</th>
               <th class="dataTable-data numeric">CTR</th>
               <th class="dataTable-data numeric">Revenue</th>
-              {% endif %} {% if campaign.promo %}
+            {% endif %}
+            {% if campaign.promo %}
               <th class="dataTable-data numeric">&nbsp;</th>
               <th class="dataTable-data numeric">Impressions</th>
               <th class="dataTable-data numeric">Clicks</th>
               <th class="dataTable-data numeric">CTR</th>
               <th class="dataTable-data numeric">Conv</th>
-              {% endif %} {% if campaign.network %}
+            {% endif %}
+            {% if campaign.network %}
               <th class="dataTable-data numeric">Attempts</th>
               <th class="dataTable-data numeric">Impressions</th>
               <th class="dataTable-data numeric">Fillrate</th>
@@ -284,39 +290,67 @@
       </table>
     </div>
     {% for a in apps %}
-      <div class="{% cycle 'appData' 'appData appData-alt' %}" id="dashboard-app-{{forloop.counter0}}">
-        <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+      <div class="{% cycle 'appData' 'appData appData-alt' %}"
+           id="dashboard-app">
+        <table class="dataTable appData-main"
+               id="dashboard-app-{{forloop.counter0}}-main">
           <tbody>
-            <tr>
+            <tr class="app-row" id="app-{{ a.key }}">
               <td class="appData-icon">
                 <a href="{% url publisher_app_show app_key=a.key %}">
-                  <img src="{% if a.icon_url %}{{a.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
+                  <img src="{% firstof a.icon_url "/placeholders/image.gif" %}" alt="Icon" width="45" height="45" />
                 </a>
               </td>
               <th class="dataTable-name">
                 <span class="inner">
                   <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
-              <span class="muted unbold">({{ a.app_type_text }})</span></span></th>
+                  <span class="muted unbold">({{ a.app_type_text }})</span>
+                  <img id="{{ a.key }}" class="targeting loading-img" src="/images/icons-custom/spinner-12.gif" />
+                </span>
+              </th>
 
+              <td class="impressions dataTable-data numeric">--</td>
+              <td class="clicks dataTable-data numeric">--</td>
+              <td class="ctr dataTable-data numeric">--</td>
+              {% if campaign.gtee %}
+                <td class="revenue dataTable-data numeric">--</td>
+              {% endif %}
+              {% if campaign.promo %}
+                <td class="dataTable-data numeric">
+                  <span class="conversions">--</span>
+                  (<span class="conv_rate">--</span>)
+                </td>
+              {% endif %}
+              {% if campaign.network %}
+                <td class="dataTable-data numeric">--</td>
+                <td class="dataTable-data numeric">--</td>
+              {% endif %}
+
+              {% comment %}
               {% if campaign.gtee or campaign.marketplace %}
                 <td class="dataTable-data numeric">&nbsp;</td>
                 <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                 <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
                 <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
                 <td class="dataTable-data numeric">{{a.stats.revenue|currency}}</td>
-                {% endif %} {% if campaign.promo %}
+              {% endif %}
+              {% if campaign.promo %}
                 <td class="dataTable-data numeric">&nbsp;</td>
                 <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                 <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
                 <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
-                <td class="dataTable-data numeric">{{a.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})</td>
-                {% endif %} {% if campaign.network %}
+                <td class="dataTable-data numeric">
+                  {{a.stats.conversion_count|withsep}} ({{a.stats.conv_rate|percentage}})
+                </td>
+              {% endif %}
+                {% if campaign.network %}
                 <td class="dataTable-data numeric">{{a.stats.request_count|withsep}}</td>
                 <td class="dataTable-data numeric">{{a.stats.impression_count|withsep}}</td>
                 <td class="dataTable-data numeric">{{a.stats.fill_rate|percentage}}</td>
                 <td class="dataTable-data numeric">{{a.stats.click_count|withsep}}</td>
                 <td class="dataTable-data numeric">{{a.stats.ctr|percentage}}</td>
               {% endif %}
+              {% endcomment %}
             </tr>
           </tbody>
         </table>
@@ -325,9 +359,33 @@
             <table class="dataTable">
               <tbody>
                 {% for au in a.adunits %}
-                  <tr>
-                    <th class="dataTable-name"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+                  <tr class="adunit-row" id="adunit-{{ au.key }}">
 
+                    <th class="dataTable-name">
+                      <span class="inner">
+                        <a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a>
+                      </span>
+                    </th>
+
+                    <td class="impressions dataTable-data numeric">--</td>
+                    <td class="clicks dataTable-data numeric">--</td>
+                    <td class="ctr dataTable-data numeric">--</td>
+                    {% if campaign.gtee %}
+                      <td class="revenue dataTable-data numeric">--</td>
+                    {% endif %}
+                    {% if campaign.promo %}
+                      <td class="dataTable-data numeric">
+                        <span class="conversions">--</span>
+                        (<span class="conv_rate">--</span>)
+                      </td>
+                    {% endif %}
+                    {% if campaign.network %}
+                      <td class="dataTable-data numeric">--</td>
+                      <td class="dataTable-data numeric">--</td>
+                    {% endif %}
+
+
+                    {% comment %}
                     {% if campaign.gtee or campaign.marketplace%}
                       <td class="dataTable-data numeric">&nbsp;</td>
                       <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
@@ -347,6 +405,7 @@
                       <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
                       <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
                     {% endif %}
+                    {% endcomment %}
                   </tr>
                 {% endfor %}
               </tbody>
@@ -518,6 +577,7 @@
                   <option value='csv'>CSV</option>
                 </select>
               </div>
+
               <h2>Daily Counts</h2>
               <div class="appData-details noneg">
                 <table class="dataTable appData-main">
@@ -618,6 +678,9 @@
 
 
           {% block extraScripts %}
+
+            <script src="/js/views.js?v=1"></script>
+            <script src="/js/models.js?v=1"></script>
             <script src="/js/controllers/campaigns.js?v=1"></script>
             <script type="text/javascript">
               $(function() {
@@ -690,7 +753,8 @@
       };
 
       CampaignsController.initializeAdGroupDetail({
-         kind: {% if campaign.network %}'network'{% else %}'direct'{% endif %}
+         kind: {% if campaign.network %}'network'{% else %}'direct'{% endif %},
+         adgroup_key: '{{ adgroup_key }}'
       });
     });
   </script>

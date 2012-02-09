@@ -56,6 +56,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         stats = query_manager.get_stats_for_days(publisher=publisher,
                                                  advertiser=None,
                                                  days=days)
+
         stat_totals = {
             'revenue': sum([stat.revenue for stat in stats]),
             'ctr': 0.0,
@@ -65,7 +66,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
             'requests': sum([stat.request_count for stat in stats]),
             'fill_rate': 0.0,
             'conversions': sum([stat.conversion_count for stat in stats]),
-            'conversion_rate': sum([stat.conversion_count for stat in stats])/len(stats),
+            'conversion_rate': sum([stat.conv_rate for stat in stats])/len(stats),
         }
         stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
         stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])

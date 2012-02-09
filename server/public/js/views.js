@@ -215,9 +215,7 @@ var mopub = window.mopub || {};
         renderInline: function () {
             /*jslint maxlen: 200 */
             var current_model = this.model;
-            console.log('tr.adunit-row#adunit-' + this.model.id)
             var adunit_row = $('tr.adunit-row#adunit-' + this.model.id, this.el);
-            console.log(adunit_row);
             $('.revenue', adunit_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
             $('.ecpm', adunit_row).text(mopub.Utils.formatCurrency(this.model.get('ecpm')));
             $('.impressions', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('impressions')));

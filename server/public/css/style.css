@@ -1412,9 +1412,14 @@ input.price_floor_change {
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(82, 168, 236, 0.6);
     color: black; }
 
-/* NEW STUFF */
-/* form elements */
-input[type="text"], textarea {
+/*
+ * Campaign and AdGroup Form
+ *
+ * TODO: consolidate all the form styles
+ */
+form#campaign_and_adgroup fieldset {
+  padding: 0 25px 25px 25px; }
+form#campaign_and_adgroup input[type="text"], form#campaign_and_adgroup textarea {
   padding: 1px 2px 2px 3px;
   border: 1px solid #eaeaea;
   border-top-color: #b9b9b9;
@@ -1425,45 +1430,36 @@ input[type="text"], textarea {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   border-radius: 3px; }
-
-input[type="text"].date {
+form#campaign_and_adgroup input[type="text"].date {
   width: 85px; }
-
-input[type="text"].time {
+form#campaign_and_adgroup input[type="text"].time {
   width: 48px; }
-
-input[type="text"].number {
+form#campaign_and_adgroup input[type="text"].number {
   width: 70px; }
-
-input.error, textarea.error {
+form#campaign_and_adgroup input.error, form#campaign_and_adgroup textarea.error {
   background: #fff2f2;
   border-color: #e6a1a1;
   border-top-color: #d98d8d;
   color: #222; }
-
-span.radios ul {
+form#campaign_and_adgroup span.radios ul {
   display: inline-block;
   list-style-type: none;
   margin: 0;
   padding: 0; }
-  span.radios ul > li {
+  form#campaign_and_adgroup span.radios ul > li {
     display: inline-block;
     margin: 0;
     padding: 0; }
-    span.radios ul > li > label {
+    form#campaign_and_adgroup span.radios ul > li > label {
       margin: 0 15px 0 0; }
-
-form#campaign_and_adgroup fieldset {
-  padding: 0 25px 25px 25px; }
-
-ul.form_fields {
+form#campaign_and_adgroup ul.form_fields {
   list-style-type: none;
   margin: 0;
   padding: 0; }
-  ul.form_fields > li {
+  form#campaign_and_adgroup ul.form_fields > li {
     margin: 12px 0 0 0;
     padding: 0; }
-    ul.form_fields > li > label {
+    form#campaign_and_adgroup ul.form_fields > li > label {
       display: inline-block;
       margin: 0 12px 0 0;
       padding: 0;
@@ -1473,28 +1469,26 @@ ul.form_fields {
       font-size: 14px;
       font-weight: 300;
       line-height: 16px; }
-    ul.form_fields > li > div {
+    form#campaign_and_adgroup ul.form_fields > li > div {
       display: inline-block;
       vertical-align: top; }
-
-span#apps_label {
+form#campaign_and_adgroup span#apps_label {
   display: inline-block;
   margin: 0 12px 0 0;
   padding: 0;
   text-align: right;
   vertical-align: top;
   width: 175px; }
-
-ul#apps {
+form#campaign_and_adgroup ul#apps {
   display: inline-block;
   vertical-align: top;
   list-style-type: none;
   margin: 0;
   padding: 0; }
-  ul#apps > li {
+  form#campaign_and_adgroup ul#apps > li {
     margin: 0 0 10px 0;
     padding: 0; }
-    ul#apps > li > img {
+    form#campaign_and_adgroup ul#apps > li > img {
       height: 45px;
       width: 45px;
       margin-right: 11px;
@@ -1502,55 +1496,51 @@ ul#apps {
       -moz-border-radius: 6px;
       -webkit-border-radius: 6px;
       border-radius: 6px; }
-    ul#apps > li > div {
+    form#campaign_and_adgroup ul#apps > li > div {
       display: inline-block;
       vertical-align: top; }
-      ul#apps > li > div label {
+      form#campaign_and_adgroup ul#apps > li > div label {
         font-size: 14px;
         display: inline-block;
         height: 28px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis; }
-      ul#apps > li > div > label {
+      form#campaign_and_adgroup ul#apps > li > div > label {
         font-weight: 600;
         width: 200px; }
-      ul#apps > li > div input[type="text"] {
+      form#campaign_and_adgroup ul#apps > li > div input[type="text"] {
         width: 200px; }
-      ul#apps > li > div ul {
+      form#campaign_and_adgroup ul#apps > li > div ul {
         list-style-type: none;
         overflow: auto;
         max-height: 200px;
         margin: 0;
         padding: 0px 20px; }
-        ul#apps > li > div ul li {
+        form#campaign_and_adgroup ul#apps > li > div ul li {
           height: 28px;
           margin: 0; }
-          ul#apps > li > div ul li label {
+          form#campaign_and_adgroup ul#apps > li > div ul li label {
             width: 180px; }
-
-ul#device_targeting {
+form#campaign_and_adgroup ul#device_targeting {
   list-style-type: none;
   margin: 5px 0 0 50px;
   padding: 0; }
-  ul#device_targeting li {
+  form#campaign_and_adgroup ul#device_targeting li {
     margin: 0;
     padding: 0; }
-
-.device_type {
+form#campaign_and_adgroup .device_type {
   display: inline-block;
   width: 150px; }
-
-ul.device_type {
+form#campaign_and_adgroup ul.device_type {
   list-style-type: none;
   margin: 0;
   padding: 0; }
-  ul.device_type li {
+  form#campaign_and_adgroup ul.device_type li {
     display: inline-block;
     margin: 0;
     padding: 0; }
-
-#toggle_advanced {
+form#campaign_and_adgroup #toggle_advanced {
   margin: 25px; }
 
 /*

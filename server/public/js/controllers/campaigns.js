@@ -500,16 +500,6 @@
                     });
             });
 
-            $('#campaign-status-options')
-                .change(function(e) {
-                    var val = $(this).val();
-                    $('#fake-campaignForm')
-                        .find('#action')
-                        .attr('value', val)
-                        .end()
-                        .submit();
-                });
-
             // Delete redunundant first option
             $('#campaign-status-options-menu').find('li').first().hide();
 

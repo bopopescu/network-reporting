@@ -68,9 +68,13 @@ class SummedStatsFetcher(AbstractStatsFetcher):
             'conversions': sum([stat.conversion_count for stat in stats]),
             'conversion_rate': sum([stat.conv_rate for stat in stats])/len(stats),
         }
+
         stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
         stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
         stat_totals['fill_rate'] = fill_rate(stat_totals['requests'], stat_totals['impressions'])
+
+        logging.warn('\n\n\n\n\n\n\n\n')
+        logging.warn(stat_totals)
 
         return stat_totals
 

@@ -78,8 +78,9 @@ class AdImpressionHandler(webapp.RequestHandler):
             budget_service.apply_expense(creative.ad_group.campaign.budget_obj, creative.ad_group.bid/1000)
 
         raw_udid = self.request.get("udid")
-        AdImpressionHandler.increment_frequency_counts(creative=creative,
-                                   raw_udid=raw_udid)
+        if creative:
+            AdImpressionHandler.increment_frequency_counts(creative=creative,
+                                       raw_udid=raw_udid)
 
         if not self.request.get('testing') == TEST_MODE:
             stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)
@@ -92,9 +93,19 @@ class AdImpressionHandler(webapp.RequestHandler):
                                    now=datetime.datetime.now()):
           user_adgroup_daily_key = frequency_capping.memcache_key_for_date(raw_udid, now, creative.ad_group.key())
           user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(raw_udid, now, creative.ad_group.key())
+
+          update_dict = {}
+          if update_dict:
+              # {user_adgroup_daily_key:1,user_adgroup_hourly_key:1}
+              if creative.ad_group.daily_frequency_cap:
+                  update_dict[user_adgroup_daily_key] = 1
+              if creative.ad_group.hourly_frequency_cap:
+                  update_dict[user_adgroup_hourly_key] = 1
+
           trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
           trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
-          memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
+          if update_dict:
+              memcache.offset_multi(update_dict, key_prefix='', namespace=None, initial_value=0)
 
 class AdClickHandler(webapp.RequestHandler):
     # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M

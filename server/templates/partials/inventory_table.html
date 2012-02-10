@@ -17,7 +17,7 @@
       <tr class="main app-row" id="app-{{ app.key }}">
         <td class="icon">
           <div>
-            <img src="{% firstof app.icon_url "/placeholders/image.gif" alt="Icon" width="45" height="45" />
+            <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" />
           </div>
         </td>
         <td class="name">

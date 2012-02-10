@@ -4,6 +4,8 @@ import datetime
 from common.utils.request_handler import RequestHandler
 from django.utils import simplejson
 from common.ragendja.template import render_to_response
+from common.utils.timezones import Pacific_tzinfo
+from django.contrib.auth.decorators import login_required
 
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager
@@ -13,7 +15,7 @@ from publisher.query_managers import AdUnitQueryManager, \
 from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      MPStatsAPIException
 
-from django.contrib.auth.decorators import login_required
+
 
 class MarketplaceIndexHandler(RequestHandler):
     """

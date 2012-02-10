@@ -498,10 +498,10 @@ $(document).ready(function() {
     }); */
 
     // Show location-dependent fields when location targeting is turned on
-    $('#campaignAdgroupForm input[name="location-targeting"]').click(function(e) {
+    $('#campaign_and_adgroup input[name="region_targeting"]').click(function(e) {
         var loc_targ = $(this).val();
-        $('.locationDependent', '#campaignAdgroupForm').hide();
-        $('.' + loc_targ + '.locationDependent', '#campaignAdgroupForm').show();
+        $('.locationDependent', '#campaign_and_adgroup').hide();
+        $('.' + loc_targ + '.locationDependent', '#campaign_and_adgroup').show();
         if ($(this).val() == 'all') {
             $('li.token-input-city span.token-input-delete-token').each(function() {
                 $(this).click();

@@ -1,6 +1,5 @@
 import copy
 import datetime
-import logging # TODO: remove
 import os
 import sys
 import unittest
@@ -12,7 +11,7 @@ sys.path.append(os.environ['PWD'])
 
 import common.utils.test.setup
 from common.utils.timezones import Pacific_tzinfo
-from advertiser.models import Campaign, AdGroup
+from advertiser.models import Campaign
 from advertiser.forms import (CampaignForm, AdGroupForm, BaseCreativeForm,
                               TextCreativeForm, TextAndTileCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
@@ -140,6 +139,7 @@ class TestAdGroupForm(unittest.TestCase):
     def test_bid_mptest(self):
         pass
 
+
 class TestCreativeForm(unittest.TestCase):
 
     def setUp(self):
@@ -154,5 +154,5 @@ class TestCreativeForm(unittest.TestCase):
     def tearDown(self):
         self.testbed.deactivate()
 
-        def test_base_creative_mptest(self):
-            form = BaseCreativeForm()
+    def test_base_creative_mptest(self):
+        form = BaseCreativeForm()

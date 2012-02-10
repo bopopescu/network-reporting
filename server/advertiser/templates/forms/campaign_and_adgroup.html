@@ -282,17 +282,17 @@
                 <div id="geo_pred_ta" name="geo_predicates"></div>
             </div>
         </li>
-        <li>
+        <li class="countryNumDependent 0 1" style="display: none;">
             {{ adgroup_form.region_targeting.label_tag }}
             <div>
                 <span class="radios">{{ adgroup_form.region_targeting }}</span>
             </div>
         </li>
-        <li class="region_targeting_dependent city country_dependent">
+        <li class="locationDependent city countryNumDependent 0 1" style="display: none;">
             <label>City Targeting:</label>
             <div>
-                <div id="city_fake">Please input a country</div>
-                <div id="city_ta"></div>
+                <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
+                <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
             </div>
         </li>
         <li>

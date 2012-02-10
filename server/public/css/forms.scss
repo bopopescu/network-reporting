@@ -445,4 +445,9 @@ form#campaign_and_adgroup {
     #toggle_advanced {
         margin: 25px;
     }
+
+    input.token-input-field {
+        border: 0;
+        width: 100px;
+    }
 }

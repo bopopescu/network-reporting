@@ -13,14 +13,18 @@ from common.utils.decorators import cache_page_until_post, conditionally
 from common.utils.timezones import Pacific_tzinfo
 from django.views.decorators.cache import cache_page
 from django.conf import settings
+from django.http import Http404
 
 from stats.log_service import LogService
 
 audit_logger = LogService(blob_file_name='audit', flush_lines=1)
 
 class RequestHandler(object):
-    """ Does some basic work and redirects a view to get and post appropriately """
-    def __init__(self, request=None, login=True):
+    """ Does some basic work and redirects a view to get and post
+    appropriately """
+    def __init__(self, request=None, login=True, id=None):
+        self._id = id
+        self.obj = None
         self.login = login
         if request:
             self.request = request
@@ -33,6 +37,7 @@ class RequestHandler(object):
         if settings.DEBUG:
             use_cache = False
 
+
         # Initialize our caching decorator
         cache_dec = cache_page_until_post(time=cache_time)
 
@@ -44,7 +49,7 @@ class RequestHandler(object):
                 in order to be able to properly use the cache decorator """
             self.params = request.POST or request.GET
             self.request = request or self.request
-            
+
             today = datetime.now(Pacific_tzinfo()).date()
 
             # start date
@@ -76,6 +81,22 @@ class RequestHandler(object):
 
                 logging.info("final account: %s"%(self.account.key()))
                 logging.info("final account: %s"%repr(self.account.key()))
+
+
+            # If a key is passed in the url, and if the request handler
+            # has been initialized with id='key_name', we can fetch the
+            # object from the db now.  We'll use it later on to make sure
+            # the user requesting the object is actually the object's
+            # owner.
+            if self._id:
+                db_object_key = kwargs.get(self._id)
+                self.obj = db.get(db_object_key)
+
+                # ensure that the fetched object's owner is the same
+                # as the user making the request.
+                if self.obj._account != self.account.key():
+                    raise Http404
+
 
             # use the offline stats
             self.offline = self.params.get("offline",False)
@@ -118,6 +139,9 @@ class RequestHandler(object):
                     if not kwargs.has_key(arg) and self.params.has_key(arg):
                         kwargs[arg] = self.params.get(arg)
                 return self.delete(*args, **kwargs)
+
+
+
 
 
         # Execute our newly decorated view

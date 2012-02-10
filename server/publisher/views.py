@@ -448,9 +448,6 @@ class ShowAppHandler(RequestHandler):
         # create a stats manager
         stats_manager = StatsModelQueryManager(self.account, self.offline)
 
-        # check to see that the user has viewership rights, ow return 404
-        if app.account.key() != self.account.key():
-            raise Http404
 
         app.adunits = AdUnitQueryManager.get_adunits(app=app)
 
@@ -599,7 +596,7 @@ class ShowAppHandler(RequestHandler):
 
 @login_required
 def app_show(request,*args,**kwargs):
-    return ShowAppHandler()(request,*args,**kwargs)
+    return ShowAppHandler(id="app_key")(request,*args,**kwargs)
 
 
 class ExportFileHandler( RequestHandler ):
@@ -841,7 +838,7 @@ class AdUnitShowHandler(RequestHandler):
 
 @login_required
 def adunit_show(request,*args,**kwargs):
-    return AdUnitShowHandler()(request,*args,**kwargs)
+    return AdUnitShowHandler(id='adunit_key')(request,*args,**kwargs)
 
 
 class AppUpdateAJAXHandler(RequestHandler):

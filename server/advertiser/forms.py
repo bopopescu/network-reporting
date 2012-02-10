@@ -298,6 +298,13 @@ class AdGroupForm(forms.ModelForm):
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
 
+    def clean_allocation_percentage(self):
+        allocation_percentage = self.cleaned_data.get('allocation_percentage', None)
+        if (not isinstance(allocation_percentage, int) and
+            not isinstance(allocation_percentage, float)):
+            allocation_percentage = 100
+        return allocation_percentage
+
     def clean(self):
         cleaned_data = super(AdGroupForm, self).clean()
         # don't store targeted cities unless region targeting for cities is selected

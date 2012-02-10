@@ -5,7 +5,7 @@ import datetime
 
 ############## HELPER FUNCTIONS ################
 def memcache_key_for_date(udid,datetime,db_key):
-    return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d'),db_key)
+    return '%s:%s:%s'%(udid,datetime.strftime('%d'),db_key)
 
 def memcache_key_for_hour(udid,datetime,db_key):
-    return '%s:%s:%s'%(udid,datetime.strftime('%y%m%d%H'),db_key)
+    return '%s:%s:%s'%(udid,datetime.strftime('%H'),db_key)

@@ -68,7 +68,7 @@ SUPPORT_EMAIL = 'support@mopub.com'
 REPORTING_EMAIL = 'report-monitoring@mopub.com'
 
 def multiprocess_update_all(start_day=None, end_day=None, email=False,
-        processes=1):
+        processes=1, testing=False):
     """
     Break up update script into multiple processes.
     """
@@ -107,7 +107,8 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
             # appropriate account
             email_account = email and account.ad_network_email
             results.append((account, day, pool.apply_async(update_account_stats,
-                    args=(account, day, email_account))))
+                    args=(account, day, email_account, testing))))
+
 
     # Wait for all processes in pool to complete
     pool.close()
@@ -132,7 +133,7 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
     logging.info("Finished.")
 
 
-def update_account_stats(account, day, email):
+def update_account_stats(account, day, email, testing=False):
     """
     Call update_login_stats for each login for the account for the day.
 
@@ -155,7 +156,7 @@ def update_account_stats(account, day, email):
 
             # Get mappers with stats
             mappers_with_stats = update_login_stats(login, day,
-                    management_stats, logger=logger)
+                    management_stats, logger=logger, testing=testing)
 
             if mappers_with_stats:
                 mapper_list, stats_list = zip(*mappers_with_stats)
@@ -208,21 +209,23 @@ def update_account_stats(account, day, email):
         # Record error in logfile
         logger.error(error_msg)
 
-        # Email admin the error
-        msg = MIMEText(error_msg)
-        msg['Subject'] = "Ad Network Update Error on %s" % \
-                day.strftime("%m/%d/%y")
-        msg['To'] = ADMIN_EMAIL
+        if not testing:
+            # Email admin the error
+            msg = MIMEText(error_msg)
+            msg['Subject'] = "Ad Network Update Error on %s" % \
+                    day.strftime("%m/%d/%y")
+            msg['To'] = ADMIN_EMAIL
 
-        # Send the message via our own SMTP server, but don't include the
-        # envelope header.
-        s = smtplib.SMTP(SMTP_SERVER)
-        s.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, msg.as_string())
-        s.quit()
+            # Send the message via our own SMTP server, but don't include the
+            # envelope header.
+            s = smtplib.SMTP(SMTP_SERVER)
+            s.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, msg.as_string())
+            s.quit()
         raise
 
 
-def update_login_stats_for_check(login, start_day=None, end_day=None):
+def update_login_stats_for_check(login, start_day=None, end_day=None,
+        testing=False):
     """
     Collect data for a given login from the start date to yesterday.
 
@@ -239,11 +242,12 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
     # Collect stats
     stats_list = []
     for day in date_magic.gen_days(start_day, end_day):
-        stats_list += update_login_stats(login, day, from_check=True)
+        stats_list += update_login_stats(login, day, from_check=True,
+                testing=testing)
     login.put()
 
 
-    if stats_list:
+    if stats_list and not testing:
         # Flush stats to db
         db.put([stats for mapper, stats in stats_list])
 
@@ -268,7 +272,7 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
 
 
 def update_login_stats(login, day, management_stats=None, from_check=False,
-        logger=None):
+        logger=None, testing=False):
     """
     Update or create stats for the given login and day.
 
@@ -319,20 +323,23 @@ def update_login_stats(login, day, management_stats=None, from_check=False,
                         login.account.key(),
                         login.ad_network_name))
         exc_traceback = sys.exc_info()[2]
-        # Email admin the traceback
-        msg = MIMEText("Couldn't get get stats for %s network for \"%s\" " \
-                "account. Error:\n %s\n\nTraceback:\n%s" % (login. \
-                    ad_network_name, login.account.key(), e, repr(traceback. \
-                        extract_tb(exc_traceback))))
-        msg['Subject'] = "Ad Network Scrape Error on %s" % \
-                day.strftime("%m/%d/%y")
-        msg['To'] = ADMIN_EMAIL
 
-        # Send the message via our own SMTP server, but don't include the
-        # envelope header.
-        s = smtplib.SMTP(SMTP_SERVER)
-        s.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, msg.as_string())
-        s.quit()
+        if not testing:
+            # Email admin the traceback
+            msg = MIMEText("Couldn't get get stats for %s network for \"%s\" " \
+                    "account. Error:\n %s\n\nTraceback:\n%s" % (login. \
+                        ad_network_name, login.account.key(), e, repr(traceback. \
+                            extract_tb(exc_traceback))))
+            msg['Subject'] = "Ad Network Scrape Error on %s" % \
+                    day.strftime("%m/%d/%y")
+            msg['To'] = ADMIN_EMAIL
+
+            # Send the message via our own SMTP server, but don't include the
+            # envelope header.
+            s = smtplib.SMTP(SMTP_SERVER)
+            s.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, msg.as_string())
+            s.quit()
+
         return []
 
     # Get all mappers for login and put them in a dict for quick access

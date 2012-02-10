@@ -116,15 +116,15 @@ var mopub = window.mopub || {};
                     $.each(metrics, function(iter, metric) {
                         console.log('i was called');
                         var selector = '#stats-breakdown-' + metric + ' .yesterday .inner';
-                        $(selector).html(this_view.collection.get_formatted_stat(metric),
-                                         this_view.options.yesterday);
+                        $(selector).html(this_view.collection.get_formatted_stat_for_day(metric,
+                                         this_view.options.yesterday));
                     });
 
                     // Render the stats breakdown for yesterday
                     $.each(metrics, function(iter, metric){
                         var selector = '#stats-breakdown-' + metric + ' .today .inner';
-                        $(selector).html(this_view.collection.get_formatted_stat(metric),
-                                         this_view.options.today);
+                        $(selector).html(this_view.collection.get_formatted_stat_for_day(metric,
+                                         this_view.options.today));
                     });
                 }
 

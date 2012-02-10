@@ -208,6 +208,8 @@ if (typeof window.console == "undefined") {
         // TODO: tell server that message.attr('id') has been hidden
 
         // Set up stats breakdown
+        // Should be done in backbone view
+        /*
         $('.stats-breakdown tr').click(function(e) {
             var row = $(this);
             if (!row.hasClass('active')) {
@@ -216,6 +218,7 @@ if (typeof window.console == "undefined") {
                 row.addClass('active');
             }
         });
+        */
 
         // Set up highcharts default options
         Highcharts.setOptions({

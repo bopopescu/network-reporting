@@ -14,7 +14,7 @@ urlpatterns = patterns('advertiser.views',
     #url(r'^adgroup/edit/(?P<adgroup_key>[-\w\.]+)/$', 'campaign_adgroup_edit', name='advertiser_adgroup_edit'),
     url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)/$', 'campaign_adgroup_show', name='advertiser_adgroup_show'),
     url(r'^adserver_test/$', 'adserver_test', name='advertiser_adserver_test'),
-    url(r'^stats/ajax/$', 'stats_ajax', name='stats_ajax'),
+
     url(r'^$', 'adgroups', name='advertiser_campaign'),
     url(r'^archive/$', 'archive', name='advertiser_archive'),
     url(r'^export/$', 'campaign_export', name='campaign_export'),

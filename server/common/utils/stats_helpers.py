@@ -88,6 +88,15 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         adunit_stats = self._get_publisher_stats(adunit, start, end)
         return adunit_stats
 
+    def get_campaign_specific_app_stats(self, app_key, adgroup_key,
+                                        start, end, *args, **kwargs):
+        pass
+
+    def get_campaign_specific_adunit_stats(self, adunit_key, adgroup_key,
+                                           start, end, *args, **kwargs):
+        pass
+
+
 
 class DirectSoldStatsFetcher(AbstractStatsFetcher):
     pass

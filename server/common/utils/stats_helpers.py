@@ -56,12 +56,18 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         stats = query_manager.get_stats_for_days(publisher=publisher,
                                                  advertiser=None,
                                                  days=days)
-        stat_totals = {'revenue': sum([stat.revenue for stat in stats]),
-                       'ctr': 0.0,
-                       'ecpm': 0.0,
-                       'impressions': sum([stat.impression_count for stat in stats]),
-                       'clicks': sum([stat.click_count for stat in stats]),
-                       'requests': sum([stat.request_count for stat in stats]),}
+
+        stat_totals = {
+            'revenue': sum([stat.revenue for stat in stats]),
+            'ctr': 0.0,
+            'ecpm': 0.0,
+            'impressions': sum([stat.impression_count for stat in stats]),
+            'clicks': sum([stat.click_count for stat in stats]),
+            'requests': sum([stat.request_count for stat in stats]),
+            'fill_rate': 0.0,
+            'conversions': sum([stat.conversion_count for stat in stats]),
+            'conversion_rate': sum([stat.conv_rate for stat in stats])/len(stats),
+        }
         stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
         stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
         stat_totals['fill_rate'] = fill_rate(stat_totals['requests'], stat_totals['impressions'])
@@ -71,23 +77,15 @@ class SummedStatsFetcher(AbstractStatsFetcher):
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         app = AppQueryManager.get(app_key)
         app_stats = self._get_publisher_stats(app, start, end)
-        logging.warn('app_stats')
-        logging.warn(app_stats)
         return app_stats
 
     def get_adunit_stats(self, adunit_key, start, end, daily=False):
         adunit = AdUnitQueryManager.get(adunit_key)
         adunit_stats = self._get_publisher_stats(adunit, start, end)
-        logging.warn('adunit_stats')
-        logging.warn(adunit_stats)
         return adunit_stats
 
 
 class DirectSoldStatsFetcher(AbstractStatsFetcher):
-    pass
-
-
-class NetworkStatsFetcher(AbstractStatsFetcher):
     pass
 
 

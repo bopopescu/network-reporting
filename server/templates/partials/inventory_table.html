@@ -17,11 +17,7 @@
       <tr class="main app-row" id="app-{{ app.key }}">
         <td class="icon">
           <div>
-          {% if app.icon_url %}
             <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" />
-          {% else %}
-            <img src="/placeholders/image.gif" alt="Icon" width="45" height="45" />
-          {% endif %}
           </div>
         </td>
         <td class="name">

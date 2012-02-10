@@ -1,6 +1,5 @@
 __doc__ = """
-API for fetching JSON serialized data for Apps, AdUnits, AdGroups, and
-AdNetworkReports.
+API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
 from advertiser.query_managers import AdGroupQueryManager
 from publisher.query_managers import AdUnitQueryManager, \
@@ -16,7 +15,6 @@ from common.utils.request_handler import RequestHandler
 from common.ragendja.template import JSONResponse
 from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      SummedStatsFetcher, \
-     NetworkStatsFetcher, \
      DirectSoldStatsFetcher, \
      AdNetworkStatsFetcher
 
@@ -89,9 +87,10 @@ class AdUnitService(RequestHandler):
     """
     API Service for delivering serialized AdUnit data
     """
-    def get(self, app_key = None, adunit_key = None):
+    def get(self, app_key=None, adgroup_key=None, adunit_key=None):
         """
-        Get the adunit data (stats data for the specified date range included)
+        Get the adunit data (stats data for the specified date range
+        included)
         """
         try:
 
@@ -143,6 +142,24 @@ class AdUnitService(RequestHandler):
                         adunit.update(active = False)
 
                 return JSONResponse(response)
+
+            elif adgroup_key:
+                adgroup = AdGroupQueryManager.get(adgroup_key)
+                adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
+                response = [adunit.toJSON() for adunit in adunits]
+
+                # Update each app with stats from the selected endpoint
+                for adunit in response:
+                    adunit_stats = stats.get_adunit_stats(adunit['id'],
+                                                          start_date,
+                                                          end_date)
+                    # We update with the app and adgroup id/key because our
+                    # backbone models often need it for reference
+                    adunit_stats.update({'app_id': str(adunit['app_key'])})
+                    adunit.update(adunit_stats)
+
+                return JSONResponse(response)
+
             else:
                 return JSONResponse({'error': 'No parameters provided'})
 
@@ -282,55 +299,6 @@ class AdGroupService(RequestHandler):
 @login_required
 def adgroup_service(request, *args, **kwargs):
     return AdGroupService()(request, use_cache=False, *args, **kwargs)
-
-
-class CreativeService(RequestHandler):
-    """
-    API Service for delivering serialized Creative data
-    """
-    def get(self, creative_key=None):
-
-
-        mpxstats = MarketplaceStatsFetcher(self.account.key())
-
-        end_date = datetime.datetime.today()
-        start_date = end_date - datetime.timedelta(13)
-        # url = "http://mpx.mopub.com/stats/creatives?pub_id=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw&dsp_id=4e8d03fb71729f4a1d000000"
-        # response = urllib2.urlopen(url).read()
-        # data = simplejson.loads(response)
-
-        creative_data = mpxstats.get_all_creatives(start_date, end_date)
-
-        creatives = []
-        for creative in creative_data:
-            creatives.append([
-                creative["creative"]["url"],
-                creative["creative"]["ad_dmn"],
-                creative["stats"]["pub_rev"],
-                currency(creative['stats']['ecpm']),
-                creative["stats"]["imp"],
-                #creative["stats"]["clk"],
-                #percentage_rounded(creative['stats']['ctr']),
-            ])
-
-        return JSONResponse({
-            'aaData': creatives
-        })
-
-
-    def post(self):
-        return JSONResponse({'error': 'Not yet implemented'})
-
-    def put(self):
-        return JSONResponse({'error': 'Not yet implemented'})
-
-    def delete(self):
-        return JSONResponse({'error': 'Not yet implemented'})
-
-
-# NOTE: CreativeService is not currently being used. It was determined
-# that proxying creative data through GAE resulted in really high
-# latency.
 
 
 

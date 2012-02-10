@@ -703,6 +703,7 @@ class AdgroupDetailHandler(RequestHandler):
                                       'campaign': adgroup.campaign,
                                       'apps': apps.values(),
                                       'adgroup': adgroup,
+                                      'adgroup_key': adgroup_key,
                                       'creatives': creatives,
                                       #'stats': stats,
                                       'today': today,
@@ -763,7 +764,7 @@ class AdgroupDetailHandler(RequestHandler):
 
 @login_required
 def campaign_adgroup_show(request, *args, **kwargs):
-    return AdgroupDetailHandler()(request, *args, **kwargs)
+    return AdgroupDetailHandler(id='adgroup_key')(request, *args, **kwargs)
 
 
 class PauseAdGroupHandler(RequestHandler):

@@ -266,6 +266,52 @@
         mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
     }
 
+
+    function fetchInventoryForAdGroup(adgroup_key) {
+
+        // Set up an adunit collection, but remap the url to the
+        // adgroup endpoint. this way, we'll only get adunits that
+        // belong to this adgroup.
+        var adgroup_inventory = new AdUnitCollection();
+        adgroup_inventory.adgroup_key = adgroup_key;
+        adgroup_inventory.url = function() {
+            return '/api/adgroup/'
+                + this.adgroup_key
+                + '/adunits/';
+        };
+
+        // Once the adgroup's adunit inventory has been fetched from
+        // the server, render each of the adunits in the appropriate
+        // table row. Additionally, fetch the adunit's app from the
+        // server and render it too.
+        adgroup_inventory.bind('reset', function(adunits){
+            adunits.each(function(adunit){
+                var app = new App({ id: adunit.get('app_key') });
+
+                //XXX: We need to remap the app's url to only get data
+                // for this adgroup
+
+                app.bind('change', function(current_app) {
+                    var appView = new AppView({
+                        model: app,
+                        el: "dashboard-app"
+                    });
+                    appView.renderInline();
+                });
+
+                app.fetch();
+
+                var adunitView = new AdUnitView({
+                    model: adunit,
+                    el: "dashboard-app"
+                });
+                adunitView.renderInline();
+            });
+        });
+
+        adgroup_inventory.fetch();
+    }
+
     var CampaignsController = {
         initializeDirectSold: function(bootstrapping_data) {
 
@@ -345,11 +391,13 @@
         },
 
         initializeAdGroupDetail: function(bootstrapping_data) {
-            var kind = bootstrapping_data.kind;
+            var kind = bootstrapping_data.kind,
+                adgroup_key = bootstrapping_data.adgroup_key;
 
             initializeCreativeForm();
             initializeChart();
             initializeDailyCounts();
+            fetchInventoryForAdGroup(adgroup_key);
 
             // Set up the click handler for the campaign status menu
             // in the top left of the page.

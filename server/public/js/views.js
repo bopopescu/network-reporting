@@ -152,7 +152,13 @@ var mopub = window.mopub || {};
     var AppView = Backbone.View.extend({
 
         initialize: function () {
-            this.template = _.template($('#app-template').html());
+            try {
+                this.template = _.template($('#app-template').html());
+            } catch (e) {
+                // the template wasn't specified. this is ok if you
+                // intend to renderInline
+            }
+
         },
 
         renderInline: function () {
@@ -165,7 +171,11 @@ var mopub = window.mopub || {};
             $('.ctr', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
             $('.fill_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
             $('.requests', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
+            $('.conversions', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conversions')));
+            $('.conv_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conversion_rate')));
             /*jslint maxlen: 110 */
+
+            $(".loading-img", app_row).hide();
 
             return this;
         },
@@ -189,7 +199,13 @@ var mopub = window.mopub || {};
     var AdUnitView = Backbone.View.extend({
 
         initialize: function () {
-            this.template = _.template($('#adunit-template').html());
+            try {
+                this.template = _.template($('#adunit-template').html());
+            } catch (e) {
+                // you load the template partial in the page. ok if
+                // you intend to renderInline.
+            }
+
         },
 
         /*
@@ -220,6 +236,8 @@ var mopub = window.mopub || {};
             $('.ctr', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
             $('.clicks', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
             $('.requests', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
+            $('.conversions', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conversions')));
+            $('.conv_rate', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conversion_rate')));
             /*jslint maxlen: 110 */
 
             if (this.model.get('active')) {

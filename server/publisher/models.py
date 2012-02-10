@@ -2,6 +2,8 @@ from google.appengine.ext import blobstore
 from google.appengine.ext import db
 from google.appengine.api import users
 
+from django.conf import settings
+
 from account.models import Account, NetworkConfig
 from advertiser.models import Creative
 
@@ -92,7 +94,11 @@ class App(db.Model):
         from common.utils import helpers
         if not self.icon_blob: return "/placeholders/image.gif"
         try:
-            return helpers.get_url_for_blob(self.icon_blob)
+            url = helpers.get_url_for_blob(self.icon_blob)
+            # hack to get images to appear on localhost
+            if settings.DEBUG:
+                url = url.replace('https', 'http')
+            return url
         except Exception:
             return None
 
@@ -210,6 +216,7 @@ class Site(db.Model):
 
     def toJSON(self):
         d = to_dict(self, ignore = ['account', 'network_config', 'app_key'])
+        d['app_key'] = str(self.app_key.key())
         return d
 
     def is_fullscreen(self):

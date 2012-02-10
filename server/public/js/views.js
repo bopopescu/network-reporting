@@ -150,7 +150,6 @@ var mopub = window.mopub || {};
      * adunits over ajax and put them in the table.
      */
     var AppView = Backbone.View.extend({
-
         initialize: function () {
             try {
                 this.template = _.template($('#app-template').html());
@@ -158,7 +157,6 @@ var mopub = window.mopub || {};
                 // the template wasn't specified. this is ok if you
                 // intend to renderInline
             }
-
         },
 
         renderInline: function () {
@@ -171,6 +169,7 @@ var mopub = window.mopub || {};
             $('.ctr', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
             $('.fill_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
             $('.requests', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
+            $('.attempts', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
             $('.conversions', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conversions')));
             $('.conv_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conversion_rate')));
             /*jslint maxlen: 110 */
@@ -197,7 +196,6 @@ var mopub = window.mopub || {};
      * submit the price floor change over ajax when the price_floor field is changed.
      */
     var AdUnitView = Backbone.View.extend({
-
         initialize: function () {
             try {
                 this.template = _.template($('#adunit-template').html());
@@ -205,7 +203,6 @@ var mopub = window.mopub || {};
                 // you load the template partial in the page. ok if
                 // you intend to renderInline.
             }
-
         },
 
         /*
@@ -236,6 +233,7 @@ var mopub = window.mopub || {};
             $('.ctr', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
             $('.clicks', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
             $('.requests', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
+            $('.attempts', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
             $('.conversions', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conversions')));
             $('.conv_rate', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conversion_rate')));
             /*jslint maxlen: 110 */

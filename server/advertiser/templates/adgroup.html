@@ -305,25 +305,31 @@
                 <span class="inner">
                   <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
                   <span class="muted unbold">({{ a.app_type_text }})</span>
-                  <img id="{{ a.key }}" class="targeting loading-img" src="/images/icons-custom/spinner-12.gif" />
+                  <img id="{{ a.key }}" class="loading-img" src="/images/icons-custom/spinner-12.gif" />
                 </span>
               </th>
 
-              <td class="impressions dataTable-data numeric">--</td>
-              <td class="clicks dataTable-data numeric">--</td>
-              <td class="ctr dataTable-data numeric">--</td>
               {% if campaign.gtee %}
+                <td class="impressions dataTable-data numeric">--</td>
+                <td class="clicks dataTable-data numeric">--</td>
+                <td class="ctr dataTable-data numeric">--</td>
                 <td class="revenue dataTable-data numeric">--</td>
               {% endif %}
               {% if campaign.promo %}
+                <td class="impressions dataTable-data numeric">--</td>
+                <td class="clicks dataTable-data numeric">--</td>
+                <td class="ctr dataTable-data numeric">--</td>
                 <td class="dataTable-data numeric">
                   <span class="conversions">--</span>
                   (<span class="conv_rate">--</span>)
                 </td>
               {% endif %}
               {% if campaign.network %}
-                <td class="dataTable-data numeric">--</td>
-                <td class="dataTable-data numeric">--</td>
+                <td class="attempts dataTable-data numeric">--</td>
+                <td class="impressions dataTable-data numeric">--</td>
+                <td class="fill_rate dataTable-data numeric">--</td>
+                <td class="clicks dataTable-data numeric">--</td>
+                <td class="ctr dataTable-data numeric">--</td>
               {% endif %}
 
               {% comment %}
@@ -367,21 +373,27 @@
                       </span>
                     </th>
 
-                    <td class="impressions dataTable-data numeric">--</td>
-                    <td class="clicks dataTable-data numeric">--</td>
-                    <td class="ctr dataTable-data numeric">--</td>
                     {% if campaign.gtee %}
+                      <td class="impressions dataTable-data numeric">--</td>
+                      <td class="clicks dataTable-data numeric">--</td>
+                      <td class="ctr dataTable-data numeric">--</td>
                       <td class="revenue dataTable-data numeric">--</td>
                     {% endif %}
                     {% if campaign.promo %}
+                      <td class="impressions dataTable-data numeric">--</td>
+                      <td class="clicks dataTable-data numeric">--</td>
+                      <td class="ctr dataTable-data numeric">--</td>
                       <td class="dataTable-data numeric">
                         <span class="conversions">--</span>
                         (<span class="conv_rate">--</span>)
                       </td>
                     {% endif %}
                     {% if campaign.network %}
-                      <td class="dataTable-data numeric">--</td>
-                      <td class="dataTable-data numeric">--</td>
+                      <td class="attempts dataTable-data numeric">--</td>
+                      <td class="impressions dataTable-data numeric">--</td>
+                      <td class="fill_rate dataTable-data numeric">--</td>
+                      <td class="clicks dataTable-data numeric">--</td>
+                      <td class="ctr dataTable-data numeric">--</td>
                     {% endif %}
 
 

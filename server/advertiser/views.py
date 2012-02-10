@@ -695,8 +695,7 @@ class AdgroupDetailHandler(RequestHandler):
                     'total': totals.ctr
                 },
             }
-        logging.warn('\n\n\n\n\n\n\n')
-        logging.warn(stats)
+
         return render_to_response(self.request,
                                   'advertiser/adgroup.html',
                                   {

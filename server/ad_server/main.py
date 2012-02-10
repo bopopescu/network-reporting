@@ -95,12 +95,11 @@ class AdImpressionHandler(webapp.RequestHandler):
           user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(raw_udid, now, creative.ad_group.key())
 
           update_dict = {}
-          if update_dict:
-              # {user_adgroup_daily_key:1,user_adgroup_hourly_key:1}
-              if creative.ad_group.daily_frequency_cap:
-                  update_dict[user_adgroup_daily_key] = 1
-              if creative.ad_group.hourly_frequency_cap:
-                  update_dict[user_adgroup_hourly_key] = 1
+          # {user_adgroup_daily_key:1,user_adgroup_hourly_key:1}
+          if creative.ad_group.daily_frequency_cap:
+              update_dict[user_adgroup_daily_key] = 1
+          if creative.ad_group.hourly_frequency_cap:
+              update_dict[user_adgroup_hourly_key] = 1
 
           trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
           trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)

@@ -33,7 +33,7 @@ class AppService(RequestHandler):
     """
     API Service for delivering serialized App data
     """
-    def get(self, app_key=None):
+    def get(self, app_key=None, adgroup_key=None):
         try:
 
             # Formulate the date range
@@ -57,7 +57,16 @@ class AppService(RequestHandler):
 
             # get stats for each app
             for app in apps:
-                app.update(stats.get_app_stats(str(app['id']), start_date, end_date))
+
+                # if the adgroup key was specified, then we only want the app's
+                # stats to reflect how it performed within that adgroup.
+                if adgroup_key:
+                    app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
+                                                                    adgroup_key,
+                                                                    start_date,
+                                                                    end_date))
+                else:
+                    app.update(stats.get_app_stats(str(app['id']), start_date, end_date))
 
             return JSONResponse(apps)
 
@@ -89,8 +98,8 @@ class AdUnitService(RequestHandler):
     """
     def get(self, app_key=None, adgroup_key=None, adunit_key=None):
         """
-        Get the adunit data (stats data for the specified date range
-        included)
+        Returns individual or lists of JSON-represented adunit
+        metadata and stats data
         """
         try:
 
@@ -143,6 +152,10 @@ class AdUnitService(RequestHandler):
 
                 return JSONResponse(response)
 
+            # If an adgroup key was specified instead of an app key,
+            # then we'll only get stats data from that adgroup. AdUnit
+            # stats will only reflect how adunits performed in that
+            # adgroup.
             elif adgroup_key:
                 adgroup = AdGroupQueryManager.get(adgroup_key)
                 adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
@@ -150,9 +163,11 @@ class AdUnitService(RequestHandler):
 
                 # Update each app with stats from the selected endpoint
                 for adunit in response:
-                    adunit_stats = stats.get_adunit_stats(adunit['id'],
-                                                          start_date,
-                                                          end_date)
+                    adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
+                                                                           adgroup_key,
+                                                                           start_date,
+                                                                           end_date)
+
                     # We update with the app and adgroup id/key because our
                     # backbone models often need it for reference
                     adunit_stats.update({'app_id': str(adunit['app_key'])})

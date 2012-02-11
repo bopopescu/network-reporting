@@ -286,10 +286,17 @@
         // server and render it too.
         adgroup_inventory.bind('reset', function(adunits){
             adunits.each(function(adunit){
-                var app = new App({ id: adunit.get('app_key') });
+                var app_key = adunit.get('app_key');
+                console.log(adunit);
+                console.log(app_key);
+                var app = new App({ id: app_key });
+                app.url = function() {
+                    return '/api/adgroup/'
+                        + adgroup_key
+                        + '/apps/'
+                        + app_key;
+                };
 
-                //XXX: We need to remap the app's url to only get data
-                // for this adgroup
 
                 app.bind('change', function(current_app) {
                     var appView = new AppView({

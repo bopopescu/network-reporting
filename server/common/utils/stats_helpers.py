@@ -3,6 +3,7 @@ from urllib2 import urlopen
 from common.utils import date_magic
 import datetime
 
+from advertiser.query_managers import AdGroupQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager, \
@@ -50,11 +51,12 @@ class AbstractStatsFetcher(object):
 
 
 class SummedStatsFetcher(AbstractStatsFetcher):
-    def _get_publisher_stats(self, publisher, start, end, *args, **kwargs):
+    def _get_publisher_stats(self, publisher, start, end,
+                             advertiser=None, *args, **kwargs):
         days = date_magic.gen_days(start, end)
         query_manager = StatsModelQueryManager(publisher.account)
         stats = query_manager.get_stats_for_days(publisher=publisher,
-                                                 advertiser=None,
+                                                 advertiser=advertiser,
                                                  days=days)
 
         stat_totals = {
@@ -73,8 +75,6 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
         stat_totals['fill_rate'] = fill_rate(stat_totals['requests'], stat_totals['impressions'])
 
-        logging.warn('\n\n\n\n\n\n\n\n')
-        logging.warn(stat_totals)
 
         return stat_totals
 
@@ -88,13 +88,22 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         adunit_stats = self._get_publisher_stats(adunit, start, end)
         return adunit_stats
 
-    def get_campaign_specific_app_stats(self, app_key, adgroup_key,
+    def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
                                         start, end, *args, **kwargs):
-        pass
+        app = AppQueryManager.get(app_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        app_stats = self._get_publisher_stats(app, start, end,
+                                              advertiser=adgroup)
+        return app_stats
 
-    def get_campaign_specific_adunit_stats(self, adunit_key, adgroup_key,
+
+    def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
                                            start, end, *args, **kwargs):
-        pass
+        adunit = AdUnitQueryManager.get(adunit_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        adunit_stats = self._get_publisher_stats(adunit, start, end,
+                                                 advertiser=adgroup)
+        return adunit_stats
 
 
 

@@ -46,6 +46,15 @@ urlpatterns = patterns(
         'adunit_service',
         name='adgroup_adunit_service'),
 
+    # /api/adgroup/<adgroup_key/apps/<app_key>
+    # individual app from an adgroup
+    url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)/apps/(?P<app_key>[-\w\.]+)$',
+        'app_service',
+        name='adgroup_app_service'),
+
+    # /api/adgroup/<adgroup_key/adunits/<adunit_key>
+    # individual adunit from an adgroup
+
 
     # REFACTOR: move this to ad_network_reports
     url(r'^ad_network/account_roll_up/$',

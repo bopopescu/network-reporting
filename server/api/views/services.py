@@ -61,6 +61,7 @@ class AppService(RequestHandler):
                 # if the adgroup key was specified, then we only want the app's
                 # stats to reflect how it performed within that adgroup.
                 if adgroup_key:
+                    logging.warn("I AM SENDING APP DATA FROM THIS ADGROUP")
                     app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
                                                                     adgroup_key,
                                                                     start_date,
@@ -173,6 +174,7 @@ class AdUnitService(RequestHandler):
                     adunit_stats.update({'app_id': str(adunit['app_key'])})
                     adunit.update(adunit_stats)
 
+                logging.warn("I AM SENDING ADUNIT DATA FOR THIS ADGROUP")
                 return JSONResponse(response)
 
             else:

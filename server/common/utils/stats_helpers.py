@@ -49,16 +49,7 @@ class AbstractStatsFetcher(object):
     def get_account_stats(self, start, end, daily=False):
         raise NotImplementedError('Implement this method fool')
 
-
-class SummedStatsFetcher(AbstractStatsFetcher):
-    def _get_publisher_stats(self, publisher, start, end,
-                             advertiser=None, *args, **kwargs):
-        days = date_magic.gen_days(start, end)
-        query_manager = StatsModelQueryManager(publisher.account)
-        stats = query_manager.get_stats_for_days(publisher=publisher,
-                                                 advertiser=advertiser,
-                                                 days=days)
-
+    def format_stats(stats):
         stat_totals = {
             'revenue': sum([stat.revenue for stat in stats]),
             'ctr': 0.0,
@@ -75,8 +66,18 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
         stat_totals['fill_rate'] = fill_rate(stat_totals['requests'], stat_totals['impressions'])
 
-
         return stat_totals
+
+
+class SummedStatsFetcher(AbstractStatsFetcher):
+    def _get_publisher_stats(self, publisher, start, end,
+                             advertiser=None, *args, **kwargs):
+        days = date_magic.gen_days(start, end)
+        query_manager = StatsModelQueryManager(publisher.account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=advertiser,
+                                                 days=days)
+        return self.format_stats(stat_totals)
 
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         app = AppQueryManager.get(app_key)

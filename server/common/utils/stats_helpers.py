@@ -49,7 +49,7 @@ class AbstractStatsFetcher(object):
     def get_account_stats(self, start, end, daily=False):
         raise NotImplementedError('Implement this method fool')
 
-    def format_stats(stats):
+    def format_stats(self, stats):
         stat_totals = {
             'revenue': sum([stat.revenue for stat in stats]),
             'ctr': 0.0,
@@ -72,25 +72,29 @@ class AbstractStatsFetcher(object):
 class SummedStatsFetcher(AbstractStatsFetcher):
     def _get_publisher_stats(self, publisher, start, end,
                              advertiser=None, *args, **kwargs):
+        # mongo
         days = date_magic.gen_days(start, end)
         query_manager = StatsModelQueryManager(publisher.account)
         stats = query_manager.get_stats_for_days(publisher=publisher,
                                                  advertiser=advertiser,
                                                  days=days)
-        return self.format_stats(stat_totals)
+        return self.format_stats(stats)
 
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
+        # mongo
         app = AppQueryManager.get(app_key)
         app_stats = self._get_publisher_stats(app, start, end)
         return app_stats
 
     def get_adunit_stats(self, adunit_key, start, end, daily=False):
+        # mongo
         adunit = AdUnitQueryManager.get(adunit_key)
         adunit_stats = self._get_publisher_stats(adunit, start, end)
         return adunit_stats
 
     def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
                                         start, end, *args, **kwargs):
+        # mongo
         app = AppQueryManager.get(app_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         app_stats = self._get_publisher_stats(app, start, end,
@@ -100,6 +104,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
 
     def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
                                            start, end, *args, **kwargs):
+        # mongo
         adunit = AdUnitQueryManager.get(adunit_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         adunit_stats = self._get_publisher_stats(adunit, start, end,

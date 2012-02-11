@@ -34,7 +34,7 @@ class AppService(RequestHandler):
     API Service for delivering serialized App data
     """
     def get(self, app_key=None, adgroup_key=None):
-        try:
+#        try:
 
             # Formulate the date range
             # REFACTOR: move this into RequestHandler
@@ -61,7 +61,6 @@ class AppService(RequestHandler):
                 # if the adgroup key was specified, then we only want the app's
                 # stats to reflect how it performed within that adgroup.
                 if adgroup_key:
-                    logging.warn("I AM SENDING APP DATA FROM THIS ADGROUP")
                     app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
                                                                     adgroup_key,
                                                                     start_date,
@@ -71,9 +70,9 @@ class AppService(RequestHandler):
 
             return JSONResponse(apps)
 
-        except Exception, e:
-            logging.warn("APPS FETCH ERROR "  + str(e))
-            return JSONResponse({'error': str(e)})
+        # except Exception, e:
+        #     logging.warn("APPS FETCH ERROR "  + str(e))
+        #     return JSONResponse({'error': str(e)})
 
 
     def post(self):
@@ -174,7 +173,6 @@ class AdUnitService(RequestHandler):
                     adunit_stats.update({'app_id': str(adunit['app_key'])})
                     adunit.update(adunit_stats)
 
-                logging.warn("I AM SENDING ADUNIT DATA FOR THIS ADGROUP")
                 return JSONResponse(response)
 
             else:
@@ -334,13 +332,13 @@ def get_days(request):
 
 def get_start_and_end_dates(request):
     if request.GET.get('s', None):
-        year, month, day = str(self.request.GET.get('s')).split('-')
+        year, month, day = str(request.GET.get('s')).split('-')
         end_date = datetime.date(int(year), int(month), int(day))
     else:
         end_date = datetime.date.today()
 
     if request.GET.get('r', None):
-        days_in_range = int(self.request.GET.get('r')) - 1
+        days_in_range = int(request.GET.get('r')) - 1
         start_date = end_date - datetime.timedelta(days_in_range)
     else:
         start_date = end_date - datetime.timedelta(13)

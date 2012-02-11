@@ -79,13 +79,15 @@ class AdImpressionHandler(webapp.RequestHandler):
 
         raw_udid = self.request.get("udid")
         if creative:
-            AdImpressionHandler.increment_frequency_counts(creative=creative,
+            freq_response = AdImpressionHandler.increment_frequency_counts(creative=creative,
                                        raw_udid=raw_udid)
+        else:
+            freq_response = None
 
         if not self.request.get('testing') == TEST_MODE:
             stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)
 
-        self.response.out.write("OK")
+        self.response.out.write("OK: %s" % freq_response)
 
     @classmethod
     def increment_frequency_counts(cls, creative=None,
@@ -104,8 +106,7 @@ class AdImpressionHandler(webapp.RequestHandler):
           trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
           trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
           if update_dict:
-              response = memcache.offset_multi(update_dict, key_prefix='', namespace=None, initial_value=0)
-              self.response.out.write("response: %s" % response)
+              return memcache.offset_multi(update_dict, key_prefix='', namespace=None, initial_value=0)
 
 class AdClickHandler(webapp.RequestHandler):
     # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M

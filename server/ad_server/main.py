@@ -104,7 +104,8 @@ class AdImpressionHandler(webapp.RequestHandler):
           trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
           trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
           if update_dict:
-              memcache.offset_multi(update_dict, key_prefix='', namespace=None, initial_value=0)
+              response = memcache.offset_multi(update_dict, key_prefix='', namespace=None, initial_value=0)
+              self.response.out.write("response: %s" % response)
 
 class AdClickHandler(webapp.RequestHandler):
     # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M

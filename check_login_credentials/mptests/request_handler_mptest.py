@@ -143,6 +143,9 @@ class TestRequestHandlers(AsyncHTTPTestCase):
         if email:
             data['email'] = True
 
+        # Don't send email when testing is = True
+        data['testing'] = True
+
         self.http_client.fetch(self.get_url('/check?' +
             urllib.urlencode(data)), self.stop)
         # Return the response

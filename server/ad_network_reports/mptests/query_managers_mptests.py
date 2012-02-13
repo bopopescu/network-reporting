@@ -70,8 +70,8 @@ class TestModels(unittest.TestCase):
         stats2 = AdNetworkScrapeStats(ad_network_app_mapper=mapper2,
                 date=TODAY)
         stats2.put()
-        AdNetworkAggregateManager.put_stats(acct, TODAY, [stats1, stats2],
-                network=NETWORK1)
+        AdNetworkAggregateManager.create_stats(acct, TODAY, [stats1, stats2],
+                network=NETWORK1).put()
         network_stats = AdNetworkNetworkStats.get_by_network_and_day(acct,
                                                                      NETWORK1,
                                                                      TODAY)
@@ -96,8 +96,8 @@ class TestModels(unittest.TestCase):
         stats2 = AdNetworkScrapeStats(ad_network_app_mapper=mapper2,
                 date=TODAY)
         stats2.put()
-        AdNetworkAggregateManager.put_stats(acct, TODAY, [stats1, stats2],
-                app=app)
+        AdNetworkAggregateManager.create_stats(acct, TODAY, [stats1, stats2],
+                app=app).put()
         app_stats = AdNetworkAppStats.get_by_app_and_day(acct,
                                                          app,
                                                          TODAY)
@@ -129,8 +129,8 @@ class TestModels(unittest.TestCase):
         stats2.clicks = CLICKS
 
         stats2.put()
-        AdNetworkAggregateManager.put_stats(acct, TODAY, [stats1, stats2],
-                network=NETWORK1)
+        AdNetworkAggregateManager.create_stats(acct, TODAY, [stats1, stats2],
+                network=NETWORK1).put()
         network_stats = AdNetworkNetworkStats.get_by_network_and_day(acct,
                                                                      NETWORK1,
                                                                      TODAY)
@@ -163,11 +163,11 @@ class TestModels(unittest.TestCase):
 
         stats2.put()
 
-        AdNetworkAggregateManager.put_stats(acct, TODAY, [stats1, stats2],
-                app=app)
+        AdNetworkAggregateManager.create_stats(acct, TODAY, [stats1, stats2],
+                app=app).put()
         app_stats = AdNetworkAppStats.get_by_app_and_day(acct,
-                                                             app,
-                                                             TODAY)
+                                                         app,
+                                                         TODAY)
 
         assert app_stats
 

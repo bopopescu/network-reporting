@@ -96,7 +96,7 @@ class CampaignForm(forms.ModelForm):
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily')
-    budget_strategy = forms.ChoiceField(choices=(('evenly', 'Spread Evently'),
+    budget_strategy = forms.ChoiceField(choices=(('evenly', 'Spread Evenly'),
                                                  ('allatonce', 'All at once')),
                                         label='Delivery Speed:',
                                         initial='evenly',
@@ -279,17 +279,17 @@ class AdGroupForm(forms.ModelForm):
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
-        if is_staff or instance and instance.network_type == 'admob':
+        if is_staff or (instance and instance.network_type == 'admob'):
+            logging.error('adding admob')
             self.fields['network_type'].choices.append(('admob', 'AdMob Javascript (deprecated)'))
-            logging.error('added choice')
 
-        if is_staff or instance and instance.network_type == 'millennial':
+        if is_staff or (instance and instance.network_type == 'millennial'):
+            logging.error('adding millennial')
             self.fields['network_type'].choices.append(('millennial', 'Millennial Server-side (deprecated)'))
-            logging.error('added choice')
 
-        if is_staff or instance and instance.network_type == 'greystripe':
+        if is_staff or (instance and instance.network_type == 'greystripe'):
+            logging.error('adding greystripe')
             self.fields['network_type'].choices.append(('greystripe', 'GreyStripe (deprecated)'))
-            logging.error('added choice')
 
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 

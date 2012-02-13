@@ -87,26 +87,22 @@ class AdImpressionHandler(webapp.RequestHandler):
         if not self.request.get('testing') == TEST_MODE:
             stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)
 
-        self.response.out.write("OK: %s" % freq_response)
+        self.response.out.write("OK")
 
     @classmethod
     def increment_frequency_counts(cls, creative=None,
-                                   raw_udid=None,
-                                   now=datetime.datetime.now()):
-          user_adgroup_daily_key = frequency_capping.memcache_key_for_date(raw_udid, now, creative.ad_group.key())
-          user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(raw_udid, now, creative.ad_group.key())
+                                        raw_udid=None,
+                                        now=datetime.datetime.now()):
+        from userstore.query_managers import ImpressionEventManager
 
-          update_dict = {}
-          # {user_adgroup_daily_key:1,user_adgroup_hourly_key:1}
-          if creative.ad_group.daily_frequency_cap:
-              update_dict[user_adgroup_daily_key] = 1
-          if creative.ad_group.hourly_frequency_cap:
-              update_dict[user_adgroup_hourly_key] = 1
+        impression_types_to_update = []
+        if creative.ad_group.daily_frequency_cap:
+            impression_types_to_update.append(ImpressionEventManager.DAILY)
+        if creative.ad_group.hourly_frequency_cap:
+            impression_types_to_update.append(ImpressionEventManager.HOURLY)
 
-          trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
-          trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
-          if update_dict:
-              return memcache.offset_multi(update_dict, key_prefix='', namespace=None, initial_value=0)
+        if impression_types_to_update:
+            ImpressionEventManager().log_impression(raw_udid, str(creative.adgroup.key()), now, impression_types_to_update)
 
 class AdClickHandler(webapp.RequestHandler):
     # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M

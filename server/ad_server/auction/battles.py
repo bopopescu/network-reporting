@@ -25,6 +25,8 @@ from common.utils import simplejson
 from google.appengine.api import urlfetch, memcache
 
 from ad_server import frequency_capping
+from userstore.query_managers import ImpressionEventManager
+from userstore.models import HourlyImpressionEvent, DailyImpressionEvent
 # TODO: Use these helpers 'to_uni', 'to_ascii'
 from common.utils.helpers import to_uni, to_ascii
 
@@ -79,28 +81,46 @@ class Battle(object):
         # TODO: refactor logging on filters (make them oo)
 
         # Build a list of all the users' frequency capping info we care about.
-        user_frequency_capping_keys = []
-        for adgroup in adgroups:
-            daily_key = frequency_capping.\
-                memcache_key_for_date(self.client_context.raw_udid,
-                                      self.client_context.now,
-                                      adgroup.key())
-            user_frequency_capping_keys.append(daily_key)
-
-            hourly_key = frequency_capping.\
-                memcache_key_for_hour(self.client_context.raw_udid,
-                                      self.client_context.now,
-                                      adgroup.key())
-            user_frequency_capping_keys.append(hourly_key)
-
-        # Get all users with a batch get for speed.
-        if user_frequency_capping_keys:
-            # user_frequency_capping_key --> # impressions for that timerange
-            frequency_cap_dict = memcache.\
-                                    get_multi(user_frequency_capping_keys)
-        else:
-            frequency_cap_dict = {}
-
+        # user_frequency_capping_keys = []
+        #         for adgroup in adgroups:
+        #             daily_key = frequency_capping.\
+        #                 memcache_key_for_date(self.client_context.raw_udid,
+        #                                       self.client_context.now,
+        #                                       adgroup.key())
+        #             user_frequency_capping_keys.append(daily_key)
+        # 
+        #             hourly_key = frequency_capping.\
+        #                 memcache_key_for_hour(self.client_context.raw_udid,
+        #                                       self.client_context.now,
+        #                                       adgroup.key())
+        #             user_frequency_capping_keys.append(hourly_key)
+        # 
+        #         # Get all users with a batch get for speed.
+        #         if user_frequency_capping_keys:
+        #             # user_frequency_capping_key --> # impressions for that timerange
+        #             frequency_cap_dict = memcache.\
+        #                                     get_multi(user_frequency_capping_keys)
+        #         else:
+        #             frequency_cap_dict = {}
+        
+        udid = self.client_context.raw_udid
+        imps = ImpressionEventManager().get_impression_events(udid, 
+                                                             [str(ag.key()) for ag in adgroups], 
+                                                             self.client_context.now)
+        frequency_cap_dict = {}                                                     
+        for imp in imps:
+            if imp:
+                if isinstance(imp, HourlyImpressionEvent):
+                    key = frequency_capping.memcache_key_for_hour(imp.udid,
+                                                                  imp.time,
+                                                                  imp.adgroup_id)
+                if isinstance(imp, DailyImpressionEvent):
+                    key = frequency_capping.memcache_key_for_date(imp.udid,
+                                                                  imp.time,
+                                                                  imp.adgroup_id)
+            
+                frequency_cap_dict[key] = imp.count
+                
 
         adgroup_filters = (exclude_filter(self.client_context.\
                                             excluded_adgroup_keys),

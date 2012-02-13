@@ -34,45 +34,39 @@ class AppService(RequestHandler):
     API Service for delivering serialized App data
     """
     def get(self, app_key=None, adgroup_key=None):
-#        try:
+        # Formulate the date range
+        # REFACTOR: move this into RequestHandler
+        start_date, end_date = get_start_and_end_dates(self.request)
 
-            # Formulate the date range
-            # REFACTOR: move this into RequestHandler
-            start_date, end_date = get_start_and_end_dates(self.request)
-
-            # Where are we getting stats from?
-            # Choices are 'mpx', 'direct', 'networks', or 'all'
-            stats_endpoint = self.request.GET.get('endpoint', 'all')
+        # Where are we getting stats from?
+        # Choices are 'mpx', 'direct', 'networks', or 'all'
+        stats_endpoint = self.request.GET.get('endpoint', 'all')
 
 
-            # Get the stats fetcher
-            stats = get_stats_fetcher(self.account.key(), stats_endpoint)
+        # Get the stats fetcher
+        stats = get_stats_fetcher(self.account.key(), stats_endpoint)
 
-            # If an app key is provided, return the single app
-            if app_key:
-                apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
-            # If no app key is provided, return a list of all apps for the account
+        # If an app key is provided, return the single app
+        if app_key:
+            apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
+        # If no app key is provided, return a list of all apps for the account
+        else:
+            apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
+
+        # get stats for each app
+        for app in apps:
+
+            # if the adgroup key was specified, then we only want the app's
+            # stats to reflect how it performed within that adgroup.
+            if adgroup_key:
+                app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
+                                                                adgroup_key,
+                                                                start_date,
+                                                                end_date))
             else:
-                apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
+                app.update(stats.get_app_stats(str(app['id']), start_date, end_date))
 
-            # get stats for each app
-            for app in apps:
-
-                # if the adgroup key was specified, then we only want the app's
-                # stats to reflect how it performed within that adgroup.
-                if adgroup_key:
-                    app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
-                                                                    adgroup_key,
-                                                                    start_date,
-                                                                    end_date))
-                else:
-                    app.update(stats.get_app_stats(str(app['id']), start_date, end_date))
-
-            return JSONResponse(apps)
-
-        # except Exception, e:
-        #     logging.warn("APPS FETCH ERROR "  + str(e))
-        #     return JSONResponse({'error': str(e)})
+        return JSONResponse(apps)
 
 
     def post(self):
@@ -101,86 +95,80 @@ class AdUnitService(RequestHandler):
         Returns individual or lists of JSON-represented adunit
         metadata and stats data
         """
-        try:
+        # where are we getting stats from?
+        # choices are 'mpx', 'direct', 'networks', or 'all'
+        stats_endpoint = self.request.GET.get('endpoint', 'all')
+        stats = get_stats_fetcher(self.account.key(), stats_endpoint)
 
-            # where are we getting stats from?
-            # choices are 'mpx', 'direct', 'networks', or 'all'
-            stats_endpoint = self.request.GET.get('endpoint', 'all')
-            stats = get_stats_fetcher(self.account.key(), stats_endpoint)
+        # REFACTOR: move this to RequestHandler
+        # formulate the date range
+        start_date, end_date = get_start_and_end_dates(self.request)
 
-            # REFACTOR: move this to RequestHandler
-            # formulate the date range
-            start_date, end_date = get_start_and_end_dates(self.request)
+        # REFACTOR: The app key isn't necessary (we can fetch an
+        # adunit directly with it's key)
+        if app_key:
+            # Get each adunit for the app and convert it to JSON
+            app = AppQueryManager.get_app_by_key(app_key)
+            adunits = AdUnitQueryManager.get_adunits(app=app)
+            response = [adunit.toJSON() for adunit in adunits]
 
-            # REFACTOR: The app key isn't necessary (we can fetch an
-            # adunit directly with it's key)
-            if app_key:
-                # Get each adunit for the app and convert it to JSON
-                app = AppQueryManager.get_app_by_key(app_key)
-                adunits = AdUnitQueryManager.get_adunits(app=app)
-                response = [adunit.toJSON() for adunit in adunits]
+            # Update each app with stats from the selected endpoint
+            for adunit in response:
+                adunit_stats = stats.get_adunit_stats(adunit['id'],
+                                                    start_date,
+                                                      end_date)
+                # We update with the app id/key because our
+                # backbone models often need it for reference
+                adunit_stats.update({'app_id':app_key})
+                adunit.update(adunit_stats)
 
-                # Update each app with stats from the selected endpoint
-                for adunit in response:
-                    adunit_stats = stats.get_adunit_stats(adunit['id'],
-                                                          start_date,
-                                                          end_date)
-                    # We update with the app id/key because our
-                    # backbone models often need it for reference
-                    adunit_stats.update({'app_id':app_key})
-                    adunit.update(adunit_stats)
+                # Update the adunit with the information from the
+                # marketplace adgroup. At this time all the adunit
+                # needs to know about is the adgroup's price floor
+                # and whether the marketplace is on/off for that
+                # adunit (active=True/False)
+                adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit['id'],
+                                                                      str(self.account.key()),
+                                                                      get_from_db=True)
+                try:
+                    adunit.update(price_floor = adgroup.mktplace_price_floor)
+                except AttributeError, e:
+                    logging.warn(e)
+                    adunit.update(price_floor = "0.25")
 
-                    # Update the adunit with the information from the
-                    # marketplace adgroup. At this time all the adunit
-                    # needs to know about is the adgroup's price floor
-                    # and whether the marketplace is on/off for that
-                    # adunit (active=True/False)
-                    adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit['id'],
-                                                                          str(self.account.key()),
-                                                                          get_from_db=True)
-                    try:
-                        adunit.update(price_floor = adgroup.mktplace_price_floor)
-                    except AttributeError, e:
-                        logging.warn(e)
-                        adunit.update(price_floor = "0.25")
+                try:
+                    adunit.update(active = adgroup.active)
+                except AttributeError, e:
+                    logging.warn(e)
+                    adunit.update(active = False)
 
-                    try:
-                        adunit.update(active = adgroup.active)
-                    except AttributeError, e:
-                        logging.warn(e)
-                        adunit.update(active = False)
+            return JSONResponse(response)
 
-                return JSONResponse(response)
+        # If an adgroup key was specified instead of an app key,
+        # then we'll only get stats data from that adgroup. AdUnit
+        # stats will only reflect how adunits performed in that
+        # adgroup.
+        elif adgroup_key:
+            adgroup = AdGroupQueryManager.get(adgroup_key)
+            adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
+            response = [adunit.toJSON() for adunit in adunits]
 
-            # If an adgroup key was specified instead of an app key,
-            # then we'll only get stats data from that adgroup. AdUnit
-            # stats will only reflect how adunits performed in that
-            # adgroup.
-            elif adgroup_key:
-                adgroup = AdGroupQueryManager.get(adgroup_key)
-                adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
-                response = [adunit.toJSON() for adunit in adunits]
+            # Update each app with stats from the selected endpoint
+            for adunit in response:
+                adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
+                                                                       adgroup_key,
+                                                                       start_date,
+                                                                       end_date)
 
-                # Update each app with stats from the selected endpoint
-                for adunit in response:
-                    adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
-                                                                           adgroup_key,
-                                                                           start_date,
-                                                                           end_date)
+                # We update with the app and adgroup id/key because our
+                # backbone models often need it for reference
+                adunit_stats.update({'app_id': str(adunit['app_key'])})
+                adunit.update(adunit_stats)
 
-                    # We update with the app and adgroup id/key because our
-                    # backbone models often need it for reference
-                    adunit_stats.update({'app_id': str(adunit['app_key'])})
-                    adunit.update(adunit_stats)
+            return JSONResponse(response)
 
-                return JSONResponse(response)
-
-            else:
-                return JSONResponse({'error': 'No parameters provided'})
-
-        except Exception, e:
-            logging.warn("ADUNITS FETCH ERROR " + str(e))
-            return JSONResponse({'error': str(e)})
+        else:
+            return JSONResponse({'error': 'No parameters provided'})
 
 
     def post(self):
@@ -195,31 +183,26 @@ class AdUnitService(RequestHandler):
         """
         Update the adunit from the PUT data
         """
-        try:
-            # Hack. Django doesn't have request.PUT by default, and instead
-            # includes the PUT params in request.raw_post_data
-            put_data = simplejson.loads(self.request.raw_post_data)
+        # Hack. Django doesn't have request.PUT by default, and instead
+        # includes the PUT params in request.raw_post_data
+        put_data = simplejson.loads(self.request.raw_post_data)
 
-            new_price_floor = put_data['price_floor']
-            activity = put_data['active']
+        new_price_floor = put_data['price_floor']
+        activity = put_data['active']
 
-            account_key = self.account.key()
-            adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
+        account_key = self.account.key()
+        adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
 
-            if new_price_floor:
-                try:
-                    adgroup.mktplace_price_floor = float(new_price_floor)
-                    adgroup.active = activity
-                    AdGroupQueryManager.put(adgroup)
-                except ValueError, e:
-                    logging.warn(e)
-                    return JSONResponse({'error': 'price floor must be a float or an integer'})
+        if new_price_floor:
+            try:
+                adgroup.mktplace_price_floor = float(new_price_floor)
+                adgroup.active = activity
+                AdGroupQueryManager.put(adgroup)
+            except ValueError, e:
+                logging.warn(e)
+                return JSONResponse({'error': 'price floor must be a float or an integer'})
 
-            return JSONResponse({'success':'success'})
-
-        except Exception, error:
-            logging.warn(error)
-            return JSONResponse({"error": "error"})
+        return JSONResponse({'success':'success'})
 
 
     def delete(self):

@@ -478,8 +478,9 @@ class LogTaskHandler(webapp.RequestHandler):
 
 
           # traditional put to GAE datastore
-          query_manager.put_stats(stats_to_put)
-          total_stats = query_manager.all_stats_deltas
+          # query_manager.put_stats(stats_to_put)
+          # total_stats = query_manager.all_stats_deltas
+
       # if the transaction is too large then we split it up and try again
       # except db.BadRequestError:
       #     async_put_models(account_name,stats_dict.values(),MAX_PUT_SIZE)

@@ -931,8 +931,9 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
         ///-(    \'   \\
     """
 
-    TEMPLATE  = 'publisher/forms/adunit_form.html'
-    def get(self,adunit_form=None,adunit=None,app=None):
+    TEMPLATE = 'publisher/forms/adunit_form.html'
+
+    def get(self, adunit_form=None, adunit=None, app=None):
         initial = {}
         if app:
             initial.update(app_key=app.key())
@@ -941,16 +942,17 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
                                                 prefix="adunit")
         return self.render(form=adunit_form)
 
-    def render(self,template=None,**kwargs):
+    def render(self, template=None, **kwargs):
         template_name = template or self.TEMPLATE
         return render_to_string(self.request,
                                 template_name=template_name,
                                 data=kwargs)
 
-    def json_response(self,json_dict):
+    def json_response(self, json_dict):
         return JSONResponse(json_dict)
 
-    def post(self,adunit_key=None):
+    def post(self, adunit_key=None):
+        logging.error('adunit_update_ajax')
         adunit_key = adunit_key or self.request.POST.get('adunit_key')
         if adunit_key:
             # Note this gets things from the cache ?
@@ -961,7 +963,7 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
         adunit_form = AdUnitForm(data=self.request.POST,
                                  instance=adunit,
                                  prefix="adunit")
-        json_dict = {'success':False, 'errors': []}
+        json_dict = {'success': False, 'errors': []}
 
         if adunit_form.is_valid():
             #ensure form posts do not change ownership
@@ -981,14 +983,15 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
             json_dict.update(success=True)
             return self.json_response(json_dict)
 
-        flatten_errors = lambda frm : [(k, unicode(v[0])) for k, v in frm.errors.items()]
+        flatten_errors = lambda frm: [(k, unicode(v[0])) for k, v in frm.errors.items()]
         grouped_errors = flatten_errors(adunit_form)
 
-        json_dict.update(success=False, errors = grouped_errors)
+        json_dict.update(success=False, errors=grouped_errors)
         return self.json_response(json_dict)
 
-def adunit_update_ajax(request,*args,**kwargs):
-    return AdUnitUpdateAJAXHandler()(request,*args,**kwargs)
+
+def adunit_update_ajax(request, *args, **kwargs):
+    return AdUnitUpdateAJAXHandler()(request, *args, **kwargs)
 
 
 class AppIconHandler(RequestHandler):

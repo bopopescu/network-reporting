@@ -265,6 +265,7 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
 
                 # TODO: need to make sure a network type is selected if the campaign is a network campaign
                 adgroup = adgroup_form.save()
+                adgroup.account = campaign.account
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':
@@ -277,9 +278,9 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
                 if campaign.campaign_type == "network":
                     html_data = None
                     if adgroup.network_type == 'custom':
-                        html_data = adgroup_form['custom_html'].value
+                        html_data = self.request.POST.get('custom_html', '')
                     elif adgroup.network_type == 'custom_native':
-                        html_data = adgroup_form['custom_method'].value
+                        html_data = self.request.POST.get('custom_method', '')
                     #build default creative with custom_html data if custom or none if anything else
                     creative = adgroup.default_creative(html_data)
                     if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
@@ -315,20 +316,23 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
                         network_config_field = "%s_pub_id" % adgroup.network_type.replace('_native', '')
 
                         for app in apps:
-                            setattr(app.network_config, network_config_field, self.request.POST.get("app_%s_pub_id" % app.key(), ''))
-                            AppQueryManager.update_config_and_put(app, app.network_config)
+                            network_config = app.network_config or NetworkConfig()
+                            setattr(network_config, network_config_field, self.request.POST.get("app_%s_pub_id" % app.key(), ''))
+                            AppQueryManager.update_config_and_put(app, network_config)
 
                         # NetworkConfig for AdUnits
                         if adgroup.network_type in ('admob_native', 'jumptap',
                                                     'millennial_native'):
                             for adunit in adunits:
-                                setattr(adunit.network_config, network_config_field, self.request.POST.get("adunit_%s_pub_id" % adunit.key(), ''))
-                                AdUnitQueryManager.update_config_and_put(adunit, adunit.network_config)
+                                network_config = adunit.network_config or NetworkConfig()
+                                setattr(network_config, network_config_field, self.request.POST.get("adunit_%s_pub_id" % adunit.key(), ''))
+                                AdUnitQueryManager.update_config_and_put(adunit, network_config)
 
                             # NetworkConfig for Account
                             if adgroup.network_type == 'jumptap':
-                                setattr(self.account.network_config, network_config_field, self.request.POST.get('account_pub_id', ''))
-                                AccountQueryManager.update_config_and_put(self.account, self.account.network_config)
+                                network_config = self.account.network_config or NetworkConfig()
+                                setattr(network_config, network_config_field, self.request.POST.get('account_pub_id', ''))
+                                AccountQueryManager.update_config_and_put(self.account, network_config)
 
                 # Delete Cache. We leave this in views.py because we
                 # must delete the adunits that the adgroup used to have as well

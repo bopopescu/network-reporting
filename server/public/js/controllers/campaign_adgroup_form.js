@@ -274,7 +274,10 @@ $(document).ready(function() {
     });
 
     // date controls
-    $('input[type="text"].date').datepicker();
+    $('input[type="text"].date').datepicker({minDate: 0});
+    $('input[name$="datetime_0"]').change(function() {
+        $(this).siblings('input[name$="datetime_1"]').val('12:00 AM');
+    });
 
     $('#all-adunits').change(function() {
         // select or deselect all adunits

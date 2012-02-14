@@ -434,6 +434,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
             files.finalize(fname)
             blob_key = files.blobstore.get_blob_key(fname)
             obj.image_blob = blob_key
+            obj.image_serve_url = helpers.get_url_for_blob(obj.image_blob)
 
         if commit:
             obj.put()
@@ -518,6 +519,7 @@ class ImageCreativeForm(AbstractCreativeForm):
             files.finalize(fname)
             blob_key = files.blobstore.get_blob_key(fname)
             obj.image_blob = blob_key
+            obj.image_serve_url = helpers.get_url_for_blob(obj.image_blob)
         else:
             commit = False
 

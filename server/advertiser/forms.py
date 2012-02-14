@@ -158,15 +158,11 @@ class CampaignForm(forms.ModelForm):
 
     def clean_start_datetime(self):
         start_datetime = self.cleaned_data.get('start_datetime', None)
-        now_datetime = datetime.now(Pacific_tzinfo())
         if start_datetime:
             # start_datetime is entered in Pacific Time
             start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo())
             if start_datetime < datetime.now(Pacific_tzinfo()):
                 raise forms.ValidationError("Start time must be in the future")
-        else:
-            # if no start time is given, use the current time
-            start_datetime = now_datetime
         return start_datetime
 
     def clean_end_datetime(self):
@@ -178,6 +174,15 @@ class CampaignForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super(CampaignForm, self).clean()
+
+        start_datetime = cleaned_data.get('start_datetime', None)
+        end_datetime = cleaned_data.get('end_datetime', None)
+        now_datetime = datetime.now(Pacific_tzinfo())
+
+        if cleaned_data.get('campaign_type', None) in ['gtee', 'promo'] and not start_datetime:
+            # if no start time is given, use the current time
+            start_datetime = now_datetime
+
         if 'campaign_type' in cleaned_data:
             # set the correct campaign_type using gtee_prioirty or promo_priority
             if cleaned_data['campaign_type'] == 'gtee':
@@ -206,8 +211,6 @@ class CampaignForm(forms.ModelForm):
             else:
                 cleaned_data['budget'] = None
 
-        start_datetime = cleaned_data.get('start_datetime', None)
-        end_datetime = cleaned_data.get('end_datetime', None)
         if start_datetime and end_datetime and end_datetime < start_datetime:
             if 'end_datetime' not in self._errors:
                 self._errors['end_datetime'] = ErrorList()

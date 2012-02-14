@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 
 from common.utils.request_handler import RequestHandler
-from common.ragendja.template import render_to_response
+from common.ragendja.template import render_to_response, JSONResponse
 from common.utils.timezones import Pacific_tzinfo
 
 from google.appengine.api import urlfetch
@@ -304,7 +304,7 @@ class MarketplaceCreativeProxyHandler(RequestHandler):
         url = "http://mpx.mopub.com/stats/creatives"
         query = "?" + "&".join([key + '=' + value for key, value in self.request.GET.items()])
         url += query
-        response = urlfetch.fetch(url, method=urlfetch.GET, deadline=20).content
+        response = urlfetch.fetch(url, method=urlfetch.GET, deadline=30).content
 
         return HttpResponse(response)
 

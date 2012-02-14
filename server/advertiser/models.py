@@ -392,6 +392,7 @@ class Creative(polymodel.PolyModel):
 
 
     active = db.BooleanProperty(default=True)
+    was_active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
 
     # the creative type helps the ad server render the right thing if the creative wins the auction

@@ -72,3 +72,14 @@ def blob_urler(creative):
         if creative.image_blob and not creative.image_serve_url:
             creative.image_serve_url = helpers.get_url_for_blob(creative.image_blob, ssl=False)
             yield op.db.Put(creative)
+
+def creative_pauser(creative):
+    if getattr(creative, 'image_blob', None):
+        creative.was_active = creative.active
+        creative.active = False
+        yield op.db.Put(creative)
+
+def creative_activater(creative):
+    if getattr(creative, 'image_blob', None):
+        creative.active = creative.was_active
+        yield op.db.Put(creative)

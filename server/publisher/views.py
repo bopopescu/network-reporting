@@ -994,23 +994,6 @@ def adunit_update_ajax(request, *args, **kwargs):
     return AdUnitUpdateAJAXHandler()(request, *args, **kwargs)
 
 
-class AppIconHandler(RequestHandler):
-    """
-    Returns a png image for an app's icon from an app's key
-    """
-    def get(self, app_key):
-        app = App.get(app_key)
-        if app.icon:
-            response = HttpResponse(app.icon)
-            response['Content-Type'] = 'image/png'
-            return response
-        else:
-            return HttpResponseRedirect('/images/misc/appicon-missing.png')
-
-def app_icon(request,*args,**kwargs):
-    return AppIconHandler()(request,*args,**kwargs)
-
-
 class DeleteAdUnitHandler(RequestHandler):
     """
     Deletes an adunit and redirects to the adunit's app.

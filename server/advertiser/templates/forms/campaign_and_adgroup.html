@@ -191,7 +191,7 @@
     <ul id="apps">
         {% for app in apps %}
         <li>
-            <img src="{% url publisher_app_icon app_key=app.key %}" />
+            <img src="{{ app.icon_url }}" />
             <div>
                 <label>
                     {{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>

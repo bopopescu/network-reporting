@@ -51,7 +51,7 @@ class AppForm(mpforms.MPModelForm):
         is_edit_form = kwargs.pop('is_edit_form', None)
 
         if instance:
-            img_url = reverse('publisher_app_icon',kwargs={'app_key':str(instance.key())})
+            img_url = instance.icon_url
             if not initial:
                 initial = {}
             initial.update(img_url=img_url)

@@ -533,6 +533,7 @@ class TextAndTileCreative(Creative):
     line2 = db.StringProperty()
     # image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
+    image_serve_url = db.StringProperty()
     action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
     color = db.StringProperty(default="000000")
     font_color = db.StringProperty(default="FFFFFF")
@@ -558,6 +559,7 @@ class ImageCreative(Creative):
     # image properties
     # image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
+    image_serve_url = db.StringProperty()
     image_width = db.IntegerProperty(default=320)
     image_height = db.IntegerProperty(default=480)
 

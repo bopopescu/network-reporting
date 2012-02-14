@@ -1,0 +1,47 @@
+mapreduce:
+- name: StatsMigrater
+  mapper:
+    input_reader: mapreduce.input_readers.DatastoreInputReader
+    handler: migrater.mapper
+    params:
+    - name: entity_kind
+      default: reporting.models.StatsModel
+    - name: processing_rate
+      default: 100
+    - name: shard_count
+      default: 100
+- name: StatsDeleter
+  mapper:
+    input_reader: mapreduce.input_readers.DatastoreInputReader
+    handler: migrater.deleter
+    params:
+    - name: entity_kind
+      default: reporting.models.MPStatsModel
+    - name: processing_rate
+      default: 100
+    - name: shard_count
+      default: 100
+
+- name: BlobMigrater
+  mapper: 
+    input_reader: mapreduce.input_readers.DatastoreInputReader
+    handler: migrater.blober
+    params:
+    - name: entity_kind
+      default: publisher.models.App
+    - name: processing_rate
+      default: 100
+    - name: shard_count
+      default: 100      
+
+- name: BlobUrlerMigrater
+  mapper: 
+    input_reader: mapreduce.input_readers.DatastoreInputReader
+    handler: migrater.blob_urler
+    params:
+    - name: entity_kind
+      default: advertiser.models.Creative
+    - name: processing_rate
+      default: 100
+    - name: shard_count
+      default: 100

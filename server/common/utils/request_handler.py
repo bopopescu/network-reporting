@@ -1,8 +1,6 @@
-import logging
 from datetime import date, datetime, timedelta
 
 from account.query_managers import AccountQueryManager
-from account.models import Account
 
 from google.appengine.ext import db
 
@@ -11,13 +9,13 @@ from inspect import getargspec
 from common.utils import simplejson
 from common.utils.decorators import cache_page_until_post, conditionally
 from common.utils.timezones import Pacific_tzinfo
-from django.views.decorators.cache import cache_page
 from django.conf import settings
 from django.http import Http404
 
 from stats.log_service import LogService
 
 audit_logger = LogService(blob_file_name='audit', flush_lines=1)
+
 
 class RequestHandler(object):
     """ Does some basic work and redirects a view to get and post
@@ -31,12 +29,11 @@ class RequestHandler(object):
             if self.login:
                 self._set_account()
 
-        super(RequestHandler,self).__init__()
+        super(RequestHandler, self).__init__()
 
-    def __call__(self,request, cache_time=5*60, use_cache=True, *args,**kwargs):
+    def __call__(self, request, cache_time=5 * 60, use_cache=True, *args, **kwargs):
         if settings.DEBUG:
             use_cache = False
-
 
         # Initialize our caching decorator
         cache_dec = cache_page_until_post(time=cache_time)
@@ -72,16 +69,12 @@ class RequestHandler(object):
                 self.date_range = (today - self.start_date).days
 
             if self.login:
-                if self.params.has_key('account'):
+                if 'account' in self.params:
                     account_key = self.params['account']
                     if account_key:
-                      self.account = AccountQueryManager.get(account_key)
+                        self.account = AccountQueryManager.get(account_key)
                 else:
                     self._set_account()
-
-                logging.info("final account: %s"%(self.account.key()))
-                logging.info("final account: %s"%repr(self.account.key()))
-
 
             # If a key is passed in the url, and if the request handler
             # has been initialized with id='key_name', we can fetch the
@@ -97,9 +90,8 @@ class RequestHandler(object):
                 if self.obj._account != self.account.key():
                     raise Http404
 
-
             # use the offline stats
-            self.offline = self.params.get("offline",False)
+            self.offline = self.params.get("offline", False)
             self.offline = True if self.offline == "1" else False
 
             if request.method == "GET":
@@ -107,9 +99,9 @@ class RequestHandler(object):
                 # Query dict every time! hooray!
                 f_args = getargspec(self.get)[0]
                 for arg in f_args:
-                    if not kwargs.has_key(arg) and self.params.has_key(arg):
+                    if not arg in kwargs and arg in self.params:
                         kwargs[arg] = self.params.get(arg)
-                return self.get(*args,**kwargs)
+                return self.get(*args, **kwargs)
             elif request.method == "POST":
                 # Now we can define get/post methods with variables instead of having to get it from the
                 # Query dict every time! hooray!
@@ -122,31 +114,26 @@ class RequestHandler(object):
                                                        "body": request.POST}))
                 f_args = getargspec(self.post)[0]
                 for arg in f_args:
-                    if not kwargs.has_key(arg) and self.params.has_key(arg):
+                    if not arg in kwargs and arg in self.params:
                         kwargs[arg] = self.params.get(arg)
-                return self.post(*args,**kwargs)
+                return self.post(*args, **kwargs)
 
             elif request.method == "PUT":
                 f_args = getargspec(self.put)[0]
                 for arg in f_args:
-                    if not kwargs.has_key(arg) and self.params.has_key(arg):
+                    if not arg in kwargs and arg in self.params:
                         kwargs[arg] = self.params.get(arg)
                 return self.put(*args, **kwargs)
 
             elif request.method == "DELETE":
                 f_args = getargspec(self.delete)[0]
                 for arg in f_args:
-                    if not kwargs.has_key(arg) and self.params.has_key(arg):
+                    if not arg in kwargs and arg in self.params:
                         kwargs[arg] = self.params.get(arg)
                 return self.delete(*args, **kwargs)
 
-
-
-
-
         # Execute our newly decorated view
         return mp_view(request, *args, **kwargs)
-
 
     def get(self):
         raise NotImplementedError
@@ -158,12 +145,12 @@ class RequestHandler(object):
         self.account = None
         user = self.request.user
         if user:
-          if user.is_staff:
-            account_key = self.request.COOKIES.get("account_impersonation",None)
-            if account_key:
-              self.account = AccountQueryManager.get(account_key)
+            if user.is_staff:
+                account_key = self.request.COOKIES.get("account_impersonation", None)
+                if account_key:
+                    self.account = AccountQueryManager.get(account_key)
         if not self.account:
-          self.account = AccountQueryManager.get_current_account(self.request,cache=True)
+            self.account = AccountQueryManager.get_current_account(self.request, cache=True)
 
 
 class AjaxRequestHandler(RequestHandler):

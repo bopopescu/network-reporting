@@ -414,7 +414,6 @@ class Creative(polymodel.PolyModel):
 
     ad_group = db.ReferenceProperty(AdGroup, collection_name="creatives")
 
-
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
 

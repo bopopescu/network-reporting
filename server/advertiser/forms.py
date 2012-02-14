@@ -71,7 +71,24 @@ class CampaignForm(forms.ModelForm):
                                   widget=forms.Textarea(attrs={'cols': 50,
                                                                'rows': 3,
                                                                'placeholder': 'Campaign for My New App'}))
-    start_datetime = forms.DateTimeField(label='Start Time:',
+    start_datetime = forms.DateTimeField(input_formats=(
+                                                 '%Y-%m-%d %H:%M:%S',     # '2006-10-25 14:30:59'
+                                                 '%Y-%m-%d %H:%M',        # '2006-10-25 14:30'
+                                                 '%Y-%m-%d',              # '2006-10-25'
+                                                 '%m/%d/%Y %H:%M:%S',     # '10/25/2006 14:30:59'
+                                                 '%m/%d/%Y %H:%M',        # '10/25/2006 14:30'
+                                                 '%m/%d/%Y',              # '10/25/2006'
+                                                 '%m/%d/%y %H:%M:%S',     # '10/25/06 14:30:59'
+                                                 '%m/%d/%y %H:%M',        # '10/25/06 14:30'
+                                                 '%m/%d/%y',              # '10/25/06'
+                                                 '%Y-%m-%d %I:%M:%S %p',  # '2006-10-25 2:30:59 PM'
+                                                 '%Y-%m-%d %I:%M %p',     # '2006-10-25 2:30 PM'
+                                                 '%m/%d/%Y %I:%M:%S %p',  # '10/25/2006 2:30:59 PM'
+                                                 '%m/%d/%Y %I:%M %p',     # '10/25/2006 2:30 PM'
+                                                 '%m/%d/%y %I:%M:%S %p',  # '10/25/06 2:30:59 PM'
+                                                 '%m/%d/%y %I:%M %p',     # '10/25/06 2:30 PM'
+                                             ),
+                                         label='Start Time:',
                                          required=False,
                                          widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                             'placeholder': 'MM/DD/YYYY'},
@@ -79,7 +96,24 @@ class CampaignForm(forms.ModelForm):
                                                                                             'placeholder': 'HH:MM'},
                                                                                 date_format='%m/%d/%Y',
                                                                                 time_format='%H:%M'))
-    end_datetime = forms.DateTimeField(label='Stop Time:',
+    end_datetime = forms.DateTimeField(input_formats=(
+                                           '%Y-%m-%d %H:%M:%S',     # '2006-10-25 14:30:59'
+                                           '%Y-%m-%d %H:%M',        # '2006-10-25 14:30'
+                                           '%Y-%m-%d',              # '2006-10-25'
+                                           '%m/%d/%Y %H:%M:%S',     # '10/25/2006 14:30:59'
+                                           '%m/%d/%Y %H:%M',        # '10/25/2006 14:30'
+                                           '%m/%d/%Y',              # '10/25/2006'
+                                           '%m/%d/%y %H:%M:%S',     # '10/25/06 14:30:59'
+                                           '%m/%d/%y %H:%M',        # '10/25/06 14:30'
+                                           '%m/%d/%y',              # '10/25/06'
+                                           '%Y-%m-%d %I:%M:%S %p',  # '2006-10-25 2:30:59 PM'
+                                           '%Y-%m-%d %I:%M %p',     # '2006-10-25 2:30 PM'
+                                           '%m/%d/%Y %I:%M:%S %p',  # '10/25/2006 2:30:59 PM'
+                                           '%m/%d/%Y %I:%M %p',     # '10/25/2006 2:30 PM'
+                                           '%m/%d/%y %I:%M:%S %p',  # '10/25/06 2:30:59 PM'
+                                           '%m/%d/%y %I:%M %p',     # '10/25/06 2:30 PM'
+                                       ),
+                                       label='Stop Time:',
                                        required=False,
                                        widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                           'placeholder': 'MM/DD/YYYY'},
@@ -96,7 +130,7 @@ class CampaignForm(forms.ModelForm):
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily')
-    budget_strategy = forms.ChoiceField(choices=(('evenly', 'Spread Evently'),
+    budget_strategy = forms.ChoiceField(choices=(('evenly', 'Spread Evenly'),
                                                  ('allatonce', 'All at once')),
                                         label='Delivery Speed:',
                                         initial='evenly',
@@ -127,9 +161,8 @@ class CampaignForm(forms.ModelForm):
         if start_datetime:
             # start_datetime is entered in Pacific Time
             start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo())
-        else:
-            # if no start time is given, use the current time
-            start_datetime = datetime.now(Pacific_tzinfo())
+            if start_datetime < datetime.now(Pacific_tzinfo()):
+                raise forms.ValidationError("Start time must be in the future")
         return start_datetime
 
     def clean_end_datetime(self):
@@ -141,6 +174,15 @@ class CampaignForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super(CampaignForm, self).clean()
+
+        start_datetime = cleaned_data.get('start_datetime', None)
+        end_datetime = cleaned_data.get('end_datetime', None)
+        now_datetime = datetime.now(Pacific_tzinfo())
+
+        if cleaned_data.get('campaign_type', None) in ['gtee', 'promo'] and not start_datetime:
+            # if no start time is given, use the current time
+            start_datetime = now_datetime
+
         if 'campaign_type' in cleaned_data:
             # set the correct campaign_type using gtee_prioirty or promo_priority
             if cleaned_data['campaign_type'] == 'gtee':
@@ -162,11 +204,17 @@ class CampaignForm(forms.ModelForm):
                     if 'promo_priority' not in self._errors:
                         self._errors['promo_priority'] = ErrorList()
                     self._errors['promo_priority'].append('This field is required')
+
         if cleaned_data.get('budget_type', None):
             if cleaned_data['budget_type'] == 'daily':
                 cleaned_data['full_budget'] = None
             else:
                 cleaned_data['budget'] = None
+
+        if start_datetime and end_datetime and end_datetime < start_datetime:
+            if 'end_datetime' not in self._errors:
+                self._errors['end_datetime'] = ErrorList()
+            self._errors['end_datetime'].append("Stop time must be after start time")
 
         return cleaned_data
 
@@ -227,8 +275,6 @@ class AdGroupForm(forms.ModelForm):
     allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
                                              required=False,
                                              widget=forms.TextInput(attrs={'class': 'number'}))
-    allocation_type = forms.ChoiceField(choices=(('users', 'users'),
-                                                 ('requests', 'requests')))
     daily_frequency_cap = forms.IntegerField(initial=0, label='Frequency Caps:',
                                              required=False,
                                              widget=forms.TextInput(attrs={'class': 'number'}))
@@ -279,17 +325,14 @@ class AdGroupForm(forms.ModelForm):
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
-        if is_staff or instance and instance.network_type == 'admob':
+        if is_staff or (instance and instance.network_type == 'admob'):
             self.fields['network_type'].choices.append(('admob', 'AdMob Javascript (deprecated)'))
-            logging.error('added choice')
 
-        if is_staff or instance and instance.network_type == 'millennial':
+        if is_staff or (instance and instance.network_type == 'millennial'):
             self.fields['network_type'].choices.append(('millennial', 'Millennial Server-side (deprecated)'))
-            logging.error('added choice')
 
-        if is_staff or instance and instance.network_type == 'greystripe':
+        if is_staff or (instance and instance.network_type == 'greystripe'):
             self.fields['network_type'].choices.append(('greystripe', 'GreyStripe (deprecated)'))
-            logging.error('added choice')
 
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
@@ -324,7 +367,6 @@ class AdGroupForm(forms.ModelForm):
                   'bid',
                   'site_keys',
                   'allocation_percentage',
-                  'allocation_type',
                   'daily_frequency_cap',
                   'hourly_frequency_cap',
                   'device_targeting',

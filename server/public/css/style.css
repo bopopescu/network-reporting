@@ -1433,7 +1433,7 @@ form#campaign_and_adgroup input[type="text"], form#campaign_and_adgroup textarea
 form#campaign_and_adgroup input[type="text"].date {
   width: 85px; }
 form#campaign_and_adgroup input[type="text"].time {
-  width: 48px; }
+  width: 60px; }
 form#campaign_and_adgroup input[type="text"].number {
   width: 70px; }
 form#campaign_and_adgroup input.error, form#campaign_and_adgroup textarea.error {
@@ -1518,7 +1518,7 @@ form#campaign_and_adgroup ul#apps {
         margin: 0;
         padding: 0px 20px; }
         form#campaign_and_adgroup ul#apps > li > div ul li {
-          height: 28px;
+          height: 30px;
           margin: 0; }
           form#campaign_and_adgroup ul#apps > li > div ul li label {
             width: 180px; }

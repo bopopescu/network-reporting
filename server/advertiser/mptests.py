@@ -9,12 +9,13 @@ from google.appengine.ext import testbed
 
 sys.path.append(os.environ['PWD'])
 
-import common.utils.test.setup
-from common.utils.timezones import Pacific_tzinfo
 from advertiser.models import Campaign
 from advertiser.forms import (CampaignForm, AdGroupForm, BaseCreativeForm,
                               TextCreativeForm, TextAndTileCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
+from budget.tzinfo import UTC
+import common.utils.test.setup
+from common.utils.timezones import Pacific_tzinfo
 
 
 class TestCampaignForm(unittest.TestCase):
@@ -100,6 +101,17 @@ class TestCampaignForm(unittest.TestCase):
         campaign = form.save()
         self.assertEqual(campaign.budget, None)
 
+    def start_date_mptest(self):
+        """
+        test for start_datetime not saved for backfill promo
+        check creation of creatives
+        test network config changes
+        keywords > 500 characters causes exception
+        make sure bid is filled out (Lighthouse #836)
+        check extra network types displayed if admin or already selected
+        test start || end_datetime PTC->UTC->PTC
+        """
+
 
 class TestAdGroupForm(unittest.TestCase):
 
@@ -137,6 +149,12 @@ class TestAdGroupForm(unittest.TestCase):
         self.assertTrue(form.is_valid(), form._errors)
 
     def test_bid_mptest(self):
+        pass
+
+    def test_creative_mptest(self):
+        pass
+
+    def test_allocation_default_mptest(self):
         pass
 
 

@@ -313,7 +313,7 @@ form#campaign_and_adgroup {
         width: 85px;
     }
     input[type="text"].time {
-        width: 48px;
+        width: 60px;
     }
     input[type="text"].number {
         width: 70px;
@@ -396,8 +396,6 @@ form#campaign_and_adgroup {
                 input[type="text"] {
                     width: 200px;
                 }
-                button.pub_id {
-                }
                 ul {
                     list-style-type: none;
                     overflow: auto;
@@ -405,7 +403,7 @@ form#campaign_and_adgroup {
                     margin: 0;
                     padding: 0px 20px;
                     li {
-                        height: 28px;
+                        height: 30px;
                         margin: 0;
                         label {
                             width: 180px;

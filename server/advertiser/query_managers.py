@@ -13,7 +13,8 @@ from advertiser.models import AdGroup
 from advertiser.models import Creative, TextCreative, \
                               TextAndTileCreative, \
                               HtmlCreative,\
-                              ImageCreative
+                              ImageCreative, \
+                              NetworkStates
 
 from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
@@ -244,6 +245,51 @@ class AdGroupQueryManager(QueryManager):
             return adgroups_dict.values()[:limit]
 
         return adgroups.fetch(limit)
+
+    @classmethod
+    def get_network_adgroup(cls, adunit_key, account_key, network_type,
+            get_from_db=False):
+        """
+        Returns the only adgroup that can belong to this adunit
+        and account. The magic of key_names allows us to
+        avoid getting the object from the db because
+        all the information is a function of the adunit itself.
+
+        Note: it is the API consumer's responsiblity to actually
+        save this object with the put method of this class
+        """
+
+        # Force to string
+        adunit_key = str(adunit_key)
+        account_key = str(account_key)
+
+        # By using a key_name that is one-to-one mapped with the
+        # adunit, we can assure that there is only ever one
+        # adgroup per adunit
+        ag_key_name = cls._get_marketplace_key_name(adunit_key)
+
+        # if db = True, retrieve from the database vs creating a local copy
+        if get_from_db:
+            adgroup = AdGroup.get_by_key_name(ag_key_name)
+            return adgroup
+
+        adgroup = AdGroup(key_name=ag_key_name, name='Network')
+        # set up the rest of the properties
+        adgroup.bid_strategy = 'cpm'
+        adgroup.account = db.Key(account_key)
+        adgroup.network_type = network_type
+        adgroup.network_state = NetworkStates.NETWORK_ADGROUP
+        # only targetted at one adunit
+        adgroup.site_keys = [db.Key(adunit_key)]
+
+        return adgroup
+
+    @classmethod
+    def _get_network_key_name(cls, adunit_key):
+        """
+        Returns the key_name based on the adunit_key
+        """
+        return 'ntwk:%s' % adunit_key
 
     @classmethod
     def get_marketplace_adgroup(cls, adunit_key, account_key, get_from_db=False):

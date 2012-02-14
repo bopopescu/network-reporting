@@ -137,6 +137,18 @@ class Campaign(db.Model):
             return False
 
 
+class NetworkStates:
+    """
+    Network states
+    """
+    USER_CREATED_ADGROUP = 0
+    PAUSED_USER_CREATED_ADGROUP = 1
+    NETWORK_ADGROUP = 2
+
+NETWORKS = ["iAd", "admob", "millennial", "ejam","chartboost", "appnexus", \
+        "inmobi", "mobfox", "jumptap", "brightroll", "greystripe", \
+        "admob_native"]
+
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
@@ -187,6 +199,10 @@ class AdGroup(db.Model):
 
     account = db.ReferenceProperty(Account)
     t = db.DateTimeProperty(auto_now_add=True)
+
+    # networks flag
+    network_state = db.IntegerProperty(default=NetworkStates. \
+            USER_CREATED_ADGROUP)
 
     # marketplace price floor
     mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
@@ -736,7 +752,7 @@ class MobFoxCreative(Creative):
     @property
     def multi_format(self):
         return ('728x90', '320x50')
-        
+
 class NullCreative(Creative):
     pass
 

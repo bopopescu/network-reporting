@@ -3,10 +3,10 @@ import logging
 from account.query_managers import AccountQueryManager
 
 from ad_network_reports.forms import LoginInfoForm
-from ad_network_reports.models import LoginStates, \
+from ad_network_reports.models import AdNetworkAppMapper, \
+        LoginStates, \
         MANAGEMENT_STAT_NAMES
-from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
-        ADMOB, \
+from ad_network_reports.query_managers import ADMOB, \
         IAD, \
         INMOBI, \
         MOBFOX, \
@@ -15,8 +15,9 @@ from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
         AdNetworkLoginManager, \
         AdNetworkMapperManager, \
         AdNetworkStatsManager, \
-        AdNetworkManagementStatsManager, \
-        create_fake_data
+        AdNetworkManagementStatsManager
+from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
+        REPORTING_NETWORKS
 
 from common.utils.date_magic import gen_days_for_range
 from common.utils.decorators import staff_login_required
@@ -37,8 +38,16 @@ from google.appengine.ext import db
 
 # Imports for getting mongo stats
 from advertiser.query_managers import AdGroupQueryManager
+from advertiser.models import NetworkStates
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
+
+OTHER_NETWORKS = {'millennial': 'Millennial',
+                  'ejam': 'eJam',
+                  'chartboost': 'ChartBoost',
+                  'appnexus': 'AppNexus',
+                  'brightroll': 'BrightRoll',
+                  'greystripe': 'Greystripe'}
 
 class NetworksHandler(RequestHandler):
     def get(self):
@@ -47,17 +56,30 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        #create_fake_data(self.account)
+        def create_and_set(networks, network, app):
+            if network not in networks:
+                networks[network] = {}
+            if 'mopub_app_stats' not in networks[network]:
+                networks[network]['mopub_app_stats'] = {}
+            if 'mopub_stats' not in networks[network]:
+                networks[network]['mopub_stats'] = StatsModel()
+            if app.key() not in networks[network]['mopub_app_stats']:
+                networks[network]['mopub_app_stats'][app.key()] = \
+                        {'stats': StatsModel(),
+                         'app': app,
+                         'adunits': []}
 
         days = gen_days_for_range(self.start_date, self.date_range)
 
-        networks = []
-        apps_with_data = {}
+        reporting_networks = {}
+        other_networks = {}
+
+        # Iterate through all networks that allow reporting
         apps_for_network = None
-        for network in sorted(AD_NETWORK_NAMES.keys()):
+        for network in REPORTING_NETWORKS.keys():
             network_data = {}
             network_data['name'] = network
-            network_data['pretty_name'] = AD_NETWORK_NAMES[network]
+            network_data['pretty_name'] = REPORTING_NETWORKS[network]
             login = AdNetworkLoginManager.get_login(self.account,
                     network).get()
             if login:
@@ -71,49 +93,11 @@ class NetworksHandler(RequestHandler):
                 if not apps_for_network:
                     apps_for_network = AppQueryManager.get_apps_without_pub_ids(
                             self.account,
-                            AD_NETWORK_NAMES.keys())
+                            REPORTING_NETWORKS.keys())
                 apps_list = apps_for_network[network] + \
                         apps_for_network[ALL_NETWORKS]
 
                 network_data['apps_without_pub_ids'] = apps_list
-
-            # Give the template enough information to make the appropriate
-            # queries ajax queries to get all the models for each collection
-            network_data['mopub_app_stats'] = []
-            for mapper in sorted(AdNetworkMapperManager.get_mappers(self.account,
-                    network), key=lambda mapper: mapper.application.name.lower()):
-                app = mapper.application
-                apps_with_data[(app.name, app.app_type)] = mapper.application
-
-
-                # get adgroups targeting this app
-                adgroups = AdGroupQueryManager.get_adgroups(app=app)
-
-                app_stats = StatsModel()
-                for ag in adgroups:
-                    logging.warning("Checking Adgroup")
-                    logging.warning(getattr(ag, 'network_type', ''))
-                    logging.warning(network)
-                    if getattr(ag, 'network_type', '') == network or \
-                            getattr(ag, 'network_type', '') == AD_NETWORK_NAMES[network]:
-                        stats_manager = StatsModelQueryManager(self.account,offline=self.offline)
-                        all_stats = stats_manager.get_stats_for_days(publisher=app,
-                                                                        advertiser=ag,
-                                                                        days=days)
-                        logging.warning(all_stats)
-                        stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
-                        logging.warning(stats)
-                        app_stats += stats
-                network_data['mopub_app_stats'].append((app,
-                    mapper.publisher_id, app_stats))
-
-            network_data['mopub_stats'] = reduce(lambda x, y: x+y,
-                    [app_stats for app, pub_id, app_stats in
-                        network_data['mopub_app_stats']], StatsModel())
-            network_data['mopub_app_stats'] = sorted(
-                    network_data['mopub_app_stats'], key=lambda app_data:
-                    app_data[0].identifier)
-
 
             # Create a form for each network and autopopulate fields.
             try:
@@ -126,50 +110,80 @@ class NetworksHandler(RequestHandler):
             except Exception, error:
                 form = LoginInfoForm(prefix=network)
             network_data['form'] = form
-            networks.append(network_data)
+            reporting_networks[network] = network_data
 
-        apps = [app for app in sorted(apps_with_data.itervalues(), key=lambda
-            app: app.identifier)]
+        # Iterate through all networks that don't have reporting
+        for network in sorted(OTHER_NETWORKS.keys()):
+            network_data = {}
+            network_data['name'] = network
+            network_data['pretty_name'] = OTHER_NETWORKS[network]
 
+            other_networks[network] = network_data
 
-#        mopub_app_stats = {}
-#        mopub_network_stats = {}
-#        # For all apps for this account get the network stats
-#        for app in get_all_apps()
-#                for ag in app.adgroups:
-#                    if ag.campaign.campaign_type == 'network':
-#                        stats_manager = StatsModelQueryManager(self.account,offline=self.offline)
-#                        all_stats = stats_manager.get_stats_for_days(publisher=app,
-#                                                                        advertiser=ag,
-#                                                                        days=days)
-#                        stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
-#
-#                        if ag.network_type in mopub_network_stats:
-#                            network_data = mopub_network_stats[ag.network_type]
-#                            network_data['stats'] += stats
-#                            app_data = network_data['app_stats']
-#                            if app.key() in app_data:
-#                                app_data[app.key()] += stats
-#                            else:
-#                                app_data[app.key()] = stats
-#                        else:
-#                            mopub_network_stats[ag.network_type] = \
-#                                    {'stats': stats,
-#                                     'app_stats': {}}
-#
-#                        if app.key() in mopub_app_stats:
-#                            app_data = mopub_app_stats[app.key()]
-#                            app_data['stats'] += stats
-#                            network_data = network_data['network_stats']
-#                            if ag.network_type in network_data:
-#                                network_data[ag.network_type] += stats
-#                            else:
-#                                network_data[ag.network_type] = stats
-#                        else:
-#                            mopub_app_stats[app.key()] = \
-#                                    {'stats': stats,
-#                                     'network_stats': {}}
+        stats_manager = StatsModelQueryManager(account=self.account)
+        # Iterate through all the apps and populate the stats for reporting_networks
+        # and other_networks
+        for app in AppQueryManager.get_apps(self.account):
+            network_config = app.network_config
+            # Get data from the ad networks
+            for network in REPORTING_NETWORKS.keys():
+                pub_id = getattr(network_config, network + '_pub_id', '')
+                logging.info('pub_id')
+                logging.info(pub_id)
+                if pub_id:
+                    mapper = AdNetworkAppMapper.get_by_publisher_id(pub_id,
+                            network)
+                    logging.info('mapper')
+                    logging.info(mapper)
+                    if mapper:
+                        create_and_set(reporting_networks, network, app)
+                        reporting_networks[network] \
+                                ['mopub_app_stats'][app.key()]['pub_id'] = \
+                                pub_id
 
+            # Get data collected by MoPub
+            adunits = []
+            for adgroup in AdGroupQueryManager.get_adgroups(app=app):
+                if adgroup.network_state == NetworkStates.NETWORK_ADGROUP:
+                    all_stats = stats_manager.get_stats_for_days(publisher=app,
+                                                                 advertiser=adgroup,
+                                                                 days=days)
+                    stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
+                    adunit = db.get(adgroup.site_keys[0])
+                    adunit.stats = stats
+                    if adgroup.network_type in REPORTING_NETWORKS.keys():
+                        create_and_set(reporting_networks, adgroup.network_type, app)
+                        reporting_networks[adgroup.network_type] \
+                                ['mopub_app_stats'][app.key()]['adunits']. \
+                                append(adunit)
+                        reporting_networks[adgroup.network_type]['mopub_app_stats'][app.key()]['stats'] += stats
+                        reporting_networks[adgroup.network_type]['mopub_stats'] += stats
+                    elif adgroup.network_type in OTHER_NETWORKS.keys():
+                        create_and_set(other_networks, adgroup.network_type, app)
+                        other_networks[adgroup.network_type] \
+                                ['mopub_app_stats'][app.key()]['adunits']. \
+                                append(adunit)
+                        other_networks[adgroup.network_type]['mopub_app_stats'][app.key()]['stats'] += stats
+                        other_networks[adgroup.network_type]['mopub_stats'] += stats
+
+        reporting_networks = sorted(reporting_networks.values(), key=lambda
+                network_data: network_data['name'])
+        for network_data in reporting_networks:
+            if 'mopub_app_stats' in network_data:
+                network_data['mopub_app_stats'] = sorted(network_data['mopub_app_stats'].values(), key=lambda
+                        app_data: app_data['app'].identifier)
+        logging.info('reporting_networks')
+        logging.info(reporting_networks)
+
+        # TODO: Generalize
+        other_networks = sorted(other_networks.values(), key=lambda
+                network_data: network_data['name'])
+        for network_data in other_networks:
+            if 'mopub_app_stats' in network_data:
+                network_data['mopub_app_stats'] = sorted(network_data['mopub_app_stats'].values(), key=lambda
+                        app_data: app_data['app'].identifier)
+        logging.info('other_networks')
+        logging.info(other_networks)
 
         # self.account can't access ad_network_* data
         account = AccountQueryManager.get_account_by_key(self.account.key())
@@ -190,19 +204,17 @@ class NetworksHandler(RequestHandler):
                   'start_date' : days[0],
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
-                  'show_graph' : (apps and True) or False,
+                  'show_graph' : True,
                   # Account key needed for form submission to EC2.
                   'settings': settings,
                   'account_key' : str(self.account.key()),
-                  'networks': networks,
-                  'apps': apps,
+                  'reporting_networks': reporting_networks,
+                  'other_networks': other_networks,
                   'LoginStates': LoginStates,
                   'ADMOB': ADMOB,
                   'IAD': IAD,
                   'INMOBI': INMOBI,
                   'MOBFOX': MOBFOX,
-#                  'mopub_app_stats': mopub_app_stats,
-#                  'mopub_network_stats': mopub_app_stats,
               })
 
 @login_required

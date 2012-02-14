@@ -37,7 +37,7 @@ from common.ragendja.template import render_to_response, render_to_string, JSONR
 # from common.ragendja.auth.decorators import google_login_required as login_required
 
 ## Models
-from advertiser.models import Campaign, AdGroup, HtmlCreative
+from advertiser.models import Campaign, AdGroup, HtmlCreative, NETWORKS
 from publisher.models import Site, Account, App
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
@@ -252,6 +252,7 @@ class AppCreateHandler(RequestHandler):
             AdUnitQueryManager.put(adunit)
 
             enable_marketplace(adunit, self.account)
+            enable_networks(adunit, self.account)
 
             # Check if this is the first ad unit for this account
             if len(AdUnitQueryManager.get_adunits(account=self.account,limit=2)) == 1:
@@ -287,7 +288,7 @@ class CreateAdUnitHandler(RequestHandler):
             else:
                 acccount = f.instance.account
             adunit = f.save(commit=False)
-            acunit.account = account
+            adunit.account = account
             adunit.app_key = a
 
             # update the database
@@ -782,7 +783,8 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
         else:
             adunit = None
 
-        adunit_form = AdUnitForm(data=self.request.POST,instance=adunit, prefix="adunit")
+        adunit_form = AdUnitForm(data=self.request.POST, instance=adunit,
+                prefix="adunit")
         json_dict = {'success':False, 'errors': []}
 
         if adunit_form.is_valid():
@@ -796,14 +798,17 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
             adunit.account = account
             AdUnitQueryManager.put(adunit)
 
-            # If the adunit already exists we don't need to enable the marketplace
+            # If the adunit already exists we don't need to enable the
+            # marketplace or networks
             if not adunit_key:
                 enable_marketplace(adunit, self.account)
+                enable_networks(adunit, self.account)
 
             json_dict.update(success=True)
             return self.json_response(json_dict)
 
-        flatten_errors = lambda frm : [(k, unicode(v[0])) for k, v in frm.errors.items()]
+        flatten_errors = lambda frm : [(k, unicode(v[0])) for k, v in
+                frm.errors.items()]
         grouped_errors = flatten_errors(adunit_form)
 
         json_dict.update(success=False, errors = grouped_errors)
@@ -900,6 +905,17 @@ class AppExportHandler(RequestHandler):
 def app_export(request, *args, **kwargs):
     return AppExportHandler()(request, *args, **kwargs)
 
+
+def enable_networks(adunit, account):
+    """
+    Create network adgroups for this adunit for all ad networks.
+    """
+    ntwk_adgroups = []
+    for network in NETWORKS:
+        ntwk_adgroups.append(AdGroupQueryManager.get_network_adgroup(
+            adunit.key(), account.key(), network))
+    # TODO: check to make sure clearing cache on put won't mess up anything
+    AdGroupQueryManager.put(ntwk_adgroups)
 
 def enable_marketplace(adunit, account):
     # create marketplace adgroup for this adunit

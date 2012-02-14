@@ -70,8 +70,12 @@ def store_icon(icon):
 def blob_urler(creative):
     if 'TextAndTileCreative' in creative._class or 'ImageCreative' in creative._class:
         if creative.image_blob and not creative.image_serve_url:
-            creative.image_serve_url = helpers.get_url_for_blob(creative.image_blob, ssl=False)
-            yield op.db.Put(creative)
+            try:
+                creative.image_serve_url = helpers.get_url_for_blob(creative.image_blob, ssl=False)
+                yield op.db.Put(creative)
+            except images.Error:
+                pass
+            
 
 def creative_pauser(creative):
     if getattr(creative, 'image_blob', None):

@@ -59,7 +59,7 @@ mapreduce:
       default: 20
 
 
-- name: CreativePauseMigrater
+- name: CreativePauseActivater
   mapper: 
     input_reader: mapreduce.input_readers.DatastoreInputReader
     handler: migrater.creative_activater

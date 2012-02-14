@@ -60,7 +60,6 @@ class App(db.Model):
     # For MPX
     categories = db.StringListProperty()
 
-    icon = db.BlobProperty()
     icon_blob = blobstore.BlobReferenceProperty()
 
     # Ad network overrides
@@ -92,7 +91,8 @@ class App(db.Model):
     @property
     def icon_url(self):
         from common.utils import helpers
-        if not self.icon_blob: return "/placeholders/image.gif"
+        if not self.icon_blob:
+            return "/placeholders/image.gif"
         try:
             url = helpers.get_url_for_blob(self.icon_blob)
             # hack to get images to appear on localhost
@@ -100,7 +100,7 @@ class App(db.Model):
                 url = url.replace('https', 'http')
             return url
         except Exception:
-            return None
+            return "/placeholders/image.gif"
 
     @property
     def identifier(self):

@@ -27,7 +27,10 @@ var mopub = mopub || {};
         _.each(app_keys, function(app_key) {
             var app = new App({ id: app_key, stats_endpoint: 'mpx' });
             app.bind('change', function(current_app) {
-                var appView = new AppView({ model: current_app, el: 'marketplace-apps' });
+                var appView = new AppView({
+                    model: current_app,
+                    el: 'marketplace-apps'
+                });
                 appView.render();
             });
 
@@ -53,7 +56,10 @@ var mopub = mopub || {};
         _.each(app_keys, function(app_key) {
             var app = new App({id: app_key, stats_endpoint: 'mpx'});
             app.bind('change', function(current_app) {
-                var appView = new AppView({ model: current_app, el: 'marketplace-apps' });
+                var appView = new AppView({
+                    model: current_app,
+                    el: 'marketplace-apps'
+                });
                 appView.renderInline();
             });
             app.fetch({
@@ -81,7 +87,10 @@ var mopub = mopub || {};
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
                 adunit.app_id = app_key;
-                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
+                var adunitView = new AdUnitView({
+                    model: adunit,
+                    el: '#marketplace_stats'
+                });
                 adunitView.renderInline();
             });
         });
@@ -147,7 +156,10 @@ var mopub = mopub || {};
 
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
-                var adunitView = new AdUnitView({ model: adunit, el: 'marketplace-apps' });
+                var adunitView = new AdUnitView({
+                    model: adunit,
+                    el: 'marketplace-apps'
+                });
                 adunitView.render();
             });
         });
@@ -192,7 +204,7 @@ var mopub = mopub || {};
         });
 
         on.error(function() {
-            Toast.error("There was an error saving your Marketplace settings. Please try again soon.");
+            Toast.error("There was an error saving your Marketplace settings. Our support team has been notified. Please refresh your page and try again.");
         });
 
         on.done(function() { });
@@ -220,7 +232,8 @@ var mopub = mopub || {};
      * Makes the Creatives Performance tab's datatable
      */
     function makeCreativePerformanceTable (pub_id, blocklist, start_date, end_date) {
-        var creative_data_url = window.location.origin + "/campaigns/marketplace/creatives/";
+        var creative_data_url = window.location.origin
+            + "/campaigns/marketplace/creatives/";
         var table = $("#report-table").dataTable({
             bProcessing: true,
             // Use jQueryUI to style the table

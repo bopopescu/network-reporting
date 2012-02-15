@@ -140,8 +140,22 @@ class CampaignForm(forms.ModelForm):
         # a little sketchy...
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
-        # convert datetimes from offset-naive UTC to Pacific
         if instance:
+            logging.error(instance.campaign_type)
+            if 'gtee' in instance.campaign_type:
+                if 'high' in instance.campaign_type:
+                    instance.gtee_priority = 'high'
+                elif 'low' in instance.campaign_type:
+                    instance.gtee_priority = 'low'
+                instance.campaign_type = 'gtee'
+            elif instance.campaign_type == 'backfill_promo':
+                instance.campaign_type = 'promo'
+                instance.promo_priority = 'backfill'
+            logging.error(instance.campaign_type)
+            if hasattr(instance, 'gtee_priority'): logging.error(instance.gtee_priority)
+            if hasattr(instance, 'promo_priority'): logging.error(instance.promo_priority)
+
+            # convert datetimes from offset-naive UTC to Pacific
             if instance.start_datetime:
                 instance.start_datetime = instance.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
             if instance.end_datetime:
@@ -250,7 +264,7 @@ class AdGroupForm(forms.ModelForm):
     network_type = forms.ChoiceField(choices=(('admob_native', 'AdMob'),
                                               ('adsense', 'AdSense'),
                                               ('brightroll', 'BrightRoll'),
-                                              ('ejam', 'eJam'),
+                                              ('ejam', 'TapIt'),
                                               ('iAd', 'iAd'),
                                               ('inmobi', 'InMobi'),
                                               ('jumptap', 'Jumptap'),

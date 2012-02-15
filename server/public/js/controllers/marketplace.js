@@ -10,6 +10,15 @@ var mopub = mopub || {};
      * ## Marketplace utility methods
      */
 
+    var toast_error = function () {
+        $("Please <a href='#'>refresh the page</a> and try again.")
+            .click(function(e){
+                e.preventDefault();
+                window.location.reload();
+            });
+        Toast.error("Please refresh the page and try again.", "Error fetching app data.");
+    };
+
     /*
      * Fetches and renders all apps from a list of app_keys.
      * Useful for bootstrapping table loads.
@@ -21,9 +30,15 @@ var mopub = mopub || {};
                 var appView = new AppView({ model: current_app, el: 'marketplace-apps' });
                 appView.render();
             });
+
             app.fetch({
                 success: function(){
                     $('table').trigger('update');
+                },
+                error: function () {
+                    app.fetch({
+                        error: toast_error
+                    });
                 }
             });
         });
@@ -41,7 +56,13 @@ var mopub = mopub || {};
                 var appView = new AppView({ model: current_app, el: 'marketplace-apps' });
                 appView.renderInline();
             });
-            app.fetch();
+            app.fetch({
+                error: function () {
+                    app.fetch({
+                        error: toast_error
+                    });
+                }
+            });
         });
     }
 
@@ -64,7 +85,6 @@ var mopub = mopub || {};
                 adunitView.renderInline();
             });
         });
-
         adunits.fetch({
             success: function(){
                 // Trigger any event handlers that have been attached to the table.
@@ -75,6 +95,11 @@ var mopub = mopub || {};
                 if (!marketplace_active) {
                     $(".targeting-box").attr('disabled', true);
                 }
+            },
+            error: function () {
+                adunits.fetch({
+                    error: toast_error
+                });
             }
         });
     }
@@ -127,7 +152,13 @@ var mopub = mopub || {};
             });
         });
 
-         adunits.fetch();
+         adunits.fetch({
+             error: function() {
+                 adunits.fetch({
+                     error: toast_error
+                 });
+             }
+         });
     }
 
     /*
@@ -164,9 +195,7 @@ var mopub = mopub || {};
             Toast.error("There was an error saving your Marketplace settings. Please try again soon.");
         });
 
-        on.done(function() {
-            //Toast.success("Foo.");
-        });
+        on.done(function() { });
 
         $(".targeting-box").removeAttr('disabled');
         $("#blindness").removeAttr('disabled');
@@ -324,11 +353,9 @@ var mopub = mopub || {};
 
         blocklist_xhr.error(function (response) {
             $("img#" + domain).addClass('hidden');
-            Toast.error(response);
+            Toast.error("There was an error adding to your blocklist. Please try again.");
         });
     }
-
-
 
     var MarketplaceController = {
         initializeIndex: function (bootstrapping_data) {

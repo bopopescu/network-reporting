@@ -12,7 +12,18 @@ register = Library()
 
 @register.inclusion_tag("partials/inventory_table.html")
 def inventory_table(inventory):
-    return {'inventory': inventory}
+    # If the object isn't iterable (for instance, a single app), put
+    # it in a list so that we can iterate over it in the template
+    if isiterable(inventory):
+        return {
+            'inventory': inventory,
+            'singular': False
+        }
+    else:
+        return {
+            'inventory': [inventory],
+            'singular': True
+        }
 
 
 @register.inclusion_tag("partials/stats_breakdown.html")
@@ -27,3 +38,11 @@ def status_icon(adgroup):
     (deleted/active/inactive/paused).
     """
     return {'adgroup': adgroup }
+
+
+def isiterable(item):
+    try:
+        item_iterater = iter(item)
+    except TypeError:
+        return False
+    return True

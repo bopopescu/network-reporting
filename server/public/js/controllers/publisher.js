@@ -57,7 +57,23 @@ var mopub = mopub || {};
                 var appView = new AppView({ model: current_app, el: '#dashboard-apps' });
                 appView.renderInline();
             });
-            app.fetch();
+
+            var toast_error = function () {
+                $("Please <a href='#'>refresh the page</a> and try again.")
+                    .click(function(e){
+                        e.preventDefault();
+                        window.location.reload();
+                    });
+                Toast.error("Please refresh the page and try again.", "Error fetching app data.");
+            };
+
+            app.fetch({
+                error: function() {
+                    app.fetch({
+                        error: toast_error
+                    });
+                }
+            });
         });
     }
 
@@ -81,6 +97,15 @@ var mopub = mopub || {};
             });
         });
 
+        var toast_error = function () {
+            $("Please <a href='#'>refresh the page</a> and try again.")
+                .click(function(e){
+                    e.preventDefault();
+                    window.location.reload();
+                });
+            Toast.error("Please refresh the page and try again.", "Error fetching adunit data.");
+        };
+
         adunits.fetch({
             success: function(data){
                 // Trigger any event handlers that have been attached to the table.
@@ -88,6 +113,11 @@ var mopub = mopub || {};
                 // being placed in?
                 $('table').trigger('update');
                 $("#" + app_key + "-img").hide();
+            },
+            error: function () {
+                adunits.fetch({
+                    error: toast_error
+                });
             }
         });
     }
@@ -795,6 +825,9 @@ var mopub = mopub || {};
 
             // Hide unneeded li entry
             $('#publisher-app-exportSelect-menu').find('li').first().hide();
+
+            fetchAppStats([bootstrapping_data.app_key]);
+            fetchAdunitStats(bootstrapping_data.app_key);
         },
 
         initializeAdunitDetail: function (bootstrapping_data) {

@@ -3,12 +3,16 @@
 {% load elements %}
 
 {% block pageTitle %}
-  <h1><a href="{% url app_index %}">Apps</a> / {{app.name}}</h1>
+  <h1>
+    <a href="{% url app_index %}">Apps</a> / {{app.name}}
+  </h1>
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
   <span class="titlebar-right">
-    <a class="button" id="dashboard-apps-editAppButton" href="#">Edit app settings</a>
+    <a class="button" id="dashboard-apps-editAppButton" href="#">
+      Edit app settings
+    </a>
   </span>
 {% endblock titleBarRight %}
 
@@ -27,9 +31,14 @@
           {{ app_form_fragment }}
           </div>
           <div class="form-submit">
-            <span class="hidden" id="appEditForm-loading"><img src="/images/loading2.gif"/></span>
-            <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span>
-            <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span>
+            <span class="hidden" id="appEditForm-loading">
+            <img src="/images/loading2.gif"/></span>
+            <span class="buttonWrap">
+              <a href="#" class="button" id="appEditForm-cancel">Cancel</a>
+            </span>
+            <span class="buttonWrap">
+              <a href="#" class="button" id="appEditForm-submit">Save</a>
+            </span>
           </div>
         </fieldset>
       </form>
@@ -37,7 +46,8 @@
   </section>
   <section class="offset nomargin" id="dashboard-stats">
     <h3 class="stats-chart-title">
-      Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+      Realtime Stats for {{start_date|format_date_compact}} to
+      {{end_date|format_date_compact}}
     </h3>
     <div class="stats">
 
@@ -225,7 +235,7 @@
           <tr>
             <td class="appData-icon">
               <a href="#">
-                <img src="{% firstof app.icon_url "/placeholders/image.gif" %}" alt="Icon" width="45" height="45" />
+                <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" />
               </a>
             </td>
             <th class="dataTable-name">Totals</th>

@@ -719,13 +719,23 @@ var mopub = mopub || {};
                 $(this).show();
             });
         });
-    }
 
+        $('.appData-id').each(function() {
+            var id = $(this);
+            var td = id.parents('tr');
+            td.hover(
+                function() {
+                    id.show();
+                },
+                function() {
+                    id.hide();
+                });
+        });
+    }
 
     function fetchAppsForAdgroup(adgroup_key) {
         // fill in
     }
-
 
     /*
      * ## Dashboard Controller
@@ -752,18 +762,6 @@ var mopub = mopub || {};
             // Remove later with new button treatment
             $('#dashboard-apps-addAppButton')
                 .button({ icons: { primary: "ui-icon-circle-plus" } });
-
-            $('.appData-id').each(function() {
-                var id = $(this);
-                var td = id.parents('tr');
-                td.hover(
-                    function() {
-                        id.show();
-                    },
-                    function() {
-                        id.hide();
-                    });
-            });
         },
         initializeGeo: function (bootstrapping_data) {
             initializeCommon();

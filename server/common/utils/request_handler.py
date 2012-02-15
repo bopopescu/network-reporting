@@ -13,6 +13,7 @@ from common.utils.decorators import cache_page_until_post, conditionally
 from common.utils.timezones import Pacific_tzinfo
 from django.conf import settings
 from django.http import Http404
+from django.template import RequestContext
 
 from stats.log_service import LogService
 

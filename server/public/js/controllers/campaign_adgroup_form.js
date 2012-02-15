@@ -275,9 +275,103 @@ $(document).ready(function() {
 
     // date controls
     $('input[type="text"].date').datepicker({minDate: 0});
-    $('input[name$="datetime_0"]').change(function() {
-        $(this).siblings('input[name$="datetime_1"]').val('12:00 AM');
+
+    function makeValidTime(timeStr, defHour, defMin, defAmPm) {
+        // Checks to see if a timeStr is valid, returns valid form
+        // AM/PM (and variants) are optional.
+
+        var timePat = /^(\d{1,2}):(\d{2})(\s?(AM|am|PM|pm|aM|pM|Pm|Am))?$/;
+
+        if (defMin < 10) {
+            defMin = '0' + defMin;
+        }
+        var matchArray = timeStr.match(timePat);
+        if (matchArray == null) {
+            return defHour + ':' + defMin + ' ' + defAmPm;
+        }
+
+        hour = matchArray[1];
+        minute = matchArray[2];
+        ampm = matchArray[4];
+
+        // Handle military time stuff
+        if (hour >= 12 && hour <= 23) {
+            hour = hour - 12;
+            // 12:00 AM to 12:00 PM
+            // 12:00    to 12:00 PM
+            //
+            // 15:00 AM to 3:00 PM
+            // 15:00 PM to 3:00 PM
+            // 15:00    to 3:00 PM
+            if (hour == 0) {
+                hour = 12;
+                if (ampm === undefined) {
+                    ampm = 'PM';
+                }
+            }
+            else {
+                ampm = 'PM';
+            }
+        }
+
+        if (hour == 0) {
+            ampm = 'AM';
+            hour = 12;
+        }
+        // Set invalid times to 0 minutes and 12 hours and default to AM
+        if (minute < 0 || minute > 59) {
+            minute = defMin;
+        }
+        if (hour < 0 || hour > 23) {
+            hour = defHour;
+        }
+        if (ampm === undefined) {
+            ampm = defAmPm;
+        }
+
+        else {
+            ampm = ampm.toUpperCase();
+        }
+        return hour + ':' + minute + ' ' + ampm ;
+    }
+
+    $('input[name="start_datetime_0"]').change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != '') {
+            $('input[name="start_datetime_1"]').change();
+        }
     });
+
+    $('input[name="end_datetime_0"]').change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != '') {
+            $('input[name="end_datetime_1"]').change();
+        }
+    });
+
+    $('input[name$="_datetime_1"]').change(function(e){
+        e.preventDefault();
+        var name = $(this).attr('name');
+        var val = $(this).val();
+        if (name == 'start_datetime_1') {
+            if($('input[name="start_datetime_0"]').val() == '') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 12, 0, 'AM');
+            }
+        }
+        else if (name == 'end_datetime_1') {
+            if($('input[name="end_datetime_0"]').val() == '') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 11, 59, 'PM');
+            }
+        }
+        $(this).val(val);
+    });
+
 
     $('#all-adunits').change(function() {
         // select or deselect all adunits

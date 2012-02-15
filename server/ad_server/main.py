@@ -95,7 +95,7 @@ class AdImpressionHandler(webapp.RequestHandler):
                                         now=None):
         from userstore.query_managers import ImpressionEventManager
 
-        now = datetime.datetime.now()
+        now = now or datetime.datetime.now()
 
         impression_types_to_update = []
         if creative.ad_group.daily_frequency_cap:

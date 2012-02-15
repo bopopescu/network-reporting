@@ -38,7 +38,7 @@
   </dd>
   <dt>Creative Name:</dt>
   <dd>
-    <input type='text' name="{{form.name.name}}" class="input-text {% if form.name.errors %}form-error{% endif %}" value="{{form.name.value}}" />
+    {{ form.name }}
     {% for error in form.name.errors %}
       <div class="form-error-text">{{error}}</div>
     {% endfor %}

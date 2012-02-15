@@ -257,10 +257,15 @@
 
         // Use breakdown to switch charts
         $('.stats-breakdown tr').click(function(e) {
-            $('#dashboard-stats-chart').fadeOut(100, function() {
-                mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-                $(this).show();
-            });
+            var row = $(this);
+            if(!row.hasClass('active')) {
+                row.siblings().removeClass('active');
+                row.addClass('active');
+                $('#dashboard-stats-chart').fadeOut(100, function() {
+                    mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
+                    $(this).show();
+                });
+            }
         });
 
         mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());

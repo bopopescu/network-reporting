@@ -315,7 +315,7 @@ form#campaign_and_adgroup {
     input[type="text"].time {
         width: 60px;
     }
-    input[type="text"].number {
+    input[type="text"].number, input[type="text"].float {
         width: 70px;
     }
     input.error, textarea.error {

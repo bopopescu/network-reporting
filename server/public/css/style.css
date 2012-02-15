@@ -1434,7 +1434,7 @@ form#campaign_and_adgroup input[type="text"].date {
   width: 85px; }
 form#campaign_and_adgroup input[type="text"].time {
   width: 60px; }
-form#campaign_and_adgroup input[type="text"].number {
+form#campaign_and_adgroup input[type="text"].number, form#campaign_and_adgroup input[type="text"].float {
   width: 70px; }
 form#campaign_and_adgroup input.error, form#campaign_and_adgroup textarea.error {
   background: #fff2f2;

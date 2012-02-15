@@ -5,7 +5,7 @@
     // All this JS is here because it needs render-time info (see immediately below) to properly pre-populate/format the token inputs
     // Can we move this to a hidden div or use ajax or some such?
     //
-    var geo_s = 'http://ws.geonames.org/searchJSON?';
+    var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';
     $(document).ready( function () {
             var priors = {% if form.geo.value %}{{form.geo.value|safe}}{% else %}[]{% endif %};
             var city_priors = {{form.cities.value|to_json|safe}};

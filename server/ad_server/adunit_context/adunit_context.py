@@ -132,6 +132,10 @@ class AdUnitContext(object):
             return ""
         if not creative.image_blob:
             return ""
+
+        image_url = creative.image_serve_url
+        if image_url: return image_url
+
         try:
             image_url = helpers.get_url_for_blob(creative.image_blob,
                                                  ssl=False)

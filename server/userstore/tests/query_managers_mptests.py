@@ -10,8 +10,8 @@ import common.utils.test.setup
 from google.appengine.ext import db
 from nose.tools import assert_equals, assert_not_equals, assert_true, assert_false, assert_raises
 
-from userstore.query_managers import MobileUserManager, MobileAppManager, ClickEventManager, AppOpenEventManager, InAppPurchaseEventManager
-from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, InAppPurchaseEvent, CLICK_EVENT_NO_APP_ID
+from userstore.query_managers import MobileUserManager, MobileAppManager, ClickEventManager, AppOpenEventManager, InAppPurchaseEventManager, ImpressionEventManager
+from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, InAppPurchaseEvent, ImpressionEvent, HourlyImpressionEvent, DailyImpressionEvent, CLICK_EVENT_NO_APP_ID
 
 
 SAMPLE_UDID1 = 'udid1'
@@ -221,46 +221,80 @@ def app_open_event_manager_conversion_logging_mptests():
     # cleanup
     clear_datastore()    
 
-def inapp_purchase_event_manager_conversion_logging_mptests():
+def inapp_purchase_event_manager_mptests():
     # cleanup
     clear_datastore()
-    
     
     dt = datetime.now()
-    manager = InAppPurchaseEventManager()
+    manager = ImpressionEventManager()
     
-    SAMPLE_RECEIPT1 = "{'receipt1':'i am'}"
-    SAMPLE_RECEIPT2 = "{'receipt2':'i am'}"
+    SAMPLE_ADGROUP1 = "ADGROUP_1"
+    SAMPLE_ADGROUP2 = "ADGROUP_2"
     
-    SAMPLE_TRANSACTION_ID1 = "TRANSACTION1"
-    SAMPLE_TRANSACTION_ID2 = "TRANSACTION2"
-    
-    
-    # log two inapp purchases one beloging to a user and app and one only to a user
-    manager.log_inapp_purchase_event(SAMPLE_TRANSACTION_ID1, SAMPLE_UDID1, dt, SAMPLE_RECEIPT1, SAMPLE_MOBILE_APPID1)
-    manager.log_inapp_purchase_event(SAMPLE_TRANSACTION_ID1, SAMPLE_UDID1, dt, SAMPLE_RECEIPT1, SAMPLE_MOBILE_APPID1)
-    manager.log_inapp_purchase_event(SAMPLE_TRANSACTION_ID2, SAMPLE_UDID1, dt, SAMPLE_RECEIPT2)
+    # log hourly impression for two users for a couple adgroups
+    manager.log_impression(SAMPLE_UDID1, SAMPLE_ADGROUP1, dt, [ImpressionEventManager.HOURLY])
+    manager.log_impression(SAMPLE_UDID2, SAMPLE_ADGROUP1, dt, [ImpressionEventManager.HOURLY])
+    manager.log_impression(SAMPLE_UDID1, SAMPLE_ADGROUP2, dt, [ImpressionEventManager.HOURLY])
     
     
-    # confirms that the right objects are created
-    temp = InAppPurchaseEvent.all().fetch(100)
-    for t in temp:
-        print repr(t)
-    assert_equals(InAppPurchaseEvent.all().count(), 2)
-    assert_equals(MobileApp.all().count(), 1)
-    assert_equals(MobileUser.all().count(), 1)
+    # verify that we have the write # of imps, users and all the counts are set to 1
+    hourly_imps = HourlyImpressionEvent.all().fetch(1000)
     
-    inapp_purchases = InAppPurchaseEvent.all()
-    assert_equals(inapp_purchases[1].receipt, SAMPLE_RECEIPT1)
-    assert_equals(inapp_purchases[0].receipt, SAMPLE_RECEIPT2)
+    assert_equals(len(hourly_imps), 3)
+    assert_equals(MobileUser.all().count(), 2)
+    
+    for imp in hourly_imps: 
+        assert_equals(imp.count,1)
+    
+    # log hourly impression AGAIN for two users for a couple adgroups
+    manager.log_impression(SAMPLE_UDID1, SAMPLE_ADGROUP1, dt, [ImpressionEventManager.HOURLY])
+    manager.log_impression(SAMPLE_UDID2, SAMPLE_ADGROUP1, dt, [ImpressionEventManager.HOURLY])
+    manager.log_impression(SAMPLE_UDID1, SAMPLE_ADGROUP2, dt, [ImpressionEventManager.HOURLY])
     
     
-    user = MobileUserManager().get_mobile_user(SAMPLE_UDID1)
-    mobile_app = MobileAppManager().get_mobile_apps(SAMPLE_UDID1,SAMPLE_MOBILE_APPID1)[0]
+    # verify that we have the write # of imps, users and all the counts are set to 2
+    hourly_imps = HourlyImpressionEvent.all().fetch(1000)
     
-    assert_equals(user.num_purchases,2)
-    assert_equals(mobile_app.num_purchases,1)
+    assert_equals(len(hourly_imps), 3)
+    assert_equals(MobileUser.all().count(), 2)
     
-    # cleanup
-    clear_datastore()
+    for imp in hourly_imps: 
+        assert_equals(imp.count, 2)
     
+    
+    
+    # log hourly impression for two users for a couple adgroups
+    manager.log_impression(SAMPLE_UDID1, SAMPLE_ADGROUP1, dt, [ImpressionEventManager.DAILY])
+    manager.log_impression(SAMPLE_UDID2, SAMPLE_ADGROUP1, dt, [ImpressionEventManager.DAILY])
+    manager.log_impression(SAMPLE_UDID1, SAMPLE_ADGROUP2, dt, [ImpressionEventManager.DAILY])
+    
+    # verify that we have the write # of imps, users and all the counts are set to 1
+    daily_imps = DailyImpressionEvent.all().fetch(1000)
+
+    assert_equals(len(daily_imps), 3)
+    assert_equals(MobileUser.all().count(), 2)
+    
+    for imp in daily_imps: assert_equals(imp.count,1)
+    
+    
+    manager.log_impression(SAMPLE_UDID1, SAMPLE_ADGROUP1, dt, [ImpressionEventManager.DAILY])
+    manager.log_impression(SAMPLE_UDID2, SAMPLE_ADGROUP1, dt, [ImpressionEventManager.DAILY])
+    manager.log_impression(SAMPLE_UDID1, SAMPLE_ADGROUP2, dt, [ImpressionEventManager.DAILY])
+    
+    # verify that we have the write # of imps, users and all the counts are set to 1
+    daily_imps = DailyImpressionEvent.all().fetch(1000)
+
+    assert_equals(len(daily_imps), 3)
+    assert_equals(MobileUser.all().count(), 2)
+    
+    for imp in daily_imps: assert_equals(imp.count,2)
+    
+    manager.log_impression(SAMPLE_UDID1, SAMPLE_ADGROUP2, dt, [ImpressionEventManager.HOURLY, ImpressionEventManager.DAILY])
+    
+    impression_events = manager.get_impression_events(SAMPLE_UDID1, [SAMPLE_ADGROUP1, SAMPLE_ADGROUP2], dt)
+    
+    for impression_event in impression_events:
+        if impression_event.adgroup_id == SAMPLE_ADGROUP1: 
+            assert_equals(impression_event.count, 2)
+        if impression_event.adgroup_id == SAMPLE_ADGROUP2: 
+            assert_equals(impression_event.count, 3)

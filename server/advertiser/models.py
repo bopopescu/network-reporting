@@ -175,7 +175,7 @@ class AdGroup(db.Model):
     # if CPM: bid = cost per 1000 impressions
     # if CPA: bid = cost per 1000 conversions
     bid = db.FloatProperty(default=0.05, required=False)
-    bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpc")
+    bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 
     # state of this ad group
     active = db.BooleanProperty(default=True)
@@ -415,6 +415,7 @@ class Creative(polymodel.PolyModel):
     ad_group = db.ReferenceProperty(AdGroup, collection_name="creatives")
 
     active = db.BooleanProperty(default=True)
+    was_active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
 
     # the creative type helps the ad server render the right thing if the creative wins the auction
@@ -557,6 +558,7 @@ class TextAndTileCreative(Creative):
     line2 = db.StringProperty()
     # image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
+    image_serve_url = db.StringProperty()
     action_icon = db.StringProperty(choices=["download_arrow4", "access_arrow", "none"], default="download_arrow4")
     color = db.StringProperty(default="000000")
     font_color = db.StringProperty(default="FFFFFF")
@@ -583,6 +585,7 @@ class ImageCreative(Creative):
     # image properties
     # image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
+    image_serve_url = db.StringProperty()
     image_width = db.IntegerProperty(default=320)
     image_height = db.IntegerProperty(default=480)
 

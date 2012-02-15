@@ -9,7 +9,9 @@ import common.utils.test.setup
 from google.appengine.ext import db
 from nose.tools import assert_equals, assert_not_equals, assert_true, assert_raises
 
-from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, InAppPurchaseEvent, CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
+from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, \
+                             ImpressionEvent, HourlyImpressionEvent, DailyImpressionEvent, \
+                             InAppPurchaseEvent, CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
 
 
 SAMPLE_UDID1 = 'udid1'
@@ -222,3 +224,19 @@ def inapp_event_model_mptests():
     # cleanup
     clear_datastore()
     
+    
+def inapp_event_model_mptests():
+    #initialization
+    dt = datetime.now()
+    
+    SAMPLE_ADGROUP1 = "ADGROUP_1"
+    SAMPLE_ADGROUP2 = "ADGROUP_2"
+
+    # required properties check
+    assert_raises(NameError, ImpressionEvent)
+    assert_raises(NameError, ImpressionEvent,
+                  udid=SAMPLE_UDID1, adgroup_id=SAMPLE_ADGROUP1) # missing time
+    assert_raises(NameError, ImpressionEvent,
+                  adgroup_id=SAMPLE_ADGROUP1, time=dt) # missing udid
+    assert_raises(NameError, ImpressionEvent,
+                udid=SAMPLE_ADGROUP1, time=dt) # missing adgroup

@@ -253,3 +253,9 @@ def to_json(python_obj):
 @register.simple_tag
 def include_raw(path):
     return template.loader.find_template(path)[0]
+
+@register.filter
+def as_list(item):
+    if type(item) == list:
+        return item
+    return [item]

@@ -2,22 +2,36 @@
 {% load filters %}
 {% load elements %}
 
+{% block pageTitle %}
+  <h1>Dashboard</h1>
+{% endblock pageTitle %}
+
 {% block content %}
 
   <div id="ajaxFailure" style="display:none">
-    <a href="#" id="ajaxDismiss"><img src="../images/icons/199_16x16.png"></img></a>
+    <a href="#" id="ajaxDismiss">
+      <img src="../images/icons/199_16x16.png"></img>
+    </a>
     There was a problem retrieving data for some of your apps / sites.
-    <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
+    <a href="#" id="ajaxRetry">
+      <img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong>
+    </a>
   </div>
 
   {% ifequal account.status "step4" %}
     <div class="alert-message block-message">
-      Start serving ads in your app by visiting the tabs at the top of the page
+      Start serving ads in your app by visiting the tabs at the top of
+      the page
       <br/><br/>
       <ul>
-        <li><strong>Campaigns</strong>  Traffic your direct sold advertisements and house campaigns</li>
-        <li><strong>Marketplace</strong>  Tap into MoPub’s Real-Time Bidding platform to access more demand sources and get paid directly from MoPub</li>
-        <li><strong>Networks</strong>  Turn on ad campaigns from the major mobile ad networks you work with like AdMob, iAd, Millennial Media and others</li>
+        <li><strong>Campaigns</strong> Traffic your direct sold
+        advertisements and house campaigns</li>
+        <li><strong>Marketplace</strong> Tap into MoPub’s Real-Time
+        Bidding platform to access more demand sources and get paid
+        directly from MoPub</li>
+        <li><strong>Networks</strong> Turn on ad campaigns from the
+        major mobile ad networks you work with like AdMob, iAd,
+        Millennial Media and others</li>
       </ul>
     </div>
   {% endifequal %}
@@ -25,7 +39,8 @@
   <section class="offset nomargin" id="dashboard-stats">
 
     <h3 class="stats-chart-title">
-      Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+      Realtime Stats for {{start_date|format_date_compact}} to
+      {{end_date|format_date_compact}}
     </h3>
 
     <div class="stats">

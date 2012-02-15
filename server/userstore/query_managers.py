@@ -4,7 +4,9 @@ from datetime import timedelta
 from google.appengine.ext import db
 
 from common.utils.query_managers import CachedQueryManager
-from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, InAppPurchaseEvent, CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
+from userstore.models import MobileUser, MobileApp, ClickEvent, AppOpenEvent, ImpressionEvent, \
+                             InAppPurchaseEvent, HourlyImpressionEvent, DailyImpressionEvent, \
+                             CLICK_EVENT_NO_APP_ID, DEFAULT_CONVERSION_WINDOW
 
 from common.constants import MAX_OBJECTS
 
@@ -212,3 +214,33 @@ class InAppPurchaseEventManager(CachedQueryManager):
         return inapp_purchase_event
         
     
+class ImpressionEventManager(CachedQueryManager):
+
+    IMPRESSION_TYPES_TO_MODEL = {'hourly': HourlyImpressionEvent, 'daily': DailyImpressionEvent}
+    HOURLY = 'hourly'
+    DAILY = 'daily'
+
+    def get_impression_events(self, udid, adgroup_ids, time):
+        hourly_keys = []
+        daily_keys = []
+        for adgroup_id in adgroup_ids:
+            hourly_keys += [HourlyImpressionEvent.get_db_key(udid, adgroup_id, time)]
+            daily_keys += [DailyImpressionEvent.get_db_key(udid, adgroup_id, time)]
+        return HourlyImpressionEvent.get(hourly_keys) + DailyImpressionEvent.get(daily_keys)
+
+    def log_impression(self, udid, adgroup_id, time, impression_types):
+        return db.run_in_transaction(self._log_impression_transaction, udid, str(adgroup_id), time, impression_types)
+
+    def _log_impression_transaction(self, udid, adgroup_id, time, impression_types):
+        for impression_type in impression_types:
+            Model = self.IMPRESSION_TYPES_TO_MODEL[impression_type]
+            imp_db_key = Model.get_db_key(udid, adgroup_id, time)
+            imp = Model.get(imp_db_key)
+            
+            # ensures that user objects exist
+            mobile_user = MobileUserManager.get_or_insert(udid)
+            if not imp:
+                imp = Model(udid=udid, adgroup_id=adgroup_id, time=time)
+
+            imp.count += 1
+            imp.put()

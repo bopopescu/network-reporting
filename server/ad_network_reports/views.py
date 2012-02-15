@@ -2,7 +2,7 @@ import logging
 
 from account.query_managers import AccountQueryManager
 
-from ad_network_reports.forms import LoginInfoForm
+from ad_network_reports.forms import LoginCredentialsForm
 from ad_network_reports.models import LoginStates, \
         MANAGEMENT_STAT_NAMES
 from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
@@ -99,12 +99,12 @@ class AdNetworkReportIndexHandler(RequestHandler):
             try:
                 login = AdNetworkLoginCredentials. \
                         get_by_ad_network_name(self.account, network)
-                form = LoginInfoForm(instance=login, prefix=network)
+                form = LoginCredentialsForm(instance=login, prefix=network)
                 # Encryption doesn't work on app engine...
                 #form.initial['password'] = login.decoded_password
                 #form.initial['username'] = login.decoded_password
             except Exception, error:
-                form = LoginInfoForm(prefix=network)
+                form = LoginCredentialsForm(prefix=network)
             network_data['form'] = form
             networks.append(network_data)
 

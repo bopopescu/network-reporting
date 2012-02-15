@@ -137,29 +137,31 @@ class CampaignForm(forms.ModelForm):
                                         widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
-        # a little sketchy...
+        if len(args) > 5:
+            initial = args[5]
+        else:
+            if 'initial' not in kwargs or not kwargs['initial']:
+                kwargs['initial'] = {}
+            initial = kwargs['initial']
+
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
         if instance:
-            logging.error(instance.campaign_type)
             if 'gtee' in instance.campaign_type:
                 if 'high' in instance.campaign_type:
-                    instance.gtee_priority = 'high'
+                    initial['gtee_priority'] = 'high'
                 elif 'low' in instance.campaign_type:
-                    instance.gtee_priority = 'low'
-                instance.campaign_type = 'gtee'
+                    initial['gtee_priority'] = 'low'
+                initial['campaign_type'] = 'gtee'
             elif instance.campaign_type == 'backfill_promo':
-                instance.campaign_type = 'promo'
-                instance.promo_priority = 'backfill'
-            logging.error(instance.campaign_type)
-            if hasattr(instance, 'gtee_priority'): logging.error(instance.gtee_priority)
-            if hasattr(instance, 'promo_priority'): logging.error(instance.promo_priority)
+                initial['campaign_type'] = 'promo'
+                initial['promo_priority'] = 'backfill'
 
             # convert datetimes from offset-naive UTC to Pacific
             if instance.start_datetime:
-                instance.start_datetime = instance.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
+                initial['start_datetime'] = instance.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
             if instance.end_datetime:
-                instance.end_datetime = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
+                initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
@@ -325,9 +327,9 @@ class AdGroupForm(forms.ModelForm):
                                                             'rows': 3}))
 
     def __init__(self, *args, **kwargs):
-        #data = args[0] if len(args) > 0 else kwargs.get('data', None)
-        #initial = args[4] if len(args) > 4 else kwargs.get('initial', None)
-        instance = args[8] if len(args) > 8 else kwargs.get('instance', None)
+        #data = args[1] if len(args) > 1 else kwargs.get('data', None)
+        #initial = args[5] if len(args) > 5 else kwargs.get('initial', None)
+        instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
         is_staff = kwargs.pop('is_staff', False)
 

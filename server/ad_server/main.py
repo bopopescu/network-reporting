@@ -92,8 +92,10 @@ class AdImpressionHandler(webapp.RequestHandler):
     @classmethod
     def increment_frequency_counts(cls, creative=None,
                                         raw_udid=None,
-                                        now=datetime.datetime.now()):
+                                        now=None):
         from userstore.query_managers import ImpressionEventManager
+
+        now = datetime.datetime.now()
 
         impression_types_to_update = []
         if creative.ad_group.daily_frequency_cap:

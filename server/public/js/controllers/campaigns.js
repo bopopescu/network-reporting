@@ -370,7 +370,10 @@
                 title: 'Guaranteed Campaigns',
                 type: 'gtee'
             });
-            gtee_adgroups_view.render();
+            gtee_adgroups.bind('reset', function(){
+                gtee_adgroups_view.render();
+            });
+
             gtee_adgroups.each(function(adgroup) {
                 adgroup.fetch({
                     data: ajax_query_string,

@@ -740,6 +740,15 @@ var mopub = mopub || {};
             });
         });
 
+        $('.stats-breakdown tr').click(function(e) {
+            var row = $(this);
+            if (!row.hasClass('active')) {
+                var table = row.parents('table');
+                $('tr.active', table).removeClass('active');
+                row.addClass('active');
+            }
+        });
+
         $('.appData-id').each(function() {
             var id = $(this);
             var td = id.parents('tr');

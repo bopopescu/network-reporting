@@ -73,9 +73,9 @@ var mopub = mopub || {};
     }
 
     /*
-     * Fetches AdUnit stats over ajax and renders them in already existing table rows.
-     * This method is useful for decreasing page load time. Uses a parent app's key
-     * to bootstrap the fetch.
+     * Fetches AdUnit stats over ajax and renders them in already
+     * existing table rows.  This method is useful for decreasing page
+     * load time. Uses a parent app's key to bootstrap the fetch.
      */
     function fetchAdunitStats (app_key, marketplace_active) {
         var adunits = new AdUnitCollection();
@@ -96,9 +96,9 @@ var mopub = mopub || {};
         });
         adunits.fetch({
             success: function(){
-                // Trigger any event handlers that have been attached to the table.
-                // Shouldn't this only trigger for the table that the adunit stats are
-                // being placed in?
+                // Trigger any event handlers that have been attached
+                // to the table.  Shouldn't this only trigger for the
+                // table that the adunit stats are being placed in?
                 $('table').trigger('update');
                 $("#" + app_key + "-img").hide();
                 if (!marketplace_active) {
@@ -114,20 +114,20 @@ var mopub = mopub || {};
     }
 
     /*
-     * Fetches and renders all of the adunits from an app key.
-     * Useful for showing adunits when a user has clicked on a
-     * 'show adunits' link.
+     * Fetches and renders all of the adunits from an app key.  Useful
+     * for showing adunits when a user has clicked on a 'show adunits'
+     * link.
      */
     function fetchAdunitsForApp (app_key) {
         var adunits = new AdUnitCollection();
         adunits.app_id = app_key;
 
-        // Once the adunits have been fetched from the server,
-        // render them as well as the app's price floor range
+        // Once the adunits have been fetched from the server, render
+        // them as well as the app's price floor range
         adunits.bind('reset', function(adunits_collection) {
 
-            // Get the max and min price floors from the adunits so
-            // we can use them for the app's price floor range
+            // Get the max and min price floors from the adunits so we
+            // can use them for the app's price floor range
             var high = _.max(adunits_collection.models, function(adunit){
                  return adunit.get("price_floor");
             }).get("price_floor");
@@ -136,15 +136,16 @@ var mopub = mopub || {};
                 return adunit.get("price_floor");
             }).get("price_floor");
 
-            // Set the app's price floor cell to the range of the adunits
-            // Keep the "Edit Price Floor" button
+            // Set the app's price floor cell to the range of the
+            // adunits Keep the "Edit Price Floor" button
             var btn = $("<a href='#" + app_key +"'" +
                         " class='edit_price_floor' " +
                         "id='" + app_key + "'> "
                         + "Edit Price Floor</a>");
 
-            // Display the range of price floors for the app. (This is no longer
-            // used, but left in because it could be used again in the future).
+            // Display the range of price floors for the app. (This is
+            // no longer used, but left in because it could be used
+            // again in the future).
             if (high == low) {
                 $(".app-row#app-" + app_key + " .price_floor").html("All $" + high);
             } else {
@@ -384,6 +385,19 @@ var mopub = mopub || {};
                                                      bootstrapping_data.blocklist,
                                                      bootstrapping_data.start_date,
                                                      bootstrapping_data.end_date);
+
+            /*
+             * Click handling for the stats breakdown
+             * REFACTOR: move this to a common place because it's everywhere
+             */
+            $('.stats-breakdown tr').click(function(e) {
+                var row = $(this);
+                if (!row.hasClass('active')) {
+                    var table = row.parents('table');
+                    $('tr.active', table).removeClass('active');
+                    row.addClass('active');
+                }
+            });
 
             /*
              * Blindness settings

@@ -23,6 +23,10 @@ function mp_cb(data) {
     iframe.document.close();
 }
 
+function mp_fail() {
+   window.location = "mopub://failLoad";
+}
+
 (function(){
 
     function gen_key() {

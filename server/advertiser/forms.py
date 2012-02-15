@@ -123,10 +123,10 @@ class CampaignForm(forms.ModelForm):
                                                                               time_format='%H:%M'))
     budget = forms.FloatField(label='Delivery Amount:',
                               required=False,
-                              widget=forms.TextInput(attrs={'class': 'number budget_type_dependent daily'}))
+                              widget=forms.TextInput(attrs={'class': 'float budget_type_dependent daily'}))
     full_budget = forms.FloatField(label='Delivery Amount:',
                                    required=False,
-                                   widget=forms.TextInput(attrs={'class': 'number budget_type_dependent full_campaign'}))
+                                   widget=forms.TextInput(attrs={'class': 'float budget_type_dependent full_campaign'}))
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily')
@@ -137,17 +137,15 @@ class CampaignForm(forms.ModelForm):
                                         widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
-        instance = args[8] if len(args) > 8 else kwargs.get('instance', None)
+        # a little sketchy...
+        instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
-        # start_datetime and end_datetimes are stored in UTC but should be
-        # displayed in Pacific Time
+        # convert datetimes from offset-naive UTC to Pacific
         if instance:
             if instance.start_datetime:
-                start_datetime = instance.start_datetime.replace(tzinfo=UTC())
-                instance.start_datetime = start_datetime.astimezone(Pacific_tzinfo())
+                instance.start_datetime = instance.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
             if instance.end_datetime:
-                end_datetime = instance.end_datetime.replace(tzinfo=UTC())
-                instance.end_datetime = end_datetime.astimezone(Pacific_tzinfo())
+                instance.end_datetime = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
@@ -160,8 +158,9 @@ class CampaignForm(forms.ModelForm):
         start_datetime = self.cleaned_data.get('start_datetime', None)
         if start_datetime:
             # start_datetime is entered in Pacific Time
-            start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo())
-            if start_datetime < datetime.now(Pacific_tzinfo()):
+            start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
+            # if this is a new campaign, it must start in the future
+            if not self.instance and start_datetime < datetime.now():
                 raise forms.ValidationError("Start time must be in the future")
         return start_datetime
 
@@ -169,7 +168,7 @@ class CampaignForm(forms.ModelForm):
         end_datetime = self.cleaned_data.get('end_datetime', None)
         if end_datetime:
             # end_datetime is entered in Pacific Time
-            end_datetime = end_datetime.replace(tzinfo=Pacific_tzinfo())
+            end_datetime = end_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
         return end_datetime
 
     def clean(self):
@@ -177,11 +176,10 @@ class CampaignForm(forms.ModelForm):
 
         start_datetime = cleaned_data.get('start_datetime', None)
         end_datetime = cleaned_data.get('end_datetime', None)
-        now_datetime = datetime.now(Pacific_tzinfo())
 
         if cleaned_data.get('campaign_type', None) in ['gtee', 'promo'] and not start_datetime:
             # if no start time is given, use the current time
-            start_datetime = now_datetime
+            start_datetime = datetime.now()
 
         if 'campaign_type' in cleaned_data:
             # set the correct campaign_type using gtee_prioirty or promo_priority
@@ -222,7 +220,6 @@ class CampaignForm(forms.ModelForm):
     # change the tzinfo of the datetimes because we display in Pacific and
     # store in UTC.  Can this be done in the model?
     def save(self, *args, **kwargs):
-        # TODO: change datetimes from Pacific to UTC
         campaign = super(CampaignForm, self).save(*args, **kwargs)
 
         # budget
@@ -270,16 +267,16 @@ class AdGroupForm(forms.ModelForm):
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
                                      label='Rate:', initial='cpc')
     bid = forms.FloatField(initial=0.05,
-                           widget=forms.TextInput(attrs={'class': 'number'}))
+                           widget=forms.TextInput(attrs={'class': 'float'}))
     # site_keys defined in __init__
     allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
                                              required=False,
-                                             widget=forms.TextInput(attrs={'class': 'number'}))
+                                             widget=forms.TextInput(attrs={'class': 'float'}))
     daily_frequency_cap = forms.IntegerField(initial=0, label='Frequency Caps:',
                                              required=False,
-                                             widget=forms.TextInput(attrs={'class': 'number'}))
+                                             widget=forms.TextInput(attrs={'class': 'float'}))
     hourly_frequency_cap = forms.IntegerField(initial=0, required=False,
-                                              widget=forms.TextInput(attrs={'class': 'number'}))
+                                              widget=forms.TextInput(attrs={'class': 'float'}))
     device_targeting = forms.TypedChoiceField(choices=(('0', 'All'),
                                                        ('1', 'Filter by device and OS')),
                                               coerce=lambda x: bool(int(x)),
@@ -430,6 +427,11 @@ class AbstractCreativeForm(forms.ModelForm):
 
 class BaseCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/base_creative_form.html'
+
+    name = forms.CharField(initial="Creative",
+                           widget=forms.TextInput(attrs={
+                               'class': 'input-text required'
+                           }))
 
     class Meta:
         model = Creative

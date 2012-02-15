@@ -1,0 +1,21 @@
+<a name="adgroupEditForm" class="hidden">anchor</a>
+<fieldset id="campaignForm-details">
+  <h2>Campaign Details</h2>
+  <p>
+    Campaigns allow you to manage ads that will run on your mobile ad units.
+  </p>
+  {{campaign_form.as_template}}
+
+
+</fieldset>
+
+
+<fieldset id="campaignForm-targeting">
+  <h2>Targeting</h2>
+  <p>
+    Choose which ad units this campaign will target.
+  </p>
+  {{adgroup_form.as_template}}
+</fieldset>
+
+{% include "mpx_tos.html" %}

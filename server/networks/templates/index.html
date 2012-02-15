@@ -3,8 +3,7 @@
 
 {% block pageTitle %}
   <div class="breadcrumb">
-    <a class="linkIcon breadcrumb-back" href="/campaigns/networks/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Networks</a>
-    <h1>Ad Network Revenue Report</h1>
+    <h1>Networks</h1>
   </div>
 {% endblock pageTitle %}
 
@@ -453,6 +452,8 @@
     {% endfor %}
   </div>
   </section>
+
+  <a id="add_campaign_button" class="right button add icon"  href="{% url add_network %}">Add a network</a>
 {% endblock innerContent %}
 
 {% block extraScripts %}

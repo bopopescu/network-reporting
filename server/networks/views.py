@@ -21,7 +21,9 @@ from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
 
 from common.utils.date_magic import gen_days_for_range
 from common.utils.decorators import staff_login_required
-from common.ragendja.template import render_to_response, TextResponse
+from common.ragendja.template import render_to_response, \
+        render_to_string, \
+        TextResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
 
@@ -41,6 +43,10 @@ from advertiser.query_managers import AdGroupQueryManager
 from advertiser.models import NetworkStates
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
+
+# Form imports
+from advertiser.forms import CampaignForm, AdGroupForm
+from publisher.query_managers import AdUnitQueryManager
 
 OTHER_NETWORKS = {'millennial': 'Millennial',
                   'ejam': 'eJam',
@@ -128,13 +134,9 @@ class NetworksHandler(RequestHandler):
             # Get data from the ad networks
             for network in REPORTING_NETWORKS.keys():
                 pub_id = getattr(network_config, network + '_pub_id', '')
-                logging.info('pub_id')
-                logging.info(pub_id)
                 if pub_id:
                     mapper = AdNetworkAppMapper.get_by_publisher_id(pub_id,
                             network)
-                    logging.info('mapper')
-                    logging.info(mapper)
                     if mapper:
                         create_and_set(reporting_networks, network, app)
                         reporting_networks[network] \
@@ -172,8 +174,6 @@ class NetworksHandler(RequestHandler):
             if 'mopub_app_stats' in network_data:
                 network_data['mopub_app_stats'] = sorted(network_data['mopub_app_stats'].values(), key=lambda
                         app_data: app_data['app'].identifier)
-        logging.info('reporting_networks')
-        logging.info(reporting_networks)
 
         # TODO: Generalize
         other_networks = sorted(other_networks.values(), key=lambda
@@ -182,8 +182,6 @@ class NetworksHandler(RequestHandler):
             if 'mopub_app_stats' in network_data:
                 network_data['mopub_app_stats'] = sorted(network_data['mopub_app_stats'].values(), key=lambda
                         app_data: app_data['app'].identifier)
-        logging.info('other_networks')
-        logging.info(other_networks)
 
         # self.account can't access ad_network_* data
         account = AccountQueryManager.get_account_by_key(self.account.key())
@@ -199,7 +197,7 @@ class NetworksHandler(RequestHandler):
         # account), daily stats needed for the graph and stats for each mapper
         # for the account all get loaded via Ajax.
         return render_to_response(self.request,
-              'networks/ad_network_reports_index.html',
+              'networks/index.html',
               {
                   'start_date' : days[0],
                   'end_date' : days[-1],
@@ -221,3 +219,87 @@ class NetworksHandler(RequestHandler):
 def networks(request, *args, **kwargs):
     return NetworksHandler()(request, *args, **kwargs)
 
+class AddNetworkHandler(RequestHandler):
+    TEMPLATE    = 'networks/forms/add_network_form.html'
+    def get(self,campaign_form=None, adgroup_form=None, adgroup_key=None):
+        adgroup = None
+        campaign = None
+
+        # TODO: HACKKKK get price floors done
+        initial = {}
+        if campaign and campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+            initial.update(price_floor=self.account.network_config.price_floor)
+        campaign_form = CampaignForm(instance=campaign, initial=initial)
+        adgroup_form = AdGroupForm(instance=adgroup)
+        networks = [['admob_native', 'AdMob', False],["adsense","AdSense",False],["brightroll","BrightRoll",False],["ejam","TapIt",False],\
+            ["iAd","iAd",False],["inmobi","InMobi",False],["jumptap","Jumptap",False],['millennial_native', 'Millennial Media', False],["mobfox","MobFox",False],\
+            ['custom','Custom Network', False], ['custom_native','Custom Native Network', False]]
+
+        all_adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        # sorts by app name, then adunit name
+        def adunit_cmp(adunit_1, adunit_2):
+            app_cmp = cmp(adunit_1.app.name, adunit_2.app.name)
+            if not app_cmp:
+                return cmp(adunit_1.name, adunit_2.name)
+            else:
+                return app_cmp
+
+        all_adunits.sort(adunit_cmp)
+
+        adgroup_form['site_keys'].choices = all_adunits # needed for validation TODO: doesn't actually work
+
+        # TODO: Remove this hack to place the bidding info with the rest of campaign
+        #Hackish part
+        campaign_form.bid    = adgroup_form['bid']
+        campaign_form.bid_strategy = adgroup_form['bid_strategy']
+        campaign_form.custom_html = adgroup_form['custom_html']
+        campaign_form.custom_method = adgroup_form['custom_method']
+        campaign_form.network_type = adgroup_form['network_type']
+
+        adunit_keys = adgroup_form['site_keys'].value or []
+        adunit_str_keys = [unicode(k) for k in adunit_keys]
+        for adunit in all_adunits:
+            adunit.checked = unicode(adunit.key()) in adunit_str_keys
+
+        if adgroup_form:
+            # We hide deprecated networks by default.  Show them for pre-existing adgroups though
+            if adgroup_form['network_type'].value == 'admob' or self.request.user.is_staff:
+                networks.append(["admob","AdMob Javascript (deprecated)",False])
+            # Allow admins to create Millennial s2s campaigns
+            if adgroup_form['network_type'].value == 'millennial' or self.request.user.is_staff:
+                networks.append(["millennial","Millennial Server-side (deprecated)",False])
+            if adgroup_form['network_type'].value == 'greystripe':
+                networks.append(["greystripe","GreyStripe (deprecated)",False])
+            for n in networks:
+                if adgroup_form['network_type'].value == n[0]:
+                    n[2] = True
+        elif adgroup:
+            for n in networks:
+                if adgroup.network_type == n[0]:
+                    n[2] = True
+        else:
+            networks[0][2] = True # select the first by default
+
+        campaign_form.add_context(dict(networks=networks))
+        adgroup_form.add_context(dict(all_adunits=all_adunits))
+
+        campaign_create_form_fragment = self.render(campaign_form=campaign_form,adgroup_form=adgroup_form)
+
+        return render_to_response(self.request,'advertiser/new.html',
+                {"adgroup_key": adgroup_key,
+            "adgroup":adgroup,
+            "account": self.account,
+            "campaign_create_form_fragment": campaign_create_form_fragment})
+
+    def render(self,template=None,**kwargs):
+        template_name = template or self.TEMPLATE
+        return render_to_string(self.request,template_name=template_name,data=kwargs)
+
+@login_required
+def add_network(request, *args, **kwargs):
+    return AddNetworkHandler()(request, *args, **kwargs)
+
+
+@login_required
+def network_details(request, *args, **kwargs):
+    return NetworkDetailsHandler()(request, *args, **kwargs)

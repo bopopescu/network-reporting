@@ -461,7 +461,11 @@ span.dropdown-icon {
     margin: -6px 0 0 0;
     font-size: 24px;
     font-weight: 300;
-    color: #444444; }
+    color: #444444;
+    width: 340px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; }
   #titlebar .buttonset {
     display: inline-block; }
   #titlebar .ui-button {
@@ -1413,6 +1417,140 @@ input.price_floor_change {
     color: black; }
 
 /*
+ * Campaign and AdGroup Form
+ *
+ * TODO: consolidate all the form styles
+ */
+form#campaign_and_adgroup fieldset {
+  padding: 0 25px 25px 25px; }
+form#campaign_and_adgroup input[type="text"], form#campaign_and_adgroup textarea {
+  padding: 1px 2px 2px 3px;
+  border: 1px solid #eaeaea;
+  border-top-color: #b9b9b9;
+  background: #fafafa;
+  font-size: 14px;
+  line-height: 16px;
+  width: 290px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px; }
+form#campaign_and_adgroup input[type="text"].date {
+  width: 85px; }
+form#campaign_and_adgroup input[type="text"].time {
+  width: 60px; }
+form#campaign_and_adgroup input[type="text"].number, form#campaign_and_adgroup input[type="text"].float {
+  width: 70px; }
+form#campaign_and_adgroup input.error, form#campaign_and_adgroup textarea.error {
+  background: #fff2f2;
+  border-color: #e6a1a1;
+  border-top-color: #d98d8d;
+  color: #222; }
+form#campaign_and_adgroup span.radios ul {
+  display: inline-block;
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  form#campaign_and_adgroup span.radios ul > li {
+    display: inline-block;
+    margin: 0;
+    padding: 0; }
+    form#campaign_and_adgroup span.radios ul > li > label {
+      margin: 0 15px 0 0; }
+form#campaign_and_adgroup ul.form_fields {
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  form#campaign_and_adgroup ul.form_fields > li {
+    margin: 12px 0 0 0;
+    padding: 0; }
+    form#campaign_and_adgroup ul.form_fields > li > label {
+      display: inline-block;
+      margin: 0 12px 0 0;
+      padding: 0;
+      text-align: right;
+      vertical-align: top;
+      width: 175px;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 16px; }
+    form#campaign_and_adgroup ul.form_fields > li > div {
+      display: inline-block;
+      vertical-align: top; }
+form#campaign_and_adgroup span#apps_label {
+  display: inline-block;
+  margin: 0 12px 0 0;
+  padding: 0;
+  text-align: right;
+  vertical-align: top;
+  width: 175px; }
+form#campaign_and_adgroup ul#apps {
+  display: inline-block;
+  vertical-align: top;
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  form#campaign_and_adgroup ul#apps > li {
+    margin: 0 0 10px 0;
+    padding: 0; }
+    form#campaign_and_adgroup ul#apps > li > img {
+      height: 45px;
+      width: 45px;
+      margin-right: 11px;
+      vertical-align: top;
+      -moz-border-radius: 6px;
+      -webkit-border-radius: 6px;
+      border-radius: 6px; }
+    form#campaign_and_adgroup ul#apps > li > div {
+      display: inline-block;
+      vertical-align: top; }
+      form#campaign_and_adgroup ul#apps > li > div label {
+        font-size: 14px;
+        display: inline-block;
+        height: 28px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis; }
+      form#campaign_and_adgroup ul#apps > li > div > label {
+        font-weight: 600;
+        width: 200px; }
+      form#campaign_and_adgroup ul#apps > li > div input[type="text"] {
+        width: 200px; }
+      form#campaign_and_adgroup ul#apps > li > div ul {
+        list-style-type: none;
+        overflow: auto;
+        max-height: 200px;
+        margin: 0;
+        padding: 0px 20px; }
+        form#campaign_and_adgroup ul#apps > li > div ul li {
+          height: 30px;
+          margin: 0; }
+          form#campaign_and_adgroup ul#apps > li > div ul li label {
+            width: 180px; }
+form#campaign_and_adgroup ul#device_targeting {
+  list-style-type: none;
+  margin: 5px 0 0 50px;
+  padding: 0; }
+  form#campaign_and_adgroup ul#device_targeting li {
+    margin: 0;
+    padding: 0; }
+form#campaign_and_adgroup .device_type {
+  display: inline-block;
+  width: 150px; }
+form#campaign_and_adgroup ul.device_type {
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  form#campaign_and_adgroup ul.device_type li {
+    display: inline-block;
+    margin: 0;
+    padding: 0; }
+form#campaign_and_adgroup #toggle_advanced {
+  margin: 25px; }
+form#campaign_and_adgroup input.token-input-field {
+  border: 0;
+  width: 100px; }
+
+/*
  * ## Colors
  */
 /* tinges -- off white colors */
@@ -1488,6 +1626,72 @@ a.disabled {
 /*
  * Corner rounding
  */
+/* iconTable
+ *
+ * This is the table class for tables that have "main" rows
+ * with an icon in the left-most column and "sub" rows below that.
+ * Each group of rows should be wrapped in <tbody> tags to alternate colors
+ * and facilitate sorting.
+ */
+.iconTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  vertical-align: top;
+  font-size: 13px;
+  font-weight: normal; }
+  .iconTable thead th, .iconTable thead td {
+    padding: 10px 10px 8px 0;
+    font-size: 10px;
+    font-weight: 300;
+    text-transform: uppercase;
+    color: #555;
+    vertical-align: bottom; }
+    .iconTable thead th.title, .iconTable thead td.title {
+      font-size: 15px;
+      font-weight: 600;
+      text-transform: none; }
+  .iconTable tbody.alt, .iconTable tbody tr.alt {
+    background: #F7F7F7; }
+  .iconTable tbody tr.main td {
+    font-weight: 600;
+    padding: 10px 10px 4px 0; }
+    .iconTable tbody tr.main td.name {
+      font-size: 14px; }
+  .iconTable tbody tr.sub td {
+    padding: 4px 10px 4px 0; }
+    .iconTable tbody tr.sub td.name, .iconTable tbody tr.sub td.stat {
+      border-top: 1px solid #EEE; }
+  .iconTable tbody tr.thick td {
+    padding: 8px 10px 7px 0; }
+  .iconTable td.stat, .iconTable th.stat {
+    text-align: right;
+    width: 65px; }
+  .iconTable td.icon, .iconTable th.icon {
+    padding: 0 11px 0 10px;
+    width: 45px; }
+    .iconTable td.icon > div, .iconTable th.icon > div {
+      position: relative; }
+      .iconTable td.icon > div img, .iconTable th.icon > div img {
+        position: absolute;
+        top: 0px;
+        left: 10px;
+        -webkit-border-radius: 6px;
+        -moz-border-radius: 6px;
+        border-radius: 6px; }
+  .iconTable td.controls, .iconTable th.controls {
+    padding-left: 5px !important;
+    padding-right: 11px !important;
+    width: 39px !important; }
+  .iconTable td.spacer, .iconTable th.spacer {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 10px !important; }
+  .iconTable tbody tr.sub:last-child td {
+    padding-bottom: 24px; }
+  .iconTable tbody tr:only-child td {
+    padding-bottom: 37px; }
+
 /* Data table */
 .dataTable thead th {
   font-size: 10px;
@@ -2704,10 +2908,10 @@ a.linkIcon .ui-icon-triangle-1-w {
 .stats-chart {
   height: 185px; }
 
-#dashboard-apps, #dashboard-campaign {
+#marketplace-apps, #dashboard-apps, #dashboard-campaign {
   margin: 30px 0 0 0; }
 
-#dashboard-apps h2 {
+#marketplace-apps h2, #dashboard-apps h2 {
   font-size: 20px;
   margin: 0; }
 
@@ -2945,7 +3149,7 @@ th.numeric, td.numeric {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7; }
 
-.campaignData-alt, .reportData-alt {
+.campaignData:nth-child(even), .campaignData-alt, .reportData-alt {
   background: #fff; }
 
 .creativeData {

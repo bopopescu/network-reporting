@@ -38,6 +38,13 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
+    def get_campaigns_by_types(cls, account, types):
+        campaigns = cls.Model.all().filter('account =', account)\
+                                   .filter('campaign_type IN', types)\
+                                   .filter('deleted =', False)
+        return campaigns
+
+    @classmethod
     def get_network_campaigns(cls, account):
         networks = cls.Model.all().filter('campaign_type =', 'network')\
                       .filter('deleted =',False)\
@@ -188,7 +195,7 @@ class CampaignQueryManager(QueryManager):
         if account:
             camps = camps.filter('account = ', account)
         #turn a list of campaigns into a list of lists where each list is all
-        #campagins at a given priority level
+        #campaigns at a given priority level
         if by_priority:
             temp = []
             for p in CAMPAIGN_LEVELS:

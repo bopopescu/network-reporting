@@ -38,7 +38,7 @@
   </dd>
   <dt>Creative Name:</dt>
   <dd>
-    <input type='text' name="{{form.name.name}}" class="input-text {% if form.name.errors %}form-error{% endif %}" value="{{form.name.value}}" />
+    {{ form.name }}
     {% for error in form.name.errors %}
       <div class="form-error-text">{{error}}</div>
     {% endfor %}
@@ -67,7 +67,7 @@
   </div>
   <dt class="admin_only">Intercept URL:</dt>
   <dd class="admin_only">
-    {{ form.launchpage|attrs:'{"label":"Intercept URL"}'|raw}}
+    {{ form.launchpage|raw}}
     <a href="#" class="whatsthis" id="creativeLaunchPage-url-helpLink">What's this?</a>
     <div id="creativeLaunchPage-url-helpContent" class="hidden">
       <h3>Intercept URL (admin only)</h3>
@@ -77,7 +77,7 @@
 
   <dt>Conversion Tracking ID:</dt>
   <dd>
-    {{ form.conv_appid|attrs:'{"label":"Conversion Tracking ID"}'|raw}}
+    {{ form.conv_appid|raw}}
     <a href="#" class="whatsthis" id="creativeConvAppid-url-helpLink">What's this?</a>
     <div id="creativeConvAppid-url-helpContent" class="hidden">
       <h3>Application ID for Conversion Tracking</h3>
@@ -89,5 +89,8 @@
       <p>e.g. com.pauloslf.cloudprint (for <a href="https://market.android.com/details?id=com.pauloslf.cloudprint&amp;feature=search_result">Cloud Print</a>)</<p></p>>
     </div>
   </dd>
-  {{ form.tracking_url|attrs:'{"label":"Impression Tracking URL"}'}}
+  <dt>Impression Tracking URL</dt>
+  <dd>
+    {{ form.tracking_url }}
+  </dd>
 

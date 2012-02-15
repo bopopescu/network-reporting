@@ -120,6 +120,7 @@ def upper(s):
 
 @register.filter
 def withsep(value):
+    """ 1000000 --> 1,000,000 """
     if value:
         try:
             match = re.sub(r'(\d{3})(?=\d)', r'\1,', str(value)[::-1])[::-1]
@@ -208,7 +209,8 @@ def time_ago_in_words(value):
 def campaign_status(adgroup):
     d = datetime.now().date()
     campaign = adgroup.campaign
-    if (campaign.start_date is None or d >= campaign.start_date) and (campaign.end_date is None or d <= campaign.end_date):
+    if (campaign.start_date is None or d >= campaign.start_date) \
+       and (campaign.end_date is None or d <= campaign.end_date):
         if not adgroup.active:
             return "Paused"
         if adgroup.campaign.budget:

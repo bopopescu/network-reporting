@@ -35,7 +35,7 @@ class MPBoundField(BoundField):
     def __init__(self, form, field, name, *args, **kwargs):
         self.attrs={}
         self.raw = False
-        
+
         if field.required:
              self.attrs['class'] = "required"
         super(MPBoundField,self).__init__(form, field, name, *args, **kwargs)
@@ -48,7 +48,7 @@ class MPBoundField(BoundField):
             if self.attrs.get(key):
                 self.attrs[key] = attrs[key] + ' ' + self.attrs[key]
             else:
-                self.attrs[key] = attrs[key]     
+                self.attrs[key] = attrs[key]
 
     def add_label(self, label):
         self.label = label
@@ -69,7 +69,7 @@ class MPBoundField(BoundField):
            else:
                value = self.data
         return value if value != None else ''
-        
+
     def as_widget(self, widget=None, attrs=None, only_initial=False):
         """
         Renders the field by rendering the passed widget, adding any HTML
@@ -102,13 +102,13 @@ class MPBoundField(BoundField):
             name = self.html_name
         else:
             name = self.html_initial_name
-        # pass error to mpforms but not to normal django forms    
+        # pass error to mpforms but not to normal django forms
         try:
-            return widget.render(name, data, attrs=attrs, errors=self.errors)    
+            return widget.render(name, data, attrs=attrs, errors=self.errors)
         except Exception, e:
             return widget.render(name, data, attrs=attrs)
         return widget.render(name, data, attrs=attrs, errors=bool(self.errors))
-        
+
 
 class MPForm(forms.Form):
     TEMPLATE = ''
@@ -123,13 +123,13 @@ class MPForm(forms.Form):
             field = self.fields[name]
         except KeyError:
             raise KeyError('Key %r not found in Form' % name)
-        return MPBoundField(self, field, name)    
-    
+        return MPBoundField(self, field, name)
+
     def add_context(self,context):
       if not hasattr(self,'_extra_context'):
         self._extra_context = {}
-      self._extra_context.update(context)  
-        
+      self._extra_context.update(context)
+
     def as_template(self):
       "Helper function for producing fields data from form."
       bound_fields = [MPBoundField(self, field, name) for name, field in self.fields.items()]
@@ -146,7 +146,7 @@ class MPForm(forms.Form):
 
 class MPModelForm(forms.ModelForm):
     TEMPLATE = 'advertiser/forms/form.html'
-  
+
     def __iter__(self):
         for name, field in self.fields.items():
             yield MPBoundField(self, field, name)
@@ -157,13 +157,13 @@ class MPModelForm(forms.ModelForm):
             field = self.fields[name]
         except KeyError:
             raise KeyError('Key %r not found in Form' % name)
-        return MPBoundField(self, field, name)    
-        
+        return MPBoundField(self, field, name)
+
     def add_context(self,context):
       if not hasattr(self,'_extra_context'):
         self._extra_context = {}
-      self._extra_context.update(context)  
-      
+      self._extra_context.update(context)
+
     def _html_output(self, normal_row, error_row, row_ender, help_text_html, errors_on_separate_row):
             "Helper function for outputting HTML. Used by as_table(), as_ul(), as_p()."
             top_errors = self.non_field_errors() # Errors that should be displayed above all fields.
@@ -235,7 +235,7 @@ class MPModelForm(forms.ModelForm):
                     # hidden fields.
                     output.append(str_hidden)
             return mark_safe(u'\n'.join(output))
-    
+
     def as_template(self):
         "Helper function for producing fields data from form."
         bound_fields = [MPBoundField(self, field, name) for name, field in self.fields.items()]

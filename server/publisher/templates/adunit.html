@@ -3,15 +3,12 @@
 {% load elements %}
 
 {% block pageTitle %}
-  <div class="breadcrumb">
-    <br />
-    <h1>
-      <a href="{% url publisher_app_show app_key=adunit.app_key.key %}">
-        AdUnits
-      </a>
-      / {{ adunit.name }}
-    </h1>
-  </div>
+  <h1>
+    <a href="{% url publisher_app_show app_key=adunit.app_key.key %}">
+      AdUnits
+    </a>
+    / {{ adunit.name }}
+  </h1>
 {% endblock pageTitle %}
 
 {% block titleBarRight %}

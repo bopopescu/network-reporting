@@ -461,7 +461,11 @@ span.dropdown-icon {
     margin: -6px 0 0 0;
     font-size: 24px;
     font-weight: 300;
-    color: #444444; }
+    color: #444444;
+    width: 340px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; }
   #titlebar .buttonset {
     display: inline-block; }
   #titlebar .ui-button {

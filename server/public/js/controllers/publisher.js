@@ -200,7 +200,6 @@ var mopub = mopub || {};
     }
 
     function initializeEditAppForm() {
-
         // Set up all of the handlers from the new app form for the new
         // app form.
         initializeNewAppForm();
@@ -287,8 +286,12 @@ var mopub = mopub || {};
         // Set up device format selection UI
         $("#adunit-device_format_phone")
             .parent()
-            .buttonset()
+            .buttonset();
+
+        $("#adunit-device_format_phone")
             .click(function(e){
+                console.log(e);
+                console.log('phone clicked');
                 $('#adForm-tablet-container').hide();
                 $('#adForm-phone-container')
                     .show()
@@ -297,6 +300,7 @@ var mopub = mopub || {};
 
         // Click handler for the tablet format
         $('#adunit-device_format_tablet').click(function(e){
+            console.log('tablet clicked');
             $('#adForm-phone-container').hide();
             $('#adForm-tablet-container')
                 .show()
@@ -432,7 +436,9 @@ var mopub = mopub || {};
 
         //initialize checked elements
         $("#adunit-device_format_phone").parent().children()
-            .filter(':checked').click().each(function() {
+            .filter(':checked')
+            .click()
+            .each(function() {
                 var deviceFormat = $(this).val(); //either tablet or phone
                 var container = "#adForm-" + deviceFormat + "-container";
                 $(container).find('.possible-format').click();
@@ -797,9 +803,9 @@ var mopub = mopub || {};
 
         initializeAdunitDetail: function (bootstrapping_data) {
             initializeCommon();
-            initializeEditAdunitForm();
             initializeDeleteForm();
             initializeDailyCounts();
+            initializeEditAdunitForm();
 
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
 

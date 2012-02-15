@@ -3,10 +3,7 @@
 {% load elements %}
 
 {% block pageTitle %}
-  <div class="breadcrumb">
-    <br />
-    <h1><a href="{% url app_index %}">Apps</a> / {{app.name}}</h1>
-  </div>
+  <h1><a href="{% url app_index %}">Apps</a> / {{app.name}}</h1>
 {% endblock pageTitle %}
 
 {% block titleBarRight %}

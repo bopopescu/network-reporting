@@ -42,8 +42,12 @@ class AppForm(mpforms.MPModelForm):
     img_file = forms.FileField(required=False)
     is_edit_form = forms.BooleanField(required=False)
 
-    primary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget, required=True)
-    secondary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget, required=False)
+    primary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,
+                                              widget=mpwidgets.MPSelectWidget,
+                                              required=True)
+    secondary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,
+                                                widget=mpwidgets.MPSelectWidget,
+                                                required=False)
 
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
@@ -61,7 +65,14 @@ class AppForm(mpforms.MPModelForm):
 
     class Meta:
         model = App
-        fields = ('name', 'app_type', 'url', 'package', 'description', 'adsense_app_name', 'primary_category', 'secondary_category')
+        fields = ('name',
+                  'app_type',
+                  'url',
+                  'package',
+                  'description',
+                  'adsense_app_name',
+                  'primary_category',
+                  'secondary_category')
 
     def save(self, commit=True):
         obj = super(AppForm, self).save(commit=False)
@@ -118,11 +129,24 @@ DEVICE_FORMAT_CHOICES = (
 
 class AdUnitForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/adunit_form.html'
-    format = mpfields.MPTextField(required=True, widget = mpwidgets.MPFormatWidget)
-    device_format = mpfields.MPChoiceField(required=True, widget=mpwidgets.MPRadioWidget, choices=DEVICE_FORMAT_CHOICES)
-    # animation_type = mpfields.MPChoiceField(choices=ANIMATION_CHOICES,widget=mpwidgets.MPSelectWidget)
+    format = mpfields.MPTextField(required=True,
+                                  widget = mpwidgets.MPFormatWidget)
+    device_format = mpfields.MPChoiceField(required=True,
+                                           widget=mpwidgets.MPRadioWidget,
+                                           choices=DEVICE_FORMAT_CHOICES)
 
     class Meta:
         model = Site
-        fields = ('name','description','app_key','ad_type', 'backfill', 'keywords',
-        'custom_width','custom_height', 'device_format', 'format','adsense_channel_id','refresh_interval','landscape')
+        fields = ('name',
+                  'description',
+                  'app_key',
+                  'ad_type',
+                  'backfill',
+                  'keywords',
+                  'custom_width',
+                  'custom_height',
+                  'device_format',
+                  'format',
+                  'adsense_channel_id',
+                  'refresh_interval',
+                  'landscape')

@@ -11,12 +11,12 @@ var mopub = mopub || {};
      */
 
     var toast_error = function () {
-        $("Please <a href='#'>refresh the page</a> and try again.")
+         var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){
                 e.preventDefault();
                 window.location.reload();
             });
-        Toast.error("Please refresh the page and try again.", "Error fetching app data.");
+        Toast.error(message, "Error fetching app data.");
     };
 
     /*

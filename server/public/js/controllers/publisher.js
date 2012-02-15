@@ -290,8 +290,6 @@ var mopub = mopub || {};
 
         $("#adunit-device_format_phone")
             .click(function(e){
-                console.log(e);
-                console.log('phone clicked');
                 $('#adForm-tablet-container').hide();
                 $('#adForm-phone-container')
                     .show()

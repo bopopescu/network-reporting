@@ -9,7 +9,12 @@
 {% endblock dateButtons %}
 
 {% block pageTitle %}
-    <h1>Edit Campaign</h1>
+  <h1>
+    Edit Campaign
+    {% if adgroup.campaign.name %}
+      : {{ adgroup.campaign.name|default_if_none:"" }}
+    {% endif %}
+  </h1>
 {% endblock pageTitle %}
 
 {% block content %}

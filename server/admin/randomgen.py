@@ -181,6 +181,7 @@ def generate_adgroup(campaign,site_keys,account):
     return adgroup
 
 
+
 def generate_campaign(account,budget,campaign_type=None):
     start_date = get_random_date()
     end_date = get_random_date()
@@ -198,7 +199,7 @@ def generate_campaign(account,budget,campaign_type=None):
     return campaign
 
 
-#Generates both user and account models.
+
 def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,marketplace_config=None,network_config=None):
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()

@@ -41,8 +41,8 @@ var mopub = window.mopub || {};
         render: function() {
             var adgroups = this.filtered_collection();
 
-            // TODO: uses elements not in this view, with multiple views there are conflicts
-            $('#campaigns-filterOptions').buttonset({'disabled': !adgroups.isFullyLoaded()});
+            // TODO: uses elements not in this view, with multiple
+            // views there are conflicts
 
             var html;
             if (adgroups.size() === 0) {

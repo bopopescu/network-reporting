@@ -83,17 +83,11 @@ class AppForm(mpforms.MPModelForm):
                 img = response.read()
                 # why no resize?
                 obj.icon_blob = self.store_icon(img)
-
-            else:
-                obj.icon = self.instance.icon  # sets the icon to the original
         elif self.cleaned_data['img_file']:
             # TODO: add error handling
             img = self.cleaned_data['img_file'].read()
             icon = images.resize(img, 60, 60)
             obj.icon_blob = self.store_icon(icon)
-            obj.icon = db.Blob(icon)  # TODO: stop this! why?
-        elif self.instance:  # if neither img_url or img_file come in just use the old value
-            obj.icon = self.instance.icon
         if commit:
             obj.put()
         return obj

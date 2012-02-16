@@ -419,6 +419,7 @@
                 });
             });
 
+
             // TODO: move somewhere else
             $('#campaigns-appFilterOptions').selectmenu({
                 style: 'popup',
@@ -438,7 +439,6 @@
                 icons : { primary : 'ui-icon-circle-plus'}
             });
 
-
             // AdGroups form
             var actions = ['pause', 'resume', 'activate', 'archive', 'delete'];
             $.each(actions, function(iter, action) {
@@ -450,6 +450,10 @@
                         .end()
                         .submit();
                 });
+            });
+
+            $('#campaigns-filterOptions').buttonset({
+                disabled: false
             });
         },
 
@@ -553,11 +557,16 @@
                 icons: { primary: "ui-icon-wrench" }
             });
 
-            $.each(['pause', 'resume', 'activate', 'archive', 'delete'], function(iter, action) {
+            var actions = ['pause', 'resume', 'activate', 'archive', 'delete'];
+            $.each(actions, function(iter, action) {
                 $('#campaignForm-' + action)
                     .click(function(e) {
                         e.preventDefault();
-                        $('#campaignForm').find("#action").attr("value", action).end().submit();
+                        $('#campaignForm')
+                            .find("#action")
+                            .attr("value", action)
+                            .end()
+                            .submit();
                     });
             });
 

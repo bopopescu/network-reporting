@@ -9,7 +9,7 @@
       
     
       
-      urls[i++]="http://www.google.com/pingme&rand=0932jfios"
+      urls[i++]="http://www.google.com/pingme"
       
       
       var hiddenSpan = document.createElement('span')

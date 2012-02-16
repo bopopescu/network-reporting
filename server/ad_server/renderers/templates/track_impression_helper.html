@@ -9,7 +9,7 @@
       {% endif %}
     
       {% if creative.tracking_url %}
-      urls[i++]="{{creative.tracking_url|safe}}&rand={{random_val}}"
+      urls[i++]="{{creative.tracking_url|safe}}"
       {% endif %}
       
       var hiddenSpan = document.createElement('span')

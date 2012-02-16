@@ -405,7 +405,11 @@
 </section>
 
 <section id="dashboard-apps">
-  <h2>Daily Counts</h2>
+  <h2 class="left">Daily Counts</h2>
+  <div class="right">
+    <a class="button" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
+    <a class="button" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>
+  </div>
   <div class="appData-details noneg">
     <table class="dataTable appData-main">
       <thead>
@@ -419,7 +423,7 @@
           <th class="dataTable-data numeric special">CTR</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="appData-totals">
         <tr>
           <th class="dataTable-name big">Totals</th>
           <td class="dataTable-data numeric">&nbsp;</td>
@@ -429,6 +433,8 @@
           <td class="dataTable-data numeric big"><b>{{adunit.stats.click_count|withsep}}</b></td>
           <td class="dataTable-data numeric big"><b>{{adunit.stats.ctr|percentage}}</b></td>
         </tr>
+      </tbody>
+      <tbody id="appData-individual" class="hidden">
         {% for s in adunit.all_stats reversed %}
           <tr class="appData-details-inner hide">
             <th class="dataTable-name">{{s.date|format_date}}</th>
@@ -442,7 +448,7 @@
         {% endfor %}
       </tbody>
     </table>
-    <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
+    <a class="appData-details-toggleButton" href="#">Show details</a>
   </div>
 </section>
 
@@ -460,10 +466,6 @@
   </div>
 </div>
 
-<div>
-  <a class="button button-small" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
-  <a class="button button-small" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>
-</div>
 {% endblock content %}
 
 {% block extraScripts %}

@@ -1106,6 +1106,70 @@ def app_export(request, *args, **kwargs):
     return AppExportHandler()(request, *args, **kwargs)
 
 
+class DashboardExportHandler(RequestHandler):
+    def post(self, file_type, start, end):
+        start = datetime.strptime(start,'%m%d%y')
+        end = datetime.strptime(end,'%m%d%y')
+        days = date_magic.gen_days(start, end)
+
+        data = []
+
+        apps = AppQueryManager.get_apps(self.account)
+
+        stats_fetcher = StatsModelQueryManager(self.account,
+                                               offline=self.offline)
+
+        for app in apps:
+            if app.app_type=="android":
+                resource_id = app.package
+            else:
+                resource_id = app.url
+            stats = stats_fetcher.get_stats_for_days(publisher=app,
+                                                     days=days)
+            summed_stats = sum(stats, StatsModel())
+            data.append([app.name,
+                         "all",
+                         str(app.key()),
+                         resource_id] + \
+                        app_stats(summed_stats) + \
+                        ["N/A",
+                         app.app_type_text()])
+            adunits = AdUnitQueryManager.get_adunits(app=app)
+
+            for adunit in adunits:
+                if adunit.format != "custom":
+                    ad_size = adunit.format
+                else:
+                    ad_size = "%sx%s" % (adunit.custom_width, adunit.custom_height)
+                stats = stats_fetcher.get_stats_for_days(publisher=adunit,
+                                                         days=days)
+                summed_stats = sum(stats,StatsModel())
+                data.append([app.name,
+                             adunit.name,
+                             str(adunit.key()),
+                             resource_id] + \
+                            app_stats(summed_stats) +
+                            [ad_size,
+                             app.app_type_text()])
+
+        f_name_dict = {
+            'start': start.strftime('%b %d'),
+            'end': end.strftime('%b %d, %Y'),
+        }
+
+        f_name = "DashboardStats,  %(start)s - %(end)s" % f_name_dict
+        f_name = f_name.encode('ascii', 'ignore')
+        titles = ['App','Ad Unit','Pub ID','Resource ID', 'Requests',
+                  'Impressions', 'Fill Rate', 'Clicks', 'CTR','Ad Size',
+                  'Platform',]
+        return sswriter.export_writer(file_type, f_name, titles, data)
+
+
+@login_required
+def dashboard_export(request, *args, **kwargs):
+    return DashboardExportHandler()(request, *args, **kwargs)
+
+
 # Helper methods
 
 def enable_marketplace(adunit, account):

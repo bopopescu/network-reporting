@@ -63,7 +63,22 @@
 
     {% inventory_table apps %}
 
+
+    <form id='dashboardExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url dashboard_export %}'>
+    <input name='file_type' id='appExportType' type='text' value='' />
+    <input name='start' value={{start_date|date:"mdy"}} />
+    <input name='end' value={{end_date|date:"mdy"}} />
+</form>
+<div class="buttonBank buttonBank-right">
+  <select name='exportSelect' id='publisher-dashboard-exportSelect' class='selectmenu'>
+    <option value='exp'>Export</option>
+    <option value='xls'>XLS</option>
+    <option value='csv'>CSV</option>
+  </select>
+</div>
+
   </section>
+
 {% endblock content %}
 
 {% block extraScripts %}

@@ -791,6 +791,26 @@ var mopub = mopub || {};
             // Remove later with new button treatment
             $('#dashboard-apps-addAppButton')
                 .button({ icons: { primary: "ui-icon-circle-plus" } });
+
+            // Do Dashboard export
+            $('#publisher-dashboard-exportSelect')
+                .change(function(e) {
+                    e.preventDefault();
+                    var val = $(this).val();
+                    if (val != 'exp') {
+                        $('#dashboardExportForm')
+                .find('#appExportType')
+                            .val(val)
+                            .end()
+                            .submit();
+                    }
+                    $(this).selectmenu('index', 0);
+                });
+
+
+            // Hide unneeded li entry
+            $('#publisher-dashboard-exportSelect-menu').find('li').first().hide();
+
         },
         initializeGeo: function (bootstrapping_data) {
             initializeCommon();

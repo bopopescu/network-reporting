@@ -17,6 +17,15 @@ var mopub = mopub || {};
      * ## Helpers for DashboardController
      */
 
+    var toast_error = function () {
+        var message = $("Please <a href='#'>refresh the page</a> and try again.")
+            .click(function(e){
+                e.preventDefault();
+                window.location.reload();
+            });
+        Toast.error(message, "Error fetching app data.");
+    };
+
     /*
      * Refactor/remove
      */
@@ -57,16 +66,6 @@ var mopub = mopub || {};
                 var appView = new AppView({ model: current_app, el: '#dashboard-apps' });
                 appView.renderInline();
             });
-
-            var toast_error = function () {
-                $("Please <a href='#'>refresh the page</a> and try again.")
-                    .click(function(e){
-                        e.preventDefault();
-                        window.location.reload();
-                    });
-                Toast.error("Please refresh the page and try again.", "Error fetching app data.");
-            };
-
             app.fetch({
                 error: function() {
                     app.fetch({
@@ -96,15 +95,6 @@ var mopub = mopub || {};
                 adunitView.renderInline();
             });
         });
-
-        var toast_error = function () {
-            $("Please <a href='#'>refresh the page</a> and try again.")
-                .click(function(e){
-                    e.preventDefault();
-                    window.location.reload();
-                });
-            Toast.error("Please refresh the page and try again.", "Error fetching adunit data.");
-        };
 
         adunits.fetch({
             success: function(data){
@@ -748,6 +738,15 @@ var mopub = mopub || {};
                 mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
                 $(this).show();
             });
+        });
+
+        $('.stats-breakdown tr').click(function(e) {
+            var row = $(this);
+            if (!row.hasClass('active')) {
+                var table = row.parents('table');
+                $('tr.active', table).removeClass('active');
+                row.addClass('active');
+            }
         });
 
         $('.appData-id').each(function() {

@@ -8,6 +8,15 @@ $(function() {
      *   ajax_query_string
      */
 
+    var toast_error = function () {
+         var message = $("Please <a href='#'>refresh the page</a> and try again.")
+            .click(function(e){
+                e.preventDefault();
+                window.location.reload();
+            });
+        Toast.error(message, "Error fetching app data.");
+    };
+
     var NetworksController = {
 
         initialize: function(bootstrapping_data) {
@@ -35,7 +44,16 @@ $(function() {
             });
             adgroups_view.render();
 
-            adgroups.each(function(adgroup) { adgroup.fetch({ data: ajax_query_string }); });
+            adgroups.each(function(adgroup) {
+                adgroup.fetch({
+                    data: ajax_query_string,
+                    error: function () {
+                        adgroup.fetch({
+                            error: toast_error
+                        });
+                    }
+                });
+            });
 
             // TODO: move to views
             // date picker
@@ -127,6 +145,7 @@ $(function() {
                 $('.stats-breakdown-value').hide();
                 $('.stats-breakdown-value.'+$(this).val()).show();
             });
+
             $('.stats-breakdown-value').hide();
             $('.stats-breakdown-value.all').show();
 
@@ -137,10 +156,15 @@ $(function() {
 
 
             // AdGroups form
-            $.each(['pause', 'resume', 'activate', 'archive', 'delete'], function(iter, action) {
+            var actions = ['pause', 'resume', 'activate', 'archive', 'delete'];
+            $.each(actions, function(iter, action) {
                 $('#campaignForm-' + action).click(function(e) {
                     e.preventDefault();
-                    $('#campaignForm').find("#action").attr("value", action).end().submit();
+                    $('#campaignForm')
+                        .find("#action")
+                        .attr("value", action)
+                        .end()
+                        .submit();
                 });
             });
         }

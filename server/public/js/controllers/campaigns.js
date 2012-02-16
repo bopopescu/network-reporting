@@ -1,5 +1,15 @@
 (function($) {
 
+    var toast_error = function () {
+         var message = $("Please <a href='#'>refresh the page</a> and try again.")
+            .click(function(e){
+                e.preventDefault();
+                window.location.reload();
+            });
+        Toast.error(message, "Error fetching app data.");
+    };
+
+
     function initializeDailyCounts() {
         $('.appData-details').each(function() {
             var details = $(this);
@@ -292,8 +302,6 @@
         adgroup_inventory.bind('reset', function(adunits){
             adunits.each(function(adunit){
                 var app_key = adunit.get('app_key');
-                console.log(adunit);
-                console.log(app_key);
                 var app = new App({ id: app_key });
                 app.url = function() {
                     return '/api/adgroup/'
@@ -301,7 +309,6 @@
                         + '/apps/'
                         + app_key;
                 };
-
 
                 app.bind('change', function(current_app) {
                     var appView = new AppView({
@@ -311,7 +318,13 @@
                     appView.renderInline();
                 });
 
-                app.fetch();
+                app.fetch({
+                    error: function () {
+                        app.fetch({
+                            error: toast_error
+                        });
+                    }
+                });
 
                 var adunitView = new AdUnitView({
                     model: adunit,
@@ -321,7 +334,13 @@
             });
         });
 
-        adgroup_inventory.fetch();
+        adgroup_inventory.fetch({
+            error: function () {
+                adgroup_inventory.fetch({
+                    error: toast_error
+                });
+            }
+        });
     }
 
     var CampaignsController = {
@@ -351,8 +370,18 @@
                 title: 'Guaranteed Campaigns',
                 type: 'gtee'
             });
-            gtee_adgroups_view.render();
-            gtee_adgroups.each(function(adgroup) { adgroup.fetch({ data: ajax_query_string }); });
+            gtee_adgroups.bind('reset', function(){
+                gtee_adgroups_view.render();
+            });
+
+            gtee_adgroups.each(function(adgroup) {
+                adgroup.fetch({
+                    data: ajax_query_string,
+                    error: function() {
+                        adgroup.fetch({ error: toast_error });
+                    }
+                });
+            });
 
             // Promotional
             var promo_adgroups = new AdGroups(promo_adgroups_data);
@@ -363,7 +392,14 @@
                 type: 'promo'
             });
             promo_adgroups_view.render();
-            promo_adgroups.each(function(adgroup) { adgroup.fetch({ data: ajax_query_string }); });
+            promo_adgroups.each(function(adgroup) {
+                adgroup.fetch({
+                    data: ajax_query_string,
+                    error: function() {
+                        adgroup.fetch({ error: toast_error });
+                    }
+                });
+            });
 
             // Backfill Promotional
             var backfill_promo_adgroups = new AdGroups(backfill_promo_adgroups_data);
@@ -374,7 +410,14 @@
                 type: 'backfill_promo'
             });
             backfill_promo_adgroups_view.render();
-            backfill_promo_adgroups.each(function(adgroup) { adgroup.fetch({ data: ajax_query_string }); });
+            backfill_promo_adgroups.each(function(adgroup) {
+                adgroup.fetch({
+                    data: ajax_query_string,
+                    error: function() {
+                        adgroup.fetch({ error: toast_error });
+                    }
+                });
+            });
 
             // TODO: move somewhere else
             $('#campaigns-appFilterOptions').selectmenu({
@@ -383,21 +426,29 @@
                 width:184
             });
 
-            $("#campaigns-filterOptions, #campaigns-appFilterOptions").change(function() {
-                gtee_adgroups_view.render();
-                promo_adgroups_view.render();
-                backfill_promo_adgroups_view.render();
-            });
+            $("#campaigns-filterOptions, #campaigns-appFilterOptions")
+                .change(function() {
+                    gtee_adgroups_view.render();
+                    promo_adgroups_view.render();
+                    backfill_promo_adgroups_view.render();
+                });
 
             // Ad Campaign button
-            $("#add_campaign_button").button({ icons : { primary : 'ui-icon-circle-plus'} });
+            $("#add_campaign_button").button({
+                icons : { primary : 'ui-icon-circle-plus'}
+            });
 
 
             // AdGroups form
-            $.each(['pause', 'resume', 'activate', 'archive', 'delete'], function(iter, action) {
+            var actions = ['pause', 'resume', 'activate', 'archive', 'delete'];
+            $.each(actions, function(iter, action) {
                 $('#campaignForm-' + action).click(function(e) {
                     e.preventDefault();
-                    $('#campaignForm').find("#action").attr("value", action).end().submit();
+                    $('#campaignForm')
+                        .find("#action")
+                        .attr("value", action)
+                        .end()
+                        .submit();
                 });
             });
         },

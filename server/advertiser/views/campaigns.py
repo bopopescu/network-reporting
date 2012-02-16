@@ -77,7 +77,7 @@ class AdGroupIndexHandler(RequestHandler):
         adunits_dict = {}
         for campaign in campaigns:
             for adgroup in campaign.adgroups:
-                if not adgroup.archived:
+                if not (adgroup.archived or adgroup.deleted):
                     adunits = []
                     adunit_keys_to_fetch = []
                     adgroup.targeted_app_keys = []

@@ -119,7 +119,6 @@ $(function() {
                     $('#dashboard-stats-chart').fadeOut(100, function() {
                         graph_view.show_chart();
                         $(this).show();
-                        console.log('showing chart');
                     });
                 }
             });
@@ -129,7 +128,7 @@ $(function() {
                 $('.stats-breakdown-value.'+$(this).val()).show();
             });
             $('.stats-breakdown-value').hide();
-        $('.stats-breakdown-value.all').show();
+            $('.stats-breakdown-value.all').show();
 
             // Ad Campaign button
             $("#add_campaign_button").button({

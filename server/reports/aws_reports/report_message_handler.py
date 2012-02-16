@@ -425,6 +425,7 @@ class ReportMessageHandler(MessageHandler):
             rep = self.get_message_report(message)
             rep.status = fail_text 
             rep.put()
+            rep.notify_failure()
         except Exception:
             log("Report notify failed", level = 'exception')
             return
@@ -771,6 +772,7 @@ class ReportMessageHandler(MessageHandler):
 
                 rep.data = self.message_data[message]
                 rep.completed_at = datetime.now()
+                rep.status = 'Completed'
                 rep.put()
             except:
                 raise ReportPutError(message = message, jobflowid = jobflowid)

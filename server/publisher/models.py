@@ -78,6 +78,8 @@ class App(db.Model):
     primary_category = db.StringProperty(choices=CATEGORY_CHOICES)
     secondary_category = db.StringProperty(choices=CATEGORY_CHOICES)
 
+    use_proxy_bids = db.BooleanProperty(default=True)
+
     def app_type_text(self):
         types = {
             'iphone': 'iOS',

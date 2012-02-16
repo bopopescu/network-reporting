@@ -44,7 +44,7 @@ def load_test_data(include_iad=False):
             username='adnetwork@com2usamerica.com',
             password='4w47m82l5jfdqw1x',
             client_key='ka820827f7daaf94826ce4cee343837a',
-            send_email=True)
+            send_email=False)
 
     # JumpTap login info
     AdNetworkReportManager.create_login_credentials_and_mappers(
@@ -52,7 +52,7 @@ def load_test_data(include_iad=False):
             ad_network_name='jumptap',
             username='zaphrox',
             password='JR.7x89re0',
-            send_email=True)
+            send_email=False)
     # iAd login info
     if include_iad:
         AdNetworkReportManager.create_login_credentials_and_mappers(
@@ -60,7 +60,7 @@ def load_test_data(include_iad=False):
                 ad_network_name='iad',
                 username='chesscom',
                 password='Faisal1Chess',
-                send_email=True)
+                send_email=False)
 
     # InMobi login info
     AdNetworkReportManager.create_login_credentials_and_mappers(
@@ -68,13 +68,13 @@ def load_test_data(include_iad=False):
             ad_network_name='inmobi',
             username='4028cb973099fe040130c2aa2a0904b5',
             password='098233019949',
-            send_email=True)
+            send_email=False)
 
     # MobFox login info
     AdNetworkReportManager.create_login_credentials_and_mappers(
             account=account,
             ad_network_name='mobfox',
-            send_email=True)
+            send_email=False)
 
 #    entities.append(AdNetworkAppMapper(application=app, ad_network_name=
 #        'iad', publisher_id=TEST_IAD_PUB_ID, ad_network_login=

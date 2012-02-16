@@ -20,7 +20,8 @@ if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/google_appengine/lib/webob')
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 
-sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+else:
+    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
 import common.utils.test.setup
 from google.appengine.ext import db
 from google.appengine.api import mail
@@ -118,10 +119,15 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                     pacific = timezone('US/Pacific')
                     two_weeks_ago = (datetime.now(pacific) -
                             timedelta(days=14)).date()
+
+                    # Set testing
+                    testing = self.get_argument('testing', False)
+
                     process = multiprocessing.Process(target=update_login_stats_for_check,
                             args=(login_credentials,
                                   two_weeks_ago,
                                   None,
+                                  testing,
                                   ))
                     logging.info(process.daemon)
                     #process.daemon = True

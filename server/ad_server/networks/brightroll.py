@@ -178,7 +178,9 @@ template = string.Template("""
 
     function goToLanding(delay)
     {
-      document.body.removeChild(document.getElementById("center"));
+      var videoContainer = document.getElementById("center");
+      var parent = videoContainer.parentNode;
+      parent.removeChild(videoContainer);
       document.getElementById("loader").style.display = "";
       delay = delay || 0;
       setTimeout(function(){ document.location.href = urls.landing[0] }, delay);

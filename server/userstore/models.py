@@ -6,7 +6,7 @@
 #         AppOpenEvent
 #     ClickEvent (mobile_appid not specified, i.e. mobile_appid=CLICK_EVENT_NO_APP_ID)
 
-
+import datetime
 import logging
 
 from google.appengine.ext import db
@@ -144,4 +144,68 @@ class InAppPurchaseEvent(db.Model):
         return 'InAppPurchaseEvent(udid=%s, mobile_appid=%s, reciept=%s, time=%s)'%(self.udid,
                                                                                     self.mobile_appid,
                                                                                     self.receipt,
-                                                                                    self.time)    
+                                                                                    self.time)
+
+
+class ImpressionEvent(db.Model):
+    """
+    Abstract class
+    """
+    udid = db.StringProperty(required=True)
+    adgroup_id = db.StringProperty(required=True)
+    time = db.DateTimeProperty(required=True)
+    count = db.IntegerProperty(default=0)
+
+    def __init__(self, parent=None, key_name=None, **kwargs):
+        udid = get_required_param('udid', kwargs)
+        adgroup_id = get_required_param('adgroup_id', kwargs)
+        time = get_required_param('time', kwargs)
+
+        if not kwargs.get('key', None):
+            if not parent:
+                parent = MobileUser.get_db_key(udid)
+                if not key_name:
+                    key_name = self.get_key_name(adgroup_id, time)
+                    
+            time = self.set_time_precision(time)
+            kwargs.update(time=time)
+
+        super(ImpressionEvent, self).__init__(parent=parent, key_name=key_name, **kwargs)
+
+    @classmethod
+    def get_key_name(cls, adgroup_id, time):
+        return get_key_name([adgroup_id, cls.format_time(time)])
+
+    @classmethod
+    def set_time_precision(cls, time):
+        raise NotImplementedError
+
+    @classmethod
+    def format_time(cls, time):
+        raise NotImplementedError
+
+    @classmethod
+    def get_db_key(cls, udid, adgroup_id, time):
+        parent = MobileUser.get_db_key(udid)
+        return Key.from_path(cls.kind(), cls.get_key_name(adgroup_id, time), parent=parent)
+
+class HourlyImpressionEvent(ImpressionEvent):
+    
+    @classmethod
+    def set_time_precision(cls, time):
+        return datetime.datetime(time.year, time.month, time.day, time.hour)
+    
+    @classmethod
+    def format_time(cls, time):
+        return time.strftime('%y%m%d%H')
+
+class DailyImpressionEvent(ImpressionEvent):
+    
+    @classmethod
+    def set_time_precision(cls, time):
+        return datetime.datetime(time.year, time.month, time.day)
+    
+    @classmethod
+    def format_time(cls, time):
+        return time.strftime('%y%m%d')
+    

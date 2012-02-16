@@ -3,12 +3,16 @@
 {% include "track_impression_helper.html" %}
 <script type="text/javascript">
 {% if not is_fullscreen %}
-trackImpressionHelper();
+if(typeof trackImpressionHelper == 'function') {
+  trackImpressionHelper();
+}
 {% endif %}
 
 function webviewDidAppear(){
 {% if is_fullscreen %}
-  trackImpressionHelper();
+  if(typeof trackImpressionHelper == 'function') {
+    trackImpressionHelper();
+  }
 {% endif %}   
 }
 </script>

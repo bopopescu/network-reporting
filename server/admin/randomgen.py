@@ -1,6 +1,3 @@
-#from appengine_django import InstallAppengineHelperForDjango
-#InstallAppengineHelperForDjango()
-
 import copy
 import string
 import random
@@ -17,8 +14,30 @@ from budget.models import *
 from reporting.models import *
 
 
+
+####
+#Configuration Parameters for data generation
+####
+
 USERNAME = "test@mopub.com"
 PASSWORD = "test"
+
+NUM_ACCOUNTS = 1
+NUM_APPS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
+NUM_CAMPAIGNS_PER_APP = 3
+NUM_CREATIVES_PER_ADGROUP = 1
+NUM_ADUNITS_PER_APP = 3
+
+APP_STATS_SINCE = dt.datetime.now() - dt.timedelta(days=14)
+
+
+### End configuration parameters
+
+
+####
+#Constants
+####
+
 
 APP_INDEX = 0
 ADUNIT_INDEX = 0
@@ -43,6 +62,11 @@ NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
                                'jumptap':'jumptap_pub_id',
                                'brightroll':'brightroll_pub_id',
                                'greystripe':'greystripe_pub_id'}                               
+
+
+####
+#Helper Methods 
+####
 
 def get_adgroup_name():
     global ADGROUP_INDEX
@@ -98,6 +122,11 @@ def get_random_datetime():
     return dt.datetime(year,month,day)
 
 
+####
+#Generation methods
+####
+
+
 def generate_app(account):
     app = App(name=get_app_name(),
               app_type=select_rand(APP_TYPES),
@@ -143,15 +172,17 @@ def generate_adgroup(campaign,site_keys,account):
                       site_keys=site_keys,
                       name=get_adgroup_name())
     adgroup.put()
+
+    #Need to update account's network configuration if we add a network adgroup
     if rand_network_type in NETWORK_TYPE_TO_PUB_ID_ATTR.keys() and campaign.campaign_type=="network":
         network_config = account.network_config
         setattr(network_config,NETWORK_TYPE_TO_PUB_ID_ATTR[rand_network_type],"fillerid")
         a = AccountQueryManager()
         a.update_config_and_put(account,network_config)
+
     return adgroup
     
 
-'''creates a budget, campaign, and adgroup'''
 def generate_campaign(account,budget,campaign_type=None):
     start_date = get_random_date()
     end_date = get_random_date()
@@ -168,7 +199,8 @@ def generate_campaign(account,budget,campaign_type=None):
     campaign.put()
     return campaign
 
-'''generates user and account'''
+
+#Generates both user and account models. 
 def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,marketplace_config=None,network_config=None):
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()
@@ -201,6 +233,7 @@ def generate_marketplace_config():
 
 
 def generate_stats_model(publisher,advertiser,account,date):
+    #This logic is in place to make the stats more realistic
     request_count = random.randint(0,10000)
     impression_count = int(random.random()*request_count)
     click_count = int(random.random()*impression_count)
@@ -231,6 +264,8 @@ def generate_stats_model(publisher,advertiser,account,date):
 
 def generate_creative(account,adgroup):
     creative_name = get_creative_name()
+
+    #For now, test data generation will only create basic text creatives
     creative = TextCreative(active=True,
                             account = account,
                             ad_group = adgroup,
@@ -244,15 +279,10 @@ def generate_creative(account,adgroup):
     
 
 
+
+
+#Example Method to generate data. See top configuration contants for customizing result
 def main():
-    NUM_ACCOUNTS = 1
-    NUM_APPS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
-    NUM_CAMPAIGNS_PER_APP = 3
-    NUM_CREATIVES_PER_ADGROUP = 1
-    NUM_ADUNITS_PER_APP = 3
-
-    APP_STATS_SINCE = dt.datetime(2012,1,18)
-
     account = generate_account(USERNAME,PASSWORD,USERNAME)
 
     apps = []
@@ -264,7 +294,6 @@ def main():
     creatives_per_campaign = {}
  
     for app in apps:
-        #
         for i in range(NUM_ADUNITS_PER_APP):
             adunits_per_app[app].append(generate_adunit(app,account))
 
@@ -275,9 +304,11 @@ def main():
             if i==0:
                 #create at least 1 network campaign
                 campaign = generate_campaign(account,budget,"network")
+
             elif i==1:
                 #create at least 1 marketplace campaign
                 campaign = generate_campaign(account,budget,"marketplace")
+
             else:
                 campaign = generate_campaign(account,budget)
 

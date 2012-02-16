@@ -135,25 +135,25 @@ if __name__ == '__main__':
 #        u'pa_com2us_usa_inc_slice_it_drd_app_banner',
 #        u'pa_com2us_usa_inc__slice_it__drd_app_banner2'])
 
-#    NC.username = 'chesscom'
-#    NC.password = 'Y7u8i9o0'
-#    publisher_ids = ['pa_chess_com_llc_chess_com_-_pla_iph_app',
-#            'pa_chess_com_llc_chess_com_-_and_drd_app']
+    NC.username = 'chesscom'
+    NC.password = 'Y7u8i9o0'
+    publisher_ids = ['pa_chess_com_llc_chess_com_-_pla_iph_app',
+            'pa_chess_com_llc_chess_com_-_and_drd_app']
 
 #    NC.username = 'komastudios'
 #    NC.password = 'nH0J4od4'
 #    publisher_ids = [u'pa_koma_studios_ug_penalty_kick_iph_app',
 #            u'pa_koma_studios_ug_penalty_kick_an_drd_app']
 
-    NC.username = 'Glenn_Kiladis'
-    NC.password = 'Aspenk'
+#    NC.username = 'Glenn_Kiladis'
+#    NC.password = 'Aspenk'
     NC.ad_network_name = 'jumptap'
 
 #    SCRAPER = JumpTapScraper(NC)
 #    print SCRAPER.test_login_info()
 
-    publisher_ids = [u'pa_mediafriends_in_heywire_iph_app',
-            u'pa_mediafriends_in_heywire_social__drd_app']
+#    publisher_ids = [u'pa_mediafriends_in_heywire_iph_app',
+#            u'pa_mediafriends_in_heywire_social__drd_app']
 
     adunit_publisher_ids = iter([])
     SCRAPER = JumpTapScraper((NC, publisher_ids, adunit_publisher_ids))

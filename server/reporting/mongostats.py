@@ -70,10 +70,10 @@ def api_fetch(start_date, end_date,
                              publisher=_key_or_none(pub_str),
                              advertiser=advertiser,
                              date=_datetime_from_str(stats_dict['date']),
-                             request_count=request_count,
-                             impression_count=stats_dict['impression_count'],
-                             click_count=stats_dict['click_count'],
-                             conversion_count=stats_dict['conversion_count'],
+                             request_count=int(request_count),
+                             impression_count=int(stats_dict['impression_count']),
+                             click_count=int(stats_dict['click_count']),
+                             conversion_count=int(stats_dict['conversion_count']),
                              revenue=float(stats_dict['revenue']))
             stats_models.append(stats_model)
     return stats_models

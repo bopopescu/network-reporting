@@ -1,4 +1,3 @@
-import logging
 import datetime
 
 from common.utils.request_handler import RequestHandler

@@ -1,4 +1,5 @@
 {% load filters %}
+{% load fields %}
   <dt>Format:</dt>
   <dd>
     <select name="{{form.format.name}}" class="format-options">
@@ -46,7 +47,7 @@
   <div class="adTypeDependent text_icon image">
     <dt>Click URL:</dt>
     <dd>
-      <input type='text' name="{{form.url.name}}" class="input-text {% if form.url.errors %}form-error{% endif %}" value="{{form.url.value}}"/>
+      <input type='text' name="{{form.url.name}}" class="input-text {% if form.url.errors %}form-error{% endif %}" value="{{form.url|display_value}}"/>
       <a href="#" class="creativeAddForm-url-helpLink">What's this?</a>
       <div id="creativeAddForm-url-helpContent" class="hidden">
         <h3>Click URL</h3>

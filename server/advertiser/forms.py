@@ -30,7 +30,6 @@ from publisher.models import Site as AdUnit
 
 from budget.query_managers import BudgetQueryManager
 from budget.tzinfo import Pacific, UTC, utc
-import logging
 import re
 import urlparse
 import cgi
@@ -315,21 +314,41 @@ class AdGroupForm(forms.ModelForm):
                                             label='Max:', required=False)
     target_other = forms.BooleanField(initial=True, label='Other',
                                       required=False)
+    geo_predicates = forms.Field(required=False, widget=forms.SelectMultiple)
     region_targeting = forms.ChoiceField(choices=(('all', 'Everywhere'),
                                                   ('city', 'City')),
                                          initial='all',
                                          label='Region Targeting:',
                                          widget=forms.RadioSelect)
-    #geo_predicates
     cities = forms.Field(required=False, widget=forms.SelectMultiple)
     keywords = forms.CharField(required=False,
                                widget=forms.Textarea(attrs={'cols': 50,
                                                             'rows': 3}))
 
     def __init__(self, *args, **kwargs):
-        #data = args[1] if len(args) > 1 else kwargs.get('data', None)
-        #initial = args[5] if len(args) > 5 else kwargs.get('initial', None)
+        initial = args[5] if len(args) > 5 else kwargs.get('initial', None)
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
+
+        if instance:
+            if not initial:
+                initial = {}
+
+            if instance.network_type == 'custom' and instance.net_creative:
+                initial.update(custom_html=instance.net_creative.html_data)
+            elif instance.network_type == 'custom_native' and instance.net_creative:
+                initial.update(custom_method=instance.net_creative.html_data)
+
+            geo_predicates = []
+            for geo_predicate in instance.geo_predicates:
+                preds = geo_predicate.split(',')
+                geo_predicates.append(','.join([str(pred.split('=')[1]) for pred in preds]))
+            initial.update(geo_predicates=geo_predicates)
+
+            if len(geo_predicates) == 1 and len(instance.cities):
+                initial['region_targeting'] = 'city'
+                initial.update(cities=instance.cities)
+
+            kwargs.update(initial=initial)
 
         is_staff = kwargs.pop('is_staff', False)
 
@@ -338,15 +357,15 @@ class AdGroupForm(forms.ModelForm):
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
+        # show deprecated networks if user is staff or instance is that type
         if is_staff or (instance and instance.network_type == 'admob'):
             self.fields['network_type'].choices.append(('admob', 'AdMob Javascript (deprecated)'))
-
         if is_staff or (instance and instance.network_type == 'millennial'):
             self.fields['network_type'].choices.append(('millennial', 'Millennial Server-side (deprecated)'))
-
         if is_staff or (instance and instance.network_type == 'greystripe'):
             self.fields['network_type'].choices.append(('greystripe', 'GreyStripe (deprecated)'))
 
+        # set choices based on the users adunits
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
         # hack to make the forms ordered correctly
@@ -361,13 +380,24 @@ class AdGroupForm(forms.ModelForm):
             allocation_percentage = 100
         return allocation_percentage
 
+    def clean_site_keys(self):
+        return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]
+
+    def clean_geo_predicates(self):
+        geo_predicates = []
+        for geo_predicate in self.cleaned_data.get('geo_predicates', []):
+            geo_predicate = tuple(geo_predicate.split(','))
+            #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
+            geo_predicates.append(GEO_LIST[len(geo_predicate) - 1] % geo_predicate)
+        return geo_predicates
+
     def clean(self):
         cleaned_data = super(AdGroupForm, self).clean()
+
         # don't store targeted cities unless region targeting for cities is selected
         if cleaned_data.get('region_targeting', None) != 'city':
             cleaned_data['cities'] = []
-        if cleaned_data.get('site_keys', []):
-            cleaned_data['site_keys'] = [Key(site_key) for site_key in cleaned_data['site_keys']]
+
         return cleaned_data
 
     class Meta:
@@ -392,6 +422,7 @@ class AdGroupForm(forms.ModelForm):
                   'android_version_min',
                   'android_version_max',
                   'target_other',
+                  'geo_predicates',
                   'region_targeting',
                   'cities',
                   'keywords')

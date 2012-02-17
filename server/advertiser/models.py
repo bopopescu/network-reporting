@@ -1,5 +1,3 @@
-import logging
-
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel

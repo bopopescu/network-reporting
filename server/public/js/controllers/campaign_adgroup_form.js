@@ -530,17 +530,19 @@ $(document).ready(function() {
     var city_pre = {type: 'city', data: []};
     //Not being used right now
     //var state_pre = {type: 'state', data: []};
-    for (var count = 0; count < countries.length; count++) {
-        var dat = countries[count];
-        if ($.inArray(dat.code, priors) != -1) {
+
+    for(var index in countries) {
+        var dat = countries[index];
+        if($.inArray(dat.code, priors) != -1) {
             pre.data.push(dat);
         }
-        if (pre.length == priors.length)
+        if(pre.length == priors.length)
             break;
     }
+
     //city is ll:ste:name:ccode;
-    for (var i in city_priors) {
-        if (city_priors.hasOwnProperty(i)) {
+    for(var i in city_priors) {
+        if(city_priors.hasOwnProperty(i)) {
             var datas = city_priors[i].split(':');
             var ll = datas[0].split(',');
             var ste = datas[1];
@@ -555,6 +557,20 @@ $(document).ready(function() {
                       });
         }
     }
+
+    //Need to create data object that is array of dictionary [ {name, id} ]
+    $('#geo_pred_ta').tokenInput(null, {
+        data: countries,
+        hintText: 'Type in a country name',
+        formatResult: function( row ) {
+            return row.name;
+        },
+        formatMatch: function( row, i, max ){
+            return [row.name, row.code];
+        },
+        prePopulate: pre
+    });
+
     $('#city_ta').tokenInput(geo_s, {
         country: 'US',
         doImmediate: false,
@@ -569,18 +585,6 @@ $(document).ready(function() {
     });
     //Verify that all cities in city_pre are in the SINGLE country that is pre
 
-    //Need to create data object that is array of dictionary [ {name, id} ]
-    $('#geo_pred_ta').tokenInput(null, {
-        data: countries,
-        hintText: 'Type in a country name',
-        formatResult: function( row ) {
-            return row.name;
-        },
-        formatMatch: function( row, i, max ){
-            return [row.name, row.code];
-        },
-        prePopulate: pre
-    });
     /* Not doing states atm
     $('#state_ta').tokenInput(geo_s, {
         country: 'US',

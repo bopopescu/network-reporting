@@ -9,10 +9,17 @@
 {% block extraScripts %}
 {% comment %}Should be able to do {{ campaign_form.media }}{% endcomment %}
 <script type="text/javascript">
-    priors = {{ adgroup.geo_predicates|to_json|safe }};
-    city_priors = {{ adgroup.cities|to_json|safe }};
+    $(function () {
+        priors = {{ adgroup.geo_predicates|to_json|safe }};
+        city_priors = {{ adgroup.cities|to_json|safe }};
+
+        // make necessary changes based on wether optimize is checked
+        $('input[name="network_state"]').change(function() {
+            $('.cant_optimize').toggle();
+        })
+    });
 </script>
-<script src="/js/controllers/networks_form.js?v=2"></script>
+<script type="text/javascript" src="/js/controllers/networks_form.js?v=2"></script>
 {% endblock extraScripts %}
 
 
@@ -80,7 +87,15 @@
                 </div>
             </li>
 
-            <li>
+            <li class="network_type_dependant {{reporting_networks}}">
+                {{ adgroup_form.network_state.label_tag }}
+                <div class="network_state">
+                  {{ adgroup_form.network_state }}
+                  <span class="error">(requires login credentials) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
+                </div>
+            </li>
+
+            <li class="cant_optimize">
                 {{ adgroup_form.bid_strategy.label_tag }}
                 <div>
                     {{ adgroup_form.bid_strategy }} @ {{ adgroup_form.bid }} USD
@@ -100,28 +115,6 @@
                 </div>
             </li>
 
-            <li class="campaign_type_dependant gtee">
-                {{ campaign_form.budget.label_tag }}
-                <div>
-                    {{ campaign_form.budget }}
-                    {{ campaign_form.full_budget}}
-                    {{ campaign_form.budget_type }}
-                </div>
-            </li>
-
-            <li class="campaign_type_dependant gtee">
-                {{ campaign_form.budget_strategy.label_tag }}
-                <div>
-                    <span class="radios">
-                        {% comment %}
-                        The latest version of Django makes it easy to modify the
-                        RadioSelect widget.  Since it is not simple here, this
-                        wrapper is used to style it.
-                        {% endcomment %}
-                        {{ campaign_form.budget_strategy }}
-                    </span>
-                </div>
-            </li>
         </ul>
     </fieldset>
 
@@ -156,7 +149,7 @@
         </ul>
     </fieldset>
 
-    <fieldset>
+    <fieldset class="cant_optimize">
         <legend>
             <h2>Advanced Targeting</h2>
             <p>Choose which ad units this campaign will target.</p>

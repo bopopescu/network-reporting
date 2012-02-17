@@ -324,6 +324,17 @@ class AdGroupForm(forms.ModelForm):
                                widget=forms.Textarea(attrs={'cols': 50,
                                                             'rows': 3}))
 
+    def coerce_network_state(optimize):
+        if optimize:
+            return NetworkStates.OPTIMIZED_NETWORK_ADGROUP
+        else:
+            return NetworkStates.NETWORK_ADGROUP
+
+    network_state = forms.TypedChoiceField(coerce=coerce_network_state,
+                                              initial=False,
+                                              label='Optimize:',
+                                              widget=forms.CheckboxInput)
+
     def __init__(self, *args, **kwargs):
         #data = args[0] if len(args) > 0 else kwargs.get('data', None)
         #initial = args[4] if len(args) > 4 else kwargs.get('initial', None)

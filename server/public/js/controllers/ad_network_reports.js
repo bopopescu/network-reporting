@@ -204,6 +204,16 @@ $(function() {
                 });
             });
 
+            $('#delete-network-button').click(function () {
+                var key = $(this).attr('id');
+                var div = $('.' + key);
+                div.dialog({
+                    buttons: {
+                        "Update": function() { $('form.loginCredentials',div).submit(); },
+                        "Close": function() { $(this).dialog('close');} }
+                });
+            });
+
             $('#dashboard-sort input').click(function() {
                 $('.tab-section').hide();
                 $('.tab-section.'+$(this).val()).show();

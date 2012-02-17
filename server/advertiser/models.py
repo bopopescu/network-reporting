@@ -146,7 +146,10 @@ class NetworkStates:
     """
     USER_CREATED_ADGROUP = 0
     PAUSED_USER_CREATED_ADGROUP = 1
-    NETWORK_ADGROUP = 2
+    NETWORK_ADUNIT_ADGROUP = 2
+    OPTIMIZED_NETWORK_ADUNIT_ADGROUP = 3
+    NETWORK_ADGROUP = 4
+    OPTIMIZED_NETWORK_ADGROUP = 5
 
 NETWORKS = ["iAd", "admob", "millennial", "ejam","chartboost", "appnexus", \
         "inmobi", "mobfox", "jumptap", "brightroll", "greystripe", \

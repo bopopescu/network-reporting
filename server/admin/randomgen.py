@@ -208,7 +208,7 @@ def generate_adgroup(site_keys,account,campaign=None,network=None):
 
     else:
         adgroup = AdGroup(network_type=network,
-                          network_state=NetworkStates.NETWORK_ADGROUP,
+                          network_state=NetworkStates.NETWORK_ADUNIT_ADGROUP,
                           bid_strategy='cpm',
                           account=account,
                           site_keys=site_keys,

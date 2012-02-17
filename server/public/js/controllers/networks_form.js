@@ -314,6 +314,9 @@ $(document).ready(function() {
         var network_type = $(this).val();
         var pub_id = pub_ids[network_type];
 
+        $('input[name="network_state"]').attr('checked', false);
+        $('.cant_optimize').show();
+
         $('.network_type_dependant').each(function() {
             $(this).toggle($(this).hasClass(network_type));
         });

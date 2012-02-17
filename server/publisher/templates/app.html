@@ -219,6 +219,12 @@
 
     <div class="divSpacer"></div>
 
+
+    {% comment %}
+      Tables containing targeting information for each campaign
+      the app is in
+    {% endcomment %}
+
     <h2>Campaigns targeting {{app.name}}</h2>
     <div>
       {% if app.adgroups %}
@@ -536,6 +542,11 @@
     </div>
   </section>
 
+
+  {% comment %}
+    Controls for exporting app information
+  {% endcomment %}
+
   <form id='appExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url publisher_app_export %}'>
     <input name='app_key' type='text' value='{{app.key}}' />
     <input name='file_type' id='appExportType' type='text' value='' />
@@ -566,7 +577,7 @@
             <th class="dataTable-data numeric special">CTR</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="appData-totals">
           <tr>
             <th class="dataTable-name big">Totals</th>
             <td class="dataTable-data numeric"><b>{{app.stats.request_count|withsep}}</b></td>
@@ -575,6 +586,8 @@
             <td class="dataTable-data numeric"><b>{{app.stats.click_count|withsep}}</b></td>
             <td class="dataTable-data numeric"><b>{{app.stats.ctr|percentage}}</b></td>
           </tr>
+        </tbody>
+        <tbody id="appData-individual" class="hidden">
           {% for stat in app.all_stats reversed %}
             <tr class="appData-details-inner hide">
               <th class="dataTable-name">{{stat.date|format_date}}</th>
@@ -587,7 +600,9 @@
           {% endfor %}
         </tbody>
       </table>
-      <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
+
+      <a class="appData-details-toggleButton" href="#">Show details</a>
+
     </div>
   </section>
 

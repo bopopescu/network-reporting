@@ -2392,7 +2392,7 @@ a.disabled {
   padding: 0;
   width: 100px;
   height: 32px;
-  background: #eeeeee url(../images/onoff.png) no-repeat; }
+  background: #eeeeee url(../images/greenonoff.png) no-repeat; }
   .lightswitch:hover {
     cursor: pointer; }
   .lightswitch .switch {

@@ -527,51 +527,24 @@ var mopub = mopub || {};
      * app/adunit detail pages.
      */
     function initializeDailyCounts() {
-        $('.appData-details').each(function() {
-            var details = $(this);
-            var data = $('.appData-details-inner', details);
-            var button = $('.appData-details-toggleButton', details);
 
-            function getButtonTextElement() {
-                var buttonTextElement = $('.ui-button-text', button);
-                    buttonTextElement = button;
-                if (buttonTextElement.length === 0) {
-                }
-                return buttonTextElement;
-            }
+        var button = $('.appData-details-toggleButton');
+        button.button();
 
-            function didShowData() {
-                data.removeClass('hide');
-                data.addClass('show');
-                button.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                getButtonTextElement().text('Hide details');
-            }
+        var individual_daily_counts = $("#appData-individual");
 
-            function didHideData() {
-                data.removeClass('show');
-                data.addClass('hide');
-                button.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                getButtonTextElement().text('Show details');
-            }
-
-            if (data.hasClass('show')) {
-                didShowData();
+        button.click(function(e) {
+            e.preventDefault();
+            if (individual_daily_counts.hasClass("hidden")) {
+                individual_daily_counts.removeClass("hidden");
+                button.button('option', 'label', 'Hide Details');
             } else {
-                data.hide();
-                didHideData();
+                individual_daily_counts.addClass("hidden");
+                button.button('option', 'label', 'Show Details');
+                button.button();
             }
-
-            button.click(function(e) {
-                e.preventDefault();
-                if (data.hasClass('show')) {
-                    data.slideUp('fast');
-                    didHideData();
-                } else {
-                    data.slideDown('fast');
-                    didShowData();
-                }
-            });
         });
+
     }
 
 

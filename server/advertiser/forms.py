@@ -608,7 +608,7 @@ class ImageCreativeForm(AbstractCreativeForm):
         if instance:
             if instance.image_blob:
                 try:
-                    image_url = helpers.get_url_for_blob(instance.image_blob)
+                    image_url = instance.image_serve_url
                 except:
                     image_url = None
             else:

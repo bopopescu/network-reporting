@@ -1,23 +1,39 @@
-{% extends 'publisher/base.html' %}{% load filters %}
+{% extends 'publisher/base.html' %}
+{% load filters %}
+{% load elements %}
+
 {% block pageTitle %}
-  <div class="breadcrumb">
-    <a class="linkIcon breadcrumb-back" href="{% url publisher_app_show app_key=adunit.app_key.key %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to App</a>
-    <h1>Ad Unit: {{adunit.name}}</h1>
-  </div>
+  <h1>
+    <a href="{% url publisher_app_show app_key=adunit.app_key.key %}">
+      AdUnits
+    </a>
+    / {{ adunit.name }}
+  </h1>
 {% endblock pageTitle %}
+
 {% block titleBarRight %}
   <span class="titlebar-right">
-    <a class="button" id="dashboard-apps-editAdUnitButton" href="#">Edit ad unit settings</a>
-    <a class="linkIcon" href="{% url publisher_generate adunit_key=adunit.key %}">Get code snippet <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+    <a class="button" id="dashboard-apps-editAdUnitButton" href="#">
+      Edit ad unit settings
+    </a>
+    <a class="linkIcon" href="{% url publisher_integration_help adunit_key=adunit.key %}">
+      Get code snippet
+      <span class="ui-icon ui-icon-triangle-1-e"></span>
+    </a>
   </span>
 {% endblock titleBarRight %}
 
 {% block content %}
+
   {% if not adunit.adgroups %}
     <div class="alert-message block-message">
-      There are no campaigns targeting this ad unit.  To show ads here, set up a new ad campaign or add this ad unit to an existing campaign on the <a href="{% url advertiser_campaign %}">Campaigns</a> page.
+      There are no campaigns targeting this ad unit.
+      To show ads here, set up a new ad campaign or
+      add this ad unit to an existing campaign on the
+      <a href="{% url advertiser_campaign %}">Campaigns</a> page.
     </div>
   {% endif %}
+
   <section id="dashboard-adunitEditForm" class="hidden">
     <div>
       <a name="adunitForm" class="hidden">anchor</a>
@@ -39,7 +55,12 @@
   <section class="offset nomargin" id="dashboard-stats">
     <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
     <div class="stats">
-      <div class="stats-breakdown">
+
+      {% comment %}
+      {% stats_breakdown adunit.stats %}
+      {% endcomment %}
+
+       <div class="stats-breakdown">
         <table>
           <tbody>
             <tr class="active" id="stats-breakdown-requests">
@@ -74,47 +95,52 @@
         <label for="stats-breakdown-dateOptions-option-2">All</label>
       </span>
     </div>
-    <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-      <div class="chart-loading-text">Loading ...</div>
-      <div class="chart-error-text">Could not load chart</div>
-      <script type="text/javascript">
-        // chart data
-        mopub.dashboardStatsChartData = {
-            //pointStart: 1294963200000,
-            pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-            pointInterval: 86400000,
-            'requests': [
-                { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-            ],
-            'impressions': [
-                { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
-            ],
-            'clicks': [
-                { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }
-            ]
-        };
-      </script>
+
+
+      {% comment %}
+        End of stats breakdown
+      {% endcomment %}
+      <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+        <div class="chart-loading-text">Loading ...</div>
+        <div class="chart-error-text">Could not load chart</div>
+        <script type="text/javascript">
+          // chart data
+          mopub.dashboardStatsChartData = {
+              //pointStart: 1294963200000,
+              pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+              pointInterval: 86400000,
+              'requests': [
+                  { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+              ],
+              'impressions': [
+                  { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
+              ],
+              'clicks': [
+                  { '{{adunit.name|safe|addslashes}}': [{% for t in adunit.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }
+              ]
+          };
+        </script>
+      </div>
     </div>
-  </div>
+    <div class="clear"></div>
+  </section>
+
   <div class="clear"></div>
-</section>
 
-<div class="clear"></div>
+  <section id="dashboard-apps">
+    <div class="buttonBank buttonBank-right">
+      <a class="button" id="advertisers-testAdServer" href="#">Test Ad</a>
+    </div>
 
-<section id="dashboard-apps">
-  <div class="buttonBank buttonBank-right">
-    <a class="button" id="advertisers-testAdServer" href="#">Test Ad</a>
-  </div>
+    <div id="adserverTest" style="display:none;">
+      <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
+      </iframe>
+      <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}?id={{adunit.key}}</div>
+    </div>
 
-  <div id="adserverTest" style="display:none;">
-    <iframe height="480" width="350" id="adserverTest-iFrame" scrolling="no">
-    </iframe>
-    <div id="adserverTest-iFrame-src" style="display:none;">{% url advertiser_adserver_test %}?id={{adunit.key}}</div>
-  </div>
+    <h2>Campaigns Targeting {{adunit.name}}</h2>
 
-  <h2>Campaigns Targeting {{adunit.name}}</h2>
-
-  <div>
+    <div>
     {% if adunit.adgroups %}
       <div class="appData alternating-color">
         <div class="appData-details noneg">
@@ -183,6 +209,7 @@
           </div>
         </div>
       </div>
+
 
       <div class="appData alternating-color">
         <div class="appData-details noneg">
@@ -262,7 +289,7 @@
                             <img title="Paused" alt="Paused" src="/images/paused.gif" height=9 width=9 />
                           {% endif %}
                           <a href="{% url marketplace_index %}">{{adgroup.name}}</a>
-                          <span class="muted">MoPub Marketplace Beta</span>
+                          <span class="muted">MoPub Marketplace </span>
                         </th>
                         <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
                         <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
@@ -364,50 +391,6 @@
         </div>
       </div>
 
-      {% if backfill_marketplace %}
-        <div class="appData alternating-color">
-          <div class="appData-details noneg">
-            <div class="appData-details-inner show">
-              <table class="dataTable appData-main">
-                <thead>
-                  <tr>
-                    <th class="dataTable-name big">Backfill Marketplace</th>
-                    <th class="dataTable-data numeric special">Revenue</th>
-                    <th class="dataTable-data numeric special">ECPM</th>
-                    <th class="dataTable-data numeric special">Attempts</th>
-                    <th class="dataTable-data numeric special">Impressions</th>
-                    <th class="dataTable-data numeric special">Fillrate</th>
-                    <th class="dataTable-data numeric special">Clicks</th>
-                    <th class="dataTable-data numeric special">CTR</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for adgroup in backfill_marketplace %}
-                    <tr>
-                      <th class="dataTable-name">
-                        {% if adgroup.deleted %}<img title="Deleted" alt="Deleted" src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                        {% if adgroup.active and not adgroup.deleted %}<img title="Active" alt="Active" src="/images/active.gif" height=9 width=9 />{% endif %}
-                        {% if not adgroup.active and not adgroup.deleted %}<img title="Paused" alt="Paused" src="/images/paused.gif" height=9 width=9 />{% endif %}
-                        <span class="muted">MoPub Marketplace Beta</span>
-                      </th>
-
-                      <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      {% endif %}
-
-
     {% else %}
       <table class="dataTable appData-main">
         <tbody>
@@ -422,7 +405,11 @@
 </section>
 
 <section id="dashboard-apps">
-  <h2>Daily Counts</h2>
+  <h2 class="left">Daily Counts</h2>
+  <div class="right">
+    <a class="button" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
+    <a class="button" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>
+  </div>
   <div class="appData-details noneg">
     <table class="dataTable appData-main">
       <thead>
@@ -436,7 +423,7 @@
           <th class="dataTable-data numeric special">CTR</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="appData-totals">
         <tr>
           <th class="dataTable-name big">Totals</th>
           <td class="dataTable-data numeric">&nbsp;</td>
@@ -446,6 +433,8 @@
           <td class="dataTable-data numeric big"><b>{{adunit.stats.click_count|withsep}}</b></td>
           <td class="dataTable-data numeric big"><b>{{adunit.stats.ctr|percentage}}</b></td>
         </tr>
+      </tbody>
+      <tbody id="appData-individual" class="hidden">
         {% for s in adunit.all_stats reversed %}
           <tr class="appData-details-inner hide">
             <th class="dataTable-name">{{s.date|format_date}}</th>
@@ -459,7 +448,7 @@
         {% endfor %}
       </tbody>
     </table>
-    <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
+    <a class="appData-details-toggleButton" href="#">Show details</a>
   </div>
 </section>
 
@@ -467,7 +456,9 @@
 
 <div style="margin-top: 1em;">
   <div class="buttonBank buttonBank-right">
-    <form method="post" id="dashboard-deleteForm" action="{% url publisher_adunit_delete adunit_key=adunit.key %}"><a href="#" id="dashboard-delete-link">Remove ad unit from dashboard</a></form>
+    <form method="post" id="dashboard-deleteForm" action="{% url publisher_delete_adunit adunit_key=adunit.key %}">
+      <a href="#" id="dashboard-delete-link">Remove ad unit from dashboard</a>
+    </form>
     <div id="dashboard-delete-modal" class="hidden">
       <h2>Remove confirmation</h2>
       <p>Are you sure you want to remove {{adunit.name}} from the app?</p>
@@ -475,8 +466,15 @@
   </div>
 </div>
 
-<div>
-  <a class="button button-small" href="/inventory/export/csv/adunit/{{adunit.key}}?spec=days">Export CSV</a>
-  <a class="button button-small" href="/inventory/export/xls/adunit/{{adunit.key}}?spec=days">Export XLS</a>
-</div>
 {% endblock content %}
+
+{% block extraScripts %}
+  <script src="/js/controllers/publisher.js?v=34"></script>
+  <script type="text/javascript">
+    $(function() {
+      DashboardController.initializeAdunitDetail({
+        // not needed yet
+      });
+    });
+  </script>
+{% endblock extraScripts %}

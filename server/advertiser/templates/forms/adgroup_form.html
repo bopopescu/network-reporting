@@ -114,7 +114,7 @@
       {% endif %}
 
       <div class="appData-icon">
-        <img src="{% url publisher_app_icon app_key=adunit.app_key.key %}" width="45" height="45"/>
+        <img src="{{ adunit.app.icon_url }}" width="45" height="45"/>
       </div>
 
       <div class="adgroupForm-Network" style="float:left;">

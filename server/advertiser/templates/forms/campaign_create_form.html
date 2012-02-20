@@ -1,31 +1,19 @@
 <a name="adgroupEditForm" class="hidden">anchor</a>
+
 <fieldset id="campaignForm-details">
-  <h2>Campaign Details</h2>
-  <p>
-    Campaigns allow you to manage ads that will run on your mobile ad units.
-  </p>
-  {{campaign_form.as_template}}
-
-
+    <h2>Campaign Details</h2>
+    <p>Campaigns allow you to manage ads that will run on your mobile ad units.</p>
+    {% with campaign_form as form %}
+    {% include 'forms/campaign_form.html' %}
+    {% end with %}
 </fieldset>
 
-  <div class="alert-message block-message hidden clearfix" id="mpx_message" style="width: 300px; margin: 0 auto; font-size: 13px;">
-    The Mopub Marketplace is a new type of beta campaign we're excited to offer.
-    Please review our new Terms of Service before creating a marketplace campaign.
-
-    <br /><br />
-    <div class="clearfix" style="width:245px; margin: 0 auto;">
-      <a class="left btn" id="accept_terms" href="#"> Review New Terms</a>
-      <a class="right" id="more_info" href="{% url mpx_info %}"> More Information </a>
-    </div>
-  </div>
-
 <fieldset id="campaignForm-targeting">
-  <h2>Targeting</h2>
-  <p>
-    Choose which ad units this campaign will target.
-  </p>
-  {{adgroup_form.as_template}}
+    <h2>Targeting</h2>
+    <p>Choose which ad units this campaign will target.</p>
+    {% with adgroup_form as form %}
+    {% include 'forms/adgroup_form.html' %}
+    {% end with %}
 </fieldset>
 
 {% include "mpx_tos.html" %}

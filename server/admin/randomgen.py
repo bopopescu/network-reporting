@@ -59,11 +59,11 @@ NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
                                'inmobi':'inmobi_pub_id',
                                'jumptap':'jumptap_pub_id',
                                'brightroll':'brightroll_pub_id',
-                               'greystripe':'greystripe_pub_id'}                               
+                               'greystripe':'greystripe_pub_id'}
 
 
 ####
-#Helper Methods 
+#Helper Methods
 ####
 
 def get_adgroup_name():
@@ -103,7 +103,7 @@ def select_rand_subset(array):
     cloned = copy.copy(array)
     random.shuffle(cloned)
     return cloned[:num_elements]
-    
+
 
 def get_random_date():
     today = dt.date.today()
@@ -131,7 +131,7 @@ def generate_app(account):
               account = account)
     app.put()
     return app
-    
+
 
 def generate_adunit(app,account):
     adunit = AdUnit(app_key = app,
@@ -151,15 +151,15 @@ def generate_budget():
     if start_date > end_date:
         temp = start_date
         start_date = end_date
-        end_date = temp    
+        end_date = temp
     budget = Budget(start_datetime=start_date,
                     end_datetime = end_date,
                     static_total_budget = float(random.randint(100,1000)),
                     static_slice_budget = float(random.randint(100,1000)))
-    
+
     budget.put()
     return budget
-                  
+
 
 def generate_adgroup(campaign,site_keys,account):
     rand_network_type = select_rand(NETWORK_TYPES)
@@ -179,7 +179,8 @@ def generate_adgroup(campaign,site_keys,account):
         a.update_config_and_put(account,network_config)
 
     return adgroup
-    
+
+
 
 def generate_campaign(account,budget,campaign_type=None):
     start_date = get_random_date()
@@ -187,7 +188,7 @@ def generate_campaign(account,budget,campaign_type=None):
     if start_date> end_date:
         temp = start_date
         start_date = end_date
-        end_date = temp    
+        end_date = temp
     campaign = Campaign(name=get_campaign_name(),
                         budget_obj = budget,
                         campaign_type = campaign_type if campaign_type else select_rand(CAMPAIGN_TYPES),
@@ -198,7 +199,7 @@ def generate_campaign(account,budget,campaign_type=None):
     return campaign
 
 
-#Generates both user and account models. 
+
 def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,marketplace_config=None,network_config=None):
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()
@@ -210,7 +211,7 @@ def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,marketpl
     manager = RegistrationManager()
     user = manager.create_active_user(send_email=False,username=username,password=password,email=email)
     manager.create_profile(user)
-    
+
     account = AccountQueryManager().get_current_account(user=user)
     account.active = True
     account.marketplace_config = marketplace_config
@@ -258,7 +259,7 @@ def generate_stats_model(publisher,advertiser,account,date):
                              click_user_count = click_user_count)
 
     return stats_model
-    
+
 
 def generate_creative(account,adgroup):
     creative_name = get_creative_name()
@@ -269,12 +270,12 @@ def generate_creative(account,adgroup):
                             ad_group = adgroup,
                             ad_type = "text",
                             headline = "%s %s" % (creative_name,"headline"),
-                            line1 = "%s %s" % (creative_name,"line1"), 
-                            line2 = "%s %s" % (creative_name,"line2"), 
+                            line1 = "%s %s" % (creative_name,"line1"),
+                            line2 = "%s %s" % (creative_name,"line2"),
                             name=creative_name)
     creative.put()
     return creative
-    
+
 
 
 
@@ -289,7 +290,7 @@ def main():
     adunits_per_app = dict([(app,[]) for app in apps])
     campaigns_per_app = dict([(app,[]) for app in apps])
     creatives_per_campaign = {}
- 
+
     for app in apps:
         for i in range(NUM_ADUNITS_PER_APP):
             adunits_per_app[app].append(generate_adunit(app,account))
@@ -317,7 +318,7 @@ def main():
                                        account)
             for i in range(NUM_CREATIVES_PER_ADGROUP):
                 creatives_per_campaign[campaign].append(generate_creative(account,adgroup))
-                                          
+
 
     cur_date = APP_STATS_SINCE
     today = dt.datetime.now()
@@ -332,18 +333,18 @@ def main():
                 stats= [generate_stats_model(adunit,
                                              creative,
                                              account,
-                                             cur_date)                    
+                                             cur_date)
                         for creative in creatives_per_campaign[campaign]
                         for adunit in adunits_per_app[app]]
 
                 req_stats = [generate_stats_model(adunit,None,account,cur_date) for adunit in adunits_per_app[app]]
                 for stat in req_stats:
                     stat.impression_count = stat.click_count = stat.conversion_count = 0
-          
+
                 s.put_stats(stats=stats+req_stats)
-            
+
             cur_date+=day
-        
-            
+
+
 if __name__=="__main__":
     main()

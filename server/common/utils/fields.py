@@ -12,11 +12,11 @@ from django.forms.util import ValidationError, ErrorList
 from django.forms.widgets import Textarea
 
 from common.utils import widgets as mpwidgets
-        
+
 """
 These are used to make custom fields with widgets.
 To find the default widgets for a property, look in djangoforms
-"""        
+"""
 
 class MPTextareaField(CharField):
     widget = mpwidgets.MPTextarea
@@ -29,21 +29,21 @@ class MPKeywordsField(MPTextareaField):
         #retain the capitalization of " AND " but lowercase everything else
         value = [' AND '.join((w.lower() for w in v.split(' AND '))) for v in value]
       return value
-      
+
 class MPTextField(CharField):
     widget = mpwidgets.MPTextInput
-    
+
 class MPFloatField(FloatField):
     widget = mpwidgets.MPNumberInput
 
 class MPChoiceField(ChoiceField):
-    widget = mpwidgets.MPRadioWidget    
-    
+    widget = mpwidgets.MPRadioWidget
+
 class MPModelMultipleChoiceField(ModelChoiceField):
     """A MultipleChoiceField whose choices are a model QuerySet."""
-    
+
     widget = forms.SelectMultiple
-    
+
     default_error_messages = {
         'list': _(u'Enter a list of values.'),
         'invalid_choice': _(u'Select a valid choice. %s is not one of the'

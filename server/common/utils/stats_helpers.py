@@ -2,10 +2,13 @@ from urllib import urlencode
 from urllib2 import urlopen
 from common.utils import date_magic
 import datetime
+
+from advertiser.query_managers import AdGroupQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager, \
         AD_NETWORK_NAMES
+
 from publisher.query_managers import AppQueryManager,\
      AdUnitQueryManager, \
      AdUnitContextQueryManager
@@ -24,13 +27,13 @@ except ImportError:
     except ImportError:
         from django.utils import simplejson as json
 
-
 ctr = lambda clicks, impressions: (clicks/float(impressions) if impressions
         else 0)
 ecpm = lambda revenue, impressions: (revenue/float(impressions)*1000 if
         impressions else 0)
 fill_rate = lambda requests, impressions: (impressions/float(requests) if
         requests else 0)
+
 
 class AbstractStatsFetcher(object):
 
@@ -46,46 +49,71 @@ class AbstractStatsFetcher(object):
     def get_account_stats(self, start, end, daily=False):
         raise NotImplementedError('Implement this method fool')
 
+    def format_stats(self, stats):
+        stat_totals = {
+            'revenue': sum([stat.revenue for stat in stats]),
+            'ctr': 0.0,
+            'ecpm': 0.0,
+            'impressions': sum([stat.impression_count for stat in stats]),
+            'clicks': sum([stat.click_count for stat in stats]),
+            'requests': sum([stat.request_count for stat in stats]),
+            'fill_rate': 0.0,
+            'conversions': sum([stat.conversion_count for stat in stats]),
+            'conversion_rate': sum([stat.conv_rate for stat in stats])/len(stats),
+        }
 
-class SummedStatsFetcher(AbstractStatsFetcher):
-    def _get_publisher_stats(self, publisher, start, end, *args, **kwargs):
-        days = date_magic.gen_days(start, end)
-        query_manager = StatsModelQueryManager(publisher.account)
-        stats = query_manager.get_stats_for_days(publisher=publisher,
-                                                 advertiser=None,
-                                                 days=days)
-        stat_totals = {'revenue': sum([stat.revenue for stat in stats]),
-                       'ctr': 0.0,
-                       'ecpm': 0.0,
-                       'impressions': sum([stat.impression_count for stat in stats]),
-                       'clicks': sum([stat.click_count for stat in stats]),
-                       'requests': sum([stat.request_count for stat in stats]),}
         stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
         stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
         stat_totals['fill_rate'] = fill_rate(stat_totals['requests'], stat_totals['impressions'])
 
         return stat_totals
 
+
+class SummedStatsFetcher(AbstractStatsFetcher):
+    def _get_publisher_stats(self, publisher, start, end,
+                             advertiser=None, *args, **kwargs):
+        # mongo
+        days = date_magic.gen_days(start, end)
+        query_manager = StatsModelQueryManager(publisher.account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=advertiser,
+                                                 days=days)
+        return self.format_stats(stats)
+
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
+        # mongo
         app = AppQueryManager.get(app_key)
         app_stats = self._get_publisher_stats(app, start, end)
-        logging.warn('app_stats')
-        logging.warn(app_stats)
         return app_stats
 
     def get_adunit_stats(self, adunit_key, start, end, daily=False):
+        # mongo
         adunit = AdUnitQueryManager.get(adunit_key)
         adunit_stats = self._get_publisher_stats(adunit, start, end)
-        logging.warn('adunit_stats')
-        logging.warn(adunit_stats)
+        return adunit_stats
+
+    def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
+                                        start, end, *args, **kwargs):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        app_stats = self._get_publisher_stats(app, start, end,
+                                              advertiser=adgroup)
+        return app_stats
+
+
+    def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
+                                           start, end, *args, **kwargs):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key)
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+        adunit_stats = self._get_publisher_stats(adunit, start, end,
+                                                 advertiser=adgroup)
         return adunit_stats
 
 
+
 class DirectSoldStatsFetcher(AbstractStatsFetcher):
-    pass
-
-
-class NetworkStatsFetcher(AbstractStatsFetcher):
     pass
 
 
@@ -356,6 +384,7 @@ class AdNetworkStatsFetcher(object):
             stats_dict['sync_date'] = sync_date.strftime('%b %d, %Y');
 
         return stats_dict
+
 
 # Helper/Utility functions
 

@@ -236,7 +236,7 @@ var mopub = mopub || {};
 
         var origin;
         if (!window.location.origin) {
-            origin = windowlocation.protocol
+            origin = window.location.protocol
                 + "//" + window.location.host + "/";
             window.location.origin = origin;
         } else {

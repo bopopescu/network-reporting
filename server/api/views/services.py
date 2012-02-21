@@ -39,12 +39,12 @@ class AppService(RequestHandler):
         # make sure app_key/adgroup_key are for apps/adgroups that
         # belong to this user
         if app_key:
-            app = db.get(app_key)
+            app = AppQueryManager.get_app_by_key(app_key)
             if app.account.key() != self.account.key():
                 raise Http404
 
         if adgroup_key:
-            adgroup = db.get(adgroup_key)
+            adgroup = AdGroupQueryManager.get(adgroup_key)
             if adgroup.account.key() != self.account.key():
                 raise Http404
 

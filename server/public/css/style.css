@@ -3009,7 +3009,7 @@ a.linkIcon .ui-icon-triangle-1-w {
   margin-right: 11px;
   width: 15px; }
 .dataTable .appData-id, .inventory_table .appData-id {
-  position: relative;
+  position: absolute;
   top: 0;
   left: 40px; }
 

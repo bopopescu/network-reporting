@@ -243,10 +243,14 @@
         margin-right: 11px;
         width: 15px;
     }
-    .appData-id {
-        position: absolute;
-        top: 0;
-        left: 40px;
+    td {
+        position: relative;
+        .appData-id {
+            position: absolute;
+            top: 3px;
+            right: 0;
+            overflow: ellipsis;
+        }
     }
 }
 

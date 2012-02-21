@@ -3008,10 +3008,13 @@ a.linkIcon .ui-icon-triangle-1-w {
 .dataTable .appData-icon-none, .inventory_table .appData-icon-none {
   margin-right: 11px;
   width: 15px; }
-.dataTable .appData-id, .inventory_table .appData-id {
-  position: absolute;
-  top: 0;
-  left: 40px; }
+.dataTable td, .inventory_table td {
+  position: relative; }
+  .dataTable td .appData-id, .inventory_table td .appData-id {
+    position: absolute;
+    top: 3px;
+    right: 0;
+    overflow: ellipsis; }
 
 .appData-main th, .appData-main td {
   padding-top: 0;

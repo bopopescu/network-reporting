@@ -14,7 +14,7 @@
 
 var mopub = window.mopub || {};
 
-(function($, Backbone, _) {
+(function ($, Backbone, _) {
     "use strict";
     /*
      * ## AdGroupsView
@@ -26,19 +26,19 @@ var mopub = window.mopub || {};
      * * tables: mapping of... MAPPING OF WHAT? I'M DYING TO KNOW
      */
     var AdGroupsView = Backbone.View.extend({
-        initialize: function() {
+        initialize: function () {
             this.collection.bind('change', this.render, this);
         },
-        filtered_collection: function() {
+        filtered_collection: function () {
             // TODO: uses elements not in this view
             var status = $('#campaigns-filterOptions').find(':checked').val();
             var app = $('#campaigns-appFilterOptions').val();
-            return new AdGroups(this.collection.reject(function(adgroup) {
+            return new AdGroups(this.collection.reject(function (adgroup) {
                 return (status && status !== adgroup.get('status')) ||
                        (app && adgroup.get('apps').indexOf(app) === -1);
             }));
         },
-        render: function() {
+        render: function () {
             var adgroups = this.filtered_collection();
 
             // TODO: uses elements not in this view, with multiple views there are conflicts
@@ -55,7 +55,7 @@ var mopub = window.mopub || {};
 
                 if (this.options.tables) {
                     var type = this.options.type;
-                    _.each(this.options.tables, function(filter, title) {
+                    _.each(this.options.tables, function (filter, title) {
                         var filtered_adgroups = new AdGroups(adgroups.filter(filter));
                         if(filtered_adgroups.length) {
                             html += _.template($('#adgroups-table-template').html(), {
@@ -85,11 +85,11 @@ var mopub = window.mopub || {};
      */
 
     var CollectionGraphView = Backbone.View.extend({
-        initialize: function() {
+        initialize: function () {
             this.collection.bind('change', this.render, this);
         },
 
-        show_chart: function() {
+        show_chart: function () {
             if(this.collection.isFullyLoaded()) {
                 var active_chart = $('#dashboard-stats .stats-breakdown .active');
                 var use_ctr = active_chart.attr('id') === 'stats-breakdown-ctr';
@@ -97,14 +97,14 @@ var mopub = window.mopub || {};
             }
         },
 
-        render: function() {
+        render: function () {
             var this_view = this;
             if (this_view.collection.isFullyLoaded()) {
 
                 var metrics = ['impression_count', 'revenue', 'click_count', 'ctr'];
 
                 // Render the stats breakdown for "all""
-                $.each(metrics, function(iter, metric){
+                $.each(metrics, function (iter, metric) {
                     var selector = '#stats-breakdown-' + metric + ' .all .inner';
                     $(selector).html(this_view.collection.get_formatted_stat(metric));
                 });
@@ -112,14 +112,14 @@ var mopub = window.mopub || {};
                 if (this_view.options.yesterday !== null && this_view.options.today !== null) {
 
                     // Render the stats breakdown for yesterday
-                    $.each(metrics, function(iter, metric) {
+                    $.each(metrics, function (iter, metric) {
                         var selector = '#stats-breakdown-' + metric + ' .yesterday .inner';
                         $(selector).html(this_view.collection.get_formatted_stat_for_day(metric,
                                          this_view.options.yesterday));
                     });
 
                     // Render the stats breakdown for yesterday
-                    $.each(metrics, function(iter, metric){
+                    $.each(metrics, function (iter, metric) {
                         var selector = '#stats-breakdown-' + metric + ' .today .inner';
                         $(selector).html(this_view.collection.get_formatted_stat_for_day(metric,
                                          this_view.options.today));
@@ -217,7 +217,7 @@ var mopub = window.mopub || {};
             $('.price_floor', adunit_row).html('<img class="loading-img hidden" ' +
                                                'src="/images/icons-custom/spinner-12.gif">' +
                                                '</img> ' +
-                                               '<input id="'+ this.model.id + '" ' +
+                                               '<input id="' + this.model.id + '" ' +
                                                'type="text" ' +
                                                'class="input-text input-text-number number" ' +
                                                'style="width:50px;margin: -3px 0;" ' +
@@ -241,12 +241,12 @@ var mopub = window.mopub || {};
             }
 
             // Add the event handler to submit targeting changes over ajax.
-            $('input.targeting-box', adunit_row).click(function() {
+            $('input.targeting-box', adunit_row).click(function () {
                 var loading_img = $('.targeting .loading-img', adunit_row);
                 loading_img.show();
                 current_model.save({'active': $(this).is(':checked')}, {
                     success: function () {
-                        setTimeout(function() {
+                        setTimeout(function () {
                             loading_img.hide();
                         }, 2000);
                     }
@@ -254,7 +254,7 @@ var mopub = window.mopub || {};
             });
 
             // Add the event handler to submit price floor changes over ajax.
-            $('.price_floor .input-text', adunit_row).keyup(function() {
+            $('.price_floor .input-text', adunit_row).keyup(function () {
                 var input_field = $(this);
                 input_field.removeClass('error');
                 var loading_img = $(".price_floor .loading-img", adunit_row);
@@ -264,10 +264,10 @@ var mopub = window.mopub || {};
                     price_floor: $(this).val()
                 });
                 if (promise) {
-                    promise.success(function() {
+                    promise.success(function () {
                         loading_img.hide();
                     });
-                    promise.error(function() {
+                    promise.error(function () {
                         loading_img.hide();
                     });
                 } else {
@@ -292,16 +292,16 @@ var mopub = window.mopub || {};
 
             // Add the event handler to submit price floor changes over ajax.
             $('.price_floor_change', renderedContent)
-                .change(function() {
+                .change(function () {
                     current_model.set({'price_floor': $(this).val()});
                     // Save when they click the save button in the price floor cell
                     var save_link = $('.save', $(this).parent());
-                    save_link.click(function(e) {
+                    save_link.click(function (e) {
                         e.preventDefault();
                         save_link.addClass('disabled').text('Saving...');
                         current_model.save({}, {
                             success: function () {
-                                setTimeout(function() {
+                                setTimeout(function () {
                                     save_link.removeClass('disabled').text('Saved');
                                     save_link.text('Save');
                                 }, 2000);
@@ -311,10 +311,10 @@ var mopub = window.mopub || {};
                 });
 
             // Add the event handler to submit targeting changes over ajax.
-            $('input.targeting-box', renderedContent).click(function() {
+            $('input.targeting-box', renderedContent).click(function () {
                 var targeting = $(this).attr('name');
                 var activation = $(this).is(':checked') ? 'On' : 'Off';
-                $('label[for="' + targeting +'"]', renderedContent).text(activation);
+                $('label[for="' + targeting + '"]', renderedContent).text(activation);
 
                 current_model.set({'active': $(this).is(':checked')});
                 current_model.save();

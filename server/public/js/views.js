@@ -113,7 +113,6 @@ var mopub = window.mopub || {};
 
                     // Render the stats breakdown for yesterday
                     $.each(metrics, function(iter, metric) {
-                        console.log('i was called');
                         var selector = '#stats-breakdown-' + metric + ' .yesterday .inner';
                         $(selector).html(this_view.collection.get_formatted_stat_for_day(metric,
                                          this_view.options.yesterday));

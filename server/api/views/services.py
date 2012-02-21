@@ -40,12 +40,12 @@ class AppService(RequestHandler):
         # belong to this user
         if app_key:
             app = db.get(app_key)
-            if app.account != self.account.key():
+            if app.account.key() != self.account.key():
                 raise Http404
 
         if adgroup_key:
             adgroup = db.get(adgroup_key)
-            if adgroup.account != self.account.key():
+            if adgroup.account.key() != self.account.key():
                 raise Http404
 
         # Formulate the date range
@@ -126,7 +126,7 @@ class AdUnitService(RequestHandler):
             # REFACTOR
             # ensure the owner of this adgroup is the request's
             # current user
-            if app.account != self.account.key():
+            if app.account.key() != self.account.key():
                 raise Http404
 
             adunits = AdUnitQueryManager.get_adunits(app=app)
@@ -174,7 +174,7 @@ class AdUnitService(RequestHandler):
             # REFACTOR
             # ensure the owner of this adgroup is the request's
             # current user
-            if adgroup.account != self.account.key():
+            if adgroup.account.key() != self.account.key():
                 raise Http404
 
             adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
@@ -223,7 +223,7 @@ class AdUnitService(RequestHandler):
         # REFACTOR
         # ensure the owner of this adgroup is the request's
         # current user
-        if adgroup.account != self.account.key():
+        if adgroup.account.key() != self.account.key():
             raise Http404
 
         if new_price_floor:
@@ -268,7 +268,7 @@ class AdGroupService(RequestHandler):
             # REFACTOR
             # ensure the owner of this adgroup is the request's
             # current user
-            if adgroup.account != self.account.key():
+            if adgroup.account.key() != self.account.key():
                 raise Http404
 
             # Get the stats for the adgroup

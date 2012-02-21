@@ -24,6 +24,7 @@ from common_templates.templatetags.filters import campaign_status
 
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
+from django.http import Http404
 
 import datetime
 import logging
@@ -34,6 +35,19 @@ class AppService(RequestHandler):
     API Service for delivering serialized App data
     """
     def get(self, app_key=None, adgroup_key=None):
+
+        # make sure app_key/adgroup_key are for apps/adgroups that
+        # belong to this user
+        if app_key:
+            app = db.get(app_key)
+            if app.account != self.account.key():
+                raise Http404
+
+        if adgroup_key:
+            adgroup = db.get(adgroup_key)
+            if adgroup.account != self.account.key():
+                raise Http404
+
         # Formulate the date range
         # REFACTOR: move this into RequestHandler
         start_date, end_date = get_start_and_end_dates(self.request)
@@ -41,7 +55,6 @@ class AppService(RequestHandler):
         # Where are we getting stats from?
         # Choices are 'mpx', 'direct', 'networks', or 'all'
         stats_endpoint = self.request.GET.get('endpoint', 'all')
-
 
         # Get the stats fetcher
         stats = get_stats_fetcher(self.account.key(), stats_endpoint)
@@ -109,6 +122,13 @@ class AdUnitService(RequestHandler):
         if app_key:
             # Get each adunit for the app and convert it to JSON
             app = AppQueryManager.get_app_by_key(app_key)
+
+            # REFACTOR
+            # ensure the owner of this adgroup is the request's
+            # current user
+            if app.account != self.account.key():
+                raise Http404
+
             adunits = AdUnitQueryManager.get_adunits(app=app)
             response = [adunit.toJSON() for adunit in adunits]
 
@@ -150,6 +170,13 @@ class AdUnitService(RequestHandler):
         # adgroup.
         elif adgroup_key:
             adgroup = AdGroupQueryManager.get(adgroup_key)
+
+            # REFACTOR
+            # ensure the owner of this adgroup is the request's
+            # current user
+            if adgroup.account != self.account.key():
+                raise Http404
+
             adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
             response = [adunit.toJSON() for adunit in adunits]
 
@@ -193,6 +220,12 @@ class AdUnitService(RequestHandler):
         account_key = self.account.key()
         adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
 
+        # REFACTOR
+        # ensure the owner of this adgroup is the request's
+        # current user
+        if adgroup.account != self.account.key():
+            raise Http404
+
         if new_price_floor:
             try:
                 adgroup.mktplace_price_floor = float(new_price_floor)
@@ -231,6 +264,12 @@ class AdGroupService(RequestHandler):
 
             # Get the adgroup
             adgroup = AdGroupQueryManager.get(adgroup_key)
+
+            # REFACTOR
+            # ensure the owner of this adgroup is the request's
+            # current user
+            if adgroup.account != self.account.key():
+                raise Http404
 
             # Get the stats for the adgroup
             stats_fetcher = StatsModelQueryManager(self.account,

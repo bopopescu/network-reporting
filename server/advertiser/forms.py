@@ -172,11 +172,11 @@ class CampaignForm(forms.ModelForm):
     def clean_start_datetime(self):
         start_datetime = self.cleaned_data.get('start_datetime', None)
         if start_datetime:
+            # if this is a new campaign, it must start in the future
+            if not self.instance and start_datetime.date() < datetime.now(tz=Pacific_tzinfo()).date():
+                raise forms.ValidationError("Start time must be in the future")
             # start_datetime is entered in Pacific Time
             start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
-            # if this is a new campaign, it must start in the future
-            if not self.instance and start_datetime < datetime.now():
-                raise forms.ValidationError("Start time must be in the future")
         return start_datetime
 
     def clean_end_datetime(self):

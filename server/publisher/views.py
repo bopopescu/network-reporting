@@ -72,9 +72,6 @@ class AppIndexHandler(RequestHandler):
     """
     def get(self):
 
-        # XXX: What is this?
-        report = self.request.POST.get('report')
-
         # Set start date if passed in, otherwise get most recent days
         if self.start_date:
             # REFACTOR -- replace with date_magic functions

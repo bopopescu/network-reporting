@@ -1,5 +1,3 @@
-import logging
-
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
@@ -49,13 +47,13 @@ from common.utils.helpers import to_uni, to_ascii
 from budget.models import Budget
 from budget.tzinfo import UTC, Pacific
 # from budget import budget_service
-#
-# A campaign.    Campaigns have budgetary and time based restrictions.
-#
+
+
 class Campaign(db.Model):
+    """ A campaign.    Campaigns have budgetary and time based restrictions. """
     name = db.StringProperty(required=True)
     description = db.TextProperty()
-    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network','backfill_promo', 'marketplace', 'backfill_marketplace'])
+    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network', 'backfill_promo', 'marketplace', 'backfill_marketplace'])
 
     # budget per day
     budget = db.FloatProperty()
@@ -65,8 +63,9 @@ class Campaign(db.Model):
     budget_type = db.StringProperty(choices=['daily', 'full_campaign'], default="daily")
 
     # Determines whether we smooth during a day
-    budget_strategy = db.StringProperty(choices=['evenly','allatonce'], default="allatonce")
+    budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'], default="allatonce")
 
+    # DEPRECATED
     # start and end dates
     start_date = db.DateProperty()
     end_date = db.DateProperty()
@@ -82,7 +81,7 @@ class Campaign(db.Model):
     account = db.ReferenceProperty(Account)
     t = db.DateTimeProperty(auto_now_add=True)
 
-    budget_obj = db.ReferenceProperty(Budget, collection_name = 'campaign')
+    budget_obj = db.ReferenceProperty(Budget, collection_name='campaign')
 
     blind = db.BooleanProperty(default=False)
 
@@ -111,11 +110,13 @@ class Campaign(db.Model):
         pass
 
     def owner(self):
-        return property(get_owner, set_owner)
+        return property(self.get_owner, self.set_owner)
 
     def delivery(self):
-        if self.stats: return self.stats.revenue / self.budget
-        else: return 1
+        if self.stats:
+            return self.stats.revenue / self.budget
+        else:
+            return 1
 
     def gtee(self):
         return self.campaign_type in ['gtee', 'gtee_high', 'gtee_low']
@@ -131,14 +132,14 @@ class Campaign(db.Model):
 
     def is_active_for_date(self, date):
         """ Start and end dates are inclusive """
-        if (self.start_date  <= date if self.start_date else True) and (date <= self.end_date if self.end_date else True):
+        if (self.start_date <= date if self.start_date else True) and (date <= self.end_date if self.end_date else True):
             return True
         else:
             return False
 
 
 class AdGroup(db.Model):
-    campaign = db.ReferenceProperty(Campaign,collection_name="adgroups")
+    campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     name = db.StringProperty()
 
@@ -149,11 +150,28 @@ class AdGroup(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
 
     # the priority level at which this ad group should be auctioned
-    network_type = db.StringProperty(choices=["dummy","adsense", "iAd", "admob","millennial","ejam","chartboost","appnexus","inmobi","mobfox","jumptap","brightroll","greystripe", "custom", "custom_native", "admob_native", "millennial_native"])
+    network_type = db.StringProperty(choices=["dummy",  # ?
+                                              "adsense",
+                                              "iAd",
+                                              "admob",  # deprecated, but may still be used by some accounts
+                                              "millennial",  # deprecated, but may still be used by some accounts
+                                              "ejam",
+                                              "chartboost",  # deprecated
+                                              "appnexus",  # deprecated
+                                              "inmobi",
+                                              "mobfox",
+                                              "jumptap",
+                                              "brightroll",
+                                              "greystripe",  # deprecated, but may still be used by some accounts
+                                              "custom",
+                                              "custom_native",
+                                              "admob_native",
+                                              "millennial_native"])
 
     # Note that bid has different meaning depending on the bidding strategy.
-    # if CPM: bid = cost per 1000 impressions
     # if CPC: bid = cost per 1 click
+    # if CPM: bid = cost per 1000 impressions
+    # if CPA: bid = cost per 1000 conversions
     bid = db.FloatProperty(default=0.05, required=False)
     bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
 
@@ -165,7 +183,7 @@ class AdGroup(db.Model):
     # percent of users to be targetted
     percent_users = db.FloatProperty(default=100.0)
     allocation_percentage = db.FloatProperty(default=100.0)
-    allocation_type = db.StringProperty(choices=["users","requests"])
+    allocation_type = db.StringProperty(choices=["users", "requests"])
 
     # frequency caps
     minute_frequency_cap = db.IntegerProperty(default=0)
@@ -191,27 +209,26 @@ class AdGroup(db.Model):
     # marketplace price floor
     mktplace_price_floor = db.FloatProperty(default=0.25, required=False)
 
-
     DEVICE_CHOICES = (
-        ('any','Any'),
-        ('iphone','iPhone'),
-        ('ipod','iPod Touch'),
-        ('ipad','iPad'),
-        ('android','Android'),
-        ('blackberry','Blackberry'),
-        ('windows7','Windows Phone 7'),
+        ('any', 'Any'),
+        ('iphone', 'iPhone'),
+        ('ipod', 'iPod Touch'),
+        ('ipad', 'iPad'),
+        ('android', 'Android'),
+        ('blackberry', 'Blackberry'),
+        ('windows7', 'Windows Phone 7'),
     )
     devices = db.StringListProperty(default=['any'])
 
     MIN_OS_CHOICES = (
-        ('any','Any'),
-        ('iphone__2_0','2.0+'),
-        ('iphone__2_1','2.1+'),
-        ('iphone__3_0','3.0+'),
-        ('iphone__3_1','3.1+'),
-        ('iphone__3_2','3.2+'),
-        ('iphone__4_0','4.0+'),
-        ('iphone__4_1','4.1+'),
+        ('any', 'Any'),
+        ('iphone__2_0', '2.0+'),
+        ('iphone__2_1', '2.1+'),
+        ('iphone__3_0', '3.0+'),
+        ('iphone__3_1', '3.1+'),
+        ('iphone__3_2', '3.2+'),
+        ('iphone__4_0', '4.0+'),
+        ('iphone__4_1', '4.1+'),
     )
     min_os = db.StringListProperty(default=['any'])
 
@@ -228,16 +245,16 @@ class AdGroup(db.Model):
     android_version_min = db.StringProperty(default=MIN_ANDROID_VERSION)
     android_version_max = db.StringProperty(default=MAX_ANDROID_VERSION)
 
-    target_other = db.BooleanProperty(default=True) # MobileWeb on blackberry etc.
+    target_other = db.BooleanProperty(default=True)  # MobileWeb on blackberry etc.
 
     USER_TYPES = (
-        ('any','Any'),
-        ('active_7','7 day active user'),
-        ('active_15','15 day active user'),
-        ('active_30','30 day active user'),
-        ('inactive_7','7 day active user'),
-        ('inactive_15','15 day active user'),
-        ('inactive_30','30 day inactive user'),
+        ('any', 'Any'),
+        ('active_7', '7 day active user'),
+        ('active_15', '15 day active user'),
+        ('active_30', '30 day active user'),
+        ('inactive_7', '7 day active user'),
+        ('inactive_15', '15 day active user'),
+        ('inactive_30', '30 day inactive user'),
     )
 
     active_user = db.StringListProperty(default=['any'])
@@ -284,7 +301,8 @@ class AdGroup(db.Model):
         elif self.network_type == 'millennial_native': c = MillennialNativeCreative(key_name=key_name, name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
         elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']: c = MarketplaceCreative(key_name=key_name, name='marketplace dummy', ad_type='html')
 
-        if c: c.ad_group = self
+        if c:
+            c.ad_group = self
         return c
 
     def __repr__(self):
@@ -317,7 +335,7 @@ class AdGroup(db.Model):
         self.campaign = value
 
     def owner(self, value):
-        return property(get_owner, set_owner)
+        return property(self.get_owner, self.set_owner)
 
     @property
     def owner_key(self):
@@ -363,7 +381,7 @@ class AdGroup(db.Model):
         if self.bid_strategy == 'cpc':
             return self.bid
         elif self.bid_strategy == 'cpm':
-            return self.bid/1000
+            return self.bid / 1000
 
     @property
     def running(self):
@@ -381,6 +399,10 @@ class AdGroup(db.Model):
     def created_date(self):
         return self.created.date()
 
+    @property
+    def campaign_type(self):
+        return self.campaign.campaign_type
+
 
 class Creative(polymodel.PolyModel):
     name = db.StringProperty(default='Creative')
@@ -389,7 +411,6 @@ class Creative(polymodel.PolyModel):
     landscape = db.BooleanProperty(default=False) # TODO: make this more flexible later
 
     ad_group = db.ReferenceProperty(AdGroup, collection_name="creatives")
-
 
     active = db.BooleanProperty(default=True)
     was_active = db.BooleanProperty(default=True)
@@ -529,6 +550,7 @@ class TextCreative(Creative):
     def __repr__(self):
         return "'%s'" % (self.headline,)
 
+
 class TextAndTileCreative(Creative):
     line1 = db.StringProperty()
     line2 = db.StringProperty()
@@ -543,6 +565,7 @@ class TextAndTileCreative(Creative):
     @property
     def Renderer(self):
         return TextAndTileRenderer
+
 
 class HtmlCreative(Creative):
     """ This creative has pure html that has been added by the user.
@@ -579,6 +602,7 @@ class ImageCreative(Creative):
     def Renderer(self):
         return ImageRenderer
 
+
 class MarketplaceCreative(HtmlCreative):
     """ If this is targetted to an adunit, lets the ad_auction know to
         run the marketplace battle. """
@@ -593,6 +617,7 @@ class CustomCreative(HtmlCreative):
     # If we don't want to add any properties to it, remove it
     network_name = "custom"
 
+
 class CustomNativeCreative(HtmlCreative):
     network_name = "custom_native"
     Renderer = CustomNativeRenderer
@@ -601,6 +626,7 @@ class CustomNativeCreative(HtmlCreative):
     @property
     def multi_format(self):
         return ('728x90', '320x50','300x250', 'full')
+
 
 class iAdCreative(Creative):
     network_name = "iAd"
@@ -611,6 +637,7 @@ class iAdCreative(Creative):
     def multi_format(self):
         return ('728x90', '320x50', 'full_tablet')
 
+
 class AdSenseCreative(Creative):
     network_name = "adsense"
 
@@ -620,11 +647,13 @@ class AdSenseCreative(Creative):
     def multi_format(self):
         return ('320x50', '300x250')
 
+
 class AdMobCreative(Creative):
     network_name = "admob"
 
 
     Renderer = AdMobRenderer
+
 
 class AdMobNativeCreative(AdMobCreative):
     network_name = "admob_native"
@@ -634,6 +663,7 @@ class AdMobNativeCreative(AdMobCreative):
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', 'full' ,)
+
 
 class MillennialCreative(Creative):
 
@@ -647,6 +677,7 @@ class MillennialCreative(Creative):
     def multi_format(self):
         return ('728x90', '320x50', '300x250',)
 
+
 class MillennialNativeCreative(MillennialCreative):
     network_name = "millennial_native"
 
@@ -657,6 +688,7 @@ class MillennialNativeCreative(MillennialCreative):
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', 'full' , 'full_tablet')
+
 
 class ChartBoostCreative(Creative):
 
@@ -670,12 +702,14 @@ class ChartBoostCreative(Creative):
     def multi_format(self):
         return ('320x50', 'full',)
 
+
 class EjamCreative(Creative):
     network_name = "ejam"
 
     Renderer = ChartBoostRenderer
 
     ServerSide = EjamServerSide
+
 
 class InMobiCreative(Creative):
 
@@ -688,6 +722,7 @@ class InMobiCreative(Creative):
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250', '468x60', '120x600',)
+
 
 class AppNexusCreative(Creative):
     network_name = "appnexus"
@@ -708,6 +743,7 @@ class BrightRollCreative(Creative):
     def multi_format(self):
         return ('full', 'full_tablet')
 
+
 class JumptapCreative(Creative):
     network_name = "jumptap"
 
@@ -718,6 +754,7 @@ class JumptapCreative(Creative):
     @property
     def multi_format(self):
         return ('728x90', '320x50', '300x250')
+
 
 class GreyStripeCreative(Creative):
     network_name = "greystripe"
@@ -730,6 +767,7 @@ class GreyStripeCreative(Creative):
     def multi_format(self):
         return ('320x320', '320x50', '300x250',)
 
+
 class MobFoxCreative(Creative):
     network_name = "mobfox"
     Renderer = MobFoxRenderer
@@ -739,9 +777,11 @@ class MobFoxCreative(Creative):
     @property
     def multi_format(self):
         return ('728x90', '320x50')
-        
+
+
 class NullCreative(Creative):
     pass
+
 
 class DummyServerSideFailureCreative(Creative):
     ServerSide = DummyServerSideFailure

@@ -1,0 +1,24 @@
+{% extends 'advertiser/base.html' %}
+
+{% block extraScripts %}
+{% comment %}Should be able to do {{ campaign_form.media }}{% endcomment %}
+<script src="/js/controllers/campaign_adgroup_form.js?v=5"></script>
+{% endblock extraScripts %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
+
+{% block pageTitle %}
+  <h1>
+    Edit Campaign
+    {% if adgroup.campaign.name %}
+      : {{ adgroup.campaign.name|default_if_none:"" }}
+    {% endif %}
+  </h1>
+{% endblock pageTitle %}
+
+{% block content %}
+    <form action="{% url advertiser_campaign_edit adgroup.key %}" id="campaign_and_adgroup" method="post">
+        {% include 'advertiser/forms/campaign_and_adgroup.html' %}
+    </form>
+{% endblock %}

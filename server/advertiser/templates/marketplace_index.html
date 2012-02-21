@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load filters %}
-
+{% load elements %}
 {% block pageTitle %}
   <h1>Marketplace</h1>
 {% endblock pageTitle %}
 
 {% block navLinks %}
-  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url app_index %}">Dashboard</a></li>
   <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
   <li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li><a href="{% url network_index %}">Networks</a></li>
@@ -43,9 +43,9 @@
       <tbody>
         <tr style="border:none;">
           {% if totals %}
-            <td> {{ totals.revenue|default_if_none:"$0"|withsep }} </td>
-            <td> {{ totals.impressions|default_if_none:"0"|withsep }} </td>
-            <td> {{ totals.ecpm|default_if_none:"$0" }} </td>
+            <td> {{ totals.revenue|currency|default_if_none:"$0.00"|withsep }} </td>
+            <td> {{ totals.impressions|default_if_none:"0" }} </td>
+            <td> {{ totals.ecpm|currency|default_if_none:"$0.00" }} </td>
           {% else %}
             <td> $0.00 </td>
             <td> 0 </td>
@@ -65,56 +65,39 @@
   {# Help Content #}
   <div id="price-floor-helpContent" class="hidden">
     <h3>What is the Price Floor?</h3>
-    <p>A price floor is the minimum CPM price that you’re willing to be paid for an impression from the Marketplace. For example, if you receive offers for ads that have a $0.50 CPM, but your price floor is $0.60 then those ads will not show.</p>
-    <p>The MoPub Marketplace let's you set different price floors on each ad unit.  You might want your interstitial ad units to have a higher price floor than your banner ad units. </p>
-    <p> In general, we recommend setting your price floor as low as you can.  MoPub will always make sure never to show an ad from the Marketplace that pays you less than an available direct or network impression. </p>
+    <p>
+      A price floor is the minimum CPM price that you’re willing
+      to be paid for an impression from the Marketplace. For example,
+      if you receive offers for ads that have a $0.50 CPM, but your
+      price floor is $0.60 then those ads will not show.
+    </p>
+    <p>
+      The MoPub Marketplace let's you set different price floors on
+      each ad unit.  You might want your interstitial ad units to
+      have a higher price floor than your banner ad units.
+    </p>
+    <p>
+      In general, we recommend setting your price floor as low as you
+      can.  MoPub will always make sure never to show an ad from the
+      Marketplace that pays you less than an available direct or network
+      impression.
+    </p>
   </div>
 
   <div class="active tab-section" id="performance">
     <section class="offset nomargin" id="dashboard-stats">
-      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <h3 class="stats-chart-title">
+        Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+      </h3>
       <div class="stats">
-        <div class="stats-breakdown">
-          <table>
-            <tbody>
-              <tr class="active" id="stats-breakdown-revenue">
-                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.revenue|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.revenue|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner">{{totals.revenue|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-              </tr>
-              <tr id="stats-breakdown-impressions">
-                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.impressions|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.impressions|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner">{{totals.impressions|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-              </tr>
-              <tr id="stats-breakdown-ecpm">
-                <td class="stats-breakdown-value today"><span class="inner">{{today_stats.ecpm|withsep}}</span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday_stats.ecpm|withsep}}</span></td>
-                <td class="stats-breakdown-value all"><span class="inner">{{totals.ecpm|withsep}}</span></td>
-                <th class="stats-breakdown-name"><span class="inner">eCPM</span></th>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="stats-breakdown-buttons">
-          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-            <label for="stats-breakdown-dateOptions-option-0">Today</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-            <label for="stats-breakdown-dateOptions-option-2">All</label>
-          </span>
-        </div>
+        {% stats_breakdown stats %}
         <div class="chart stats-chart" id="dashboard-stats-chart">
         </div>
       </div>
       <div class="clear"></div>
     </section>
 
-    <section id="dashboard-apps">
+    <section id="marketplace-apps">
     <div class="appData-columnHeaders">
       <table class="dataTable" id="dashboard-apps-columnHeaders" width="100%">
         <thead>
@@ -124,23 +107,30 @@
             <th class="dataTable-data numeric">Revenue</th>
             <th class="dataTable-data numeric">Impressions</th>
             <th class="dataTable-data numeric">eCPM</th>
-            <th class="dataTable-data numeric" style="width:100px;"><a href="#" id="price-floor-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> Price Floor CPM</th>
+            <th class="dataTable-data numeric" style="width:100px;">
+              <a href="#" id="price-floor-helpLink" class="whatsthis">
+                <div class="whatsthis-icon"></div>
+              </a>
+              Price Floor CPM
+            </th>
             <th class="dataTable-data numeric">Enabled</th>
           </tr>
         </thead>
       </table>
     </div>
-    {% for a in apps %}
-    <div class="{% cycle 'appData' 'appData appData-alt' %}" id="appData-{{a.key}}">
-      <table class="dataTable appData-main" id="dashboard-app-{{forloop.counter0}}-main">
+    {% for app in apps %}
+    <div class="{% cycle 'appData' 'appData appData-alt' %}" id="appData-{{ app.key }}">
+      <table class="dataTable appData-main" id="dashboard-app-{{ forloop.counter0 }}-main">
         <tbody>
-          <tr class="app-row" id="app-{{a.key}}" style="border:none;">
-            <td class="appData-icon"><img src="{{ a.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" /></td>
+          <tr class="app-row" id="app-{{ app.key }}" style="border:none;">
+            <td class="appData-icon">
+              <img src="{{ app.icon_url }}" alt="Icon" width="45" height="45" class="app-icon" />
+            </td>
             <td class="dataTable-name" style="width:475px;">
               <span class="inner" style="width:475px;">
-                  <a href="{% url publisher_app_show app_key=a.key %}">{{a.name}}</a>
-                  <span class="muted unbold">({% ifequal a.app_type "iphone" %}iOS{% endifequal %}{% ifequal a.app_type "android" %}Android{% endifequal %}{% ifequal a.app_type "mweb" %}Mobile Web{% endifequal %})</span>
-                  <img id="{{a.key}}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+                  <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }}</a>
+                  <span class="muted unbold">({{ app.app_type_text }})</span>
+                  <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
               </span>
             </td>
             <td class="dataTable-data numeric revenue">--</td>
@@ -151,18 +141,22 @@
           </tr>
         </tbody>
       </table>
-      <div class="appData-details" id="dashboard-app-{{forloop.counter0}}-details">
+      <div class="appData-details" id="dashboard-app-{{ forloop.counter0 }}-details">
         <div class="appData-details-inner show">
           <table class="dataTable">
             <tbody>
-              {% for au in a.adunits %}
-              <tr class="adunit-row incomplete for-app-{{a.key}}" id="adunit-{{au.key}}" style="border:none;">
-                <th class="dataTable-name" style="width:475px;"><span class="inner" style="width:475px;"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a></span></th>
+              {% for adunit in app.adunits %}
+              <tr class="adunit-row incomplete for-app-{{ app.key }}" id="adunit-{{adunit.key}}" style="border:none;">
+                <th class="dataTable-name" style="width:475px;">
+                  <span class="inner" style="width:475px;">
+                    <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
+                  </span>
+                </th>
                 <td class="dataTable-data numeric revenue" style="border:none;">--</td>
                 <td class="dataTable-data numeric impressions" style="border:none;">--</td>
                 <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
                 <td class="dataTable-data numeric price_floor" style="border:none;width:100px">
-                  <input id="{{au.key}}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
+                  <input id="{{ adunit.key }}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
                 </td>
                 <td class="dataTable-data numeric targeting" style="border:none;"></td>
               </tr>
@@ -242,7 +236,7 @@
       <p>
         MoPub can filter ads so that only appropriate ads will be displayed to for your audience.
         Select the filtering level for your ads below.
-        <a href="#"> Learn More </a>
+        <a href="http://help.mopub.com/customer/portal/articles/324027-mopub-marketplace-settings"> Learn More </a>
       </p>
 
       <ul id="content_filter_levels">
@@ -307,7 +301,9 @@
   <script type="text/html" id="adunit-template">
     {% include "partials/adunit.html" %}
   </script>
-  <script type="text/javascript" src="/js/toast.js?v=1"></script>
+  <script type="text/javascript" src="/js/models.js?v=3"></script>
+  <script type="text/javascript" src="/js/views.js?v=3"></script>
+  <script type="text/javascript" src="/js/controllers/marketplace.js?v=1017"></script>
   <script type="text/javascript">
     var mopub = mopub || {};
     $(document).ready(function() {
@@ -329,10 +325,8 @@
       MarketplaceController.initializeIndex(bootstrapping_data);
     });
   </script>
-  <script type="text/javascript" src="/js/mopub-marketplace.js?v=120"></script>
 {% endblock extraScripts %}
 
 {% block extraCSS %}
 <link rel="stylesheet" href="/css/dt_jui.css?v=8"></link>
 {% endblock extraCSS %}
-

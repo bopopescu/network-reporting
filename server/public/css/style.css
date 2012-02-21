@@ -461,7 +461,11 @@ span.dropdown-icon {
     margin: -6px 0 0 0;
     font-size: 24px;
     font-weight: 300;
-    color: #444444; }
+    color: #444444;
+    width: 340px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; }
   #titlebar .buttonset {
     display: inline-block; }
   #titlebar .ui-button {
@@ -1413,6 +1417,144 @@ input.price_floor_change {
     color: black; }
 
 /*
+ * Campaign and AdGroup Form
+ *
+ * TODO: consolidate all the form styles
+ */
+form#campaign_and_adgroup fieldset {
+  padding: 0 25px 25px 25px; }
+form#campaign_and_adgroup input[type="text"], form#campaign_and_adgroup textarea {
+  padding: 1px 2px 2px 3px;
+  border: 1px solid #eaeaea;
+  border-top-color: #b9b9b9;
+  background: #fafafa;
+  font-size: 14px;
+  line-height: 16px;
+  width: 290px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px; }
+form#campaign_and_adgroup input[type="text"].date {
+  width: 85px; }
+form#campaign_and_adgroup input[type="text"].time {
+  width: 60px; }
+form#campaign_and_adgroup input[type="text"].number, form#campaign_and_adgroup input[type="text"].float {
+  width: 70px; }
+form#campaign_and_adgroup input.error, form#campaign_and_adgroup textarea.error {
+  background: #fff2f2;
+  border-color: #e6a1a1;
+  border-top-color: #d98d8d;
+  color: #222; }
+form#campaign_and_adgroup span.radios ul {
+  display: inline-block;
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  form#campaign_and_adgroup span.radios ul > li {
+    display: inline-block;
+    margin: 0;
+    padding: 0; }
+    form#campaign_and_adgroup span.radios ul > li > label {
+      margin: 0 15px 0 0; }
+form#campaign_and_adgroup ul.form_fields {
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  form#campaign_and_adgroup ul.form_fields > li {
+    margin: 12px 0 0 0;
+    padding: 0; }
+    form#campaign_and_adgroup ul.form_fields > li > label {
+      display: inline-block;
+      margin: 0 12px 0 0;
+      padding: 0;
+      text-align: right;
+      vertical-align: top;
+      width: 175px;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 16px; }
+    form#campaign_and_adgroup ul.form_fields > li > div {
+      display: inline-block;
+      vertical-align: top; }
+form#campaign_and_adgroup span#apps_label {
+  display: inline-block;
+  margin: 0 12px 0 0;
+  padding: 0;
+  text-align: right;
+  vertical-align: top;
+  width: 175px; }
+form#campaign_and_adgroup ul#apps {
+  display: inline-block;
+  vertical-align: top;
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  form#campaign_and_adgroup ul#apps > li {
+    margin: 0 0 10px 0;
+    padding: 0; }
+    form#campaign_and_adgroup ul#apps > li > img {
+      height: 45px;
+      width: 45px;
+      margin-right: 11px;
+      vertical-align: top;
+      -moz-border-radius: 6px;
+      -webkit-border-radius: 6px;
+      border-radius: 6px; }
+    form#campaign_and_adgroup ul#apps > li > div {
+      display: inline-block;
+      vertical-align: top; }
+      form#campaign_and_adgroup ul#apps > li > div label {
+        font-size: 14px;
+        display: inline-block;
+        height: 28px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis; }
+      form#campaign_and_adgroup ul#apps > li > div > label {
+        font-weight: 600;
+        vertical-align: top;
+        width: 200px; }
+      form#campaign_and_adgroup ul#apps > li > div input[type="text"] {
+        width: 200px; }
+      form#campaign_and_adgroup ul#apps > li > div span {
+        vertical-align: top; }
+      form#campaign_and_adgroup ul#apps > li > div ul {
+        list-style-type: none;
+        overflow: auto;
+        max-height: 200px;
+        margin: 0;
+        padding: 0px 20px; }
+        form#campaign_and_adgroup ul#apps > li > div ul li {
+          height: 30px;
+          width: 400px;
+          margin: 0; }
+          form#campaign_and_adgroup ul#apps > li > div ul li label {
+            width: 180px; }
+form#campaign_and_adgroup ul#device_targeting {
+  list-style-type: none;
+  margin: 5px 0 0 50px;
+  padding: 0; }
+  form#campaign_and_adgroup ul#device_targeting li {
+    margin: 0;
+    padding: 0; }
+form#campaign_and_adgroup .device_type {
+  display: inline-block;
+  width: 150px; }
+form#campaign_and_adgroup ul.device_type {
+  list-style-type: none;
+  margin: 0;
+  padding: 0; }
+  form#campaign_and_adgroup ul.device_type li {
+    display: inline-block;
+    margin: 0;
+    padding: 0; }
+form#campaign_and_adgroup #toggle_advanced {
+  margin: 25px; }
+form#campaign_and_adgroup input.token-input-field {
+  border: 0;
+  width: 100px; }
+
+/*
  * ## Colors
  */
 /* tinges -- off white colors */
@@ -1488,6 +1630,72 @@ a.disabled {
 /*
  * Corner rounding
  */
+/* iconTable
+ *
+ * This is the table class for tables that have "main" rows
+ * with an icon in the left-most column and "sub" rows below that.
+ * Each group of rows should be wrapped in <tbody> tags to alternate colors
+ * and facilitate sorting.
+ */
+.inventory_table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  vertical-align: top;
+  font-size: 13px;
+  font-weight: normal; }
+  .inventory_table thead th, .inventory_table thead td {
+    padding: 10px 10px 8px 0;
+    font-size: 10px;
+    font-weight: 300;
+    text-transform: uppercase;
+    color: #555;
+    vertical-align: bottom; }
+    .inventory_table thead th.title, .inventory_table thead td.title {
+      font-size: 15px;
+      font-weight: 600;
+      text-transform: none; }
+  .inventory_table tbody.alt, .inventory_table tbody tr.alt {
+    background: #F7F7F7; }
+  .inventory_table tbody tr.main td {
+    font-weight: 600;
+    padding: 10px 10px 4px 0; }
+    .inventory_table tbody tr.main td.name {
+      font-size: 14px; }
+  .inventory_table tbody tr.sub td {
+    padding: 4px 10px 4px 0; }
+    .inventory_table tbody tr.sub td.name, .inventory_table tbody tr.sub td.stat {
+      border-top: 1px solid #EEE; }
+  .inventory_table tbody tr.thick td {
+    padding: 8px 10px 7px 0; }
+  .inventory_table td.stat, .inventory_table th.stat {
+    text-align: right;
+    width: 65px; }
+  .inventory_table td.icon, .inventory_table th.icon {
+    padding: 0 11px 0 10px;
+    width: 45px; }
+    .inventory_table td.icon > div, .inventory_table th.icon > div {
+      position: relative; }
+      .inventory_table td.icon > div img, .inventory_table th.icon > div img {
+        position: absolute;
+        top: 0px;
+        left: 10px;
+        -webkit-border-radius: 6px;
+        -moz-border-radius: 6px;
+        border-radius: 6px; }
+  .inventory_table td.controls, .inventory_table th.controls {
+    padding-left: 5px !important;
+    padding-right: 11px !important;
+    width: 39px !important; }
+  .inventory_table td.spacer, .inventory_table th.spacer {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 10px !important; }
+  .inventory_table tbody tr.sub:last-child td {
+    padding-bottom: 24px; }
+  .inventory_table tbody tr:only-child td {
+    padding-bottom: 37px; }
+
 /* Data table */
 .dataTable thead th {
   font-size: 10px;
@@ -1527,25 +1735,37 @@ table.dataTable {
   color: #53a600; }
 
 table.simpletable {
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
   width: 100%;
   margin-bottom: 10px;
   padding: 0;
   border-collapse: separate;
-  *border-collapse: collapse; }
+  *border-collapse: collapse;
+  border: 1px solid #ddd; }
   table.simpletable th, table.simpletable td {
     padding: 10px 10px 9px;
     text-align: left; }
   table.simpletable th {
+    padding-top: 9px;
     vertical-align: middle;
+    border-bottom: 1px solid #ddd;
+    font-size: 16px;
     font-size: 10px;
     font-weight: 300;
     text-transform: uppercase;
     color: #555;
+    vertical-align: bottom;
     padding: 0 0 8px 0; }
   table.simpletable td {
     vertical-align: top; }
     table.simpletable td.align_right {
       text-align: right; }
+  table.simpletable th + th, table.simpletable td + td {
+    border-left: 1px solid #ddd; }
+  table.simpletable tr + tr td {
+    border-top: 1px solid #ddd; }
   table.simpletable tbody tr:first-child td:first-child {
     -webkit-border-radius: 4px 0 0 0;
     -moz-border-radius: 4px 0 0 0;
@@ -1581,102 +1801,6 @@ table.simpletable {
 .zebra-striped tbody tr:hover td {
   background-color: #EBF2F7; }
 
-/* table { */
-/*     .header { */
-/*         cursor: pointer; */
-/*         &:after { */
-/*             content: ""; */
-/*             float: right; */
-/*             margin-top: 7px; */
-/*             border-width: 0 4px 4px; */
-/*             border-style: solid; */
-/*             border-color: #000 transparent; */
-/*             visibility: hidden; */
-/*         } */
-/*     } */
-/*     .headerSortUp, */
-/*     .headerSortDown { */
-/*         background-color: rgba(141,192,219,.25); */
-/*         text-shadow: 0 1px 1px rgba(255,255,255,.75); */
-/*     } */
-/*     .header:hover { */
-/*         &:after { */
-/*             visibility:visible; */
-/*         } */
-/*     } */
-/*     // Style the descending (alphabetical) column header */
-/*     .headerSortDown, */
-/*     .headerSortDown:hover { */
-/*         &:after { */
-/*             visibility:visible; */
-/*             @include opacity(60); */
-/*         } */
-/*     } */
-/*     .headerSortUp { */
-/*         &:after { */
-/*             border-bottom: none; */
-/*             border-left: 4px solid transparent; */
-/*             border-right: 4px solid transparent; */
-/*             border-top: 4px solid #000; */
-/*             visibility:visible; */
-/*             @include box-shadow(none); //cant add boxshadow to downward facing arrow :( */
-/*                 @include opacity(60); */
-/*             } */
-/*         } */
-/*     .blue { */
-/*         color: $blue; */
-/*         border-bottom-color: $blue; */
-/*     } */
-/*     .headerSortUp.blue, */
-/*     .headerSortDown.blue { */
-/*         background-color: lighten($blue, 40%); */
-/*     } */
-/*     // Green Table Headings */
-/*     .green { */
-/*         color: $green; */
-/*         border-bottom-color: $green; */
-/*     } */
-/*     .headerSortUp.green, */
-/*     .headerSortDown.green { */
-/*         background-color: lighten($green, 40%); */
-/*     } */
-/*     // Red Table Headings */
-/*     .red { */
-/*         color: $red; */
-/*         border-bottom-color: $red; */
-/*     } */
-/*     .headerSortUp.red, */
-/*     .headerSortDown.red { */
-/*         background-color: lighten($red, 50%); */
-/*     } */
-/*     // Yellow Table Headings */
-/*     .yellow { */
-/*         color: $yellow; */
-/*         border-bottom-color: $yellow; */
-/*     } */
-/*     .headerSortUp.yellow, */
-/*     .headerSortDown.yellow { */
-/*         background-color: lighten($yellow, 40%); */
-/*     } */
-/*     // Orange Table Headings */
-/*     .orange { */
-/*         color: $orange; */
-/*         border-bottom-color: $orange; */
-/*     } */
-/*     .headerSortUp.orange, */
-/*     .headerSortDown.orange { */
-/*         background-color: lighten($orange, 40%); */
-/*     } */
-/*     // Purple Table Headings */
-/*     .purple { */
-/*         color: $purple; */
-/*         border-bottom-color: $purple; */
-/*     } */
-/*     .headerSortUp.purple, */
-/*     .headerSortDown.purple { */
-/*         background-color: lighten($purple, 40%); */
-/*     } */
-/* } */
 .dataTables_length {
   float: left; }
 
@@ -2268,7 +2392,7 @@ a.disabled {
   padding: 0;
   width: 100px;
   height: 32px;
-  background: #eeeeee url(../images/onoff.png) no-repeat; }
+  background: #eeeeee url(../images/greenonoff.png) no-repeat; }
   .lightswitch:hover {
     cursor: pointer; }
   .lightswitch .switch {
@@ -2701,10 +2825,10 @@ a.linkIcon .ui-icon-triangle-1-w {
 .stats-chart {
   height: 185px; }
 
-#dashboard-apps, #dashboard-campaign {
+#marketplace-apps, #dashboard-apps, #dashboard-campaign {
   margin: 30px 0 0 0; }
 
-#dashboard-apps h2 {
+#marketplace-apps h2, #dashboard-apps h2 {
   font-size: 20px;
   margin: 0; }
 
@@ -2867,82 +2991,72 @@ a.linkIcon .ui-icon-triangle-1-w {
 .appData-columnHeaders {
   padding: 10px 10px 0 10px; }
 
-.dataTable .appData-icon {
+.dataTable .appData-icon, .inventory_table .appData-icon {
   padding-right: 11px;
   width: 45px; }
-
-.dataTable .networkData-icon {
+.dataTable .networkData-icon, .inventory_table .networkData-icon {
   padding-right: 11px;
   width: 75px; }
-
-.dataTable .appData-icon a img,
-.dataTable .campaignData-icon a img,
-#appForm-icon img,
-.dataTable .reportData-icon a img {
+.dataTable .appData-icon a img, .inventory_table .appData-icon a img {
   -webkit-border-radius: 6px;
-  -moz-border-radius: 6px; }
-
-.dataTable .appData-icon-none {
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
+.dataTable .reportData-icon a img, .inventory_table .reportData-icon a img {
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
+.dataTable .appData-icon-none, .inventory_table .appData-icon-none {
   margin-right: 11px;
   width: 15px; }
-
-.dataTable .appData-id {
-  position: absolute;
+.dataTable .appData-id, .inventory_table .appData-id {
+  position: relative;
   top: 0;
-  right: 0; }
+  left: 40px; }
 
 .appData-main th, .appData-main td {
   padding-top: 0;
   font-size: 13px;
   font-weight: 600; }
-
-th.numeric, td.numeric {
-  text-align: right; }
-
+  .appData-main th.smaller, .appData-main td.smaller {
+    font-size: 13px;
+    font-weight: normal; }
 .appData-main .dataTable-name {
   padding-top: 0;
   font-size: 14px;
   font-weight: 600; }
 
-.appData-main th .smaller, .appData-main td .smaller {
-  font-size: 13px;
-  font-weight: normal; }
+th.numeric, td.numeric {
+  text-align: right; }
 
 .appData-details {
   margin: -29px 0 0 56px; }
-
-.appData-details .dataTable {
-  margin: 0 0 7px 0;
-  background: url(../images/layout/hr-dots.png) repeat-x bottom left; }
-
-.appData-details .dataTable th,
-.appData-details .dataTable td {
-  padding-top: 4px;
-  padding-bottom: 4px;
-  font-size: 13px;
-  font-weight: normal;
-  background: url(../images/layout/hr-dots.png) repeat-x top left; }
-
-.appData-details .dataTable th.special {
-  font-size: 10px;
-  font-weight: 300;
-  background: none; }
-
-.appData-details .dataTable th.big {
-  font-size: 15px;
-  font-weight: 600;
-  text-transform: none;
-  background: none; }
-
-.appData-details.noneg {
-  margin: 0; }
+  .appData-details .dataTable {
+    margin: 0 0 7px 0;
+    background: url(../images/layout/hr-dots.png) repeat-x bottom left; }
+    .appData-details .dataTable th, .appData-details .dataTable td {
+      padding-top: 4px;
+      padding-bottom: 4px;
+      font-size: 13px;
+      font-weight: normal;
+      background: url(../images/layout/hr-dots.png) repeat-x top left; }
+      .appData-details .dataTable th.special, .appData-details .dataTable td.special {
+        font-size: 10px;
+        font-weight: 300;
+        background: none; }
+      .appData-details .dataTable th.big, .appData-details .dataTable td.big {
+        font-size: 15px;
+        font-weight: 600;
+        text-transform: none;
+        background: none; }
+  .appData-details.noneg {
+    margin: 0; }
 
 /* Campaigns */
 .campaignData, .reportData {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7; }
 
-.campaignData-alt, .reportData-alt {
+.campaignData:nth-child(even), .campaignData-alt, .reportData-alt {
   background: #fff; }
 
 .creativeData {

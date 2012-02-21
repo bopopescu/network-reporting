@@ -264,7 +264,7 @@ def export_writer(file_type, file_name, row_titles, row_data):
     response['Content-disposition'] = 'attachment; filename="%s"' % file_name
     row_writer(row_titles)
     for row in row_data:
-        row_writer(row)
+        row_writer([d.encode("utf8") if type(d) is unicode else d for d in row])
     if file_type == 'xls':
         writer(response)
     return response

@@ -453,4 +453,7 @@ form#campaign_and_adgroup {
         border: 0;
         width: 100px;
     }
+    input.token-input-field.focused {
+        background-color: white;
+    }
 }

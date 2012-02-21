@@ -233,7 +233,17 @@ var mopub = mopub || {};
      * Makes the Creatives Performance tab's datatable
      */
     function makeCreativePerformanceTable (pub_id, blocklist, start_date, end_date) {
-        var creative_data_url = window.location.origin
+
+        var origin;
+        if (!window.location.origin) {
+            origin = windowlocation.protocol
+                + "//" + window.location.host + "/";
+            window.location.origin = origin;
+        } else {
+            origin = window.location.origin;
+        }
+
+        var creative_data_url = origin
             + "/campaigns/marketplace/creatives/";
         var table = $("#report-table").dataTable({
             bProcessing: true,

@@ -1,20 +1,22 @@
-import copy
-import datetime
 import os
 import sys
-import unittest
 
+sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
+
+
+import copy
+import datetime
+import unittest
 from google.appengine.api import memcache
 from google.appengine.ext import testbed
 
-sys.path.append(os.environ['PWD'])
 
 from advertiser.models import Campaign
 from advertiser.forms import (CampaignForm, AdGroupForm, BaseCreativeForm,
                               TextCreativeForm, TextAndTileCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
 from budget.tzinfo import UTC
-import common.utils.test.setup
 from common.utils.timezones import Pacific_tzinfo
 
 

@@ -718,8 +718,7 @@ class AdUnitShowHandler(RequestHandler):
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
             if ag.campaign.campaign_type in ['network']:
-                if ag.cpc:
-                    ag.calculated_ecpm = calculate_ecpm(ag)
+                ag.calculated_ecpm = calculate_ecpm(ag)
 
 
         # to allow the adunit to be edited
@@ -1231,10 +1230,11 @@ def create_iad_mapper(account, app):
                                           app=app)
 
 def calculate_ecpm(adgroup):
-    try:
-        return adgroup.stats.click_count * \
-               adgroup.cpc * \
-               1000 / adgroup.stats.impression_count
-    except Exception, error:
-        logging.error(error)
-        return adgroup.bid
+    if adgroup.cpc:
+        try:
+            return adgroup.stats.click_count * \
+                   adgroup.cpc * \
+                   1000 / adgroup.stats.impression_count
+        except Exception, error:
+            logging.error(error)
+    return adgroup.bid

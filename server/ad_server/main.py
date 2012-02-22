@@ -231,7 +231,8 @@ def main():
                                                   ('/m/memshow', memcache_mangler.ShowHandler),
                                                   ('/m/purchase', PurchaseHandler),
                                                   ('/m/purchase_txn', PurchaseHandlerTxn),
-                                                  ('/m/req',AdRequestHandler),
+                                                  ('/m/req', AdRequestHandler),
+                                                  ('/_ah/warmup', adhandler.AdHandler),
                                                   ('/m/budget/advance/', budget_handlers.BudgetAdvanceHandler),
                                                   ('/m/budget/advance_worker/', budget_handlers.BudgetAdvanceWorkerHandler)],
                                                   debug=DEBUG)

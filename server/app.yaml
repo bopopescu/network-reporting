@@ -77,6 +77,9 @@ handlers:
 - url: /m/.*
   script: ad_server/main.py
 
+- url: /_ah/warmup
+  script: ad_server/main.py
+
 - url: /_ah/queue/.*
   script: stats/views.py
   login: admin

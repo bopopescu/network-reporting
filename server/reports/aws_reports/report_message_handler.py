@@ -290,19 +290,24 @@ class ReportMessageHandler(MessageHandler):
     def get_message_parse_pipe(self, message):
         return self.message_parse_pipe[message]
 
-    def listen_to_parse_pipe(self, message):
+    def listen_to_parse_pipe(self, message, step, i):
         pipe_conn = self.get_message_parse_pipe(message)
         # There is data
         while pipe_conn.poll():
             msg_type = pipe_conn.recv()
             data = pipe_conn.recv()
-            self.handle_pipe_message(message, msg_type, data)
+            self.handle_pipe_message(message, msg_type, data, i)
 
 
-    def handle_pipe_message(self, message, msg_type, data):
+    def handle_pipe_message(self, message, msg_type, data, i):
         if msg_type == STEP_STATUS_CHANGE:
             step, state = data
-            self.set_completed(message, step, state)
+            # If the state is "True" and we're completed, then
+            # do the default completion handling
+            if state in (True, 'True'):
+                self.mark_completed(message, step, i)
+            else:
+                self.set_completed(message, step, state)
         elif msg_type == MSG_DATA:
             self.message_data[message] = data
 
@@ -420,6 +425,7 @@ class ReportMessageHandler(MessageHandler):
             rep = self.get_message_report(message)
             rep.status = fail_text 
             rep.put()
+            rep.notify_failure()
         except Exception:
             log("Report notify failed", level = 'exception')
             return
@@ -434,7 +440,7 @@ class ReportMessageHandler(MessageHandler):
 
     def kill_waiting_jobflows(self):
         """ For the jobflows in the creation map, kill those that have been idle for just nearly an hour """
-        jobflows = self.get_jobflow_statuses(self.jobid_creations.keys())
+        jobflows = self.get_jobflow_statuses(self.existing_jobflows)
         if jobflows is None:
             return
         for jobflow in jobflows:
@@ -445,6 +451,10 @@ class ReportMessageHandler(MessageHandler):
             if jobflow.state == u'WAITING' and minutes % 60 >= 50:
                 self.emr_conn.terminate_jobflow(jobid)
                 del(self.jobid_creations[str(jobid)])
+    
+    @property
+    def existing_jobflows(self):
+        return self.jobid_creations.keys()
 
 
     def handle_messages(self, force_no_data=False, force_submit_error=False, force_delete_error=False):
@@ -526,7 +536,7 @@ class ReportMessageHandler(MessageHandler):
                 time.sleep(5 + (2 * retry))
         return None
 
-    def handle_working_jobs(self, jobflows = None, force_failure = False, fail_step=None):
+    def handle_working_jobs(self, jobflows = None, force_failure = False, fail_step=None, fail_msg=None):
         """
             For all jobs that have messages being handled, see if they're done.  If they are, 
             process them
@@ -539,6 +549,7 @@ class ReportMessageHandler(MessageHandler):
         if not self.testing:
             force_failure = False
             fail_step = None
+            fail_msg = None
             jobflows = self.get_jobflow_statuses(self.working_jobids)
 
         if jobflows is None:
@@ -547,10 +558,29 @@ class ReportMessageHandler(MessageHandler):
         # but it's conceivable that we have two
         for jobflow in jobflows:
             log("Handling: %s" % jobflow.jobflowid)
+            self.handle_jobflow(jobflow, 
+                                force_failure = force_failure, 
+                                fail_step=fail_step,
+                                fail_msg=fail_msg)
+    
+    def handle_jobflow(self, jobflow, force_failure = False, fail_step=None, fail_msg=None):
+
+        jobid = jobflow.jobflowid
+        if not self.jobid_message_map.has_key(jobid):
+            return
+        messages = self.jobid_message_map[jobid]
+        log("Messages for this jobid: %s" % messages)
+        completed_steps = [step.name for step in jobflow.steps if step.state == u'COMPLETED']
+        failed_steps = [step.name for step in jobflow.steps if step.state == u'FAILED']
+        finished_messages = [msg for msg in messages if msg.step_name in completed_steps]
+        failed_messages = [msg for msg in messages if msg.step_name in failed_steps]
+
+        # Finished messages is a list of messages that correspond to the FINISHED
+        # EMR jobs for this jobflow
+        for message in finished_messages:
             try:
-                self.handle_jobflow(jobflow, 
-                                    force_failure = force_failure, 
-                                    fail_step=fail_step)
+                self.on_success(message, jobid, force_failure, fail_step, fail_msg)
+
             except BlobUploadError, e:
                 message = e.report_message
                 log("Blob upload error for %s" % message)
@@ -599,21 +629,6 @@ class ReportMessageHandler(MessageHandler):
                 if self.step_timedout(message, NOTIFY):
                     log("TIMED OUT ON NOTIFY")
                     self.mark_failed(message, jobflowid)
-    
-    def handle_jobflow(self, jobflow, force_failure = False, fail_step=None):
-
-        jobid = jobflow.jobflowid
-        if not self.jobid_message_map.has_key(jobid):
-            return
-        messages = self.jobid_message_map[jobid]
-        log("Messages for this jobid: %s" % messages)
-        completed_steps = [step.name for step in jobflow.steps if step.state == u'COMPLETED']
-        failed_steps = [step.name for step in jobflow.steps if step.state == u'FAILED']
-        finished_messages = [msg for msg in messages if msg.step_name in completed_steps]
-        failed_messages = [msg for msg in messages if msg.step_name in failed_steps]
-
-        for message in finished_messages:
-            self.on_success(message, jobid, force_failure, fail_step)
 
         for message in failed_messages:
             self.on_failure(message, jobid)
@@ -636,7 +651,7 @@ class ReportMessageHandler(MessageHandler):
         self.notify_failure(message, 'Failed')
         self.jobid_message_map[jobid] = [msg for msg in self.jobid_message_map[jobid] if msg != message]
 
-    def on_success(self, message, jobid, force_failure = False, fail_step=None):
+    def on_success(self, message, jobid, force_failure = False, fail_step=None, fail_msg=None):
         #logger.info("Message: %s success, handling" % message)
         # Set the timeout for the first step
         if self.step_timeout(message, MESSAGE_COMPLETION_STEPS[0]) is None:
@@ -648,6 +663,7 @@ class ReportMessageHandler(MessageHandler):
         if not self.testing:
             force_failure = False
             fail_step = None
+            fail_msg = None
 
         # There are 5 distinct steps to finalizing, all of which can fail.  If any one fails
         # the on_success is retried.  There is no reason to try to do something again that
@@ -657,7 +673,7 @@ class ReportMessageHandler(MessageHandler):
         for i, step in enumerate(MESSAGE_COMPLETION_STEPS):
             if step == PARSE:
                 if self.parsing_message(message):
-                    self.listen_to_parse_pipe(message)
+                    self.listen_to_parse_pipe(message, step, i)
                     log("Parsing message")
                     return 
                 elif self.parse_error(message):
@@ -670,7 +686,7 @@ class ReportMessageHandler(MessageHandler):
                 #logger.info("Handling step %s for message %s" % (step, message))
                 # If the handling succeeds mark it as such and do the next one
                 # Otherwise stop processing this message
-                if self.handle_completion_step(message, step, jobid, force_failure, fail_step):
+                if self.handle_completion_step(message, step, jobid, force_failure, fail_step, fail_msg):
                     self.mark_completed(message, step, i)
                     # The child is the only one that will return True, kill it after we've 
                     # marked the step as completed
@@ -683,7 +699,7 @@ class ReportMessageHandler(MessageHandler):
         self.message_completion_cleanup(message)
     
 
-    def handle_completion_step(self, message, step, jobflowid, force_failure=False, fail_step=None):
+    def handle_completion_step(self, message, step, jobflowid, force_failure=False, fail_step=None, fail_msg=None):
         """ Do what is needed for the specified step.  
 
         THIS IS WHERE ERRORS (should be) ARE THROWN """
@@ -748,10 +764,15 @@ class ReportMessageHandler(MessageHandler):
                 rep = self.get_message_report(message)
 
                 if force_failure and fail_step == step:
-                    raise ReportPutError(message = message, jobflowid = jobflowid)
+                    if fail_msg is not None:
+                        if fail_msg == message:
+                            raise ReportPutError(message = message, jobflowid = jobflowid)
+                    else:
+                        raise ReportPutError(message = message, jobflowid = jobflowid)
 
                 rep.data = self.message_data[message]
                 rep.completed_at = datetime.now()
+                rep.status = 'Completed'
                 rep.put()
             except:
                 raise ReportPutError(message = message, jobflowid = jobflowid)
@@ -843,7 +864,7 @@ class ReportMessageHandler(MessageHandler):
                 output = output,
                 )
         steps_to_add = [gen_report_step]
-        jobid = get_waiting_jobflow(self.emr_conn, self.working_jobids)
+        jobid = get_waiting_jobflow(self.emr_conn, self.existing_jobflows)
         instances = 10
         try:
             if jobid:

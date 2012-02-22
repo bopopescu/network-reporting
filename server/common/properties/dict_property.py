@@ -52,9 +52,12 @@ class DictProperty(db.Property):
     def make_value_from_datastore(self, value):
         if value is None:
             return dict()
-        blob_info = blobstore.BlobInfo.get(value)
-        reader = blob_info.open()
-        return pickle.load(reader)
+        try:
+            blob_info = blobstore.BlobInfo.get(value)
+            reader = blob_info.open()
+            return pickle.load(reader)
+        except:
+            return pickle.loads(value)
 
     def default_value(self):
         if self.default is None:

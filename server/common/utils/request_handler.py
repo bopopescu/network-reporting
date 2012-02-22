@@ -11,6 +11,8 @@ from inspect import getargspec
 from common.utils import simplejson
 from common.utils.decorators import cache_page_until_post, conditionally
 from common.utils.timezones import Pacific_tzinfo
+from common.utils import date_magic
+
 from django.conf import settings
 from django.http import Http404
 from django.template import RequestContext
@@ -50,27 +52,26 @@ class RequestHandler(object):
             self.params = request.POST or request.GET
             self.request = request or self.request
 
+
+            # Set self.start_date, self.end_date, self.date_range, and
+            # self.days
             today = datetime.now(Pacific_tzinfo()).date()
 
-            # start date
-            try:
-                s = self.request.GET.get('s').split('-')
-                self.start_date = date(int(s[0]), int(s[1]), int(s[2]))
-                # ensure start date is not in the future
-                if self.start_date > today:
-                    self.start_date = today
-            except:
-                self.start_date = None
+            self.start_date, self.end_date = get_start_and_end_dates(self.request)
 
-            # date range
             try:
                 self.date_range = int(self.params.get('r'))
             except:
                 self.date_range = 14
+
             # ensure end date is not in the future
             if self.start_date and self.start_date + timedelta(days=self.date_range) > today:
                 self.date_range = (today - self.start_date).days
 
+            self.days = date_magic.gen_days(self.start_date, self.end_date)
+
+
+            # Set self.account
             if self.login:
                 if 'account' in self.params:
                     account_key = self.params['account']
@@ -158,3 +159,19 @@ class RequestHandler(object):
 
 class AjaxRequestHandler(RequestHandler):
     pass
+
+
+def get_start_and_end_dates(request):
+    if request.GET.get('s', None):
+        year, month, day = str(request.GET.get('s')).split('-')
+        end_date = date(int(year), int(month), int(day))
+    else:
+        end_date = date.today()
+
+    if request.GET.get('r', None):
+        days_in_range = int(request.GET.get('r')) - 1
+        start_date = end_date - timedelta(days_in_range)
+    else:
+        start_date = end_date - timedelta(13)
+
+    return (start_date, end_date)

@@ -322,14 +322,26 @@
                 {% for adgroup in network %}
                   <tr>
                     <th class="dataTable-name">
-                      {% if adgroup.deleted %}<img title="Deleted" alt="Deleted" src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img title="Active" alt="Active" src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img title="Paused" alt="Paused" src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
-                      <span class="muted">{{adgroup.network_type}}</span>
+                      {% if adgroup.deleted %}
+                        <img title="Deleted" alt="Deleted" src="/images/deleted.gif" height=9 width=9 />
+                      {% endif %}
+                      {% if adgroup.active and not adgroup.deleted %}
+                        <img title="Active" alt="Active" src="/images/active.gif" height=9 width=9 />
+                      {% endif %}
+                      {% if not adgroup.active and not adgroup.deleted %}
+                        <img title="Paused" alt="Paused" src="/images/paused.gif" height=9 width=9 />
+                      {% endif %}
+                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
+                        {{ adgroup.name }}
+                      </a>
+                      <span class="muted">
+                        {{ adgroup.network_type }}
+                      </span>
                     </th>
 
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                    <td class="dataTable-data numeric {% if adgroup.cpc %}dataTable-campaign-ecpm{% endif %}">
+                        {{ adgroup.calculated_ecpm|currency }}
+                    </td>
                     <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                     <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>

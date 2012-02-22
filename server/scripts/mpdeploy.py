@@ -297,29 +297,11 @@ def minify_javascript():
         sys.exit(1)
 
     JS_DIR = os.path.join(PWD, '../public/js/')
+    JS_APP_FILE = os.path.join(JS_DIR, 'app.min.js')
 
-    # we'll minify all of these files. add them here without the .js
-    JS_FILES = ('models',
-                'views',
-                'controllers/publisher',
-                'controllers/mopub',
-                'controllers/campaigns',
-                'controllers/marketplace',
-                'controllers/networks',)
+    envoy.run('juicer merge -s -f -o %s models/*.js views/*.js controllers/*.js utilities/*.js' % JS_APP_FILE)
 
     puts("Minifying Javascript files in " + JS_DIR)
-
-    for module in JS_FILES:
-        current_module = os.path.join(JS_DIR, module)
-        result = envoy.run('juicer'
-                           + ' merge'
-                           +' -s'  # skip verification
-                           +' -f' # force overwrite
-                           +' -o ' # specify output file
-                           + current_module + '.min.js '
-                           + current_module + '.js')
-        git('add ' + current_module + '.min.js')
-
 
     puts(colored.green('Javascript Minified'))
 

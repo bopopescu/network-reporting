@@ -103,6 +103,7 @@ class TestCampaignForm(unittest.TestCase):
 
     def start_date_mptest(self):
         """
+        new campaign, start_datetime cannot be < today
         test for start_datetime not saved for backfill promo
         check creation of creatives
         test network config changes
@@ -110,6 +111,7 @@ class TestCampaignForm(unittest.TestCase):
         make sure bid is filled out (Lighthouse #836)
         check extra network types displayed if admin or already selected
         test start || end_datetime PTC->UTC->PTC
+        not be able to have campaign with no end, no budget, spread evenly
         """
 
 

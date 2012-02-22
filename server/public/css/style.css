@@ -1553,6 +1553,8 @@ form#campaign_and_adgroup #toggle_advanced {
 form#campaign_and_adgroup input.token-input-field {
   border: 0;
   width: 100px; }
+form#campaign_and_adgroup input.token-input-field.focused {
+  background-color: white; }
 
 /*
  * ## Colors

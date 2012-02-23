@@ -46,7 +46,8 @@ class User(hybrid_models.User):
 
     @classmethod
     def get_by_email(cls, email):
-        return cls.get(cls.get_key(email))
+        """Gets the FIRST user with a particular email address"""
+        return cls.all().filter('email =', email).get()
 
     def __unicode__(self):
         return "User: "+self.email

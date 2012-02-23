@@ -82,7 +82,7 @@ handlers:
   login: admin
 
 - url: /_ah/warmup
-  script: stats/views.py
+  script: ad_server/main.py
   login: admin
 
 

@@ -105,8 +105,6 @@ class PublisherViewHelpersTestCase(unittest.TestCase):
     pass
 
 
-import os
-
 def setCurrentUser(email, user_id='1', is_admin=False):
     os.environ['USER_EMAIL'] = email or ''
     os.environ['USER_ID'] = user_id or ''

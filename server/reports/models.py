@@ -223,8 +223,6 @@ class Report(db.Model):
             pass
 
     def notify_failure(self):
-        if not self.email:
-            return
         mesg = mail.EmailMessage(sender = 'olp@mopub.com',
                                  subject = 'Your report has failed',
                                  bcc = 'report-monitoring@mopub.com',

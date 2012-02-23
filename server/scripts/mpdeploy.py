@@ -118,8 +118,7 @@ def git_tag_current_deploy():
     # Make the tag name by finding the most recent deploy tag
     # and adding 1 to the deploy number.
     try:
-        most_recent_tag = deploy_tags[-1]
-        deploy_number = int(most_recent_tag.replace("deploy-", ""))
+        deploy_number = max([int(tag.replace('deploy-', '')) for tag in deploy_tags if tag.find('deploy-') >= 0])
         new_deploy_number = deploy_number + 1
     except IndexError, ValueError:
         new_deploy_number = 0
@@ -297,29 +296,11 @@ def minify_javascript():
         sys.exit(1)
 
     JS_DIR = os.path.join(PWD, '../public/js/')
+    JS_APP_FILE = os.path.join(JS_DIR, 'app.min.js')
 
-    # we'll minify all of these files. add them here without the .js
-    JS_FILES = ('models',
-                'views',
-                'controllers/publisher',
-                'controllers/mopub',
-                'controllers/campaigns',
-                'controllers/marketplace',
-                'controllers/networks',)
+    envoy.run('juicer merge -s -f -o %s models/*.js views/*.js controllers/*.js utilities/*.js' % JS_APP_FILE)
 
     puts("Minifying Javascript files in " + JS_DIR)
-
-    for module in JS_FILES:
-        current_module = os.path.join(JS_DIR, module)
-        result = envoy.run('juicer'
-                           + ' merge'
-                           +' -s'  # skip verification
-                           +' -f' # force overwrite
-                           +' -o ' # specify output file
-                           + current_module + '.min.js '
-                           + current_module + '.js')
-        git('add ' + current_module + '.min.js')
-
 
     puts(colored.green('Javascript Minified'))
 

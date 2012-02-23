@@ -44,7 +44,7 @@
         <tr style="border:none;">
           {% if totals %}
             <td> {{ totals.revenue|currency|default_if_none:"$0.00"|withsep }} </td>
-            <td> {{ totals.impressions|default_if_none:"0" }} </td>
+            <td> {{ totals.impressions|withsep|default_if_none:"0" }} </td>
             <td> {{ totals.ecpm|currency|default_if_none:"$0.00" }} </td>
           {% else %}
             <td> $0.00 </td>

@@ -38,6 +38,7 @@ class DictProperty(db.Property):
                 f.write(data)
             files.finalize(file_name)
             blob_key = files.blobstore.get_blob_key(file_name)
+            return blob_key
         except:
             # This should only be run by AWS, only one proc @ a time, so only
             # one person will be using this file @ a time
@@ -45,8 +46,7 @@ class DictProperty(db.Property):
                 fd.write(data)
             with open('/tmp/temp_report.tmp', 'r') as fd:
                 blob_key = upload_file(fd)
-
-        return blobstore.BlobKey(blob_key)
+            return blobstore.BlobKey(blob_key)
 
 
     def make_value_from_datastore(self, value):

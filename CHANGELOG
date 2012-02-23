@@ -1,8 +1,11 @@
 # Deployed Thursday, February 23, 2012
 ### Deployed by John Pena
-### Tagged deploy-10
+### Tagged deploy-11
 ### Bugs Fixed: ['860']
 ### Included Commits: 
+ * cb51212 Merge branch 'master' of github.com:mopub/mopub
+ * 9daa9ed Whoooops
+ * 4b25a86 [#860 state:resolved]
  * 1c2cc21 Merge branch 'master' of github.com:mopub/mopub
  * 59459a6 Fixed to read only
  * 1851343 Added backwards compatibility
@@ -57,6 +60,65 @@
  * 1cc590c added timeout to mongostats
  * d166c56 Deployed without finding any bug fixes.
  
+# Deployed Thursday, February 23, 2012
+### Deployed by John Pena
+### Tagged deploy-10
+### Bugs Fixed: ['860']
+### Included Commits:
+* 1c2cc21 Merge branch 'master' of github.com:mopub/mopub
+* 59459a6 Fixed to read only
+* 1851343 Added backwards compatibility
+* 80f24b4 Fix for budget pacing [#860 state:fixed]
+* 0df889e Now using the blobstore instead of just a blob
+* ffdf447 Server-side fix for interstitials not showing up on Ice Cream Sandwich: adding mopubUriInterface call
+* 8dc3630 Minor reporting changes and making colors better
+* 70f7ee3 Merge branch 'master' of github.com:mopub/mopub
+* 204040a Message failures\!
+* a7ba35f Big reporting change
+* 37dc1dc fixed tests
+* 1f93851 removed random number [#898 state:resolved]
+* 3dd79b0 checking that a bid exists first before applying expense
+* bbc94b1 only storing active adgroups
+* d85f24c added use_proxy_bid flag and added that logic to auction
+* 07b7b4e add explit comment in realtime stats to mongo logic in case where creative is empty string
+* c511256 added mp_fail function to mweb js
+* 2300af2 fixed python bug!
+* 3ff8550 fixed python bug!
+* 5fe711b fixed version #
+* f92d946 storing image_serve_url at the time of image creation
+* 8ca4025 fixed MR name and catch errors
+* c73b40b added creative pausers/activaters
+* 49a3c57 Merge branch 'master' of github.com:mopub/mopub
+* 87bd947 changed default queue settings
+* cb453eb changed default queue settings
+* 7b16c33 fixed url for geonames
+* 6d48f63 added mapreduce files
+* 0974090 adding linear backoff to mongo-rt-stats retry logic for mongo migration; comment out putting rt stats to GAE
+* 9c2d436 changing default bid strategy to cpm and returning image_serve_url if possible
+* 57314dc added image_serve_url property to creative objects
+* 8542446 swapping out memcache for datastore based freq capping
+* c28ec00 fixed output so as not to cause 500s
+* 2231313 outputing memcache success
+* 2200453 ensure keys are not ambiguous
+* c07fb34 Merge branch 'master' of github.com:mopub/mopub
+* 46e08b4 shortened keys
+* 16a2c3b Fix for Brightroll interstitial not redirect to lead-behind
+* 05bb357 Fixed pacing indicator to display a different kind of pace as requested by various AdOps folks
+* 20920d1 shortened memcache keys
+* 24a7128 fixed bug
+* 32aac36 only recording in cache impressions that actually care about freq capping
+* 6680ffe Budget updating was being skipped for budgets that hadn't yet started, even if the update would make it so they HAD actually started.  [#881 state:review-requested assigned:nafis]
+* 0878db9 Merge branch 'master' into ad-network-reports
+* 7e89691 Fixed tests so they work with modifications to ad network reports emailing
+* 2c9fc68 Implement simplejson comparisons of header dictionary in renders_mptests
+* deee45e Deployed without finding any bug fixes.
+* d463649 coercing types from mongostats
+* 7828284 Deployed without finding any bug fixes.
+* 610d416 removed timeout
+* 629baca Deployed without finding any bug fixes.
+* 1cc590c added timeout to mongostats
+* d166c56 Deployed without finding any bug fixes.
+
 # Deployed Monday, February 06, 2012
 ### Deployed by Nafis Jamal
 ### Tagged deploy-10

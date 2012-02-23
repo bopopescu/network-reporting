@@ -52,14 +52,15 @@ class AppIndexViewTestCase(unittest.TestCase):
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_user_stub()
 
-        # set up necessary
-
         self.account = generate_account()
-        #print self.account.user
+        setCurrentUser('test@mopub.com', 'test')
 
         self.c = Client()
         self.c.login(username="test@mopub.com", password="test")
         self.name = "app_index"
+
+    def tearDown(self):
+        self.testbed.deactivate()
 
     def login(self):
         pass
@@ -103,6 +104,16 @@ class AdUnitDeleteViewTestCase(unittest.TestCase):
 class PublisherViewHelpersTestCase(unittest.TestCase):
     pass
 
+
+import os
+
+def setCurrentUser(email, user_id, is_admin=False):
+    os.environ['USER_EMAIL'] = email or ''
+    os.environ['USER_ID'] = user_id or ''
+    os.environ['USER_IS_ADMIN'] = '1' if is_admin else '0'
+
+def logoutCurrentUser():
+    setCurrentUser(None, None)
 
 if __name__ == '__main__':
     unittest.main()

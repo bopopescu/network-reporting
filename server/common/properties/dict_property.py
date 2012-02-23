@@ -43,7 +43,7 @@ class DictProperty(db.Property):
             # one person will be using this file @ a time
             with open('/tmp/temp_report.tmp', 'w') as fd:
                 fd.write(data)
-            with open('/tmp/temp_report.tmp', 'rw') as fd:
+            with open('/tmp/temp_report.tmp', 'r') as fd:
                 blob_key = upload_file(fd)
 
         return blobstore.BlobKey(blob_key)

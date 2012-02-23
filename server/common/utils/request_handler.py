@@ -1,6 +1,6 @@
 import logging
 
-from datetime import date, datetime, timedelta
+import datetime
 
 from account.query_managers import AccountQueryManager
 
@@ -47,27 +47,29 @@ class RequestHandler(object):
         @conditionally(cache_dec, use_cache)
         # @cache_page(cache_time)
         def mp_view(request, *args, **kwargs):
-            """ We wrap all the business logic of the request Handler here
-                in order to be able to properly use the cache decorator """
+            """
+            We wrap all the business logic of the request Handler here
+            in order to be able to properly use the cache decorator
+            """
+
+            # Set the basics
             self.params = request.POST or request.GET
             self.request = request or self.request
 
-
-            # Set self.start_date, self.end_date, self.date_range, and
-            # self.days
-            today = datetime.now(Pacific_tzinfo()).date()
-
+            # date ranges are used very commonly, so compute them
+            # beforehand here to keep things dry.
+            # we set:
+            # * self.start_date - the first date in the range
+            # * self.end_date - the last date in the range
+            # * self.date_range - the number of days in between
+            #       self.start_date and self.end_date, inclusive.
+            # * self.days - a list of datetime.date objects for each day
+            #       in between self.start_date and self.end_date, inclusive.
             self.start_date, self.end_date = get_start_and_end_dates(self.request)
-
             try:
                 self.date_range = int(self.params.get('r'))
             except:
                 self.date_range = 14
-
-            # ensure end date is not in the future
-            if self.start_date and self.start_date + timedelta(days=self.date_range) > today:
-                self.date_range = (today - self.start_date).days
-
             self.days = date_magic.gen_days(self.start_date, self.end_date)
 
 
@@ -94,28 +96,31 @@ class RequestHandler(object):
                 if self.obj._account != self.account.key():
                     raise Http404
 
-            # use the offline stats
+            # Set self.offline (use the offline stats)
+            # XXX: what are offline stats?
             self.offline = self.params.get("offline", False)
             self.offline = True if self.offline == "1" else False
 
+            # Now we can define get/post methods with variables
+            # instead of having to get it from the Query dict
+            # every time! hooray!
             if request.method == "GET":
-                # Now we can define get/post methods with variables instead of having to get it from the
-                # Query dict every time! hooray!
                 f_args = getargspec(self.get)[0]
                 for arg in f_args:
                     if not arg in kwargs and arg in self.params:
                         kwargs[arg] = self.params.get(arg)
                 return self.get(*args, **kwargs)
+
             elif request.method == "POST":
-                # Now we can define get/post methods with variables instead of having to get it from the
-                # Query dict every time! hooray!
                 if self.login and self.request.user.is_authenticated():
-                    audit_logger.log(simplejson.dumps({"user_email": self.request.user.email,
-                                                       "account_email": self.account.mpuser.email,
-                                                       "account_key": str(self.account.key()),
-                                                       "time": datetime.now(Pacific_tzinfo()).isoformat(),
-                                                       "url": self.request.get_full_path(),
-                                                       "body": request.POST}))
+                    # XXX: why do we do this?
+                    audit_logger.log(simplejson.dumps({
+                        "user_email": self.request.user.email,
+                        "account_email": self.account.mpuser.email,
+                        "account_key": str(self.account.key()),
+                        "time": datetime.datetime.now(Pacific_tzinfo()).isoformat(),
+                        "url": self.request.get_full_path(),
+                        "body": request.POST}))
                 f_args = getargspec(self.post)[0]
                 for arg in f_args:
                     if not arg in kwargs and arg in self.params:
@@ -162,16 +167,15 @@ class AjaxRequestHandler(RequestHandler):
 
 
 def get_start_and_end_dates(request):
-    if request.GET.get('s', None):
-        year, month, day = str(request.GET.get('s')).split('-')
-        end_date = date(int(year), int(month), int(day))
-    else:
-        end_date = date.today()
+    start_date_string = request.GET.get('s', None)
+    date_range = abs(int(request.GET.get('r', 14)))
 
-    if request.GET.get('r', None):
-        days_in_range = int(request.GET.get('r')) - 1
-        start_date = end_date - timedelta(days_in_range)
+    if start_date_string:
+        year, month, day = str(start_date_string).split('-')
+        start_date = datetime.date(int(year), int(month), int(day))
+        end_date = start_date + datetime.timedelta(date_range - 1)
     else:
-        start_date = end_date - timedelta(13)
+        end_date = datetime.datetime.now(Pacific_tzinfo()).date()
+        start_date = end_date - datetime.timedelta(date_range - 1)
 
     return (start_date, end_date)

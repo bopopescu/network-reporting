@@ -1,15 +1,33 @@
-"""
-Interaction tests for the mopub front-end. Interaction tests
-use a live browser to test user actions like clicks, entering
-and changing data, and navigation.
+import sys, os
+sys.path.append(os.environ['PWD'])
+import common.utils.test.setup
 
-The tests in this module use selenium (http://seleniumhq.org/)
-and assume a running selenium server on localhost. You'll also
-have to have firefox installed.
-"""
-
+import django
 import unittest
 import random
+import datetime
+
+from google.appengine.ext import testbed
+from google.appengine.api import memcache
+
+from django.core.urlresolvers import reverse
+from django.test import Client
+from django.test.utils import setup_test_environment
+from django.contrib.auth.models import User
+from django.contrib.auth import login as auth_login
+
+from nose.tools import eq_
+
+from account.models import Account, MarketPlaceConfig, NetworkConfig
+from account.query_managers import AccountQueryManager
+from registration.models import RegistrationManager
+from admin.randomgen import generate_account
+
+
+import warnings
+warnings.filterwarnings("ignore")
+
+setup_test_environment()
 
 # Forms
 
@@ -24,7 +42,33 @@ class AdUnitFormTestCase(unittest.TestCase):
 # View Handlers
 
 class AppIndexViewTestCase(unittest.TestCase):
-    pass
+    """
+    /inventory/
+    """
+    def setUp(self):
+        # bootstrap the test environment
+        self.testbed = testbed.Testbed()
+        self.testbed.activate()
+        self.testbed.init_datastore_v3_stub()
+        self.testbed.init_user_stub()
+
+        # set up necessary
+
+        self.account = generate_account()
+        #print self.account.user
+
+        self.c = Client()
+        self.c.login(username="test@mopub.com", password="test")
+        self.name = "app_index"
+
+    def login(self):
+        pass
+
+    def testFuckThis(self):
+        response = self.c.get(reverse(self.name))
+        print response.context
+        eq_(response.status_code, 200)
+
 
 class GeoPerformanceViewTestCase(unittest.TestCase):
     pass
@@ -58,6 +102,7 @@ class AdUnitDeleteViewTestCase(unittest.TestCase):
 
 class PublisherViewHelpersTestCase(unittest.TestCase):
     pass
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,7 +5,16 @@
   {% if version >= 2 %}
   <script type="text/javascript">
     function mopubFinishLoad(){
-      window.location = 'mopub://finishLoad'
+      {% if version >= 6 and os == 'android' and is_fullscreen %}
+        {% comment %}
+          Android SDKs with v < 6 have problems with displaying interstitials on Ice Cream Sandwich
+          devices due to setting window.location during the onload event. In v == 6, we introduced a
+          JS-Java bridge object (mopubUriInterface) which bypasses setting window.location. Calling
+          fireFinishLoad() on the bridge object triggers the same client behavior as navigating to
+          "mopub://finishLoad". The return value of fireFinishLoad() is always true.
+        {% endcomment %}
+        if (typeof mopubUriInterface !== 'undefined' && mopubUriInterface.fireFinishLoad()) return;
+      {% endif %}window.location = 'mopub://finishLoad'
     }
   </script>
   {% endif %}

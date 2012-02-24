@@ -323,7 +323,7 @@ class Report(db.Model):
             data.append(value['name'])
 
             for i in range(level_total - level):
-                data.append('')
+                data.append('ALL')
 
             if isinstance(value['stats'], dict):
                 impressions = float(value['stats']['impression_count'])

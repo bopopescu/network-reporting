@@ -83,7 +83,7 @@ CSTEP_NAME = 'CSTEP%s'
 UPLOAD = CSTEP_NAME % 0 
 BLOB_KEY_PUT = CSTEP_NAME % 1
 PARSE = CSTEP_NAME % 2
-POST_PARSE_BLOB_PUT % 3
+POST_PARSE_BLOB_PUT = CSTEP_NAME % 3
 POST_PARSE_PUT = CSTEP_NAME % 4 # I wanted to call this P3 but I took pity
 NOTIFY = CSTEP_NAME % 5 
 
@@ -284,7 +284,7 @@ class ReportMessageHandler(MessageHandler):
         """ dels all the dict entries, leaks suck"""
         if self.testing and self.message_blob_keys[message]:
             os.remove(os.path.join(TEST_DATA_DIR, self.message_blob_keys[message]))
-        if self.testing and self.message_blob_keys[message]:
+        if self.testing and self.message_html_blob_keys[message]:
             os.remove(os.path.join(TEST_DATA_DIR, self.message_html_blob_keys[message]))
         del(self.message_completion_statuses[message])
         del(self.message_step_timeouts[message])

@@ -1,3 +1,4 @@
+import datetime
 import logging, random
 from ad_server.debug_console import trace_logging
 
@@ -51,7 +52,12 @@ def budget_filter():
 def active_filter():
     log_mesg = "Removed due to inactivity: %s"
     def real_filter(a):
-        return (a.campaign.active and a.active and (a.campaign.start_date  <= StatsModel.today() if a.campaign.start_date else True) and (StatsModel.today() <= a.campaign.end_date if a.campaign.end_date else True))
+        if not a.campaign.active or not a.active: return False
+        if a.campaign.start_date and not (a.campaign.start_date <= StatsModel.today()): return False
+        if a.campaign.end_date and not (StatsModel.today() <= a.campaign.end_date): return False
+        if a.campaign.start_datetime and not(a.campaign.start_datetime <= datetime.datetime.now()): return False
+        if a.campaign.end_datetime and not(datetime.datetime.now() <= a.campaign.end_datetime): return False
+        return True
     return (real_filter, log_mesg, [])
 
 def kw_filter(keywords):

@@ -11,6 +11,7 @@ from django.template import loader
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.api import users, mail
+from google.appengine.ext.webapp import template
 
 #mopub imports
 from account.models import Account
@@ -184,6 +185,8 @@ class Report(db.Model):
 
     #the actual report (As of 6/13/11 with MR)
     report_blob = blobstore.BlobReferenceProperty()
+
+    html_data_blob = blobstore.BlobReferenceProperty()
 
     # This should never, ever be set on prod
     test_report_blob = db.TextProperty()

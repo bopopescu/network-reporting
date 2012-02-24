@@ -288,6 +288,7 @@ class TestMessageHandler(unittest.TestCase):
             self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
             if not self.empty_rmh_maps():
                 assert self.success_until(message, my_step)
+                assert self.rmh.message_html_blob_keys[message] is not None
                 assert self.rmh.message_blob_keys[message] is not None
                 assert self.rmh.message_data[message] is not None
             rep = Report.get(self.rep.key())

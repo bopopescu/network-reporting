@@ -156,9 +156,6 @@ class AppIndexHandler(RequestHandler):
             },
         }
 
-        logging.warn('\n\n\n\n\n\n\n\n\n')
-        logging.warn(self.date_range)
-
         return render_to_response(self.request,
                                   'publisher/app_index.html',
                                   {

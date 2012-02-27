@@ -16,6 +16,7 @@ from reports.aws_reports.report_message_handler import (
                                             UPLOAD,
                                             BLOB_KEY_PUT,
                                             PARSE,
+                                            POST_PARSE_BLOB_PUT,
                                             POST_PARSE_PUT,
                                             NOTIFY,
                                             MESSAGE_COMPLETION_STEPS,
@@ -261,6 +262,24 @@ class TestMessageHandler(unittest.TestCase):
         assert self.empty_rmh_maps()
         assert Report.get(self.rep.key()).status == 'Failed'
  
+    def handle_post_parse_blob_upload_failure_mptest(self):
+        jobflow, message = self.create_jobflow()
+        my_step = POST_PARSE_BLOB_PUT
+        now = datetime.now()
+        while (datetime.now() - now).seconds < TEST_FAIL_TIMEOUT:
+            self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
+            if not self.empty_rmh_maps():
+                assert self.success_until(message, my_step)
+                assert self.rmh.message_blob_keys[message] is not None
+                assert self.rmh.message_data[message] is not None
+            rep = Report.get(self.rep.key())
+            assert rep.test_report_blob is not None
+            assert rep.completed_at is None
+            assert rep.data == {}
+        logging.warning(self.rmh.message_maps)
+        assert self.empty_rmh_maps()
+        assert Report.get(self.rep.key()).status == 'Failed'
+
     def handle_post_parse_failure_mptest(self):
         jobflow, message = self.create_jobflow()
         my_step = POST_PARSE_PUT
@@ -269,6 +288,7 @@ class TestMessageHandler(unittest.TestCase):
             self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
             if not self.empty_rmh_maps():
                 assert self.success_until(message, my_step)
+                assert self.rmh.message_html_blob_keys[message] is not None
                 assert self.rmh.message_blob_keys[message] is not None
                 assert self.rmh.message_data[message] is not None
             rep = Report.get(self.rep.key())

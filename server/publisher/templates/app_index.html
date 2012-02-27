@@ -93,7 +93,6 @@
   {% include_script 'views/inventory' %}
   <script>
     var mopub = mopub || {};
-    console.log('blah');
     $(function() {
         var graphStartDate = Date.UTC({{ start_date.year }},
               {{ start_date.month|add:"-1" }}, {# js months are zero-indexed #}

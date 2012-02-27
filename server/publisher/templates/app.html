@@ -575,9 +575,9 @@
 
 
 {% block extraScripts %}
-  <script src="/js/models/inventory.js?v=0909"></script>
-  <script src="/js/views/inventory.js?v=0909"></script>
-  <script src="/js/controllers/publisher.js?v=34"></script>
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/publisher" %}
   <script type="text/javascript">
     $(function() {
       DashboardController.initializeAppDetail({

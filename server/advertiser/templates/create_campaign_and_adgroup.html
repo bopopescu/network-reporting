@@ -1,8 +1,14 @@
 {% extends 'advertiser/base.html' %}
+{% load filters %}
 
 {% block extraScripts %}
-{% comment %}Should be able to do {{ campaign_form.media }}{% endcomment %}
-<script src="/js/controllers/campaign_adgroup_form.js?v=5"></script>
+  {# Should be able to do {{ campaign_form.media }} #}
+  {% include_script "controllers/campaigns" %}
+  <script type="text/javascript">
+    $(function () {
+        CampaignsController.initializeCreateCampaign();
+    });
+  </script>
 {% endblock extraScripts %}
 
 {% block dateButtons %}

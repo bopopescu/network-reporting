@@ -1,41 +1,41 @@
-$(document).ready(function() {
+(function (){
+    function setupAdGroupForm() {
+        // select the appropriate campaign_type from the hash
+        if (window.location.hash.substring(1) !== '') {
+            $('select[name="campaign_type"]').val(window.location.hash.substring(1));
+        }
 
-    // select the appropriate campaign_type from the hash
-    if (window.location.hash.substring(1) !== '') {
-        $('select[name="campaign_type"]').val(window.location.hash.substring(1));
-    }
-
-    var validator = $('form#campaign_and_adgroup').validate({
-        errorPlacement: function(error, element) {
-            element.closest('li > div').append(error);
-        },
-        submitHandler: function(form) {
-            $(form).ajaxSubmit({
-                data: {ajax: true},
-                dataType: 'json',
-                success: function(jsonData, statusText, xhr, $form) {
-                    if(jsonData.success) {
-                        window.location = jsonData.redirect;
-                        $('form#campaign_and_adgroup #submit').button({label: 'Success...',
-                                                                       disabled: true});
-                    }
-                    else {
-                        validator.showErrors(jsonData.errors);
+        var validator = $('form#campaign_and_adgroup').validate({
+            errorPlacement: function(error, element) {
+                element.closest('li > div').append(error);
+            },
+            submitHandler: function(form) {
+                $(form).ajaxSubmit({
+                    data: {ajax: true},
+                    dataType: 'json',
+                    success: function(jsonData, statusText, xhr, $form) {
+                        if(jsonData.success) {
+                            window.location = jsonData.redirect;
+                            $('form#campaign_and_adgroup #submit').button({label: 'Success...',
+                                                                           disabled: true});
+                        }
+                        else {
+                            validator.showErrors(jsonData.errors);
+                            $('form#campaign_and_adgroup #submit').button({label: 'Try Again',
+                                                                           disabled: false});
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
                         $('form#campaign_and_adgroup #submit').button({label: 'Try Again',
                                                                        disabled: false});
+                    },
+                    beforeSubmit: function(arr, $form, options) {
+                        $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
+                                                                       disabled: true});
                     }
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    $('form#campaign_and_adgroup #submit').button({label: 'Try Again',
-                                                                   disabled: false});
-                },
-                beforeSubmit: function(arr, $form, options) {
-                    $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
-                                                                   disabled: true});
-                }
-            });
-        }
-    });
+                });
+            }
+        });
 
     $('form#campaign_and_adgroup #submit')
         .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
@@ -401,5 +401,6 @@ $(document).ready(function() {
             });
         }
     }).filter(':checked').click();
+  }
 
 });

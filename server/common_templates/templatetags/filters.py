@@ -282,8 +282,6 @@ def include_script(script_name,
     random number to bust the cache). Just pass in the name, such as
     'controllers/networks', don't bother with the '.js'.
     """
-    logging.warn('\n\n\n\n\n\n\n\n')
-    logging.warn(script_name)
     # clean up the script name
     script_name = script_name.replace(".min.js", "")
     script_name = script_name.replace(".js", "")

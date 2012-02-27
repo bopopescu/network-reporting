@@ -132,9 +132,9 @@
   <script type="text/html" id="adgroups-table-template">
     {% include "partials/adgroups_table.html" %}
   </script>
-  <script type="text/javascript" src="/js/models/inventory.js?v=10000"></script>
-  <script type="text/javascript" src="/js/views/inventory.js?v=100000"></script>
-  <script type="text/javascript" src="/js/controllers/campaigns.js?v=100000000"></script>
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/campaigns" %}
   <script>
     $(function() {
 

@@ -320,15 +320,18 @@ $(document).ready(function() {
     //Not being used right now
     //var state_pre = {type: 'state', data: []};
 
+    window.priors = window.priors || [];
+
     for(var index in countries) {
         var dat = countries[index];
-        if($.inArray(dat.code, priors) != -1) {
+        if($.inArray(dat.code, window.priors) != -1) {
             pre.data.push(dat);
         }
         if(pre.length == priors.length)
             break;
     }
 
+    window.city_priors = window.city_priors || [];
     //city is ll:ste:name:ccode;
     for(var i in city_priors) {
         if(city_priors.hasOwnProperty(i)) {

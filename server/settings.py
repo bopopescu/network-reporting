@@ -159,6 +159,8 @@ LOGIN_REQUIRED_PREFIXES = (
 
 ACCOUNT_ACTIVATION_DAYS = 14
 
+STATIC_VERSION_NUMBER = 69
+
 from common.ragendja.settings_post import *
 
 #add additional settings for local machine settings
@@ -166,3 +168,4 @@ try:
     from local_settings import *
 except ImportError:
     pass
+

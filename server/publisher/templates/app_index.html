@@ -93,6 +93,7 @@
   {% include_script 'views/inventory' %}
   <script>
     var mopub = mopub || {};
+    console.log('blah');
     $(function() {
         var graphStartDate = Date.UTC({{ start_date.year }},
               {{ start_date.month|add:"-1" }}, {# js months are zero-indexed #}
@@ -101,11 +102,12 @@
 
         var app_keys = {{ app_keys|safe }};
 
+        console.log('about to load dashcontroller');
         DashboardController.initializeIndex({
             start_date: graphStartDate,
             account_stats: accountStats,
             app_keys: app_keys
-        })
+        });
     });
 </script>
 {% include_script 'controllers/publisher' %}

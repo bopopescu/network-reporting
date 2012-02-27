@@ -263,6 +263,39 @@ class AdGroup(db.Model):
     # Each incoming request will be matched against all of these combinations
     geo_predicates = db.StringListProperty(default=["country_name=*"])
 
+    def simplify(self):
+        return SimpleAdGroup(key = str(self.key()),
+                             campaign = self.campaign,
+                             account = self.account,
+                             name = self.name,
+                             bid = self.bid,
+                             bid_strategy = self.bid_strategy,
+                             active = self.active,
+                             deleted = self.deleted,
+                             minute_frequency_cap= self.minute_frequency_cap,
+                             hourly_frequency_cap= self.hourly_frequency_cap,
+                             daily_frequency_cap= self.daily_frequency_cap,
+                             weekly_frequency_cap= self.weekly_frequency_cap,
+                             monthly_frequency_cap= self.monthly_frequency_cap,
+                             lifetime_frequency_cap= self.lifetime_frequency_cap,
+                             keywords = self.keywords,
+                             site_keys = [str(key) for key in self.site_keys],
+                             mktplace_price_floor = self.mktplace_price_floor,
+                             device_targeting = self.device_targeting,
+                             target_iphone = self.target_iphone,
+                             target_ipad = self.target_ipad,
+                             target_ipod = self.target_ipod,
+                             ios_version_max = self.ios_version_max,
+                             ios_version_min = self.ios_version_min,
+                             target_android = self.target_android,
+                             android_version_max = self.android_version_max,
+                             android_version_min = self.android_version_min,
+                             target_other = self.target_other,
+                             cities = self.cities,
+                             geo_predicates = self.geo_predicates,
+                             allocation_percentage = self.allocation_percentage,
+                             )
+
     def default_creative(self, custom_html=None, key_name=None):
         # TODO: These should be moved to ad_server/networks or some such
         c = None

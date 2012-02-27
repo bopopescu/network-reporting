@@ -9,7 +9,7 @@ import simplejson
 #### IF THESE TESTS ARE FAILING, SET THIS TO TRUE, RUN AGAIN, THEN SET
 #### BACK TO FALSE AND TRY AGAIN.  IF THEY STILL FAIL THEN
 #### SOMETHING IS BROKEN
-RESET_EXAMPLE = False
+RESET_EXAMPLE = False 
 
 sys.path.append(os.environ['PWD'])
 import unittest

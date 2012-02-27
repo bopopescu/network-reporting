@@ -132,11 +132,12 @@ class CampaignQueryManager(QueryManager):
     def put(cls, campaigns):
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
+        put_response = db.put(campaigns)
+        
         for camp in campaigns:
             budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
             camp.budget_obj = budg_obj
 
-        put_response = db.put(campaigns)
 
         # Clear cache
         adunits = []

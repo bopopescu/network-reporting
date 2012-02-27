@@ -900,7 +900,6 @@ class AppExportHandler(RequestHandler):
 def app_export(request, *args, **kwargs):
     return AppExportHandler()(request, *args, **kwargs)
 
-
 def enable_marketplace(adunit, account):
     # create marketplace adgroup for this adunit
     mpx_adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit.key(), account.key())

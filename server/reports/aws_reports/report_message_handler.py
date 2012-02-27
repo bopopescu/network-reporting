@@ -4,10 +4,17 @@ import pickle
 import sys
 import time
 import traceback
-import json
+try:
+    import json
+except:
+    import simplejson as json
 
 from datetime import datetime, timedelta
-from multiprocessing import Process, Pipe
+
+try:
+    from multiprocessing import Process, Pipe
+except:
+    pass
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()

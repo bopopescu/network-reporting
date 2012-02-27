@@ -70,6 +70,9 @@ handlers:
 - url: /files/.*
   script: stats/views.py
 
+- url:/fetch_api/.*
+  script: fetch_api/api_server.py
+
 - url: /m/budget/.*
   script: ad_server/main.py
   login: admin

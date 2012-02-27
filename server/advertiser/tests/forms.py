@@ -1,18 +1,16 @@
+import copy
+import datetime
 import os
 import sys
+import unittest
 
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
-
-import copy
-import datetime
-import unittest
 from google.appengine.api import memcache
 from google.appengine.ext import testbed
 
-
-from advertiser.models import Campaign
+from advertiser.models import Campaign, AdGroup
 from advertiser.forms import (CampaignForm, AdGroupForm, BaseCreativeForm,
                               TextCreativeForm, TextAndTileCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
@@ -20,14 +18,115 @@ from budget.tzinfo import UTC
 from common.utils.timezones import Pacific_tzinfo
 
 
+"""
+check creation of creatives
+test network config changes
+keywords > 500 characters causes exception
+make sure bid is filled out (Lighthouse #836)
+not be able to have campaign with no end, no budget, spread evenly
+"""
+
+
+class TestDirectSoldCampaignForm(unittest.TestCase):
+    def setUp(self):
+        self.data = [
+            {
+                'campaign_type': 'gtee',
+                'gtee_priority': 'high',
+                'name': 'Gtee High'
+            },
+            {
+                'campaign_type': 'gtee',
+                'gtee_priority': 'normal',
+                'name': 'Gtee High'
+            },
+            {
+                'campaign_type': 'gtee',
+                'gtee_priority': 'low',
+                'name': 'Gtee High'
+            },
+            {
+                'campaign_type': 'promo',
+                'promo_priority': 'normal',
+                'name': 'Gtee High'
+            },
+            {
+                'campaign_type': 'promo',
+                'promo_priority': 'backfill',
+                'name': 'Gtee High'
+            },
+        ]
+
+    def test_start_datetime(self):
+        """ start_datetime defaults to now """
+
+        """ start_datetime cannot be before today """
+
+    def test_datetime_timezones(self):
+        data = copy.deepcopy(self.data)
+        for test_data in data:
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors)
+            campaign = form.save()
+            # make sure start_datetime is set to the current time
+            # use a margin of one second
+            self.assertTrue(datetime.datetime.now() - campaign.start_datetime < datetime.timedelta(seconds=1))
+
+
+class TestNetworkAdgroupForm(unittest.TestCase):
+
+    def setUp(self):
+        self.testbed = testbed.Testbed()
+        self.testbed.activate()
+        self.testbed.init_blobstore_stub()
+        self.testbed.init_datastore_v3_stub()
+        self.testbed.init_memcache_stub()
+
+    def tearDown(self):
+        self.testbed.deactivate()
+
+    def test_network_type_choices(self):
+        deprecated_network_types = ['admob', 'millennial', 'greystripe']
+
+        adgroup = AdGroup()
+
+        form = AdGroupForm(instance=adgroup)
+        # make sure deprecated ad network types are not in network type choices
+        for deprecated_network_type in deprecated_network_types:
+            self.assertFalse(deprecated_network_type in [choice[0] for choice in form.fields['network_type'].choices], form.fields['network_type'].choices)
+
+        # make sure deprecated ad network types are in network type choices when
+        # the user is staff
+        form = AdGroupForm(instance=adgroup, is_staff=True)
+        for deprecated_network_type in deprecated_network_types:
+            self.assertTrue(deprecated_network_type in [choice[0] for choice in form.fields['network_type'].choices], form.fields['network_type'].choices)
+
+        # deprecated network type should be shown if instance has that type
+        for deprecated_network_type in deprecated_network_types:
+            adgroup = AdGroup(network_type=deprecated_network_type)
+            form = AdGroupForm(instance=adgroup)
+            self.assertTrue(deprecated_network_type in [choice[0] for choice in form.fields['network_type'].choices], form.fields['network_type'].choices)
+            # TODO: make sure the others aren't in here
+
+
+class TestNetworkCampaignForm(unittest.TestCase):
+    def test_datetimes_null(self):
+        form = CampaignForm({
+            'campaign_type': 'network',
+            'name': 'Test Campaign'
+        })
+        self.assertTrue(form.is_valid(), form._errors.as_text())
+        campaign = form.save()
+        self.assertEqual(campaign.start_datetime, None, "A network campaign's start_datetime should be null")
+        self.assertEqual(campaign.end_datetime, None, "A network campaign's end_datetime should be null")
+
+"""
 class TestCampaignForm(unittest.TestCase):
 
     def setUp(self):
-        # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()
-        # Then activate the testbed, which prepares the service stubs for use.
         self.testbed.activate()
-        # Next, declare which service stubs you want to use.
+        self.testbed.init_blobstore_stub()
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_memcache_stub()
 
@@ -104,17 +203,6 @@ class TestCampaignForm(unittest.TestCase):
         self.assertEqual(campaign.budget, None)
 
     def start_date_mptest(self):
-        """
-        new campaign, start_datetime cannot be < today
-        test for start_datetime not saved for backfill promo
-        check creation of creatives
-        test network config changes
-        keywords > 500 characters causes exception
-        make sure bid is filled out (Lighthouse #836)
-        check extra network types displayed if admin or already selected
-        test start || end_datetime PTC->UTC->PTC
-        not be able to have campaign with no end, no budget, spread evenly
-        """
 
 
 class TestAdGroupForm(unittest.TestCase):
@@ -178,3 +266,4 @@ class TestCreativeForm(unittest.TestCase):
 
     def test_base_creative_mptest(self):
         form = BaseCreativeForm()
+"""

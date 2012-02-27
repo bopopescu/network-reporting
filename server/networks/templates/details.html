@@ -1,4 +1,4 @@
-{% extends "ad_network_base.html" %}
+{% extends "networks_base.html" %}
 {% load filters %}
 
 {% block pageTitle %}
@@ -31,9 +31,9 @@
         </td>
         <td>
           {% if network.active %}
-            <img src="/images/active.gif" height="9" width="9" />
+            <img src="/images/active.gif" height="9" width="9" /> Running
           {% else %}
-            <img src="/images/paused.gif" height="9" width="9" />
+            <img src="/images/paused.gif" height="9" width="9" /> Paused
           {% endif %}
         </td>
       </tr>
@@ -61,13 +61,6 @@
       </span>
     {% endif %}
 
-    <div class="buttonBank buttonBank-right">
-      <select name='exportSelect' id='ad-network-exportSelect' class='selectmenu export-selectMenu'>
-        <option value="">Export</option>
-        <option value="/ad_network_reports/export/xls">XLS</option>
-        <option value="/ad_network_reports/export/csv">CSV</option>
-      </select>
-    </div>
   </section>
 
   <section id="aggregate-stats">
@@ -96,38 +89,52 @@
             {% endif %}
             {% if network.name != MOBFOX %}
               <td class="dataTable-data numeric">
-                <div class="attempts network-data">--</div>
+                {% if network.name in REPORTING_NETWORKS %}
+                  <div class="attempts network-data">--</div>
+                {% endif %}
                 <div class="mopub-attempts mopub-data">{{network.mopub_stats.request_count|withsep}}</div>
               </td>
             {% else %}
               <td class="dataTable-data numeric"></td>
             {% endif %}
             <td class="dataTable-data numeric">
-              <div class="impressions network-data">--</div>
+              {% if network.name in REPORTING_NETWORKS %}
+                <div class="impressions network-data">--</div>
+              {% endif %}
               <div class="mopub-impressions mopub-data">{{network.mopub_stats.impression_count|withsep}}</div>
             </td>
             <td class="dataTable-data numeric">
-              <div class="cpm network-data">--</div>
+              {% if network.name in REPORTING_NETWORKS %}
+                <div class="cpm network-data">--</div>
+              {% endif %}
               <div class="mopub-cpm mopub-data">{{network.mopub_stats.get_cpm|currency}}</div>
             </td>
             {% if network.name != MOBFOX %}
               <td class="dataTable-data numeric">
-                <div class="fill-rate network-data">--</div>
+                {% if network.name in REPORTING_NETWORKS %}
+                  <div class="fill-rate network-data">--</div>
+                {% endif %}
                 <div class="mopub-fill-rate mopub-data">{{network.mopub_stats.fill_rate|percentage}}</div>
               </td>
             {% else %}
               <td class="dataTable-data numeric"></td>
             {% endif %}
             <td class="dataTable-data numeric">
-              <div class="clicks network-data">--</div>
+              {% if network.name in REPORTING_NETWORKS %}
+                <div class="clicks network-data">--</div>
+              {% endif %}
               <div class="mopub-clicks mopub-data">{{network.mopub_stats.click_count|withsep}}</div>
             </td>
             <td class="dataTable-data numeric">
-              <div class="cpc network-data">--</div>
+              {% if network.name in REPORTING_NETWORKS %}
+                <div class="cpc network-data">--</div>
+              {% endif %}
               <div class="mopub-cpc mopub-data">{{network.mopub_stats.cpc|currency}}</div>
             </td>
             <td class="dataTable-data numeric">
-              <div class="ctr network-data">--</div>
+              {% if network.name in REPORTING_NETWORKS %}
+                <div class="ctr network-data">--</div>
+              {% endif %}
               <div class="mopub-ctr mopub-data">{{network.mopub_stats.ctr|percentage}}</div>
             </td>
           </tr>

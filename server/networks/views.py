@@ -94,9 +94,8 @@ class NetworksHandler(RequestHandler):
         for network in DEFAULT_NETWORKS.union(set(OTHER_NETWORKS.keys())):
             adgroup = AdGroupQueryManager.get_network_adgroup(self.account.key(), network)
 
-            all_stats = stats_manager.get_stats_for_days(publisher=None,
-                                                         advertiser=adgroup,
-                                                         days=days)
+            logging.info('all_stats')
+            logging.info(all_stats)
 
             login = False
             network_data = {}
@@ -108,7 +107,10 @@ class NetworksHandler(RequestHandler):
                     reporting_networks.append(network)
                     network_data['reporting'] = True
 
-            if all_stats or login:
+            if adgroup or login:
+                all_stats = stats_manager.get_stats_for_days(publisher=None,
+                                                             advertiser=adgroup,
+                                                             days=days)
                 stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
 
                 network_data['name'] = network
@@ -141,8 +143,7 @@ class NetworksHandler(RequestHandler):
             additional_networks_.append(network_data)
 
         # Sort networks alphabetically
-        reporting_networks = sorted(reporting_networks, key=lambda
-                network_data: network_data['name'])
+        networks = sorted(networks, key=lambda network_data: network_data['name'])
 
         logging.info(networks)
         logging.info(networks_to_setup_)
@@ -171,21 +172,39 @@ def networks(request, *args, **kwargs):
 class EditNetworkHandler(RequestHandler):
     def get(self,
             network):
+        network_data = {}
+        network_data['name'] = network
+        network_data['pretty_name'] = REPORTING_NETWORKS.get(network, False) or \
+                OTHER_NETWORKS.get(network, False)
+
+        campaign_form = CampaignForm()
         login_form = LoginCredentialsForm()
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
         reporting_networks = ' '.join(REPORTING_NETWORKS.keys()) + ' admob_native'
 
+        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        for app in apps:
+            app.network_config_form = AppNetworkConfigForm(instance=app.network_config, prefix="app_%s" % app.key())
+            app.adunits = []
+            for adunit in app.all_adunits:
+                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config, prefix="adunit_%s" % adunit.key())
+                app.adunits.append(adunit)
+
         # TODO: Strip campaign crap from edit_network_form.html
         return render_to_response(self.request,
                                   'networks/edit_network_form.html',
                                   {
-                                      'network': network,
+                                      'account_key': str(self.account.key()),
+                                      'network': network_data,
+                                      'campaign_form': campaign_form,
+                                      'REPORTING_NETWORKS': REPORTING_NETWORKS,
                                       'reporting_networks': reporting_networks,
                                       'login_form': login_form,
                                       'adgroup_form': adgroup_form,
                                       'account_network_config_form': account_network_config_form,
+                                      'apps': apps,
                                   })
 
     # TODO: Add campaign to form

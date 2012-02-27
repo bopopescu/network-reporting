@@ -5,9 +5,13 @@ from django.forms.widgets import TextInput
 from models import AdNetworkLoginCredentials
 
 class LoginCredentialsForm(forms.ModelForm):
-    username_str = forms.CharField(label='Username:', required=False)
-    password_str = forms.CharField(label='Password:', required=False)
-    client_key = forms.CharField(label='Client Key:', required=False)
+    username_str = forms.CharField(label='Username:',
+                                   required=False)
+    password_str = forms.CharField(label='Password:',
+                                   required=False,
+                                   widget=forms.PasswordInput)
+    client_key = forms.CharField(label='Client Key:',
+                                 required=False)
 
     def __unicode__(self):
         return str(self.fields)

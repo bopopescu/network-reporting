@@ -3,25 +3,56 @@
     <dt>Platform:</dt>
     <dd>
       <span class="radios">
-        <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="iphone" id="appForm-platform-iphone" {% ifequal form.app_type.value 'iphone' %}checked="checked"{% endifequal %}{% if not form.app_type.value %}checked="checked"{% endif %} />
+        <input type="radio"
+               class="input-radio"
+               name="{{form.app_type.name}}"
+               value="iphone"
+               id="appForm-platform-iphone"
+               {% ifequal form.app_type.value 'iphone' %}checked="checked"{% endifequal %}
+               {% if not form.app_type.value %}checked="checked"{% endif %} />
         <label for="appForm-platform-iphone">iOS</label>
-        <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="android" id="appForm-platform-android" {% ifequal form.app_type.value 'android' %}checked="checked"{% endifequal %}/>
+
+        <input type="radio"
+               class="input-radio"
+               name="{{form.app_type.name}}"
+               value="android"
+               id="appForm-platform-android"
+               {% ifequal form.app_type.value 'android' %}checked="checked"{% endifequal %}/>
         <label for="appForm-platform-android">Android</label>
-        <input type="radio" class="input-radio" name="{{form.app_type.name}}" value="mweb" id="appForm-platform-mweb" {% ifequal form.app_type.value 'mweb' %}checked="checked"{% endifequal %}/>
+
+        <input type="radio"
+               class="input-radio"
+               name="{{form.app_type.name}}"
+               value="mweb"
+               id="appForm-platform-mweb"
+               {% ifequal form.app_type.value 'mweb' %}checked="checked"{% endifequal %}/>
         <label for="appForm-platform-mweb">Mobile Web</label>
+
     </span>
   </dd>
+
   <dt class="appForm-platformDependent">
-      <label class="iphone" for="appForm-name">App name:</label>
-      <label class="android" for="appForm-name">App name:</label>
-      <label class="mweb" for="appForm-name">Site name:</label>
+    <label class="iphone" for="appForm-name">App name:</label>
+    <label class="android" for="appForm-name">App name:</label>
+    <label class="mweb" for="appForm-name">Site name:</label>
   </dt>
+
   <dd class="appForm-platformDependent">
-    <input type="text" class="input-text {% if form.name.errors %}form-error{% endif %} required" name="name" value="{{form.name.value}}" id="appForm-name" />
+    <input type="text"
+           class="input-text {% if form.name.errors %}form-error{% endif %} required"
+           name="name"
+           value="{{form.name.value}}"
+           id="appForm-name" />
 
     <div class="formFields-field-help" id="appForm-search">
       <a href="#" class="button iphone" id="appForm-search-button">Search App Store</a>
-      <!-- Commented out since Android search is blocked <a href="#" class="button android" id="appForm-market-search-button">Search Android Market</a> -->
+      {% comment %}
+        {# Commented out since Android search is blocked #}
+        <a href="#" class="button android" id="appForm-market-search-button">
+          Search Android Market
+        </a>
+      {% endcomment %}
+
       <div id="dashboard-searchAppStore-custom-modal" class="hidden">
         <h3>Search Results</h3>
         <div class="loading" id="searchAppStore-loading">
@@ -30,39 +61,73 @@
         <div id="searchAppStore-results"></div>
       </div>
     </div>
+
     {% for error in form.name.errors %}
-    <div class="form-error-text">{{error}}</div>
+      <div class="form-error-text">{{error}}</div>
     {% endfor %}
   </dd>
+
   <dt class="appForm-platformDependent iphone">
     <label class="iphone" for="appForm-url">iTunes URL:</label>
     <label class="mweb" for="appForm-url">URL:</label>
     <label class="android" for="appForm-package">Package name:</label>
   </dt>
-  <dd class="appForm-platformDependent iphone">
-    <input type="url" class="input-text iphone {% if form.url.errors %}form-error{% endif %}" name="{{form.url.name}}" value="{{form.url.value}}" id="appForm-url" placeholder="http://itunes.apple.com/yourapp" />
+
+  <dd class="appForm-platformDependent iphone mweb">
+    <input type="url"
+           class="input-text iphone {% if form.url.errors %}form-error{% endif %}"
+           name="{{form.url.name}}"
+           value="{{form.url.value}}"
+           id="appForm-url"
+           placeholder="http://itunes.apple.com/yourapp" />
+
     {% for error in form.url.errors %}
-    <div class="form-error-text">{{error}}</div>
+      <div class="form-error-text">{{error}}</div>
     {% endfor %}
-    <input type="text" class="input-text android  {% if form.package.errors %}form-error{% endif %}" name="{{form.package.name}}" value="{{form.package.value}}" id="appForm-package" placeholder="com.company.appname" />
+
+    <input type="text"
+           class="input-text android  {% if form.package.errors %}form-error{% endif %}"
+           name="{{form.package.name}}"
+           value="{{form.package.value}}"
+           id="appForm-package"
+           placeholder="com.company.appname" />
     {% for error in form.package.errors %}
-    <div class="form-error-text">{{error}}</div>
+      <div class="form-error-text">{{error}}</div>
     {% endfor %}
+
+    <input type="url"
+           class="input-text mweb {% if form.url.errors %}form-error{% endif %}"
+           name="{{form.url.name}}"
+           value="{{form.url.value}}"
+           id="appForm-url"
+           placeholder="http://www.yourapp.com/" />
+
+    {% for error in form.url.errors %}
+      <div class="form-error-text">{{error}}</div>
+    {% endfor %}
+
   </dd>
 
-  <dt><label for="appForm-icon">Icon:</label></dt>
+  <dt>
+    <label for="appForm-icon">Icon:</label>
+  </dt>
   <dd>
     <div id="appForm-icon" class="appData-icon">
-      <img src="{{form.img_url.value|default:'/images/misc/appicon-missing.png'}}" alt="No icon" width='40' height='40'/>
+      <img src="{{form.img_url.value|default:'/images/misc/appicon-missing.png'}}"
+           alt="No icon"
+           width='40'
+           height='40'/>
     </div>
+
     <div id="appForm-changeIcon">
       <span class="sep">&middot;</span>
-      <a id="appForm-changeIcon-link" href="#">Upload an app icon ...</a>
-     <input id="appForm-icon-upload" type="file" name="img_file" style="display:none;" />
-     <input type="hidden" name="{{form.img_url.name}}" value="" />
-   </div>
+      <a id="appForm-changeIcon-link" href="#"> Upload an app icon ...</a>
+      <input id="appForm-icon-upload" type="file" name="img_file" style="display:none;" />
+      <input type="hidden" name="{{form.img_url.name}}" value="" />
+    </div>
   </dd>
-  {{form.primary_category}}
-  {{form.secondary_category}}
+  {{ form.primary_category }}
+  {{ form.secondary_category }}
 </dl>
+
 <div class="clear"></div>

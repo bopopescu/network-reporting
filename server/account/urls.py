@@ -6,6 +6,6 @@ urlpatterns = patterns('account.views',
     url(r'^networks/$','ad_network_settings', name='ad_network_settings'),
     url(r'^payments/history$', 'payment_history', name='payment_history'),
     url(r'^payments/change$','payment_info_change', name='payment_info_change'),
-    url(r'^new/$','new', name='account_new'),
+    url(r'^create_account/$','create_account', name='account_create_account'),
     url(r'^logout/$','logout', name='account_logout'),
 )

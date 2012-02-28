@@ -172,7 +172,7 @@ def ad_network_settings(request,*args,**kwargs):
     return AdNetworkSettingsHandler()(request,*args,**kwargs)
 
 
-class NewAccountHandler(RequestHandler):
+class CreateAccountHandler(RequestHandler):
     def get(self,account_form=None):
         account_form = account_form or AccountForm(instance=self.account)
         return render_to_response(self.request,'account/new_account.html',{'account': self.account,
@@ -192,14 +192,14 @@ class NewAccountHandler(RequestHandler):
             AccountQueryManager().put_accounts(account)
 
             # Step 2
-            return HttpResponseRedirect(reverse('publisher_app_create'))
+            return HttpResponseRedirect(reverse('publisher_create_app'))
 
         return self.get(account_form=account_form)
 
 # We use login_required here since we want to let users activate themselves on this page
 @login_required
-def new(request,*args,**kwargs):
-    return NewAccountHandler()(request,*args,**kwargs)
+def create_account(request,*args,**kwargs):
+    return CreateAccountHandler()(request,*args,**kwargs)
 
 class LogoutHandler(RequestHandler):
     def get(self):

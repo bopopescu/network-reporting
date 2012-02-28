@@ -1,4 +1,3 @@
-import logging
 import random
 
 from google.appengine.api import memcache
@@ -35,6 +34,13 @@ def chunks(l, n):
 
 class CampaignQueryManager(QueryManager):
     Model = Campaign
+
+    @classmethod
+    def get_campaigns_by_types(cls, account, types):
+        campaigns = cls.Model.all().filter('account =', account)\
+                                   .filter('campaign_type IN', types)\
+                                   .filter('deleted =', False)
+        return campaigns
 
     @classmethod
     def get_network_campaigns(cls, account):
@@ -141,9 +147,7 @@ class CampaignQueryManager(QueryManager):
         # Clear cache
         adunits = []
         for campaign in campaigns:
-            logging.info(campaign.name)
             for adgroup in campaign.adgroups:
-                logging.info(adgroup.name)
                 adunits.extend(adgroup.site_keys)
 
         adunits = AdUnitQueryManager.get(adunits)
@@ -160,7 +164,6 @@ class CampaignQueryManager(QueryManager):
             if type(advertiser) == list:
                 return advertiser
             else:
-                logging.error("this makes no sensssseeeee")
                 return advertiser
 
         if publisher:
@@ -187,7 +190,7 @@ class CampaignQueryManager(QueryManager):
         if account:
             camps = camps.filter('account = ', account)
         #turn a list of campaigns into a list of lists where each list is all
-        #campagins at a given priority level
+        #campaigns at a given priority level
         if by_priority:
             temp = []
             for p in CAMPAIGN_LEVELS:

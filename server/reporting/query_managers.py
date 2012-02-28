@@ -114,7 +114,14 @@ class StatsModelQueryManager(CachedQueryManager):
 
         return stats
 
-    def get_stats_for_hours(self, publisher=None, advertiser=None, date_hour=None, date_hours=None, account=None, country=None, offline=False):
+    def get_stats_for_hours(self,
+                            publisher=None,
+                            advertiser=None,
+                            date_hour=None,
+                            date_hours=None,
+                            account=None,
+                            country=None,
+                            offline=False):
         """
         date_hour is a datetime object
         date_hours are a list of datetime objects

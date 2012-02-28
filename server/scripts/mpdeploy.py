@@ -22,6 +22,7 @@ except ImportError:
         from clint.textui import puts, indent, colored
     except ImportError:
         print 'please run `pip install clint`'
+        sys.exit(1)
 
 try:
     import envoy
@@ -31,7 +32,7 @@ except ImportError:
         import envoy
     except ImportError:
         print 'please run `pip install envoy`'
-
+        sys.exit(1)
 
 
 def prompt_before_executing(original, override=None):
@@ -285,6 +286,25 @@ def write_changelog(deploy_tag, fixed_tickets, new_commits):
     changelog_file.writelines([line + '\n' for line in new_changelog])
     changelog_file.close()
 
+def minify_javascript():
+
+    # we use juicer for minification, alert them if they dont have it
+    has_juicer = envoy.run('which juicer')
+    if has_juicer.std_out == '':
+        puts(colored.red('you need to install juicer to run the pre-commit hook'))
+        puts(colored.red('install it with "$ gem install juicer"'))
+        sys.exit(1)
+
+    JS_DIR = os.path.join(PWD, '../public/js/')
+    JS_APP_FILE = os.path.join(JS_DIR, 'app.min.js')
+
+    envoy.run('juicer merge -s -f -o %s models/*.js views/*.js controllers/*.js utilities/*.js' % JS_APP_FILE)
+
+    puts("Minifying Javascript files in " + JS_DIR)
+
+    puts(colored.green('Javascript Minified'))
+
+
 
 def main():
     """
@@ -343,6 +363,10 @@ def main():
                 # Push all tags
                 puts("Updating origin with the new tag")
                 git_push_tag(deploy_tag_name)
+
+                # Minify all javascript
+                puts("Minifying Javascript")
+                minify_javascript()
 
                 # Write to the changelog
                 puts("Writing changelog")

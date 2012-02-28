@@ -1,3 +1,4 @@
+{% load fields %}
 <style type="text/css">
 #highlight.gradient {
   background: -webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,0.35)),
@@ -9,7 +10,7 @@
 function updateLine1() {$('line1sample').innerHTML = $('line1').value;}
 function updateLine2() {$('line2sample').innerHTML = $('line2').value;}
 function updateColor() {color=$('color').value;if (color.match(/^[0-9a-f]{6}$/i)) $('preview').style.backgroundColor='#'+color;}
-function updateFontColor() {color=$('font_color').value;if (color.match(/^[0-9a-f]{6}$/i)){$('line1sample').style.color='#'+color; $('line2sample').style.color='#'+color;}} 
+function updateFontColor() {color=$('font_color').value;if (color.match(/^[0-9a-f]{6}$/i)){$('line1sample').style.color='#'+color; $('line2sample').style.color='#'+color;}}
 function updateGradient() {$('highlight').toggleClassName('gradient');}
 function changeIcon() {$('app_img').value='';$('image_input').show();$('image_input_change').hide();
 }
@@ -28,8 +29,8 @@ function setApp(name,url,key) {
 </script>
 
 <dt><label for="headline">Headline:</label></dt>
-<dd><input type='text' name="{{form.headline.name}}" class="input-text" value="{{form.headline.value}}"/></dd>
+<dd><input type='text' name="{{form.headline.name}}" class="input-text" value="{{form.headline|field_value}}"/></dd>
 <dt><label for="line1">Line 1:</label></dt>
-<dd><input type='text' name="{{form.line1.name}}" class="input-text" value="{{form.line1.value}}"/></dd>
+<dd><input type='text' name="{{form.line1.name}}" class="input-text" value="{{form.line1|field_value}}"/></dd>
 <dt><label for="line2">Line 2:</label></dt>
-<dd><input type='text' name="{{form.line2.name}}" class="input-text" value="{{form.line2.value}}"/></dd>
+<dd><input type='text' name="{{form.line2.name}}" class="input-text" value="{{form.line2|field_value}}"/></dd>

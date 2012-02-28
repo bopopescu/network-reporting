@@ -20,7 +20,7 @@ from google.appengine.ext.db import Timeout
 LIMIT = 1000
 
 def auth_func():
-    return "olp@mopub.com", "N47935"
+    return "olp@mopub.com", "N47935N47935"
 
 def setup_remote_api():
     from google.appengine.ext.remote_api import remote_api_stub

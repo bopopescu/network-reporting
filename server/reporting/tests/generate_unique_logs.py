@@ -27,7 +27,7 @@ NUM_LOGS = 1000
 
 def main(app_id="mopub-inc",host="38-aws.latest.mopub-inc.appspot.com"):
     def auth_func():
-      return "olp@mopub.com", "N47935"
+      return "olp@mopub.com", "N47935N47935"
     
     # connect to google datastore
     remote_api_stub.ConfigureRemoteDatastore(app_id, '/remote_api', auth_func, host)

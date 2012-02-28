@@ -1,11 +1,10 @@
-from django.utils.translation import ugettext_lazy as _
-
+from django.conf import settings
 from google.appengine.ext import db
 from google.appengine.api import users
+
 from common.ragendja.auth import hybrid_models
 from common.constants import ISO_COUNTRIES
 
-import logging
 
 class User(hybrid_models.User):
     title = db.StringProperty()
@@ -18,11 +17,11 @@ class User(hybrid_models.User):
     mailing_list = db.BooleanProperty(default=False)
 
     def __init__(self, parent=None, key_name=None, **kwargs):
-        if not key_name and not kwargs.get('key',None):
-            email = kwargs.get('email',None)
+        if not key_name and not kwargs.get('key', None):
+            email = kwargs.get('email', None)
             if email:
                 key_name = self.get_key_name(email)
-        return super(User,self).__init__(parent=parent,key_name=key_name,**kwargs)
+        return super(User, self).__init__(parent=parent, key_name=key_name, **kwargs)
 
     @property
     def id(self):
@@ -34,21 +33,27 @@ class User(hybrid_models.User):
 
     @classmethod
     def get_key_name(cls, email):
-        return 'k:'+email.lower().\
-                        replace('@','_at_').\
-                        replace('.','_dot_').\
-                        replace('+','_plus_')
+        return 'k:' + email.lower().\
+                        replace('@', '_at_').\
+                        replace('.', '_dot_').\
+                        replace('+', '_plus_')
 
     @classmethod
-    def get_key(cls,email):
-        return db.Key.from_path(cls.kind(),cls.get_key_name(email))
+    def get_key(cls, email):
+        return db.Key.from_path(cls.kind(), cls.get_key_name(email))
 
     @classmethod
     def get_by_email(cls, email):
-        return cls.get(cls.get_key(email))
+        """Gets the most recently logged in user with a particular email address"""
+        possible_users = cls.all().filter('email =', email).fetch(100)
+        sorted_users = sorted(possible_users, key=lambda x: x.last_login, reverse=True)
+        if sorted_users:
+            return sorted_users[0]
+        else:
+            return None
 
     def __unicode__(self):
-        return "User: "+self.email
+        return "User: " + self.email
 
     def __repr__(self):
         return unicode(self)
@@ -57,7 +62,7 @@ class User(hybrid_models.User):
 #
 # The main account
 #
-DEFAULT_CATEGORIES =  ["IAB25"]
+DEFAULT_CATEGORIES = ["IAB25"]
 LOW_CATEGORIES = ["IAB25"]
 MODERATE_CATEGORIES = ["IAB25",
                        "IAB7-39",
@@ -82,6 +87,7 @@ LOW_ATTRIBUTES = \
 MODERATE_ATTRIBUTES = \
 STRICT_ATTRIBUTES = [9, 10, 14]
 
+
 class NetworkConfig(db.Model):
     """ The set of ids for all the different networks """
     # iad_pub_id is stored in the app url. Take a look at publisher's query
@@ -99,7 +105,7 @@ class NetworkConfig(db.Model):
 
     # marketplace related
     rev_share = db.FloatProperty(default=.80)
-    price_floor = db.FloatProperty(default=.25) # dollars CPM
+    price_floor = db.FloatProperty(default=.25)  # dollars CPM
     blocklist = db.StringListProperty(indexed=False)
     category_blocklist = db.StringListProperty(indexed=False,
                                     default=MODERATE_CATEGORIES)
@@ -145,14 +151,16 @@ class NetworkConfig(db.Model):
         self.category_blocklist = DEFAULT_CATEGORIES
         self.put()
 
+
 class MarketPlaceConfig(db.Model):
     """ All marketplace related configurations """
     rev_share = db.FloatProperty(default=.90)
-    price_floor = db.FloatProperty(default=.25) # dollars CPM
+    price_floor = db.FloatProperty(default=.25)  # dollars CPM
     blocklist = db.StringListProperty(indexed=False)
 
+
 class Account(db.Model):
-    user = db.UserProperty() # admin user for this account
+    user = db.UserProperty()  # admin user for this account
     all_users = db.ListProperty(db.Key)
 
     mpuser = db.ReferenceProperty(User)
@@ -168,7 +176,6 @@ class Account(db.Model):
     traffic = db.FloatProperty()
     # Publishers website, this is for MPX
     domain = db.StringProperty()
-
 
     active = db.BooleanProperty(default=False)
     status = db.StringProperty()  # Initially storing onboarding status
@@ -201,7 +208,7 @@ class Account(db.Model):
     # use MongoDB for realtime stats
     # ex: Outblaze and Mobipeak have too many apps for GAE realtime stats to
     # handle
-    use_mongodb_stats = db.BooleanProperty(default=True)
+    use_mongodb_stats = db.BooleanProperty(default=False if settings.DEBUG else True)
 
     # use only mongo, not datastore for storing real time stats
     use_only_mongo = db.BooleanProperty(default=False)
@@ -211,8 +218,7 @@ class Account(db.Model):
     ad_network_recipients = db.StringListProperty()
 
     # use only mongo to display realtime stats in UI
-    display_mongo = db.BooleanProperty(default=True)
-
+    display_mongo = db.BooleanProperty(default=False if settings.DEBUG else True)
 
     @property
     def emails(self):
@@ -269,6 +275,5 @@ class PaymentRecord(db.Model):
     period_start = db.DateProperty()
     period_end = db.DateProperty()
     scheduled_payment = db.BooleanProperty(default=False)  # Whether this is a scheduled payment of actual payment
-    resolved = db.BooleanProperty(default=False) # For scheduled payment, resolved means it has been paid
+    resolved = db.BooleanProperty(default=False)  # For scheduled payment, resolved means it has been paid
     created = db.DateTimeProperty(auto_now_add=True)
-

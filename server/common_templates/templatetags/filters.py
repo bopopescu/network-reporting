@@ -8,6 +8,8 @@ import logging
 import string
 from budget.tzinfo import Pacific, utc
 
+from django.conf import settings
+
 from country_codes import COUNTRY_CODE_DICT
 
 register = template.Library()
@@ -120,6 +122,7 @@ def upper(s):
 
 @register.filter
 def withsep(value):
+    """ 1000000 --> 1,000,000 """
     if value:
         try:
             match = re.sub(r'(\d{3})(?=\d)', r'\1,', str(value)[::-1])[::-1]
@@ -208,7 +211,8 @@ def time_ago_in_words(value):
 def campaign_status(adgroup):
     d = datetime.now().date()
     campaign = adgroup.campaign
-    if (campaign.start_date is None or d >= campaign.start_date) and (campaign.end_date is None or d <= campaign.end_date):
+    if (campaign.start_date is None or d >= campaign.start_date) \
+       and (campaign.end_date is None or d <= campaign.end_date):
         if not adgroup.active:
             return "Paused"
         if adgroup.campaign.budget:
@@ -248,6 +252,77 @@ def country_code_to_name(country_code):
 def to_json(python_obj):
     return json.dumps(python_obj)
 
+@register.filter
+def as_list(item):
+    if type(item) == list:
+        return item
+    return [item]
+
+
+# Inclusion tags
+
 @register.simple_tag
 def include_raw(path):
+    """
+    Includes raw file data from `path`. This is useful for loading
+    javascript templates (such as mustache.js templates) that would
+    normally be interpolated with the template context.
+    """
     return template.loader.find_template(path)[0]
+
+# @register.simple_tag
+# def include_script(script_name,
+#                    load_minified=(not settings.DEBUG),
+#                    overload=settings.DEBUG):
+#     """
+#     Includes a script tag (should be a js file) and considers whether
+#     the script should be loaded (if we're in production, only load the
+#     'app' file, otherwise overload), and what the version number should
+#     be (whatever is in settings.py if we're in production, otherwise a
+#     random number to bust the cache). Just pass in the name, such as
+#     'controllers/networks', don't bother with the '.js'.
+#     """
+#     # clean up the script name
+#     script_name = script_name.replace(".min.js", "")
+#     script_name = script_name.replace(".js", "")
+
+#     # make the script path
+#     path_prefix = "/js/"
+
+#     if load_minified:
+#         path_suffix = ".min.js"
+#     else:
+#         path_suffix = ".js"
+
+#     if overload:
+#         version_number = "?=%s" % str(time.time()).split('.')[0]
+#     else:
+#         version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
+
+#     script_path = path_prefix + script_name + path_suffix + version_number
+
+#     if script_name == 'app' or overload:
+#         return """<script type="text/javascript" src="%s"></script>""" % script_path
+#     else:
+#         return ""
+
+@register.simple_tag
+def include_script(script_name,
+                   load_minified=(not settings.DEBUG),
+                   overload=settings.DEBUG):
+
+    # clean up the script name
+    script_name = script_name.replace(".min.js", "")
+    script_name = script_name.replace(".js", "")
+
+    # make the script path
+    path_prefix = "/js/"
+    path_suffix = ".js"
+    version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
+
+    script_path = path_prefix + script_name + path_suffix + version_number
+
+    if not script_name == 'app':
+        return """<script type="text/javascript" src="%s"></script>""" % script_path
+    else:
+        return ""

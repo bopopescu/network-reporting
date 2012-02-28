@@ -12,7 +12,8 @@ from common.utils.timezones import Pacific_tzinfo
 from account.models import Account, PaymentRecord
 from account.forms import AccountForm, NetworkConfigForm, PaymentInfoForm
 from account.query_managers import AccountQueryManager, PaymentRecordQueryManager
-from ad_network_reports.query_managers import AdNetworkMapperManager
+from ad_network_reports.query_managers import AdNetworkMapperManager, \
+        AdNetworkStatsManager
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager, AppQueryManager
 import logging
 from common.utils.request_handler import RequestHandler
@@ -129,11 +130,21 @@ class AdNetworkSettingsHandler(RequestHandler):
                         # exists)
                         network = app_key_identifier[1][:-len(PUB_ID)]
                         if value and network in logins_dict:
+                            mappers = AdNetworkMapperManager.get_mappers_for_app(
+                                    login=logins_dict[network], app=app)
+                            # Delete the existing mappers if there are no scrape
+                            # stats for them.
+                            for mapper in mappers:
+                                if mapper:
+                                    stats = mapper.ad_network_stats
+                                    if not stats.count():
+                                        mapper.delete()
                             AdNetworkMapperManager.create(network=network,
                                     pub_id=value, login=logins_dict[network],
                                     app=app)
 
-                app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
+                app_form = NetworkConfigForm(data=app_network_config_data,
+                        instance=app.network_config)
                 app_network_config = app_form.save(commit=False)
                 AppQueryManager.update_config_and_put(app, app_network_config)
 
@@ -161,7 +172,7 @@ def ad_network_settings(request,*args,**kwargs):
     return AdNetworkSettingsHandler()(request,*args,**kwargs)
 
 
-class NewAccountHandler(RequestHandler):
+class CreateAccountHandler(RequestHandler):
     def get(self,account_form=None):
         account_form = account_form or AccountForm(instance=self.account)
         return render_to_response(self.request,'account/new_account.html',{'account': self.account,
@@ -181,14 +192,14 @@ class NewAccountHandler(RequestHandler):
             AccountQueryManager().put_accounts(account)
 
             # Step 2
-            return HttpResponseRedirect(reverse('publisher_app_create'))
+            return HttpResponseRedirect(reverse('publisher_create_app'))
 
         return self.get(account_form=account_form)
 
 # We use login_required here since we want to let users activate themselves on this page
 @login_required
-def new(request,*args,**kwargs):
-    return NewAccountHandler()(request,*args,**kwargs)
+def create_account(request,*args,**kwargs):
+    return CreateAccountHandler()(request,*args,**kwargs)
 
 class LogoutHandler(RequestHandler):
     def get(self):

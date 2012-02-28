@@ -5,7 +5,7 @@
   background: #f7f7f7;
 }
 
-.campaignData-alt, .reportData-alt {
+.campaignData:nth-child(even), .campaignData-alt, .reportData-alt {
   background: #fff;
 }
 

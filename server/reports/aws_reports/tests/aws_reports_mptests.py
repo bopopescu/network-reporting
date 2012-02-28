@@ -16,6 +16,7 @@ from reports.aws_reports.report_message_handler import (
                                             UPLOAD,
                                             BLOB_KEY_PUT,
                                             PARSE,
+                                            POST_PARSE_BLOB_PUT,
                                             POST_PARSE_PUT,
                                             NOTIFY,
                                             MESSAGE_COMPLETION_STEPS,
@@ -87,14 +88,29 @@ class TestMessageHandler(unittest.TestCase):
                                 end = datetime.now().date(),
                                 days = 1,
                                 )
+
+        self.sched2 = ScheduledReport(account = self.account,
+                                d1 = 'app',
+                                d2 = 'adunit',
+                                end = datetime.now().date(),
+                                days = 1,
+                                )
         self.sched.put()
+        self.sched2.put()
         logging.warning("Putting report")
         self.rep = Report(account = self.account,
                           schedule = self.sched,
                           start = datetime.now().date(),
                           end = datetime.now().date(),
                           )
+        self.rep2 = Report(account = self.account,
+                          schedule = self.sched2,
+                          start = datetime.now().date(),
+                          end = datetime.now().date(),
+                          )
         self.rep.put()
+        self.rep2.put()
+        self.reps = [self.rep, self.rep2]
         self.rmh = ReportMessageHandler(test_queue, testing=True)
 
     def tearDown(self):
@@ -246,9 +262,9 @@ class TestMessageHandler(unittest.TestCase):
         assert self.empty_rmh_maps()
         assert Report.get(self.rep.key()).status == 'Failed'
  
-    def handle_post_parse_failure_mptest(self):
+    def handle_post_parse_blob_upload_failure_mptest(self):
         jobflow, message = self.create_jobflow()
-        my_step = POST_PARSE_PUT
+        my_step = POST_PARSE_BLOB_PUT
         now = datetime.now()
         while (datetime.now() - now).seconds < TEST_FAIL_TIMEOUT:
             self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
@@ -263,6 +279,52 @@ class TestMessageHandler(unittest.TestCase):
         logging.warning(self.rmh.message_maps)
         assert self.empty_rmh_maps()
         assert Report.get(self.rep.key()).status == 'Failed'
+
+    def handle_post_parse_failure_mptest(self):
+        jobflow, message = self.create_jobflow()
+        my_step = POST_PARSE_PUT
+        now = datetime.now()
+        while (datetime.now() - now).seconds < TEST_FAIL_TIMEOUT:
+            self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step)
+            if not self.empty_rmh_maps():
+                assert self.success_until(message, my_step)
+                assert self.rmh.message_html_blob_keys[message] is not None
+                assert self.rmh.message_blob_keys[message] is not None
+                assert self.rmh.message_data[message] is not None
+            rep = Report.get(self.rep.key())
+            assert rep.test_report_blob is not None
+            assert rep.completed_at is None
+            assert rep.data == {}
+        logging.warning(self.rmh.message_maps)
+        assert self.empty_rmh_maps()
+        assert Report.get(self.rep.key()).status == 'Failed'
+
+    def handle_post_parse_multi_message_failure_mptest(self):
+        jobflow, messages = self.create_jobflow(msgs=2)
+        bad_msg, good_msg = messages
+        my_step = POST_PARSE_PUT
+        now = datetime.now()
+        while (datetime.now() - now).seconds < TEST_FAIL_TIMEOUT:
+            self.rmh.handle_working_jobs(jobflows = [jobflow], force_failure = True, fail_step = my_step, fail_msg=bad_msg)
+            if not self.empty_rmh_maps():
+                # Assert that only the bad message has these, the good message
+                # has been cleaned up
+                assert self.success_until(bad_msg, my_step)
+                assert self.rmh.message_blob_keys[bad_msg] is not None
+                assert self.rmh.message_data[bad_msg] is not None
+            rep = Report.get(self.rep.key())
+            rep2 = Report.get(self.rep2.key())
+            assert rep.test_report_blob is not None
+            assert rep.completed_at is None
+            assert rep.data == {}
+
+            assert rep2.test_report_blob is not None
+            assert rep2.completed_at is not None
+            assert not rep2.data == {}
+        logging.warning(self.rmh.message_maps)
+        assert self.empty_rmh_maps()
+        assert Report.get(self.rep.key()).status == 'Failed'
+        assert not Report.get(self.rep2.key()).status == 'Failed'
 
     def handle_notify_failure_mptest(self):
         jobflow, message = self.create_jobflow()
@@ -281,18 +343,26 @@ class TestMessageHandler(unittest.TestCase):
         assert self.empty_rmh_maps()
         assert Report.get(self.rep.key()).status == 'Failed'
 
-    def create_jobflow(self):
-        m = Message()
-        m.set_body(self.rep.message)
-        good_message = ReportMessage(m)
-        good_step = FakeJobFlowStep(id = 1, state = u'COMPLETED', name = good_message.step_name)
-        steps = [good_step]
+    def create_jobflow(self, msgs=1):
+        messages = []
+        steps = []
+        for i in range(msgs):
+            m = Message()
+            m.set_body(self.reps[i].message)
+            good_message = ReportMessage(m)
+            step = FakeJobFlowStep(id = i, state = u'COMPLETED', name = good_message.step_name)
+            messages.append(good_message)
+            steps.append(step)
         for i in range(4):
-            steps.append(FakeJobFlowStep(id=i+1, state=u'RUNNING', name = 'irrelevant_step_%s' % i))
+            steps.append(FakeJobFlowStep(id=i+msgs, state=u'RUNNING', name = 'irrelevant_step_%s' % i))
         jobflow = FakeJobFlow(jobflowid = 1, steps = steps, state = u'RUNNING')
-        self.rmh.jobid_message_map[jobflow.jobflowid] = [good_message]
-        self.rmh.init_message(good_message)
-        return jobflow, good_message
+        self.rmh.jobid_message_map[jobflow.jobflowid] = messages
+        for msg in messages:
+            self.rmh.init_message(msg)
+        if len(messages) == 1:
+            return jobflow, messages[0]
+        else:
+            return jobflow, messages
 
 
     def success_until(self, message, step):

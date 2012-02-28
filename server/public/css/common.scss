@@ -137,6 +137,10 @@ a.disabled {
     background: #ffffff;
 }
 
+.export-selectMenu {
+    width: 100px;
+}
+
 // Gradients
 @mixin horizontal-gradient ($startColor: #555, $endColor: #333) {
     background-color: $endColor;

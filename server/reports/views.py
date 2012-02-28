@@ -1,15 +1,16 @@
 import logging, datetime
 
 from urllib import urlencode
+import urllib
 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.utils import simplejson
 from django.template import loader
-from google.appengine.api import mail
+from google.appengine.api import mail, files
 from google.appengine.ext import db
-from google.appengine.ext.webapp import template
+from google.appengine.ext.webapp import template, blobstore_handlers
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
@@ -136,14 +137,18 @@ class CheckReportHandler(RequestHandler):
         man = ReportQueryManager(self.account)
         #Sched is false, this is a standard report
         report = man.get_report_data_by_key(report_key)
-        data = report.html_data
-        ret = {}
-        if data is None:
-            #Not going to do this now
-            #ret['map-status'], ret['shuf-status'], ret['red-status'] = MapReduceQueryManager.get_mr_status(type='report', key=report_key)
-            data = 'none'
-        ret['data'] = data
-        return HttpResponse(simplejson.dumps(ret), mimetype='application/json')
+        if report.html_data_blob:
+            return HttpResponseRedirect('/offline/reports/get_blob/%s/' % str(report.html_data_blob.key()))
+        else:
+            data = report.html_data
+            ret = {}
+            if data is None:
+                #Not going to do this now
+                #ret['map-status'], ret['shuf-status'], ret['red-status'] = MapReduceQueryManager.get_mr_status(type='report', key=report_key)
+                data = 'none'
+            ret['data'] = data
+            json_ret = simplejson.dumps(ret)
+            return HttpResponse(json_ret, mimetype='application/json')
 
 def check_report(request, *args, **kwargs):
     return CheckReportHandler()(request, use_cache=False, *args, **kwargs)

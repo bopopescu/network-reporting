@@ -1,239 +1,143 @@
 {% extends "advertiser/base.html" %}
 {% load filters %}
+{% load elements %}
+
 
 {% block pageTitle %}
-  <h1> Networks </h1>
+  <h1>Networks</h1>
 {% endblock pageTitle %}
 
+
 {% block navLinks %}
-  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url app_index %}">Dashboard</a></li>
   <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li class="active"><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
 
 {% block titleBarRight %}
-<span class="titlebar-link">
-  <a class="linkIcon" href="/ad_network_reports/">Ad Network Revenue Report <span class="ui-icon ui-icon-triangle-1-e"></span></a>
-</span>
+  <span class="titlebar-link">
+    <a class="linkIcon" href="/ad_network_reports/">Ad Network Revenue Report <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+  </span>
 {% endblock titleBarRight %}
 
 {% block content %}
-
-  {% comment %}
-
-  <h2> Ad Network Stats</h2>
-
-  <div class="alert-message block-message info">
-    MoPub is now collecting ad network performance data directly from ad networks you use. Below is the data we've collected from the ad networks for which you've given us login credentials. For more information, like network-specific performance, visit our new <a href="{% url ad_network_reports_index %}"> ad network reports dashboard</a>.
-  </div>
-
-  <div class="rollup fig3">
-
-    <div class="data-figure">
-      <div class="figure">
-      </div>
-      <div class="label">
-        Revenue
-      </div>
-    </div>
-
-    <div class="data-figure">
-      <div class="figure">
-      </div>
-      <div class="label">
-        Impressions
-      </div>
-    </div>
-
-    <div class="data-figure">
-      <div class="figure">
-      </div>
-      <div class="label">
-        Clicks
-      </div>
-    </div>
-
-    <div class="right"> <a href="{% url ad_network_reports_index %}"> Ad Network Reports </a> </div>
-  </div>
-
-  <br />
-
-  {% if network_campaigns %}
-    <h2>
-      Network Performance
-      <img id="network-loading-img" class="loading-img" style="display:none" src="../../images/icons-custom/spinner-16.gif"></img>
-    </h2>
-  {% else %}
-    <h2> No network campaigns </h2>
-  {% endif %}
-
-  {% endcomment %}
-
   <div class="clearfix">
-    <section class="offset nomargin" id="dashboard-stats">
-      <h3 class="stats-chart-title">
-        Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
-      </h3>
-
-      {# Controls and stats breakdown for the top realtime stats #}
-      <div class="stats">
-        <div class="stats-breakdown">
-          <table>
-            <tbody>
-              <tr class="active" id="stats-breakdown-impressions">
-                <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-              </tr>
-              <tr id="stats-breakdown-clicks">
-                <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-              </tr>
-              <tr id="stats-breakdown-ctr">
-                <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
-              </tr>
-            </tbody>
-          </table>
+    {% if network_adgroups %}
+      <section class="offset nomargin" id="dashboard-stats">
+        <h3 class="stats-chart-title">
+          Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+        </h3>
+        {# Controls and stats breakdown for the top realtime stats #}
+        <div class="stats">
+          {% comment %}
+            {% stats_breakdown stats %}
+          {% endcomment %}
+          <div class="stats">
+            <div id="stats-breakdown" class="stats-breakdown">
+              <table>
+                <tbody>
+                  <tr class="active" id="stats-breakdown-impression_count">
+                    <td class="stats-breakdown-value today"><span class="inner">-</span></td>
+                    <td class="stats-breakdown-value yesterday"><span class="inner">-</span></td>
+                    <td class="stats-breakdown-value all"><span class="inner">-</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-click_count">
+                    <td class="stats-breakdown-value today"><span class="inner">-</span></td>
+                    <td class="stats-breakdown-value yesterday"><span class="inner">-</span></td>
+                    <td class="stats-breakdown-value all"><span class="inner">-</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                  </tr>
+                  <tr id="stats-breakdown-ctr">
+                    <td class="stats-breakdown-value today"><span class="inner">-</span></td>
+                    <td class="stats-breakdown-value yesterday"><span class="inner">-</span></td>
+                    <td class="stats-breakdown-value all"><span class="inner">-</span></td>
+                    <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="stats-breakdown-buttons">
+              <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+                <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+                <label for="stats-breakdown-dateOptions-option-0">Today</label>
+                <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+                <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+                <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+                <label for="stats-breakdown-dateOptions-option-2">All</label>
+              </span>
+            </div>
+            <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+          </div>
         </div>
-        <div class="stats-breakdown-buttons">
-          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-            <label for="stats-breakdown-dateOptions-option-0">Today</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-            <label for="stats-breakdown-dateOptions-option-2">All</label>
-          </span>
-        </div>
-        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
-      </div>
-
-    </section>
+      </section>
+    {% endif %}
   </div>
-
 
   <br />
   <a id="add_campaign_button" class="right button add icon"  href="{% url advertiser_campaign_create %}#network">Add a network</a>
-  <br />
 
-  <br />
-  {% if network_campaigns %}
+  <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
+    <input type="hidden" name="action" id="action"/>
+    <div id="adgroups">
+    </div>
+    <div class="form-submit-left">
+      <span class="buttonWrap">
+        <a class="button pause icon" id="campaignForm-pause">Pause</a>
+        <a class="button play icon" id="campaignForm-resume">Resume</a>
+        <a class="button stop icon" id="campaignForm-delete">Delete</a>
+      </span>
+    </div>
+  </form>
 
-  <h2>Ad Networks</h2>
-
-    <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
-      <input type="hidden" name="action" id="action"/>
-      <div id='network-rollups' class="campaignData-rollup">
-        <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-          <thead>
-            <tr>
-              <th width=25%>Impressions</th>
-              <th width=25%>Clicks</th>
-              <th width=25%>CTR</th>
-              <th width=25%>Fill Rate (Attempts)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td id='network-total-imp'>--</td>
-              <td id='network-total-clk'>--</td>
-              <td id='network-total-ctr'>--</td>
-              <td id='network-total-fill'>--</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <table class="dataTable campaignData-main">
-        <thead>
-          <tr>
-            <th class="campaignData-icon"></th>
-            <th class="dataTable-name">Name</th>
-            <th class="dataTable-data numeric">eCPM <a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></th>
-            <th class="dataTable-data numeric">Attempts</th>
-            <th class="dataTable-data numeric" width="100">Impressions</th>
-            <th class="dataTable-data numeric">Fillrate</th>
-            <th class="dataTable-data numeric">Clicks</th>
-            <th class="dataTable-data numeric">CTR</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for network in network_campaigns %}
-            {% for adgroup in network.adgroups %}
-              <tr class="campaignData
-                         network_row
-                         campaign-status-all
-                         campaign-targeting-all
-                         incomplete
-                         {% for app_key in adgroup.targeted_app_keys %}
-                           campaign-targeting-{{ app_key }}
-                         {% endfor %}"
-                  id="{{adgroup.key}}">
-
-              <td class="campaignData-icon">
-                <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                {% if adgroup.deleted %}
-                  <img src="/images/deleted.gif" height=9 width=9 />
-                {% endif %}
-                {% if adgroup.active and not adgroup.deleted %}
-                  <img src="/images/active.gif" height=9 width=9 />
-                {% endif %}
-                {% if not adgroup.active and not adgroup.deleted %}
-                  <img src="/images/paused.gif" height=9 width=9 />
-                {% endif %}
-              </td>
-              <td class="dataTable-name">
-                <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
-                <span class="muted">{{adgroup.network_type}}</span>
-              </td>
-              {% if adgroup.cpc %}
-                <td class="dataTable-data numeric">
-                  <div class="dataTable-campaign-ecpm ecpm">--</div>
-                </td>
-              {% else %}
-                <td class="dataTable-data numeric ecpm">--</td>
-              {% endif %}
-              <td class="dataTable-data numeric network-req req">--</td>
-              <td class="dataTable-data numeric network-imp imp">--</td>
-              <td class="dataTable-data numeric network-fill fill">--</td>
-              <td class="dataTable-data numeric network-clk clk">--</td>
-              <td class="dataTable-data numeric network-ctr ctr">--</td>
-            </tr>
-          {% endfor %}
-                    {% endfor %}
-        </tbody>
-      </table>
-      <div class="clearfix">
-        <div class="form-submit-left">
-          <span class="buttonWrap">
-            <a class="button pause icon" id="campaignForm-pause">Pause</a>
-            <a class="button play icon" id="campaignForm-resume">Resume</a>
-            <a class="button stop icon" id="campaignForm-delete">Delete</a>
-          </span>
-        </div>
-      </div>
-    </form>
-
-  {% endif %}
-
-
+  {# Help Content #}
+  <div id="campaign-ecpm-helpContent" class="hidden">
+    <h3>Revenue Optimized Campaign eCPM</h3>
+    <p>We calculate the <strong>eCPM</strong> for CPC campaigns by combining the CPC of the campaign with our CTR calculated in real time.</p>
+    <p>This number may vary over time. This is perfectly natural and our system will adjust to these fluctuations in real time.</p>
+    <p>Campaigns that have not yet begun use the average CTR of the entire app to calculate eCPM.</p>
+  </div>
 {% endblock content %}
 
 
 {% block extraScripts %}
-  <script src="/js/mopub-advertiser.js?v=86"></script>
+  <script type="text/html" id="adgroups-rollup-template">
+    {% include "partials/adgroups_rollup.html" %}
+  </script>
+  <script type="text/html" id="adgroups-table-template">
+    {% include "partials/adgroups_table.html" %}
+  </script>
+
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/networks" %}
+
   <script>
-    var mopub = mopub || {};
     $(function() {
-        mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
-        mopub.Advertiser.initNetworkPage();
+
+      NetworksController.initialize({
+        adgroups_data: [
+            {% for adgroup in network_adgroups %}{
+              id: '{{ adgroup.key }}',
+              active: {% if adgroup.active %}true{% else %}false{% endif %},
+              name: '{{ adgroup.name }}',
+              bid_strategy: '{{ adgroup.bid_strategy }}',
+              details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
+              network_type: '{{ adgroup.network_type }}'}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+            ],
+
+        graph_start_date: Date.UTC({{ start_date.year }},
+                                   {{ start_date.month|add:"-1" }},
+                                   {{ start_date.day }}),
+
+        today: {% if today != None %}{{ today }}{% else %}null{% endif %},
+
+        yesterday: {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %},
+
+        ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}{% if offline %}&offline=1{% endif %}'
+        });
     });
   </script>
 {% endblock extraScripts %}

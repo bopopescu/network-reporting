@@ -25,7 +25,7 @@ from ad_network_reports.mptests.load_test_data import load_test_data
 INCLUDE_IAD = False
 
 # TODO: Improve update testing
-# TODO: figure out a way to verify data that spawned processes created
+# TODO: figure out a way to verify data from spawned processes
 class TestUpdate(unittest.TestCase):
     def setUp(self):
         # First, create an instance of the Testbed class.
@@ -49,7 +49,7 @@ class TestUpdate(unittest.TestCase):
         yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
 
         # Call the method we are testing.
-        update_account_stats(account, yesterday, False)
+        update_account_stats(account, yesterday, False, testing=True)
 
         mappers = list(AdNetworkMapperManager.get_mappers(account))
         print 'App Mapper\'s len: %d' % len(mappers)
@@ -76,7 +76,7 @@ class TestUpdate(unittest.TestCase):
         account = load_test_data(include_iad=INCLUDE_IAD)
 
         # Call the method we are testing.
-        multiprocess_update_all(processes=3)
+        multiprocess_update_all(processes=3, testing=True)
 
         mappers = list(AdNetworkMapperManager.get_mappers(account))
         print 'App Mapper\'s len: %d' % len(mappers)
@@ -94,7 +94,7 @@ class TestUpdate(unittest.TestCase):
 
         # Call the method we are testing.
         multiprocess_update_all(start_day=four_days_ago, end_day=two_days_ago,
-                processes=3)
+                processes=3, testing=True)
 
         mappers = list(AdNetworkMapperManager.
                 get_mappers(account))

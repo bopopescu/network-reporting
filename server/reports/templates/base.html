@@ -2,13 +2,13 @@
 {% load filters %}
 
 {% block navLinks %}
-  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url app_index %}">Dashboard</a></li>
   <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
 
 {% block extraScripts %}
-  <script type="text/javascript" src="/js/mopub-reports.js?v=1000"></script>
-  <script type="text/javascript" src="/js/reports-ajaxPoll.js?v=5"></script>
+  <script type="text/javascript" src="/js/controllers/reports.js?v=1000"></script>
+  <script type="text/javascript" src="/js/utilities/reports-ajaxPoll.js?v=6"></script>
 {% endblock extraScripts %}

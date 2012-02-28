@@ -80,11 +80,6 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
     start_day = start_day or yesterday
     end_day = end_day or yesterday
 
-    login_count = AdNetworkLoginManager.get_all_logins().count()
-
-    # Create the pool of processes
-    pool = Pool(processes=processes)
-
     def get_all_accounts_with_logins():
         logins_query = AdNetworkLoginManager.get_all_logins(
                 order_by_account=True)
@@ -96,10 +91,15 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
 
     days = date_magic.gen_days(start_day, end_day)
 
-    results = []
-    logging.info("Assigning processes in pool to collect and save stats...")
-    for account in get_all_accounts_with_logins():
-        for day in days:
+    accounts = list(get_all_accounts_with_logins())
+
+    for day in days:
+        # Create the pool of processes
+        pool = Pool(processes=processes)
+
+        results = []
+        logging.info("Assigning processes in pool to collect and save stats...")
+        for account in accounts:
             logging.info("Assigning process in pool to account %s and day %s" %
                     (account.key(), day))
 
@@ -109,25 +109,25 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
             results.append((account, day, pool.apply_async(update_account_stats,
                     args=(account, day, email_account))))
 
-    # Wait for all processes in pool to complete
-    pool.close()
-    pool.join()
+        # Wait for all processes in pool to complete
+        pool.close()
+        pool.join()
 
-    # Save management stats
-    logging.info("Updating management stats...")
-    stats_dict = {}
-    for account, day, result in results:
-        if result.successful():
-            stats = result.get()
-            if stats.day in stats_dict:
-                stats_dict[stats.day].combined(stats)
+        # Save management stats
+        logging.info("Updating management stats...")
+        stats_dict = {}
+        for account, day, result in results:
+            if result.successful():
+                stats = result.get()
+                if stats.day in stats_dict:
+                    stats_dict[stats.day].combined(stats)
+                else:
+                    stats_dict[stats.day] = stats
             else:
-                stats_dict[stats.day] = stats
-        else:
-            raise UpdateException(account, day)
+                raise UpdateException(account, day)
 
-    for stats in stats_dict.itervalues():
-        stats.put_stats()
+        for stats in stats_dict.itervalues():
+            stats.put_stats()
 
     logging.info("Finished.")
 
@@ -454,7 +454,7 @@ def send_stats_mail(account, day, stats_list):
                    'revenue': stats.revenue,
                    'attempts': stats.attempts,
                    'impressions': stats.impressions,
-                   'fill_rate': stats.fill_rate,
+                   'fill_rate': stats.fill_rate * 100,
                    'clicks': stats.clicks,
                    'ctr': stats.ctr * 100,
                    'cpm': stats.cpm}
@@ -516,7 +516,7 @@ def send_stats_mail(account, day, stats_list):
                 """ % {'revenue': aggregate_stats.revenue,
                        'attempts': aggregate_stats.attempts,
                        'impressions': aggregate_stats.impressions,
-                       'fill_rate': aggregate_stats.fill_rate,
+                       'fill_rate': aggregate_stats.fill_rate * 100,
                        'clicks': aggregate_stats.clicks,
                        'ctr': aggregate_stats.ctr * 100,
                        'cpm': aggregate_stats.cpm})

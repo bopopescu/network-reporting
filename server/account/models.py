@@ -46,7 +46,7 @@ class User(hybrid_models.User):
     def get_by_email(cls, email):
         """Gets the most recently logged in user with a particular email address"""
         possible_users = cls.all().filter('email =', email).fetch(100)
-        sorted_users = sorted(possible_users, lambda x,y : x.last_login > y.last_login)
+        sorted_users = sorted(possible_users, key=lambda x: x.last_login, reverse=True)
         if sorted_users:
             return sorted_users[0]
         else:

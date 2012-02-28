@@ -74,6 +74,10 @@ def multiprocess_update_all(start_day=None,
                             testing=False):
     """
     Break up update script into multiple processes.
+
+    Note: it works a day at a time since MobFox and Admob have a limit on the
+    number of requests they can take from a given user within a window of
+    time.
     """
     # Standardize the date
     pacific = timezone('US/Pacific')
@@ -279,7 +283,6 @@ def update_login_stats_for_check(login,
         s.quit()
 
 
-# TODO: make some db transactions atomic
 def retry_logins(day,
                  processes=1):
     """
@@ -648,8 +651,12 @@ def main(args):
     Updates the database from the given start date to the given end date
     sending emails if the flag is set and using the # of processes given.
 
+    ================
+    To retry failed logins for a given day use:
+    update_networks.py retry [day=xxxx-xx-xx] [processes=xx]
+
     =================
-    start_day, end_day:
+    start_day, end_day, day:
 
     Date arguments must be in the folowing format:
     YEAR-MONTH-DAY
@@ -672,34 +679,51 @@ def main(args):
     number of login credentials.
     """
     HELP = 'help'
+
     START_DAY = 'start_day'
     END_DAY = 'end_day'
     EMAIL = 'email'
     PROCESSES = 'processes'
+
+    RETRY = 'retry'
+    DAY = 'day'
 
     start_day = None
     end_day = None
     email = True
     processes = 1
 
-    if (len(args) > 1):
-        for arg in args[1:]:
-            if HELP == arg:
-                print main.__doc__
-                return
-            if START_DAY + '=' == arg[:len(START_DAY) + 1]:
-                start_day = date(*[int(num) for num in arg[len(START_DAY) +
-                    1:].split('-')])
-            elif END_DAY + '=' == arg[:len(END_DAY) + 1]:
-                end_day = date(*[int(num) for num in arg[len(END_DAY) +
-                    1:].split('-')])
-            elif EMAIL + '=' == arg[:len(EMAIL) + 1]:
-                email = (arg[len(EMAIL) + 1:] in ('y', 'Y'))
-            elif PROCESSES + '=' == arg[:len(PROCESSES) + 1]:
-                processes = int(arg[len(PROCESSES) + 1:])
-
     setup_remote_api()
-    multiprocess_update_all(start_day, end_day, email, processes)
+
+    def field_name_match(arg, field):
+        return field + '=' == arg[:len(field) + 1]
+
+    def parse_day(arg, field):
+        return date(*[int(num) for num in arg[len(field) + 1:].split('-')])
+
+    if (len(args) > 1):
+        if RETRY == args[1]:
+            for arg in args[2:]:
+                if field_name_match(arg, DAY):
+                    day = parse_day(arg, DAY)
+                elif field_name_match(arg, PROCESSES):
+                    processes = int(arg[len(PROCESSES) + 1:])
+            retry_logins(day, processes)
+        else:
+            for arg in args[1:]:
+                if HELP == arg:
+                    print main.__doc__
+                    return
+                elif field_name_match(arg, START_DAY):
+                    start_day = parse_day(arg, START_DAY)
+                elif field_name_match(arg, END_DAY):
+                    end_day = parse_day(arg, END_DAY)
+                elif field_name_match(arg, EMAIL):
+                    email = (arg[len(EMAIL) + 1:] in ('y', 'Y'))
+                elif field_name_match(arg, PROCESSES):
+                    processes = int(arg[len(PROCESSES) + 1:])
+            multiprocess_update_all(start_day, end_day, email, processes)
+
 
 if __name__ == "__main__":
     main(sys.argv)

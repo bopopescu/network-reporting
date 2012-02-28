@@ -2,8 +2,19 @@ import sys
 import os
 import csv
 from datetime import date
-sys.path.append(os.environ['PWD'])
+if os.path.exists('/home/ubuntu/'):
+    sys.path.append('/home/ubuntu/mopub-tmp/server')
+    sys.path.append('/home/ubuntu/google_appengine')
+    sys.path.append('/home/ubuntu/google_appengine/lib/antlr3')
+    sys.path.append('/home/ubuntu/google_appengine/lib/django_1_2')
+    sys.path.append('/home/ubuntu/google_appengine/lib/fancy_urllib')
+    sys.path.append('/home/ubuntu/google_appengine/lib/ipaddr')
+    sys.path.append('/home/ubuntu/google_appengine/lib/webob')
+    sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 
+import common.utils.test.setup
+
+import common.utils.test.setup
 from common.utils.connect_to_appengine import setup_remote_api
 from common.utils import sswriter
 from common.utils.date_magic import gen_days_for_range
@@ -29,12 +40,13 @@ def get_all_accounts_with_logins():
 if __name__ == "__main__":
     setup_remote_api()
 
-    days = gen_days_for_range(date(2012,1,15), 13)
+    days = gen_days_for_range(date(2012,1,22), 7)
 
-    writer = csv.writer(open('network_data.csv', 'wb'))
+    writer = csv.writer(open('network_data2.csv', 'wb'))
     writer.writerow(['Email', 'Key', 'Main App', 'Network'] + STAT_NAMES)
     account_stats = []
-    for account in [get_all_accounts_with_logins().next()]:
+    accounts = list(get_all_accounts_with_logins())
+    for account in accounts:
         for network in AD_NETWORK_NAMES.keys():
             network_stats = AdNetworkStats()
             for day in days:
@@ -46,7 +58,7 @@ if __name__ == "__main__":
             if stats:
                 apps = []
                 apps.extend(App.all().filter('account =', account).fetch(limit=4))
-                apps = ', '.join([app.full_name for app in apps])
+                apps = ', '.join([app.full_name.encode('utf8') for app in apps])
 
                 writer.writerow([account.emails[0], str(account.key()),
                     apps, AD_NETWORK_NAMES[network]] +

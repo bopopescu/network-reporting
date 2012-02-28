@@ -70,8 +70,6 @@ def to_basic_type(obj, already_translated = None):
     assert obj is None or isinstance(obj, (int, long, float, str, unicode, datetime, dict, list, tuple, SimpleModel))
     if isinstance(obj, (list, tuple)):
         # Apply this function recursively on the subobjects.
-        for x in obj:
-            logging.warning(x)
         to_return = [to_basic_type(x, already_translated) for x in obj]
     elif isinstance(obj, dict):
         # Apply this function recursively on the subobjects.
@@ -84,7 +82,6 @@ def to_basic_type(obj, already_translated = None):
         # The dict contains all the instance variables, plus the name of the class of the object.
         d = {}
         key_transform = {"_key": "key", "_multi_format": "multi_format"}
-        logging.warning(obj)
         for (key, value) in obj.__dict__.iteritems():
             key = key_transform.get(key, key) # Default is no change.
             if key.startswith("_"):

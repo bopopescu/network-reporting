@@ -6,7 +6,7 @@ import base64, binascii
 from django.utils import simplejson as json
 import logging
 import string
-from budget.tzinfo import Pacific, utc
+from common.utils.tzinfo import Pacific, utc
 
 from country_codes import COUNTRY_CODE_DICT
 

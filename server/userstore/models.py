@@ -12,7 +12,7 @@ import logging
 from google.appengine.ext import db
 from google.appengine.ext.db import Key
 
-from helper import get_key_name, get_required_param, check_required_param
+from userstore.helper import get_key_name, get_required_param, check_required_param
 
 
 CLICK_EVENT_NO_APP_ID = 'NOT_PROVIDED'

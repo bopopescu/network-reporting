@@ -25,7 +25,6 @@ from django.utils import simplejson
 from common.ragendja.template import render_to_response, render_to_string, JSONResponse
 from common.utils.marketplace_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 from common.utils.timezones import Pacific_tzinfo
-from budget.tzinfo import Pacific, utc
 # from common.ragendja.auth.decorators import google_login_required as login_required
 from account.query_managers import AccountQueryManager
 from account.forms import NetworkConfigForm
@@ -44,6 +43,7 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
 from budget import budget_service
 from budget.models import Budget
 from budget.query_managers import BudgetQueryManager
+from common.utils.tzinfo import Pacific, utc
 from common.utils.query_managers import CachedQueryManager
 from common.utils.request_handler import RequestHandler
 
@@ -778,13 +778,12 @@ def campaign_adgroup_show(request,*args,**kwargs):
 class PauseAdGroupHandler(RequestHandler):
     def post(self):
         action = self.request.POST.get("action", "pause")
-        update_objs = []
         adgroups = []
+        update_objs = []
         update_creatives = []
-        ids = self.request.POST.getlist('id') or []
-        if ids:
-            adgroups = AdGroupQueryManager.get(ids)
-        for a in adgroups:
+        for id_ in self.request.POST.getlist('id') or []:
+            a = AdGroupQueryManager.get(id_)
+            adgroups.append(a)
             if a != None and a.campaign.account == self.account:
                 if action == "pause":
                     a.active = False
@@ -827,6 +826,7 @@ class PauseAdGroupHandler(RequestHandler):
                     for creative in a.creatives:
                         creative.deleted = True
                         update_creatives.append(creative)
+                BudgetQueryManager.update_or_create_budget_for_campaign(a.campaign)
 
 
         if update_objs:

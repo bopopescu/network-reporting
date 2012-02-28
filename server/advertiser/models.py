@@ -1,53 +1,66 @@
 import logging
+import sys
 
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
+from google.appengine.api import images
 from account.models import Account
 
 from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSION, MAX_ANDROID_VERSION
 import datetime
 
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer
-from ad_server.renderers.admob import AdMobRenderer
-from ad_server.renderers.admob_native import AdMobNativeRenderer
-from ad_server.renderers.text_and_tile import TextAndTileRenderer
-from ad_server.renderers.adsense import AdSenseRenderer
-from ad_server.renderers.image import ImageRenderer
-from ad_server.renderers.millennial_native import MillennialNativeRenderer
-from ad_server.renderers.millennial import MillennialRenderer
-from ad_server.renderers.custom_native import CustomNativeRenderer
-from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
-from ad_server.renderers.html_data_renderer import HtmlDataRenderer
-from ad_server.renderers.brightroll import BrightRollRenderer
-from ad_server.renderers.inmobi import InmobiRenderer
-from ad_server.renderers.greystripe import GreyStripeRenderer
-from ad_server.renderers.appnexus import AppNexusRenderer
-from ad_server.renderers.chartboost import ChartBoostRenderer
-from ad_server.renderers.ejam import EjamRenderer
-from ad_server.renderers.jumptap import JumptapRenderer
-from ad_server.renderers.iad import iAdRenderer
-from ad_server.renderers.mobfox import MobFoxRenderer
+#from ad_server.renderers.creative_renderer import BaseCreativeRenderer
+#from ad_server.renderers.admob import AdMobRenderer
+#from ad_server.renderers.admob_native import AdMobNativeRenderer
+#from ad_server.renderers.text_and_tile import TextAndTileRenderer
+#from ad_server.renderers.adsense import AdSenseRenderer
+#from ad_server.renderers.image import ImageRenderer
+#from ad_server.renderers.millennial_native import MillennialNativeRenderer
+#from ad_server.renderers.millennial import MillennialRenderer
+#from ad_server.renderers.custom_native import CustomNativeRenderer
+#from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
+#from ad_server.renderers.html_data_renderer import HtmlDataRenderer
+#from ad_server.renderers.brightroll import BrightRollRenderer
+#from ad_server.renderers.inmobi import InmobiRenderer
+#from ad_server.renderers.greystripe import GreyStripeRenderer
+#from ad_server.renderers.appnexus import AppNexusRenderer
+#from ad_server.renderers.chartboost import ChartBoostRenderer
+#from ad_server.renderers.ejam import EjamRenderer
+#from ad_server.renderers.jumptap import JumptapRenderer
+#from ad_server.renderers.iad import iAdRenderer
+#from ad_server.renderers.mobfox import MobFoxRenderer
 
 
-from ad_server.networks.appnexus import AppNexusServerSide
-from ad_server.networks.jumptap import JumptapServerSide
-from ad_server.networks.brightroll import BrightRollServerSide
-from ad_server.networks.chartboost import ChartBoostServerSide
-from ad_server.networks.ejam import EjamServerSide
-from ad_server.networks.greystripe import GreyStripeServerSide
-from ad_server.networks.inmobi import InMobiServerSide
-from ad_server.networks.jumptap import JumptapServerSide
-from ad_server.networks.millennial import MillennialServerSide
-from ad_server.networks.mobfox import MobFoxServerSide
-from ad_server.networks.dummy_server_side import (DummyServerSideSuccess,
-                                                  DummyServerSideFailure
-                                                 )
+#from ad_server.networks.appnexus import AppNexusServerSide
+#from ad_server.networks.jumptap import JumptapServerSide
+#from ad_server.networks.brightroll import BrightRollServerSide
+#from ad_server.networks.chartboost import ChartBoostServerSide
+#from ad_server.networks.ejam import EjamServerSide
+#from ad_server.networks.greystripe import GreyStripeServerSide
+#from ad_server.networks.inmobi import InMobiServerSide
+#from ad_server.networks.jumptap import JumptapServerSide
+#from ad_server.networks.millennial import MillennialServerSide
+#from ad_server.networks.mobfox import MobFoxServerSide
+#from ad_server.networks.dummy_server_side import (DummyServerSideSuccess,
+#                                                  DummyServerSideFailure
+#                                                 )
 
 from common.utils.helpers import to_uni, to_ascii
 
 from budget.models import Budget
-from budget.tzinfo import UTC, Pacific
+from common.utils.tzinfo import UTC, Pacific
+from simple_models import (SimpleAdGroup,
+                           SimpleCampaign,
+                           SimpleCreative,
+                           SimpleHtmlCreative,
+                           SimpleImageCreative,
+                           SimpleTextAndTileCreative,
+                           SimpleTextCreative,
+                           SimpleNullCreative,
+                           SimpleDummyFailureCreative,
+                           SimpleDummySuccessCreative,
+                           )
 # from budget import budget_service
 #
 # A campaign.    Campaigns have budgetary and time based restrictions.
@@ -85,6 +98,26 @@ class Campaign(db.Model):
     budget_obj = db.ReferenceProperty(Budget, collection_name = 'campaign')
 
     blind = db.BooleanProperty(default=False)
+
+    def simplify(self):
+        if self.start_date and not self.start_datetime:
+            strt = self.start_date
+            start_datetime = datetime.datetime(strt.year, strt.month, strt.day)
+        else:
+            start_datetime = self.start_datetime
+        if self.end_date and not self.end_datetime:
+            end = self.end_date
+            end_datetime = datetime.datetime(end.year, end.month, end.day)
+        else:
+            end_datetime = self.end_datetime
+        return SimpleCampaign(key = str(self.key()),
+                              name = self.name,
+                              campaign_type = self.campaign_type,
+                              active = self.active,
+                              start_datetime = start_datetime,
+                              end_datetime = end_datetime,
+                              account = self.account,
+                              )
 
     def __repr__(self):
         return "Camp(start:(%s,%s) end:(%s,%s) active:%s daily:%s total:%s spread:%s type:%s)" % (self.start_date, self.start_datetime, self.end_date, self.end_datetime, self.active, self.budget, self.full_budget, self.budget_strategy, self.budget_type)
@@ -463,6 +496,7 @@ class Creative(polymodel.PolyModel):
     #         return float(self.ad_group.bid)
 
     network_name = None
+    SIMPLE = SimpleCreative
 
     @property
     def intercept_url(self):
@@ -478,8 +512,8 @@ class Creative(polymodel.PolyModel):
         return self.launchpage
 
     # Set up the basic Renderers and ServerSides for the creative
-    Renderer = BaseCreativeRenderer
-    ServerSide = None  # Non-server-bound creatives don't need a serverside
+    #Renderer = BaseCreativeRenderer
+    #ServerSide = None  # Non-server-bound creatives don't need a serverside
 
     @property
     def multi_format(self):
@@ -549,20 +583,55 @@ class Creative(polymodel.PolyModel):
         return "Creative{ad_type=%s, key_name=%s}" % (self.ad_type, self.key().id_or_name())
 
 
+    def build_simplify_dict(self):
+        return dict(key = str(self.key()),
+                    name = self.name,
+                    custom_width = self.custom_width,
+                    custom_height = self.custom_height,
+                    landscape = self.landscape,
+                    ad_group = self.ad_group,
+                    active = self.active,
+                    ad_type = self.ad_type,
+                    tracking_url = self.tracking_url,
+                    url = self.url,
+                    display_url = self.display_url,
+                    conv_appid = self.conv_appid,
+                    format = self.format,
+                    launchpage = self.launchpage,
+                    account = self.account,
+                    multi_format = self.multi_format,
+                    network_name = self.network_name)
+
+    def simplify(self):
+        simplify_dict = self.build_simplify_dict()
+        return self.SIMPLE(**simplify_dict)
+
+
+
 class TextCreative(Creative):
+    SIMPLE = SimpleTextCreative
     # text ad properties
     headline = db.StringProperty()
     line1 = db.StringProperty()
     line2 = db.StringProperty()
 
-    @property
-    def Renderer(self):
-        return None
+    #@property
+    #def Renderer(self):
+    #    return None
 
     def __repr__(self):
         return "'%s'" % (self.headline,)
 
+    def build_simplify_dict(self):
+        spec_dict = dict(headline = self.headline,
+                         line1 = self.line1,
+                         line2 = self.line2)
+        spec_dict.update(super(TextCreative, self).build_simplify_dict())
+        return spec_dict
+
 class TextAndTileCreative(Creative):
+    SIMPLE = SimpleTextAndTileCreative
+
     line1 = db.StringProperty()
     line2 = db.StringProperty()
     # image = db.BlobProperty()
@@ -573,23 +642,50 @@ class TextAndTileCreative(Creative):
     font_color = db.StringProperty(default="FFFFFF")
     gradient = db.BooleanProperty(default=True)
 
-    @property
-    def Renderer(self):
-        return TextAndTileRenderer
+    def build_simplify_dict(self):
+        try:
+            img_url = images.get_serving_url(self.image_blob)
+        except:
+            img_url = "http://curezone.com/upload/Members/new03/white.jpg"
+        spec_dict = dict(line1 = self.line1,
+                         line2 = self.line2,
+                         image_url = img_url,
+                         action_icon = self.action_icon,
+                         color = self.color,
+                         font_color = self.font_color,
+                         gradient = self.gradient)
+
+        spec_dict.update(super(TextAndTileCreative, self).build_simplify_dict())
+        return spec_dict
+
+    #@property
+    #def Renderer(self):
+    #    return TextAndTileRenderer
 
 class HtmlCreative(Creative):
     """ This creative has pure html that has been added by the user.
         This should not be confused with ad_type=html, which means that the
         payload is html as opposed to a native request. """
+
+    SIMPLE = SimpleHtmlCreative
     html_data = db.TextProperty()
     ormma_html = db.BooleanProperty(default=False)
 
-    @property
-    def Renderer(self):
-        return HtmlDataRenderer
+    def build_simplify_dict(self):
+        spec_dict = dict(html_data = self.html_data,
+                         ormma_html = self.ormma_html)
+
+        spec_dict.update(super(HtmlCreative, self).build_simplify_dict())
+        return spec_dict
+
+
+    #@property
+    #def Renderer(self):
+    #    return HtmlDataRenderer
 
 
 class ImageCreative(Creative):
+    SIMPLE = SimpleImageCreative
     # image properties
     # image = db.BlobProperty()
     image_blob = blobstore.BlobReferenceProperty()
@@ -607,10 +703,22 @@ class ImageCreative(Creative):
         fp = IMAGE_PREDICATES.get("%dx%d" % (img.width, img.height))
         return [fp] if fp else None
 
+    def build_simplify_dict(self):
+        try:
+            img_url = images.get_serving_url(self.image_blob)
+        except:
+            img_url = "http://cache.ohinternet.com/images/1/13/Awesome.png"
+        spec_dict = dict(image_url = img_url,
+                         image_width = self.image_width,
+                         image_height = self.image_height,
+                         )
 
-    @property
-    def Renderer(self):
-        return ImageRenderer
+        spec_dict.update(super(ImageCreative, self).build_simplify_dict())
+        return spec_dict
+
+    #@property
+    #def Renderer(self):
+    #    return ImageRenderer
 
 class MarketplaceCreative(HtmlCreative):
     """ If this is targetted to an adunit, lets the ad_auction know to
@@ -628,8 +736,7 @@ class CustomCreative(HtmlCreative):
 
 class CustomNativeCreative(HtmlCreative):
     network_name = "custom_native"
-    Renderer = CustomNativeRenderer
-
+    #Renderer = CustomNativeRenderer
 
     @property
     def multi_format(self):
@@ -638,7 +745,7 @@ class CustomNativeCreative(HtmlCreative):
 class iAdCreative(Creative):
     network_name = "iAd"
 
-    Renderer = iAdRenderer
+    #Renderer = iAdRenderer
 
     @property
     def multi_format(self):
@@ -647,7 +754,7 @@ class iAdCreative(Creative):
 class AdSenseCreative(Creative):
     network_name = "adsense"
 
-    Renderer = AdSenseRenderer
+    #Renderer = AdSenseRenderer
 
     @property
     def multi_format(self):
@@ -657,12 +764,12 @@ class AdMobCreative(Creative):
     network_name = "admob"
 
 
-    Renderer = AdMobRenderer
+    #Renderer = AdMobRenderer
 
 class AdMobNativeCreative(AdMobCreative):
     network_name = "admob_native"
 
-    Renderer = AdMobNativeRenderer
+    #Renderer = AdMobNativeRenderer
 
     @property
     def multi_format(self):
@@ -672,9 +779,9 @@ class MillennialCreative(Creative):
 
     network_name = "millennial"
 
-    Renderer = MillennialRenderer
+    #Renderer = MillennialRenderer
 
-    ServerSide = MillennialServerSide
+    #ServerSide = MillennialServerSide
 
     @property
     def multi_format(self):
@@ -683,9 +790,9 @@ class MillennialCreative(Creative):
 class MillennialNativeCreative(MillennialCreative):
     network_name = "millennial_native"
 
-    Renderer = MillennialNativeRenderer
+    #Renderer = MillennialNativeRenderer
 
-    ServerSide = None
+    #ServerSide = None
 
     @property
     def multi_format(self):
@@ -695,9 +802,9 @@ class ChartBoostCreative(Creative):
 
     network_name = "chartboost"
 
-    Renderer = ChartBoostRenderer
+    #Renderer = ChartBoostRenderer
 
-    ServerSide = ChartBoostServerSide
+    #ServerSide = ChartBoostServerSide
 
     @property
     def multi_format(self):
@@ -706,17 +813,17 @@ class ChartBoostCreative(Creative):
 class EjamCreative(Creative):
     network_name = "ejam"
 
-    Renderer = ChartBoostRenderer
+    #Renderer = ChartBoostRenderer
 
-    ServerSide = EjamServerSide
+    #ServerSide = EjamServerSide
 
 class InMobiCreative(Creative):
 
     network_name = "inmobi"
 
-    Renderer = InmobiRenderer
+    #Renderer = InmobiRenderer
 
-    ServerSide = InMobiServerSide
+    #ServerSide = InMobiServerSide
 
     @property
     def multi_format(self):
@@ -725,17 +832,17 @@ class InMobiCreative(Creative):
 class AppNexusCreative(Creative):
     network_name = "appnexus"
 
-    Renderer = AppNexusRenderer
+    #Renderer = AppNexusRenderer
 
-    ServerSide = AppNexusServerSide
+    #ServerSide = AppNexusServerSide
 
 
 class BrightRollCreative(Creative):
     network_name = "brightroll"
 
-    Renderer = BrightRollRenderer
+    #Renderer = BrightRollRenderer
 
-    ServerSide = BrightRollServerSide
+    #ServerSide = BrightRollServerSide
 
     @property
     def multi_format(self):
@@ -744,9 +851,9 @@ class BrightRollCreative(Creative):
 class JumptapCreative(Creative):
     network_name = "jumptap"
 
-    Renderer = JumptapRenderer
+    #Renderer = JumptapRenderer
 
-    ServerSide = JumptapServerSide
+    #ServerSide = JumptapServerSide
 
     @property
     def multi_format(self):
@@ -755,9 +862,9 @@ class JumptapCreative(Creative):
 class GreyStripeCreative(Creative):
     network_name = "greystripe"
 
-    Renderer = GreyStripeRenderer
+    #Renderer = GreyStripeRenderer
 
-    ServerSide = GreyStripeServerSide
+    #ServerSide = GreyStripeServerSide
 
     @property
     def multi_format(self):
@@ -765,20 +872,22 @@ class GreyStripeCreative(Creative):
 
 class MobFoxCreative(Creative):
     network_name = "mobfox"
-    Renderer = MobFoxRenderer
+    #Renderer = MobFoxRenderer
 
-    ServerSide = MobFoxServerSide
+    #ServerSide = MobFoxServerSide
 
     @property
     def multi_format(self):
         return ('728x90', '320x50')
         
 class NullCreative(Creative):
-    pass
+    SIMPLE = SimpleNullCreative
 
 class DummyServerSideFailureCreative(Creative):
-    ServerSide = DummyServerSideFailure
+    SIMPLE = SimpleDummyFailureCreative
+    #ServerSide = DummyServerSideFailure
 
 
 class DummyServerSideSuccessCreative(Creative):
-    ServerSide = DummyServerSideSuccess
+    SIMPLE = SimpleDummySuccessCreative
+    #ServerSide = DummyServerSideSuccess

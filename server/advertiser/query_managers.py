@@ -5,7 +5,19 @@ from google.appengine.api import memcache
 from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
-from common.utils.decorators import wraps_first_arg
+#from common.utils.decorators import wraps_first_arg
+class wraps_first_arg(object):
+    """ Decorator that wraps all nonlist arguments and turns them into lists.
+    Only works for bound methods """
+    def __init__(self, f):
+        self.f = f
+    def __call__(self, *args):
+        args = list(args)
+        if not isinstance(args[1], (list, tuple)):
+            args[1] = [args[1]]
+
+        return self.f(*args)
+
 from common.constants import CAMPAIGN_LEVELS
 
 from advertiser.models import Campaign

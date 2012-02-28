@@ -22,12 +22,10 @@ from datetime import          (datetime,
 from google.appengine.ext.webapp import (Request,
                                          Response,
                                          )
-                                         
 from ad_server.main import  (AdImpressionHandler,
                                      AdClickHandler,
                                      AppOpenHandler,
                                     )
-                                    
 from ad_server.handlers.adhandler import AdHandler  
 
 from time import mktime

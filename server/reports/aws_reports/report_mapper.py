@@ -6,7 +6,7 @@ import logging
 sys.path.append('.')
 
 
-from parse_utils import gen_days, parse_line, build_keys
+from reports.aws_reports.parse_utils import gen_days, parse_line, build_keys
 
 
 def main():

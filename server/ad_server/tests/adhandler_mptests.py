@@ -3,6 +3,8 @@ import sys
 import os
 import datetime
 
+import cPickle as pickle
+
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
@@ -34,6 +36,7 @@ from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManag
 ############# Integration Tests #############
 import unittest
 from nose.tools import eq_
+from nose.tools import ok_
 from nose.tools import with_setup
 from budget import budget_service
 from google.appengine.api import memcache
@@ -48,6 +51,12 @@ from google.appengine.ext import testbed
 ################# End to End #################
 
 from common.utils.system_test_framework import run_auction, fake_request
+from simple_models import (from_basic_type, 
+                           SimpleAdUnitContext,
+                           SimpleAccount,
+                           SimpleAdGroup,
+                           )
+
 
 
 
@@ -86,7 +95,8 @@ class TestAdAuction(unittest.TestCase):
         self.adunit.put()
 
         # Make Expensive Campaign
-        self.expensive_c = Campaign(name="expensive",
+        self.expensive_c = Campaign(account = self.account,
+                                    name="expensive",
                                     budget=1000.0,
                                     budget_strategy="evenly",
                                     campaign_type="network")
@@ -111,7 +121,8 @@ class TestAdAuction(unittest.TestCase):
         self.expensive_creative.put()
 
         # Make cheap campaign
-        self.cheap_c = Campaign(name="cheap",
+        self.cheap_c = Campaign(account = self.account,
+                                name="cheap",
                                 budget=1000.0,
                                 budget_strategy="evenly")
         self.cheap_c.put()

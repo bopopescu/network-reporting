@@ -43,6 +43,8 @@ then
    nosetests ./ad_server/renderers/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
    echo "Network Server Side tests"
    nosetests ./ad_server/networks/tests/ --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
+   echo "SimpleModels Tests"
+   nosetests ./simple_models_mptests.py --match='(?:^|[\b_\./-])mptest' --without-sandbox
 
    # System Tests (Must live in server root dir for some reason TODO: Fix this)
    echo "System tests"
@@ -51,7 +53,7 @@ then
    nosetests network_config_mptests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox
 
    # to get coverage, use:
-   nosetests ./ad_server/auction/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox  --cover-package ad_server.auction
+   #nosetests ./ad_server/auction/tests --match='(?:^|[\b_\./-])mptest' --with-gae --gae-application='./' --without-sandbox  --cover-package ad_server.auction
 
    # mopub logging tests
    echo "mopub logging tests"

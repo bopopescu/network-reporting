@@ -2,7 +2,6 @@
 import sys
 import os
 import datetime
-
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
@@ -200,8 +199,8 @@ class TestAdAuction(unittest.TestCase):
     def mptest_ecpms(self):
         """ Make sure that we actually have set ecpms for our networks apropriately """
         self._make_expensive_creative_fail()
-        eq_(optimizer.get_ecpm(self.adunit_context, self.expensive_creative), 1.00)
-        eq_(optimizer.get_ecpm(self.adunit_context, self.cheap_creative), 0.25)
+        eq_(optimizer.get_ecpm(self.adunit, self.expensive_creative), 1.00)
+        eq_(optimizer.get_ecpm(self.adunit, self.cheap_creative), 0.25)
 
 
     def mptest_marketplace_beating_failed_networks(self):

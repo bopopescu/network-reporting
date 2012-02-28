@@ -5,6 +5,7 @@ from google.appengine.ext import db
 from google.appengine.api import users
 from common.ragendja.auth import hybrid_models
 from common.constants import ISO_COUNTRIES
+from simple_models import SimpleNetworkConfig, SimpleAccount
 
 import logging
 
@@ -110,6 +111,23 @@ class NetworkConfig(db.Model):
                                           default=MODERATE_ATTRIBUTES)
     blind = db.BooleanProperty(default=False)
 
+    def simplify(self):
+        return SimpleNetworkConfig(admob_pub_id = self.admob_pub_id,
+                                   adsense_pub_id = self.adsense_pub_id,
+                                   brightroll_pub_id = self.brightroll_pub_id,
+                                   chartboost_pub_id = self.chartboost_pub_id,
+                                   ejam_pub_id = self.ejam_pub_id,
+                                   greystripe_pub_id = self.greystripe_pub_id,
+                                   inmobi_pub_id = self.inmobi_pub_id,
+                                   jumptap_pub_id = self.jumptap_pub_id,
+                                   mobfox_pub_id = self.mobfox_pub_id,
+                                   rev_share = self.rev_share,
+                                   price_floor = self.price_floor,
+                                   blocklist = self.blocklist,
+                                   blind = self.blind,
+                                   category_blocklist = self.category_blocklist,
+                                   attribute_blocklist = self.attribute_blocklist,
+                                   )
     @property
     def filter_level(self):
         if sorted(self.category_blocklist) == sorted(DEFAULT_CATEGORIES) and \
@@ -215,6 +233,14 @@ class Account(db.Model):
     # use only mongo to display realtime stats in UI
     display_mongo = db.BooleanProperty(default=False if settings.DEBUG else True)
 
+    def simplify(self):
+        return SimpleAccount(key = str(self.key()),
+                             company = self.company,
+                             domain = self.domain,
+                             network_config = self.network_config,
+                             adsense_company_name = self.adsense_company_name,
+                             adsense_test_mode = self.adsense_test_mode,
+                             )
 
     @property
     def emails(self):

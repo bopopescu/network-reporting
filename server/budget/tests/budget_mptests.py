@@ -1,7 +1,6 @@
 import os
 import sys
 import logging
-
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
@@ -36,7 +35,7 @@ from budget.memcache_budget import (remaining_ts_budget,
                                     braking_fraction,
                                     )
 from budget.query_managers import BudgetQueryManager
-from budget.tzinfo import utc, Pacific
+from common.utils.tzinfo import utc, Pacific
 
 from google.appengine.ext import testbed
 

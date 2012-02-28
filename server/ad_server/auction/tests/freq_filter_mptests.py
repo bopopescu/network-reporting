@@ -4,7 +4,6 @@
 import sys
 import os
 import datetime
-
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
@@ -20,7 +19,6 @@ from advertiser.models import ( Campaign,
 from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
-                                          
 from ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,

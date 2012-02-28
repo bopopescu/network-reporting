@@ -25,7 +25,7 @@ from google.appengine.api import images, files
 from publisher.models import Site as AdUnit
 
 from budget.query_managers import BudgetQueryManager
-from budget.tzinfo import Pacific, utc
+from common.utils.tzinfo import Pacific, utc
 import logging
 import re
 import urlparse

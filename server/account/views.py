@@ -12,7 +12,8 @@ from common.utils.timezones import Pacific_tzinfo
 from account.models import Account, PaymentRecord
 from account.forms import AccountForm, NetworkConfigForm, PaymentInfoForm
 from account.query_managers import AccountQueryManager, PaymentRecordQueryManager
-from ad_network_reports.query_managers import AdNetworkMapperManager
+from ad_network_reports.query_managers import AdNetworkMapperManager, \
+        AdNetworkStatsManager
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager, AppQueryManager
 import logging
 from common.utils.request_handler import RequestHandler
@@ -129,11 +130,21 @@ class AdNetworkSettingsHandler(RequestHandler):
                         # exists)
                         network = app_key_identifier[1][:-len(PUB_ID)]
                         if value and network in logins_dict:
+                            mappers = AdNetworkMapperManager.get_mappers_for_app(
+                                    login=logins_dict[network], app=app)
+                            # Delete the existing mappers if there are no scrape
+                            # stats for them.
+                            for mapper in mappers:
+                                if mapper:
+                                    stats = mapper.ad_network_stats
+                                    if not stats.count():
+                                        mapper.delete()
                             AdNetworkMapperManager.create(network=network,
                                     pub_id=value, login=logins_dict[network],
                                     app=app)
 
-                app_form = NetworkConfigForm(data=app_network_config_data, instance=app.network_config)
+                app_form = NetworkConfigForm(data=app_network_config_data,
+                        instance=app.network_config)
                 app_network_config = app_form.save(commit=False)
                 AppQueryManager.update_config_and_put(app, app_network_config)
 

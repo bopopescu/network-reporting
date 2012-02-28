@@ -60,9 +60,9 @@ class AdNetworkLoginCredentials(db.Model):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
                 kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
-        if 'username' in kwargs:
+        if 'username' in kwargs and not kwargs.get('debug', False):
             self.username = kwargs['username']
-        if 'password' in kwargs:
+        if 'password' in kwargs and not kwargs.get('debug', False):
             self.password = kwargs['password']
 
     def get_username(self):

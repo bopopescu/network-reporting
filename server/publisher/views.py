@@ -1224,6 +1224,14 @@ def create_iad_mapper(account, app):
     if app.iad_pub_id:
         login = AdNetworkLoginManager.get_login(account, network='iad').get()
         if login:
+            mappers = AdNetworkMapperManager.get_mappers_for_app(login=login,
+                    app=app)
+            # Delete the existing mappers if there are no scrape stats for them.
+            for mapper in mappers:
+                if mapper:
+                    stats = mapper.ad_network_stats
+                    if not stats.count():
+                        mapper.delete()
             AdNetworkMapperManager.create(network='iad',
                                           pub_id=app.iad_pub_id,
                                           login=login,

@@ -14,7 +14,7 @@ import subprocess
 def main():
     f = open('/Users/nafis/Desktop/kinds.txt')
 
-    download_template = "time echo N47935 | appcfg.py download_data --application=mopub-inc --url=http://38-aws.mopub-inc.appspot.com/remote_api --kind=%s --filename=/tmp/%s.data --email=olp@mopub.com --passin"
+    download_template = "time echo N47935N47935 | appcfg.py download_data --application=mopub-inc --url=http://38-aws.mopub-inc.appspot.com/remote_api --kind=%s --filename=/tmp/%s.data --email=olp@mopub.com --passin"
 
     for kind in f:
         kind = kind.strip()

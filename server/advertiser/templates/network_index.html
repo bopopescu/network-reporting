@@ -25,17 +25,14 @@
   <div class="clearfix">
     {% if network_adgroups %}
       <section class="offset nomargin" id="dashboard-stats">
-
         <h3 class="stats-chart-title">
           Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
         </h3>
-
         {# Controls and stats breakdown for the top realtime stats #}
         <div class="stats">
           {% comment %}
             {% stats_breakdown stats %}
           {% endcomment %}
-
           <div class="stats">
             <div id="stats-breakdown" class="stats-breakdown">
               <table>
@@ -71,13 +68,11 @@
                 <label for="stats-breakdown-dateOptions-option-2">All</label>
               </span>
             </div>
-
-
             <div class="chart stats-chart" id="dashboard-stats-chart"></div>
           </div>
-        </section>
-         {% else %}
-       {% endif %}
+        </div>
+      </section>
+    {% endif %}
   </div>
 
   <br />

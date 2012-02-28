@@ -511,18 +511,16 @@ class AdNetworkAggregateManager(CachedQueryManager):
                      stats,
                      network=None,
                      app=None):
-        def txn():
-            old_stats = AdNetworkScrapeStats.get_by_app_mapper_and_day(mapper,
-                    day)
-            aggregate_stats = cls.find_or_create(account, day, network, app)
-            # Do AdNetworkScrapeStats already exist for the app, network and
-            # day?
-            if old_stats:
-                AdNetworkStatsManager.combined_stats(aggregate_stats, old_stats,
-                        subtract=True)
-            AdNetworkStatsManager.combined_stats(aggregate_stats, stats)
-            aggregate_stats.put()
-        db.run_in_transaction(txn)
+        old_stats = AdNetworkScrapeStats.get_by_app_mapper_and_day(mapper,
+                day)
+        aggregate_stats = cls.find_or_create(account, day, network, app)
+        # Do AdNetworkScrapeStats already exist for the app, network and
+        # day?
+        if old_stats:
+            AdNetworkStatsManager.combined_stats(aggregate_stats, old_stats,
+                    subtract=True)
+        AdNetworkStatsManager.combined_stats(aggregate_stats, stats)
+        aggregate_stats.put()
 
     @classmethod
     def find_or_create(cls,
@@ -531,27 +529,25 @@ class AdNetworkAggregateManager(CachedQueryManager):
                        network=None,
                        app=None,
                        create=True):
-        def txn():
-            if network:
-                stats = AdNetworkNetworkStats.get_by_network_and_day(account,
-                                                                    network,
-                                                                    day)
-                if create and not stats:
-                    return AdNetworkNetworkStats(account=account,
-                                                 ad_network_name=network,
-                                                 date=day)
-                return stats
-            elif app:
-                stats = AdNetworkAppStats.get_by_app_and_day(account,
-                                                            app,
-                                                            day)
-                if create and not stats:
-                    return AdNetworkAppStats(account=account,
-                                             application=app,
+        if network:
+            stats = AdNetworkNetworkStats.get_by_network_and_day(account,
+                                                                network,
+                                                                day)
+            if create and not stats:
+                return AdNetworkNetworkStats(account=account,
+                                             ad_network_name=network,
                                              date=day)
-                return stats
-            raise LookupError("Method needs either an app or a network.")
-        return db.run_in_transaction(txn)
+            return stats
+        elif app:
+            stats = AdNetworkAppStats.get_by_app_and_day(account,
+                                                        app,
+                                                        day)
+            if create and not stats:
+                return AdNetworkAppStats(account=account,
+                                         application=app,
+                                         date=day)
+            return stats
+        raise LookupError("Method needs either an app or a network.")
 
     @classmethod
     def get_stats_for_day(cls,
@@ -594,19 +590,13 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
             failed_logins += stats.failed_logins
         return failed_logins
 
-    def get_and_clear_failed_logins(self):
+    def clear_failed_logins(self):
         """
-        Get a list of the failed logins and clear them from the db in an atomic
-        transaction.
+        Clear failed logins from management stats.
         """
-        def txn():
-            failed_logins = []
-            for stats in self.stats_dict.itervalues():
-                failed_logins += stats.failed_logins
-                stats.failed_logins = []
-                stats.put()
-            return failed_logins
-        return db.run_in_transaction(txn)
+        for stats in self.stats_dict.itervalues():
+            stats.failed_logins = []
+            stats.put()
 
     def append_failed_login(self,
                             login_credentials):

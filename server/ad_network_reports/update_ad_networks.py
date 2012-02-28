@@ -292,12 +292,14 @@ def retry_logins(day,
     pool = Pool(processes=processes)
 
     management_stats = AdNetworkManagementStatsManager(day, assemble=True)
-    failed_logins = management_stats.get_and_clear_failed_logins()
+    failed_logins = management_stats.failed_logins
+    management_stats.clear_failed_logins()
 
     logging.info("Assigning processes in pool to retry collecting stats for "
             "%s..." % day)
     results = []
-    for login in failed_logins:
+    for login_key in failed_logins:
+        login = db.get(login_key)
         logging.info("Assigning process in pool to login %s and day %s" %
                 login.key())
         # Using a different management stats for each process and combinding
@@ -326,7 +328,7 @@ def retry_logins(day,
 
     # Flush stats to db
     db.put([stats for mapper, stats in stats_list])
-    final_stats.put()
+    final_stats.put_stats()
 
     logging.info("Finished.")
 

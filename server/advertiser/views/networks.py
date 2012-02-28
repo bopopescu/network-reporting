@@ -42,4 +42,4 @@ class NetworkIndexHandler(RequestHandler):
 
 @login_required
 def network_index(request, *args, **kwargs):
-    return NetworkIndexHandler()(request, *args, **kwargs)
+    return NetworkIndexHandler()(request, use_cache=False, *args, **kwargs)

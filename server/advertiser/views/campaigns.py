@@ -116,7 +116,7 @@ class AdGroupIndexHandler(RequestHandler):
 
 @login_required
 def adgroups(request, *args, **kwargs):
-    return AdGroupIndexHandler()(request, *args, **kwargs)
+    return AdGroupIndexHandler()(request, use_cache=False, *args, **kwargs)
 
 
 ####### Helpers for campaign page #######
@@ -767,7 +767,7 @@ class AdgroupDetailHandler(RequestHandler):
 
 @login_required
 def campaign_adgroup_show(request, *args, **kwargs):
-    return AdgroupDetailHandler(id='adgroup_key')(request, *args, **kwargs)
+    return AdgroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
 
 
 class PauseAdGroupHandler(RequestHandler):

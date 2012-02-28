@@ -171,7 +171,7 @@ class AppIndexHandler(RequestHandler):
 
 @login_required
 def app_index(request,*args,**kwargs):
-    return AppIndexHandler()(request,*args,**kwargs)
+    return AppIndexHandler()(request, use_cache=False, *args, **kwargs)
 
 
 class GeoPerformanceHandler(RequestHandler):
@@ -567,7 +567,7 @@ class ShowAppHandler(RequestHandler):
 
 @login_required
 def app_show(request,*args,**kwargs):
-    return ShowAppHandler(id="app_key")(request,*args,**kwargs)
+    return ShowAppHandler(id="app_key")(request, use_cache=False, *args,**kwargs)
 
 
 class ExportFileHandler( RequestHandler ):
@@ -792,7 +792,7 @@ class AdUnitShowHandler(RequestHandler):
 
 @login_required
 def adunit_show(request,*args,**kwargs):
-    return AdUnitShowHandler(id='adunit_key')(request,*args,**kwargs)
+    return AdUnitShowHandler(id='adunit_key')(request, use_cache=False, *args, **kwargs)
 
 
 class AppUpdateAJAXHandler(RequestHandler):

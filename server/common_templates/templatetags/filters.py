@@ -270,41 +270,59 @@ def include_raw(path):
     """
     return template.loader.find_template(path)[0]
 
+# @register.simple_tag
+# def include_script(script_name,
+#                    load_minified=(not settings.DEBUG),
+#                    overload=settings.DEBUG):
+#     """
+#     Includes a script tag (should be a js file) and considers whether
+#     the script should be loaded (if we're in production, only load the
+#     'app' file, otherwise overload), and what the version number should
+#     be (whatever is in settings.py if we're in production, otherwise a
+#     random number to bust the cache). Just pass in the name, such as
+#     'controllers/networks', don't bother with the '.js'.
+#     """
+#     # clean up the script name
+#     script_name = script_name.replace(".min.js", "")
+#     script_name = script_name.replace(".js", "")
+
+#     # make the script path
+#     path_prefix = "/js/"
+
+#     if load_minified:
+#         path_suffix = ".min.js"
+#     else:
+#         path_suffix = ".js"
+
+#     if overload:
+#         version_number = "?=%s" % str(time.time()).split('.')[0]
+#     else:
+#         version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
+
+#     script_path = path_prefix + script_name + path_suffix + version_number
+
+#     if script_name == 'app' or overload:
+#         return """<script type="text/javascript" src="%s"></script>""" % script_path
+#     else:
+#         return ""
+
 @register.simple_tag
 def include_script(script_name,
                    load_minified=(not settings.DEBUG),
                    overload=settings.DEBUG):
-    """
-    Includes a script tag (should be a js file) and considers whether
-    the script should be loaded (if we're in production, only load the
-    'app' file, otherwise overload), and what the version number should
-    be (whatever is in settings.py if we're in production, otherwise a
-    random number to bust the cache). Just pass in the name, such as
-    'controllers/networks', don't bother with the '.js'.
-    """
-    logging.warn('\n\n\n\n\n\n\n\n')
-    logging.warn(script_name)
+
     # clean up the script name
     script_name = script_name.replace(".min.js", "")
     script_name = script_name.replace(".js", "")
 
     # make the script path
     path_prefix = "/js/"
-
-    if load_minified:
-        path_suffix = ".min.js"
-    else:
-        path_suffix = ".js"
-
-    if overload:
-        version_number = "?=%s" % str(time.time()).split('.')[0]
-    else:
-        version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
+    path_suffix = ".js"
+    version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
 
     script_path = path_prefix + script_name + path_suffix + version_number
 
-    if script_name == 'app' or overload:
+    if not script_name == 'app':
         return """<script type="text/javascript" src="%s"></script>""" % script_path
     else:
         return ""
-

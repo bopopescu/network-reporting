@@ -295,9 +295,9 @@
   <script type="text/html" id="app-on-network-row-template">
     {% include "partials/app_on_network.html" %}
   </script>
-  <script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
-  <script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
-  <script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=4"></script>
+  {% include_script "models/ad_network_reports" %}
+  {% include_script "viewss/ad_network_reports" %}
+  {% include_script "controllers/ad_network_reports" %}
   <script>
     $(function () {
         var account_key = '{{ account_key }}';

@@ -1,6 +1,5 @@
 from __future__ import with_statement
 import urllib2 as urllib
-import logging
 
 from google.appengine.ext import db
 from google.appengine.api import images, files
@@ -43,8 +42,12 @@ class AppForm(mpforms.MPModelForm):
     img_file = forms.FileField(required=False)
     is_edit_form = forms.BooleanField(required=False)
 
-    primary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget, required=True)
-    secondary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,widget=mpwidgets.MPSelectWidget, required=False)
+    primary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,
+                                              widget=mpwidgets.MPSelectWidget,
+                                              required=True)
+    secondary_category = mpfields.MPChoiceField(choices=CATEGORY_CHOICES,
+                                                widget=mpwidgets.MPSelectWidget,
+                                                required=False)
 
     def __init__(self, *args,**kwargs):
         instance = kwargs.get('instance',None)
@@ -52,7 +55,7 @@ class AppForm(mpforms.MPModelForm):
         is_edit_form = kwargs.pop('is_edit_form', None)
 
         if instance:
-            img_url = reverse('publisher_app_icon',kwargs={'app_key':str(instance.key())})
+            img_url = instance.icon_url
             if not initial:
                 initial = {}
             initial.update(img_url=img_url)
@@ -62,36 +65,35 @@ class AppForm(mpforms.MPModelForm):
 
     class Meta:
         model = App
-        fields = ('name', 'app_type', 'url', 'package', 'description', 'adsense_app_name', 'primary_category', 'secondary_category')
+        fields = ('name',
+                  'app_type',
+                  'url',
+                  'package',
+                  'description',
+                  'adsense_app_name',
+                  'primary_category',
+                  'secondary_category')
 
-    def save(self,commit=True):
-        obj = super(AppForm,self).save(commit=False)
+    def save(self, commit=True):
+        obj = super(AppForm, self).save(commit=False)
+
+        # Save the image url if they specified that
         if self.cleaned_data['img_url']:
+            # TODO: add error handling
+            # If there's a new image
             if not self.cleaned_data['img_url'] == self.initial.get('img_url'):
-                try:
-                    response = urllib.urlopen(self.cleaned_data['img_url'])
-                    img = response.read()
+                response = urllib.urlopen(self.cleaned_data['img_url'])
+                img = response.read()
+                # Why don't we resize the app icon to be the proper size?
+                # TODO This would be a good place to do it.
+                obj.icon_blob = self.store_icon(img)
 
-                    obj.icon_blob = self.store_icon(img)
-                    obj.icon = db.Blob(img) # TODO: stop this!
-
-                except Exception, e: # TODO: appropriately handle the failure
-                    raise Exception('WTF: %s'%e)
-            else:
-                logging.info("keeping same icon because the new is same as old")
-                obj.icon = self.instance.icon # sets the icon to the original
+        # Save the file if they uploaded one
         elif self.cleaned_data['img_file']:
-            try:
-                img = self.cleaned_data['img_file'].read()
-                icon = images.resize( img, 60, 60)
-
-                obj.icon_blob = self.store_icon(icon)
-                obj.icon = db.Blob(icon)
-            except Exception, e: # TODO: appropriate handle the failure
-                raise Exception('WTF2: %s'%e)
-        elif self.instance: # if neither img_url or img_file come in just use the old value
-            logging.info("keeping same icon because no new provided")
-            obj.icon = self.instance.icon
+            # TODO: add error handling
+            img = self.cleaned_data['img_file'].read()
+            icon = images.resize(img, 60, 60)
+            obj.icon_blob = self.store_icon(icon)
         if commit:
             obj.put()
         return obj
@@ -101,6 +103,15 @@ class AppForm(mpforms.MPModelForm):
         if not data:
             raise forms.ValidationError('Please provide a name for your app.')
         return data
+
+    # def clean_secondary_category(self):
+    #     secondary_category = self.cleaned_data['secondary_category']
+    #     primary_category = self.cleaned_data['primary_category']
+    #     if secondary_category == primary_category:
+    #         message = """Please choose a secondary category
+    #         that's different from your primary category."""
+    #         raise forms.ValidationError(message)
+    #     return secondary_category
 
     def store_icon(self, icon):
         # add the icon it to the blob store
@@ -127,11 +138,24 @@ DEVICE_FORMAT_CHOICES = (
 
 class AdUnitForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/adunit_form.html'
-    format = mpfields.MPTextField(required=True, widget = mpwidgets.MPFormatWidget)
-    device_format = mpfields.MPChoiceField(required=True, widget=mpwidgets.MPRadioWidget, choices=DEVICE_FORMAT_CHOICES)
-    # animation_type = mpfields.MPChoiceField(choices=ANIMATION_CHOICES,widget=mpwidgets.MPSelectWidget)
+    format = mpfields.MPTextField(required=True,
+                                  widget = mpwidgets.MPFormatWidget)
+    device_format = mpfields.MPChoiceField(required=True,
+                                           widget=mpwidgets.MPRadioWidget,
+                                           choices=DEVICE_FORMAT_CHOICES)
 
     class Meta:
         model = Site
-        fields = ('name','description','app_key','ad_type', 'backfill', 'keywords',
-        'custom_width','custom_height', 'device_format', 'format','adsense_channel_id','refresh_interval','landscape')
+        fields = ('name',
+                  'description',
+                  'app_key',
+                  'ad_type',
+                  'backfill',
+                  'keywords',
+                  'custom_width',
+                  'custom_height',
+                  'device_format',
+                  'format',
+                  'adsense_channel_id',
+                  'refresh_interval',
+                  'landscape')

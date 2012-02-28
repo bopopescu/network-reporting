@@ -137,7 +137,7 @@ def get_url_for_blob(blob, ssl=True):
 
 
 
-def get_all(Model, limit=300):
+def get_all(Model, limit=300, testing=False):
     cnt = 0
     models = Model.all().fetch(limit)
     new_models = models
@@ -146,6 +146,8 @@ def get_all(Model, limit=300):
         print cnt, len(models)
         new_models = Model.all().filter('__key__ >',models[-1]).fetch(limit)
         models += new_models
+        # in testing mode return right away
+        if testing: return models
     return models
 
 def put_all(models, limit=300):

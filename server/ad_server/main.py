@@ -74,12 +74,15 @@ class AdImpressionHandler(webapp.RequestHandler):
         adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_key)
         creative_id = self.request.get('cid')
         creative = adunit_context.get_creative_by_key(creative_id)
-        if creative.ad_group.bid_strategy == 'cpm':
+        if creative.ad_group.bid_strategy == 'cpm' and creative.ad_group.bid:
             budget_service.apply_expense(creative.ad_group.campaign.budget_obj, creative.ad_group.bid/1000)
 
         raw_udid = self.request.get("udid")
-        AdImpressionHandler.increment_frequency_counts(creative=creative,
-                                   raw_udid=raw_udid)
+        if creative:
+            freq_response = AdImpressionHandler.increment_frequency_counts(creative=creative,
+                                       raw_udid=raw_udid)
+        else:
+            freq_response = None
 
         if not self.request.get('testing') == TEST_MODE:
             stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)
@@ -88,13 +91,20 @@ class AdImpressionHandler(webapp.RequestHandler):
 
     @classmethod
     def increment_frequency_counts(cls, creative=None,
-                                   raw_udid=None,
-                                   now=datetime.datetime.now()):
-          user_adgroup_daily_key = frequency_capping.memcache_key_for_date(raw_udid, now, creative.ad_group.key())
-          user_adgroup_hourly_key = frequency_capping.memcache_key_for_hour(raw_udid, now, creative.ad_group.key())
-          trace_logging.warning("user_adgroup_daily_key: %s"%user_adgroup_daily_key)
-          trace_logging.warning("user_adgroup_hourly_key: %s"%user_adgroup_hourly_key)
-          memcache.offset_multi({user_adgroup_daily_key:1,user_adgroup_hourly_key:1}, key_prefix='', namespace=None, initial_value=0)
+                                        raw_udid=None,
+                                        now=None):
+        from userstore.query_managers import ImpressionEventManager
+
+        now = now or datetime.datetime.now()
+
+        impression_types_to_update = []
+        if creative.ad_group.daily_frequency_cap:
+            impression_types_to_update.append(ImpressionEventManager.DAILY)
+        if creative.ad_group.hourly_frequency_cap:
+            impression_types_to_update.append(ImpressionEventManager.HOURLY)
+
+        if impression_types_to_update:
+            ImpressionEventManager().log_impression(raw_udid, str(creative.adgroup.key()), now, impression_types_to_update)
 
 class AdClickHandler(webapp.RequestHandler):
     # /m/aclk?udid=james&appid=angrybirds&id=ahRldmVudHJhY2tlcnNjYWxldGVzdHILCxIEU2l0ZRipRgw&cid=ahRldmVudHJhY2tlcnNjYWxldGVzdHIPCxIIQ3JlYXRpdmUYoh8M
@@ -221,7 +231,8 @@ def main():
                                                   ('/m/memshow', memcache_mangler.ShowHandler),
                                                   ('/m/purchase', PurchaseHandler),
                                                   ('/m/purchase_txn', PurchaseHandlerTxn),
-                                                  ('/m/req',AdRequestHandler),
+                                                  ('/m/req', AdRequestHandler),
+                                                  ('/_ah/warmup', adhandler.AdHandler),
                                                   ('/m/budget/advance/', budget_handlers.BudgetAdvanceHandler),
                                                   ('/m/budget/advance_worker/', budget_handlers.BudgetAdvanceWorkerHandler)],
                                                   debug=DEBUG)

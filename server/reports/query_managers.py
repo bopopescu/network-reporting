@@ -166,8 +166,12 @@ class ReportQueryManager(CachedQueryManager):
                 now = now - one_day
             elif report.interval == 'lmonth':
                 start, end = date_magic.last_month(now)
-                now = end.date()
-                dt = end.date() - start.date()
+                if isinstance(end, datetime.datetime):
+                    end = end.date()
+                if isinstance(start, datetime.datetime):
+                    start = start.date()
+                now = end
+                dt = end - start
 
         account = report.account.key()
         start = now - dt

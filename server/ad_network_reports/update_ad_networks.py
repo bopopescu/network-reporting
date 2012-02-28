@@ -67,8 +67,11 @@ ADMIN_EMAIL = 'tiago@mopub.com'
 SUPPORT_EMAIL = 'support@mopub.com'
 REPORTING_EMAIL = 'report-monitoring@mopub.com'
 
-def multiprocess_update_all(start_day=None, end_day=None, email=False,
-        processes=1):
+def multiprocess_update_all(start_day=None,
+                            end_day=None,
+                            email=False,
+                            processes=1,
+                            testing=False):
     """
     Break up update script into multiple processes.
     """
@@ -132,7 +135,10 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
     logging.info("Finished.")
 
 
-def update_account_stats(account, day, email):
+def update_account_stats(account,
+                         day,
+                         email,
+                         testing=False):
     """
     Call update_login_stats for each login for the account for the day.
 
@@ -222,7 +228,10 @@ def update_account_stats(account, day, email):
         raise
 
 
-def update_login_stats_for_check(login, start_day=None, end_day=None):
+def update_login_stats_for_check(login,
+                                 start_day=None,
+                                 end_day=None,
+                                 testing=False):
     """
     Collect data for a given login from the start date to yesterday.
 
@@ -239,7 +248,7 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
     # Collect stats
     stats_list = []
     for day in date_magic.gen_days(start_day, end_day):
-        stats_list += update_login_stats(login, day, from_check=True)
+        stats_list += update_login_stats(login, day, update_aggregates=True)
     login.put()
 
 
@@ -267,8 +276,61 @@ def update_login_stats_for_check(login, start_day=None, end_day=None):
         s.quit()
 
 
-def update_login_stats(login, day, management_stats=None, from_check=False,
-        logger=None):
+# TODO: make some db transactions atomic
+def retry_logins(day,
+                 processes=1):
+    """
+    Retry failed logins for a given day.
+    """
+    # Create the pool of processes
+    pool = Pool(processes=processes)
+
+    management_stats = AdNetworkManagementStatsManager(day, assemble=True)
+    failed_logins = management_stats.get_and_clear_failed_logins()
+
+    logging.info("Assigning processes in pool to retry collecting stats for "
+            "%s..." % day)
+    results = []
+    for login in failed_logins:
+        logging.info("Assigning process in pool to login %s and day %s" %
+                login.key())
+        # Using a different management stats for each process and combinding
+        # them later keeps increments atomic
+        temp_stats = AdNetworkManagementStatsManager(day)
+        # Assign process in pool calling update_login_stats and giving it
+        # it's appropriate login
+        results.append((temp_stats,
+            pool.apply_async(update_login_stats,
+                args=(account, day),
+                kwds={'management_stats': temp_stats,
+                      'update_aggregates': True})))
+
+    # Wait for all processes in pool to complete
+    pool.close()
+    pool.join()
+
+    # Save management stats
+    logging.info("Saving scrape stats...")
+    stats_list = []
+    final_stats = management_stats
+    for temp_stats, result in results:
+        if result.successful():
+            stats_list += result.get()
+            final_stats.combined(temp_stats)
+
+    # Flush stats to db
+    db.put([stats for mapper, stats in stats_list])
+    final_stats.put()
+
+    logging.info("Finished.")
+
+
+def update_login_stats(login,
+                       day,
+                       management_stats=None,
+                       update_aggregates=False,
+                       logger=None,
+                       testing=False):
     """
     Update or create stats for the given login and day.
 
@@ -389,7 +451,7 @@ def update_login_stats(login, day, management_stats=None, from_check=False,
                                             clicks=stats.clicks)
         valid_stats_list.append((mapper, scrape_stats))
 
-        if from_check:
+        if update_aggregates:
             AdNetworkAggregateManager.update_stats(login.account, mapper, day,
                     scrape_stats, network=mapper.ad_network_name)
             AdNetworkAggregateManager.update_stats(login.account, mapper, day,

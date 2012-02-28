@@ -5,18 +5,7 @@ from google.appengine.api import memcache
 from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
-#from common.utils.decorators import wraps_first_arg
-class wraps_first_arg(object):
-    """ Decorator that wraps all nonlist arguments and turns them into lists.
-    Only works for bound methods """
-    def __init__(self, f):
-        self.f = f
-    def __call__(self, *args):
-        args = list(args)
-        if not isinstance(args[1], (list, tuple)):
-            args[1] = [args[1]]
-
-        return self.f(*args)
+from common.utils.decorators import wraps_first_arg
 
 from common.constants import CAMPAIGN_LEVELS
 
@@ -144,11 +133,17 @@ class CampaignQueryManager(QueryManager):
     def put(cls, campaigns):
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
+        
+        # Put campaigns so if they're new they have a key    
         put_response = db.put(campaigns)
         
+        # They need a key because this QM needs the key
         for camp in campaigns:
             budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
             camp.budget_obj = budg_obj
+
+        # Put them again so they save their budget obj
+        put_response = db.put(campaigns)
 
 
         # Clear cache

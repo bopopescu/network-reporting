@@ -16,25 +16,13 @@ from ad_server.adunit_context.adunit_context import AdUnitContext
 
 from advertiser.models import Campaign, AdGroup, Creative
 from common.constants import MAX_OBJECTS
-# from common.utils.decorators import wraps_first_arg
+from common.utils.decorators import wraps_first_arg
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from hypercache import hypercache
 from publisher.models import App
 from publisher.models import Site as AdUnit
 from reporting.query_managers import StatsModelQueryManager
-
-class wraps_first_arg(object):
-    """ Decorator that wraps all nonlist arguments and turns them into lists.
-    Only works for bound methods """
-    def __init__(self, f):
-        self.f = f
-    def __call__(self, *args):
-        args = list(args)
-        if not isinstance(args[1], (list, tuple)):
-            args[1] = [args[1]]
-
-        return self.f(*args)
 
 
 CACHE_TIME = 0 # turned off cache expiration
@@ -124,13 +112,16 @@ class AdUnitContextQueryManager(CachedQueryManager):
             clear_uri = clear_uri + '&testing=True&port=%s' % port
             fetcher.fetch(clear_uri)
         else:
-            try:
-                full_url = 'http://' + ADSERVER + clear_uri
-                urllib2.urlopen(full_url)
-            except:
-                # This isn't implemented, don't do it
-                #TODO(tornado): need to implement this and things
-                pass
+            pass
+            #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
+            # WHEN SHIT IS LIVE FOR REAL
+            #try:
+            #    full_url = 'http://' + ADSERVER + clear_uri
+            #    urllib2.urlopen(full_url)
+            #except:
+            #    # This isn't implemented, don't do it
+            #    #TODO(tornado): need to implement this and things
+            #    pass
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)

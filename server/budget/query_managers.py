@@ -59,13 +59,16 @@ class BudgetQueryManager(QueryManager):
         if testing and fetcher:
             fetcher.fetch(update_uri)
         else:
-            try:
-                full_url = 'http://' + ADSERVER + update_uri
-                urllib2.urlopen(full_url)
-            except:
-                # This isn't implemented yet
-                #TODO(tornado): need to implement this and things
-                pass
+            pass
+            #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
+            # WHEN SHIT IS LIVE FOR REAL
+            #try:
+            #    full_url = 'http://' + ADSERVER + update_uri
+            #    urllib2.urlopen(full_url)
+            #except:
+            #    # This isn't implemented yet
+            #    #TODO(tornado): need to implement this and things
+            #    pass
 
         if camp.budget_obj:
             budget = camp.budget_obj

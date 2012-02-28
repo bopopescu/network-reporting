@@ -618,7 +618,7 @@ LEVELS = (
     ('a', 'Strict - Only allow ads appropriate for family audiences'),
     ('b', 'Moderate - Allow ads for general audiences'),
     ('c', 'Low - Allow ads for mature audiences, including alcohol and dating ads'),
-    ('d', 'No filtering - Allow ads including those with provocative or suggestive imagery. MoPub always blocks illegal or deceptive ads.'),
+    ('d', 'No filtering - Allow ads including those with provocative or suggestive imagery. MoPub always blocks illegal, pornographic and deceptive ads.'),
     )
 
 

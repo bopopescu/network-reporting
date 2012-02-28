@@ -41,6 +41,11 @@
             </td>
             {% endif %}
         {% else %}
+        {% ifequal status "Completed" %}
+        <td class='success'>
+            Complete!
+        </td>
+        {% endifequal %}
             {% ifequal status "No Data" %}
             <td class='invalid'>
                 No Data

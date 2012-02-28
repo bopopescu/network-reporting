@@ -7,7 +7,7 @@
 {% endblock pageTitle %}
 
 {% block navLinks %}
-  <li><a href="{% url publisher_index %}">Dashboard</a></li>
+  <li><a href="{% url app_index %}">Dashboard</a></li>
   <li class="active"><a href="{% url advertiser_campaign %}">Campaigns</a></li>
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li><a href="{% url network_index %}">Networks</a></li>
@@ -17,27 +17,27 @@
 {% block dateButtons %}
 <div id="titlebar-center-wide">
     <span class="buttonset-start-disabled" id="campaigns-filterOptions">
-      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-all" checked="checked" id="campaigns-filterOptions-option-all"/>
+      <input type="radio" name="campaigns-filterOptions-option" value="" checked="checked" id="campaigns-filterOptions-option-all"/>
       <label for="campaigns-filterOptions-option-all">
         All
       </label>
-      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Running" id="campaigns-filterOptions-option-Running"/>
+      <input type="radio" name="campaigns-filterOptions-option" value="Running" id="campaigns-filterOptions-option-Running"/>
       <label for="campaigns-filterOptions-option-Running">
         Running
       </label>
-      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Paused" id="campaigns-filterOptions-option-Paused" />
+      <input type="radio" name="campaigns-filterOptions-option" value="Paused" id="campaigns-filterOptions-option-Paused" />
       <label for="campaigns-filterOptions-option-Paused">
         Paused
       </label>
-      <input type="radio" name="campaigns-filterOptions-option" value="campaign-status-Scheduled" id="campaigns-filterOptions-option-Scheduled" />
+      <input type="radio" name="campaigns-filterOptions-option" value="Scheduled" id="campaigns-filterOptions-option-Scheduled" />
       <label for="campaigns-filterOptions-option-Scheduled">
         Scheduled
       </label>
     </span>
     <select name="campaigns-appFilterOptions" id="campaigns-appFilterOptions">
-      <option id="campaigns-appFilterOptions-option-all" value="campaign-status-all">All Apps</option>
+      <option id="campaigns-appFilterOptions-option-all" value="">All Apps</option>
       {% for app in apps %}
-        <option value="campaign-targeting-{{app.key}}">{{app.name}}</option>
+        <option value="{{app.key}}">{{app.name}}</option>
       {% endfor %}
     </select>
 </div>
@@ -61,7 +61,7 @@
   {% if not apps %}
     <div class="alert-message block-message">
       Before you set up your ad campaigns, we recommend that you set up your App inventory.
-      Visit the <a href="{% url publisher_index %}">Dashboard</a> to add your Apps.
+      Visit the <a href="{% url app_index %}">Dashboard</a> to add your Apps.
     </div>
   {% endif %}
 
@@ -75,413 +75,114 @@
       <input type="hidden" name="action" id="action"/>
 
       <h3 style="float: right;">Showing {{start_date|date:"n/j/y"}} to {{end_date|date:"n/j/y"}}</h3>
-      {% if not guarantee_num %}
-        <h2> No Guaranteed Campaigns </h2>
-      {% else %}
-        <h2> Guaranteed Campaigns <img id="gtee-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img> </h2>
-      {% endif %}
 
-      {% if guarantee_num %}
+      <div id="gtee-adgroups"></div>
 
-        <div id='gtee-rollups' class="campaignData-rollup">
-          <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-            <thead>
-              <tr>
-                <th width=25%>Impressions</th>
-                <th width=25%>Clicks</th>
-                <th width=25%>CTR</th>
-                <th width=25%>Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td id='gtee-total-imp'>--</td>
-                <td id='gtee-total-clk'>--</td>
-                <td id='gtee-total-ctr'>--</td>
-                <td id='gtee-total-rev'>--</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div id="promo-adgroups"></div>
 
+      <div id="backfill-promo-adgroups"></div>
 
-    {% for level in guarantee_levels %}
-      {% if level.display %}
-        <table class="dataTable campaignData-main" id="campaignDataTable-direct-{{level.name}}">
-          <thead>
-            <tr>
-              <th class="campaignData-icon"></th>
-              <th class="dataTable-name"> {{ level.name }} Priority </th>
-              <th class="dataTable-data numeric">Revenue</th>
-              <th class="dataTable-data numeric">Status</th>
-              <th class="dataTable-data numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
-              <th class="dataTable-data numeric">Goal</th>
-              <th class="dataTable-data numeric">Impressions</th>
-              <th class="dataTable-data numeric">Clicks</th>
-              <th class="dataTable-data numeric">Conv</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for adgroup in level.adgroups %}
-              <tr class="campaignData gtee_row campaign-status-all campaign-targeting-all incomplete {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}" id="{{adgroup.key}}">
-                <td class="campaignData-icon">
-                  <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                  {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                  {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                  {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                </td>
-                <td class="dataTable-name">
-                  <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
-				 
-                  <span class="muted">
-                    {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                      {{adgroup.campaign.start_datetime|format_date_compact}} - {{adgroup.campaign.end_datetime|format_date_compact}}.
-                    {% endif %}
+      <div class="form-submit-left">
+        <span class="buttonWrap">
+          <a class="button pause icon" id="campaignForm-pause">Pause</a>
+          <a class="button play icon" id="campaignForm-resume">Resume</a>
+          <a class="button stop icon" id="campaignForm-archive">Archive</a>
+        </span>
+      </div>
+    </form>
 
-                    {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                      Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
-                    {% endif %}
+    <div id="archive-link" >
+      <a class="linkIcon" href="{% url advertiser_archive %}"> View Archived Campaigns <span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
+    </div>
+  </section>
 
-                    {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                      Ends {{adgroup.campaign.end_datetime|format_date_compact}}.
-                    {% endif %}
-
-                    {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                      All dates.
-                    {% endif %}
-
-                    {% ifequal adgroup.campaign.budget_type 'daily' %}
-                      {% if adgroup.campaign.budget %}
-                        {{adgroup.campaign.budget|currency}} daily budget.
-                      {% else %}
-                        Unlimited budget.
-                      {% endif %}
-                    {% endifequal %}
-
-                    {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
-                      {{adgroup.campaign.full_budget|withsep}} campaign budget.
-                    {% endifequal %}
-                  </span>
-
-                </td>
-
-                <td class="dataTable-data numeric gtee-rev rev">--</td>
-
-                <td class="dataTable-data numeric">
-                  <div class="status">--</div>
-                  <div class="dataTable-data dataTable-pace pace"></div>
-                </td>
-
-                {% if adgroup.cpc %}
-                  <td class="dataTable-data numeric dataTable-ecpm">
-                    <div class="dataTable-campaign-ecpm ecpm">--</div>
-                  </td>
-                {% else %}
-                  <td class="dataTable-data numeric dataTable-ecpm ecpm">--</td>
-                {% endif %}
-
-                <td class="dataTable-goals">
-                    <div class="dataTable-data numeric">
-                        {% if adgroup.budget_goal %}
-                          {% if adgroup.cpc %}${% endif %}{{adgroup.budget_goal|withsep}}
-                        {% if adgroup.cpc %}
-                          <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">USD</div>
-                        {% else %}
-                          <div class="dataTable-data numeric gtee-goal_unit goal_unit muted">Impressions</div>
-                        {% endif %}
-                        {% else %}--{% endif %}
-                    </div>
-                </td>
-                <td class="dataTable-data numeric gtee-imp imp">--</td>
-                <td class="dataTable-data numeric">
-                    <div class="gtee-clk clk">--</div>
-                    <div class="gtee-ctr ctr muted">--</div>
-                </td>
-                <td class="dataTable-data numeric">
-                  <div class="gtee-conv conv">--</div>
-                  <div class="gtee-conve_rate conv_rate muted">--</div>
-                </td>
-              </tr>
-            {% endfor %}
-          {% endif %}
-        {% endfor %}
-          </tbody>
-
-        </table>
-      {% endif %}
+  {# Help Content #}
+  <div id="campaign-ecpm-helpContent" class="hidden">
+    <h3>Revenue Optimized Campaign eCPM</h3>
+    <p>We calculate the <strong>eCPM</strong> for CPC campaigns by combining the CPC of the campaign with our CTR calculated in real time.</p>
+    <p>This number may vary over time. This is perfectly natural and our system will adjust to these fluctuations in real time.</p>
+    <p>Campaigns that have not yet begun use the average CTR of the entire app to calculate eCPM.</p>
+  </div>
 
 
-      {% if not promo%}
-        <h2> No Promotional Campaigns </h2>
-      {% else %}
-        <h2>Promotional Campaigns <img id="promo-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img> </h2>
-      {% endif %}
+  <div id="campaign-osi-success-helpContent" class="hidden">
+    <h3>On Schedule Indicator</h3>
+    <p> The on-schedule indicator tells you that your campaign is on track to hit its budget goal based on current traffic and settings.</p>
+  </div>
 
-      {% if promo %}
-
-        <div id='promo-rollups' class="campaignData-rollup">
-          <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-            <thead>
-              <tr>
-                <th width=25%>Impressions</th>
-                <th width=25%>Clicks</th>
-                <th width=25%>CTR</th>
-                <th width=25%>Conversions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td id='promo-total-imp'>--</td>
-                <td id='promo-total-clk'>--</td>
-                <td id='promo-total-ctr'>--</td>
-                <td id='promo-total-conv'>--</td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <table class="dataTable campaignData-main">
-          <thead>
-            <tr>
-              <th class="campaignData-icon"></th>
-              <th class="dataTable-name">Name</th>
-              <th class="dataTable-data numeric">Status</th>
-              <th class="dataTable-data numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
-              <th class="dataTable-data numeric">Goal</th>
-              <th class="dataTable-data numeric">Impressions</th>
-              <th class="dataTable-data numeric">Clicks</th>
-              <th class="dataTable-data numeric">Conv</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for adgroup in promo %}
-                <tr class="campaignData promo_row campaign-status-all campaign-targeting-all incomplete
-                           {% for app_key in adgroup.targeted_app_keys %} campaign-targeting-{{ app_key }} {% endfor %}"
-                    id="{{adgroup.key}}">
-                  <td class="campaignData-icon">
-                    <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                    {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                    {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                    {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                  </td>
-                  <td class="dataTable-name">
-                    <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
-                    <br/>
-                    <span class="muted">
-                      {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                        {{adgroup.campaign.start_datetime|format_date_compact}}-{{adgroup.campaign.end_datetime|format_date_compact}}.
-                      {% endif %}
-                      {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                        Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
-                      {% endif %}
-                      {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                        Ends {{adgroup.campaign.end_datetime|format_date_compact}}.
-                      {% endif %}
-                      {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                        All dates.
-                      {% endif %}
-                      {% if adgroup.campaign.budget %}
-                        {{adgroup.campaign.budget|currency}} daily budget.
-                      {% else %}
-                        Unlimited budget.
-                      {% endif %}
-                    </span>
-                  </td>
-
-                <td class="dataTable-data numeric">
-                  <div class="status">--</div>
-                  <div class="on_schedule muted"></div>
-                </td>
-
-                {% if adgroup.cpc %}
-                  <td class="dataTable-data numeric">
-                    <div class="dataTable-campaign-ecpm ecpm">--</div>
-                  </td>
-                {% else %}
-                  <td class="dataTable-data numeric ecpm">--</td>
-                {% endif %}
-                <td class="dataTable-data numeric promo-goal goal"></td>
-                <td class="dataTable-data numeric promo-imp imp">--</td>
-                <td class="dataTable-data numeric">
-                    <div class="promo-clk clk">--</div>
-                    <div class="promo-ctr ctr muted">--</div>
-                </td>
-                <td class="dataTable-data numeric">
-                  <div class="promo-conv conv">--</div>
-                  <div class="promo-conve_rate conv_rate muted">--</div>
-                </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        {% endif %}
-
-        {% if not backfill_promo %}
-          <h2> No Backfill Promotional Campaigns </h2>
-        {% else %}
-          <h2>
-            Backfill Promotional Campaigns
-            <img id="bfill-loading-img" class="loading-img" style="display:none" src="../images/icons-custom/spinner-16.gif"></img>
-          </h2>
-        {% endif %}
-
-        {% if backfill_promo %}
-          <div id='bfill-rollups' class="campaignData-rollup">
-            <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-              <thead>
-                <tr>
-                  <th width=25%>Impressions</th>
-                  <th width=25%>Clicks</th>
-                  <th width=25%>CTR</th>
-                  <th width=25%>Conversions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td id='bfill-total-imp'>--</td>
-                  <td id='bfill-total-clk'>--</td>
-                  <td id='bfill-total-ctr'>--</td>
-                  <td id='bfill-total-conv'>--</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <table class="dataTable campaignData-main">
-            <thead>
-              <tr>
-                <th class="campaignData-icon"></th>
-                <th class="dataTable-name">Name</th>
-
-                <th class="dataTable-data numeric"></th>
-                <th class="dataTable-data numeric">Status</th>
-                <th class="dataTable-data numeric"><a href="#" id="campaign-ecpm-helpLink" class="whatsthis"><div class="whatsthis-icon"></div></a> eCPM</th>
-                <th class="dataTable-data numeric">Goal</th>
-                <th class="dataTable-data numeric">Impressions</th>
-                <th class="dataTable-data numeric">Clicks</th>
-                <th class="dataTable-data numeric">Conv</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for adgroup in backfill_promo %}
-                <tr class="campaignData
-                           bfill_row
-                           campaign-status-all
-                           campaign-targeting-all
-                           incomplete
-                           {% for app_key in adgroup.targeted_app_keys %}
-                             campaign-targeting-{{ app_key }}
-                           {% endfor %}"
-                    id="{{adgroup.key}}">
-                  <td class="campaignData-icon">
-                    <input type="checkbox" name="id" value="{{adgroup.key}}"/>
-                    {% if adgroup.deleted %}
-                      <img src="/images/deleted.gif" height=9 width=9></img>
-                    {% endif %}
-                    {% if adgroup.active and not adgroup.deleted %}
-                      <img src="/images/active.gif" height=9 width=9 />
-                    {% endif %}
-                    {% if not adgroup.active and not adgroup.deleted %}
-                      <img src="/images/paused.gif" height=9 width=9 />
-                    {% endif %}
-                  </td>
-                  <td class="dataTable-name">
-                    <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a><br/>
-                    <span class="muted">
-                      {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                        {{adgroup.campaign.start_datetime|format_date_compact}}-{{adgroup.campaign.end_datetime|format_date_compact}}.
-                        {% endif %} {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                        Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
-                        {% endif %} {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                        Ends {{adgroup.campaign.end_datetime|format_date_compact}}.
-                        {% endif %} {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                        All dates.
-                      {% endif %}
-                      {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
-                    </span>
-                    </td>
-
-                    <td class="dataTable-data numeric"></th>
-                    <td class="dataTable-data numeric">
-                      <div class="status">--</div>
-                      <div class="on_schedule muted"></div>
-                    </td>
-
-                    {% if adgroup.cpc %}
-                      <td class="dataTable-data numeric">
-                        <div class="dataTable-campaign-ecpm ecpm">--</div>
-                      </td>
-                    {% else %}
-                      <td class="dataTable-data numeric ecpm">--</td>
-                    {% endif %}
-
-                    <td class="dataTable-data numeric bfill-goal goal"></td>
-                    <td class="dataTable-data numeric bfill-imp imp">--</td>
-                    <td class="dataTable-data numeric">
-                      <div class="bfill-clk clk">--</div>
-                      <div class="bfill-ctr ctr muted">--</div>
-                    </td>
-                    <td class="dataTable-data numeric">
-                      <div class="bfill-conv conv">--</div>
-                      <div class="bfill-conve_rate conv_rate muted">--</div>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>{% endif %}
-
-              <div class="form-submit-left">
-                <span class="buttonWrap">
-                <a class="button pause icon" id="campaignForm-pause">Pause</a>
-                <a class="button play icon" id="campaignForm-resume">Resume</a>
-                <a class="button stop icon" id="campaignForm-archive">Archive</a>
-                </span>
-              </div>
-            </form>
-            <div id="archive-link" >
-            <a class="linkIcon" href="{% url advertiser_archive %}"> View Archived Campaigns <span class="ui-icon ui-icon-arrowthick-1-e"></span></a>
-            </div>
-          </section>
-
-          {# Help Content #}
-          <div id="campaign-ecpm-helpContent" class="hidden">
-            <h3>Revenue Optimized Campaign eCPM</h3>
-            <p>We calculate the <strong>eCPM</strong> for CPC campaigns by combining the CPC of the campaign with our CTR calculated in real time. </p>
-            <p> This number may vary over time. This is perfectly natural and our system will adjust to these fluctuations in real time. </p>
-            <p> Campaigns that have not yet begun use the average CTR of the entire app to calculate eCPM. </p>
-          </div>
-
-          <div id="campaign-osi-success-helpContent" class="hidden">
-            <h3>On Schedule Indicator</h3>
-            <p> The on-schedule indicator tells you that your campaign is on track to hit its budget goal based on current traffic and settings. </p>
-          </div>
-
-          <div id="campaign-osi-failure-helpContent" class="hidden">
-            <h3>Behind Schedule Indicator</h3>
-            <p> The behind-schedule indicator tells you that your campaign is delivering at less than 95% and may not meet its delivery goal. </p>
-            <p> Some possible causes of this problem are:
-              <ul>
-                <li> Format mismatch (e.g. your adunits are 320x50 and your creatives are interstitial) </li>
-                <li> Overly strict frequency capping (e.g. one per person) </li>
-                <li> Insufficient traffic </li>
-              </ul>
-
-          </div>
-
-          {% include "mpx_tos.html" %}
-
+  <div id="campaign-osi-failure-helpContent" class="hidden">
+    <h3>Behind Schedule Indicator</h3>
+    <p> The behind-schedule indicator tells you that your campaign is delivering at less than 95% and may not meet its delivery goal.</p>
+    <p> Some possible causes of this problem are:
+      <ul>
+        <li>Format mismatch (e.g. your adunits are 320x50 and your creatives are interstitial)</li>
+        <li>Overly strict frequency capping (e.g. one per person)</li>
+        <li>Insufficient traffic</li>
+      </ul>
+    </p>
+  </div>
 {% endblock content %}
 
 
 {% block extraScripts %}
-  <script src="/js/mopub-advertiser.js?v=95"></script>
+
+  <script type="text/html" id="adgroups-rollup-template">
+    {% include "partials/adgroups_rollup.html" %}
+  </script>
+  <script type="text/html" id="adgroups-table-template">
+    {% include "partials/adgroups_table.html" %}
+  </script>
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/campaigns" %}
   <script>
-    var mopub = mopub || {};
     $(function() {
-        mopub.isDirectSoldPage = true; // need this for getNumDaysToFetch()
-        mopub.graphStartDate = Date.UTC({{start_date.year}}, {{start_date.month|add:"-1"}}, {{start_date.day}});
-        mopub.Advertiser.initDirectSoldPage();
+
+    CampaignsController.initializeDirectSold({
+      gtee_adgroups_data: [{% for adgroup in gtee_adgroups %}{
+        id: '{{ adgroup.key }}',
+        active: {% if adgroup.active %}true{% else %}false{% endif %},
+        level: '{% if adgroup.campaign.campaign_type == 'gtee_high' %}high{% else %}{% if adgroup.campaign.campaign_type == 'gtee' %}normal{% else %}low{% endif %}{% endif %}',
+        name: '{{ adgroup.name }}',
+          details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
+          start_date: {% if adgroup.campaign.start_datetime %}new Date({{ adgroup.campaign.start_datetime.year }}, {{ adgroup.campaign.start_datetime.month|add:"-1" }}, {{ adgroup.campaign.start_datetime.day }}){% else %}null{% endif %},
+          end_date: {% if adgroup.campaign.end_datetime %}new Date({{ adgroup.campaign.end_datetime.year }}, {{ adgroup.campaign.end_datetime.month|add:"-1" }}, {{ adgroup.campaign.end_datetime.day }}){% else %}null{% endif %},
+          budget_type: '{{ adgroup.campaign.budget_type }}',
+          budget: {% if adgroup.campaign.budget_type == "daily" %}{% if adgroup.campaign.budget %}{{ adgroup.campaign.budget }}{% else %}null{% endif %}{% else %}{% if adgroup.campaign.full_budget %}{{ adgroup.campaign.full_budget }}{% else %}null{% endif %}{% endif %},
+          goal: {% if adgroup.budget_goal %}{{ adgroup.budget_goal }}{% else %}null{% endif %},
+          bid: {{ adgroup.bid|default_if_none:"null" }},
+          bid_strategy: '{{ adgroup.bid_strategy }}',
+          apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}],
+          promo_adgroups_data: [{% for adgroup in promo_adgroups %}{
+          id: '{{ adgroup.key }}',
+          active: {% if adgroup.active %}true{% else %}false{% endif %},
+          name: '{{ adgroup.name }}',
+          details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
+          start_date: {% if adgroup.campaign.start_datetime %}new Date({{ adgroup.campaign.start_datetime.year }}, {{ adgroup.campaign.start_datetime.month|add:"-1" }}, {{ adgroup.campaign.start_datetime.day }}){% else %}null{% endif %},
+          end_date: {% if adgroup.campaign.end_datetime %}new Date({{ adgroup.campaign.end_datetime.year }}, {{ adgroup.campaign.end_datetime.month|add:"-1" }}, {{ adgroup.campaign.end_datetime.day }}){% else %}null{% endif %},
+          budget_type: '{{ adgroup.campaign.budget_type }}',
+          budget: {% if adgroup.campaign.budget_type == "daily" %}{% if adgroup.campaign.budget %}'{{ adgroup.campaign.budget }}'{% else %}null{% endif %}{% else %}{% if adgroup.campaign.full_budget %}'{{ adgroup.campaign.full_budget }}'{% else %}null{% endif %}{% endif %},
+          goal: {% if adgroup.budget_goal %}{{ adgroup.budget_goal }}{% else %}null{% endif %},
+          bid: {{ adgroup.bid }},
+          bid_strategy: '{{ adgroup.bid_strategy }}',
+          apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}],
+          backfill_promo_adgroups_data: [{% for adgroup in backfill_promo_adgroups %}{
+            id: '{{ adgroup.key }}',
+            deleted: {% if adgroup.deleted %}true{% else %}false{% endif %},
+            active: {% if adgroup.active %}true{% else %}false{% endif %},
+            name: '{{ adgroup.name }}',
+            details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
+            start_date: {% if adgroup.campaign.start_datetime %}new Date({{ adgroup.campaign.start_datetime.year }}, {{ adgroup.campaign.start_datetime.month|add:"-1" }}, {{ adgroup.campaign.start_datetime.day }}){% else %}null{% endif %},
+            end_date: {% if adgroup.campaign.end_datetime %}new Date({{ adgroup.campaign.end_datetime.year }}, {{ adgroup.campaign.end_datetime.month|add:"-1" }}, {{ adgroup.campaign.end_datetime.day }}){% else %}null{% endif %},
+            budget_type: '{{ adgroup.campaign.budget_type }}',
+            budget: {% if adgroup.campaign.budget_type == "daily" %}{% if adgroup.campaign.budget %}'{{ adgroup.campaign.budget }}'{% else %}null{% endif %}{% else %}{% if adgroup.campaign.full_budget %}'{{ adgroup.campaign.full_budget }}'{% else %}null{% endif %}{% endif %},
+            goal: {% if adgroup.budget_goal %}{{ adgroup.budget_goal }}{% else %}null{% endif %},
+            bid: {{ adgroup.bid }},
+            bid_strategy: '{{ adgroup.bid_strategy }}',
+            apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}
+            ],
+          ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}{% if offline %}&offline=1{% endif %}'
+        });
     });
   </script>
 {% endblock extraScripts %}

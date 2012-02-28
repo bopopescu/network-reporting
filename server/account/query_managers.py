@@ -42,7 +42,7 @@ class AccountQueryManager(CachedQueryManager):
 
     @classmethod
     def get_account_for_email(cls, email):
-        user = User.get_by_email(email)
+        user = UserQueryManager.get_by_email(email)
         return cls.get_current_account(user=user)
 
     @classmethod

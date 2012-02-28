@@ -8,12 +8,13 @@
 <head>
   <meta charset="utf-8">
 
-  <title>MoPub - {% block pageTitleTag %}Ad Serving for Mobile Applications{% endblock %}</title>
+  <title>
+    MoPub - {% block pageTitleTag %}Ad Serving for Mobile Applications{% endblock %}
+  </title>
   <meta name="description" content="">
   <meta name="author" content="">
   {% block extraMeta %}{% endblock %}
 
-  <script type="text/javascript" src="/js/require.min.js?v=1"></script>
   {# TypeKit #}
   <script type="text/javascript" src="https://use.typekit.com/qhz7iwb.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
@@ -22,7 +23,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   {# CSS #}
-  <link rel="stylesheet" href="/js/mylibs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />
+  <link rel="stylesheet" href="/js/libs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />
   <link rel="stylesheet" href="/css/style.css?v=51">
   {% block extraCSS %}{% endblock %}
 
@@ -34,13 +35,15 @@
       google.load("jqueryui", "1.8.7");
   </script>
 
-  {# Plugins  aggregated from all the *.js files in /public/js/mylibs/*#}
-  <script src="/js/mopub-plugins.js?v=24"></script>
+  {# Plugins  aggregated from all the *.js files in /public/js/libs/*#}
+  <script src="/js/plugins.js?v=25"></script>
 
 
   {# MoPub #}
-  <script src="/js/mopub.js?v=670"></script>
-  {% block extraScripts %}<script src="/js/mopub-dashboard.js?v=34"></script>{% endblock extraScripts %}
+  {% include_script "app" 1 %}
+  {% include_script "controllers/mopub" %}
+
+  {% block extraScripts %}{% endblock extraScripts %}
 
   {# Mixpanel #}
 
@@ -69,7 +72,9 @@
       })();
   </script>
 </head>
+
 <input type=hidden value="{{user.is_staff}}" id='is_admin_input'></input>
+
 {% endspaceless %}
 
 {% block body_content %}
@@ -88,10 +93,10 @@
         <nav id="nav1">
           <ul>
             {% block navLinks %}
-            <li><a href="/inventory/">Dashboard</a></li>
-            <li><a href="/campaigns/">Campaigns</a></li>
-            <li><a href="/campaigns/marketplace/">Marketplace</a></li>
-            <li><a href="/campaigns/networks/">Networks</a></li>
+            <li><a href="{% url app_index %}">Dashboard</a></li>
+            <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+            <li><a href="{% url marketplace_index %}">Marketplace</a></li>
+            <li><a href="{% url network_index %}">Networks</a></li>
             {% endblock navLinks %}
           </ul>
         </nav>
@@ -112,7 +117,7 @@
 
             <li><a href="http://help.mopub.com/" target="_blank">Help</a></li>
             {% if user.is_authenticated %}
-            <li><a href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
+            <li><a id="logout-link" href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
             {% endif %}
           </ul>
         </nav>
@@ -123,7 +128,6 @@
       <div id="titlebar">
         <div class="pageWidth">
           {% block pageTitle %}
-            <h1>Dashboard</h1>
           {% endblock pageTitle %}
 
           {% block dateButtons %}

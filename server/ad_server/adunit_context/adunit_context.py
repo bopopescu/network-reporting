@@ -101,7 +101,7 @@ class AdUnitContext(object):
         adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
                                   filter("deleted =",False).\
                                   fetch(limit)
-        return adgroups
+        return [adgroup for adgroup in adgroups if adgroup.active]
 
     @classmethod
     def fetch_creatives(cls, adunit, adgroups, limit=MAX_OBJECTS):
@@ -132,6 +132,10 @@ class AdUnitContext(object):
             return ""
         if not creative.image_blob:
             return ""
+
+        image_url = creative.image_serve_url
+        if image_url: return image_url
+
         try:
             image_url = helpers.get_url_for_blob(creative.image_blob,
                                                  ssl=False)

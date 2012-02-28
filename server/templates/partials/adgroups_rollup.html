@@ -1,0 +1,42 @@
+<h2><%= title %><% if(!adgroups.isFullyLoaded()) { %> <img class="loading-img" src="/images/icons-custom/spinner-16.gif"></img><% } %></h2>
+
+<div class="campaignData-rollup">
+    <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+        <thead>
+            <tr>
+                <th width="25%">Impressions</th>
+                <th width="25%">Clicks</th>
+                <th width="25%">CTR</th>
+                <th width="25%">
+                    <% switch(type) {
+                        case 'gtee': %>Revenue<% break; 
+                        case 'promo':
+                        case 'backfill_promo': %>Conversions<% break;
+                        case 'network': %>Fill Rate (Attempts)<% break;
+                    } %>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <%= adgroups.get_formatted_stat('impression_count') %>
+                </td>
+                <td>
+                    <%= adgroups.get_formatted_stat('click_count') %>
+                </td>
+                <td>
+                    <%= adgroups.get_formatted_stat('ctr') %>
+                </td>
+                <td>
+                    <% switch(type) {
+                        case 'gtee': print(adgroups.get_formatted_stat('revenue')); break; 
+                        case 'promo':
+                        case 'backfill_promo': print(adgroups.get_formatted_stat('conversion_count')); break;
+                        case 'network': print(adgroups.get_formatted_stat('fill_rate') + ' (' + adgroups.get_formatted_stat('request_count') + ')'); break;
+                    } %>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

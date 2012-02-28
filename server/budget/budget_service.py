@@ -213,6 +213,10 @@ def timeslice_advance(budget, testing=False, advance_to_datetime = None):
 
     # no previous slice log, this budget hasn't been initialized
     if last_log is None:
+        # No previous log, but it needs to be updated so update it.  Must do this first because 
+        # it could affect things later down
+        if budget.update:
+            BudgetQueryManager.exec_update_budget(budget)
         # We're advancing to a slice that is exactly when or after the budget
         # shoudl be init'd
         if slice_num and slice_num >= budget.start_slice:

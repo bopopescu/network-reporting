@@ -2,6 +2,8 @@ from google.appengine.ext import blobstore
 from google.appengine.ext import db
 from google.appengine.api import users
 
+from django.conf import settings
+
 from account.models import Account, NetworkConfig
 from advertiser.models import Creative
 
@@ -18,27 +20,27 @@ class App(db.Model):
     IAD_URL = 'http://itunes.apple.com.*'
 
     CATEGORY_CHOICES = (
-            u'not_selected',
-            u'books',
-            u'business',
-            u'education',
-            u'entertainment',
-            u'finance',
-            u'games',
-            u'healthcare_and_fitness',
-            u'lifestyle',
-            u'medical',
-            u'music',
-            u'navigation',
-            u'news',
-            u'photography',
-            u'productivity',
-            u'reference',
-            u'social_networking',
-            u'sports',
-            u'travel',
-            u'utilities',
-            u'weather',
+        u'not_selected',
+        u'books',
+        u'business',
+        u'education',
+        u'entertainment',
+        u'finance',
+        u'games',
+        u'healthcare_and_fitness',
+        u'lifestyle',
+        u'medical',
+        u'music',
+        u'navigation',
+        u'news',
+        u'photography',
+        u'productivity',
+        u'reference',
+        u'social_networking',
+        u'sports',
+        u'travel',
+        u'utilities',
+        u'weather',
     )
 
     account = db.ReferenceProperty(Account)
@@ -49,16 +51,15 @@ class App(db.Model):
     adsense_app_id = db.StringProperty()
     admob_bgcolor = db.StringProperty()
     admob_textcolor = db.StringProperty()
-
-    app_type = db.StringProperty(required=True, default='iphone',
-            choices=['iphone', 'android', 'ipad', 'mweb'])
+    app_type = db.StringProperty(required=True,
+                                 default='iphone',
+                                 choices=['iphone', 'android', 'ipad', 'mweb'])
     description = db.TextProperty()
     url = db.StringProperty()
     package = db.StringProperty()
     # For MPX
     categories = db.StringListProperty()
 
-    icon = db.BlobProperty()
     icon_blob = blobstore.BlobReferenceProperty()
 
     # Ad network overrides
@@ -78,6 +79,8 @@ class App(db.Model):
     primary_category = db.StringProperty(choices=CATEGORY_CHOICES)
     secondary_category = db.StringProperty(choices=CATEGORY_CHOICES)
 
+    use_proxy_bids = db.BooleanProperty(default=True)
+
     def app_type_text(self):
         types = {
             'iphone': 'iOS',
@@ -90,11 +93,16 @@ class App(db.Model):
     @property
     def icon_url(self):
         from common.utils import helpers
-        if not self.icon_blob: return "/placeholders/image.gif"
+        if not self.icon_blob:
+            return "/placeholders/image.gif"
         try:
-            return helpers.get_url_for_blob(self.icon_blob)
+            url = helpers.get_url_for_blob(self.icon_blob)
+            # hack to get images to appear on localhost
+            if settings.DEBUG:
+                url = url.replace('https', 'http')
+            return url
         except Exception:
-            return None
+            return "/placeholders/image.gif"
 
     @property
     def identifier(self):
@@ -172,14 +180,17 @@ class Site(db.Model):
     custom_height = db.IntegerProperty()
 
     device_format = db.StringProperty(default='phone', choices=DEVICE_FORMAT_CHOICES)
-    format = db.StringProperty(choices=FORMAT_CHOICES) #TODO: we should use this w/o explicity using height, width
+    #TODO: we should use this w/o explicity using height, width
+    format = db.StringProperty(choices=FORMAT_CHOICES)
     resizable = db.BooleanProperty(default=False)
     landscape = db.BooleanProperty(default=False)
 
     deleted = db.BooleanProperty(default=False)
 
     # what kind of ad is preferred here
-    ad_type = db.StringProperty(choices=['text', 'image'], default='image',required=False)
+    ad_type = db.StringProperty(choices=['text', 'image'],
+                                default='image',
+                                required=False)
 
     # Ad network overrides
     jumptap_site_id = db.StringProperty()
@@ -190,7 +201,8 @@ class Site(db.Model):
     # keywords = db.StringListProperty()
 
     refresh_interval = db.IntegerProperty(default=0)
-    animation_type = db.StringProperty(default='0') # NOTE: this is a string in case we don't want enumeration later
+    # XXX: this is a string in case we don't want enumeration later
+    animation_type = db.StringProperty(default='0')
 
     # color scheme
     color_border = db.StringProperty(required=True, default='336699')
@@ -206,6 +218,7 @@ class Site(db.Model):
 
     def toJSON(self):
         d = to_dict(self, ignore = ['account', 'network_config', 'app_key'])
+        d['app_key'] = str(self.app_key.key())
         return d
 
     def is_fullscreen(self):

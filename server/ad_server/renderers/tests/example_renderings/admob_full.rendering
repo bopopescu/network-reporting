@@ -24,26 +24,29 @@
   
 
 <script type="text/javascript">
-  function trackImpressionHelper(){
-    var urls = new Array();
-    var i = 0;
+  // Define trackImpressionsHelper if it hasn't been defined
+  if (trackImpressionHelper == null || typeof(trackImpressionHelper) != "function") {
+    function trackImpressionHelper(){
+      var urls = new Array();
+      var i = 0;
+      
     
-  
-    
-    
-    var hiddenSpan = document.createElement('span')
-    hiddenSpan.style.display = 'none';
+      
+      
+      var hiddenSpan = document.createElement('span')
+      hiddenSpan.style.display = 'none';
 
-    var i=0;
-    for (var i=0;i<urls.length;i++)
-    {
-      var img = document.createElement('img')
-      img.src = urls[i];
-      hiddenSpan.appendChild(img);
-    }    
+      var i=0;
+      for (var i=0;i<urls.length;i++)
+      {
+        var img = document.createElement('img')
+        img.src = urls[i];
+        hiddenSpan.appendChild(img);
+      }    
 
-    var body = document.getElementsByTagName('body')[0] ;
-    body.appendChild(hiddenSpan);
+      var body = document.getElementsByTagName('body')[0] ;
+      body.appendChild(hiddenSpan);
+    }
   }
 </script>
 
@@ -104,29 +107,29 @@ var admob_vars = {
 
 <!-- Script to determine if admob loaded -->
 <script>
-    var ad = _admob.fetchAd(document.getElementById('admob_ad'));                                                                         
+    var ad = _admob.fetchAd(document.getElementById('admob_ad'));
     var POLLING_FREQ = 500;
     var MAX_POLL = 5000;
-    var polling_timeout = 0;                                                                                                              
-    var polling_func = function() {                                                                                                       
-     if(ad.adEl.height == 48) {                                                                                                           
-       // we have an ad                                                                                                                   
+    var polling_timeout = 0;
+    var polling_func = function() {
+     if(ad.adEl.height == 48) {
+       // we have an ad
        console.log('received ad');
 
        mopubFinishLoad(); // notify client
        trackImpressionHelper(); // fire pixels
      } 
-     else if(polling_timeout < MAX_POLL) {                                                                                                         
-       console.log('repoll');                                                                                                             
-       polling_timeout += POLLING_FREQ;                                                                                                           
-       window.setTimeout(polling_func, POLLING_FREQ);                                                                                             
-     }                                                                                                                                    
-     else {                                                                                                                               
+     else if(polling_timeout < MAX_POLL) {
+       console.log('repoll');
+       polling_timeout += POLLING_FREQ;
+       window.setTimeout(polling_func, POLLING_FREQ);
+     }
+     else {
        console.log('no ad'); 
-       ad.adEl.style.display = 'none';                                                                                                    
+       ad.adEl.style.display = 'none';
        window.location = "mopub://failLoad";
-     }                                                                                                                                    
-    };                                                                                                                                    
+     }
+    };
     window.setTimeout(polling_func, POLLING_FREQ);
 </script>
 

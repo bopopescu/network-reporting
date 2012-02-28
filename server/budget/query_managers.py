@@ -28,7 +28,7 @@ class BudgetQueryManager(QueryManager):
             if camp.active != budget.active:
                 budget.active = camp.active
                 budget.put()
-            # if the campaign is now deleted and the budget says it's still active, 
+            # if the campaign is now deleted and the budget says it's still active,
             # make the budget not active.  This will be fine if the campaign becomes undeleted
             # because then the activity levels will differ and everything will be right again
             if camp.deleted and budget.active:
@@ -38,7 +38,7 @@ class BudgetQueryManager(QueryManager):
             update_dict = {}
             # Camp datetimes will either be PST/PDT and aware of it, or UTC and unaware of it
             # budget datetimes will always be UTC and unaware
-            
+
             # if Campaigns are aware of their tz, set them to UTC and make them unaware of it
             # doesn't matter if we put budgets at this point because when it gets put it'll fix itself
             if camp.start_datetime is None:
@@ -47,7 +47,7 @@ class BudgetQueryManager(QueryManager):
                 camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo = None)
             if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
                 camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo = None)
-            
+
             #Do the same thing above, but for budgets
             budget_start = camp.budget_obj.start_datetime
             budget_end = camp.budget_obj.end_datetime
@@ -170,7 +170,7 @@ class BudgetQueryManager(QueryManager):
         return campaign, budget
 
     @classmethod
-    def prep_update_budget(cls, budget, 
+    def prep_update_budget(cls, budget,
                            start_datetime = None,
                            end_datetime = False,
                            delivery_type = None,

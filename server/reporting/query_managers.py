@@ -1,3 +1,5 @@
+from django.conf import settings
+
 import datetime
 import logging
 import time
@@ -112,7 +114,14 @@ class StatsModelQueryManager(CachedQueryManager):
 
         return stats
 
-    def get_stats_for_hours(self, publisher=None, advertiser=None, date_hour=None, date_hours=None, account=None, country=None, offline=False):
+    def get_stats_for_hours(self,
+                            publisher=None,
+                            advertiser=None,
+                            date_hour=None,
+                            date_hours=None,
+                            account=None,
+                            country=None,
+                            offline=False):
         """
         date_hour is a datetime object
         date_hours are a list of datetime objects
@@ -169,7 +178,7 @@ class StatsModelQueryManager(CachedQueryManager):
                            country=None,
                            offline=False,
                            date_fmt='date',
-                           use_mongo=True):
+                           use_mongo=False if settings.DEBUG else True):
         """
         Gets the stats for a specific pairing. Definitions:
         advertiser_group: Either Campaign, AdGroup or Creative

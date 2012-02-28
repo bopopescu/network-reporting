@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+
+import sys
+import subprocess
+import os
+
+try:
+    import envoy
+except ImportError:
+    print 'you dont have envoy installed'
+    print 'install it with "$ pip install envoy"'
+    sys.exit(1)
+
+PWD = os.path.dirname(__file__)
+
+# Git stuff
+def git(cmd, git_dir=None):
+    """
+    Calls a git command `cmd` from the repository in `git_dir`.
+    `git_dir` is set to the mopub directory by default.
+    Note that `git_dir` needs to be the path to the actual .git
+    directory, not the directory that contains it.
+    """
+    if git_dir == None:
+        git_dir = "../.."
+        git_dir = os.path.join(PWD, git_dir)
+    command = "git --git-dir=" + git_dir + "/.git " + cmd
+    # print command
+    result = envoy.run(command)
+    # return result.std_out
+
+
+def minify_javascript():
+
+    has_juicer = envoy.run('which juicer')
+    if has_juicer.std_out == '':
+        print 'you need to install juicer to run the pre-commit hook'
+        print 'install it with "$ gem install juicer"'
+        sys.exit(1)
+
+    JS_DIR = os.path.join(PWD, '../../server/public/js/')
+    JS_FILES = ('models',
+                'views',
+                'controllers/publisher',
+                'controllers/mopub',
+                'controllers/campaigns')
+
+    print "Minifying Javascript files in", JS_DIR
+
+    for module in JS_FILES:
+        current_module = os.path.join(JS_DIR, module)
+        subprocess.call(['juicer',
+                         'merge',
+                         '-s', # skip verification
+                         '-f', # force overwrite
+                         '-o', # specify output file
+                         current_module + '.min.js',
+                         current_module + '.js'])
+        git('add ' + current_module + '.min.js')
+
+
+    print 'Javascript Minified'
+
+if __name__ == '__main__':
+    print "Pre-commit hook called"
+    minify_javascript()

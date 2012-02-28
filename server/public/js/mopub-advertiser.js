@@ -129,6 +129,7 @@ var mopub = mopub || {};
                         data : $('#networkForm').serialize(),
                         success : function(resp) {
                             $('#networkSettingsForm-loading').hide();
+                            $('#network-settingsForm').slideUp('fast');
                         },
                         error : function(jqXHR, textStatus, errorThrown) {
                             $('#settings-form-message').html("Couldn't update settings.");

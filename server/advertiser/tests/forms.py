@@ -57,20 +57,31 @@ class TestDirectSoldCampaignForm(unittest.TestCase):
             },
         ]
 
-    def test_start_datetime(self):
+    def test_default_start_datetime(self):
         """ start_datetime defaults to now """
-
-        """ start_datetime cannot be before today """
-
-    def test_datetime_timezones(self):
         data = copy.deepcopy(self.data)
         for test_data in data:
             form = CampaignForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
             campaign = form.save()
-            # make sure start_datetime is set to the current time
-            # use a margin of one second
             self.assertTrue(datetime.datetime.now() - campaign.start_datetime < datetime.timedelta(seconds=1))
+
+    def  test_start_datetime(self):
+        """ start_datetime cannot be before today """
+        data = copy.deepcopy(self.data)
+        now = datetime.datetime.now(Pacific_tzinfo())
+        yesterday = (now - datetime.timedelta(days=1))
+        for test_data in data:
+            test_data['start_datetime_0'] = yesterday.date().strftime('%m/%d/%Y')
+            test_data['start_datetime_1'] = datetime.time().strftime('%I:%M %p')
+            form = CampaignForm(test_data)
+            self.assertFalse(form.is_valid(), "start_datetime was %s but the form validated" % test_data)
+            test_data['start_datetime_0'] = now.date().strftime('%m/%d/%Y')
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+
+    def test_datetime_timezones(self):
+        pass
 
 
 class TestNetworkAdgroupForm(unittest.TestCase):

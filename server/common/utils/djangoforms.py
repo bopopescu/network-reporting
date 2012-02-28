@@ -80,18 +80,21 @@ Notes:
 """
 
 
-
 import itertools
 import logging
-
 
 import django.core.exceptions
 import django.utils.datastructures
 
 try:
   from django import newforms as forms
+  from django.newforms.widgets import media_property
+  have_uploadedfile = False
 except ImportError:
   from django import forms
+  from django.forms.widgets import media_property
+  from django.core.files import uploadedfile
+  have_uploadedfile = True
 
 try:
   from django.utils.translation import ugettext_lazy as _
@@ -100,6 +103,7 @@ except ImportError:
 
 from google.appengine.api import users
 from google.appengine.ext import db
+
 from common.utils import widgets as mpwidgets
 from common.utils import fields as mpfields
 
@@ -135,8 +139,6 @@ def monkey_patch(name, bases, namespace):
     if name not in ('__metaclass__', '__module__'):
       setattr(base, name, value)
   return base
-
-
 
 
 class Property(db.Property):
@@ -251,15 +253,17 @@ class StringProperty(db.StringProperty):
     multiline attribute is set.
     """
     defaults = {}
+    # changed to use mpwidgets
     if self.choices:
       defaults['widget'] =  mpwidgets.MPRadioWidget
     elif self.multiline:
       defaults['widget'] =  mpwidgets.MPTextarea
     else:
       defaults['widget'] =  mpwidgets.MPTextInput
+    # if self.multiline:
+    #   defaults['widget'] = forms.Textarea
     defaults.update(kwargs)
     return super(StringProperty, self).get_form_field(**defaults)
-
 
 
 class TextProperty(db.TextProperty):
@@ -270,27 +274,32 @@ class TextProperty(db.TextProperty):
 
     This sets the widget default to forms.Textarea.
     """
+    # changed to use mpwidgets
     defaults = {'widget': mpwidgets.MPTextarea}
     # defaults = {'widget': forms.Textarea}
     defaults.update(kwargs)
     return super(TextProperty, self).get_form_field(**defaults)
 
 
+# added
 class ChoiceProperty(StringProperty):
 
   def get_form_field(self, **kwargs):
-    """Return a Django form field appropriate for a text property.
+    """Return a Django form field appropriate for a choice property.
 
-    This sets the widget default to forms.Textarea.
+    This sets the widget default to mpwidgets.MPRadioWidget.
     """
     defaults = {'widget': mpwidgets.MPRadioWidget}
     defaults.update(kwargs)
     return super(ChoiceProperty, self).get_form_field(**defaults)
 
 
-
 class BlobProperty(db.BlobProperty):
   __metaclass__ = monkey_patch
+
+  def __init__(self, *args, **kwargs):
+    super(BlobProperty, self).__init__(*args, **kwargs)
+    self.form_value = None
 
   def get_form_field(self, **kwargs):
     """Return a Django form field appropriate for a blob property.
@@ -319,8 +328,11 @@ class BlobProperty(db.BlobProperty):
     This extracts the content from the UploadedFile instance returned
     by the FileField instance.
     """
-    if value.__class__.__name__ == 'UploadedFile':
-      return db.Blob(value.content)
+    if have_uploadedfile and isinstance(value, uploadedfile.UploadedFile):
+      if not self.form_value:
+        self.form_value = value.read()
+      b = db.Blob(self.form_value)
+      return b
     return super(BlobProperty, self).make_value_from_form(value)
 
 
@@ -383,7 +395,8 @@ class IntegerProperty(db.IntegerProperty):
 
     This defaults to an IntegerField instance.
     """
-    defaults = {'form_class': forms.IntegerField,'widget':mpwidgets.MPNumberInput}
+    # changed to use mpwidgets
+    defaults = {'form_class': forms.IntegerField, 'widget': mpwidgets.MPNumberInput}
     defaults.update(kwargs)
     return super(IntegerProperty, self).get_form_field(**defaults)
 
@@ -399,6 +412,7 @@ class FloatProperty(db.FloatProperty):
     """
     defaults = {}
     if hasattr(forms, 'FloatField'):
+      # changed to use mpwidgets
       defaults['form_class'] = mpfields.MPFloatField
     defaults.update(kwargs)
     return super(FloatProperty, self).get_form_field(**defaults)
@@ -437,6 +451,7 @@ class StringListProperty(db.StringListProperty):
 
     This defaults to a Textarea widget with a blank initial value.
     """
+    # changed to use mpwidgets
     defaults = {'widget': mpfields.MPTextareaField,
                 'initial': ''}
     defaults.update(kwargs)
@@ -647,7 +662,6 @@ def property_clean(prop, value):
   """
   if value is not None:
     try:
-      logging.warning(str(prop))
       prop.validate(prop.make_value_from_form(value))
     except (db.BadValueError, ValueError), e:
       raise forms.ValidationError(unicode(e))
@@ -660,16 +674,19 @@ class ModelFormOptions(object):
     model: a db.Model class, or None
     fields: list of field names to be defined, or None
     exclude: list of field names to be skipped, or None
+    # added to be compatible with Django 1.2 forms
+    widgets: a mapping of field names to widgets to replace the default widget
 
   These instance attributes are copied from the 'Meta' class that is
   usually present in a ModelForm class, and all default to None.
   """
 
-
   def __init__(self, options=None):
     self.model = getattr(options, 'model', None)
     self.fields = getattr(options, 'fields', None)
     self.exclude = getattr(options, 'exclude', None)
+    # added to be compatible with Django 1.2 forms
+    self.widgets = getattr(options, 'widgets', None)
 
 
 class ModelFormMetaclass(type):
@@ -682,7 +699,7 @@ class ModelFormMetaclass(type):
   See the docs for ModelForm below for a usage example.
   """
 
-  def __new__(cls, class_name, bases, attrs):
+  def __new__(cls, name, bases, attrs):
     """Constructor for a new ModelForm class instance.
 
     The signature of this method is determined by Python internals.
@@ -699,6 +716,7 @@ class ModelFormMetaclass(type):
     for base in bases[::-1]:
       if hasattr(base, 'base_fields'):
         fields = base.base_fields.items() + fields
+
     declared_fields = django.utils.datastructures.SortedDict()
     for field_name, obj in fields:
       declared_fields[field_name] = obj
@@ -714,41 +732,54 @@ class ModelFormMetaclass(type):
         base_models.append(base_model)
     if len(base_models) > 1:
       raise django.core.exceptions.ImproperlyConfigured(
-          "%s's base classes define more than one model." % class_name)
+          "%s's base classes define more than one model." % name)
 
     if opts.model is not None:
       if base_models and base_models[0] is not opts.model:
         raise django.core.exceptions.ImproperlyConfigured(
-            '%s defines a different model than its parent.' % class_name)
+            '%s defines a different model than its parent.' % name)
 
       model_fields = django.utils.datastructures.SortedDict()
-      for name, prop in sorted(opts.model.properties().iteritems(),
+      for prop_name, prop in sorted(opts.model.properties().iteritems(),
                                key=lambda prop: prop[1].creation_counter):
-        if opts.fields and name not in opts.fields:
+        if opts.fields and prop_name not in opts.fields:
           continue
-        if opts.exclude and name in opts.exclude:
+        if opts.exclude and prop_name in opts.exclude:
           continue
         form_field = prop.get_form_field()
         if form_field is not None:
-          model_fields[name] = form_field
+          model_fields[prop_name] = form_field
+        if opts.widgets and prop_name in opts.widgets:
+          model_fields[prop_name].widget = opts.widgets[prop_name]
 
       model_fields.update(declared_fields)
       attrs['base_fields'] = model_fields
 
       props = opts.model.properties()
-      for name, field in model_fields.iteritems():
-        prop = props.get(name)
+      for field_name, field in model_fields.iteritems():
+        prop = props.get(field_name)
         if prop:
-          def clean_for_property_field(value, prop=prop, old_clean=field.clean):
-            value = old_clean(value)
-            property_clean(prop, value)
-            return value
+          if hasattr(forms, 'FileField') and isinstance(field, forms.FileField):
+            def clean_for_property_field(value, initial, prop=prop,
+                                         old_clean=field.clean):
+              value = old_clean(value, initial)
+              property_clean(prop, value)
+              return value
+          else:
+            def clean_for_property_field(value, prop=prop,
+                                         old_clean=field.clean):
+              value = old_clean(value)
+              property_clean(prop, value)
+              return value
           field.clean = clean_for_property_field
     else:
       attrs['base_fields'] = declared_fields
 
-    return super(ModelFormMetaclass, cls).__new__(cls,
-                                                  class_name, bases, attrs)
+    new_class = super(ModelFormMetaclass, cls).__new__(cls, name, bases, attrs)
+    # TODO: why dosen't this work? it is exactly like django.forms.ModelFormmetaClass
+    #if 'media' not in attrs:
+    #    new_class.media = media_property(new_class)
+    return new_class
 
 
 class BaseModelForm(forms.BaseForm):
@@ -835,26 +866,17 @@ class BaseModelForm(forms.BaseForm):
       iter([('key_name', StringProperty(name='key_name'))])
       )
     for name, prop in propiter:
-      if name in cleaned_data:
-          value = cleaned_data.get(name)
-          converted_data[name] = prop.make_value_from_form(value)
+      value = cleaned_data.get(name)
+      if value is not None:
+        converted_data[name] = prop.make_value_from_form(value)
     try:
       if instance is None:
-        delete_keys = []
-        # for key,value in converted_data.iteritems():
-        #     if value is None:
-        #         delete_keys.append(key)
-        # for key in delete_keys:
-        #     del converted_data[key]
-                
         instance = opts.model(**converted_data)
         self.instance = instance
       else:
         for name, value in converted_data.iteritems():
           if name == 'key_name':
             continue
-          # if (getattr(instance,name) and value is None) or \
-          #   value is not None:
           setattr(instance, name, value)
     except db.BadValueError, err:
       raise ValueError('The %s could not be %s (%s)' %
@@ -932,7 +954,3 @@ class ModelForm(BaseModelForm):
   """
 
   __metaclass__ = ModelFormMetaclass
-
-
-
-

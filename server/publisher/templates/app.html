@@ -1,544 +1,588 @@
-{% extends 'publisher/base.html' %}{% load filters %}
+{% extends 'publisher/base.html' %}
+{% load filters %}
+{% load elements %}
+
 {% block pageTitle %}
-          <div class="breadcrumb">
-            <a class="linkIcon breadcrumb-back" href="{% url publisher_index %}"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Dashboard</a>
-            <h1>App: {{app.name}}</h1>
-          </div>
+  <h1>
+    <a href="{% url app_index %}">Apps</a> / {{app.name}}
+  </h1>
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-<span class="titlebar-right">
-  <a class="button" id="dashboard-apps-editAppButton" href="#">Edit app settings</a>
-</span>
+  <span class="titlebar-right">
+    <a class="button" id="dashboard-apps-editAppButton" href="#">
+      Edit app settings
+    </a>
+  </span>
 {% endblock titleBarRight %}
 
 {% block content %}
-          <section id="dashboard-appEditForm" class="hidden">
-            <div>
-              <a name="appForm" class="hidden">anchor</a>
-              <form action="{% url publisher_app_update_ajax app_key=app.key %}" enctype='multipart/form-data' method="POST" accept-charset="utf-8" id="appForm" class="appEditForm">
-                <fieldset id="appForm-details" class="alt">
-                  <div id="appForm-fragment">
-{{app_form_fragment}}
-                  </div>
-                  <div class="form-submit">
-                    <span class="hidden" id="appEditForm-loading"><img src="/images/loading2.gif"/></span>
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-cancel">Cancel</a></span>
-                    <span class="buttonWrap"><a href="#" class="button" id="appEditForm-submit">Save</a></span>
-                  </div>
-                </fieldset>
-              </form>
-            </div>
-          </section>
-          <section class="offset nomargin" id="dashboard-stats">
-            <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-            <div class="stats">
-              <div class="stats-breakdown">
-                <table>
-                  <tbody>
-                    <tr class="active" id="stats-breakdown-requests">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.request_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-impressions">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.impression_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-clicks">
-                      <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({{today.ctr|percentage}})</span> {{today.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner"><span class="muted unbold">({{yesterday.ctr|percentage}})</span> {{yesterday.click_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner"><span class="muted unbold">({{app.stats.ctr|percentage}})</span> {{app.stats.click_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-users">
-                      <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
-                      <td class="stats-breakdown-value all"><span class="inner">{{app.stats.user_count|withsep}}</span></td>
-                      <th class="stats-breakdown-name"><span class="inner">Users</span></th>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="stats-breakdown-buttons">
-                <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-                  <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-                  <label for="stats-breakdown-dateOptions-option-0">Today</label>
-                  <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-                  <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
-                  <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-                  <label for="stats-breakdown-dateOptions-option-2">All</label>
+  <section id="dashboard-appEditForm" class="hidden">
+    <div>
+      <a name="appForm" class="hidden">anchor</a>
+      <form action="{% url publisher_app_update_ajax app_key=app.key %}"
+            enctype='multipart/form-data'
+            method="POST"
+            accept-charset="utf-8"
+            id="appForm"
+            class="appEditForm">
+        <fieldset id="appForm-details" class="alt">
+          <div id="appForm-fragment">
+          {{ app_form_fragment }}
+          </div>
+          <div class="form-submit">
+            <span class="hidden" id="appEditForm-loading">
+            <img src="/images/loading2.gif"/></span>
+            <span class="buttonWrap">
+              <a href="#" class="button" id="appEditForm-cancel">Cancel</a>
+            </span>
+            <span class="buttonWrap">
+              <a href="#" class="button" id="appEditForm-submit">Save</a>
+            </span>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+  <section class="offset nomargin" id="dashboard-stats">
+    <h3 class="stats-chart-title">
+      Realtime Stats for {{start_date|format_date_compact}} to
+      {{end_date|format_date_compact}}
+    </h3>
+    <div class="stats">
+
+      {% comment %}
+        Refactor to use this:
+        {% stats_breakdown app.stats %}
+      {% endcomment %}
+
+      <div class="stats-breakdown">
+        <table>
+          <tbody>
+
+            <tr class="active" id="stats-breakdown-requests">
+              <td class="stats-breakdown-value today">
+                <span class="inner">{{today.request_count|withsep}}</span>
+              </td>
+              <td class="stats-breakdown-value yesterday">
+                <span class="inner">{{yesterday.request_count|withsep}}</span>
+              </td>
+              <td class="stats-breakdown-value all">
+                <span class="inner">{{app.stats.request_count|withsep}}</span>
+              </td>
+              <th class="stats-breakdown-name">
+                <span class="inner">Requests</span>
+              </th>
+            </tr>
+
+            <tr id="stats-breakdown-impressions">
+              <td class="stats-breakdown-value today">
+                <span class="inner">{{today.impression_count|withsep}}</span>
+              </td>
+              <td class="stats-breakdown-value yesterday">
+                <span class="inner">{{yesterday.impression_count|withsep}}</span>
+              </td>
+              <td class="stats-breakdown-value all">
+                <span class="inner">{{app.stats.impression_count|withsep}}</span>
+              </td>
+              <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+            </tr>
+
+            <tr id="stats-breakdown-clicks">
+              <td class="stats-breakdown-value today">
+                <span class="inner">
+                  <span class="muted unbold">({{today.ctr|percentage}})</span>
+                  {{today.click_count|withsep}}
                 </span>
-              </div>
-              <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
-                <div class="chart-loading-text">Loading ...</div>
-                <div class="chart-error-text">Could not load chart</div>
-                <script type="text/javascript">
-                  // chart data
-                  mopub.dashboardStatsChartData = {
-                    //pointStart: 1294963200000,
-                    pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-                    pointInterval: 86400000,
-                    'requests': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                    ],
-                    'impressions': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                    ],
-                    'clicks': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                    ],
-                    'users': [{% for au in app.graph_adunits %}
-                      { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                    ]
-                  };
-                </script>
-              </div>
+              </td>
+              <td class="stats-breakdown-value yesterday">
+                <span class="inner">
+                  <span class="muted unbold">({{yesterday.ctr|percentage}})</span>
+                  {{yesterday.click_count|withsep}}
+                </span>
+              </td>
+              <td class="stats-breakdown-value all">
+                <span class="inner">
+                  <span class="muted unbold">({{app.stats.ctr|percentage}})</span>
+                  {{app.stats.click_count|withsep}}
+                </span>
+              </td>
+              <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+            </tr>
+
+            <tr id="stats-breakdown-users">
+              <td class="stats-breakdown-value today">
+                <span class="inner">{{today.user_count|withsep}}</span>
+              </td>
+              <td class="stats-breakdown-value yesterday">
+                <span class="inner">{{yesterday.user_count|withsep}}</span>
+              </td>
+              <td class="stats-breakdown-value all">
+                <span class="inner">{{app.stats.user_count|withsep}}</span>
+              </td>
+              <th class="stats-breakdown-name">
+                <span class="inner">Users</span>
+              </th>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="stats-breakdown-buttons">
+        <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+          <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+          <label for="stats-breakdown-dateOptions-option-0">Today</label>
+          <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+          <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+          <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+          <label for="stats-breakdown-dateOptions-option-2">All</label>
+        </span>
+      </div>
+
+      {% comment %}
+        End of stats breakdown
+      {% endcomment %}
+
+      <div class="chart chart-loading stats-chart" id="dashboard-stats-chart">
+        <div class="chart-loading-text">Loading ...</div>
+        <div class="chart-error-text">Could not load chart</div>
+        {# WHY #}
+        <script type="text/javascript">
+          // chart data
+          mopub.dashboardStatsChartData = {
+              //pointStart: 1294963200000,
+              pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+              pointInterval: 86400000,
+              'requests': [{% for au in app.graph_adunits %}
+                           { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                          ],
+              'impressions': [{% for au in app.graph_adunits %}
+                              { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                             ],
+              'clicks': [{% for au in app.graph_adunits %}
+                         { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+              'users': [{% for au in app.graph_adunits %}
+                        { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                       ]
+          };
+        </script>
+      </div>
+    </div>
+    <div class="clear"></div>
+  </section>
+
+  <div class="clear"></div>
+
+  <section id="dashboard-apps">
+    <div class="buttonBank buttonBank-right">
+      <a class="button" id="dashboard-apps-addAdUnitButton" href="#">
+        Add an ad unit
+      </a>
+    </div>
+
+    <h2>Ad units for {{ app.name }}</h2>
+
+    {% comment %}
+      Form/buttons for adding a new adunit
+    {% endcomment %}
+
+    <section id="dashboard-adunitAddForm" class="hidden">
+      <div>
+        <a name="adunitForm" class="hidden">anchor</a>
+        <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm">
+          <fieldset id="adunitForm-details" class="alt">
+            <div id="adunitForm-fragment">
+              {{ adunit_form_fragment }}
             </div>
-            <div class="clear"></div>
-          </section>
-
-          <div class="clear"></div>
-
-          <section id="dashboard-apps">
-            <div class="buttonBank buttonBank-right">
-              <a class="button" id="dashboard-apps-addAdUnitButton" href="#">Add an ad unit</a>
+            <div class="form-submit">
+              <span class="hidden" id="adunitForm-loading">
+                <img src="/images/loading2.gif"/>
+              </span>
+              <span class="buttonWrap">
+                <a href="#" class="button" id="adunitAddForm-cancel"> Cancel </a>
+              </span>
+              <span class="buttonWrap">
+                <a href="#" class="button" id="adunitAddForm-submit"> Save </a>
+              </span>
             </div>
-            <h2>Ad units</h2>
+          </fieldset>
+        </form>
+      </div>
+    </section>
 
-            <section id="dashboard-adunitAddForm" class="hidden">
-              <div>
-                <a name="adunitForm" class="hidden">anchor</a>
-                <form action="{% url publisher_adunit_update_ajax %}" method="POST" accept-charset="utf-8" id="adunitAddForm">
-                  <fieldset id="adunitForm-details" class="alt">
-                    <div id="adunitForm-fragment">
-                      {{adunit_form_fragment}}
-                    </div>
-                    <div class="form-submit">
-                      <span class="hidden" id="adunitForm-loading"><img src="/images/loading2.gif"/></span>
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-cancel">Cancel</a></span>
-                      <span class="buttonWrap"><a href="#" class="button" id="adunitAddForm-submit">Save</a></span>
-                    </div>
-                  </fieldset>
-                </form>
-              </div>
-            </section>
+    {% comment %}
+      Table containing each adunit for the app
+    {% endcomment %}
 
-            <div class="appData-columnHeaders">
-              <table class="dataTable" id="dashboard-apps-columnHeaders">
+    {% inventory_table app %}
+
+    <div class="divSpacer"></div>
+
+
+    {% comment %}
+      Tables containing targeting information for each campaign
+      the app is in
+    {% endcomment %}
+
+    <h2>Ad sources for {{app.name}}</h2>
+    <div>
+      {% if app.adgroups %}
+
+        <div class="appData appData-alt">
+          <div class="appData-details noneg">
+            <div class="appData-details-inner show">
+              <table class="dataTable appData-main">
                 <thead>
                   <tr>
-                    <th class="appData-icon"></th>
-                    <th class="dataTable-name">&nbsp;</th>
-                    <th class="dataTable-data numeric">Requests</th>
-                    <th class="dataTable-data numeric">Impressions</th>
-                    <th class="dataTable-data numeric">Fillrate</th>
-                    <th class="dataTable-data numeric">Clicks</th>
-                    <th class="dataTable-data numeric">CTR</th>
+                    <th class="dataTable-name special">Name</th>
+                    <th class="dataTable-data numeric special">Priority</th>
+                    <th class="dataTable-data numeric special">Revenue</th>
+                    <th class="dataTable-data numeric special">CPM</th>
+                    <th class="dataTable-data numeric special">Impressions</th>
+                    <th class="dataTable-data numeric special">Clicks</th>
+                    <th class="dataTable-data numeric special">CONV</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for level in gtee %}
+                    {% for adgroup in level.adgroups %}
+                      <tr>
+                        <th>
+
+                          {% status_icon adgroup %}
+
+                          <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{ adgroup.name }}</a><br />
+                          <span class="muted">
+                            {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                              {{adgroup.campaign.start_datetime|format_date}} -
+                              {{adgroup.campaign.end_datetime|format_date}}.
+                            {% endif %}
+
+                            {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+
+                              Starts {{adgroup.campaign.start_datetime|format_date}}.
+                            {% endif %}
+
+                            {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                              Ends {{adgroup.campaign.end_datetime|format_date}}.
+                            {% endif %}
+
+                            {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                              All dates.
+                            {% endif %}
+
+                            {% ifequal adgroup.campaign.budget_type 'daily' %}
+                              {% if adgroup.campaign.budget %}
+                                {{ adgroup.campaign.budget|currency }} daily budget.
+                              {% else %}
+                                  Unlimited budget.
+                              {% endif %}
+                            {% endifequal %}
+                            {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
+                              {{adgroup.campaign.full_budget|currency}} campaign budget.
+                            {% endifequal %}
+                            {% if adgroup.percent_delivered %}
+                              ({{adgroup.percent_delivered|floatformat:1}}%)
+                            {%endif %}
+                          </span>
+                        </th>
+                        <td class="dataTable-data numeric">
+                            Guaranteed<br/><span class="muted">{{level.name}}</span></td>
+                        <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                        <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                        <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">
+                            {{adgroup.stats.click_count|withsep}}<br/>
+                            <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
+                        </td>
+                        <td class="dataTable-data numeric">
+                          {{adgroup.stats.conversion_count|withsep}}<br/>
+                          <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  {% endfor %}
+                  {% for adgroup in promo %}
+                    <tr>
+                      <th>
+                        {% status_icon adgroup %}
+                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
+                          {{adgroup.name}}
+                        </a><br/>
+                        <span class="muted">
+                          {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                            {{adgroup.campaign.start_date|format_date_compact}}
+                            -
+                            {{adgroup.campaign.end_date|format_date_compact}}.
+                          {% endif %}
+
+                          {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                            Starts {{adgroup.campaign.start_date|format_date_compact}}.
+                          {% endif %}
+
+                          {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                            Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                          {% endif %}
+
+                          {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                            All dates.
+                          {% endif %}
+
+                          {% if adgroup.campaign.budget %}
+                            {{adgroup.campaign.budget|currency}} daily budget.
+                          {% else %}
+                            Unlimited budget.
+                          {% endif %}
+                        </span>
+                      </th>
+                      <td class="dataTable-data numeric">Promotional<br/><span class="muted">Normal</span></td>
+                      <td class="dataTable-data numeric">-</td>
+                      <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                      <td class="dataTable-data numeric">
+                          {{adgroup.stats.click_count|withsep}}<br/>
+                          <span class="muted">{{adgroup.stats.ctr|percentage|withsep}}<span>
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {{adgroup.stats.conversion_count|withsep}}<br/>
+                        <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                      </td>
+                    </tr>
+                  {% endfor %}
+
+                  {% if marketplace %}
+                    {% for adgroup in marketplace %}
+                      {% if forloop.counter0 == 0 %}
+                        <tr>
+                          <th>
+                            {% if marketplace_activated and active_mpx_adunit_exists %}
+                              <img src="/images/active.gif" height=9 width=9 />
+                            {% else %}
+                              <img src="/images/inactive.gif" height=9 width=9 />
+                            {% endif %}
+                            <a href="{% url marketplace_index %}">
+                              MoPub Marketplace<br/>
+                              &nbsp; {# This is here so that the row matches height of others #}
+                            </a>
+                          </th>
+                          <td class="dataTable-data numeric">Marketplace</td>
+                          <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                          <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
+                          <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                          <td class="dataTable-data numeric">-</td>
+                          <td class="dataTable-data numeric">-</td>
+                        </tr>
+                      {% endif %}
+                    {% endfor %}
+                  {% endif %}
+
+                  {% for adgroup in network %}
+                    <tr>
+                      <td>
+                        {% status_icon adgroup %}
+                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
+                          {{adgroup.name}}
+                        </a>
+                        <br/>
+                        <span class="muted">{{adgroup.network_type}}</span>
+                      </td>
+
+                      <td class="dataTable-data numeric">Network</td>
+                      <td class="dataTable-data numeric">-</td>
+                      <td class="dataTable-data numeric {% if adgroup.cpc %}dataTable-campaign-ecpm{% endif %}">
+                        {{ adgroup.calculated_ecpm|currency }}
+                      </td>
+                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                      <td class="dataTable-data numeric">
+                          {{adgroup.stats.click_count|withsep}}
+                          <br/>
+                          <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
+                      </td>
+                      <td class="dataTable-data numeric">-</td>
+                    </tr>
+                  {% endfor %}
+
+                  {% for adgroup in backfill_promo %}
+                    <tr>
+                      <th>
+                        {% status_icon adgroup %}
+                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
+                          {{adgroup.name}}
+                        </a><br/>
+
+                        <span class="muted">
+
+                          {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                            {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
+                          {% endif %}
+
+                          {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                            Starts {{adgroup.campaign.start_date|format_date_compact}}.
+                          {% endif %}
+
+                          {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
+                            Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                          {% endif %}
+
+                          {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                            All dates.
+                          {% endif %}
+
+                          {% if adgroup.campaign.budget %}
+                            {{adgroup.campaign.budget|currency}} daily budget.
+                          {% else %}
+                            Unlimited budget.
+                          {% endif %}
+                        </span>
+                      </th>
+                      <td class="dataTable-data numeric">Promotional<br/><span class="muted">Backfill</span></td>
+                      <td class="dataTable-data numeric">-</td>
+                      <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                      <td class="dataTable-data numeric">
+                          {{adgroup.stats.click_count|withsep}}<br/>
+                          <span class="muted">{{adgroup.stats.ctr|percentage|withsep}}</span>
+                      </td>
+                      <td class="dataTable-data numeric">
+                        {{adgroup.stats.conversion_count|withsep}}<br/>
+                        <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                  <tr>
+                    <td class="big">Totals</td>
+                    <td></td>
+                    <td class="dataTable-name numeric"><b>{{app.stats.revenue|currency}}</b></td>
+                    <td></td>
+                    <td class="dataTable-name numeric"><b>{{app.stats.impression_count|withsep}}</b></td>
+                    <td class="dataTable-data numeric">
+                        <b>{{app.stats.click_count|withsep}}<br/>
+                        {{app.stats.ctr|percentage}}</b>
+                    </td>
+                    <td class="dataTable-data numeric">
+                        <b>{{app.stats.conversion_count|withsep}}<br/>
+                        {{app.stats.conv_rate|percentage}}</b>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      {% else %}
+        <div class="appData appData-alt">
+          <div class="appData-details noneg">
+            <div class="appData-details-inner show">
+              <table class="dataTable appData-main">
+                <thead>
+                  <tr>
+                    <th class="dataTable-name big">
+                      <span class="muted">No ad sources targeting {{app.name}}</span>
+                    </th>
                   </tr>
                 </thead>
               </table>
             </div>
-            <div class="appData" id="dashboard-app-0">
-              <table class="dataTable appData-main" id="dashboard-app-0-main">
-                <tbody>
-                  <tr>
-                    <td class="appData-icon"><a href="#"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td>
-                    <th class="dataTable-name">Totals</th>
-                    <td class="dataTable-data numeric">{{app.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{app.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{app.stats.fill_rate|percentage_rounded}}</td>
-                    <td class="dataTable-data numeric">{{app.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{app.stats.ctr|percentage}}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="appData-details" id="dashboard-app-0-details">
-                <div class="appData-details-inner show">
-                  <table class="dataTable">
-                    <tbody>
-                      {% for au in app.adunits %}
-                      <tr>
-                        <th class="dataTable-name"><div style="position:relative"><span class="inner"><a href="{% url publisher_adunit_show adunit_key=au.key %}">{{au.name}}</a><div class="appData-id muted hidden">Ad Unit ID: {{au.key}}</div></span></div></th>
-                        <td class="dataTable-data numeric">{{au.stats.request_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.fill_rate|percentage_rounded}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.click_count|withsep}}</td>
-                        <td class="dataTable-data numeric">{{au.stats.ctr|percentage}}</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <div class="divSpacer"></div>
-
-            <h2>Campaigns targeting {{app.name}}</h2>
-            <div>
-            {% if app.adgroups %}
-
-                  <div class="appData alternating-color">
-                    <div class="appData-details noneg">
-              <div class="appData-details-inner show">
-                <table class="dataTable appData-main">
-                            <thead>
-                              <tr>
-                                <th class="dataTable-name big">Guaranteed</th>
-                                <th class="dataTable-data numeric special">CPM</th>
-                        <th class="dataTable-data numeric special">Revenue</th>
-                        <th class="dataTable-data numeric special">Impressions</th>
-                        <th class="dataTable-data numeric special">Clicks</th>
-                        <th class="dataTable-data numeric special">CTR</th>
-                        <th class="dataTable-data numeric special">CONV</th>
-                              </tr>
-                      </thead>
-                  <tbody>
-                              {% for level in gtee %}
-                              {% for adgroup in level.adgroups %}
-                  <tr>
-                    <th>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}} {% if level.name != "normal" %} (priority: {{level.name}}) {% endif %}</a>
-                      <span class="muted">
-                          {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                          {{adgroup.campaign.start_datetime|format_date_compact}}-{{adgroup.campaign.end_datetime|format_date_compact}}.
-                          {% endif %} {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                          Starts {{adgroup.campaign.start_datetime|format_date_compact}}.
-                          {% endif %} {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                          Ends {{adgroup.campaign.end_datetime|format_date_compact}}.
-                          {% endif %} {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                          All dates.
-                          {% endif %}
-                          {% ifequal adgroup.campaign.budget_type 'daily' %}{% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %} Unlimited budget.{% endif %}{% endifequal %}
-                          {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
-                          {% if adgroup.percent_delivered %}({{ adgroup.percent_delivered|percentage }}){%endif %}
-                      </span>
-                    </th>
-
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
-                  </tr>
-                  {% endfor %}
-                              {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-                  </div>
-
-                  <div class="appData alternating-color">
-                    <div class="appData-details noneg">
-              <div class="appData-details-inner show">
-                <table class="dataTable appData-main">
-                            <thead>
-                              <tr>
-                                <th class="dataTable-name big">Promotional</th>
-                                <th class="dataTable-data numeric special">CPM</th>
-                          <th class="dataTable-data numeric special">Impressions</th>
-                          <th class="dataTable-data numeric special">Clicks</th>
-                          <th class="dataTable-data numeric special">CTR</th>
-                        <th class="dataTable-data numeric special">CONV</th>
-                              </tr>
-                      </thead>
-                <tbody>
-                  {% for adgroup in promo %}
-                  <tr>
-                    <th>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
-                      <span class="muted">
-                          {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                          {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
-                          {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                          Starts {{adgroup.campaign.start_date|format_date_compact}}.
-                          {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                          Ends {{adgroup.campaign.start_date|format_date_compact}}.
-                          {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                          All dates.
-                          {% endif %}
-                          {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
-                      </span>
-                    </th>
-
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            </div>
-                  </div>
-
-            {% if marketplace %}
-              <div class="appData alternating-color">
-                <div class="appData-details noneg">
-                  <div class="appData-details-inner show">
-                    <table class="dataTable appData-main">
-                      <thead>
-                        <tr>
-                          <th class="dataTable-name big">Marketplace</th>
-                          <th class="dataTable-data numeric special">Revenue</th>
-                          <th class="dataTable-data numeric special">ECPM</th>
-                          <th class="dataTable-data numeric special">Impressions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for adgroup in marketplace %}
-                          {% if forloop.counter0 == 0 %}
-                            <tr>
-                              <th>
-                                {% if marketplace_activated and active_mpx_adunit_exists %}
-                                  <img src="/images/active.gif" height=9 width=9 />
-                                {% else %}
-                                  <img src="/images/inactive.gif" height=9 width=9 />
-                                {% endif %}
-                                <a href="{% url marketplace_index %}">
-                                  {{ adgroup.name }}
-                                </a>
-                                <span class="muted">MoPub Marketplace Beta</span>
-                              </th>
-                              <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                              <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                              <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                            </tr>
-                          {% endif %}
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            {% endif %}
-
-            <div class="appData alternating-color">
-              <div class="appData-details noneg">
-                <div class="appData-details-inner show">
-                  <table class="dataTable appData-main">
-                            <thead>
-                              <tr>
-                                <th class="dataTable-name big">Network</th>
-                              <th class="dataTable-data numeric special">ECPM</th>
-                        <th class="dataTable-data numeric special">Attempts</th>
-                        <th class="dataTable-data numeric special">Impressions</th>
-                        <th class="dataTable-data numeric special">Fillrate</th>
-                        <th class="dataTable-data numeric special">Clicks</th>
-                        <th class="dataTable-data numeric special">CTR</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                  {% for adgroup in network %}
-                  <tr>
-                    <th>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
-                      <span class="muted">{{adgroup.network_type}}</span>
-                    </th>
-
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-              </div>
-            </div>
-                  </div>
-
-            <div class="appData alternating-color">
-                <div class="appData-details noneg">
-            <div class="appData-details-inner show">
-              <table class="dataTable appData-main">
-                      <thead>
-                          <tr>
-                                <th class="dataTable-name big">Backfill Promotional</th>
-                                <th class="dataTable-data numeric special">CPM</th>
-                          <th class="dataTable-data numeric special">Impressions</th>
-                          <th class="dataTable-data numeric special">Clicks</th>
-                          <th class="dataTable-data numeric special">CTR</th>
-                        <th class="dataTable-data numeric special">CONV</th>
-                            </tr>
-                      </thead>
-                <tbody>
-                  {% for adgroup in backfill_promo %}
-                  <tr>
-                    <th>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
-                      <span class="muted">
-                          {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                          {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
-                          {% endif %} {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                          Starts {{adgroup.campaign.start_date|format_date_compact}}.
-                          {% endif %} {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                          Ends {{adgroup.campaign.start_date|format_date_compact}}.
-                          {% endif %} {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                          All dates.
-                          {% endif %}
-                          {% if adgroup.campaign.budget %}{{adgroup.campaign.budget|currency}} daily budget.{% else %}Unlimited budget.{% endif %}
-                      </span>
-                    </th>
-                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-                </table>
-            </div>
-            </div>
-                </div>
-
-            {% if backfill_marketplace %}
-                  <div class="appData alternating-color">
-                    <div class="appData-details noneg">
-              <div class="appData-details-inner show">
-                <table class="dataTable appData-main">
-                            <thead>
-                              <tr>
-                                <th class="dataTable-name big">Backfill Marketplace</th>
-                              <th class="dataTable-data numeric special">Revenue</th>
-                              <th class="dataTable-data numeric special">ECPM</th>
-                        <th class="dataTable-data numeric special">Attempts</th>
-                        <th class="dataTable-data numeric special">Impressions</th>
-                        <th class="dataTable-data numeric special">Fillrate</th>
-                        <th class="dataTable-data numeric special">Clicks</th>
-                        <th class="dataTable-data numeric special">CTR</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                  {% for adgroup in backfill_marketplace %}
-                  <tr>
-                    <th>
-                      {% if adgroup.deleted %}<img src="/images/deleted.gif" height=9 width=9 />{% endif %}
-                      {% if adgroup.active and not adgroup.deleted %}<img src="/images/active.gif" height=9 width=9 />{% endif %}
-                      {% if not adgroup.active and not adgroup.deleted %}<img src="/images/paused.gif" height=9 width=9 />{% endif %}
-                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{adgroup.name}}</a>
-                      <span class="muted">MoPub Marketplace Beta</span>
-                    </th>
-
-                    <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.request_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.fill_rate|percentage}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.click_count|withsep}}</td>
-                    <td class="dataTable-data numeric">{{adgroup.stats.ctr|percentage}}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-              </div>
-            </div>
-                  </div>
-            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
 
 
-                  {% else %}
-                  <div class="appData alternating-color">
-                    <div class="appData-details noneg">
-              <div class="appData-details-inner show">
-                <table class="dataTable appData-main">
-                            <thead>
-                              <tr>
-                                <th class="dataTable-name big"><span class="muted">No campaigns targeting {{app.name}}</span></th>
-                              </tr>
-                      </thead>
-                    </table>
-                  <div>
-                  <div>
-                  <div>
-            {% endif %}
-            </div>
-          </section>
+  {% comment %}
+    Controls for exporting app information
+  {% endcomment %}
 
-<form id='appExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url app_export %}'>
+  <form id='appExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url publisher_app_export %}'>
     <input name='app_key' type='text' value='{{app.key}}' />
     <input name='file_type' id='appExportType' type='text' value='' />
     <input name='start' value={{start_date|date:"mdy"}} />
     <input name='end' value={{end_date|date:"mdy"}} />
-</form>
-          <section id="dashboard-apps">
-              <div class="buttonBank buttonBank-right">
-                  <select name='exportSelect' id='publisher-app-exportSelect' class='selectmenu export-selectMenu'>
-                      <option value='exp'>Export</option>
-                      <option value='xls'>XLS</option>
-                      <option value='csv'>CSV</option>
-                  </select>
-              </div>
-              <h2>Daily Counts</h2>
-                 <div class="appData-details noneg">
-                  <table class="dataTable appData-main">
-                      <thead>
-                          <tr>
-                              <th class="dataTable-name big">&nbsp;</th>
-                              <th class="dataTable-data numeric special">Requests</th>
-                              <th class="dataTable-data numeric special">Impressions</th>
-                              <th class="dataTable-data numeric special">Fillrate</th>
-                              <th class="dataTable-data numeric special">Clicks</th>
-                              <th class="dataTable-data numeric special">CTR</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr>
-                              <th class="dataTable-name big">Totals</th>
-                              <td class="dataTable-data numeric special"><b>{{app.stats.request_count|withsep}}</b></td>
-                              <td class="dataTable-data numeric special"><b>{{app.stats.impression_count|withsep}}</b></td>
-                              <td class="dataTable-data numeric special"><b>{{app.stats.fill_rate|percentage}}</b></td>
-                              <td class="dataTable-data numeric special"><b>{{app.stats.click_count|withsep}}</b></td>
-                              <td class="dataTable-data numeric special"><b>{{app.stats.ctr|percentage}}</b></td>
-                          </tr>
-                          {% for s in app.all_stats reversed %}
-                          <tr class="appData-details-inner hide">
-                              <th class="dataTable-name">{{s.date|format_date}}</th>
-                              <td class="dataTable-data numeric">{{s.request_count|withsep}}</td>
-                              <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
-                              <td class="dataTable-data numeric">{{s.fill_rate|percentage}}</td>
-                              <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
-                              <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
-                          </tr>
-                          {% endfor %}
-                      </tbody>
-                  </table>
-                  <a class="button button-small appData-details-toggleButton" href="#">Hide details</a>
-              </div>
-          </section>
+  </form>
 
-          <div class="clear"></div>
+  <section id="dashboard-apps">
+    <div class="buttonBank buttonBank-right">
+      <select name='exportSelect' id='publisher-app-exportSelect' class='selectmenu export-selectMenu'>
+        <option value='exp'>Export</option>
+        <option value='xls'>XLS</option>
+        <option value='csv'>CSV</option>
+      </select>
+    </div>
 
-          <div style="margin-top: 1em">
-              <div class="buttonBank buttonBank-right">
-                  <form method="post" id="dashboard-deleteForm" action="{% url publisher_app_delete app_key=app.key %}"><a href="#" id="dashboard-delete-link">Remove app from dashboard</a></form>
-                  <div id="dashboard-delete-modal" class="hidden">
-                    <h2>Remove confirmation</h2>
-                    <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
-                  </div>
-              </div>
-          </div>
+
+    <h2>Daily Counts</h2>
+    <div class="appData-details noneg">
+      <table class="dataTable appData-main">
+        <thead>
+          <tr>
+            <th class="dataTable-name big">&nbsp;</th>
+            <th class="dataTable-data numeric special">Requests</th>
+            <th class="dataTable-data numeric special">Impressions</th>
+            <th class="dataTable-data numeric special">Fillrate</th>
+            <th class="dataTable-data numeric special">Clicks</th>
+            <th class="dataTable-data numeric special">CTR</th>
+          </tr>
+        </thead>
+        <tbody id="appData-totals">
+          <tr>
+            <th class="dataTable-name big">Totals</th>
+            <td class="dataTable-data numeric"><b>{{app.stats.request_count|withsep}}</b></td>
+            <td class="dataTable-data numeric"><b>{{app.stats.impression_count|withsep}}</b></td>
+            <td class="dataTable-data numeric"><b>{{app.stats.fill_rate|percentage}}</b></td>
+            <td class="dataTable-data numeric"><b>{{app.stats.click_count|withsep}}</b></td>
+            <td class="dataTable-data numeric"><b>{{app.stats.ctr|percentage}}</b></td>
+          </tr>
+        </tbody>
+        <tbody id="appData-individual" class="hidden">
+          {% for stat in app.all_stats reversed %}
+            <tr class="appData-details-inner hide">
+              <th class="dataTable-name">{{stat.date|format_date}}</th>
+              <td class="dataTable-data numeric">{{stat.request_count|withsep}}</td>
+              <td class="dataTable-data numeric">{{stat.impression_count|withsep}}</td>
+              <td class="dataTable-data numeric">{{stat.fill_rate|percentage}}</td>
+              <td class="dataTable-data numeric">{{stat.click_count|withsep}}</td>
+              <td class="dataTable-data numeric">{{stat.ctr|percentage}}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <a class="appData-details-toggleButton" href="#">Show details</a>
+
+    </div>
+  </section>
+
+  <div class="clear"></div>
+
+  <div style="margin-top: 1em">
+    <div class="buttonBank buttonBank-right">
+      <form method="post" id="dashboard-deleteForm" action="{% url publisher_delete_app app_key=app.key %}">
+        <a href="#" id="dashboard-delete-link">Remove app from dashboard</a>
+      </form>
+
+      <div id="dashboard-delete-modal" class="hidden">
+        <h2>Remove confirmation</h2>
+        <p>Are you sure you want to remove {{app.name}} from the dashboard?</p>
+      </div>
+
+    </div>
+  </div>
+
 {% endblock content %}
+
+
+{% block extraScripts %}
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/publisher" %}
+  <script type="text/javascript">
+    $(function() {
+      DashboardController.initializeAppDetail({
+          app_key: "{{ app.key }}"
+      });
+    });
+  </script>
+{% endblock extraScripts %}

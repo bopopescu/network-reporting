@@ -1,0 +1,31 @@
+{% extends 'advertiser/base.html' %}
+{% load filters %}
+
+{% block extraScripts %}
+  {# Should be able to do {{ campaign_form.media }} #}
+  {% include_script "controllers/campaigns" %}
+  <script type="text/javascript">
+    $(function () {
+        CampaignsController.initializeCreateCampaign();
+    });
+  </script>
+{% endblock extraScripts %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
+
+{% block pageTitle %}
+    <h1>New Campaign</h1>
+    {% if account.status == 'step4' %}
+        <!-- MixPanel Tracking -->
+        <script type="text/javascript">
+            mpq.push(["track", "Sign up: Create campaign"]);
+        </script>
+    {% endif %}
+{% endblock pageTitle %}
+
+{% block content %}
+    <form action="{% url advertiser_campaign_create %}" id="campaign_and_adgroup" method="post">
+        {% include 'advertiser/forms/campaign_and_adgroup.html' %}
+    </form>
+{% endblock %}

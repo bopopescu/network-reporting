@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html>  
+<!doctype html>
+<html>
 <meta name = "viewport" content = "width = 320, initial-scale = 1.0, user-scalable = no">   
 <style> 
 header {
@@ -21,25 +21,35 @@ background-color: #444;
 </style> 
 <body>
 
-<!-- <header>
-<img src="http://localhost:8080/images/mopub-logo2.png">  
-</header>   -->
+<FORM NAME="joe">
+<INPUT TYPE="hidden" NAME="burns">
+</FORM>
+
 <script type="text/javascript">
-    var mopub_ad_unit='agltb3B1Yi1pbmNyDQsSBFNpdGUYt8SNDgw';
 
-    //Be sure to set these to the size of your adunit
-    var mopub_ad_width=320; //optional
-    var mopub_ad_height=50; //optional
+	var locate = window.location
+	document.joe.burns.value = locate
+	var text = document.joe.burns.value
 
-    //Use custom keywords appropriate for your mobile webpage
-    //var mopub_keywords= "custom keywords"; //optional
-</script>
-<script src="http://ads.mopub.com/js/client/mopub.js"></script>  
-        
+	function delineate2(str)
+	{
+	point = str.lastIndexOf("=");
+	return(str.substring(point+1,str.length));
+	}
+	adunitid= (delineate2(text));
+	console.log(adunitid);
+
+	var mopub_ad_unit=adunitid;
+
+	    //Be sure to set these to the size of your adunit
+	    var mopub_ad_width=320; //optional
+	    var mopub_ad_height=50; //optional
+
+	    //Use custom keywords appropriate for your mobile webpage
+	    //var mopub_keywords= "custom keywords"; //optional
+	</script>
+<script src="http://ads.mopub.com/js/client/mopub.js"></script>
+
 
 </body>
-
-
-
-
 </html>

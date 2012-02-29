@@ -519,9 +519,8 @@ class ShowAppHandler(RequestHandler):
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, adgroups = level_camps))
 
-        marketplace_campaigns = filter(lambda x: x.campaign_type, app.adgroups)
-        marketplace_campaigns = sorted(marketplace_campaigns,
-                                       lambda x,y: cmp(x.bid, y.bid))
+        marketplace_campaigns = filter(lambda x: x.campaign_type == 'marketplace', app.adgroups)
+        marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
 
         network_campaigns = filter(lambda x: x.campaign_type in ['network'], app.adgroups)
         network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -534,6 +533,8 @@ class ShowAppHandler(RequestHandler):
 
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
+        logging.warn([adgroup.active for adgroup in marketplace_campaigns])
+        logging.warn([adgroup.deleted for adgroup in marketplace_campaigns])
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
                                         for adgroup in marketplace_campaigns])
         try:
@@ -570,8 +571,8 @@ def app_show(request,*args,**kwargs):
     return ShowAppHandler(id="app_key")(request, use_cache=False, *args,**kwargs)
 
 
-class ExportFileHandler( RequestHandler ):
-    def get( self, key, key_type, f_type ):
+class ExportFileHandler(RequestHandler):
+    def get(self, key, key_type, f_type):
         spec = self.params.get('spec')
         stat_names, stat_models = self.get_desired_stats(key, key_type,
                                                          self.days, spec=spec)

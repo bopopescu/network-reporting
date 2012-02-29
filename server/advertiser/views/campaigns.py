@@ -39,7 +39,6 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        HtmlCreativeQueryManager)
 from ad_server.optimizer.optimizer import DEFAULT_CTR
 from budget import budget_service
-from budget.tzinfo import Pacific, utc
 from common.ragendja.template import (JSONResponse, render_to_response,
                                       render_to_string)
 from common.utils import date_magic, helpers, sswriter
@@ -48,6 +47,7 @@ from common.utils.request_handler import RequestHandler
 from common.utils.stats_helpers import (MarketplaceStatsFetcher,
                                         MPStatsAPIException)
 from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import Pacific, utc
 from publisher.models import Site
 from publisher.query_managers import (AdUnitQueryManager, AppQueryManager,
                                       AdUnitContextQueryManager)

@@ -14,8 +14,8 @@ from advertiser.models import Campaign, AdGroup
 from advertiser.forms import (CampaignForm, AdGroupForm, BaseCreativeForm,
                               TextCreativeForm, TextAndTileCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
-from budget.tzinfo import UTC
 from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import UTC
 
 
 """

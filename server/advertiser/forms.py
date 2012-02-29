@@ -10,11 +10,11 @@ from google.appengine.ext.db import Key
 from advertiser.models import (Campaign, AdGroup, Creative, TextCreative,
                                TextAndTileCreative, HtmlCreative, ImageCreative)
 from budget.query_managers import BudgetQueryManager
-from budget.tzinfo import UTC
 from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
                               CITY_GEO, REGION_GEO, COUNTRY_GEO)
 from common.utils import helpers
 from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import UTC
 
 from widgets import CustomizableSplitDateTimeWidget
 

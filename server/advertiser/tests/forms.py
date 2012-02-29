@@ -79,6 +79,8 @@ class TestDirectSoldCampaignForm(unittest.TestCase):
             test_data['start_datetime_0'] = now.date().strftime('%m/%d/%Y')
             form = CampaignForm(test_data)
             self.assertTrue(form.is_valid(), form._errors.as_text())
+            campaign = form.save()
+            self.assertEqual(campaign.start_datetime, now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC()).replace(tzinfo=None))
 
     def test_datetime_timezones(self):
         pass
@@ -121,6 +123,7 @@ class TestNetworkAdgroupForm(unittest.TestCase):
 
 
 class TestNetworkCampaignForm(unittest.TestCase):
+
     def test_datetimes_null(self):
         form = CampaignForm({
             'campaign_type': 'network',
@@ -130,6 +133,31 @@ class TestNetworkCampaignForm(unittest.TestCase):
         campaign = form.save()
         self.assertEqual(campaign.start_datetime, None, "A network campaign's start_datetime should be null")
         self.assertEqual(campaign.end_datetime, None, "A network campaign's end_datetime should be null")
+
+
+class TestAdGroupForm(unittest.TestCase):
+    def setUp(self):
+        self.data = [
+            {
+                'name': 'Test AdGroup',
+                'bid_strategy': 'cpm',
+                'bid': 0.1,
+            },
+        ]
+
+    def test_required_and_default(self):
+        data = copy.deepcopy(self.data)
+        for test_data in data:
+            form = AdGroupForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+            adgroup = form.save()
+            self.assertEqual(adgroup.allocation_percentage, 100.0)
+            for key in test_data:
+                incomplete_data = copy.deepcopy(test_data)
+                del incomplete_data[key]
+                form = AdGroupForm(incomplete_data)
+                self.assertFalse(form.is_valid(), "%s was missing but form validated" % key)
+
 
 """
 class TestCampaignForm(unittest.TestCase):

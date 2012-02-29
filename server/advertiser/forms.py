@@ -214,6 +214,7 @@ class CampaignForm(forms.ModelForm):
 
 
 class AdGroupForm(forms.ModelForm):
+    name = forms.CharField()
     network_type = forms.ChoiceField(choices=(('admob_native', 'AdMob'),
                                               ('adsense', 'AdSense'),
                                               ('brightroll', 'BrightRoll'),
@@ -249,6 +250,7 @@ class AdGroupForm(forms.ModelForm):
                                               coerce=lambda x: bool(int(x)),
                                               initial=False,
                                               label='Device Targeting:',
+                                              required=False,
                                               widget=forms.RadioSelect)
     target_iphone = forms.BooleanField(initial=True, label='iPhone',
                                        required=False)
@@ -271,6 +273,7 @@ class AdGroupForm(forms.ModelForm):
                                                   ('city', 'City')),
                                          initial='all',
                                          label='Region Targeting:',
+                                         required=False,
                                          widget=forms.RadioSelect)
     cities = forms.Field(required=False, widget=forms.SelectMultiple)
     keywords = forms.CharField(required=False,
@@ -337,7 +340,7 @@ class AdGroupForm(forms.ModelForm):
 
     def clean_geo_predicates(self):
         geo_predicates = []
-        for geo_predicate in self.cleaned_data.get('geo_predicates', []):
+        for geo_predicate in self.cleaned_data.get('geo_predicates', []) or []:
             geo_predicate = tuple(geo_predicate.split(','))
             #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
             geo_predicates.append(GEO_LIST[len(geo_predicate) - 1] % geo_predicate)

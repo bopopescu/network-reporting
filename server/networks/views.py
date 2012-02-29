@@ -352,11 +352,8 @@ class NetworkDetailsHandler(RequestHandler):
                     if 'mopub_app_stats' not in network_data:
                         network_data['mopub_app_stats'] = {}
                     if app.key() not in network_data['mopub_app_stats']:
-                        network_data['mopub_app_stats'][app.key()] = {}
-                    network_data['mopub_app_stats'][app.key()]['pub_id'] = \
-                            pub_id
-                    network_data['mopub_app_stats'][app.key()]['app'] = \
-                            app
+                        network_data['mopub_app_stats'][app.key()] = app
+                    network_data['mopub_app_stats'][app.key()].pub_id = pub_id
 
             # Get data collected by MoPub
             adunits = []
@@ -373,13 +370,33 @@ class NetworkDetailsHandler(RequestHandler):
                     # One adunit per adgroup for network adunits
                     adunit = db.get(adgroup.site_keys[0])
                     adunit.stats = stats
-                    network_data['mopub_app_stats'][app.key()]['adunits'].append(adunit)
-                    network_data['mopub_app_stats'][app.key()]['stats'] += stats
-                    network_data['mopub_stats'] += stats
+                    if 'mopub_app_stats' not in network_data:
+                        network_data['mopub_app_stats'] = {}
+                    if app.key() not in network_data['mopub_app_stats']:
+                        network_data['mopub_app_stats'][app.key()] = {}
+                    if not hasattr(network_data['mopub_app_stats'][app.key()],
+                            'adunits'):
+                        network_data['mopub_app_stats'][app.key()].adunits = []
+
+                    network_data['mopub_app_stats'][app.key()].adunits.append(
+                            adunit)
+
+                    if hasattr(network_data['mopub_app_stats'][app.key()],
+                            'stats'):
+                        network_data['mopub_app_stats'][app.key()].stats += \
+                                stats
+                    else:
+                        network_data['mopub_app_stats'][app.key()].stats = \
+                                stats
+
+                    if 'mopub_stats' in network_data:
+                        network_data['mopub_stats'] += stats
+                    else:
+                        network_data['mopub_stats'] = stats
 
         if 'mopub_app_stats' in network_data:
             network_data['mopub_app_stats'] = sorted(network_data['mopub_app_stats'].values(), key=lambda
-                    app_data: app_data['app'].identifier)
+                    app_data: app_data.identifier)
 
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper

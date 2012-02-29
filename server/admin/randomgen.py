@@ -394,8 +394,6 @@ def main():
     for network in REPORTING_NETWORKS.keys():
         login = AdNetworkLoginCredentials(account=account,
                            ad_network_name=network,
-                           username='bullshit',
-                           password='bullshit',
                            client_key=str(random.random()*10),
                            send_email=False)
         login_by_network[network] = login

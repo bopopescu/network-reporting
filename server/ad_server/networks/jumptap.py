@@ -54,7 +54,8 @@ class JumptapServerSide(ServerSide):
 
     @property
     def headers(self):
-        return { 'User-Agent': self.get_user_agent() }
+        return { 'User-Agent': self.get_user_agent(),
+                 'X-Forwarded-For': self.client_context.client_ip, }
      #'Accept-Language': 'en-us' }  # TODO: Accept language from web request
 
     def get_language(self):

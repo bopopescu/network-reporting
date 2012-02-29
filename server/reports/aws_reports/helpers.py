@@ -128,7 +128,7 @@ def upload_file(fd):
     return blob_key
 
 def auth_func():
-    return 'olp@mopub.com', 'N47935'
+    return 'olp@mopub.com', 'N47935N47935'
 
 def setup_remote_api():
     app_id = 'mopub-inc'

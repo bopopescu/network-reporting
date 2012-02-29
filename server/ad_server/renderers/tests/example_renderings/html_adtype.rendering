@@ -33,7 +33,7 @@
       
     
       
-      urls[i++]="http://www.google.com/&rand=0932jfios"
+      urls[i++]="http://www.google.com/"
       
       
       var hiddenSpan = document.createElement('span')

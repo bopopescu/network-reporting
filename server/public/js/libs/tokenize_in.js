@@ -62,7 +62,7 @@ $.TokenData = function(data,type) {
         return $('<input type="hidden" class="' + raw.countryCode + '" name="cities" id="' + raw.name.replace(/ /gi, '_') + '" value="' + value + '" />');
     }
     function country_input() {
-        return $('<input type="hidden" name="geo" id="' + code + '" value="' + code + '" />');
+        return $('<input type="hidden" name="geo_predicates" id="' + code + '" value="' + code + '" />');
     }
 
     if (type == 'city') {
@@ -338,7 +338,6 @@ $.TokenList = function (input, settings) {
     var children = $('#geo_pred_ta').children().length;
     $('.countryNumDependent').hide();
     $('.countryNumDependent.' + children).show();
-
   }
 
 
@@ -716,8 +715,8 @@ $.TokenList = function (input, settings) {
                     q_url += "&featureCode=" + encodeURIComponent(settings.featureCode);
                 }
                 q_url += '&country=';
-                if ($('input[name="geo"]').val() !== undefined) {
-                   q_url += encodeURIComponent($('input[name="geo"]').val());
+                if ($('input[name="geo_predicates"]').val() !== undefined) {
+                   q_url += encodeURIComponent($('input[name="geo_predicates"]').val());
                 }
                 else {
                     q_url += encodeURIComponent(settings.country);

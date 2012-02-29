@@ -126,7 +126,8 @@ class AdHandler(webapp.RequestHandler):
         trace_logging.info(str(self.request.url))
 
 
-        adunit_id = self.request.get("id")
+        adunit_id = self.request.get("id") or 'agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA'
+        adunit_id = adunit_id.replace(' ','') #remove empty spaces
         experimental = self.request.get("exp")
         now = datetime.datetime.now()
 

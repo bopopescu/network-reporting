@@ -74,7 +74,7 @@ class AdImpressionHandler(webapp.RequestHandler):
         adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_key)
         creative_id = self.request.get('cid')
         creative = adunit_context.get_creative_by_key(creative_id)
-        if creative.ad_group.bid_strategy == 'cpm':
+        if creative.ad_group.bid_strategy == 'cpm' and creative.ad_group.bid:
             budget_service.apply_expense(creative.ad_group.campaign.budget_obj, creative.ad_group.bid/1000)
 
         raw_udid = self.request.get("udid")
@@ -95,7 +95,7 @@ class AdImpressionHandler(webapp.RequestHandler):
                                         now=None):
         from userstore.query_managers import ImpressionEventManager
 
-        now = datetime.datetime.now()
+        now = now or datetime.datetime.now()
 
         impression_types_to_update = []
         if creative.ad_group.daily_frequency_cap:
@@ -231,7 +231,8 @@ def main():
                                                   ('/m/memshow', memcache_mangler.ShowHandler),
                                                   ('/m/purchase', PurchaseHandler),
                                                   ('/m/purchase_txn', PurchaseHandlerTxn),
-                                                  ('/m/req',AdRequestHandler),
+                                                  ('/m/req', AdRequestHandler),
+                                                  ('/_ah/warmup', adhandler.AdHandler),
                                                   ('/m/budget/advance/', budget_handlers.BudgetAdvanceHandler),
                                                   ('/m/budget/advance_worker/', budget_handlers.BudgetAdvanceWorkerHandler)],
                                                   debug=DEBUG)

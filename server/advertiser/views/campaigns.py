@@ -77,7 +77,7 @@ class AdGroupIndexHandler(RequestHandler):
         adunits_dict = {}
         for campaign in campaigns:
             for adgroup in campaign.adgroups:
-                if not adgroup.archived:
+                if not (adgroup.archived or adgroup.deleted):
                     adunits = []
                     adunit_keys_to_fetch = []
                     adgroup.targeted_app_keys = []
@@ -116,7 +116,7 @@ class AdGroupIndexHandler(RequestHandler):
 
 @login_required
 def adgroups(request, *args, **kwargs):
-    return AdGroupIndexHandler()(request, *args, **kwargs)
+    return AdGroupIndexHandler()(request, use_cache=False, *args, **kwargs)
 
 
 ####### Helpers for campaign page #######
@@ -767,7 +767,7 @@ class AdgroupDetailHandler(RequestHandler):
 
 @login_required
 def campaign_adgroup_show(request, *args, **kwargs):
-    return AdgroupDetailHandler(id='adgroup_key')(request, *args, **kwargs)
+    return AdgroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
 
 
 class PauseAdGroupHandler(RequestHandler):
@@ -955,6 +955,7 @@ class AddCreativeHandler(RequestHandler):
 
         jsonDict = {'success': False, 'errors': []}
         if base_creative_form.is_valid():
+            logging.error('base_creative_form is_valid')
             base_creative = base_creative_form.save(commit=False)
             ad_type = base_creative.ad_type
             if ad_type == "text":
@@ -967,6 +968,7 @@ class AddCreativeHandler(RequestHandler):
                 creative_form = html_creative_form
 
             if creative_form.is_valid():
+                logging.error('creative_form is_valid')
 
                 if not creative_form.instance:  # ensure form posts do not change ownership
                     account = self.account
@@ -976,6 +978,7 @@ class AddCreativeHandler(RequestHandler):
                 creative.account = account
                 creative.ad_group = ad_group
                 CreativeQueryManager.put(creative)
+                logging.error('put')
 
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)

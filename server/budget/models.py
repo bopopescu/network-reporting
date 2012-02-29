@@ -534,21 +534,18 @@ class BudgetSliceLog(db.Model):
         if not budget.is_active_for_date(date.today()): return None
         logging.warn("Has budget")
 
-        last_slice = budget.most_recent_slice_log  
-        if budget.end_datetime:
-            if budget.delivery_type == "allatonce":
-                percent_spent = budget.total_spent / budget.total_budget
-                percent_days = budget.elapsed_slices / budget.total_slices
-                return ["Pace", min(1, (percent_spent / percent_days))]
-            else:
-                last_percent = last_slice.actual_spending / last_slice.desired_spending
-                expected_remaining = last_percent * self.desired_spending * budget.remaining_slices
-                return ["Pace", min(1, ((budget.total_spent + expected_remaining) / budget.total_budget))]
-        else:
-            if budget.static_slice_budget:
-                return ["Pace", min(1, (last_slice.actual_spending / last_slice.desired_spending))]
+        last_slice = budget.most_recent_slice_log
+        percent_days = budget.elapsed_slices / float(budget.total_slices)
+        if budget.delivery_type == "allatonce":
+            if budget.static_slice_budget and not budget.end_datetime:
+                return ["Delivery", min(1, last_slice.actual_spending / last_slice.desired_spending)]
             else:
                 return ["Delivery", min(1, (budget.total_spent / budget.total_budget))]
+        else:
+            if budget.end_datetime:
+                return ["Pacing", min(1, ((budget.total_spent / budget.total_budget) / percent_days))]
+            else:
+                return ["Pacing", min(1, last_slice.actual_spending / last_slice.desired_spending)]
         return None
 
     @classmethod

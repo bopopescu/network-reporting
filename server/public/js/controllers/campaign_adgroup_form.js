@@ -1,252 +1,41 @@
-$(document).ready(function() {
-    /*
-    function calculateAndShowBudget() {
-        $('#campaignAdgroupForm-budget-display').hide();
-        $('#campaignAdgroupForm-budget-display_full').hide();
-        if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
-            var rate = $('#campaignAdgroupForm input[name="bid"]').val();
-            if ($("#adgroupForm-budget_type-select").val() == "daily") {
-                var impressions = $('#campaignAdgroupForm input[name="impressions"]').val();
-                var budget = rate * impressions / 1000;
-                if (budget) {
-                    var budget_fixed = budget.toFixed(2);
-                    $('#campaignAdgroupForm-budget-display').html("("+budget_fixed +" USD / day)");
-                    $('#campaignAdgroupForm input[name="budget"]').val(budget);
-                    $('#campaignAdgroupForm-budget-display').show();
-                } else {
-                    $('#campaignAdgroupForm-budget-display').html(null);
-                    $('#campaignAdgroupForm input[name="budget"]').val(null);
-                }
-            } else {
-                var impressions = $('#campaignAdgroupForm input[name="full_impressions"]').val();
-                var full_budget = rate*impressions/1000;
-                if (full_budget) {
-                    var full_budget_fixed = full_budget.toFixed(2);
-                    $('#campaignAdgroupForm-budget-display_full').html("("+full_budget_fixed +" total USD)");
-                    $('#campaignAdgroupForm input[name="full_budget"]').val(full_budget);
-                    $('#campaignAdgroupForm-budget-display_full').show();
-                } else {
-                    $('#campaignAdgroupForm-budget-display_full').html(null);
-                    $('#campaignAdgroupForm input[name="full_budget"]').val(null);
-                }
-            }
-        }
-    }
-
-    function campaignAdgroupFormOnLoad() {
+(function (){
+    function setupAdGroupForm() {
+        // select the appropriate campaign_type from the hash
         if (window.location.hash.substring(1) !== '') {
-            $('#campaign_type_select').val(window.location.hash.substring(1));
+            $('select[name="campaign_type"]').val(window.location.hash.substring(1));
         }
 
-        // Select the appropriate form field options based on the type of campaign
-        $('#campaign_type_select').change(function(e) {
-            var campaign_type = $(this).val();
-            window.location.hash = "#" + campaign_type;
-            $('.campaignDependent', '#campaignAdgroupForm').hide();
-            $('.'+campaign_type+'.campaignDependent', '#campaignAdgroupForm').show();
-            $('#campaignAdgroupForm')
-                .find('.campaignDependent').hide().end()
-                .find("."+$(this).val()).show().end();
-            if ($(this).val() == "network"){
-                $('#bid_strategy :selected').removeAttr('selected');
-
-                // make the network bid cpm by default
-                $('option#bid_strategy-cpm').attr('selected','selected');
-
-                // rename so we dont have duplicates
-                $('#bid-max').attr('name','bid-max');
-                $('#bid-network').attr('name','bid');
-
-                // rename so we don't have duplicates
-                $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy_std');
-                $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy');
-            } else {                  // rename so we dont have duplicates
-                $('#bid-network').attr('name','bid-network');
-                $('#bid-max').attr('name','bid');
-
-                // rename so we don't have duplicates
-                $('#adgroupForm-bid_strategy-select').attr('name','bid_strategy');
-                $('#adgroupForm-bid_strategy-select-network').attr('name','bid_strategy_network');
-            }
-
-            if ($(this).val() == 'marketplace') {
-                $("#mpx_message").removeClass('hidden');
-                $('.ui-button-text', "#campaignAdgroupForm-submit").text('Accept New Terms and Continue');
-            } else {
-                $("#mpx_message").addClass('hidden');
-                $('.ui-button-text', "#campaignAdgroupForm-submit").text('Continue');
-            }
-        }).change(); // make sure we're in sync when the page loads
-
-        // Show appropriate options based on what network has been chosen
-        // (Network campaigns only)
-        $("#network_select").change(function(e) {
-        var network = $(this).val();
-        $('.networkDependent').hide();
-        $('.'+network+'.networkDependent').show();
-
-        if (network == 'admob_native' || network == 'millennial_native') {
-            $('#network_select_sdk_msg').show();
-        } else {
-            $('#network_select_sdk_msg').hide();
-        }
-
-        if (network == 'iAd') {
-            $('div.adunit-Target.mweb')
-                .hide()
-                .find('input')
-                .removeAttr('checked');
-            $('div.adunit-Target.android')
-                .hide()
-                .find('input')
-                .removeAttr('checked');
-        } else {
-            $('div.adunit-Target:hidden').show();
-        }
-        }).change();
-
-        // Show budget fields when they're needed
-        $("#adgroupForm-budget_type-select").change( function(e) {
-          var budget_type = $(this).val();
-          $('.budgetDependent').hide();
-          $('.'+budget_type+'.budgetDependent').show();
-          if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
-              if (budget_type == "full_campaign") {
-                  $('#campaignAdgroupForm-budget-display_full').show();
-              }
-              if (budget_type == "daily"){
-                  $('#campaignAdgroupForm-budget-display').show();
-              }
-          }
-        }).change();
-
-
-
-        // Initialize impression count on form display
-        if ($('#adgroupForm-bid_strategy-select').val() == 'cpm') {
-            var rate = $('#campaignAdgroupForm input[name="bid"]').val();
-            if ($("#adgroupForm-budget_type-select").val() == "daily") {
-                var budget = $('#campaignAdgroupForm input[name="budget"]').val();
-                var impressions = 1000 * budget / rate;
-                if (impressions) {
-                    var fixed_impressions = impressions.toFixed();
-                    $('#campaignAdgroupForm input[name="impressions"]').val(fixed_impressions);
-                    calculateAndShowBudget();
-                }
-            } else {
-                var budget = $('#campaignAdgroupForm input[name="full_budget"]').val();
-                var full_impressions = 1000 * budget / rate;
-                if (full_impressions) {
-                    var fixed_full_impressions = full_impressions.toFixed();
-                    $('#campaignAdgroupForm input[name="full_impressions"]').val(fixed_full_impressions);
-                    calculateAndShowBudget();
-                }
-            }
-        }
-
-        // Show and update budget controls when needed
-        $('#adgroupForm-bid_strategy-select').change(function() {
-            if ($(this).val() == 'cpm') {
-                $('.campaignAdgroupForm-budget').hide();
-                $('#campaignAdgroupForm-budget-fullimpressions').show();
-                $('#campaignAdgroupForm-budget-impressions').show();
-                $("#adgroupForm-budget_type-select option[value='full_campaign']").text("total impressions");
-                $("#adgroupForm-budget_type-select option[value='daily']").text("impressions/day");
-            } else {
-                $('.campaignAdgroupForm-budget').hide();
-                $('#campaignAdgroupForm-budget-fullbid').show();
-                $('#campaignAdgroupForm-budget-bid').show();
-                $("#adgroupForm-budget_type-select option[value='full_campaign']").text("total USD");
-                $("#adgroupForm-budget_type-select option[value='daily']").text("USD/day");
-            }
-            calculateAndShowBudget();
-        }).change();
-
-        $('#campaignAdgroupForm input[name="impressions"]').keyup(function() {
-          calculateAndShowBudget();
-        });
-
-        $('#campaignAdgroupForm input[name="full_impressions"]').keyup(function() {
-          calculateAndShowBudget();
-        });
-
-        $('#bid-max').keyup(function() {
-          calculateAndShowBudget();
-        });
-
-        $("#terms").dialog({
-            autoOpen: false,
-            height: 530,
-            buttons: {
-                "OK": function() {
-                    $(this).dialog("close");
-                }
-            }
-        });
-        $("#accept_terms").click(function() {
-            $("#terms").dialog('open');
-        });
-    }
-
-    campaignAdgroupFormOnLoad();
-
-    // Set up the campaign adgroup form for ajax
-
-    $('#campaignAdgroupForm-submit')
-        .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
-        .click(function(e) {
-            e.preventDefault();
-            $('#campaignAdgroupForm').submit();
-        });
-
-    // device targeting
-    $("#device_targeting_False").click(function(){
-        $("#target-by-device").slideUp();
-    });
-    $("#device_targeting_True").click(function() {
-        $("#target-by-device").slideDown();
-    });
-    if($("#device_targeting_True:checked").length === 0) {
-        $("#target-by-device").hide();
-    }
-    */
-
-    // select the appropriate campaign_type from the hash
-    if (window.location.hash.substring(1) !== '') {
-        $('select[name="campaign_type"]').val(window.location.hash.substring(1));
-    }
-
-    var validator = $('form#campaign_and_adgroup').validate({
-        errorPlacement: function(error, element) {
-            element.closest('li > div').append(error);
-        },
-        submitHandler: function(form) {
-            $(form).ajaxSubmit({
-                data: {ajax: true},
-                dataType: 'json',
-                success: function(jsonData, statusText, xhr, $form) {
-                    if(jsonData.success) {
-                        window.location = jsonData.redirect;
-                        $('form#campaign_and_adgroup #submit').button({label: 'Success...',
-                                                                       disabled: true});
-                    }
-                    else {
-                        validator.showErrors(jsonData.errors);
+        var validator = $('form#campaign_and_adgroup').validate({
+            errorPlacement: function(error, element) {
+                element.closest('li > div').append(error);
+            },
+            submitHandler: function(form) {
+                $(form).ajaxSubmit({
+                    data: {ajax: true},
+                    dataType: 'json',
+                    success: function(jsonData, statusText, xhr, $form) {
+                        if(jsonData.success) {
+                            window.location = jsonData.redirect;
+                            $('form#campaign_and_adgroup #submit').button({label: 'Success...',
+                                                                           disabled: true});
+                        }
+                        else {
+                            validator.showErrors(jsonData.errors);
+                            $('form#campaign_and_adgroup #submit').button({label: 'Try Again',
+                                                                           disabled: false});
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
                         $('form#campaign_and_adgroup #submit').button({label: 'Try Again',
                                                                        disabled: false});
+                    },
+                    beforeSubmit: function(arr, $form, options) {
+                        $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
+                                                                       disabled: true});
                     }
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    $('form#campaign_and_adgroup #submit').button({label: 'Try Again',
-                                                                   disabled: false});
-                },
-                beforeSubmit: function(arr, $form, options) {
-                    $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
-                                                                   disabled: true});
-                }
-            });
-        }
-    });
+                });
+            }
+        });
 
     $('form#campaign_and_adgroup #submit')
         .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
@@ -275,9 +64,103 @@ $(document).ready(function() {
 
     // date controls
     $('input[type="text"].date').datepicker({minDate: 0});
-    $('input[name$="datetime_0"]').change(function() {
-        $(this).siblings('input[name$="datetime_1"]').val('12:00 AM');
+
+    function makeValidTime(timeStr, defHour, defMin, defAmPm) {
+        // Checks to see if a timeStr is valid, returns valid form
+        // AM/PM (and variants) are optional.
+
+        var timePat = /^(\d{1,2}):(\d{2})(\s?(AM|am|PM|pm|aM|pM|Pm|Am))?$/;
+
+        if (defMin < 10) {
+            defMin = '0' + defMin;
+        }
+        var matchArray = timeStr.match(timePat);
+        if (matchArray == null) {
+            return defHour + ':' + defMin + ' ' + defAmPm;
+        }
+
+        hour = matchArray[1];
+        minute = matchArray[2];
+        ampm = matchArray[4];
+
+        // Handle military time stuff
+        if (hour >= 12 && hour <= 23) {
+            hour = hour - 12;
+            // 12:00 AM to 12:00 PM
+            // 12:00    to 12:00 PM
+            //
+            // 15:00 AM to 3:00 PM
+            // 15:00 PM to 3:00 PM
+            // 15:00    to 3:00 PM
+            if (hour == 0) {
+                hour = 12;
+                if (ampm === undefined) {
+                    ampm = 'PM';
+                }
+            }
+            else {
+                ampm = 'PM';
+            }
+        }
+
+        if (hour == 0) {
+            ampm = 'AM';
+            hour = 12;
+        }
+        // Set invalid times to 0 minutes and 12 hours and default to AM
+        if (minute < 0 || minute > 59) {
+            minute = defMin;
+        }
+        if (hour < 0 || hour > 23) {
+            hour = defHour;
+        }
+        if (ampm === undefined) {
+            ampm = defAmPm;
+        }
+
+        else {
+            ampm = ampm.toUpperCase();
+        }
+        return hour + ':' + minute + ' ' + ampm ;
+    }
+
+    $('input[name="start_datetime_0"]').change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != '') {
+            $('input[name="start_datetime_1"]').change();
+        }
     });
+
+    $('input[name="end_datetime_0"]').change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != '') {
+            $('input[name="end_datetime_1"]').change();
+        }
+    });
+
+    $('input[name$="_datetime_1"]').change(function(e){
+        e.preventDefault();
+        var name = $(this).attr('name');
+        var val = $(this).val();
+        if (name == 'start_datetime_1') {
+            if($('input[name="start_datetime_0"]').val() == '') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 12, 0, 'AM');
+            }
+        }
+        else if (name == 'end_datetime_1') {
+            if($('input[name="end_datetime_0"]').val() == '') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 11, 59, 'PM');
+            }
+        }
+        $(this).val(val);
+    });
+
 
     $('#all-adunits').change(function() {
         // select or deselect all adunits
@@ -436,17 +319,22 @@ $(document).ready(function() {
     var city_pre = {type: 'city', data: []};
     //Not being used right now
     //var state_pre = {type: 'state', data: []};
-    for (var count = 0; count < countries.length; count++) {
-        var dat = countries[count];
-        if ($.inArray(dat.code, priors) != -1) {
+
+    window.priors = window.priors || [];
+
+    for(var index in countries) {
+        var dat = countries[index];
+        if($.inArray(dat.code, window.priors) != -1) {
             pre.data.push(dat);
         }
-        if (pre.length == priors.length)
+        if(pre.length == priors.length)
             break;
     }
+
+    window.city_priors = window.city_priors || [];
     //city is ll:ste:name:ccode;
-    for (var i in city_priors) {
-        if (city_priors.hasOwnProperty(i)) {
+    for(var i in city_priors) {
+        if(city_priors.hasOwnProperty(i)) {
             var datas = city_priors[i].split(':');
             var ll = datas[0].split(',');
             var ste = datas[1];
@@ -461,6 +349,20 @@ $(document).ready(function() {
                       });
         }
     }
+
+    //Need to create data object that is array of dictionary [ {name, id} ]
+    $('#geo_pred_ta').tokenInput(null, {
+        data: countries,
+        hintText: 'Type in a country name',
+        formatResult: function( row ) {
+            return row.name;
+        },
+        formatMatch: function( row, i, max ){
+            return [row.name, row.code];
+        },
+        prePopulate: pre
+    });
+
     $('#city_ta').tokenInput(geo_s, {
         country: 'US',
         doImmediate: false,
@@ -475,18 +377,6 @@ $(document).ready(function() {
     });
     //Verify that all cities in city_pre are in the SINGLE country that is pre
 
-    //Need to create data object that is array of dictionary [ {name, id} ]
-    $('#geo_pred_ta').tokenInput(null, {
-        data: countries,
-        hintText: 'Type in a country name',
-        formatResult: function( row ) {
-            return row.name;
-        },
-        formatMatch: function( row, i, max ){
-            return [row.name, row.code];
-        },
-        prePopulate: pre
-    });
     /* Not doing states atm
     $('#state_ta').tokenInput(geo_s, {
         country: 'US',
@@ -511,5 +401,6 @@ $(document).ready(function() {
             });
         }
     }).filter(':checked').click();
+  }
 
 });

@@ -2,8 +2,8 @@
 {% load filters %}
 
 <script type="text/javascript">
-    priors = {{ adgroup.geo_predicates|to_json|safe }};
-    city_priors = {{ adgroup.cities|to_json|safe }};
+    priors = {{ adgroup_form.geo_predicates|field_value|to_json|safe }};
+    city_priors = {{ adgroup_form.cities|field_value|to_json|safe }};
 </script>
 
 <fieldset>
@@ -292,7 +292,7 @@
             <label>City Targeting:</label>
             <div>
                 <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
-                <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
+                <div class="countryNumDependent 1" style="display: none;"><div id="city_ta"></div></div>
             </div>
         </li>
         <li>

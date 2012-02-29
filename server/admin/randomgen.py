@@ -218,6 +218,7 @@ def generate_adgroup(site_keys,account,campaign=None,network=None):
     return adgroup
 
 
+
 def generate_campaign(account,budget,campaign_type=None):
     start_date = get_random_date()
     end_date = get_random_date()
@@ -235,7 +236,7 @@ def generate_campaign(account,budget,campaign_type=None):
     return campaign
 
 
-#Generates both user and account models.
+
 def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,marketplace_config=None,network_config=None):
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()
@@ -331,7 +332,7 @@ def main_():
         for i in range(NUM_ADUNITS_PER_APP):
             adunits_per_app[app].append(generate_adunit(app,account))
 
-        all_site_keys = [a.key() for a in AdUnit.all()]
+        all_site_keys = [a.key() for a in AdUnit.all() if a._account == account.key()]
 
         for i in range(NUM_CAMPAIGNS_PER_APP):
             budget = generate_budget()

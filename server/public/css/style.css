@@ -1512,9 +1512,12 @@ form#campaign_and_adgroup ul#apps {
         text-overflow: ellipsis; }
       form#campaign_and_adgroup ul#apps > li > div > label {
         font-weight: 600;
+        vertical-align: top;
         width: 200px; }
       form#campaign_and_adgroup ul#apps > li > div input[type="text"] {
         width: 200px; }
+      form#campaign_and_adgroup ul#apps > li > div span {
+        vertical-align: top; }
       form#campaign_and_adgroup ul#apps > li > div ul {
         list-style-type: none;
         overflow: auto;
@@ -1523,6 +1526,7 @@ form#campaign_and_adgroup ul#apps {
         padding: 0px 20px; }
         form#campaign_and_adgroup ul#apps > li > div ul li {
           height: 30px;
+          width: 400px;
           margin: 0; }
           form#campaign_and_adgroup ul#apps > li > div ul li label {
             width: 180px; }
@@ -1549,6 +1553,8 @@ form#campaign_and_adgroup #toggle_advanced {
 form#campaign_and_adgroup input.token-input-field {
   border: 0;
   width: 100px; }
+form#campaign_and_adgroup input.token-input-field.focused {
+  background-color: white; }
 
 /*
  * ## Colors
@@ -1633,63 +1639,63 @@ a.disabled {
  * Each group of rows should be wrapped in <tbody> tags to alternate colors
  * and facilitate sorting.
  */
-.iconTable {
+.inventory_table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
   vertical-align: top;
   font-size: 13px;
   font-weight: normal; }
-  .iconTable thead th, .iconTable thead td {
+  .inventory_table thead th, .inventory_table thead td {
     padding: 10px 10px 8px 0;
     font-size: 10px;
     font-weight: 300;
     text-transform: uppercase;
     color: #555;
     vertical-align: bottom; }
-    .iconTable thead th.title, .iconTable thead td.title {
+    .inventory_table thead th.title, .inventory_table thead td.title {
       font-size: 15px;
       font-weight: 600;
       text-transform: none; }
-  .iconTable tbody.alt, .iconTable tbody tr.alt {
+  .inventory_table tbody.alt, .inventory_table tbody tr.alt {
     background: #F7F7F7; }
-  .iconTable tbody tr.main td {
+  .inventory_table tbody tr.main td {
     font-weight: 600;
     padding: 10px 10px 4px 0; }
-    .iconTable tbody tr.main td.name {
+    .inventory_table tbody tr.main td.name {
       font-size: 14px; }
-  .iconTable tbody tr.sub td {
+  .inventory_table tbody tr.sub td {
     padding: 4px 10px 4px 0; }
-    .iconTable tbody tr.sub td.name, .iconTable tbody tr.sub td.stat {
+    .inventory_table tbody tr.sub td.name, .inventory_table tbody tr.sub td.stat {
       border-top: 1px solid #EEE; }
-  .iconTable tbody tr.thick td {
+  .inventory_table tbody tr.thick td {
     padding: 8px 10px 7px 0; }
-  .iconTable td.stat, .iconTable th.stat {
+  .inventory_table td.stat, .inventory_table th.stat {
     text-align: right;
     width: 65px; }
-  .iconTable td.icon, .iconTable th.icon {
+  .inventory_table td.icon, .inventory_table th.icon {
     padding: 0 11px 0 10px;
     width: 45px; }
-    .iconTable td.icon > div, .iconTable th.icon > div {
+    .inventory_table td.icon > div, .inventory_table th.icon > div {
       position: relative; }
-      .iconTable td.icon > div img, .iconTable th.icon > div img {
+      .inventory_table td.icon > div img, .inventory_table th.icon > div img {
         position: absolute;
         top: 0px;
         left: 10px;
         -webkit-border-radius: 6px;
         -moz-border-radius: 6px;
         border-radius: 6px; }
-  .iconTable td.controls, .iconTable th.controls {
+  .inventory_table td.controls, .inventory_table th.controls {
     padding-left: 5px !important;
     padding-right: 11px !important;
     width: 39px !important; }
-  .iconTable td.spacer, .iconTable th.spacer {
+  .inventory_table td.spacer, .inventory_table th.spacer {
     padding-left: 0 !important;
     padding-right: 0 !important;
     width: 10px !important; }
-  .iconTable tbody tr.sub:last-child td {
+  .inventory_table tbody tr.sub:last-child td {
     padding-bottom: 24px; }
-  .iconTable tbody tr:only-child td {
+  .inventory_table tbody tr:only-child td {
     padding-bottom: 37px; }
 
 /* Data table */
@@ -1731,25 +1737,37 @@ table.dataTable {
   color: #53a600; }
 
 table.simpletable {
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
   width: 100%;
   margin-bottom: 10px;
   padding: 0;
   border-collapse: separate;
-  *border-collapse: collapse; }
+  *border-collapse: collapse;
+  border: 1px solid #ddd; }
   table.simpletable th, table.simpletable td {
     padding: 10px 10px 9px;
     text-align: left; }
   table.simpletable th {
+    padding-top: 9px;
     vertical-align: middle;
+    border-bottom: 1px solid #ddd;
+    font-size: 16px;
     font-size: 10px;
     font-weight: 300;
     text-transform: uppercase;
     color: #555;
+    vertical-align: bottom;
     padding: 0 0 8px 0; }
   table.simpletable td {
     vertical-align: top; }
     table.simpletable td.align_right {
       text-align: right; }
+  table.simpletable th + th, table.simpletable td + td {
+    border-left: 1px solid #ddd; }
+  table.simpletable tr + tr td {
+    border-top: 1px solid #ddd; }
   table.simpletable tbody tr:first-child td:first-child {
     -webkit-border-radius: 4px 0 0 0;
     -moz-border-radius: 4px 0 0 0;
@@ -1785,102 +1803,6 @@ table.simpletable {
 .zebra-striped tbody tr:hover td {
   background-color: #EBF2F7; }
 
-/* table { */
-/*     .header { */
-/*         cursor: pointer; */
-/*         &:after { */
-/*             content: ""; */
-/*             float: right; */
-/*             margin-top: 7px; */
-/*             border-width: 0 4px 4px; */
-/*             border-style: solid; */
-/*             border-color: #000 transparent; */
-/*             visibility: hidden; */
-/*         } */
-/*     } */
-/*     .headerSortUp, */
-/*     .headerSortDown { */
-/*         background-color: rgba(141,192,219,.25); */
-/*         text-shadow: 0 1px 1px rgba(255,255,255,.75); */
-/*     } */
-/*     .header:hover { */
-/*         &:after { */
-/*             visibility:visible; */
-/*         } */
-/*     } */
-/*     // Style the descending (alphabetical) column header */
-/*     .headerSortDown, */
-/*     .headerSortDown:hover { */
-/*         &:after { */
-/*             visibility:visible; */
-/*             @include opacity(60); */
-/*         } */
-/*     } */
-/*     .headerSortUp { */
-/*         &:after { */
-/*             border-bottom: none; */
-/*             border-left: 4px solid transparent; */
-/*             border-right: 4px solid transparent; */
-/*             border-top: 4px solid #000; */
-/*             visibility:visible; */
-/*             @include box-shadow(none); //cant add boxshadow to downward facing arrow :( */
-/*                 @include opacity(60); */
-/*             } */
-/*         } */
-/*     .blue { */
-/*         color: $blue; */
-/*         border-bottom-color: $blue; */
-/*     } */
-/*     .headerSortUp.blue, */
-/*     .headerSortDown.blue { */
-/*         background-color: lighten($blue, 40%); */
-/*     } */
-/*     // Green Table Headings */
-/*     .green { */
-/*         color: $green; */
-/*         border-bottom-color: $green; */
-/*     } */
-/*     .headerSortUp.green, */
-/*     .headerSortDown.green { */
-/*         background-color: lighten($green, 40%); */
-/*     } */
-/*     // Red Table Headings */
-/*     .red { */
-/*         color: $red; */
-/*         border-bottom-color: $red; */
-/*     } */
-/*     .headerSortUp.red, */
-/*     .headerSortDown.red { */
-/*         background-color: lighten($red, 50%); */
-/*     } */
-/*     // Yellow Table Headings */
-/*     .yellow { */
-/*         color: $yellow; */
-/*         border-bottom-color: $yellow; */
-/*     } */
-/*     .headerSortUp.yellow, */
-/*     .headerSortDown.yellow { */
-/*         background-color: lighten($yellow, 40%); */
-/*     } */
-/*     // Orange Table Headings */
-/*     .orange { */
-/*         color: $orange; */
-/*         border-bottom-color: $orange; */
-/*     } */
-/*     .headerSortUp.orange, */
-/*     .headerSortDown.orange { */
-/*         background-color: lighten($orange, 40%); */
-/*     } */
-/*     // Purple Table Headings */
-/*     .purple { */
-/*         color: $purple; */
-/*         border-bottom-color: $purple; */
-/*     } */
-/*     .headerSortUp.purple, */
-/*     .headerSortDown.purple { */
-/*         background-color: lighten($purple, 40%); */
-/*     } */
-/* } */
 .dataTables_length {
   float: left; }
 
@@ -2472,7 +2394,7 @@ a.disabled {
   padding: 0;
   width: 100px;
   height: 32px;
-  background: #eeeeee url(../images/onoff.png) no-repeat; }
+  background: #eeeeee url(../images/greenonoff.png) no-repeat; }
   .lightswitch:hover {
     cursor: pointer; }
   .lightswitch .switch {
@@ -3074,75 +2996,68 @@ a.linkIcon .ui-icon-triangle-1-w {
 .appData-columnHeaders {
   padding: 10px 10px 0 10px; }
 
-.dataTable .appData-icon {
+.dataTable .appData-icon, .inventory_table .appData-icon {
   padding-right: 11px;
   width: 45px; }
-
-.dataTable .networkData-icon {
+.dataTable .networkData-icon, .inventory_table .networkData-icon {
   padding-right: 11px;
   width: 75px; }
-
-.dataTable .appData-icon a img,
-.dataTable .campaignData-icon a img,
-#appForm-icon img,
-.dataTable .reportData-icon a img {
+.dataTable .appData-icon a img, .inventory_table .appData-icon a img {
   -webkit-border-radius: 6px;
-  -moz-border-radius: 6px; }
-
-.dataTable .appData-icon-none {
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
+.dataTable .reportData-icon a img, .inventory_table .reportData-icon a img {
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px; }
+.dataTable .appData-icon-none, .inventory_table .appData-icon-none {
   margin-right: 11px;
   width: 15px; }
-
-.dataTable .appData-id {
-  position: absolute;
-  top: 0;
-  right: 0; }
+.dataTable td, .inventory_table td {
+  position: relative; }
+  .dataTable td .appData-id, .inventory_table td .appData-id {
+    position: absolute;
+    top: 3px;
+    right: 0;
+    overflow: ellipsis; }
 
 .appData-main th, .appData-main td {
   padding-top: 0;
   font-size: 13px;
   font-weight: 600; }
-
-th.numeric, td.numeric {
-  text-align: right; }
-
+  .appData-main th.smaller, .appData-main td.smaller {
+    font-size: 13px;
+    font-weight: normal; }
 .appData-main .dataTable-name {
   padding-top: 0;
   font-size: 14px;
   font-weight: 600; }
 
-.appData-main th .smaller, .appData-main td .smaller {
-  font-size: 13px;
-  font-weight: normal; }
+th.numeric, td.numeric {
+  text-align: right; }
 
 .appData-details {
   margin: -29px 0 0 56px; }
-
-.appData-details .dataTable {
-  margin: 0 0 7px 0;
-  background: url(../images/layout/hr-dots.png) repeat-x bottom left; }
-
-.appData-details .dataTable th,
-.appData-details .dataTable td {
-  padding-top: 4px;
-  padding-bottom: 4px;
-  font-size: 13px;
-  font-weight: normal;
-  background: url(../images/layout/hr-dots.png) repeat-x top left; }
-
-.appData-details .dataTable th.special {
-  font-size: 10px;
-  font-weight: 300;
-  background: none; }
-
-.appData-details .dataTable th.big {
-  font-size: 15px;
-  font-weight: 600;
-  text-transform: none;
-  background: none; }
-
-.appData-details.noneg {
-  margin: 0; }
+  .appData-details .dataTable {
+    margin: 0 0 7px 0;
+    background: url(../images/layout/hr-dots.png) repeat-x bottom left; }
+    .appData-details .dataTable th, .appData-details .dataTable td {
+      padding-top: 4px;
+      padding-bottom: 4px;
+      font-size: 13px;
+      font-weight: normal;
+      background: url(../images/layout/hr-dots.png) repeat-x top left; }
+      .appData-details .dataTable th.special, .appData-details .dataTable td.special {
+        font-size: 10px;
+        font-weight: 300;
+        background: none; }
+      .appData-details .dataTable th.big, .appData-details .dataTable td.big {
+        font-size: 15px;
+        font-weight: 600;
+        text-transform: none;
+        background: none; }
+  .appData-details.noneg {
+    margin: 0; }
 
 /* Campaigns */
 .campaignData, .reportData {

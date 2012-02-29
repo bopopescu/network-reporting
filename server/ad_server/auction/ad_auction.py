@@ -40,7 +40,9 @@ def run(client_context, adunit_context, MarketplaceBattle=MarketplaceBattle):
                                    min_cpm=0.0) # init with 0.0, assign later
     network_bids = network_battle.bids_for_level()
 
-
+    # only include network bids if the app would like to pass these
+    if not adunit_context.adunit.app_key.use_proxy_bids:
+        network_bids = None
 
     # Run the MarketplaceBattle, and then pass the winning bid into the
     # NetworkBattle

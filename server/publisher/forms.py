@@ -76,24 +76,24 @@ class AppForm(mpforms.MPModelForm):
 
     def save(self, commit=True):
         obj = super(AppForm, self).save(commit=False)
+
+        # Save the image url if they specified that
         if self.cleaned_data['img_url']:
             # TODO: add error handling
+            # If there's a new image
             if not self.cleaned_data['img_url'] == self.initial.get('img_url'):
                 response = urllib.urlopen(self.cleaned_data['img_url'])
                 img = response.read()
-                # why no resize?
+                # Why don't we resize the app icon to be the proper size?
+                # TODO This would be a good place to do it.
                 obj.icon_blob = self.store_icon(img)
 
-            else:
-                obj.icon = self.instance.icon  # sets the icon to the original
+        # Save the file if they uploaded one
         elif self.cleaned_data['img_file']:
             # TODO: add error handling
             img = self.cleaned_data['img_file'].read()
             icon = images.resize(img, 60, 60)
             obj.icon_blob = self.store_icon(icon)
-            obj.icon = db.Blob(icon)  # TODO: stop this! why?
-        elif self.instance:  # if neither img_url or img_file come in just use the old value
-            obj.icon = self.instance.icon
         if commit:
             obj.put()
         return obj
@@ -103,6 +103,15 @@ class AppForm(mpforms.MPModelForm):
         if not data:
             raise forms.ValidationError('Please provide a name for your app.')
         return data
+
+    # def clean_secondary_category(self):
+    #     secondary_category = self.cleaned_data['secondary_category']
+    #     primary_category = self.cleaned_data['primary_category']
+    #     if secondary_category == primary_category:
+    #         message = """Please choose a secondary category
+    #         that's different from your primary category."""
+    #         raise forms.ValidationError(message)
+    #     return secondary_category
 
     def store_icon(self, icon):
         # add the icon it to the blob store

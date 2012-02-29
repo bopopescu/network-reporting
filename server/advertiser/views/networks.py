@@ -1,4 +1,3 @@
-import logging
 import datetime
 
 from common.utils.request_handler import RequestHandler
@@ -25,25 +24,8 @@ class NetworkIndexHandler(RequestHandler):
         for campaign in CampaignQueryManager.get_network_campaigns(account=self.account):
             for adgroup in campaign.adgroups:
                 network_adgroups.append(adgroup)
-
-        # Today might be None
-        stats = {
-            'impressions': {
-                'today': "---",  # today.impression_count,
-                'yesterday': "---",  # yesterday.impression_count,
-                'total': "---"  # totals.impression_count,
-            },
-            'clicks': {
-                'today': "---",  # today.click_count,
-                'yesterday': "---",  # yesterday.click_count,
-                'total': "---"  # totals.click_count
-            },
-            'ctr': {
-                'today': "---",  # today.ctr,
-                'yesterday': "---",  # yesterday.ctr,
-                'total': "---"  # totals.ctr
-            },
-        }
+        # sort alphabetically
+        network_adgroups.sort(key=lambda adgroup: adgroup.campaign.name.lower())
 
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
@@ -52,7 +34,6 @@ class NetworkIndexHandler(RequestHandler):
                                       'start_date': self.start_date,
                                       'end_date': end_date,
                                       'date_range': self.date_range,
-                                      'stats': stats,
                                       'today': today_index,
                                       'yesterday': yesterday_index,
                                       'offline': self.offline,
@@ -61,4 +42,4 @@ class NetworkIndexHandler(RequestHandler):
 
 @login_required
 def network_index(request, *args, **kwargs):
-    return NetworkIndexHandler()(request, *args, **kwargs)
+    return NetworkIndexHandler()(request, use_cache=False, *args, **kwargs)

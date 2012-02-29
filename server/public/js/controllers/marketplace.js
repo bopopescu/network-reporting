@@ -10,6 +10,15 @@ var mopub = mopub || {};
      * ## Marketplace utility methods
      */
 
+    var toast_error = function () {
+         var message = $("Please <a href='#'>refresh the page</a> and try again.")
+            .click(function(e){
+                e.preventDefault();
+                window.location.reload();
+            });
+        Toast.error(message, "Error fetching app data.");
+    };
+
     /*
      * Fetches and renders all apps from a list of app_keys.
      * Useful for bootstrapping table loads.
@@ -18,12 +27,21 @@ var mopub = mopub || {};
         _.each(app_keys, function(app_key) {
             var app = new App({ id: app_key, stats_endpoint: 'mpx' });
             app.bind('change', function(current_app) {
-                var appView = new AppView({ model: current_app, el: 'marketplace-apps' });
+                var appView = new AppView({
+                    model: current_app,
+                    el: 'marketplace-apps'
+                });
                 appView.render();
             });
+
             app.fetch({
                 success: function(){
                     $('table').trigger('update');
+                },
+                error: function () {
+                    app.fetch({
+                        error: toast_error
+                    });
                 }
             });
         });
@@ -38,17 +56,26 @@ var mopub = mopub || {};
         _.each(app_keys, function(app_key) {
             var app = new App({id: app_key, stats_endpoint: 'mpx'});
             app.bind('change', function(current_app) {
-                var appView = new AppView({ model: current_app, el: 'marketplace-apps' });
+                var appView = new AppView({
+                    model: current_app,
+                    el: 'marketplace-apps'
+                });
                 appView.renderInline();
             });
-            app.fetch();
+            app.fetch({
+                error: function () {
+                    app.fetch({
+                        error: toast_error
+                    });
+                }
+            });
         });
     }
 
     /*
-     * Fetches AdUnit stats over ajax and renders them in already existing table rows.
-     * This method is useful for decreasing page load time. Uses a parent app's key
-     * to bootstrap the fetch.
+     * Fetches AdUnit stats over ajax and renders them in already
+     * existing table rows.  This method is useful for decreasing page
+     * load time. Uses a parent app's key to bootstrap the fetch.
      */
     function fetchAdunitStats (app_key, marketplace_active) {
         var adunits = new AdUnitCollection();
@@ -60,40 +87,47 @@ var mopub = mopub || {};
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
                 adunit.app_id = app_key;
-                var adunitView = new AdUnitView({ model: adunit, el: '#marketplace_stats' });
+                var adunitView = new AdUnitView({
+                    model: adunit,
+                    el: '#marketplace_stats'
+                });
                 adunitView.renderInline();
             });
         });
-
         adunits.fetch({
             success: function(){
-                // Trigger any event handlers that have been attached to the table.
-                // Shouldn't this only trigger for the table that the adunit stats are
-                // being placed in?
+                // Trigger any event handlers that have been attached
+                // to the table.  Shouldn't this only trigger for the
+                // table that the adunit stats are being placed in?
                 $('table').trigger('update');
                 $("#" + app_key + "-img").hide();
                 if (!marketplace_active) {
                     $(".targeting-box").attr('disabled', true);
                 }
+            },
+            error: function () {
+                adunits.fetch({
+                    error: toast_error
+                });
             }
         });
     }
 
     /*
-     * Fetches and renders all of the adunits from an app key.
-     * Useful for showing adunits when a user has clicked on a
-     * 'show adunits' link.
+     * Fetches and renders all of the adunits from an app key.  Useful
+     * for showing adunits when a user has clicked on a 'show adunits'
+     * link.
      */
     function fetchAdunitsForApp (app_key) {
         var adunits = new AdUnitCollection();
         adunits.app_id = app_key;
 
-        // Once the adunits have been fetched from the server,
-        // render them as well as the app's price floor range
+        // Once the adunits have been fetched from the server, render
+        // them as well as the app's price floor range
         adunits.bind('reset', function(adunits_collection) {
 
-            // Get the max and min price floors from the adunits so
-            // we can use them for the app's price floor range
+            // Get the max and min price floors from the adunits so we
+            // can use them for the app's price floor range
             var high = _.max(adunits_collection.models, function(adunit){
                  return adunit.get("price_floor");
             }).get("price_floor");
@@ -102,15 +136,16 @@ var mopub = mopub || {};
                 return adunit.get("price_floor");
             }).get("price_floor");
 
-            // Set the app's price floor cell to the range of the adunits
-            // Keep the "Edit Price Floor" button
+            // Set the app's price floor cell to the range of the
+            // adunits Keep the "Edit Price Floor" button
             var btn = $("<a href='#" + app_key +"'" +
                         " class='edit_price_floor' " +
                         "id='" + app_key + "'> "
                         + "Edit Price Floor</a>");
 
-            // Display the range of price floors for the app. (This is no longer
-            // used, but left in because it could be used again in the future).
+            // Display the range of price floors for the app. (This is
+            // no longer used, but left in because it could be used
+            // again in the future).
             if (high == low) {
                 $(".app-row#app-" + app_key + " .price_floor").html("All $" + high);
             } else {
@@ -122,12 +157,21 @@ var mopub = mopub || {};
 
             // Create the views and render each adunit row
             _.each(adunits_collection.models, function(adunit) {
-                var adunitView = new AdUnitView({ model: adunit, el: 'marketplace-apps' });
+                var adunitView = new AdUnitView({
+                    model: adunit,
+                    el: 'marketplace-apps'
+                });
                 adunitView.render();
             });
         });
 
-         adunits.fetch();
+         adunits.fetch({
+             error: function() {
+                 adunits.fetch({
+                     error: toast_error
+                 });
+             }
+         });
     }
 
     /*
@@ -161,12 +205,10 @@ var mopub = mopub || {};
         });
 
         on.error(function() {
-            Toast.error("There was an error saving your Marketplace settings. Please try again soon.");
+            Toast.error("There was an error saving your Marketplace settings. Our support team has been notified. Please refresh your page and try again.");
         });
 
-        on.done(function() {
-            //Toast.success("Foo.");
-        });
+        on.done(function() { });
 
         $(".targeting-box").removeAttr('disabled');
         $("#blindness").removeAttr('disabled');
@@ -191,7 +233,18 @@ var mopub = mopub || {};
      * Makes the Creatives Performance tab's datatable
      */
     function makeCreativePerformanceTable (pub_id, blocklist, start_date, end_date) {
-        var creative_data_url = window.location.origin + "/campaigns/marketplace/creatives/";
+
+        var origin;
+        if (!window.location.origin) {
+            origin = window.location.protocol
+                + "//" + window.location.host + "/";
+            window.location.origin = origin;
+        } else {
+            origin = window.location.origin;
+        }
+
+        var creative_data_url = origin
+            + "/campaigns/marketplace/creatives/";
         var table = $("#report-table").dataTable({
             bProcessing: true,
             // Use jQueryUI to style the table
@@ -324,11 +377,9 @@ var mopub = mopub || {};
 
         blocklist_xhr.error(function (response) {
             $("img#" + domain).addClass('hidden');
-            Toast.error(response);
+            Toast.error("There was an error adding to your blocklist. Please try again.");
         });
     }
-
-
 
     var MarketplaceController = {
         initializeIndex: function (bootstrapping_data) {
@@ -344,6 +395,19 @@ var mopub = mopub || {};
                                                      bootstrapping_data.blocklist,
                                                      bootstrapping_data.start_date,
                                                      bootstrapping_data.end_date);
+
+            /*
+             * Click handling for the stats breakdown
+             * REFACTOR: move this to a common place because it's everywhere
+             */
+            $('.stats-breakdown tr').click(function(e) {
+                var row = $(this);
+                if (!row.hasClass('active')) {
+                    var table = row.parents('table');
+                    $('tr.active', table).removeClass('active');
+                    row.addClass('active');
+                }
+            });
 
             /*
              * Blindness settings

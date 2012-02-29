@@ -17,6 +17,15 @@ var mopub = mopub || {};
      * ## Helpers for DashboardController
      */
 
+    var toast_error = function () {
+        var message = $("Please <a href='#'>refresh the page</a> and try again.")
+            .click(function(e){
+                e.preventDefault();
+                window.location.reload();
+            });
+        Toast.error(message, "Error fetching app data.");
+    };
+
     /*
      * Refactor/remove
      */
@@ -57,7 +66,13 @@ var mopub = mopub || {};
                 var appView = new AppView({ model: current_app, el: '#dashboard-apps' });
                 appView.renderInline();
             });
-            app.fetch();
+            app.fetch({
+                error: function() {
+                    app.fetch({
+                        error: toast_error
+                    });
+                }
+            });
         });
     }
 
@@ -88,6 +103,11 @@ var mopub = mopub || {};
                 // being placed in?
                 $('table').trigger('update');
                 $("#" + app_key + "-img").hide();
+            },
+            error: function () {
+                adunits.fetch({
+                    error: toast_error
+                });
             }
         });
     }
@@ -507,51 +527,24 @@ var mopub = mopub || {};
      * app/adunit detail pages.
      */
     function initializeDailyCounts() {
-        $('.appData-details').each(function() {
-            var details = $(this);
-            var data = $('.appData-details-inner', details);
-            var button = $('.appData-details-toggleButton', details);
 
-            function getButtonTextElement() {
-                var buttonTextElement = $('.ui-button-text', button);
-                    buttonTextElement = button;
-                if (buttonTextElement.length === 0) {
-                }
-                return buttonTextElement;
-            }
+        var button = $('.appData-details-toggleButton');
+        button.button();
 
-            function didShowData() {
-                data.removeClass('hide');
-                data.addClass('show');
-                button.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                getButtonTextElement().text('Hide details');
-            }
+        var individual_daily_counts = $("#appData-individual");
 
-            function didHideData() {
-                data.removeClass('show');
-                data.addClass('hide');
-                button.button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                getButtonTextElement().text('Show details');
-            }
-
-            if (data.hasClass('show')) {
-                didShowData();
+        button.click(function(e) {
+            e.preventDefault();
+            if (individual_daily_counts.hasClass("hidden")) {
+                individual_daily_counts.removeClass("hidden");
+                button.button('option', 'label', 'Hide Details');
             } else {
-                data.hide();
-                didHideData();
+                individual_daily_counts.addClass("hidden");
+                button.button('option', 'label', 'Show Details');
+                button.button();
             }
-
-            button.click(function(e) {
-                e.preventDefault();
-                if (data.hasClass('show')) {
-                    data.slideUp('fast');
-                    didHideData();
-                } else {
-                    data.slideDown('fast');
-                    didShowData();
-                }
-            });
         });
+
     }
 
 
@@ -720,6 +713,15 @@ var mopub = mopub || {};
             });
         });
 
+        $('.stats-breakdown tr').click(function(e) {
+            var row = $(this);
+            if (!row.hasClass('active')) {
+                var table = row.parents('table');
+                $('tr.active', table).removeClass('active');
+                row.addClass('active');
+            }
+        });
+
         $('.appData-id').each(function() {
             var id = $(this);
             var td = id.parents('tr');
@@ -762,6 +764,26 @@ var mopub = mopub || {};
             // Remove later with new button treatment
             $('#dashboard-apps-addAppButton')
                 .button({ icons: { primary: "ui-icon-circle-plus" } });
+
+            // Do Dashboard export
+            $('#publisher-dashboard-exportSelect')
+                .change(function(e) {
+                    e.preventDefault();
+                    var val = $(this).val();
+                    if (val != 'exp') {
+                        $('#dashboardExportForm')
+                .find('#appExportType')
+                            .val(val)
+                            .end()
+                            .submit();
+                    }
+                    $(this).selectmenu('index', 0);
+                });
+
+
+            // Hide unneeded li entry
+            $('#publisher-dashboard-exportSelect-menu').find('li').first().hide();
+
         },
         initializeGeo: function (bootstrapping_data) {
             initializeCommon();
@@ -795,6 +817,9 @@ var mopub = mopub || {};
 
             // Hide unneeded li entry
             $('#publisher-app-exportSelect-menu').find('li').first().hide();
+
+            fetchAppStats([bootstrapping_data.app_key]);
+            fetchAdunitStats(bootstrapping_data.app_key);
         },
 
         initializeAdunitDetail: function (bootstrapping_data) {

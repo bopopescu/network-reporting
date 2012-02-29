@@ -21,7 +21,7 @@ if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 
 else:
-    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+    sys.path.append('/Users/tiagobandeira/mopub/server')
 import common.utils.test.setup
 from google.appengine.ext import db
 from google.appengine.api import mail

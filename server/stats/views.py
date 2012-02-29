@@ -199,6 +199,8 @@ def _package_mdb_post_data(mdb_dict):
         [adunit, creative, date_hour] = parts
 
         # NOTE: deref adunit after creative, since there's a bug where the account is not guaranteed to be retrieved from creative
+        # if creative is empty string, the creative field in the post_dict will just be emptry string while adgroup and campaign
+        # will be None
         [adgroup, campaign, account] = _deref_creative(creative) or [None, None, None]
         [app, account] = _deref_adunit(adunit) or [None, None]
 

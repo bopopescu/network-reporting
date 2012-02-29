@@ -677,9 +677,10 @@
 
           {% block extraScripts %}
 
-            <script src="/js/views.js?v=1"></script>
-            <script src="/js/models.js?v=1"></script>
-            <script src="/js/controllers/campaigns.js?v=2"></script>
+            {% include_script "views/inventory" %}
+            {% include_script "models/inventory" %}
+            {% include_script "controllers/campaigns" %}
+
             <script type="text/javascript">
               $(function() {
               // chart data

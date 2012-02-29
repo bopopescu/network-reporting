@@ -101,7 +101,7 @@ class AdUnitContext(object):
         adgroups = AdGroup.all().filter("site_keys =",adunit.key()).\
                                   filter("deleted =",False).\
                                   fetch(limit)
-        return adgroups
+        return [adgroup for adgroup in adgroups if adgroup.active]
 
     @classmethod
     def fetch_creatives(cls, adunit, adgroups, limit=MAX_OBJECTS):

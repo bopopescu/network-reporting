@@ -391,10 +391,14 @@ form#campaign_and_adgroup {
                 }
                 > label {
                     font-weight: 600;
+                    vertical-align: top;
                     width: 200px;
                 }
                 input[type="text"] {
                     width: 200px;
+                }
+                span {
+                    vertical-align: top;
                 }
                 ul {
                     list-style-type: none;
@@ -404,6 +408,7 @@ form#campaign_and_adgroup {
                     padding: 0px 20px;
                     li {
                         height: 30px;
+                        width: 400px;
                         margin: 0;
                         label {
                             width: 180px;
@@ -447,5 +452,8 @@ form#campaign_and_adgroup {
     input.token-input-field {
         border: 0;
         width: 100px;
+    }
+    input.token-input-field.focused {
+        background-color: white;
     }
 }

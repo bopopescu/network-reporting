@@ -1,42 +1,26 @@
 from __future__ import with_statement
-
 from datetime import datetime
-from common.utils.timezones import Pacific_tzinfo
+import re
 
-from advertiser.models import Campaign, AdGroup, Creative, \
-                              TextCreative, TextAndTileCreative,\
-                              HtmlCreative, ImageCreative
-
-from common.constants import (  CITY_GEO,
-                                REGION_GEO,
-                                COUNTRY_GEO,
-                                )
-from common.utils import helpers
-
-#THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
-GEO_LIST = ( COUNTRY_GEO, REGION_GEO, CITY_GEO )
-
-from google.appengine.ext.db import Key
-
-from common.utils import forms as mpforms
-from common.utils import fields as mpfields
-from common.utils import widgets as mpwidgets
 from django import forms
 from django.forms.util import ErrorList
-from django.core.urlresolvers import reverse
-from google.appengine.ext import db
 from google.appengine.api import images, files
-from publisher.models import Site as AdUnit
+from google.appengine.ext.db import Key
 
+from advertiser.models import (Campaign, AdGroup, Creative, TextCreative,
+                               TextAndTileCreative, HtmlCreative, ImageCreative)
 from budget.query_managers import BudgetQueryManager
-from budget.tzinfo import Pacific, UTC, utc
-import logging
-import re
-import urlparse
-import cgi
+from budget.tzinfo import UTC
+from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
+                              CITY_GEO, REGION_GEO, COUNTRY_GEO)
+from common.utils import helpers
+from common.utils.timezones import Pacific_tzinfo
 
-from common.constants import IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES
 from widgets import CustomizableSplitDateTimeWidget
+
+
+#THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
+GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
 
 
 def get_filetype_extension(filename):
@@ -55,111 +39,74 @@ class CampaignForm(forms.ModelForm):
     gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
                                                ('normal', 'Normal'),
                                                ('low', 'Low')),
-                                      initial='normal',
-                                      label='Priority:',
+                                      initial='normal', label='Priority:',
                                       required=False)
     promo_priority = forms.ChoiceField(choices=(('normal', 'Normal'),
                                                 ('backfill', 'Backfill')),
-                                       initial='normal',
-                                       label='Priority:',
+                                       initial='normal', label='Priority:',
                                        required=False)
     name = forms.CharField(label='Name:',
                            widget=forms.TextInput(attrs={'class': 'required',
                                                          'placeholder': 'Campaign Name'}))
-    description = forms.CharField(label='Description:',
-                                  required=False,
+    description = forms.CharField(label='Description:', required=False,
                                   widget=forms.Textarea(attrs={'cols': 50,
                                                                'rows': 3,
                                                                'placeholder': 'Campaign for My New App'}))
-    start_datetime = forms.DateTimeField(input_formats=(
-                                                 '%Y-%m-%d %H:%M:%S',     # '2006-10-25 14:30:59'
-                                                 '%Y-%m-%d %H:%M',        # '2006-10-25 14:30'
-                                                 '%Y-%m-%d',              # '2006-10-25'
-                                                 '%m/%d/%Y %H:%M:%S',     # '10/25/2006 14:30:59'
-                                                 '%m/%d/%Y %H:%M',        # '10/25/2006 14:30'
-                                                 '%m/%d/%Y',              # '10/25/2006'
-                                                 '%m/%d/%y %H:%M:%S',     # '10/25/06 14:30:59'
-                                                 '%m/%d/%y %H:%M',        # '10/25/06 14:30'
-                                                 '%m/%d/%y',              # '10/25/06'
-                                                 '%Y-%m-%d %I:%M:%S %p',  # '2006-10-25 2:30:59 PM'
-                                                 '%Y-%m-%d %I:%M %p',     # '2006-10-25 2:30 PM'
-                                                 '%m/%d/%Y %I:%M:%S %p',  # '10/25/2006 2:30:59 PM'
-                                                 '%m/%d/%Y %I:%M %p',     # '10/25/2006 2:30 PM'
-                                                 '%m/%d/%y %I:%M:%S %p',  # '10/25/06 2:30:59 PM'
-                                                 '%m/%d/%y %I:%M %p',     # '10/25/06 2:30 PM'
-                                             ),
-                                         label='Start Time:',
-                                         required=False,
+    start_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
+                                         label='Start Time:', required=False,
                                          widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                             'placeholder': 'MM/DD/YYYY'},
                                                                                 time_attrs={'class': 'time',
                                                                                             'placeholder': 'HH:MM'},
                                                                                 date_format='%m/%d/%Y',
-                                                                                time_format='%H:%M'))
-    end_datetime = forms.DateTimeField(input_formats=(
-                                           '%Y-%m-%d %H:%M:%S',     # '2006-10-25 14:30:59'
-                                           '%Y-%m-%d %H:%M',        # '2006-10-25 14:30'
-                                           '%Y-%m-%d',              # '2006-10-25'
-                                           '%m/%d/%Y %H:%M:%S',     # '10/25/2006 14:30:59'
-                                           '%m/%d/%Y %H:%M',        # '10/25/2006 14:30'
-                                           '%m/%d/%Y',              # '10/25/2006'
-                                           '%m/%d/%y %H:%M:%S',     # '10/25/06 14:30:59'
-                                           '%m/%d/%y %H:%M',        # '10/25/06 14:30'
-                                           '%m/%d/%y',              # '10/25/06'
-                                           '%Y-%m-%d %I:%M:%S %p',  # '2006-10-25 2:30:59 PM'
-                                           '%Y-%m-%d %I:%M %p',     # '2006-10-25 2:30 PM'
-                                           '%m/%d/%Y %I:%M:%S %p',  # '10/25/2006 2:30:59 PM'
-                                           '%m/%d/%Y %I:%M %p',     # '10/25/2006 2:30 PM'
-                                           '%m/%d/%y %I:%M:%S %p',  # '10/25/06 2:30:59 PM'
-                                           '%m/%d/%y %I:%M %p',     # '10/25/06 2:30 PM'
-                                       ),
-                                       label='Stop Time:',
-                                       required=False,
+                                                                                time_format='%I:%M %p'))
+    end_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
+                                       label='Stop Time:', required=False,
                                        widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                           'placeholder': 'MM/DD/YYYY'},
                                                                               time_attrs={'class': 'time',
                                                                                           'placeholder': 'HH:MM'},
                                                                               date_format='%m/%d/%Y',
-                                                                              time_format='%H:%M'))
-    budget = forms.FloatField(label='Delivery Amount:',
-                              required=False,
+                                                                              time_format='%I:%M %p'))
+    budget = forms.FloatField(label='Delivery Amount:', required=False,
                               widget=forms.TextInput(attrs={'class': 'float budget_type_dependent daily'}))
-    full_budget = forms.FloatField(label='Delivery Amount:',
-                                   required=False,
+    full_budget = forms.FloatField(label='Delivery Amount:', required=False,
                                    widget=forms.TextInput(attrs={'class': 'float budget_type_dependent full_campaign'}))
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
-                                    initial='daily')
+                                    initial='daily', required=False)
     budget_strategy = forms.ChoiceField(choices=(('evenly', 'Spread Evenly'),
                                                  ('allatonce', 'All at once')),
                                         label='Delivery Speed:',
-                                        initial='evenly',
+                                        initial='allatonce', required=False,
                                         widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
-        # a little sketchy...
+        if len(args) > 5:
+            initial = args[5]
+        else:
+            if 'initial' not in kwargs or not kwargs['initial']:
+                kwargs['initial'] = {}
+            initial = kwargs['initial']
+
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
         if instance:
-            logging.error(instance.campaign_type)
             if 'gtee' in instance.campaign_type:
                 if 'high' in instance.campaign_type:
-                    instance.gtee_priority = 'high'
+                    initial['gtee_priority'] = 'high'
                 elif 'low' in instance.campaign_type:
-                    instance.gtee_priority = 'low'
-                instance.campaign_type = 'gtee'
+                    initial['gtee_priority'] = 'low'
+                initial['campaign_type'] = 'gtee'
             elif instance.campaign_type == 'backfill_promo':
-                instance.campaign_type = 'promo'
-                instance.promo_priority = 'backfill'
-            logging.error(instance.campaign_type)
-            if hasattr(instance, 'gtee_priority'): logging.error(instance.gtee_priority)
-            if hasattr(instance, 'promo_priority'): logging.error(instance.promo_priority)
+                initial['campaign_type'] = 'promo'
+                initial['promo_priority'] = 'backfill'
 
             # convert datetimes from offset-naive UTC to Pacific
             if instance.start_datetime:
-                instance.start_datetime = instance.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
+                initial['start_datetime'] = instance.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
             if instance.end_datetime:
-                instance.end_datetime = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
+                initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
@@ -171,11 +118,11 @@ class CampaignForm(forms.ModelForm):
     def clean_start_datetime(self):
         start_datetime = self.cleaned_data.get('start_datetime', None)
         if start_datetime:
+            # if this is a new campaign, it must start in the future
+            if not self.instance and start_datetime.date() < datetime.now(tz=Pacific_tzinfo()).date():
+                raise forms.ValidationError("Start time must be in the future")
             # start_datetime is entered in Pacific Time
             start_datetime = start_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
-            # if this is a new campaign, it must start in the future
-            if not self.instance and start_datetime < datetime.now():
-                raise forms.ValidationError("Start time must be in the future")
         return start_datetime
 
     def clean_end_datetime(self):
@@ -193,7 +140,7 @@ class CampaignForm(forms.ModelForm):
 
         if cleaned_data.get('campaign_type', None) in ['gtee', 'promo'] and not start_datetime:
             # if no start time is given, use the current time
-            start_datetime = datetime.now()
+            cleaned_data['start_datetime'] = datetime.now()
 
         if 'campaign_type' in cleaned_data:
             # set the correct campaign_type using gtee_prioirty or promo_priority
@@ -313,21 +260,41 @@ class AdGroupForm(forms.ModelForm):
                                             label='Max:', required=False)
     target_other = forms.BooleanField(initial=True, label='Other',
                                       required=False)
+    geo_predicates = forms.Field(required=False, widget=forms.SelectMultiple)
     region_targeting = forms.ChoiceField(choices=(('all', 'Everywhere'),
                                                   ('city', 'City')),
                                          initial='all',
                                          label='Region Targeting:',
                                          widget=forms.RadioSelect)
-    #geo_predicates
     cities = forms.Field(required=False, widget=forms.SelectMultiple)
     keywords = forms.CharField(required=False,
                                widget=forms.Textarea(attrs={'cols': 50,
                                                             'rows': 3}))
 
     def __init__(self, *args, **kwargs):
-        #data = args[0] if len(args) > 0 else kwargs.get('data', None)
-        #initial = args[4] if len(args) > 4 else kwargs.get('initial', None)
-        instance = args[8] if len(args) > 8 else kwargs.get('instance', None)
+        initial = args[5] if len(args) > 5 else kwargs.get('initial', None)
+        instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
+
+        if instance:
+            if not initial:
+                initial = {}
+
+            if instance.network_type == 'custom' and instance.net_creative:
+                initial.update(custom_html=instance.net_creative.html_data)
+            elif instance.network_type == 'custom_native' and instance.net_creative:
+                initial.update(custom_method=instance.net_creative.html_data)
+
+            geo_predicates = []
+            for geo_predicate in instance.geo_predicates:
+                preds = geo_predicate.split(',')
+                geo_predicates.append(','.join([str(pred.split('=')[1]) for pred in preds]))
+            initial.update(geo_predicates=geo_predicates)
+
+            if len(geo_predicates) == 1 and len(instance.cities):
+                initial['region_targeting'] = 'city'
+                initial.update(cities=instance.cities)
+
+            kwargs.update(initial=initial)
 
         is_staff = kwargs.pop('is_staff', False)
 
@@ -336,15 +303,15 @@ class AdGroupForm(forms.ModelForm):
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
+        # show deprecated networks if user is staff or instance is that type
         if is_staff or (instance and instance.network_type == 'admob'):
             self.fields['network_type'].choices.append(('admob', 'AdMob Javascript (deprecated)'))
-
         if is_staff or (instance and instance.network_type == 'millennial'):
             self.fields['network_type'].choices.append(('millennial', 'Millennial Server-side (deprecated)'))
-
         if is_staff or (instance and instance.network_type == 'greystripe'):
             self.fields['network_type'].choices.append(('greystripe', 'GreyStripe (deprecated)'))
 
+        # set choices based on the users adunits
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
         # hack to make the forms ordered correctly
@@ -359,13 +326,24 @@ class AdGroupForm(forms.ModelForm):
             allocation_percentage = 100
         return allocation_percentage
 
+    def clean_site_keys(self):
+        return [Key(site_key) for site_key in self.cleaned_data.get('site_keys', [])]
+
+    def clean_geo_predicates(self):
+        geo_predicates = []
+        for geo_predicate in self.cleaned_data.get('geo_predicates', []):
+            geo_predicate = tuple(geo_predicate.split(','))
+            #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
+            geo_predicates.append(GEO_LIST[len(geo_predicate) - 1] % geo_predicate)
+        return geo_predicates
+
     def clean(self):
         cleaned_data = super(AdGroupForm, self).clean()
+
         # don't store targeted cities unless region targeting for cities is selected
         if cleaned_data.get('region_targeting', None) != 'city':
             cleaned_data['cities'] = []
-        if cleaned_data.get('site_keys', []):
-            cleaned_data['site_keys'] = [Key(site_key) for site_key in cleaned_data['site_keys']]
+
         return cleaned_data
 
     class Meta:
@@ -390,6 +368,7 @@ class AdGroupForm(forms.ModelForm):
                   'android_version_min',
                   'android_version_max',
                   'target_other',
+                  'geo_predicates',
                   'region_targeting',
                   'cities',
                   'keywords')
@@ -504,7 +483,7 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
                 initial = {}
             initial.update(image_url=image_url)
             kwargs.update(initial=initial)
-        super(TextAndTileCreativeForm,self).__init__(*args,**kwargs)
+        super(TextAndTileCreativeForm, self).__init__(*args, **kwargs)
 
     def clean_image_file(self):
         data = self.cleaned_data.get('image_file', None)
@@ -529,9 +508,9 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
 
         return data
 
-    def save(self,commit=True):
-        obj = super(TextAndTileCreativeForm,self).save(commit=False)
-        if self.files.get('image_file',None):
+    def save(self, commit=True):
+        obj = super(TextAndTileCreativeForm, self).save(commit=False)
+        if self.files.get('image_file', None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
             fname = files.blobstore.create(mime_type='image/png')
@@ -546,36 +525,38 @@ class TextAndTileCreativeForm(AbstractCreativeForm):
             obj.put()
         return obj
 
+
 class HtmlCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/html_creative_form.html'
 
     class Meta:
         model = HtmlCreative
         fields = ('html_data', 'ormma_html') + \
-                 ('ad_type','name','tracking_url','url','display_url','format',
-                  'custom_height','custom_width','landscape', 'conv_appid',
-                  'launchpage')
+                 ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
+                  'format', 'custom_height', 'custom_width', 'landscape',
+                  'conv_appid', 'launchpage')
+
 
 class ImageCreativeForm(AbstractCreativeForm):
     TEMPLATE = 'advertiser/forms/image_creative_form.html'
 
-    image_url = forms.URLField(verify_exists=False,required=False)
+    image_url = forms.URLField(verify_exists=False, required=False)
     image_file = forms.FileField(required=False)
 
     class Meta:
         model = ImageCreative
-        fields = ('ad_type','name','tracking_url','url','display_url','format',
-                  'custom_height','custom_width','landscape', 'conv_appid',
-                  'launchpage')
+        fields = ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
+                  'format', 'custom_height', 'custom_width', 'landscape',
+                  'conv_appid', 'launchpage')
 
-    def __init__(self, *args,**kwargs):
-        instance = kwargs.get('instance',None)
-        initial = kwargs.get('initial',None)
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        initial = kwargs.get('initial', None)
 
         if instance:
             if instance.image_blob:
                 try:
-                    image_url = helpers.get_url_for_blob(instance.image_blob)
+                    image_url = instance.image_serve_url
                 except:
                     image_url = None
             else:
@@ -584,7 +565,7 @@ class ImageCreativeForm(AbstractCreativeForm):
                 initial = {}
             initial.update(image_url=image_url)
             kwargs.update(initial=initial)
-        super(ImageCreativeForm,self).__init__(*args,**kwargs)
+        super(ImageCreativeForm, self).__init__(*args, **kwargs)
 
     def clean_image_file(self):
         data = self.cleaned_data.get('image_file', None)
@@ -609,9 +590,8 @@ class ImageCreativeForm(AbstractCreativeForm):
 
         return data
 
-
     def save(self, commit=True):
-        obj = super(ImageCreativeForm,self).save(commit=False)
+        obj = super(ImageCreativeForm, self).save(commit=False)
         if self.files.get('image_file', None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
@@ -634,15 +614,13 @@ class ImageCreativeForm(AbstractCreativeForm):
 
 
 # Marketplace
-
 LEVELS = (
     ('a', 'Strict - Only allow ads appropriate for family audiences'),
     ('b', 'Moderate - Allow ads for general audiences'),
     ('c', 'Low - Allow ads for mature audiences, including alcohol and dating ads'),
-    ('d', 'No filtering - Allow ads including those with provocative or suggestive imagery. MoPub always blocks illegal or deceptive ads.'),
+    ('d', 'No filtering - Allow ads including those with provocative or suggestive imagery. MoPub always blocks illegal, pornographic and deceptive ads.'),
     )
 
-from django.forms.widgets import RadioSelect
 
 class ContentFilterForm(forms.Form):
-    level = forms.ChoiceField(choices = LEVELS, widget = RadioSelect)
+    level = forms.ChoiceField(choices=LEVELS, widget=forms.RadioSelect)

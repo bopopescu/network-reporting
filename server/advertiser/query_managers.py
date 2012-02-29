@@ -1,4 +1,3 @@
-import logging
 import random
 
 from google.appengine.api import memcache
@@ -149,9 +148,7 @@ class CampaignQueryManager(QueryManager):
         # Clear cache
         adunits = []
         for campaign in campaigns:
-            logging.info(campaign.name)
             for adgroup in campaign.adgroups:
-                logging.info(adgroup.name)
                 adunits.extend(adgroup.site_keys)
 
         adunits = AdUnitQueryManager.get(adunits)
@@ -168,7 +165,6 @@ class CampaignQueryManager(QueryManager):
             if type(advertiser) == list:
                 return advertiser
             else:
-                logging.error("this makes no sensssseeeee")
                 return advertiser
 
         if publisher:

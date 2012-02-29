@@ -571,8 +571,8 @@ def app_show(request,*args,**kwargs):
     return ShowAppHandler(id="app_key")(request, use_cache=False, *args,**kwargs)
 
 
-class ExportFileHandler( RequestHandler ):
-    def get( self, key, key_type, f_type ):
+class ExportFileHandler(RequestHandler):
+    def get(self, key, key_type, f_type):
         spec = self.params.get('spec')
         stat_names, stat_models = self.get_desired_stats(key, key_type,
                                                          self.days, spec=spec)

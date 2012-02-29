@@ -1,7 +1,6 @@
 import os
 import sys
 import logging
-
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
@@ -27,7 +26,6 @@ from nose.tools import with_setup
 from budget import budget_service
 from google.appengine.api import memcache
 from budget import models as budgetmodels
-import budget
 from budget.models import (Budget,
                            BudgetSliceLog,
                            )

@@ -4,23 +4,33 @@ import re
 
 from hypercache import hypercache
 import datetime
-
-from common.utils.query_managers import QueryManager, CachedQueryManager
-
-from common.utils.decorators import wraps_first_arg, deprecated
+import urllib2
 
 from google.appengine.ext import db
+from google.appengine.api import memcache
 
+from ad_server.debug_console import trace_logging
+import os
+
+from ad_server.adunit_context.adunit_context import AdUnitContext
+
+from advertiser.models import Campaign, AdGroup, Creative
+from common.constants import MAX_OBJECTS
+from common.utils.decorators import wraps_first_arg
+
+from common.utils.query_managers import QueryManager, CachedQueryManager
+from hypercache import hypercache
 from publisher.models import App
 from publisher.models import Site as AdUnit
-from advertiser.models import Campaign, AdGroup, Creative
-import datetime
 from reporting.query_managers import StatsModelQueryManager
-from google.appengine.api import memcache
-from ad_server.debug_console import trace_logging
-from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
-from common.constants import MAX_OBJECTS
+
+
 CACHE_TIME = 0 # turned off cache expiration
+
+#TODO(tornado): This needs to be a url that we'll actually use
+ADSERVER = 'someurlgoeshere'
+TEST_ADSERVER = 'localhost:8000'
+AUC_CLEAR_URI = '/gae/adunit_context_clear'
 
 IAD = 'iad'
 APPLE_DEVICES = ('iphone', 'ipad')
@@ -40,6 +50,9 @@ class AdUnitContextQueryManager(CachedQueryManager):
             This assumes that any stale adunit_context objects have been removed
             from memcache using cache_delete_from_adunits.
             """
+        # TODO(simon): This will eventually change to just get from the datastore, with no memcaching.
+        # ...assuming that this will only be used for the AdUnitContext fetch service.
+
         adunit_key = str(adunit_key).replace("'","")
         adunit_context_key = AdUnitContext.key_from_adunit_key(adunit_key)
 
@@ -75,23 +88,48 @@ class AdUnitContextQueryManager(CachedQueryManager):
 
         return adunit_context
 
-
-
-
     @classmethod
-    def cache_delete_from_adunits(cls, adunits):
+    def cache_delete_from_adunits(cls, adunits, testing=False, fetcher=None, port=None):
         """ This is called whenever something modifies an adunit_context.
             Removes both the context and its digest from memcache in
             order to maintain an up-to-date value in the cache. """
+        # TODO(simon): We need to make this method make an API call to the AWS/Tornado servers
+        #   to tell them to clear the AdUnitContext from their caches.
         if not isinstance(adunits, list):
           adunits = [adunits]
-        keys = ["context:"+str(adunit.key()) for adunit in adunits]
-        logging.info("deleting from cache: %s"%keys)
+
+        if len(adunits) > 0 and isinstance(adunits[0], str):
+            keys = ["context:"+adunit for adunit in adunits]
+            adunit_keys = adunits
+        else:
+            keys = ["context:"+str(adunit.key()) for adunit in adunits]
+            adunit_keys = [str(adunit.key()) for adunit in adunits]
+
+        clear_keys = ["adunit_key=%s" % key for key in adunit_keys]
+        clear_uri = AUC_CLEAR_URI + '?' + '&'.join(clear_keys)
+
+        if testing and fetcher:
+            clear_uri = clear_uri + '&testing=True&port=%s' % port
+            fetcher.fetch(clear_uri)
+        else:
+            pass
+            #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
+            # WHEN SHIT IS LIVE FOR REAL
+            #try:
+            #    full_url = 'http://' + ADSERVER + clear_uri
+            #    urllib2.urlopen(full_url)
+            #except:
+            #    # This isn't implemented, don't do it
+            #    #TODO(tornado): need to implement this and things
+            #    pass
+
+        logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)
         ts_success = memcache.delete_multi(["ts:%s" % k for k in keys])
 
-        logging.info("deleted: %s" % success and ts_success)
+        logging.info("Deleted from memcache: %s" % (success and ts_success))
         return success
+
 
 class AppQueryManager(QueryManager):
     Model = App

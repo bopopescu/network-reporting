@@ -1,9 +1,11 @@
 import logging
+import urllib
+import urllib2
 
 from datetime import datetime, timedelta
 
 from budget.models import BudgetChangeLog, Budget, BudgetSliceLog, BudgetSlicer
-from budget.tzinfo import Pacific, utc
+from common.utils.tzinfo import Pacific, utc
 from common.utils.query_managers import QueryManager
 
 from budget.helpers import (build_budget_update_string,
@@ -15,17 +17,64 @@ from budget.helpers import (build_budget_update_string,
 
 ZERO_BUDGET = 0.0
 ONE_DAY = timedelta(days=1)
+BUDGET_UPDATE_DATE_FMT = '%Y/%m/%d %H:%M'
+
+#TODO(tornado): This needs to be a url that we'll actually use
+ADSERVER = 'ec2-50-17-0-25.compute-1.amazonaws.com'
+TEST_ADSERVER = 'localhost:8000'
+BUDGET_UPDATE_URI = '/gae/campaign_update'
 
 class BudgetQueryManager(QueryManager):
 
     Model = Budget
     @classmethod
-    def update_or_create_budget_for_campaign(cls, camp, total_spent=0.0):
+    def update_or_create_budget_for_campaign(cls, camp, total_spent=0.0, testing=False, fetcher=None):
         # Update budget
+        if camp.start_datetime is None:
+            camp.start_datetime = datetime.now().replace(tzinfo=utc)
+        if str(camp.start_datetime.tzinfo) == str(Pacific):
+            camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo = None)
+        if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
+            camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo = None)
+
+        if camp.start_datetime:
+            remote_start = camp.start_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
+        else:
+            remote_start = None
+        if camp.end_datetime:
+            remote_end = camp.end_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
+        else:
+            remote_end = None
+        remote_update_dict = dict(campaign_key = str(camp.key()),
+                                  start_datetime = remote_start,
+                                  end_datetime = remote_end,
+                                  static_total_budget = camp.full_budget,
+                                  static_daily_budget = camp.budget,
+                                  active = camp.active,
+                                  delivery_type = camp.budget_strategy,
+                                  )
+        qs = urllib.urlencode(remote_update_dict)
+        update_uri = BUDGET_UPDATE_URI + '?' + qs
+
+        if testing and fetcher:
+            fetcher.fetch(update_uri)
+        else:
+            pass
+            #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
+            # WHEN SHIT IS LIVE FOR REAL
+            #try:
+            #    full_url = 'http://' + ADSERVER + update_uri
+            #    urllib2.urlopen(full_url)
+            #except:
+            #    # This isn't implemented yet
+            #    #TODO(tornado): need to implement this and things
+            #    pass
+
         if camp.budget_obj:
             budget = camp.budget_obj
             # if the budget and the campaign have differing activity levels sync them
             if camp.active != budget.active:
+                remote_update_dict['active'] = camp.active
                 budget.active = camp.active
                 budget.put()
             # if the campaign is now deleted and the budget says it's still active,

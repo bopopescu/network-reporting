@@ -19,7 +19,7 @@ from google.appengine.api import urlfetch, memcache
 from google.appengine.ext import webapp, db
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext
 
 from stats import stats_accumulator
 from google.appengine.ext.db import Key
@@ -29,12 +29,7 @@ from ad_server import memcache_mangler
 
 from ad_server import frequency_capping
 
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer
-from ad_server.renderers.admob import AdMobRenderer
-from ad_server.renderers.text_and_tile import TextAndTileRenderer
-from ad_server.renderers.adsense import AdSenseRenderer
-
-# unnecessary because we use class introspection
+from ad_server.renderers.get_renderer import get_renderer_for_creative
 
 # RENDERERS = {
 #     "admob": AdMobRenderer,
@@ -242,6 +237,7 @@ class AdHandler(webapp.RequestHandler):
         #         ad_click_url += cost_tracker
 
 
+            creative.Renderer = get_renderer_for_creative(creative)
             creative_renderer = creative.Renderer(creative=creative,
                                          adunit=adunit,
                                          udid=raw_udid,

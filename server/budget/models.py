@@ -1,8 +1,12 @@
 from google.appengine.ext import db
 from budget.helpers import get_curr_slice_num, get_slice_from_datetime, TS_PER_DAY, TEST_TS_PER_DAY
-from budget.tzinfo import utc, Pacific
+from common.utils.tzinfo import utc, Pacific
 import logging
 import math
+import sys, logging
+#modules = sorted([k for k in sys.modules])
+#for m in modules:
+#    logging.warning("K: %s\t\tV: %s" % (m, sys.modules[m]))
 
 from datetime import datetime, timedelta, date
 

@@ -1,14 +1,15 @@
-from common.utils.query_managers import CachedQueryManager
-
 from google.appengine.ext import db
 from google.appengine.api.images import InvalidBlobKeyError
 
-from publisher.models import App
 from publisher.models import Site as AdUnit
-from advertiser.models import Campaign, AdGroup, Creative
+from advertiser.models import AdGroup, Creative
 import datetime
 from reporting.query_managers import StatsModelQueryManager
 from google.appengine.api import memcache
+from common.utils.db_deep_get import deep_get_from_db
+from simple_models import SimpleAdUnitContext
+
+
 
 from ad_server.debug_console import trace_logging
 
@@ -20,14 +21,21 @@ class AdUnitContext(object):
     """All the adunit information necessary
     to run the auction. """
     
+    def simplify(self):
+        return SimpleAdUnitContext(self.adunit, self.campaigns, self.adgroups, self.creatives)
+ 
     @classmethod
     def wrap(cls, adunit):
         """ Factory method that takes an adunit, fetches all the appropriate information
         from the database, and then returns an adunit_context object """
+        if isinstance(adunit, str):
+            adunit = AdUnit.get(adunit)
         
         adgroups = cls.fetch_adgroups(adunit)
-        campaigns = cls.fetch_campaigns(adgroups)
         creatives = cls.fetch_creatives(adunit, adgroups)
+        # Fetch all the references so we can cache the whole object
+        deep_get_from_db([adunit] + adgroups + creatives)
+        campaigns = cls.collect_campaigns(adgroups)
         
         adunit_context = cls(adunit, 
                              campaigns, 
@@ -36,37 +44,17 @@ class AdUnitContext(object):
         return adunit_context
 
     def __init__(self, adunit, campaigns, adgroups, creatives):
-        self.adunit = adunit
+        # For high performance, the Model instances passed as arguments should be deeply-fetched (e.g. using deep_get_from_db()).
         
+        self.adunit = adunit
         
         self.campaigns = campaigns
         self.adgroups = adgroups
         self.creatives = creatives
-        
-        # creative_ctr is a mapping from creative keys to CreativeCTR objects
         self.creative_ctrs = {}
         for c in creatives:
             self.creative_ctrs[c.key()] = CreativeCTR(c, adunit)
             
-            
-        # Triggers dereferencing of references so we can cache the whole object
-        # We ask both Account and App for an arbitrary property 
-        self.adunit.account.active
-        self.adunit.app_key.deleted
-        
-        # We also dereference the network configs
-        if self.adunit.account.network_config:
-            self.adunit.account.network_config.admob_pub_id
-        if self.adunit.app.network_config:
-            self.adunit.app.network_config.admob_pub_id
-        if self.adunit.network_config:
-            self.adunit.network_config.admob_pub_id
-        
-        # We also deference the marketplace configs
-        if self.adunit.account.marketplace_config:
-            self.adunit.account.marketplace_config.price_floor
-
-
     def _get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
         '''Given a creative, calculates the CTR.  
         The date_hour parameter is the last full hour that has passed.
@@ -87,12 +75,10 @@ class AdUnitContext(object):
                     
     def get_creatives_for_adgroups(self,adgroups,limit=MAX_OBJECTS):
         """ Get only the creatives for the requested adgroups """
-        adgroup_keys = [adgroup.key() for adgroup in adgroups]
-        creatives = self.creatives
-        # we must use get_value_for_datastore so we don't auto dereference
+        adgroup_keys = set(adgroup.key() for adgroup in adgroups)
+        # creative.ad_group should have already been fetched, so we don't need to worry about avoiding auto-dereferencing it.
         creatives = [creative for creative in self.creatives
                               if creative.ad_group.key() in adgroup_keys]
-
         return creatives
         
     @classmethod
@@ -112,20 +98,25 @@ class AdUnitContext(object):
         # creatives = Creative.all().filter("ad_group IN", adgroups).\
         #             filter("active =",True).filter("deleted =",False).\
         #             fetch(limit)
+        adgroup_keys = set(adgroup.key() for adgroup in adgroups)
+ 
+        def adgroup_key(creative):
+            # Returns the creative.ad_group.key() without fetching the ad_group
+            return Creative.ad_group.get_value_for_datastore(creative)
+
+        # Return only the creatives that reference one of our adgroups.
+        return [c for c in creatives if adgroup_key(c) in adgroup_keys]
+
+    @classmethod
+    def collect_campaigns(cls, adgroups):
+        # For high performance, the campaigns should already be fetched.
+        campaigns_by_key = {}
+        for adgroup in adgroups:
+            campaigns_by_key[adgroup.campaign.key()] = adgroup.campaign
+        return [c for c in campaigns_by_key.itervalues() if not c.deleted] 
                     
-        # re-write creative so that ad_group is actually the object already in memory
-        real_crtvs = []
-        for creative in creatives:
-            try:
-                creative.ad_group = [ag for ag in adgroups 
-                        if ag.key() == Creative.ad_group.get_value_for_datastore(creative)][0]
-                creative.image_url = cls._get_image_url(creative)
-                # only store creatives actually targeted to this adunit
-                if adunit.key() in creative.ad_group.site_keys:
-                    real_crtvs.append(creative)
-            except IndexError, e:
-                pass
-        return real_crtvs
+
+
     @classmethod
     def _get_image_url(cls, creative):
         if not hasattr(creative, 'image_blob'):
@@ -149,24 +140,29 @@ class AdUnitContext(object):
 
     @classmethod
     def fetch_campaigns(cls, adgroups):  
-        # campaign exclusions... budget + time
-        trace_logging.info("attach eligible campaigns")
-        campaigns = []
-        for adgroup in adgroups:
-            campaign = db.get(adgroup.campaign.key())
-            if not campaign.deleted:
-                campaigns.append(campaign)
+        # TODO(simon): Remove this function? Remove the campaigns attribute entirely?
+        trace_logging.info("getting campaigns from db")
+
+        def campaign_key(adgroup):
+            # Returns the adgroup.campaign.key() without fetching the campaign
+            return AdGroup.campaign.get_value_for_datastore(adgroup)
+
+        campaign_keys = set(campaign_key(adgroup) for adgroup in adgroups)
+        # Batch get all the relevant campaigns
+        campaigns = db.get(list(campaign_keys))
+        campaigns = [c for c in campaigns if not c.deleted] 
         return campaigns   
         
     @classmethod
     def key_from_adunit_key(cls, adunit_key):    
         """ Since we want a 1-1 mapping from adunits to adunit_contexts, we
         appropriate the key from the adunit, returns a string. """
-        return "context:"+ adunit_key   
+        return "context:" + str(adunit_key)
         
     def key(self):
         """ Uses the adunit's key """
-        return AdUnitContext.key_from_adunit_key(str(self.adunit.key()))
+        return AdUnitContext.key_from_adunit_key(self.adunit.key())
+
         
     def get_creative_by_key(self,creative_key):
         creative = None

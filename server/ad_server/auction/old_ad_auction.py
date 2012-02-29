@@ -54,7 +54,7 @@ from ad_server.optimizer import optimizer
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
-from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext
 
 from stats import stats_accumulator
 from budget import budget_service
@@ -317,11 +317,11 @@ class AdAuction(object):
                     # For now we only use sampling on the experimental server
                     if experimental:
                         # Construct dict: k=player, v=ecpm
-                        player_ecpm_dict = optimizer.get_ecpms(adunit_context,
+                        player_ecpm_dict = optimizer.get_ecpms(adunit_context.adunit,
                                                                players)
                     else:
                         # Construct dict: k=player, v=ecpm
-                        player_ecpm_dict = optimizer.get_ecpms(adunit_context,
+                        player_ecpm_dict = optimizer.get_ecpms(adunit_context.adunit,
                                                                players,
                                                                sampling_fraction=0.0)
 

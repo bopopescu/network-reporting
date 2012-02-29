@@ -3,7 +3,6 @@ import sys
 import os
 import datetime
 import logging
-
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 

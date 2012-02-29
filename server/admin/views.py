@@ -303,7 +303,7 @@ def migrate_image(request, *args, **kwargs):
     """ Migrates a text and tile image. """
     from google.appengine.api import files
     from common.utils import helpers
-
+    
     params = request.POST or request.GET
 
     app_keys = params.getlist('app_key')

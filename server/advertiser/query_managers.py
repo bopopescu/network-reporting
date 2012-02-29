@@ -5,6 +5,7 @@ from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
+
 from common.constants import CAMPAIGN_LEVELS
 
 from advertiser.models import Campaign
@@ -138,11 +139,18 @@ class CampaignQueryManager(QueryManager):
     def put(cls, campaigns):
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
+        
+        # Put campaigns so if they're new they have a key    
+        put_response = db.put(campaigns)
+        
+        # They need a key because this QM needs the key
         for camp in campaigns:
             budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
             camp.budget_obj = budg_obj
 
+        # Put them again so they save their budget obj
         put_response = db.put(campaigns)
+
 
         # Clear cache
         adunits = []

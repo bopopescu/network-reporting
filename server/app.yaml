@@ -74,6 +74,9 @@ handlers:
   script: ad_server/main.py
   login: admin
 
+- url: /fetch_api/.*
+  script: fetch_api/api_server.py
+
 - url: /m/.*
   script: ad_server/main.py
 

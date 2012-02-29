@@ -2,8 +2,6 @@ import datetime
 import logging
 import os
 import sys
-
-
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 

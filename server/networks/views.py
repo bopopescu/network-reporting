@@ -67,20 +67,6 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        def create_and_set(networks, network, app, network_names):
-            if network not in networks:
-                networks[network] = {'name': network,
-                                     'pretty_name': network_names[network]}
-            if 'mopub_app_stats' not in networks[network]:
-                networks[network]['mopub_app_stats'] = {}
-            if 'mopub_stats' not in networks[network]:
-                networks[network]['mopub_stats'] = StatsModel()
-            if app.key() not in networks[network]['mopub_app_stats']:
-                networks[network]['mopub_app_stats'][app.key()] = \
-                        {'stats': StatsModel(),
-                         'app': app,
-                         'adunits': []}
-
         days = gen_days_for_range(self.start_date, self.date_range)
 
         networks_to_setup = DEFAULT_NETWORKS
@@ -93,9 +79,6 @@ class NetworksHandler(RequestHandler):
         stats_manager = StatsModelQueryManager(account=self.account)
         for network in DEFAULT_NETWORKS.union(set(OTHER_NETWORKS.keys())):
             adgroup = AdGroupQueryManager.get_network_adgroup(self.account.key(), network)
-
-            logging.info('all_stats')
-            logging.info(all_stats)
 
             login = False
             network_data = {}
@@ -366,10 +349,14 @@ class NetworkDetailsHandler(RequestHandler):
                 mapper = AdNetworkAppMapper.get_by_publisher_id(pub_id,
                         network)
                 if mapper:
-                    create_and_set(reporting_networks, network, app,
-                            REPORTING_NETWORKS)
+                    if 'mopub_app_stats' not in network_data:
+                        network_data['mopub_app_stats'] = {}
+                    if app.key() not in network_data['mopub_app_stats']:
+                        network_data['mopub_app_stats'][app.key()] = {}
                     network_data['mopub_app_stats'][app.key()]['pub_id'] = \
                             pub_id
+                    network_data['mopub_app_stats'][app.key()]['app'] = \
+                            app
 
             # Get data collected by MoPub
             adunits = []

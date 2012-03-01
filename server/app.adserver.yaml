@@ -85,7 +85,7 @@ handlers:
   script: ad_server/main.py
   login: admin
 
-- url:/fetch_api/.*
+- url: /fetch_api/.*
   script: fetch_api/api_server.py
 
 - url: /mdb/.*

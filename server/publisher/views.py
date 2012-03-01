@@ -1240,6 +1240,10 @@ def create_iad_mapper(account, app):
                                           app=app)
 
 def calculate_ecpm(adgroup):
+    """
+    Calculate the ecpm for a cpc campaign.
+    REFACTOR: move this to the app/adunit models
+    """
     if adgroup.cpc:
         try:
             return float(adgroup.stats.click_count) * \

@@ -494,6 +494,9 @@ class ShowAppHandler(RequestHandler):
                 ag.stats.revenue = float(mpx_stats.get('revenue'))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
+            if ag.campaign.campaign_type in ['network']:
+                ag.calculated_ecpm = calculate_ecpm(ag)
+
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'],
                                  app.adgroups)
@@ -533,8 +536,6 @@ class ShowAppHandler(RequestHandler):
 
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
-        logging.warn([adgroup.active for adgroup in marketplace_campaigns])
-        logging.warn([adgroup.deleted for adgroup in marketplace_campaigns])
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
                                         for adgroup in marketplace_campaigns])
         try:

@@ -721,11 +721,14 @@ class AdgroupDetailHandler(RequestHandler):
                 or not self.account.network_config:
 
                 for app in apps.values():
-                    if (app.network_config \
-                        and not getattr(app.network_config, adgroup_network_type + '_pub_id')) \
-                        or not app.network_config:
+                    if not (app.network_config and
+                            getattr(app.network_config, adgroup_network_type + '_pub_id')):
 
-                        message.append("The application " + app.name + " needs to have a <strong>" + adgroup_network_type.title() + " Network ID</strong> in order to serve. Specify a " + adgroup_network_type.title() + " Network ID on <a href=%s>your account's ad network settings</a> page." % reverse("ad_network_settings"))
+                        for adunit in app.all_adunits:
+                            if not (adunit.network_config and
+                                    getattr(adunit.network_config, adgroup_network_type + '_pub_id')):
+                                message.append("The application " + app.name + " needs to have a <strong>" + adgroup_network_type.title() + " Network ID</strong> in order to serve. Specify a " + adgroup_network_type.title() + " Network ID on <a href=%s>your account's ad network settings</a> page." % reverse("ad_network_settings"))
+                                break
         if message == []:
             message = None
         else:

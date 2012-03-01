@@ -1,3 +1,6 @@
+"""
+asdfasdf
+"""
 from google.appengine.ext import blobstore
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -9,6 +12,7 @@ from simple_models import SimpleApp, SimpleAdUnit
 import datetime
 import time
 import logging
+import re
 
 #
 # A mobile app, which can have multiple Sites on which ads can be displayed

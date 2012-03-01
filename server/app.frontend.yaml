@@ -1,0 +1,101 @@
+application: mopub-inc
+version: 38
+
+runtime: python
+api_version: 1
+default_expiration: "10d"
+
+builtins:
+- remote_api: on
+- datastore_admin: on
+
+# Turn this on to debug
+# - appstats: on
+
+inbound_services:
+- warmup
+
+handlers:
+### BEGIN STATIC ASSETS ###
+- url: /robots.txt
+  static_files: public/robots.txt
+  upload: public/robots.txt
+
+- url: /images
+  static_dir: public/images
+
+- url: /favicon.ico
+  static_files: public/images/favicon.ico
+  upload: public/images/favicon.ico
+
+- url: /css
+  static_dir: public/css
+
+- url: /js
+  static_dir: public/js
+
+- url: /js/client
+  static_dir: public/js/client
+  expiration: "30m"
+
+- url: /placeholders
+  static_dir: public/placeholders
+  
+### END STATIC ASSETS ###
+
+### BEGIN APP ENGINE BUILT-INS ###
+
+- url: /mapreduce(/.*)?
+  script: mapreduce/main.py
+  login: admin
+
+- url: /remote_api
+  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
+  login: admin
+
+### END APP ENGINE BUILT-INS ###
+
+- url: /admin/prep
+  script: main.py
+  login: admin
+
+- url: /admin/sfdc/
+  script: main.py
+  login: admin
+
+- url: /m/clear
+  script: ad_server/main.py
+  login: admin
+
+- url: /files/.*
+  script: stats/views.py
+
+- url: /m/budget/.*
+  script: ad_server/main.py
+  login: admin
+
+- url: /fetch_api/.*
+  script: fetch_api/api_server.py
+
+- url: /m/.*
+  script: ad_server/main.py
+
+- url: /_ah/queue/.*
+  script: stats/views.py
+  login: admin
+
+- url: /_ah/warmup
+  script: ad_server/main.py
+  login: admin
+
+
+- url: /mdb/.*
+  script: stats/views.py
+  login: admin
+
+- url: /offline/.*
+  script: reporting/aws_logging/blob_server.py
+
+- url: /.*
+  script: main.py
+  secure: optional

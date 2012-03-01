@@ -1241,9 +1241,9 @@ def create_iad_mapper(account, app):
 def calculate_ecpm(adgroup):
     if adgroup.cpc:
         try:
-            return adgroup.stats.click_count * \
-                   adgroup.cpc * \
-                   1000 / adgroup.stats.impression_count
+            return float(adgroup.stats.click_count) * \
+                   float(adgroup.cpc) * \
+                   1000 / float(adgroup.stats.impression_count)
         except Exception, error:
             logging.error(error)
     return adgroup.bid

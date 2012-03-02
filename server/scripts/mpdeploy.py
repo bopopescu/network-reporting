@@ -8,32 +8,26 @@ import sys
 import os
 import datetime
 import re
-from common.utils.timezones import Pacific_tzinfo
 
 PWD = os.path.dirname(__file__)
+
+sys.path.append(os.path.join(PWD, '..'))
+from common.utils.timezones import Pacific_tzinfo
+
 
 # These only seem to work in python2.7
 try:
     import clint
     from clint.textui import puts, indent, colored
 except ImportError:
-    sys.path.append(os.path.join(PWD, '../common/clint'))
-    try:
-        import clint
-        from clint.textui import puts, indent, colored
-    except ImportError:
-        print 'please run `pip install clint`'
-        sys.exit(1)
+    print 'please run `pip install clint`'
+    sys.exit(1)
 
 try:
     import envoy
 except ImportError:
-    sys.path.append(os.path.join(PWD, '../common/envoy'))
-    try:
-        import envoy
-    except ImportError:
-        print 'please run `pip install envoy`'
-        sys.exit(1)
+    print 'please run `pip install envoy`'
+    sys.exit(1)
 
 
 def prompt_before_executing(original, override=None):

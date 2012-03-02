@@ -45,10 +45,9 @@ import datetime
 #                                                  DummyServerSideFailure
 #                                                 )
 
-from common.utils.helpers import to_uni, to_ascii
+from common.utils.helpers import to_uni
 
 from budget.models import Budget
-from common.utils.tzinfo import UTC, Pacific
 from simple_models import (SimpleAdGroup,
                            SimpleCampaign,
                            SimpleCreative,

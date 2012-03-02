@@ -135,9 +135,15 @@ class TestGuaranteedCampaignForm(unittest.TestCase):
             self.assertEqual(campaign.budget_type, 'daily', "budget_type was %s, should have been %s" % (campaign.budget_type, 'daily'))
             self.assertEqual(campaign.budget_strategy, 'allatonce', "budget_strategy was %s, should have been %s" % (campaign.budget_strategy, 'allatonce'))
 
+            # not be able to have campaign with no end, no budget, spread evenly
             test_data['budget'] = budget
             test_data['budget_type'] = 'full_campaign'
             test_data['budget_strategy'] = 'evenly'
+            form = CampaignForm(test_data)
+            self.assertFalse(form.is_valid(), "budget_strategy was evenly with no end_datetime and full_campaign budget_type but the form validated")
+
+            test_data['end_datetime_0'] = (datetime.datetime.now().date() + datetime.timedelta(days=1)).strftime('%m/%d/%Y')
+            test_data['end_datetime_1'] = datetime.time().strftime('%I:%M %p')
             form = CampaignForm(test_data)
             self.assertTrue(form.is_valid(), form._errors.as_text())
             campaign = form.save()
@@ -145,8 +151,6 @@ class TestGuaranteedCampaignForm(unittest.TestCase):
             self.assertEqual(campaign.full_budget, budget, "full_budget was %s, should have been %s" % (campaign.full_budget, budget))
             self.assertEqual(campaign.budget_type, 'full_campaign', "budget_type was %s, should have been %s" % (campaign.budget_type, 'full_campaign'))
             self.assertEqual(campaign.budget_strategy, 'evenly', "budget_strategy was %s, should have been %s" % (campaign.budget_strategy, 'evenly'))
-
-            # TODO: not be able to have campaign with no end, no budget, spread evenly
 
 
 class TestPromotionalCampaignForm(unittest.TestCase):

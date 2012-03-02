@@ -188,15 +188,7 @@ def git_get_logs_for_changelog():
     Gets a list of abbreviated commits since the last deploy.
     """
     most_recent_id = git_most_recent_commit_id()
-    deploy_tags = git_list_deploy_tags()
-    try:
-        # consider passing this in instead of calculating
-        # in the function. the most recent tag might point to HEAD
-        # which we don't want.
-        most_recent_tag = deploy_tags[-1]
-    except IndexError, ValueError:
-        most_recent_tag = "deploy-1"
-
+    most_recent_tag = git_get_most_recent_deploy_tag()
     log = git('log --pretty=oneline --abbrev-commit ' + most_recent_tag + "..." + most_recent_id)
 
     return log.std_out.split('\n')

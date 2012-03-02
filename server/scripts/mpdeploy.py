@@ -12,7 +12,6 @@ import re
 PWD = os.path.dirname(__file__)
 
 sys.path.append(os.path.join(PWD, '..'))
-from common.utils.timezones import Pacific_tzinfo
 
 
 # These only seem to work in python2.7
@@ -125,7 +124,7 @@ def git_tag_current_deploy():
     new_deploy_tag = "deploy-" + str(new_deploy_number)
 
     # Make the message for the deploy
-    deploy_datetime = datetime.datetime.now(Pacific_tzinfo()).strftime("%A, %B %d, %Y at %I:%M%p PST")
+    deploy_datetime = datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M%p PST")
     message = "Deployed by %s on %s." % (git_get_user(), deploy_datetime)
 
     # Tag the commit

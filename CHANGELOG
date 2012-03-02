@@ -1,8 +1,8 @@
-# Deployed Friday, March 02, 2012 at 10:39PM PST
+# Deployed Friday, March 02, 2012 at 2:39PM PST
 ### Deployed by John Pena
 ### Tagged deploy-23
 ### Bugs Fixed: []
-### Included Commits: 
+### Included Commits:
  * a3e0148 fixed tagging issues in mpdeploy and ammended the changelog
  * bdef7ee Merge branch '947-form-budgets' of github.com:mopub/mopub
  * 9e8a505 handled case where gtee campaign does not have budget or full_budget set correctly
@@ -14,7 +14,7 @@
  * a885655 Deployed without finding any bug fixes.
  * 6b71f91 Merge branch '947-form-budgets' of github.com:mopub/mopub into 947-form-budgets
  * 401be0f added budget validation, tests
- 
+
 # Deployed Friday, March 02, 2012
 ### Deployed by Nafis Jamal
 ### Tagged deploy-22

@@ -66,7 +66,9 @@ class Campaign(db.Model):
     """ A campaign.    Campaigns have budgetary and time based restrictions. """
     name = db.StringProperty(required=True)
     description = db.TextProperty()
-    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo', 'network', 'backfill_promo', 'marketplace', 'backfill_marketplace'])
+    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo',
+                                               'network', 'backfill_promo', 'marketplace',
+                                               'backfill_marketplace'])
 
     # budget per day
     budget = db.FloatProperty()
@@ -483,7 +485,11 @@ class Creative(polymodel.PolyModel):
     deleted = db.BooleanProperty(default=False)
 
     # the creative type helps the ad server render the right thing if the creative wins the auction
-    ad_type = db.StringProperty(choices=["text", "text_icon", "image", "iAd", "adsense", "admob", "greystripe", "html", "html_full", "clear", "custom_native","admob_native", "millennial_native"], default="image")
+    ad_type = db.StringProperty(choices=["text", "text_icon", "image", "iAd", "adsense",
+                                         "admob", "greystripe", "html", "html_full",
+                                         "clear", "custom_native","admob_native",
+                                         "millennial_native"],
+                                default="image")
 
     # tracking pixel
     tracking_url = db.StringProperty()
@@ -499,7 +505,9 @@ class Creative(polymodel.PolyModel):
     # e.g. format=320x50
     # e.g. format=*
     format_predicates = db.StringListProperty(default=["format=*"])
-    format = db.StringProperty(default="320x50") # We should switch to using this field instead of format_predicates: one creative per size
+    # We should switch to using this field instead of
+    # format_predicates: one creative per size
+    format = db.StringProperty(default="320x50")
 
     launchpage = db.StringProperty()
 
@@ -649,6 +657,7 @@ class TextCreative(Creative):
                          line2 = self.line2)
         spec_dict.update(super(TextCreative, self).build_simplify_dict())
         return spec_dict
+
 
 class TextAndTileCreative(Creative):
     SIMPLE = SimpleTextAndTileCreative

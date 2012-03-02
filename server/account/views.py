@@ -42,8 +42,7 @@ def index(request, *args, **kwargs):
 
 
 class AdNetworkSettingsHandler(RequestHandler):
-    def get(self,account_form=None):
-
+    def get(self, account_form=None):
         if self.params.get("skip"):
             self.account.status = "step4"
             AccountQueryManager.put_accounts(self.account)
@@ -64,12 +63,12 @@ class AdNetworkSettingsHandler(RequestHandler):
                     'mobfox_status']
         network_config_status = {}
 
-        def _get_net_status(account,network):
+        def _get_net_status(account, network):
             status = 0
             # eg. account.admob_pub_id
-            if getattr(account.network_config,network[:-6]+'pub_id',None):
+            if getattr(account.network_config, network[:-6] + 'pub_id', None):
                 for app in apps_for_account:
-                    if getattr(app.network_config,network[:-6]+'pub_id',None):
+                    if getattr(app.network_config, network[:-6] + 'pub_id', None):
                         status = 2
                         return status
                 status = 1
@@ -78,18 +77,17 @@ class AdNetworkSettingsHandler(RequestHandler):
             for app in apps_for_account:
                 # dynamically attach adunits to app
                 app.adunits = AdUnitQueryManager.get_adunits(app=app)
-                if  not getattr(app.network_config,network[:-6]+'pub_id',None):
+                if  not getattr(app.network_config, network[:-6] + 'pub_id', None):
                     broke = True
                 else:
                     status = 3
-            if not broke and len(apps_for_account)!=0:
+            if not broke and len(apps_for_account) != 0:
                 return 4
             else:
                 return status
 
         for network in networks:
-            network_config_status[network] = _get_net_status(self.account,network)
-
+            network_config_status[network] = _get_net_status(self.account, network)
 
         return render_to_response(self.request,
                                   'account/ad_network_settings.html',
@@ -98,9 +96,7 @@ class AdNetworkSettingsHandler(RequestHandler):
                                         'user': user,
                                         "apps": apps_for_account}.items() + network_config_status.items()))
 
-
     def post(self):
-
         account_form = AccountForm(data=self.request.POST, instance=self.account)
         network_config_form = NetworkConfigForm(data=self.request.POST, instance=self.account.network_config)
 
@@ -159,17 +155,17 @@ class AdNetworkSettingsHandler(RequestHandler):
                     adunit_network_config = adunit_form.save(commit=False)
                     AdUnitQueryManager.update_config_and_put(adunit, adunit_network_config)
 
-
-
             if self.account.status == "step3":
                 self.account.status = "step4"
                 AccountQueryManager.put_accounts(self.account)
                 return HttpResponseRedirect(reverse('advertiser_campaign'))
+
         return self.get(account_form=account_form)
 
+
 @login_required
-def ad_network_settings(request,*args,**kwargs):
-    return AdNetworkSettingsHandler()(request,*args,**kwargs)
+def ad_network_settings(request, *args, **kwargs):
+    return AdNetworkSettingsHandler()(request, *args, **kwargs)
 
 
 class CreateAccountHandler(RequestHandler):

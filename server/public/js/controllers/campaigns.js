@@ -177,6 +177,19 @@
             $(this).val(val);
         });
 
+        $('input[name="end_datetime_0"], input[name="end_datetime_1"], select[name="budget_type"], select[name="budget_strategy"]').change(function(){
+            if(!$('input[name="end_datetime_0"]').val() &&
+               !$('input[name="end_datetime_1"]').val() &&
+               $('select[name="budget_type"]').val() == 'full_campaign') {
+                $('input#id_budget_strategy_1').prop('checked', 'checked');
+                $('input#id_budget_strategy_0').removeProp('checked');
+                $('input#id_budget_strategy_0').attr('disabled', 'disabled');
+            }
+            else {
+                $('input#id_budget_strategy_0').removeAttr('disabled');
+            }
+        }).change();
+
 
         $('#all-adunits').change(function() {
             // select or deselect all adunits

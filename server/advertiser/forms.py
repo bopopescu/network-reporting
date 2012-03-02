@@ -75,9 +75,8 @@ class CampaignForm(forms.ModelForm):
                                                                               date_format='%m/%d/%Y',
                                                                               time_format='%I:%M %p'))
     budget = forms.FloatField(label='Delivery Amount:', required=False,
-                              widget=forms.TextInput(attrs={'class': 'float budget_type_dependent daily'}))
-    full_budget = forms.FloatField(label='Delivery Amount:', required=False,
-                                   widget=forms.TextInput(attrs={'class': 'float budget_type_dependent full_campaign'}))
+                              widget=forms.TextInput(attrs={'class': 'float'}))
+    full_budget = forms.FloatField(required=False)
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily', required=False)
@@ -114,6 +113,9 @@ class CampaignForm(forms.ModelForm):
             if instance.end_datetime:
                 initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
+            if instance.budget_type == 'full_campaign':
+                initial['budget'] = instance.full_budget
+
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
         # hack to make the forms ordered correctly
@@ -141,51 +143,71 @@ class CampaignForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(CampaignForm, self).clean()
 
-        start_datetime = cleaned_data.get('start_datetime', None)
-        end_datetime = cleaned_data.get('end_datetime', None)
+        # gtee, promo
+        if cleaned_data.get('campaign_type', '') in ('gtee', 'promo'):
+            # start and end datetimes
+            start_datetime = cleaned_data.get('start_datetime', None)
+            end_datetime = cleaned_data.get('end_datetime', None)
+            # if start_datetime is None, use the current time
+            if not start_datetime:
+                cleaned_data['start_datetime'] = datetime.now()
+            # end_datetime must be after start_datetime
+            if start_datetime and end_datetime and end_datetime < start_datetime:
+                if 'end_datetime' not in self._errors:
+                    self._errors['end_datetime'] = ErrorList()
+                self._errors['end_datetime'].append("Stop time must be after start time")
 
-        if cleaned_data.get('campaign_type', None) in ['gtee', 'promo'] and not start_datetime:
-            # if no start time is given, use the current time
-            cleaned_data['start_datetime'] = datetime.now()
-
-        if 'campaign_type' in cleaned_data:
-            # set the correct campaign_type using gtee_prioirty or promo_priority
+            # gtee
             if cleaned_data['campaign_type'] == 'gtee':
-                if cleaned_data.get('gtee_priority', None):
-                    gtee_priority = cleaned_data['gtee_priority']
-                    if gtee_priority == 'low':
-                        cleaned_data['campaign_type'] = 'gtee_low'
-                    elif gtee_priority == 'high':
-                        cleaned_data['campaign_type'] = 'gtee_high'
-                else:
+                if not cleaned_data.get('gtee_priority', None):
                     if 'gtee_priority' not in self._errors:
                         self._errors['gtee_priority'] = ErrorList()
                     self._errors['gtee_priority'].append('This field is required')
-            elif cleaned_data['campaign_type'] == 'promo':
-                if cleaned_data.get('promo_priority', None):
-                    if cleaned_data['promo_priority'] == 'backfill':
-                        cleaned_data['campaign_type'] = 'backfill_promo'
+                elif cleaned_data['gtee_priority'] in ('low', 'high'):
+                    cleaned_data['campaign_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
+                # budget
+                cleaned_data['budget_type'] = cleaned_data.get('budget_type', None) or 'daily'
+                cleaned_data['budget_strategy'] = cleaned_data.get('budget_strategy', None) or 'allatonce'
+                if cleaned_data['budget_type'] == 'daily':
+                    cleaned_data['full_budget'] = None
                 else:
+                    if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
+                        if 'budget_strategy' not in self._errors:
+                            self._errors['budget_strategy'] = ErrorList()
+                        self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
+                    cleaned_data['full_budget'] = cleaned_data.get('budget', None)
+                    cleaned_data['budget'] = None
+
+            # promo
+            elif cleaned_data['campaign_type'] == 'promo':
+                # priority
+                if not cleaned_data.get('promo_priority', None):
                     if 'promo_priority' not in self._errors:
                         self._errors['promo_priority'] = ErrorList()
                     self._errors['promo_priority'].append('This field is required')
-
-        if cleaned_data.get('budget_type', None):
-            if cleaned_data['budget_type'] == 'daily':
-                cleaned_data['full_budget'] = None
-            else:
+                elif cleaned_data['promo_priority'] == 'backfill':
+                    cleaned_data['campaign_type'] = 'backfill_promo'
+                # promo campaigns have no budget
                 cleaned_data['budget'] = None
+                cleaned_data['full_budget'] = None
+                cleaned_data['budget_type'] = None
+                cleaned_data['budget_strategy'] = None
 
-        if start_datetime and end_datetime and end_datetime < start_datetime:
-            if 'end_datetime' not in self._errors:
-                self._errors['end_datetime'] = ErrorList()
-            self._errors['end_datetime'].append("Stop time must be after start time")
+        # network
+        elif cleaned_data.get('campaign_type', '') == 'network':
+            # network campaigns have no start and end datetimes
+            cleaned_data['start_datetime'] = None
+            cleaned_data['end_datetime'] = None
+            # network campaigns have no budget
+            cleaned_data['budget'] = None
+            cleaned_data['full_budget'] = None
+            cleaned_data['budget_type'] = None
+            cleaned_data['budget_strategy'] = None
 
         return cleaned_data
 
     # It is not standard to override a ModelForm's save method, but we need to
-    # change the tzinfo of the datetimes because we display in Pacific and
-    # store in UTC.  Can this be done in the model?
+    # save the budget information.  TODO: find a better way to do this?
     def save(self, *args, **kwargs):
         campaign = super(CampaignForm, self).save(*args, **kwargs)
 
@@ -209,6 +231,7 @@ class CampaignForm(forms.ModelForm):
                   'start_datetime',
                   'end_datetime',
                   'budget',
+                  'full_budget',
                   'budget_type',
                   'budget_strategy')
 

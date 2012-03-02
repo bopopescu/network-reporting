@@ -171,6 +171,10 @@ class CampaignForm(forms.ModelForm):
                 if cleaned_data['budget_type'] == 'daily':
                     cleaned_data['full_budget'] = None
                 else:
+                    if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
+                        if 'budget_strategy' not in self._errors:
+                            self._errors['budget_strategy'] = ErrorList()
+                        self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
                     cleaned_data['full_budget'] = cleaned_data.get('budget', None)
                     cleaned_data['budget'] = None
 

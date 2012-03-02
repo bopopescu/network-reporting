@@ -8,6 +8,7 @@ import sys
 import os
 import datetime
 import re
+from common.utils.timezones import Pacific_tzinfo
 
 PWD = os.path.dirname(__file__)
 
@@ -119,8 +120,6 @@ def git_tag_current_deploy():
     """
     Tags the repo with a new deploy name.
     """
-    deploy_tags = git_list_deploy_tags()
-
     # Make the tag name by finding the most recent deploy tag
     # and adding 1 to the deploy number.
     try:
@@ -132,7 +131,8 @@ def git_tag_current_deploy():
     new_deploy_tag = "deploy-" + str(new_deploy_number)
 
     # Make the message for the deploy
-    message = "Deployed by %s on %s." % (git_get_user(), datetime.datetime.utcnow())
+    deploy_datetime = datetime.datetime.now(Pacific_tzinfo()).strftime("%A, %B %d, %Y at %I:%M%p PST")
+    message = "Deployed by %s on %s." % (git_get_user(), deploy_datetime)
 
     # Tag the commit
     #command = 'tag -m \'%s\' -a %s' % (message, new_deploy_tag)
@@ -274,7 +274,7 @@ def write_changelog(deploy_tag, fixed_tickets, new_commits):
     changelog_file.close()
 
     # Make the header for the new change
-    new_changelog = ["# Deployed " + datetime.datetime.utcnow().strftime("%A, %B %d, %Y"),
+    new_changelog = ["# Deployed " + datetime.datetime.utcnow().strftime("%A, %B %d, %Y at %I:%M%p PST"),
                      "### Deployed by " + git_get_user(),
                      "### Tagged " + deploy_tag,
                      "### Bugs Fixed: " + str(fixed_tickets),

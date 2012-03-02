@@ -58,7 +58,7 @@ class AppService(RequestHandler):
             apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
         # If no app key is provided, return a list of all apps for the account
         else:
-            apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
+            apps = [a.toJSON() for a in AppQueryManager.get_apps(self.account)]
 
         # get stats for each app
         for app in apps:

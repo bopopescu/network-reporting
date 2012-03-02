@@ -139,7 +139,7 @@ class ChangeSettingsForm(BaseRegistrationForm):
         super(ChangeSettingsForm, self).__init__(*args, **kwargs)
 
     def clean_email(self):
-        email = self.cleaned_data['email']
+        email = self.cleaned_data['email'].lower()
         # Check to make sure this hasn't been registered yet
         if not(self.account.mpuser.email == email) and UserQueryManager.get_by_email(email):
             raise forms.ValidationError('This email address is already registered to another.')
@@ -160,7 +160,7 @@ class MPRegistrationForm(MPGoogleRegistrationForm):
     password2 = forms.CharField(widget=mpwidgets.MPPasswordInput,)
 
     def clean_email(self):
-        email = self.cleaned_data['email']
+        email = self.cleaned_data['email'].lower()
         # Check to make sure this hasn't been registered yet
         if UserQueryManager.get_by_email(email):
             raise forms.ValidationError('This email address has already been used to register an account.')

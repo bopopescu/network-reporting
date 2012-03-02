@@ -41,11 +41,15 @@ class User(hybrid_models.User):
 
     @classmethod
     def get_key(cls, email):
+        """
+        Deprecated
+        """
         return db.Key.from_path(cls.kind(), cls.get_key_name(email))
 
     @classmethod
     def get_by_email(cls, email):
         """Gets the most recently logged in user with a particular email address"""
+        email = email.lower()
         possible_users = cls.all().filter('email =', email).fetch(100)
         sorted_users = sorted(possible_users, key=lambda x: x.last_login, reverse=True)
         if sorted_users:

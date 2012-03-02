@@ -274,7 +274,7 @@ class AdGroupService(RequestHandler):
                     mpx_stats = stats_fetcher.get_account_stats(self.start_date,
                                                                 self.end_date)
                 except MPStatsAPIException, error:
-                    logging.error('MPStatsAPIException: ', str(error))
+                    logging.error('MPStatsAPIException: ' + str(error))
                     mpx_stats = {}
                 summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 summed_stats.impression_count = int(mpx_stats.get('impressions', 0))

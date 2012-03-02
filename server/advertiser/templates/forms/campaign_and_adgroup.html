@@ -202,17 +202,19 @@
                 </span>
                 <ul class="adunits">
                     {% for adunit in app.adunits %}
-                    <li>
-                        <label>
+                      {% if not adunit.deleted %}
+                        <li>
+                          <label>
                             <input {% if adunit.key in adgroup_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" />
                             {{ adunit.name }}
-                        </label>
-                        <span class="campaign_type_dependant network">
+                          </label>
+                          <span class="campaign_type_dependant network">
                             {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
                             <span class="pub_id muted"></span>
                             <a class="pub_id" href="javascript:void(0);" type="button">change</a>
-                        </span>
-                    </li>
+                          </span>
+                        </li>
+                      {% endif %}
                     {% endfor %}
                 </ul>
             </div>

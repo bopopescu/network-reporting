@@ -108,6 +108,12 @@ def git_list_deploy_tags():
     deploy_tags = git("tag -l deploy-*").std_out.strip().split("\n")
     return deploy_tags
 
+def git_get_most_recent_deploy_tag():
+    deploy_tags = git_list_deploy_tags()
+    n = max([int(tag.replace('deploy-', '')) for tag in deploy_tags if tag.find('deploy-') >= 0])
+    return 'deploy-' + str(n)
+
+
 #@prompt_before_executing
 def git_tag_current_deploy():
     """
@@ -118,7 +124,7 @@ def git_tag_current_deploy():
     # Make the tag name by finding the most recent deploy tag
     # and adding 1 to the deploy number.
     try:
-        deploy_number = max([int(tag.replace('deploy-', '')) for tag in deploy_tags if tag.find('deploy-') >= 0])
+        deploy_number = int(git_get_most_recent_deploy_tag().replace('deploy-',''))
         new_deploy_number = deploy_number + 1
     except IndexError, ValueError:
         new_deploy_number = 0
@@ -215,7 +221,7 @@ def git_list_resolved_tickets():
     # Get all of the commit log text between the last deploy (tagged deploy-<n>)
     # and the current commit. This is logs all of the commits being deployed.
     most_recent_id = git_most_recent_commit_id()
-    most_recent_deploy_tag = git_list_deploy_tags()[-1]
+    most_recent_deploy_tag = git_get_most_recent_deploy_tag()
     log = git("log " + most_recent_deploy_tag + "..." + most_recent_id).std_out.strip().split("\n")
 
     # Find all of the commits that were tagged with fixes

@@ -3225,3 +3225,14 @@ ul#content_filter_levels {
   list-style-type: none;
   margin-left: 5px;
   padding-left: 1px; }
+
+.status-table {
+  width: 300px;
+  font-size: 120%; }
+  .status-table td {
+    padding: 2px; }
+  .status-table .network-name {
+    font-size: 150%;
+    vertical-align: bottom; }
+  .status-table .status-field {
+    padding-left: 70px; }

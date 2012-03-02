@@ -7,6 +7,7 @@ from account.query_managers import AccountQueryManager
 
 from ad_network_reports.forms import LoginCredentialsForm
 from ad_network_reports.models import AdNetworkAppMapper, \
+        AdNetworkStats, \
         LoginStates, \
         MANAGEMENT_STAT_NAMES
 from ad_network_reports.query_managers import ADMOB, \
@@ -42,7 +43,8 @@ from django.shortcuts import redirect
 from google.appengine.ext import db
 
 # Imports for getting mongo stats
-from advertiser.query_managers import AdGroupQueryManager
+from advertiser.query_managers import AdGroupQueryManager, \
+        CampaignQueryManager
 from advertiser.models import NetworkStates
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
@@ -50,6 +52,8 @@ from reporting.query_managers import StatsModelQueryManager
 # Form imports
 from advertiser.forms import CampaignForm, AdGroupForm
 from publisher.query_managers import AdUnitQueryManager
+
+import copy
 
 OTHER_NETWORKS = {'millennial': 'Millennial',
                   'ejam': 'eJam',
@@ -69,16 +73,18 @@ class NetworksHandler(RequestHandler):
         """
         days = gen_days_for_range(self.start_date, self.date_range)
 
-        networks_to_setup = DEFAULT_NETWORKS
+        networks_to_setup = copy.copy(DEFAULT_NETWORKS)
         additional_networks = set(OTHER_NETWORKS.keys())
         networks = []
         reporting_networks = []
         reporting = False
 
+        logging.info(DEFAULT_NETWORKS)
+
         # Iterate through all networks that allow reporting
         stats_manager = StatsModelQueryManager(account=self.account)
         for network in DEFAULT_NETWORKS.union(set(OTHER_NETWORKS.keys())):
-            adgroup = AdGroupQueryManager.get_network_adgroup(self.account.key(), network)
+            campaign = CampaignQueryManager.get_network_campaign(self.account.key(), network)
 
             login = False
             network_data = {}
@@ -90,20 +96,26 @@ class NetworksHandler(RequestHandler):
                     reporting_networks.append(network)
                     network_data['reporting'] = True
 
-            if adgroup or login:
+            if campaign or login:
+                logging.info(campaign)
+                if campaign:
+                    logging.info(str(campaign.key()))
+
                 all_stats = stats_manager.get_stats_for_days(publisher=None,
-                                                             advertiser=adgroup,
+                                                             advertiser=campaign,
                                                              days=days)
                 stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
 
                 network_data['name'] = network
                 network_data['pretty_name'] = REPORTING_NETWORKS.get(network,
                         False) or OTHER_NETWORKS[network]
+                network_data['mopub_stats'] = stats
 
-                networks_to_setup -= set(network)
-                additional_networks -= set(network)
+                networks_to_setup -= set([network])
+                additional_networks -= set([network])
 
                 networks.append(network_data)
+
 
         networks_to_setup_ = []
         # Generate list of main networks that can be setup
@@ -126,11 +138,16 @@ class NetworksHandler(RequestHandler):
             additional_networks_.append(network_data)
 
         # Sort networks alphabetically
-        networks = sorted(networks, key=lambda network_data: network_data['name'])
+        networks = sorted(networks, key=lambda network_data:
+                network_data['name'])
 
-        logging.info(networks)
-        logging.info(networks_to_setup_)
-        logging.info(additional_networks_)
+        # TODO: remove
+        network_adgroups = []
+        for campaign in CampaignQueryManager.get_network_campaigns(account=
+                self.account):
+            for adgroup in campaign.adgroups:
+                network_adgroups.append(adgroup)
+
 
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper
@@ -339,6 +356,16 @@ class NetworkDetailsHandler(RequestHandler):
         if not network_data['pretty_name']:
             raise Http404
 
+        network_data['reporting'] = False
+
+        stats_by_day = {}
+        for day in days:
+            stats_by_day[day] = StatsModel()
+
+        reporting_stats_by_day = {}
+        for day in days:
+            reporting_stats_by_day[day] = AdNetworkStats()
+
         stats_manager = StatsModelQueryManager(account=self.account)
         # Iterate through all the apps and populate the stats for network_data
         for app in AppQueryManager.get_apps(self.account):
@@ -355,48 +382,111 @@ class NetworkDetailsHandler(RequestHandler):
                         network_data['mopub_app_stats'][app.key()] = app
                     network_data['mopub_app_stats'][app.key()].pub_id = pub_id
 
+                    # Get reporting graph stats
+                    reporting_stats = AdNetworkStatsManager. \
+                            get_stats_list_for_mapper_and_days(mapper.key(),
+                                    days)
+                    for stats in reporting_stats:
+                        if stats.date in reporting_stats_by_day:
+                            reporting_stats_by_day[stats.date] += stats
+
+                    network_data['reporting'] = True
+
             # Get data collected by MoPub
             adunits = []
-            for adgroup in AdGroupQueryManager.get_adgroups(app=app):
-                if adgroup.network_state == \
-                        NetworkStates.NETWORK_ADUNIT_ADGROUP:
+            for adunit in AdUnitQueryManager.get_adunits(account=self.account,
+                    app=app):
+                # One adunit per adgroup for network adunits
+                adgroup = AdGroupQueryManager.get_network_adunit_adgroup(
+                        adunit.key(),
+                        self.account.key(), network)
 
-                    all_stats = stats_manager.get_stats_for_days(publisher=app,
-                                                                 advertiser=adgroup,
-                                                                 days=days)
+                all_stats = stats_manager.get_stats_for_days(publisher=app,
+                                                             advertiser=adgroup,
+                                                             days=days)
+                for stats in all_stats:
+                    if stats.date.date() in stats_by_day:
+                        stats_by_day[stats.date.date()] += stats
 
-                    stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
+                stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
 
-                    # One adunit per adgroup for network adunits
-                    adunit = db.get(adgroup.site_keys[0])
-                    adunit.stats = stats
-                    if 'mopub_app_stats' not in network_data:
-                        network_data['mopub_app_stats'] = {}
-                    if app.key() not in network_data['mopub_app_stats']:
-                        network_data['mopub_app_stats'][app.key()] = {}
-                    if not hasattr(network_data['mopub_app_stats'][app.key()],
-                            'adunits'):
-                        network_data['mopub_app_stats'][app.key()].adunits = []
+                adunit.stats = stats
+                if 'mopub_app_stats' not in network_data:
+                    network_data['mopub_app_stats'] = {}
+                if app.key() not in network_data['mopub_app_stats']:
+                    network_data['mopub_app_stats'][app.key()] = app
+                if not hasattr(network_data['mopub_app_stats'][app.key()],
+                        'adunits'):
+                    network_data['mopub_app_stats'][app.key()].adunits = []
 
-                    network_data['mopub_app_stats'][app.key()].adunits.append(
-                            adunit)
+                network_data['mopub_app_stats'][app.key()].adunits.append(
+                        adunit)
 
-                    if hasattr(network_data['mopub_app_stats'][app.key()],
-                            'stats'):
-                        network_data['mopub_app_stats'][app.key()].stats += \
-                                stats
-                    else:
-                        network_data['mopub_app_stats'][app.key()].stats = \
-                                stats
+                if hasattr(network_data['mopub_app_stats'][app.key()],
+                        'stats'):
+                    network_data['mopub_app_stats'][app.key()].stats += \
+                            stats
+                else:
+                    network_data['mopub_app_stats'][app.key()].stats = \
+                            stats
 
-                    if 'mopub_stats' in network_data:
-                        network_data['mopub_stats'] += stats
-                    else:
-                        network_data['mopub_stats'] = stats
+                if 'mopub_stats' in network_data:
+                    network_data['mopub_stats'] += stats
+                else:
+                    network_data['mopub_stats'] = stats
 
         if 'mopub_app_stats' in network_data:
-            network_data['mopub_app_stats'] = sorted(network_data['mopub_app_stats'].values(), key=lambda
+            network_data['mopub_app_stats'] = sorted(network_data[
+                'mopub_app_stats'].values(), key=lambda
                     app_data: app_data.identifier)
+            for app in network_data['mopub_app_stats']:
+                app.adunits = sorted(app.adunits, key=lambda adunit:
+                        adunit.name)
+
+
+        # Format graph stats
+        from django.utils import simplejson
+
+        graph_stats = []
+        # Format mopub collected graph stats
+        mopub_graph_stats = reduce(lambda x, y: x+y, stats_by_day.values(),
+                StatsModel())
+
+        daily_stats = sorted(stats_by_day.values(), key=lambda
+                stats: stats.date)
+        daily_stats = [s.to_dict() for s in daily_stats]
+
+
+        mopub_graph_stats = mopub_graph_stats.to_dict()
+        mopub_graph_stats['daily_stats'] = daily_stats
+        mopub_graph_stats['name'] = "From MoPub"
+
+        graph_stats.append(mopub_graph_stats)
+
+        # Format network collected graph stats
+        if network_data['reporting']:
+            reporting_graph_stats = reduce(lambda x, y: x+y,
+                    reporting_stats_by_day.values(), AdNetworkStats())
+
+            daily_stats = sorted(reporting_stats_by_day.values(), key=lambda
+                    stats: stats.date)
+            daily_stats = [StatsModel(request_count=stats.attempts,
+                impression_count=stats.impressions,
+                click_count=stats.clicks).to_dict()
+                for stats in daily_stats]
+
+
+
+            reporting_graph_stats = StatsModel(request_count= \
+                    reporting_graph_stats.attempts,
+                    impression_count=reporting_graph_stats.impressions,
+                    click_count=reporting_graph_stats.clicks).to_dict()
+            reporting_graph_stats['daily_stats'] = daily_stats
+            reporting_graph_stats['name'] = "From Networks"
+
+            graph_stats.append(reporting_graph_stats)
+
+        graph_stats = simplejson.dumps(graph_stats)
 
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper
@@ -408,6 +498,7 @@ class NetworkDetailsHandler(RequestHandler):
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
                   'show_graph' : True,
+                  'graph_stats' : graph_stats,
                   'network': network_data,
                   'ADMOB': ADMOB,
                   'IAD': IAD,

@@ -44,6 +44,14 @@ class CampaignQueryManager(QueryManager):
         return campaigns
 
     @classmethod
+    def get_network_campaign(cls, account, network_type):
+        network = cls.Model.all().filter('campaign_type =', 'network') \
+                      .filter('deleted =',False) \
+                      .filter('account =',account) \
+                      .filter('network_type =', network_type).get()
+        return network
+
+    @classmethod
     def get_network_campaigns(cls, account):
         networks = cls.Model.all().filter('campaign_type =', 'network')\
                       .filter('deleted =',False)\
@@ -249,7 +257,7 @@ class AdGroupQueryManager(QueryManager):
 
         return adgroups.fetch(limit)
 
-# TODO: Make all of this DRY
+    # TODO: Make all of this DRY
     @classmethod
     def get_network_adgroup(cls, account_key, network_type):
         """

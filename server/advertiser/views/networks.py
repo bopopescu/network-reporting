@@ -21,7 +21,8 @@ class NetworkIndexHandler(RequestHandler):
         yesterday_index = (yesterday - self.start_date).days if yesterday >= self.start_date and yesterday <= end_date else None
 
         network_adgroups = []
-        for campaign in CampaignQueryManager.get_network_campaigns(account=self.account):
+        for campaign in CampaignQueryManager.get_network_campaigns(account=
+                self.account):
             for adgroup in campaign.adgroups:
                 network_adgroups.append(adgroup)
         # sort alphabetically
@@ -43,3 +44,4 @@ class NetworkIndexHandler(RequestHandler):
 @login_required
 def network_index(request, *args, **kwargs):
     return NetworkIndexHandler()(request, use_cache=False, *args, **kwargs)
+

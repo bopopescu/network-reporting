@@ -73,11 +73,11 @@
             <thead>
               <th class="networkData-icon" style="width:75px"></th>
               <th class="dataTable-name"> Name </th>
-              <th class="dataTable-name"> eCPM </th>
-              <th class="dataTable-name"> Revenue </th>
-              <th class="dataTable-name"> Attempts </th>
-              <th class="dataTable-name"> Impressions </th>
-              <th class="dataTable-name"> Clicks </th>
+              <th class="dataTable-data numeric"> eCPM </th>
+              <th class="dataTable-data numeric"> Revenue </th>
+              <th class="dataTable-data numeric"> Attempts </th>
+              <th class="dataTable-data numeric"> Impressions </th>
+              <th class="dataTable-data numeric"> Clicks </th>
             </thead>
           </table>
         </div>
@@ -120,7 +120,9 @@
                   {% endif %}
                   <td class="dataTable-data numeric">
                     {% if network.reporting %}
-                      <div class="impressions network-data">--</div>
+                      <div class="network-data">
+                        <span class="impressions">--</span> (<span class="fill-rate">--</span>)
+                      </div>
                     {% endif %}
                     <div class="mopub-impressions mopub-data">
                       {{network.mopub_stats.impression_count|withsep}} ({{network.mopub_stats.fill_rate|percentage}})
@@ -128,7 +130,9 @@
                   </td>
                   <td class="dataTable-data numeric">
                     {% if network.reporting %}
-                      <div class="clicks network-data">--</div>
+                      <div class="network-data">
+                        <div class="clicks network-data">--</div>
+                      </div>
                     {% endif %}
                     <div class="mopub-clicks mopub-data">
                       {{network.mopub_stats.click_count|withsep}} ({{network.mopub_stats.ctr|percentage}})
@@ -192,9 +196,10 @@
 
         AdNetworkReportsController.initializeAdReportsIndex({
         networks_data: [{% for network in reporting_networks %} {
-           network: '{{ network.name }}',
+           network: '{{ network }}',
            models: []},
         {% endfor %}],
+        only_networks: true,
         apps_data: [],
         ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
 
@@ -237,3 +242,4 @@
     });
   </script>
 {% endblock extraScripts %}
+

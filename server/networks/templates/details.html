@@ -13,20 +13,71 @@
   </span>
 {% endblock titleBarRight %}
 
+{% block graph %}
+  <section class="offset nomargin" id="dashboard-stats">
+    <h3 class="stats-chart-title">
+      Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+    </h3>
+    {# Controls and stats breakdown for the top realtime stats #}
+    <div class="stats">
+      {% comment %}
+        {% stats_breakdown stats %}
+      {% endcomment %}
+      <div class="stats">
+        <div id="stats-breakdown" class="stats-breakdown">
+          <table>
+            <tbody>
+              <tr class="active" id="stats-breakdown-impression_count">
+                <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+              </tr>
+              <tr id="stats-breakdown-click_count">
+                <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+              </tr>
+              <tr id="stats-breakdown-ctr">
+                <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stats-breakdown-buttons">
+          <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+            <label for="stats-breakdown-dateOptions-option-0">Today</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+            <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+            <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+            <label for="stats-breakdown-dateOptions-option-2">All</label>
+          </span>
+        </div>
+        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+      </div>
+    </div>
+  </section>
+{% endblock graph %}
+
 {% block innerContent %}
   <section id="network-status">
-    <table width="200px">
+    <table class="status-table">
       <tr>
         <td>
-          <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
+          <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="150" height="50" />
         </td>
-        <td>
+        <td class="network-name">
           {{network.pretty_name}}
         </td>
       </tr>
 
       <tr>
-        <td>
+        <td class="status-field">
           Status:
         </td>
         <td>
@@ -39,7 +90,7 @@
       </tr>
 
       <tr>
-        <td>
+        <td class="status-field">
          Targeting:
         </td>
         <td>
@@ -50,7 +101,7 @@
   </section>
 
   <section id="network-choices">
-    {% if network.name in REPORTING_NETWORKS %}
+    {% if network.reporting %}
       <span class="buttonset">
         <input id="show-both" type="radio" name="show-data" value="both" checked="true"/>
         <label for="show-both" title="Show network stats in green alongside MoPub stats in black.">Show Both</label>
@@ -68,8 +119,8 @@
       <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
         <thead>
           <tr>
-            <th class="dataTable-data numeric"> CPM </th>
-            {% if network.name in REPORTING_NETWORKS %}
+            <th class="dataTable-data numeric"> eCPM </th>
+            {% if network.reporting %}
               <th class="dataTable-data numeric"> Revenue </th>
             {% endif %}
             <th class="dataTable-data numeric"> Attempts </th>
@@ -80,44 +131,40 @@
         <tbody>
           <tr id="{{network.name}}-row">
             <td class="dataTable-data numeric">
-              {% if network.name in REPORTING_NETWORKS %}
+              {% if network.reporting %}
                 <div class="cpm network-data">--</div>
               {% endif %}
               <div class="mopub-cpm mopub-data">{{network.mopub_stats.get_cpm|currency}}</div>
             </td>
-            {% if network.name in REPORTING_NETWORKS %}
+            {% if network.reporting %}
               <td class="dataTable-data numeric">
                 <div class="revenue network-data">--</div>
               </td>
             {% endif %}
-            {% if network.name != MOBFOX %}
-              <td class="dataTable-data numeric">
-                {% if network.name in REPORTING_NETWORKS %}
-                  <div class="attempts network-data">--</div>
-                {% endif %}
-                <div class="mopub-attempts mopub-data">{{network.mopub_stats.request_count|withsep}}</div>
-              </td>
-            {% else %}
-              <td class="dataTable-data numeric"></td>
-            {% endif %}
             <td class="dataTable-data numeric">
-              {% if network.name in REPORTING_NETWORKS %}
+              {% if network.reporting and network.name != MOBFOX %}
+                <div class="attempts network-data">--</div>
+              {% endif %}
+              <div class="mopub-attempts mopub-data">{{network.mopub_stats.request_count|withsep}}</div>
+            </td>
+            <td class="dataTable-data numeric">
+              {% if network.reporting %}
                 <div class="network-data">
-                  <span class="impressions">--</span> (<span class="fill-rate">--</span>)
+                  <span class="impressions">--</span> {% if network.name != MOBFOX %}(<span class="fill-rate">--</span>) {% endif %}
                 </div>
               {% endif %}
-              <div class="mopub-data">
-                <span class="mopub-impressions">{{network.mopub_stats.impression_count|withsep}}</span> (<span class="mopub-fill-rate">{{network.mopub_stats.fill_rate|percentage}}</span>)
+              <div class="mopub-impressions mopub-data">
+                {{network.mopub_stats.impression_count|withsep}} ({{network.mopub_stats.fill_rate|percentage}})
               </div>
             </td>
             <td class="dataTable-data numeric">
-              {% if network.name in REPORTING_NETWORKS %}
+              {% if network.reporting %}
                 <div class="network-data">
                   <span class="clicks">--</span> (<span class="ctr">--</span>)
                 </div>
               {% endif %}
-              <div class="mopub-data">
-                <span class="mopub-ctr">{{network.mopub_stats.click_count|withsep}}</span> (<span class="mopub-clicks">{{network.mopub_stats.ctr|percentage}}</span>)
+              <div class="mopub-clicks mopub-data">
+                {{network.mopub_stats.click_count|withsep}} ({{network.mopub_stats.ctr|percentage}})
               </div>
             </td>
           </tr>
@@ -135,7 +182,7 @@
           <th class="networkData-icon" style="width:75px"></th>
           <th class="dataTable-name"></th>
           <th class="dataTable-data numeric"> CPM </th>
-          {% if network.name in REPORTING_NETWORKS %}
+          {% if network.reporting %}
             <th class="dataTable-data numeric"> Revenue </th>
           {% endif %}
           <th class="dataTable-data numeric"> Attempts </th>
@@ -164,29 +211,31 @@
                       <div class="cpm network-data"></div>
                       <div class="mopub-cpm mopub-data">{{app.stats.get_cpm|currency}}</div>
                     </td>
-                    {% if network.name in REPORTING_NETWORKS %}
+                    {% if network.reporting %}
                       <td class="dataTable-data numeric">
                         <div class="revenue network-data"></div>
                       </td>
                     {% endif %}
                     <td class="dataTable-data numeric">
-                      <div class="attempts network-data"></div>
+                      {% if network.name != MOBFOX %}
+                        <div class="attempts network-data"></div>
+                      {% endif %}
                       <div class="mopub-attempts mopub-data">{{app.stats.request_count|withsep}}</div>
                     </td>
                     <td class="dataTable-data numeric">
                       <div class="network-data">
-                        <span class="impressions"></span> (<span class="fill-rate"></span>)
+                        <span class="impressions"></span> {% if network.reporting and network.name != MOBFOX %}(<span class="fill-rate"></span>){% endif %}
                       </div>
-                      <div class="mopub-data">
-                        <span class="mopub-impressions">{{app.stats.impression_count|withsep}}</span> (<span class="mopub-fill-rate">{{app.stats.fill_rate|percentage}}</span>)
+                      <div class="mopub-impressions mopub-data">
+                        {{app.stats.impression_count|withsep}} ({{app.stats.fill_rate|percentage}})
                       </div>
                     </td>
                     <td class="dataTable-data numeric">
                       <div class="network-data">
-                        <span class="clicks"></span> (<span class="ctr"></span>)
+                        <span class="clicks"></span> {% if network.reporting %}(<span class="ctr"></span>){% endif %}
                       </div>
-                      <div class="mopub-data">
-                        <span class="mopub-clicks">{{app.stats.click_count|withsep}}</span> (<span class="mopub-ctr">{{app.stats.ctr|percentage}}</span>)
+                      <div class="mopub-clicks mopub-data">
+                        {{app.stats.click_count|withsep}} ({{app.stats.ctr|percentage}})
                       </div>
                     </td>
                   </tr>
@@ -197,7 +246,9 @@
                       <td class="dataTable-data numeric">
                         {{adunit.stats.get_cpm|currency}}
                       </td>
-                      <td></td>
+                      {% if network.reporting %}
+                        <td></td>
+                      {% endif %}
                       <td class="dataTable-data numeric">
                         {{adunit.stats.request_count|withsep}}
                       </td>
@@ -227,8 +278,10 @@
   </script>
   <script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
   <script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
-  <script type="text/javascript" src="/js/controllers/networks.js?v=0"></script>
   <script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=0"></script>
+
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
   <script>
     $(function () {
         account_key = '{{ account_key }}';
@@ -247,6 +300,24 @@
         apps_data: [],
         ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
 
+        graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
+
+        today = {% if today != None %}{{ today }}{% else %}null{% endif %};
+
+        yesterday = {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %};
+
+        console.log({{graph_stats|safe}});
+        // TODO: remove hack
+        var adgroups = new AdGroups({{graph_stats|safe}});
+
+        var graph_view = new CollectionGraphView({
+            collection: adgroups,
+            start_date: graph_start_date,
+            today: today,
+            yesterday: yesterday
+        });
+        graph_view.render();
+
         $('#show-both').click(function() {
             $('.mopub-data').show();
             $('.network-data').show();
@@ -264,3 +335,4 @@
     });
   </script>
 {% endblock extraScripts %}
+

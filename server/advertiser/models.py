@@ -85,6 +85,26 @@ class Campaign(db.Model):
 
     blind = db.BooleanProperty(default=False)
 
+    # If the campaign is a network level campaign then this is set to the network
+    # otherwise it's not defined
+    network_type = db.StringProperty(choices=["dummy",  # ?
+                                              "adsense",
+                                              "iAd",
+                                              "admob",  # deprecated, but may still be used by some accounts
+                                              "millennial",  # deprecated, but may still be used by some accounts
+                                              "ejam",
+                                              "chartboost",  # deprecated
+                                              "appnexus",  # deprecated
+                                              "inmobi",
+                                              "mobfox",
+                                              "jumptap",
+                                              "brightroll",
+                                              "greystripe",  # deprecated, but may still be used by some accounts
+                                              "custom",
+                                              "custom_native",
+                                              "admob_native",
+                                              "millennial_native"])
+
     def __repr__(self):
         return "Camp(start:(%s,%s) end:(%s,%s) active:%s daily:%s total:%s spread:%s type:%s)" % (self.start_date, self.start_datetime, self.end_date, self.end_datetime, self.active, self.budget, self.full_budget, self.budget_strategy, self.budget_type)
 

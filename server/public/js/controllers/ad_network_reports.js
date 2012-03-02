@@ -54,17 +54,17 @@ $(function() {
             account_roll_up.fetch({ data: ajax_query_string });
 
             // Load graph data
-            var daily_stats = new DailyStatsCollection();
-            var daily_stats_view = new DailyStatsView({
-                collection: daily_stats
-            });
-            daily_stats.fetch({ data: ajax_query_string });
+//            var daily_stats = new DailyStatsCollection();
+//            var daily_stats_view = new DailyStatsView({
+//                collection: daily_stats
+//            });
+//            daily_stats.fetch({ data: ajax_query_string });
 
             // Load rolled up network stats
             var i;
             for (i=0; i < networks_data.length; i++) {
                 var network_data = networks_data[i];
-                if(network_data['models'].length > 0) {
+                if(network_data['models'].length > 0 || bootstrapping_data.only_networks) {
                     var roll_up = new RollUp({
                         id: network_data['network'],
                         type: 'network'

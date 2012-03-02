@@ -246,6 +246,7 @@ class StatsModelQueryManager(CachedQueryManager):
                                                              date_fmt=date_fmt),
                                       parent=parent)
                         for d in days]
+        logging.info(keys)
 
 
         #### BEGIN USE MONGOSTATS API ####

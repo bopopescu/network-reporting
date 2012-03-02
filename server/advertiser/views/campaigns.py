@@ -232,7 +232,8 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
             app.network_config_form = AppNetworkConfigForm(instance=app.network_config, prefix="app_%s" % app.key())
             app.adunits = []
             for adunit in app.all_adunits:
-                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config, prefix="adunit_%s" % adunit.key())
+                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config,
+                                                                     prefix="adunit_%s" % adunit.key())
                 app.adunits.append(adunit)
 
         return render_to_response(self.request,
@@ -396,16 +397,19 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
     def get(self, adgroup_key):
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
-        campaign_form = CampaignForm(instance=adgroup.campaign)
+        campaign_form = CampaignForm(instance=adgroup.campaign, initial={'bid': adgroup.bid,
+                                                                         'bid_strategy':adgroup.bid_strategy})
         adgroup_form = AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         for app in apps:
-            app.network_config_form = AppNetworkConfigForm(instance=app.network_config, prefix="app_%s" % app.key())
+            app.network_config_form = AppNetworkConfigForm(instance=app.network_config,
+                                                           prefix="app_%s" % app.key())
             app.adunits = []
             for adunit in app.all_adunits:
-                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config, prefix="adunit_%s" % adunit.key())
+                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config,
+                                                                     prefix="adunit_%s" % adunit.key())
                 app.adunits.append(adunit)
 
         return render_to_response(self.request,
@@ -427,7 +431,9 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
         apps = AppQueryManager.get_apps(account=self.account)
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
-        campaign_form = CampaignForm(self.request.POST, instance=adgroup.campaign)
+        campaign_form = CampaignForm(self.request.POST, instance=adgroup.campaign, initial={'bid': adgroup.bid,
+                                                                                            'bid_strategy': adgroup.bid_strategy})
+
         if campaign_form.is_valid():
             campaign = campaign_form.save()
 

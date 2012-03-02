@@ -21,12 +21,8 @@ from widgets import CustomizableSplitDateTimeWidget
 
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
-from budget.query_managers import BudgetQueryManager
-from common.utils.tzinfo import Pacific, utc
+
 import logging
-import re
-import urlparse
-import cgi
 
 
 def get_filetype_extension(filename):
@@ -80,6 +76,8 @@ class CampaignForm(forms.ModelForm):
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily', required=False)
+    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
+                                     label='Rate:', initial='cpc')
     budget_strategy = forms.ChoiceField(choices=(('evenly', 'Spread Evenly'),
                                                  ('allatonce', 'All at once')),
                                         label='Delivery Speed:',
@@ -102,6 +100,13 @@ class CampaignForm(forms.ModelForm):
                     initial['gtee_priority'] = 'high'
                 elif 'low' in instance.campaign_type:
                     initial['gtee_priority'] = 'low'
+                if initial['bid_strategy'] == 'cpm':
+                    if instance.budget_type == 'daily':
+                        budget = instance.budget
+                    else:
+                        budget = instance.full_budget
+                    initial['budget'] = int(1000.0 * budget / initial['bid'])
+
                 initial['campaign_type'] = 'gtee'
             elif instance.campaign_type == 'backfill_promo':
                 initial['campaign_type'] = 'promo'
@@ -122,6 +127,13 @@ class CampaignForm(forms.ModelForm):
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
+
+    def _calculate_budget(self, budget):
+        if self.data.get('bid_strategy', 'cpm') == 'cpm':
+            return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
+        else:
+            return budget
+
 
     def clean_start_datetime(self):
         start_datetime = self.cleaned_data.get('start_datetime', None)
@@ -165,17 +177,22 @@ class CampaignForm(forms.ModelForm):
                     self._errors['gtee_priority'].append('This field is required')
                 elif cleaned_data['gtee_priority'] in ('low', 'high'):
                     cleaned_data['campaign_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
-                # budget
+
+                # BEWARE HACKS
+                # if the campaign is a cpm campaign, we need to calculate what the budget
+                # will be, since budgets are stored in dollar amounts.
                 cleaned_data['budget_type'] = cleaned_data.get('budget_type', None) or 'daily'
                 cleaned_data['budget_strategy'] = cleaned_data.get('budget_strategy', None) or 'allatonce'
+
                 if cleaned_data['budget_type'] == 'daily':
+                    cleaned_data['budget'] = self._calculate_budget(cleaned_data['budget'])
                     cleaned_data['full_budget'] = None
                 else:
                     if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
                         if 'budget_strategy' not in self._errors:
                             self._errors['budget_strategy'] = ErrorList()
                         self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
-                    cleaned_data['full_budget'] = cleaned_data.get('budget', None)
+                    cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
                     cleaned_data['budget'] = None
 
             # promo
@@ -656,3 +673,5 @@ LEVELS = (
 
 class ContentFilterForm(forms.Form):
     level = forms.ChoiceField(choices=LEVELS, widget=forms.RadioSelect)
+
+

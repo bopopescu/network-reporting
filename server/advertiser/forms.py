@@ -21,12 +21,8 @@ from widgets import CustomizableSplitDateTimeWidget
 
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
-from budget.query_managers import BudgetQueryManager
-from common.utils.tzinfo import Pacific, utc
+
 import logging
-import re
-import urlparse
-import cgi
 
 
 def get_filetype_extension(filename):
@@ -134,9 +130,6 @@ class CampaignForm(forms.ModelForm):
 
     def _calculate_budget(self, budget):
         if self.data.get('bid_strategy', 'cpm') == 'cpm':
-            logging.warn('\n\n')
-            logging.warn(budget)
-            logging.warn(self.data.get('bid'))
             return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
         else:
             return budget

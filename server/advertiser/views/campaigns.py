@@ -431,7 +431,9 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
         apps = AppQueryManager.get_apps(account=self.account)
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
-        campaign_form = CampaignForm(self.request.POST, instance=adgroup.campaign)
+        campaign_form = CampaignForm(self.request.POST, instance=adgroup.campaign, initial={'bid': adgroup.bid,
+                                                                                            'bid_strategy': adgroup.bid_strategy})
+
         if campaign_form.is_valid():
             campaign = campaign_form.save()
 

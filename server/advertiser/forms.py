@@ -105,9 +105,9 @@ class CampaignForm(forms.ModelForm):
 
                 if initial['bid_strategy'] == 'cpm':
                     if instance.budget_type == 'daily':
-                        budget = instance.budget
+                        budget = instance.budget or 0.0
                     else:
-                        budget = instance.full_budget
+                        budget = instance.full_budget or 0.0
                     initial['budget'] = int(1000.0 * budget / initial['bid'])
                 elif instance.budget_type == 'full_campaign':
                     initial['budget'] = instance.full_budget

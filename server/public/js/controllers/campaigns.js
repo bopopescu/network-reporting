@@ -188,7 +188,7 @@
             else {
                 $('input#id_budget_strategy_0').removeAttr('disabled');
             }
-        });
+        }).change();
 
 
         $('#all-adunits').change(function() {

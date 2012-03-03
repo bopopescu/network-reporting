@@ -32,6 +32,8 @@ from common.utils.helpers import to_uni, to_ascii
 
 import random
 
+from ad_server.networks.get_serverside import get_serverside_for_creative
+
 class Battle(object):
     """ Determines the best creative available within a subset of adgroups.
         Essentially a sub-auction on some subset of adgroups. """
@@ -454,6 +456,7 @@ class NetworkBattle(Battle):
                        udid=self.client_context.raw_udid,
                        country_code=self.client_context.country_code)
 
+        creative.ServerSide = get_serverside_for_creative(creative)
         # If the network is a native network, then it does not require an rpc
         if not creative.ServerSide:
             return super(NetworkBattle, self)._process_winner(creative)

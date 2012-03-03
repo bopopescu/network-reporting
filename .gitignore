@@ -17,7 +17,8 @@ server/reporting/aws_logging/*.txt
 server/common/wurfl/*.xml
 server/scripts/*.pkl
 counts.csv
-
+*.sublime-project
+*.sublime-workspace
 server/public/css/.sass-cache/
 .sass-cache
 server/common/wurfl/*.xml

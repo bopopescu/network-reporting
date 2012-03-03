@@ -113,7 +113,8 @@ var mopub = mopub || {};
                 return null;
             }
             var day_stats = daily_stats[day];
-            if (!stat in day_stats) {
+
+            if (!day_stats.hasOwnProperty(stat)) {
                 return null;
             }
             return day_stats[stat];
@@ -168,7 +169,7 @@ var mopub = mopub || {};
                 if (memo === null ||
                     !adgroup.has('daily_stats') ||
                     day >= adgroup.get('daily_stats').length ||
-                    !(stat in adgroup.get('daily_stats')[day])) {
+                    !(adgroup.get('daily_stats')[day]).hasOwnProperty(stat)) {
                     return null;
                 }
 

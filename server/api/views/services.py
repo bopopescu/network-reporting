@@ -16,16 +16,15 @@ from common.ragendja.template import JSONResponse
 from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      SummedStatsFetcher, \
      DirectSoldStatsFetcher, \
-     AdNetworkStatsFetcher
+     AdNetworkStatsFetcher, \
+     MPStatsAPIException
 
-from common.utils.timezones import Pacific_tzinfo
 from common_templates.templatetags.filters import campaign_status
 
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.http import Http404
 
-import datetime
 import logging
 
 
@@ -59,7 +58,7 @@ class AppService(RequestHandler):
             apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
         # If no app key is provided, return a list of all apps for the account
         else:
-            apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
+            apps = [a.toJSON() for a in AppQueryManager.get_apps(self.account)]
 
         # get stats for each app
         for app in apps:
@@ -275,6 +274,7 @@ class AdGroupService(RequestHandler):
                     mpx_stats = stats_fetcher.get_account_stats(self.start_date,
                                                                 self.end_date)
                 except MPStatsAPIException, error:
+                    logging.error('MPStatsAPIException: ' + str(error))
                     mpx_stats = {}
                 summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 summed_stats.impression_count = int(mpx_stats.get('impressions', 0))

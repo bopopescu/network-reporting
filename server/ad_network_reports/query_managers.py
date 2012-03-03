@@ -511,9 +511,11 @@ class AdNetworkAggregateManager(CachedQueryManager):
                      stats,
                      network=None,
                      app=None):
-        old_stats = AdNetworkScrapeStats.get_by_app_mapper_and_day(mapper, day)
+        old_stats = AdNetworkScrapeStats.get_by_app_mapper_and_day(mapper,
+                day)
         aggregate_stats = cls.find_or_create(account, day, network, app)
-        # Do AdNetworkScrapeStats already exist for the app, network and day?
+        # Do AdNetworkScrapeStats already exist for the app, network and
+        # day?
         if old_stats:
             AdNetworkStatsManager.combined_stats(aggregate_stats, old_stats,
                     subtract=True)
@@ -568,13 +570,33 @@ class AdNetworkAggregateManager(CachedQueryManager):
 
 class AdNetworkManagementStatsManager(CachedQueryManager):
     def __init__(self,
-                 day):
+                 day,
+                 assemble=False):
+        self.day = day
         self.stats_dict = {}
         for network in AD_NETWORK_NAMES.keys():
-            self.day = day
-            self.stats_dict[network] = AdNetworkManagementStats(
-                    ad_network_name=network,
-                    date=day)
+            if assemble:
+                self.stats_dict[network] = AdNetworkManagementStats. \
+                        get_by_day(network, day)
+            else:
+                self.stats_dict[network] = AdNetworkManagementStats(
+                        ad_network_name=network,
+                        date=day)
+
+    @property
+    def failed_logins(self):
+        failed_logins = []
+        for stats in self.stats_dict.itervalues():
+            failed_logins += stats.failed_logins
+        return failed_logins
+
+    def clear_failed_logins(self):
+        """
+        Clear failed logins from management stats.
+        """
+        for stats in self.stats_dict.itervalues():
+            stats.failed_logins = []
+            stats.put()
 
     def append_failed_login(self,
                             login_credentials):

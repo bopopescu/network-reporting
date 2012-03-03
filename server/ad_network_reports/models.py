@@ -151,6 +151,26 @@ class AdNetworkStats(db.Model):
     impressions = db.IntegerProperty(default=0)
     clicks = db.IntegerProperty(default=0)
 
+    def __add__(self,
+                stats):
+        """
+        stats1 = self + stats
+        """
+        for stat in STAT_NAMES:
+            # example: self.revenue += stats.revenue
+            setattr(self, stat, getattr(self, stat) + getattr(stats, stat))
+        return self
+
+    def __sub_(self,
+                stats):
+        """
+        stats1 = self - stats
+        """
+        for stat in STAT_NAMES:
+            # example: self.revenue -= stats.revenue
+            setattr(self, stat, getattr(self, stat) - getattr(stats, stat))
+        return self
+
     @property
     def cpm(self):
         if self.impressions:

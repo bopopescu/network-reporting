@@ -494,6 +494,9 @@ class ShowAppHandler(RequestHandler):
                 ag.stats.revenue = float(mpx_stats.get('revenue'))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
+            if ag.campaign.campaign_type in ['network']:
+                ag.calculated_ecpm = calculate_ecpm(ag)
+
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'],
                                  app.adgroups)
@@ -519,9 +522,8 @@ class ShowAppHandler(RequestHandler):
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, adgroups = level_camps))
 
-        marketplace_campaigns = filter(lambda x: x.campaign_type, app.adgroups)
-        marketplace_campaigns = sorted(marketplace_campaigns,
-                                       lambda x,y: cmp(x.bid, y.bid))
+        marketplace_campaigns = filter(lambda x: x.campaign_type == 'marketplace', app.adgroups)
+        marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
 
         network_campaigns = filter(lambda x: x.campaign_type in ['network'], app.adgroups)
         network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -570,8 +572,8 @@ def app_show(request,*args,**kwargs):
     return ShowAppHandler(id="app_key")(request, use_cache=False, *args,**kwargs)
 
 
-class ExportFileHandler( RequestHandler ):
-    def get( self, key, key_type, f_type ):
+class ExportFileHandler(RequestHandler):
+    def get(self, key, key_type, f_type):
         spec = self.params.get('spec')
         stat_names, stat_models = self.get_desired_stats(key, key_type,
                                                          self.days, spec=spec)
@@ -1238,11 +1240,15 @@ def create_iad_mapper(account, app):
                                           app=app)
 
 def calculate_ecpm(adgroup):
+    """
+    Calculate the ecpm for a cpc campaign.
+    REFACTOR: move this to the app/adunit models
+    """
     if adgroup.cpc:
         try:
-            return adgroup.stats.click_count * \
-                   adgroup.cpc * \
-                   1000 / adgroup.stats.impression_count
+            return float(adgroup.stats.click_count) * \
+                   float(adgroup.cpc) * \
+                   1000 / float(adgroup.stats.impression_count)
         except Exception, error:
             logging.error(error)
     return adgroup.bid

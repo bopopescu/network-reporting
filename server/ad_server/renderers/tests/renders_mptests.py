@@ -48,6 +48,7 @@ from ad_server.renderers.creative_renderer import (BaseCreativeRenderer,
                                                    UDID,
                                                    )
 from ad_server.renderers.header_context import HeaderContext
+from ad_server.renderers.get_renderer import get_renderer_for_creative
 
 ################# KEY CONSTANSTS (makes tests work) #############
 CREATIVE_KEY = 'agltb3B1Yi1pbmNyFgsSCENyZWF0aXZlIghrZXlfbmFtZQw'
@@ -196,6 +197,7 @@ class RenderingTestBase(object):
         """ For now just test the renderer. Next test headers too.
             Uses a default value for html_data. """
 
+        self.creative.Renderer = get_renderer_for_creative(self.creative)
         creative_renderer = self.creative.Renderer(creative=self.creative,
                        adunit=self.adunit,
                        udid=self.udid,

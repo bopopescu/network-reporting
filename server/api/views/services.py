@@ -282,23 +282,23 @@ class AdGroupService(RequestHandler):
                 summed_stats.cpm = adgroup.cpm
 
             adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+            if adgroup.pace:
+                summed_stats.pace = adgroup.pace[1]
+                if adgroup.pace[0] == "Pacing":
+                    if summed_stats.pace < .5:
+                        summed_stats.pace_type = "pace-failure"
+                    elif summed_stats.pace < .85:
+                        summed_stats.pace_type = "pace-warning"
+                    else:
+                        summed_stats.pace_type = "pace-success"
+                else:
+                    summed_stats.pace_type = "delivery"
+
             percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
             summed_stats.percent_delivered = percent_delivered
             adgroup.percent_delivered = percent_delivered
 
             summed_stats.status = campaign_status(adgroup)
-
-            # Determine the pacing
-            if adgroup.running and  \
-               adgroup.campaign.budget_obj and  \
-               adgroup.campaign.budget_obj.delivery_type != 'allatonce':
-
-                if budget_service.get_osi(adgroup.campaign.budget_obj):
-                    summed_stats.on_schedule = "on pace"
-                else:
-                    summed_stats.on_schedule = "behind"
-            else:
-                summed_stats.on_schedule = "none"
 
             stats_dict = summed_stats.to_dict()
 

@@ -73,6 +73,8 @@ var mopub = mopub || {};
             return mopub.Utils.formatNumberAsPercentage(value);
           case 'status':
             return value;
+          case 'pace':
+            return (value*100).toFixed() + '%';
         default:
             throw 'Unsupported stat "' + stat + '".';
         }

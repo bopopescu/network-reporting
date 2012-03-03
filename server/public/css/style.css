@@ -3056,8 +3056,8 @@ th.numeric, td.numeric {
   .appData-details.noneg {
     margin: 0; }
 
-/* Campaigns */
-.campaignData, .reportData {
+1
+.campaignData .reportData {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7; }
 
@@ -3129,10 +3129,13 @@ table.campaignData-main, table.reportData-table {
   border-radius: 10px;
   padding: 5px 40px; }
 
-.osi-success {
+.pace-success {
   color: #53a600; }
 
-.osi-failure {
+.pace-warning {
+  color: #F1C522; }
+
+.pace-failure {
   color: #ac6f6f; }
 
 .loading-img {

@@ -3061,36 +3061,52 @@ th.numeric, td.numeric {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7; }
 
-.campaignData:nth-child(even), .campaignData-alt, .reportData-alt {
+.campaignData:nth-child(even),
+.campaignData-alt,
+.reportData-alt {
   background: #fff; }
 
 .creativeData {
   padding: 10px 5px 6px 5px;
   background: #f7f7f7; }
 
-.campaignData-placeholder, .reportData-placeholder {
+.campaignData-placeholder,
+.reportData-placeholder {
   display: table-row; }
 
-.campaignData th.dataTable-name, .reportData th.dataTable-name {
+.campaignData th.dataTable-name,
+.reportData th.dataTable-name {
   width: 200px; }
 
-.campaignData-icon, .reportData-icon {
+.campaignData-icon,
+.reportData-icon {
   padding-right: 0;
   width: 55px; }
 
-.campaignData-icon input, .reportData-icon input {
+.campaignData-icon input,
+.reportData-icon input {
   margin-left: 5px; }
 
-.campaignData-icon img, .reportData-icon img {
+.campaignData-icon img,
+.reportData-icon img {
   margin: 4px 0 0 4px; }
 
-table.campaignData-main, table.reportData-table {
+table.campaignData-main,
+table.reportData-table {
   margin: 0 0 15px 0;
   width: 100%; }
 
-.campaignData-main th, .campaignData-main td, .reportData-table th, .reportData-table td {
+.campaignData-main th,
+.campaignData-main td,
+.reportData-table th,
+.reportData-table td {
   font-size: 13px;
   font-weight: normal; }
+  .campaignData-main th.status,
+  .campaignData-main td.status,
+  .reportData-table th.status,
+  .reportData-table td.status {
+    width: 120px; }
 
 .campaignData-rollup {
   /*  background: #F5F9FC;*/
@@ -3140,26 +3156,6 @@ table.campaignData-main, table.reportData-table {
 
 .loading-img {
   padding-left: 3px; }
-
-#ajaxFailure {
-  font-size: 14px;
-  padding: 8px;
-  border: 1px solid #e6d2b8;
-  background: #fff2f2;
-  position: fixed;
-  top: 1%;
-  right: 1%;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  z-index: 1000; }
-
-#ajaxDismiss img {
-  padding-right: 5px;
-  vertical-align: top; }
-
-#ajaxRetry img {
-  padding-left: 5px;
-  vertical-align: top; }
 
 /* New Campaign */
 #campaignForm-details {

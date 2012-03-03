@@ -51,13 +51,6 @@
 
 {% block content %}
 
-  {# This will pop up when campaign loading over Ajax fails, allowing the user to retry #}
-  <div id="ajaxFailure" style="display:none">
-    <a href="#" id="ajaxDismiss"><img src="../images/icons/199_16x16.png"></img></a>
-    There was a problem retrieving data for some of your campaigns.
-    <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
-  </div>
-
   {% if not apps %}
     <div class="alert-message block-message">
       Before you set up your ad campaigns, we recommend that you set up your App inventory.

@@ -40,29 +40,78 @@
   </section>
 {% endblock preContent %}
 
-{% if not networks %}
-  {% block graph %}
+{% block graph %}
+  {% if networks %}
+    <section class="offset nomargin" id="dashboard-stats">
+      <h3 class="stats-chart-title">
+        Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+      </h3>
+      {# Controls and stats breakdown for the top realtime stats #}
+      <div class="stats">
+        {% comment %}
+          {% stats_breakdown stats %}
+        {% endcomment %}
+        <div class="stats">
+          <div id="stats-breakdown" class="stats-breakdown">
+            <table>
+              <tbody>
+                <tr class="active" id="stats-breakdown-impression_count">
+                  <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                  <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                  <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                </tr>
+                <tr id="stats-breakdown-click_count">
+                  <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                  <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                  <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                </tr>
+                <tr id="stats-breakdown-ctr">
+                  <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                  <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                  <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                  <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stats-breakdown-buttons">
+            <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+              <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+              <label for="stats-breakdown-dateOptions-option-0">Today</label>
+              <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+              <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
+              <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+              <label for="stats-breakdown-dateOptions-option-2">All</label>
+            </span>
+          </div>
+          <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+        </div>
+      </div>
+    </section>
+  {% else %}
     <section id="graph">
       <div class="alert-message block-message">
         MoPub can can mediate the ad networks where you have an account. ...more help text
       </div>
     </section>
-  {% endblock graph %}
-{% endif %}
+  {% endif %}
+{% endblock graph %}
 
 {% block innerContent %}
   {% if networks %}
     <section id="dashboard-apps">
-      {% if reporting %}
-        <span class="buttonset">
-          <input id="show-both" type="radio" name="show-data" value="both" checked="true"/>
-          <label for="show-both" title="Show network stats in green alongside MoPub stats in black.">Show Both</label>
-          <input id="show-network" type="radio" name="show-data" value="network"/>
-          <label for="show-network" title="Show only network stats.">Show Network Data</label>
-          <input id="show-mopub" type="radio" name="show-data" value="mopub"/>
-          <label for="show-mopub" title="Show only MoPub stats.">Show MoPub Data</label>
-        </span>
-      {% endif %}
+    {% if reporting_networks %}
+      <span class="buttonset">
+        <input id="show-both" type="radio" name="show-data" value="both" checked="true"/>
+        <label for="show-both" title="Show network stats in green alongside MoPub stats in black.">Show Both</label>
+        <input id="show-network" type="radio" name="show-data" value="network"/>
+        <label for="show-network" title="Show only network stats.">Show Network Data</label>
+        <input id="show-mopub" type="radio" name="show-data" value="mopub"/>
+        <label for="show-mopub" title="Show only MoPub stats.">Show MoPub Data</label>
+      </span>
+    {% endif %}
 
       {% comment %}
         Make a table for ad networks that are active
@@ -190,6 +239,9 @@
   <script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
   <script type="text/javascript" src="/js/controllers/networks.js?v=0"></script>
   <script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=0"></script>
+
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
   <script>
     $(function () {
         account_key = '{{ account_key }}';
@@ -202,6 +254,25 @@
         only_networks: true,
         apps_data: [],
         ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
+
+        graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
+
+        today = {% if today != None %}{{ today }}{% else %}null{% endif %};
+
+        yesterday = {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %};
+
+        console.log({{graph_stats|safe}});
+        // TODO: remove hack
+        var adgroups = new AdGroups({{graph_stats|safe}});
+
+        var graph_view = new CollectionGraphView({
+            collection: adgroups,
+            start_date: graph_start_date,
+            today: today,
+            yesterday: yesterday
+        });
+        graph_view.render();
+
 
         $('#show-both').click(function() {
             $('.mopub-data').show();

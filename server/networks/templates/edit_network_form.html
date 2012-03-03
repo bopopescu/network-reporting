@@ -11,7 +11,7 @@
 <script type="text/javascript">
     $(function () {
         // TODO: network changes in django
-        network_type = '{{ network.name }}';
+        var network_type = '{{ network.name }}';
         priors = {{ adgroup.geo_predicates|to_json|safe }};
         city_priors = {{ adgroup.cities|to_json|safe }};
 
@@ -72,6 +72,64 @@
                     }
                 }
             });
+        });
+
+        // make necessary changes based on network type
+        var pub_ids = {
+            'admob': 'admob_pub_id',
+            'adsense': 'adsense_pub_id',
+            'brightroll': 'brightroll_pub_id',
+            'ejam': 'ejam_pub_id',
+            'inmobi': 'inmobi_pub_id',
+            'jumptap': 'jumptap_pub_id',
+            'millennial_native': 'millennial_pub_id',
+            'mobfox': 'mobfox_pub_id'
+        };
+
+        var pub_id = pub_ids[network_type];
+
+
+        $('.network_type_dependant').each(function() {
+            $(this).toggle($(this).hasClass(network_type));
+        });
+
+        // for each appropriate input, show either the input or the span and button
+        $('ul#apps > li').each(function() {
+            var span = $(this).children('div').children('span');
+            span.children().hide();
+            var input = span.children('input[name$="'+pub_id+'"]');
+            var value = input.val();
+            $(this).children('div').children('label').attr('for', input.attr('id'));
+            if(value) {
+                input.siblings('span.pub_id').html(value).show();
+                input.siblings('a.pub_id').show();
+            }
+            else {
+                input.show();
+            }
+            $(this).children('div').children('ul.adunits').children('li').children('span').each(function() {
+                var span = $(this);
+                span.children().hide();
+                var input = span.children('input[name$="'+pub_id+'"]');
+                if(input.length) {
+                    var value = input.val();
+                    if(value) {
+                        input.siblings('span.pub_id').html(value).show();
+                    }
+                    else {
+                        input.siblings('span.pub_id').html('Default').show();
+                    }
+                    input.siblings('a.pub_id').show();
+                }
+            });
+        });
+
+        $('a.pub_id').click(function() {
+            var network_type = $('select[name="network_type"]').val();
+            var pub_id = pub_ids[network_type];
+            $(this).siblings('input[name$="'+pub_id+'"]').show();
+            $(this).prev('span').hide();
+            $(this).hide();
         });
     });
 </script>

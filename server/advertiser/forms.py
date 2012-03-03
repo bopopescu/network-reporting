@@ -396,6 +396,14 @@ class AdGroupForm(forms.ModelForm):
             geo_predicates.append(GEO_LIST[len(geo_predicate) - 1] % geo_predicate)
         return geo_predicates
 
+    def clean_keywords(self):
+        keywords = self.cleaned_data.get('keywords', None)
+        logging.warning("keywords: %s" % keywords)
+        if keywords:
+            if len(keywords) > 500:
+                raise forms.ValidationError('Maximum 500 characters for keywords.')
+        return keywords
+
     def clean(self):
         cleaned_data = super(AdGroupForm, self).clean()
 

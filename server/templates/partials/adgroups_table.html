@@ -81,22 +81,23 @@
                     <td class="dataTable-data numeric">
                         <%= adgroup.get_formatted_stat('status') %><%
                             if(adgroup.get_stat('status') == "Running") {
-                                if(adgroup.get_stat('on_schedule') == "on pace") { %>
-                                    <div class="osi-success">
-                                        <a href="#" id="campaign-osi-success-helpLink" class="whatsthis">
-                                            <div class="whatsthis-icon"></div>
-                                        </a>
-                                        On pace
-                                    </div>
-                                <% }
-                                else if(adgroup.get_stat('on_schedule') == "behind") { %>
-                                    <div class="osi-failure">
-                                        <a href="#" id="campaign-osi-failure-helpLink" class="whatsthis">
-                                            <div class="whatsthis-icon"></div>
-                                        </a>
-                                        Behind
-                                    </div>
-                                <% }
+                                if (adgroup.get_stat('pace_type')) {}
+                                    if(adgroup.get_stat('pace_type') == "delivery") { %>
+                                        <div class="delivery">
+                                            <a href="#" id="campaign-delivery-helpLink" class="whatsthis">
+                                                <div class="whatsthis-icon"></div>
+                                            </a>
+                                            Delivery: <%= adgroup.get_formatted_stat('pace') %>
+                                        </div>
+                                    <% }
+                                    else if(adgroup.get_stat('pace_type')) { %>
+                                        <div class="<%= adgroup.get_stat('pace_type') %>">
+                                            <a href="#" id="campaign-pacing-helpLink" class="whatsthis">
+                                                <div class="whatsthis-icon"></div>
+                                            </a>
+                                            Pace: <%= adgroup.get_formatted_stat('pace') %>
+                                        </div>
+                                    <% }
                             }
                         %>
                     </td>

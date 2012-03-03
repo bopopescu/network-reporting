@@ -1,4 +1,4 @@
-/* Campaigns */
+1/* Campaigns */
 
 .campaignData, .reportData {
   padding: 10px 5px 6px 5px;
@@ -88,11 +88,15 @@ table.campaignData-main, table.reportData-table {
   padding:5px 40px;
 }
 
-.osi-success {
+.pace-success {
   color: #53a600;
 }
 
-.osi-failure {
+.pace-warning {
+  color: #F1C522;
+}
+
+.pace-failure {
   color: #ac6f6f;
 }
 

@@ -500,7 +500,7 @@ class BaseCreativeForm(AbstractCreativeForm):
                   'conv_appid', 'launchpage')
 
     def clean_name(self):
-        data = self.cleaned_data.get('name', None)
+        data = self.cleaned_data.get('name', None).strip()
         if not data:
             raise forms.ValidationError('You must give your creative a name.')
         return data

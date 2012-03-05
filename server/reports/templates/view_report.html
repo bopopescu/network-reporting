@@ -20,16 +20,12 @@
 {% block content %}
   <link rel='stylesheet' href='/css/dt_jui.css?v=7'>
     <input id='reportKey' type='hidden' value='{{report.key}}' />
-    <script type='text/javascript' src='/js/legacy/datatables-treesort.js?v=1'></script>
-    <script type='text/javascript' src='/js/utilities/reports-ajaxPoll.js?v=12'></script>
     <form id='reportExportForm' style='display:none;' action='{% url report_export %}' method='POST' accept-charset='utf-8'>
       <input name='report_key' type='text' value='{{report.key}}' />
       <input name='account_key' type='text' value='{{report.account.key}}' />
       <input id='report-exportFtype' name='f_type' type='text' value='' />
     </form>
     <div class='buttonBank buttonBank-right'>
-      {% comment %} <a class='button' id='reports-view-exportReportButton' href='#'>Export</a>
-      <a class='button' id='reports-view-sendReportButton' href='#'>Send</a> {% endcomment %}
       <a class='button' id='reports-view-runReportButton' href='/reports/run/{{report.key}}'>Run Report</a>
       <a class='button' id='reports-view-saveAsButton' href='#'>Save As</a>
       <select name='exportSelect' id='reports-view-exportSelect' class='selectmenu'>

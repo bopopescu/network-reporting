@@ -9,6 +9,7 @@
 {% endblock navLinks %}
 
 {% block extraScripts %}
-  <script type="text/javascript" src="/js/controllers/reports.js?v=1000"></script>
-  <script type="text/javascript" src="/js/utilities/reports-ajaxPoll.js?v=6"></script>
+  {% include_script "controllers/reports" %}
+  {% include_script "utilities/reports-ajaxPoll" %}
+  {% include_script "legacy/datatables-treesort" %}
 {% endblock extraScripts %}

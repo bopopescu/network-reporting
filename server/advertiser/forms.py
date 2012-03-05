@@ -283,7 +283,7 @@ class AdGroupForm(forms.ModelForm):
     custom_method = forms.CharField(label='Custom Method:', required=False,
                                     widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     label='Rate:', initial='cpc')
+                                     label='Rate:', initial='cpm')
     bid = forms.FloatField(initial=0.05,
                            widget=forms.TextInput(attrs={'class': 'float'}))
     # site_keys defined in __init__

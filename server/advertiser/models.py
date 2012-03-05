@@ -1,5 +1,5 @@
 import logging
-import sys
+
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
@@ -63,65 +63,37 @@ from simple_models import (SimpleAdGroup,
 
 
 class Campaign(db.Model):
-    """ A campaign.    Campaigns have budgetary and time based restrictions. """
+    """
+    Campaigns are essentially containers for adgroups.
+    They have a name, advertiser, and description, some basic state,
+    and an account. All other information should be added to AdGroup.
+    """
     name = db.StringProperty(required=True)
+    advertiser = db.StringProperty(required=True)
     description = db.TextProperty()
-    campaign_type = db.StringProperty(choices=['gtee', 'gtee_high', 'gtee_low', 'promo',
-                                               'network', 'backfill_promo', 'marketplace',
-                                               'backfill_marketplace'])
 
-    # budget per day
-    budget = db.FloatProperty()
-    full_budget = db.FloatProperty()
-
-    # Determines whether we redistribute if we underdeliver during a day
-    budget_type = db.StringProperty(choices=['daily', 'full_campaign'], default="daily")
-
-    # Determines whether we smooth during a day
-    budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'], default="allatonce")
-
-    # DEPRECATED
-    # start and end dates
-    start_date = db.DateProperty()
-    end_date = db.DateProperty()
-
-    # New start and end date properties
-    start_datetime = db.DateTimeProperty()
-    end_datetime = db.DateTimeProperty()
-
+    # current state
     active = db.BooleanProperty(default=True)
     deleted = db.BooleanProperty(default=False)
 
-    # who owns this
+    # who owns this?
     account = db.ReferenceProperty(Account)
-    t = db.DateTimeProperty(auto_now_add=True)
 
-    budget_obj = db.ReferenceProperty(Budget, collection_name='campaign')
+    # date of creation
+    created = db.DateTimeProperty(auto_now_add=True)
 
-    blind = db.BooleanProperty(default=False)
 
     def simplify(self):
-        if self.start_date and not self.start_datetime:
-            strt = self.start_date
-            start_datetime = datetime.datetime(strt.year, strt.month, strt.day)
-        else:
-            start_datetime = self.start_datetime
-        if self.end_date and not self.end_datetime:
-            end = self.end_date
-            end_datetime = datetime.datetime(end.year, end.month, end.day)
-        else:
-            end_datetime = self.end_datetime
         return SimpleCampaign(key = str(self.key()),
                               name = self.name,
-                              campaign_type = self.campaign_type,
+                              advertiser = self.advertiser
                               active = self.active,
-                              start_datetime = start_datetime,
-                              end_datetime = end_datetime,
-                              account = self.account,
-                              )
+                              account = self.account)
 
     def __repr__(self):
-        return "Camp(start:(%s,%s) end:(%s,%s) active:%s daily:%s total:%s spread:%s type:%s)" % (self.start_date, self.start_datetime, self.end_date, self.end_datetime, self.active, self.budget, self.full_budget, self.budget_strategy, self.budget_type)
+        return "Campaign: %s, owned by %s, for %s" % (self.name,
+                                                      self.account,
+                                                      self.advertiser)
 
     @property
     def owner_key(self):
@@ -130,13 +102,6 @@ class Campaign(db.Model):
     @property
     def owner_name(self):
         return None
-
-    @property
-    def finite(self):
-        if (self.start_date and self.end_date):
-            return True
-        else:
-            return False
 
     def get_owner(self):
         return None
@@ -147,40 +112,11 @@ class Campaign(db.Model):
     def owner(self):
         return property(self.get_owner, self.set_owner)
 
-    def delivery(self):
-        if self.stats:
-            return self.stats.revenue / self.budget
-        else:
-            return 1
-
-    def gtee(self):
-        return self.campaign_type in ['gtee', 'gtee_high', 'gtee_low']
-
-    def promo(self):
-        return self.campaign_type in ['promo', 'backfill_promo']
-
-    def network(self):
-        return self.campaign_type in ['network']
-
-    def marketplace(self):
-        return self.campaign_type in ['marketplace', 'backfill_marketplace']
-
-    def is_active_for_date(self, date):
-        """ Start and end dates are inclusive """
-        if (self.start_date <= date if self.start_date else True) and (date <= self.end_date if self.end_date else True):
-            return True
-        else:
-            return False
-
 
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     name = db.StringProperty()
-
-    # start and end dates
-    start_date = db.DateProperty()
-    end_date = db.DateProperty()
 
     created = db.DateTimeProperty(auto_now_add=True)
 
@@ -209,6 +145,38 @@ class AdGroup(db.Model):
     # if CPA: bid = cost per 1000 conversions
     bid = db.FloatProperty(default=0.05, required=False)
     bid_strategy = db.StringProperty(choices=["cpc", "cpm", "cpa"], default="cpm")
+
+    #############################
+    # moved from campaign class #
+    #############################
+
+    # budget per day
+    daily_budget = db.FloatProperty()
+    full_budget = db.FloatProperty()
+    # Determines whether we redistribute if we underdeliver during a day
+    budget_type = db.StringProperty(choices=['daily', 'full_campaign'],
+                                    default="daily")
+    # Determines whether we smooth during a day
+    budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'],
+                                        default="allatonce")
+
+    # budget_obj = db.ReferenceProperty(Budget, collection_name='adgroup')
+
+    # New start and end date properties
+    start_datetime = db.DateTimeProperty()
+    end_datetime = db.DateTimeProperty()
+
+    adgroups_type = db.StringProperty(choices=['gtee',
+                                               'gtee_high',
+                                               'gtee_low',
+                                               'promo',
+                                               'network',
+                                               'backfill_promo',
+                                               'marketplace'])
+
+    ##################################
+    # /end moved from campaign class #
+    ##################################
 
     # state of this ad group
     active = db.BooleanProperty(default=True)
@@ -468,8 +436,51 @@ class AdGroup(db.Model):
         return self.created.date()
 
     @property
-    def campaign_type(self):
-        return self.campaign.campaign_type
+    def adgroup_type(self):
+        return self.adgroup_type
+
+
+    #############################
+    # moved from campaign class #
+    #############################
+
+    @property
+    def finite(self):
+        if (self.start_datetime and self.end_datetime):
+            return True
+        else:
+            return False
+
+    def delivery(self):
+        if self.stats:
+            return self.stats.revenue / self.budget
+        else:
+            return 1
+
+    def gtee(self):
+        return self.campaign_type in ['gtee', 'gtee_high', 'gtee_low']
+
+    def promo(self):
+        return self.campaign_type in ['promo', 'backfill_promo']
+
+    def network(self):
+        return self.campaign_type in ['network']
+
+    def marketplace(self):
+        return self.campaign_type in ['marketplace']
+
+    def is_active_for_date(self, date):
+        """ Start and end dates are inclusive """
+        if (self.start_date <= date if self.start_date else True) and \
+           (date <= self.end_date if self.end_date else True):
+            return True
+        else:
+            return False
+
+    ##################################
+    # /end moved from campaign class #
+    ##################################
+
 
 
 class Creative(polymodel.PolyModel):

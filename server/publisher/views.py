@@ -1,13 +1,8 @@
 """
 Views that handle pages for Apps and AdUnits.
 """
-import base64
-import binascii
-import hashlib
+
 import logging
-import math
-import os
-import re
 
 from datetime import (datetime,
                       time,
@@ -19,18 +14,8 @@ import urllib
 # hack to get urllib to work on snow leopard
 urllib.getproxies_macosx_sysconf = lambda: {}
 
-from urllib import urlencode
-from operator import itemgetter
-
-# Appengine
-from google.appengine.api.urlfetch import fetch
-from google.appengine.ext import db
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.api import images
-
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, \
@@ -39,7 +24,7 @@ from common.ragendja.template import render_to_response, \
 
 ## Models
 from advertiser.models import Campaign, AdGroup, HtmlCreative
-from publisher.models import Site, Account, App
+from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
 from account.models import NetworkConfig
@@ -50,7 +35,6 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkLoginManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
-from common.utils.query_managers import CachedQueryManager
 from publisher.query_managers import AppQueryManager, \
      AdUnitQueryManager, \
      AdUnitContextQueryManager
@@ -61,7 +45,6 @@ from common.utils import sswriter, date_magic
 from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 from common.constants import *
-from common.utils.decorators import cache_page_until_post
 from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 from budget import budget_service
@@ -74,7 +57,6 @@ class AppIndexHandler(RequestHandler):
 
         # Get all of the adunit keys for bootstrapping the apps
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
-        adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
         # We list the app traits in the table, and then load their
         # stats over ajax using Backbone. Fetch the apps/adunits for the
@@ -538,11 +520,11 @@ class ShowAppHandler(RequestHandler):
         # activated adgroups so we can mark it as active/inactive
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
                                         for adgroup in marketplace_campaigns])
+
         try:
             marketplace_activated = marketplace_campaigns[0].campaign.active
         except IndexError:
             marketplace_activated = False
-
 
         return render_to_response(self.request,
                                   'publisher/app.html',

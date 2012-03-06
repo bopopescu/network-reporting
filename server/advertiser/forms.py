@@ -135,7 +135,6 @@ class CampaignForm(forms.ModelForm):
         else:
             return budget
 
-
     def clean_start_datetime(self):
         start_datetime = self.cleaned_data.get('start_datetime', None)
         if start_datetime:
@@ -152,6 +151,12 @@ class CampaignForm(forms.ModelForm):
             # end_datetime is entered in Pacific Time
             end_datetime = end_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
         return end_datetime
+
+    def clean_bid(self):
+        bid = self.cleaned_data.get('bid', None)
+        if bid != None and bid <= 0.0:
+            raise forms.ValidationError("Bid must be greather than zero")
+        return bid
 
     def clean(self):
         cleaned_data = super(CampaignForm, self).clean()
@@ -403,6 +408,12 @@ class AdGroupForm(forms.ModelForm):
             if len(keywords) > 500:
                 raise forms.ValidationError('Maximum 500 characters for keywords.')
         return keywords
+
+    def clean_bid(self):
+        bid = self.cleaned_data.get('bid', None)
+        if bid != None and bid <= 0.0:
+            raise forms.ValidationError("Bid must be greather than zero")
+        return bid
 
     def clean(self):
         cleaned_data = super(AdGroupForm, self).clean()

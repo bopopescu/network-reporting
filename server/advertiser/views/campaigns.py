@@ -398,7 +398,7 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
         campaign_form = CampaignForm(instance=adgroup.campaign, initial={'bid': adgroup.bid,
-                                                                         'bid_strategy':adgroup.bid_strategy})
+                                                                         'bid_strategy': adgroup.bid_strategy})
         adgroup_form = AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 

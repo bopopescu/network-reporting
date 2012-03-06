@@ -1,20 +1,6 @@
 import logging
 import datetime
 
-from django.conf import settings
-
-from google.appengine.api import urlfetch
-
-from urllib import urlencode
-
-from copy import deepcopy
-
-import base64, binascii
-from google.appengine.api import users, images, files
-
-from google.appengine.ext import db
-
-from django.views.decorators.cache import cache_control
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
@@ -44,8 +30,6 @@ from common.ragendja.template import (JSONResponse, render_to_response,
 from common.utils import date_magic, helpers, sswriter
 from common.utils.helpers import campaign_stats
 from common.utils.request_handler import RequestHandler
-from common.utils.stats_helpers import (MarketplaceStatsFetcher,
-                                        MPStatsAPIException)
 from common.utils.timezones import Pacific_tzinfo
 from common.utils.tzinfo import Pacific, utc
 from publisher.models import Site
@@ -55,7 +39,11 @@ from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
 
-CAMPAIGN_LEVELS = ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo']
+CAMPAIGN_LEVELS = ['gtee_high',
+                   'gtee',
+                   'gtee_low',
+                   'promo',
+                   'backfill_promo']
 
 
 class AdGroupIndexHandler(RequestHandler):

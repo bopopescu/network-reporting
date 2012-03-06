@@ -318,7 +318,7 @@ def include_script(script_name,
     # make the script path
     path_prefix = "/js/"
     path_suffix = ".js"
-    version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
+    version_number = "?=%s" % str(settings.SCRIPTS_VERSION_NUMBER)
 
     script_path = path_prefix + script_name + path_suffix + version_number
 
@@ -332,7 +332,7 @@ def include_style(style_name):
     style_name = style_name.replace('.css', '')
     path_prefix = "/css/"
     path_suffix = ".css"
-    version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
+    version_number = "?=%s" % str(settings.STYLES_VERSION_NUMBER)
 
     style_path = path_prefix + style_name + path_suffix + version_number
 

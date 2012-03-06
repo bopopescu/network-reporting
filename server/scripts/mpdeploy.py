@@ -278,6 +278,7 @@ def write_changelog(deploy_tag, fixed_tickets, new_commits):
     changelog_file.writelines([line + '\n' for line in new_changelog])
     changelog_file.close()
 
+
 def minify_javascript():
 
     # we use juicer for minification, alert them if they dont have it
@@ -295,6 +296,7 @@ def minify_javascript():
     puts("Minifying Javascript files in " + JS_DIR)
 
     puts(colored.green('Javascript Minified'))
+
 
 def update_static_version_numbers():
     f = open('../versions.yaml','r')
@@ -371,6 +373,10 @@ def main():
                 # Minify all javascript
                 puts("Minifying Javascript")
                 minify_javascript()
+
+                # Updating version numbers
+                puts("Updating Version Numbers")
+                update_static_version_numbers()
 
                 # Write to the changelog
                 puts("Writing changelog")

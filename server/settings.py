@@ -162,7 +162,7 @@ STATIC_VERSION_NUMBER = 216
 
 
 import yaml
-config = yaml.load(open('versions.yaml').read())
+config = yaml.load(open('versions.yaml', 'r'))
 
 SCRIPTS_VERSION_NUMBER = config['scripts']
 STYLES_VERSION_NUMBER = config['styles']

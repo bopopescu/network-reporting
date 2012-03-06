@@ -2,9 +2,11 @@ import copy
 import string
 import random
 import datetime
+import uuid
 
 from account.query_managers import AccountQueryManager
 from reporting.query_managers import StatsModelQueryManager
+
 
 from registration.models import *
 from advertiser.models import *
@@ -24,10 +26,10 @@ USERNAME = "test@mopub.com"
 PASSWORD = "test"
 
 NUM_ACCOUNTS = 1
-NUM_APPS = 5 #ONLY SUPPORT ONE ACCOUNT FOR NOW
+NUM_APPS = 2
 NUM_CAMPAIGNS_PER_APP = 3
-NUM_CREATIVES_PER_ADGROUP = 3
-NUM_ADUNITS_PER_APP = 10
+NUM_CREATIVES_PER_ADGROUP = 1
+NUM_ADUNITS_PER_APP = 5
 
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
@@ -92,33 +94,28 @@ NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
 ####
 
 def get_adgroup_name():
-    global ADGROUP_INDEX
-    ADGROUP_INDEX+=1
-    return "adgroup%s" % ADGROUP_INDEX
+    adgroup_index = str(uuid.uuid1()).split('-')[0]
+    return "AdGroup %s" % adgroup_index
 
 
 def get_creative_name():
-    global CREATIVE_INDEX
-    CREATIVE_INDEX+=1
-    return "creative%s" % CREATIVE_INDEX
+    creative_index = str(uuid.uuid1()).split('-')[0]
+    return "Creative %s" % creative_index
 
 def get_app_name():
-    global APP_INDEX
-    APP_INDEX+=1
-    return "app%s" % APP_INDEX
+    app_index = str(uuid.uuid1()).split('-')[0]
+    return "Your Great App %s" % app_index
 
 def get_adunit_name():
-    global ADUNIT_INDEX
-    ADUNIT_INDEX+=1
-    return "adunit%s" % ADUNIT_INDEX
+    adunit_index = str(uuid.uuid1()).split('-')[0]
+    return "Your Well Performing AdUnit %s" % adunit_index
 
 def get_campaign_name():
-    global CAMPAIGN_INDEX
-    CAMPAIGN_INDEX+=1
-    return "campaign%s" % CAMPAIGN_INDEX
+    campaign_index = str(uuid.uuid1()).split('-')[0]
+    return "Super Campaign %s" % campaign_index
 
 def get_random_color():
-    return "".join([select_rand(COLOR_ALPH) for i in range(5)])
+    return "".join([select_rand(COLOR_ALPH) for i in xrange(5)])
 
 def select_rand(array):
     return array[random.randint(0,len(array)-1)]
@@ -199,7 +196,7 @@ def generate_adgroup(campaign, site_keys, account, adgroup_type):
 
     adgroup = AdGroup(campaign=campaign,
                       adgroup_type = adgroup_type,
-                      network_type=rand_network_type ,
+                      network_type=rand_network_type,
                       bid_strategy=select_rand(BID_STRATEGIES),
                       account=account,
                       site_keys=site_keys,
@@ -213,7 +210,7 @@ def generate_adgroup(campaign, site_keys, account, adgroup_type):
     # update the account's NetworkConfig object as well, so that ad
     # network configuration is set properly.
     if rand_network_type in NETWORK_TYPE_TO_PUB_ID_ATTR.keys() \
-       and campaign.campaign_type=="network":
+       and adgroup.adgroup_type=="network":
         network_config = account.network_config
         setattr(network_config,
                 NETWORK_TYPE_TO_PUB_ID_ATTR[rand_network_type],
@@ -229,6 +226,13 @@ def generate_campaign(account, budget):
     campaign = Campaign(name=get_campaign_name(),
                         account = account,
                         advertiser = "John's Hat Co, Inc.")
+    campaign.put()
+    return campaign
+
+def generate_marketplace_campaign(account, budget):
+    campaign = Campaign(name=get_campaign_name(),
+                        account = account,
+                        advertiser = "marketplace")
     campaign.put()
     return campaign
 
@@ -335,9 +339,6 @@ def main():
 
         for i in xrange(NUM_CAMPAIGNS_PER_APP):
             budget = generate_budget()
-
-            campaign = generate_campaign(account, budget)
-
             adgroup_type = 'gtee_high'
 
             if i == 1:
@@ -346,6 +347,11 @@ def main():
                 adgroup_type = 'marketplace'
             elif i == 3:
                 adgroup_type = 'promo'
+
+            if adgroup_type == 'marketplace':
+                campaign = generate_marketplace_campaign(account, budget)
+            else:
+                campaign = generate_campaign(account, budget)
 
             creatives_per_campaign[campaign] = []
             campaigns_per_app[app].append(campaign)

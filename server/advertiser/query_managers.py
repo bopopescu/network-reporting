@@ -74,7 +74,7 @@ class CampaignQueryManager(QueryManager):
         if from_db:
             return Campaign.get_by_key_name(c_key_name)
         return Campaign(key_name=c_key_name,
-                        campaign_type='marketplace',
+                        advertiser='marketplace',
                         name='MarketPlace',
                         account=account_key)
 
@@ -139,10 +139,10 @@ class CampaignQueryManager(QueryManager):
     def put(cls, campaigns):
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
-        
-        # Put campaigns so if they're new they have a key    
+
+        # Put campaigns so if they're new they have a key
         put_response = db.put(campaigns)
-        
+
         # They need a key because this QM needs the key
         for camp in campaigns:
             budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)

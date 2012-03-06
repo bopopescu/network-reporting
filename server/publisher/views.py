@@ -1,36 +1,14 @@
 """
 Views that handle pages for Apps and AdUnits.
 """
-import base64
-import binascii
-import hashlib
 import logging
-import math
-import os
-import re
-
-from datetime import (datetime,
-                      time,
-                      date,
-                      timedelta,
-                      )
-
+import datetime
 import urllib
 # hack to get urllib to work on snow leopard
 urllib.getproxies_macosx_sysconf = lambda: {}
 
-from urllib import urlencode
-from operator import itemgetter
-
-# Appengine
-from google.appengine.api.urlfetch import fetch
-from google.appengine.ext import db
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.api import images
-
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, \
@@ -39,7 +17,7 @@ from common.ragendja.template import render_to_response, \
 
 ## Models
 from advertiser.models import Campaign, AdGroup, HtmlCreative
-from publisher.models import Site, Account, App
+from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
 from account.models import NetworkConfig
@@ -50,7 +28,6 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkLoginManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
-from common.utils.query_managers import CachedQueryManager
 from publisher.query_managers import AppQueryManager, \
      AdUnitQueryManager, \
      AdUnitContextQueryManager
@@ -61,7 +38,6 @@ from common.utils import sswriter, date_magic
 from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 from common.constants import *
-from common.utils.decorators import cache_page_until_post
 from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 from budget import budget_service
@@ -74,7 +50,6 @@ class AppIndexHandler(RequestHandler):
 
         # Get all of the adunit keys for bootstrapping the apps
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
-        adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
         # We list the app traits in the table, and then load their
         # stats over ajax using Backbone. Fetch the apps/adunits for the
@@ -479,12 +454,12 @@ class ShowAppHandler(RequestHandler):
                                                             advertiser = ag,
                                                             days = self.days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            budget_object = ag.campaign.budget_obj
+            budget_object = ag.budget_obj
             ag.percent_delivered = budget_service.percent_delivered(budget_object)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
-            if ag.campaign.campaign_type in ['marketplace']:
+            if ag.adgroup_type in ['marketplace']:
                 try:
                     mpx_stats = stats_fetcher.get_app_stats(str(app_key),
                                                             self.start_date,
@@ -494,52 +469,22 @@ class ShowAppHandler(RequestHandler):
                 ag.stats.revenue = float(mpx_stats.get('revenue'))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
-            if ag.campaign.campaign_type in ['network']:
+            if ag.adgroup_type in ['network']:
                 ag.calculated_ecpm = calculate_ecpm(ag)
 
-
-        promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'],
-                                 app.adgroups)
-
-
-        # Sort out all of the campaigns that are targeting this app
-        promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], app.adgroups)
-        promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-
-        gtee_types = ['gtee_high', 'gtee_low', 'gtee']
-        guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in gtee_types,
-                                     app.adgroups)
-        guarantee_campaigns = sorted(guarantee_campaigns,
-                                     lambda x,y: cmp(y.bid, x.bid))
-
-        levels = ('high', '', 'low')
-        gtee_str = "gtee_%s"
-        gtee_levels = []
-        for level in levels:
-            this_level = gtee_str % level if level else "gtee"
-            name = level if level else 'normal'
-            level_camps = filter(lambda x:x.campaign.campaign_type == this_level,
-                                 guarantee_campaigns)
-            gtee_levels.append(dict(name = name, adgroups = level_camps))
-
-        marketplace_campaigns = filter(lambda x: x.campaign_type == 'marketplace', app.adgroups)
-        marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
-
-        network_campaigns = filter(lambda x: x.campaign_type in ['network'], app.adgroups)
-        network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
-
-        backfill_promo_campaigns = filter(lambda x: x.campaign_type in ['backfill_promo'],
-                                          app.adgroups)
-        backfill_promo_campaigns = sorted(backfill_promo_campaigns,
-                                          lambda x,y: cmp(y.bid, x.bid))
-
+        guaranteed_adgroups = filter_by_type(app.adgroups, ['gtee_high', 'gtee_low', 'gtee'])
+        logging.warn(guaranteed_adgroups)
+        promo_adgroups = filter_by_type(app.adgroups, ['promo'])
+        mpx_adgroups = filter_by_type(app.adgroups, ['marketplace'])
+        network_adgroups = filter_by_type(app.adgroups, ['network'])
+        backfill_promo_adgroups = filter_by_type(app.adgroups, ['backfill_promo'])
 
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
-                                        for adgroup in marketplace_campaigns])
+                                        for adgroup in mpx_adgroups])
         try:
-            marketplace_activated = marketplace_campaigns[0].campaign.active
+            marketplace_activated = mpx_adgroups[0].campaign.active
         except IndexError:
             marketplace_activated = False
 
@@ -557,13 +502,13 @@ class ShowAppHandler(RequestHandler):
                                       'yesterday': yesterday,
                                       'account': self.account,
                                       'helptext': help_text,
-                                      'gtee': gtee_levels,
-                                      'promo': promo_campaigns,
-                                      'marketplace': marketplace_campaigns,
+                                      'gtee': guaranteed_adgroups,
+                                      'promo': promo_adgroups,
+                                      'marketplace': mpx_adgroups,
                                       'marketplace_activated': marketplace_activated,
                                       'active_mpx_adunit_exists': active_mpx_adunit_exists,
-                                      'network': network_campaigns,
-                                      'backfill_promo': backfill_promo_campaigns,
+                                      'network': network_adgroups,
+                                      'backfill_promo': backfill_promo_adgroups,
                                   })
 
 
@@ -680,7 +625,8 @@ class AdUnitShowHandler(RequestHandler):
     """
 
     def get(self, adunit_key):
-    # load the site
+
+        # load the site
         adunit = AdUnitQueryManager.get(adunit_key)
         if adunit.account.key() != self.account.key():
             raise Http404
@@ -689,9 +635,7 @@ class AdUnitShowHandler(RequestHandler):
         adunit.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
                                                             days=self.days)
 
-        adunit.stats = reduce(lambda x, y: x+y,
-                              adunit.all_stats,
-                              StatsModel())
+        adunit.stats = reduce(lambda x, y: x+y, adunit.all_stats, StatsModel())
 
         # used the get marketplace stats from mpx servers
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
@@ -704,12 +648,12 @@ class AdUnitShowHandler(RequestHandler):
                                                             advertiser=ag,
                                                             days=self.days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            budget_object = ag.campaign.budget_obj
+            budget_object = ag.budget_obj
             ag.percent_delivered = budget_service.percent_delivered(budget_object)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
-            if ag.campaign.campaign_type in ['marketplace']:
+            if ag.adgroup_type in ['marketplace']:
                 try:
                     mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()),
                                                                self.start_date,
@@ -719,48 +663,21 @@ class AdUnitShowHandler(RequestHandler):
                 ag.stats.revenue = float(mpx_stats.get('revenue'))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
-            if ag.campaign.campaign_type in ['network']:
+            if ag.adgroup_type in ['network']:
                 ag.calculated_ecpm = calculate_ecpm(ag)
 
 
         # to allow the adunit to be edited
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
 
-
-        promo_campaigns = filter(lambda x: x.campaign_type in ['promo'], adunit.adgroups)
-        promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-
-        gtee_types = ['gtee_high', 'gtee_low', 'gtee']
-        guarantee_campaigns = filter(lambda x: x.campaign_type in gtee_types,
-                                     adunit.adgroups)
-        guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
-        levels = ('high', '', 'low')
-        gtee_str = "gtee_%s"
-        gtee_levels = []
-        for level in levels:
-            this_level = gtee_str % level if level else "gtee"
-            name = level if level else 'normal'
-            level_camps = filter(lambda x:x.campaign_type == this_level,
-                                 guarantee_campaigns)
-            gtee_levels.append(dict(name = name, adgroups = level_camps))
-
-        marketplace_campaigns = filter(lambda x: x.campaign_type in ['marketplace'],
-                                       adunit.adgroups)
-        marketplace_campaigns = sorted(marketplace_campaigns,
-                                       lambda x,y: cmp(x.bid, y.bid))
-
-        network_campaigns = filter(lambda x: x.campaign_type in ['network'],
-                                   adunit.adgroups)
-        network_campaigns = sorted(network_campaigns,
-                                   lambda x,y: cmp(y.bid, x.bid))
-
-        backfill_promo_campaigns = filter(lambda x: x.campaign_type in ['backfill_promo'],
-                                          adunit.adgroups)
-        backfill_promo_campaigns = sorted(backfill_promo_campaigns,
-                                          lambda x,y: cmp(y.bid, x.bid))
+        guaranteed_adgroups = filter_by_type(adunit.adgroups, ['gtee_high', 'gtee_low', 'gtee'])
+        promo_adgroups = filter_by_type(adunit.adgroups, ['promo'])
+        mpx_adgroups = filter_by_type(adunit.adgroups, ['marketplace'])
+        network_adgroups = filter_by_type(adunit.adgroups, ['network'])
+        backfill_promo_adgroups = filter_by_type(adunit.adgroups, ['backfill_promo'])
 
         try:
-            marketplace_activated = marketplace_campaigns[0].campaign.active
+            marketplace_activated = mpx_adgroups[0].campaign.active
         except IndexError:
             marketplace_activated = False
 
@@ -784,11 +701,11 @@ class AdUnitShowHandler(RequestHandler):
                                       'account': self.account,
                                       'days': self.days,
                                       'adunit_form_fragment': adunit_form_fragment,
-                                      'gtee': gtee_levels,
-                                      'promo': promo_campaigns,
-                                      'marketplace': marketplace_campaigns,
-                                      'network': network_campaigns,
-                                      'backfill_promo': backfill_promo_campaigns,
+                                      'gtee': guaranteed_adgroups,
+                                      'promo': promo_adgroups,
+                                      'marketplace': mpx_adgroups,
+                                      'network': network_adgroups,
+                                      'backfill_promo': backfill_promo_adgroups,
                                       'marketplace_activated': marketplace_activated
                                   })
 
@@ -1252,3 +1169,8 @@ def calculate_ecpm(adgroup):
         except Exception, error:
             logging.error(error)
     return adgroup.bid
+
+def filter_by_type(adgroups, types):
+    filtered_adgroups = filter(lambda x: x.adgroup_type in types, adgroups)
+    sorted_adgroups = sorted(filtered_adgroups, lambda x,y: cmp(x.bid, y.bid))
+    return sorted_adgroups

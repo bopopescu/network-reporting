@@ -86,7 +86,7 @@ class Campaign(db.Model):
     def simplify(self):
         return SimpleCampaign(key = str(self.key()),
                               name = self.name,
-                              advertiser = self.advertiser
+                              advertiser = self.advertiser,
                               active = self.active,
                               account = self.account)
 
@@ -160,19 +160,19 @@ class AdGroup(db.Model):
     budget_strategy = db.StringProperty(choices=['evenly', 'allatonce'],
                                         default="allatonce")
 
-    # budget_obj = db.ReferenceProperty(Budget, collection_name='adgroup')
+    budget_obj = db.ReferenceProperty(Budget, collection_name='adgroup')
 
     # New start and end date properties
     start_datetime = db.DateTimeProperty()
     end_datetime = db.DateTimeProperty()
 
-    adgroups_type = db.StringProperty(choices=['gtee',
-                                               'gtee_high',
-                                               'gtee_low',
-                                               'promo',
-                                               'network',
-                                               'backfill_promo',
-                                               'marketplace'])
+    adgroup_type = db.StringProperty(choices=['gtee',
+                                              'gtee_high',
+                                              'gtee_low',
+                                              'promo',
+                                              'network',
+                                              'backfill_promo',
+                                              'marketplace'])
 
     ##################################
     # /end moved from campaign class #
@@ -434,10 +434,6 @@ class AdGroup(db.Model):
     @property
     def created_date(self):
         return self.created.date()
-
-    @property
-    def adgroup_type(self):
-        return self.adgroup_type
 
 
     #############################

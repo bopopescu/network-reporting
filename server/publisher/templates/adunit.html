@@ -158,72 +158,69 @@
                 </tr>
               </thead>
               <tbody>
-                  {% for level in gtee %}
-                    {% for adgroup in level.adgroups %}
-                      <tr>
-                        <th>
 
-                          {% status_icon adgroup %}
+                {% for adgroup in level.adgroups %}
+                  <tr>
+                    <th>
+                      {% status_icon adgroup %}
+                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{ adgroup.name }}</a><br />
+                      <span class="muted">
+                        {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                          {{adgroup.campaign.start_datetime|format_date}} -
+                          {{adgroup.campaign.end_datetime|format_date}}.
+                        {% endif %}
 
-                          <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{ adgroup.name }}</a><br />
-                          <span class="muted">
-                            {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                              {{adgroup.campaign.start_datetime|format_date}} -
-                              {{adgroup.campaign.end_datetime|format_date}}.
-                            {% endif %}
+                        {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
 
-                            {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                          Starts {{adgroup.campaign.start_datetime|format_date}}.
+                        {% endif %}
 
-                              Starts {{adgroup.campaign.start_datetime|format_date}}.
-                            {% endif %}
+                        {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
+                          Ends {{adgroup.campaign.end_datetime|format_date}}.
+                        {% endif %}
 
-                            {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                              Ends {{adgroup.campaign.end_datetime|format_date}}.
-                            {% endif %}
+                        {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                          All dates.
+                        {% endif %}
 
-                            {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
-                              All dates.
-                            {% endif %}
-
-                            {% ifequal adgroup.campaign.budget_type 'daily' %}
-                              {% if adgroup.campaign.budget %}
-                                {{ adgroup.campaign.budget|currency }} daily budget.
-                              {% else %}
-                                  Unlimited budget.
-                              {% endif %}
-                            {% endifequal %}
-                            {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
-                              {{adgroup.campaign.full_budget|currency}} campaign budget.
-                            {% endifequal %}
-                            {% if adgroup.percent_delivered %}
-                              ({{adgroup.percent_delivered|floatformat:1}}%)
-                            {%endif %}
-                          </span>
-                        </th>
-                        <td class="dataTable-data numeric">
-                            Guaranteed<br/><span class="muted">{{level.name}}</span></td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                        <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
-                        <td class="dataTable-data numeric">
-                            {{adgroup.stats.click_count|withsep}}<br/>
-                            <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
-                        </td>
-                        <td class="dataTable-data numeric">
-                          {{adgroup.stats.conversion_count|withsep}}<br/>
-                          <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
-                        </td>
-                      </tr>
-                    {% endfor %}
-                  {% endfor %}
-                  {% for adgroup in promo %}
-                    <tr>
-                      <th>
-                        {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                          {{adgroup.name}}
-                        </a><br/>
-                        <span class="muted">
+                        {% ifequal adgroup.campaign.budget_type 'daily' %}
+                          {% if adgroup.campaign.budget %}
+                            {{ adgroup.campaign.budget|currency }} daily budget.
+                          {% else %}
+                            Unlimited budget.
+                          {% endif %}
+                        {% endifequal %}
+                        {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
+                          {{adgroup.campaign.full_budget|currency}} campaign budget.
+                        {% endifequal %}
+                        {% if adgroup.percent_delivered %}
+                          ({{adgroup.percent_delivered|floatformat:1}}%)
+                        {%endif %}
+                      </span>
+                    </th>
+                    <td class="dataTable-data numeric">
+                    Guaranteed<br/><span class="muted">{{level.name}}</span></td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                    <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                    <td class="dataTable-data numeric">
+                      {{adgroup.stats.click_count|withsep}}<br/>
+                      <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
+                    </td>
+                    <td class="dataTable-data numeric">
+                      {{adgroup.stats.conversion_count|withsep}}<br/>
+                      <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% for adgroup in promo %}
+                  <tr>
+                    <th>
+                    {% status_icon adgroup %}
+                    <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
+                      {{adgroup.name}}
+                      </a><br/>
+                      <span class="muted">
                           {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
                             {{adgroup.campaign.start_date|format_date_compact}}
                             -

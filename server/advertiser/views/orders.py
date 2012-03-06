@@ -1,5 +1,20 @@
+__doc__ = """
+Views for orders and line items.
+
+'Order' is an alias for 'Campaign', and 'LineItem' is an alias for
+'AdGroup'.  We decided to make this change because many other
+advertisers use this language.  The code hasn't adopted this naming
+convention, and instead still uses "Campaign" and "AdGroup" for
+compatibility with the ad server.
+
+Whenever you see "Campaign", think "Order", and wherever you see
+"""
+
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response
+
+from advertiser.models import Campaign, AdGroup
+from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 
 class OrderIndexHandler(RequestHandler):
     """
@@ -11,9 +26,18 @@ class OrderIndexHandler(RequestHandler):
       - name, dates, budgeting information, top-level stats.
     """
     def get(self):
+
+        orders = CampaignQueryManager.get_campaigns(account=self.account)
+        lineitems = AdGroupQueryManager.get_adgroups(campaigns=orders)
+
+
         return render_to_response(self.request,
                                   "advertiser/order_index.html",
-                                  {})
+                                  {
+                                      'orders': orders,
+                                      'lineitems': lineitems
+
+                                  })
 
 def order_index(request, *args, **kwargs):
     return OrderIndexHandler()(request, use_cache=False, *args, **kwargs)

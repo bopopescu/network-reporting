@@ -113,6 +113,10 @@ class Campaign(db.Model):
         return property(self.get_owner, self.set_owner)
 
 
+# Alias
+Order = Campaign
+
+
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
@@ -477,6 +481,7 @@ class AdGroup(db.Model):
     # /end moved from campaign class #
     ##################################
 
+LineItem = AdGroup
 
 
 class Creative(polymodel.PolyModel):

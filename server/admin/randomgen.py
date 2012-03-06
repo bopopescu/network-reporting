@@ -126,14 +126,6 @@ def select_rand_subset(array):
     random.shuffle(cloned)
     return cloned[:num_elements]
 
-
-def get_random_date():
-    today = datetime.date.today()
-    year = 2012
-    month = random.randint(1,today.month)
-    day = random.randint(1,28 if today.month!= month else random.randint(1,month))
-    return datetime.date(year,month,day)
-
 def get_random_datetime():
     today = datetime.datetime.now()
     year = 2012
@@ -142,17 +134,22 @@ def get_random_datetime():
     return datetime.datetime(year,month,day)
 
 def get_random_datetime_pair():
+    """
+    Generates a pair of datetimes, returned in order of time.
+    Good for generating start and end dates, because start
+    will always be before end.
+    e.g.:
+        start, end = get_random_datetime_pair()
+    """
     start, end = get_random_datetime(), get_random_datetime()
     if start > end:
         start, end = end, start
-
     return start, end
 
 
 ####
 #Generation methods
 ####
-
 
 def generate_app(account):
     app = App(name=get_app_name(),
@@ -181,7 +178,6 @@ def generate_budget():
                     end_datetime = end_date,
                     static_total_budget = float(random.randint(100,1000)),
                     static_slice_budget = float(random.randint(100,1000)))
-
     budget.put()
     return budget
 
@@ -221,7 +217,6 @@ def generate_adgroup(campaign, site_keys, account, adgroup_type):
     return adgroup
 
 
-
 def generate_campaign(account, budget):
     campaign = Campaign(name=get_campaign_name(),
                         account = account,
@@ -229,13 +224,13 @@ def generate_campaign(account, budget):
     campaign.put()
     return campaign
 
+
 def generate_marketplace_campaign(account, budget):
     campaign = Campaign(name=get_campaign_name(),
                         account = account,
                         advertiser = "marketplace")
     campaign.put()
     return campaign
-
 
 
 def generate_account(username=USERNAME,
@@ -251,7 +246,10 @@ def generate_account(username=USERNAME,
         network_config.put()
 
     manager = RegistrationManager()
-    user = manager.create_active_user(send_email=False,username=username,password=password,email=email)
+    user = manager.create_active_user(send_email=False,
+                                      username=username,
+                                      password=password,
+                                      email=email)
     manager.create_profile(user)
 
     account = AccountQueryManager().get_current_account(user=user)
@@ -262,10 +260,12 @@ def generate_account(username=USERNAME,
     account.put()
     return account
 
+
 def generate_networkconfig():
     networkconfig = NetworkConfig()
     networkconfig.put()
     return networkconfig
+
 
 def generate_marketplace_config():
     marketplace_config = MarketPlaceConfig()
@@ -317,8 +317,6 @@ def generate_creative(account,adgroup):
                             name=creative_name)
     creative.put()
     return creative
-
-
 
 
 #Example Method to generate data. See top configuration contants for customizing result

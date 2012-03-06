@@ -23,8 +23,8 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   {# CSS #}
-  <link rel="stylesheet" href="/js/libs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />
-  <link rel="stylesheet" href="/css/style.css?v=52">
+  {% include_style "jquery-ui-1.8.7.custom" %}
+  {% include_style "style" %}
   {% block extraCSS %}{% endblock %}
 
   {# Google load for jquery and jqueryui #}
@@ -36,7 +36,7 @@
   </script>
 
   {# Plugins  aggregated from all the *.js files in /public/js/libs/*#}
-  <script src="/js/plugins.js?v=25"></script>
+  {% include_script "plugins" %}
 
 
   {# MoPub #}

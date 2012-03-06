@@ -2,7 +2,7 @@ import re
 import time
 from datetime import datetime
 from django import template
-import base64, binascii
+import binascii
 from django.utils import simplejson as json
 import logging
 import string
@@ -326,3 +326,14 @@ def include_script(script_name,
         return """<script type="text/javascript" src="%s"></script>""" % script_path
     else:
         return ""
+
+@register.simple_tag
+def include_style(style_name):
+    style_name = style_name.replace('.css', '')
+    path_prefix = "/css/"
+    path_suffix = ".css"
+    version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
+
+    style_path = path_prefix + style_name + path_suffix + version_number
+
+    return """<link rel="stylesheet" href="%s" />""" % style_path

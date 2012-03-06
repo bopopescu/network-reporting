@@ -103,12 +103,15 @@ class CampaignForm(forms.ModelForm):
                     initial['gtee_priority'] = 'low'
                 initial['campaign_type'] = 'gtee'
 
-                if initial['bid_strategy'] == 'cpm':
-                    if instance.budget_type == 'daily':
-                        budget = instance.budget or 0.0
+                if initial.get('bid_strategy', '') == 'cpm':
+                    if initial.get('bid', 0):
+                        if instance.budget_type == 'daily':
+                            budget = instance.budget or 0.0
+                        else:
+                            budget = instance.full_budget or 0.0
+                        initial['budget'] = int(1000.0 * budget / initial['bid'])
                     else:
-                        budget = instance.full_budget or 0.0
-                    initial['budget'] = int(1000.0 * budget / initial['bid'])
+                        initial['budget'] = None
                 elif instance.budget_type == 'full_campaign':
                     initial['budget'] = instance.full_budget
 

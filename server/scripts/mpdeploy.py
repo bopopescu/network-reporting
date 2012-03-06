@@ -8,6 +8,7 @@ import sys
 import os
 import datetime
 import re
+import yaml
 
 PWD = os.path.dirname(__file__)
 
@@ -294,6 +295,18 @@ def minify_javascript():
     puts("Minifying Javascript files in " + JS_DIR)
 
     puts(colored.green('Javascript Minified'))
+
+def update_static_version_numbers():
+    f = open('../versions.yaml','r')
+    config = yaml.load(f)
+    f.close()
+    # REFACTOR: check to see if files have been updated first
+    config['scripts'] += 1
+    config['styles'] += 1
+    f = open('../versions.yaml','w')
+    yaml.dump(config, f)
+    f.close()
+
 
 
 

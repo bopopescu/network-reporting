@@ -9,6 +9,7 @@ import string
 from common.utils.tzinfo import Pacific, utc
 
 from django.conf import settings
+from django.core.urlresolvers import reverse
 
 from country_codes import COUNTRY_CODE_DICT
 
@@ -257,6 +258,37 @@ def as_list(item):
     if type(item) == list:
         return item
     return [item]
+
+
+@register.filter
+def adgroup_to_json(adgroup):
+    data = {}
+    if adgroup:
+        data.update({
+            'id': str(adgroup.key()),
+            'active': adgroup.active,
+            'name': adgroup.name,
+            'details_url': reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}),
+            'bid_strategy': adgroup.bid_strategy,
+        })
+        if adgroup.campaign.gtee() or adgroup.campaign.promo():
+            data.update({
+                'start_date': adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d") if adgroup.campaign.start_datetime else None,
+                'end_date': adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d") if adgroup.campaign.end_datetime else None,
+                'apps': [str(key) for key in adgroup.targeted_app_keys],
+            })
+        if adgroup.campaign.gtee():
+            data.update({
+                'level': 'high' if adgroup.campaign.campaign_type == 'gtee_high' else 'normal' if adgroup.campaign.campaign_type == 'gtee' else 'low',
+                'budget_type': adgroup.campaign.budget_type,
+                'budget': adgroup.campaign.budget if adgroup.campaign.budget_type == "daily" else adgroup.campaign.full_budget,
+                'goal': adgroup.budget_goal,
+            })
+        if adgroup.campaign.network():
+            data.update({
+                'network_type': adgroup.network_type,
+            })
+    return json.dumps(data)
 
 
 # Inclusion tags

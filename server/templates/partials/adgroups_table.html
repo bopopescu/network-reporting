@@ -13,7 +13,7 @@
             <% if(type == 'network') { %>
                 <th class="dataTable-data numeric">Attempts</th>
             <% } %>
-            <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+            <% if(type == 'gtee') { %>
                 <th class="dataTable-data numeric">Goal</th>
             <% } %>
             <th class="dataTable-data numeric">Impressions</th>
@@ -50,26 +50,28 @@
                             var end_date = adgroup.get('end_date');
                             if(start_date != null) {
                                 if(end_date != null)
-                                    print((start_date.getMonth() + 1) + '/' + start_date.getDate() + ' - ' + (end_date.getMonth() + 1) + '/' + end_date.getDate() + '.');
+                                    print(start_date + ' - ' + end_date + '.');
                                 else
-                                    print('Starts ' + (start_date.getMonth() + 1) + '/' + start_date.getDate() + '.');
+                                    print('Starts ' + start_date + '.');
                             }
                             else {
                                 if(end_date != null)
-                                    print('Ends ' + (end_date.getMonth() + 1) + '/' + end_date.getDate() + '.');
+                                    print('Ends ' + end_date + '.');
                                 else
                                     print('All dates.');
                             }
-                            var budget_type = adgroup.get('budget_type');
-                            var budget = adgroup.get('budget');
-                            if(budget_type == 'daily') {
-                                if(budget != null)
-                                    print(' $' + mopub.Utils.formatNumberWithCommas(budget.toFixed(2)) + ' daily budget.');
-                                else
-                                    print(' Unlimited budget.');
-                            }
-                            else if(budget_type == 'full_campaign') {
-                                print(' ' + mopub.Utils.formatNumberWithCommas(budget) + ' campaign budget.');
+                            if(type == 'gtee') {
+                                var budget_type = adgroup.get('budget_type');
+                                var budget = adgroup.get('budget');
+                                if(budget_type == 'daily') {
+                                    if(budget != null)
+                                        print(' $' + mopub.Utils.formatNumberWithCommas(budget.toFixed(2)) + ' daily budget.');
+                                    else
+                                        print(' Unlimited budget.');
+                                }
+                                else if(budget_type == 'full_campaign') {
+                                    print(' ' + mopub.Utils.formatNumberWithCommas(budget) + ' campaign budget.');
+                                }
                             }
                         }
                     %></span>
@@ -108,7 +110,7 @@
                 <% if(type == 'network') { %>
                     <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('request_count') %></td>
                 <% } %>
-                <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+                <% if(type == 'gtee') { %>
                     <td class="dataTable-data numeric dataTable-goals"><%
                         if(adgroup.get_stat('goal')) {
                             if(adgroup.get('bid_strategy') == 'cpm') { %>

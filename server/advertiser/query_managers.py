@@ -1,11 +1,7 @@
-import random
-
-from google.appengine.api import memcache
 from google.appengine.ext import db
 
-from common.utils.query_managers import QueryManager, CachedQueryManager
+from common.utils.query_managers import QueryManager
 from common.utils.decorators import wraps_first_arg
-
 from common.constants import CAMPAIGN_LEVELS
 
 from advertiser.models import Campaign
@@ -15,7 +11,7 @@ from advertiser.models import Creative, TextCreative, \
                               HtmlCreative,\
                               ImageCreative
 
-from publisher.models import App, AdUnit
+
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from budget.query_managers import BudgetQueryManager
 

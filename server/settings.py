@@ -160,6 +160,14 @@ ACCOUNT_ACTIVATION_DAYS = 14
 
 STATIC_VERSION_NUMBER = 216
 
+
+import yaml
+config = yaml.load(open('versions.yaml').read())
+
+SCRIPTS_VERSION_NUMBER = config['scripts']
+STYLES_VERSION_NUMBER = config['styles']
+STATIC_VERSION_NUMBER = SCRIPTS_VERSION_NUMBER
+
 from common.ragendja.settings_post import *
 
 #add additional settings for local machine settings

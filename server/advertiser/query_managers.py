@@ -140,9 +140,12 @@ class CampaignQueryManager(QueryManager):
         put_response = db.put(campaigns)
 
         # They need a key because this QM needs the key
-        for camp in campaigns:
-            budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
-            camp.budget_obj = budg_obj
+
+        #TODO_ADGROUPS:
+        # This needs to be moved into the AdgroupQueryManager.put method
+        # for camp in campaigns:
+        #     budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
+        #     camp.budget_obj = budg_obj
 
         # Put them again so they save their budget obj
         put_response = db.put(campaigns)

@@ -250,6 +250,7 @@ class MarketplaceOnOffHandler(RequestHandler):
             CampaignQueryManager.put(mpx)
             return JSONResponse({'success': 'success'})
         except Exception, e:
+            raise
             logging.error(e)
             return JSONResponse({'error': e})
 

@@ -34,7 +34,7 @@ from common.utils import sswriter
 from publisher.query_managers import AppQueryManager, \
         ALL_NETWORKS
 
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta, time
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.utils import simplejson
@@ -87,20 +87,15 @@ class NetworksHandler(RequestHandler):
             campaign = CampaignQueryManager.get_network_campaign(self. \
                     account.key(), network)
 
-            login = False
             network_data = {}
-            if network in REPORTING_NETWORKS:
-                login = AdNetworkLoginManager.get_login(self.account,
-                        network).get()
+            if campaign:
+                if network in REPORTING_NETWORKS:
+                    login = AdNetworkLoginManager.get_login(self.account,
+                            network).get()
 
-                if login:
-                    reporting_networks.append(network)
-                    network_data['reporting'] = True
-
-            if campaign or login:
-                logging.info(campaign)
-                if campaign:
-                    logging.info(str(campaign.key()))
+                    if login:
+                        reporting_networks.append(network)
+                        network_data['reporting'] = True
 
                 network_data['name'] = network
                 network_data['pretty_name'] = REPORTING_NETWORKS.get(network,
@@ -182,22 +177,41 @@ class EditNetworkHandler(RequestHandler):
             network):
         network_data = {}
         network_data['name'] = network
-        network_data['pretty_name'] = REPORTING_NETWORKS.get(network, False) or \
-                OTHER_NETWORKS.get(network, False)
+        network_data['pretty_name'] = REPORTING_NETWORKS.get(network, False) \
+                or OTHER_NETWORKS.get(network)
 
-        campaign_form = CampaignForm()
-        login_form = LoginCredentialsForm()
+        campaign = CampaignQueryManager.get_network_campaign(self. \
+                account.key(), network)
+        if campaign:
+            campaign_form = CampaignForm(instance=campaign)
+        else:
+            campaign_form = CampaignForm()
+
+        login = AdNetworkLoginManager.get_login(self.account,
+                network).get()
+        if login:
+            # Can't initialize username or password because it's encrypted and
+            # can only be decrypted on EC2
+            login_form = LoginCredentialsForm(instance=login)
+        else:
+            login_form = LoginCredentialsForm()
+
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff)
-        account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
+        account_network_config_form = AccountNetworkConfigForm(instance=
+                self.account.network_config)
 
-        reporting_networks = ' '.join(REPORTING_NETWORKS.keys()) + ' admob_native'
+        reporting_networks = ' '.join(REPORTING_NETWORKS.keys()) + \
+                ' admob_native'
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         for app in apps:
-            app.network_config_form = AppNetworkConfigForm(instance=app.network_config, prefix="app_%s" % app.key())
+            app.network_config_form = AppNetworkConfigForm(instance= \
+                    app.network_config, prefix="app_%s" % app.key())
             app.adunits = []
             for adunit in app.all_adunits:
-                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config, prefix="adunit_%s" % adunit.key())
+                adunit.network_config_form = AdUnitNetworkConfigForm(
+                        instance=adunit.network_config, prefix="adunit_%s" %
+                        adunit.key())
                 app.adunits.append(adunit)
 
         # TODO: Strip campaign crap from edit_network_form.html
@@ -211,7 +225,8 @@ class EditNetworkHandler(RequestHandler):
                                       'reporting_networks': reporting_networks,
                                       'login_form': login_form,
                                       'adgroup_form': adgroup_form,
-                                      'account_network_config_form': account_network_config_form,
+                                      'account_network_config_form':
+                                            account_network_config_form,
                                       'apps': apps,
                                   })
 
@@ -224,7 +239,10 @@ class EditNetworkHandler(RequestHandler):
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
         campaign_form = CampaignForm(self.request.POST)
+        logging.info(campaign_form)
+
         if campaign_form.is_valid():
+            logging.info('campaign form is valid')
             campaign = campaign_form.save()
             campaign.account = self.account
             campaign.save()
@@ -476,14 +494,12 @@ class NetworkDetailsHandler(RequestHandler):
             reporting_graph_stats = reduce(lambda x, y: x+y,
                     reporting_stats_by_day.values(), AdNetworkStats())
 
-            daily_stats = sorted(reporting_stats_by_day.values(), key=lambda
-                    stats: stats.date)
             daily_stats = [StatsModel(request_count=stats.attempts,
                 impression_count=stats.impressions,
-                click_count=stats.clicks).to_dict()
-                for stats in daily_stats]
-
-
+                click_count=stats.clicks,
+                date=datetime.combine(stats.date, time())).to_dict()
+                for stats in reporting_stats_by_day.values()]
+            daily_stats = sorted(daily_stats, key=lambda stats: stats['date'])
 
             reporting_graph_stats = StatsModel(request_count= \
                     reporting_graph_stats.attempts,

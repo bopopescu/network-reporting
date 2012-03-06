@@ -968,16 +968,21 @@ if (typeof window.console == "undefined") {
 
                     if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
                         value = '$' + Highcharts.numberFormat(this.y, 2);
-                        total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
+                        if(data.total) {
+                            total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
+                        }
                     } else if (activeMetric == 'clicks') {
                         value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
-                        total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                        if(data.total) {
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                        }
                     } else if (activeMetric == 'ctr') {
                         value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
-                        total = "";
                     } else {
                         value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
-                        total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                        if(data.total) {
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                        }
                     }
 
                     text += '<span style="font-size: 14px;">' + Highcharts.dateFormat('%A, %B %e, %Y', this.x) + '</span><br/>';

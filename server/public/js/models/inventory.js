@@ -206,7 +206,7 @@ var mopub = mopub || {};
             return total_daily_stats;
         },
 
-        get_chart_data: function(stat) {
+        get_chart_data: function(stat, mopub_optimized) {
             var adgroups = this.filter(function(adgroup) {
                 return adgroup.has(stat) && adgroup.has('daily_stats');
             });
@@ -231,7 +231,7 @@ var mopub = mopub || {};
                     'Others': other_adgroups.get_total_daily_stats(stat)
                 });
             }
-            if (stat === 'ctr') {
+            if (stat === 'ctr' && mopub_optimized) {
                 chart_data.push({
                     'MoPub Optimized': this.get_total_daily_stats('ctr')
                 });

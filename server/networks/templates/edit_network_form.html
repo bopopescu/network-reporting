@@ -10,127 +10,144 @@
 {% comment %}Should be able to do {{ campaign_form.media }}{% endcomment %}
 <script type="text/javascript">
     $(function () {
-        // TODO: network changes in django
-        var network_type = '{{ network.name }}';
-        priors = {{ adgroup.geo_predicates|to_json|safe }};
-        city_priors = {{ adgroup.cities|to_json|safe }};
+            // TODO: network changes in django
+            var network_type = '{{ network.name }}';
+            priors = {{ adgroup.geo_predicates|to_json|safe }};
+            city_priors = {{ adgroup.cities|to_json|safe }};
 
-        {% if network.name in REPORTING_NETWORKS %}
-            $('.login_credentials').show();
+            {% if network.name in REPORTING_NETWORKS %}
+            $('.login-credentials').show();
             $('.advanced_targeting').hide();
-        {% else %}
-            $('.login_credentials').hide();
+            {% else %}
+            $('.login-credentials').hide();
             $('.advanced_targeting').show();
 
             $('#optimizationSelect-button').hide();
-        {% endif %}
+            {% endif %}
 
-        // make necessary changes based on wether optimize is checked
-        $('#optimizationSelect').change(function() {
-            if ($(this).val() == 'optimize') {
-                $('.login_credentials').show();
-                $('.advanced_targeting').hide();
-            } else {
-                $('.login_credentials').hide();
-                $('.advanced_targeting').show();
-            }
-        })
+            // make necessary changes based on wether optimize is checked
+            $('#targeting').click(function() {
+                $('.advanced_targeting').toggle();
+                })
 
-        $("#networkSettingsForm-submit").click(function() {
-            // Hack to serialize sub-section of forms data.
-            // Add a new form and hide it.
-            $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
-            // Clone the fieldset into the new form.
-            $('#form-to-submit').html($('.login-credentials-fields').clone());
-            // Serialize the data.
-            var data = $('#form-to-submit').serialize();
-            var username = $('#id_username_str').val();
-            var password = $('#id_password_str').val();
-            // Remove the form.
-            $('#form-to-submit').remove();
-            data += ("&account_key={{account_key}}" + "&ad_network_name={{network.name}}");
+            $("#networkSettingsForm-submit").click(function() {
+                    // Hack to serialize sub-section of forms data.
+                    // Add a new form and hide it.
+                    $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
+                    // Clone the fieldset into the new form.
+                    $('#form-to-submit').html($('.login-credentials-fields').clone());
+                    // Serialize the data.
+                    var data = $('#form-to-submit').serialize();
+                    // Remove the form.
+                    $('#form-to-submit').remove();
+                    data += ("&account_key={{account_key}}" + "&ad_network_name={{network.name}}");
 
-            // Check if data submitted in the form is valid login
-            // information for the ad network
-            var message = $('.login-credentials-message');
-            $(message).html("Verifying login credentials...");
-            $.ajax({
-                url: 'https://checklogincredentials.mopub.com',
-                data: data,
-                crossDomain: true,
-                dataType: "jsonp",
-                success: function(valid) {
-                    // Upon success notify the user
-                    if (valid) {
-                        $(message).html("MoPub is currently optimizing {{network.pretty_name}} by pulling data from {{network.pretty_name}} using the following credentials.");
-                        $('#username').html(username);
-                        // TODO: overwrite password with *'s
-                        $('#password').html(password);
-                        $('login_credentials_submit').html('\n<a>Change Username and Password</a>\n<a>Turn off Optimization</a>\n');
-                    } else {
-                        $(message).html("Invalid login information.");
-                    }
-                }
+                    // Check if data submitted in the form is valid login
+                    // information for the ad network
+                    var message = $('.login-credentials-message');
+                    $(message).html("Verifying login credentials...");
+
+                    $.ajax({url: 'https://checklogincredentials.mopub.com',
+                        data: data,
+                        crossDomain: true,
+                        dataType: "jsonp",
+                        success: function(valid) {
+                            // Upon success notify the user
+                            if (valid) {
+                                $(message).html("MoPub is currently optimizing {{network.pretty_name}} by pulling data from {{network.pretty_name}} using the following credentials.");
+                                var username = $('#id_username_str').val();
+                                var password = $('#id_password_str').val();
+                                var client_key = $('#id_client_key').val();
+
+                                $('#id_username_str').hide();
+                                $('#id_password_str').hide();
+                                $('#id_client_key').hide();
+
+                                $('#username').text(username);
+                                var hidden_password = "";
+                                $.each( password, function(c){
+                                    hidden_password += "*";
+                                });
+                                $('#password').text(hidden_password);
+                                $('#client_key').text(client_key);
+                                $('.login-credentials-submit').hide();
+                                $('.login-credentials-settings').show();
+                            } else {
+                                $(message).html("Invalid login information.");
+                            }
+                        }
+                    });
             });
-        });
 
-        // make necessary changes based on network type
-        var pub_ids = {
-            'admob': 'admob_pub_id',
-            'adsense': 'adsense_pub_id',
-            'brightroll': 'brightroll_pub_id',
-            'ejam': 'ejam_pub_id',
-            'inmobi': 'inmobi_pub_id',
-            'jumptap': 'jumptap_pub_id',
-            'millennial_native': 'millennial_pub_id',
-            'mobfox': 'mobfox_pub_id'
-        };
+            $("#edit-login").click(function() {
+                    $('#id_username_str').show();
+                    $('#id_password_str').show();
+                    $('#id_client_key').show();
 
-        var pub_id = pub_ids[network_type];
+                    $('#username').text('');
+                    $('#password').text('');
+                    $('#client_key').text('');
+
+                    $('.login-credentials-submit').show();
+                    $('.login-credentials-settings').hide();
+            });
+
+            // make necessary changes based on network type
+            var pub_ids = {
+                'admob': 'admob_pub_id',
+                'adsense': 'adsense_pub_id',
+                'brightroll': 'brightroll_pub_id',
+                'ejam': 'ejam_pub_id',
+                'inmobi': 'inmobi_pub_id',
+                'jumptap': 'jumptap_pub_id',
+                'millennial_native': 'millennial_pub_id',
+                'mobfox': 'mobfox_pub_id'
+            };
+
+            var pub_id = pub_ids[network_type];
 
 
-        $('.network_type_dependant').each(function() {
-            $(this).toggle($(this).hasClass(network_type));
-        });
+            $('.network_type_dependant').each(function() {
+                    $(this).toggle($(this).hasClass(network_type));
+            });
 
-        // for each appropriate input, show either the input or the span and button
-        $('ul#apps > li').each(function() {
-            var span = $(this).children('div').children('span');
-            span.children().hide();
-            var input = span.children('input[name$="'+pub_id+'"]');
-            var value = input.val();
-            $(this).children('div').children('label').attr('for', input.attr('id'));
-            if(value) {
-                input.siblings('span.pub_id').html(value).show();
-                input.siblings('a.pub_id').show();
-            }
-            else {
-                input.show();
-            }
-            $(this).children('div').children('ul.adunits').children('li').children('span').each(function() {
-                var span = $(this);
-                span.children().hide();
-                var input = span.children('input[name$="'+pub_id+'"]');
-                if(input.length) {
+            // for each appropriate input, show either the input or the span and button
+            $('ul#apps > li').each(function() {
+                    var span = $(this).children('div').children('span');
+                    span.children().hide();
+                    var input = span.children('input[name$="'+pub_id+'"]');
                     var value = input.val();
+                    $(this).children('div').children('label').attr('for', input.attr('id'));
                     if(value) {
-                        input.siblings('span.pub_id').html(value).show();
+                    input.siblings('span.pub_id').html(value).show();
+                    input.siblings('a.pub_id').show();
                     }
                     else {
-                        input.siblings('span.pub_id').html('Default').show();
+                    input.show();
                     }
-                    input.siblings('a.pub_id').show();
-                }
+                    $(this).children('div').children('ul.adunits').children('li').children('span').each(function() {
+                        var span = $(this);
+                        span.children().hide();
+                        var input = span.children('input[name$="'+pub_id+'"]');
+                        if(input.length) {
+                        var value = input.val();
+                        if(value) {
+                        input.siblings('span.pub_id').html(value).show();
+                        }
+                        else {
+                        input.siblings('span.pub_id').html('Default').show();
+                        }
+                        input.siblings('a.pub_id').show();
+                        }
+                        });
             });
-        });
 
-        $('a.pub_id').click(function() {
-            var network_type = $('select[name="network_type"]').val();
-            var pub_id = pub_ids[network_type];
-            $(this).siblings('input[name$="'+pub_id+'"]').show();
-            $(this).prev('span').hide();
-            $(this).hide();
-        });
+            $('a.pub_id').click(function() {
+                var pub_id = pub_ids[network_type];
+                $(this).siblings('input[name$="'+pub_id+'"]').show();
+                $(this).prev('span').hide();
+                $(this).hide();
+            });
     });
 </script>
 <script type="text/javascript" src="/js/controllers/networks_form.js?v=2"></script>
@@ -138,310 +155,308 @@
 
 
 {% block pageTitle %}
-    <h1>Networks > {{ network.pretty_name }}</h1>
+<h1>Networks > {{ network.pretty_name }}</h1>
 {% endblock pageTitle %}
 
 {% block content %}
-    <form action="{% url advertiser_campaign_create %}" id="campaign_and_adgroup" method="post">
+<form action="{% url advertiser_campaign_create %}" id="campaign_and_adgroup" method="post">
 
-        <div class="alert-message block-message">
-          ... help text for intitial setup ...
-        </div>
+    <div class="alert-message block-message">
+        ... help text for intitial setup ...
+    </div>
 
-        <fieldset>
-            <legend>
-                <h2>Network Details</h2>
-            </legend>
+    <fieldset>
+        <legend>
+            <h2>Network Details</h2>
+        </legend>
+
+        <ul class="form_fields">
+            <li class="campaign_type_dependant network">
+            {{ adgroup_form.network_type.label_tag }}
+            <div>
+                <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
+                <span class="error network_type_dependant admob_native millennial_native">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
+                :
+            </div>
+            </li>
+
+
+            <li>
+            {{ campaign_form.name.label_tag }}
+            <div>
+                {{ campaign_form.name }}
+            </div>
+            </li>
+
+            <li>
+            {{ campaign_form.description.label_tag }}
+            <div>
+                {{ campaign_form.description }}
+            </div>
+            </li>
+
+        </ul>
+    </fieldset>
+
+    <a class="button" id="targeting">Advanced Targeting</a>
+
+    <fieldset class="advanced_targeting">
+        <legend>
+            <h2>Advanced Targeting</h2>
+            <p>Choose which ad units this campaign will target.</p>
+        </legend>
+
+        <ul class="form_fields" id="apps">
+
+            <li class="campaign_type_dependant network network_type_dependant jumptap">
+            {{ account_network_config_form.jumptap_pub_id.label_tag }}
+            <div>
+                {{ account_network_config_form.jumptap_pub_id }}
+            </div>
+            </li>
+
+            <li class="campaign_type_dependant network network_type_dependant custom">
+            {{ adgroup_form.custom_html.label_tag }}
+            <div>
+                {{ adgroup_form.custom_html }}
+                <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
+                <div id="campaignForm-customHtml-helpContent" class="hidden">
+                    <h3>Custom Network</h3>
+                    MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
+                    <br/>
+                    <br/>
+                    <h4>Example:</h4>
+                    A sample HTML snippet from Glam Media is:
+                    <br/>
+                    <br/>
+                    <code>
+                        &lt;script type="text/javascript"><br/>
+                        window.glam_affiliate_id = 1234567890;<br/>
+                        if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
+                        if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
+                        var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
+                        document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
+                        &lt;/script><br/>
+                    </code>
+                </div>
+            </div>
+            </li>
+
+            <li class="campaign_type_dependant network network_type_dependant custom_native">
+            {{ adgroup_form.custom_method.label_tag }}
+            <div>
+                {{ adgroup_form.custom_method }}
+            </div>
+            </li>
+
+            <li class="cant_optimize">
+            {{ adgroup_form.bid_strategy.label_tag }}
+            <div>
+                {{ adgroup_form.bid_strategy }} @ {{ adgroup_form.bid }} USD
+                <a class="campaign_type_dependant promo network whatsthis" id="bid-promo-helpLink" href="#">What's this?</a>
+                <div id="bid-promo-helpContent" class="hidden">
+                    <h3>Promotional CPM</h3>
+                    <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
+                </div>
+                <div id="bid-network-helpContent" class="hidden">
+                    <h3>Network Rate</h3>
+                    <h4>Cost Per Click</h4>
+                    <p>MoPub uses the CPC from the ad networks along with realtime CTR statistics from your app to calculate eCPM. Because ad network CTR is highly variable, this allows us to constantly display the most profitable ads.</p>
+                    <p>You can find your CPC on the ad network's site.</p>
+                    <h4>Estimated Cost Per Mille</h4>
+                    <p>Using a static CPM disables automatic eCPM calculation. This is useful for users who have a preexisting contract with a specific ad network.</p>
+                </div>
+            </div>
+            </li>
+
+            <li>
+            {{ adgroup_form.allocation_percentage.label_tag }}
+            <div>
+                {{ adgroup_form.allocation_percentage }} % of all requests
+            </div>
+            </li>
+            <li>
+            {{ adgroup_form.daily_frequency_cap.label_tag }}
+            <div>
+                {{ adgroup_form.daily_frequency_cap }} daily impressions per user<br />
+                {{ adgroup_form.hourly_frequency_cap }} hourly impressions per user
+            </div>
+            </li>
+            <li>
+            {{ adgroup_form.device_targeting.label_tag }}
+            <div>
+                {% comment %}
+                This field should be rendered using a Django widget, but
+                there is no good option in 1.2 for a Boolean RadioSelect.
+                {% endcomment %}
+                <span class="radios">
+                    <ul>
+                        <li><label for="id_device_targeting_0"><input type="radio" id="id_device_targeting_0" value="0" name="device_targeting" {% if not adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> All</label></li>
+                        <li><label for="id_device_targeting_1"><input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> Filter by device and OS</label></li>
+                    </ul>
+                </span>
+                <ul id="device_targeting">
+                    <li>
+                    <ul class="device_type">
+                        <li><label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label></li>
+                        <li><label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label></li>
+                        <li><label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label></li>
+                    </ul>
+                    {{ adgroup_form.ios_version_min.label_tag }}
+                    {{ adgroup_form.ios_version_min }}
+                    {{ adgroup_form.ios_version_max.label_tag }}
+                    {{ adgroup_form.ios_version_max }}
+                    </li>
+                    <li>
+                    <label class="device_type">{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</label>
+                    {{ adgroup_form.android_version_min.label_tag }}
+                    {{ adgroup_form.android_version_min }}
+                    {{ adgroup_form.android_version_max.label_tag }}
+                    {{ adgroup_form.android_version_max }}
+                    </li>
+                    <li>
+                    <label class="device_type">{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</label>
+                    <span class="muted">(All versions)</span>
+                    </li>
+                </ul>
+            </div>
+            </li>
+            <li>
+            <label>Country Targeting:</label>
+            <div>
+                <div id="geo_pred_ta" name="geo_predicates"></div>
+            </div>
+            </li>
+            <li class="countryNumDependent 0 1" style="display: none;">
+            {{ adgroup_form.region_targeting.label_tag }}
+            <div>
+                <span class="radios">{{ adgroup_form.region_targeting }}</span>
+            </div>
+            </li>
+            <li class="locationDependent city" style="display: none;">
+            <label>City Targeting:</label>
+            <div>
+                <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
+                <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
+            </div>
+            </li>
+            <li>
+            {{ adgroup_form.keywords.label_tag }}
+            <div>
+                {{ adgroup_form.keywords }}
+                <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
+                <div id="campaignForm-keyword-helpContent" class="hidden">
+                    <h3>Keywords</h3>
+                    <p>
+                    Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
+                    <br/><br/>
+                    e.g. In order to target 24-year-old males or any 25-year-old you can use special keywords
+                    <br/><br/>
+                    m_age:24 AND m_gender:M
+                    <br/>
+                    m_age:25
+                    <br/><br/>
+                    Note: Keywords should only be used if your app is sending keywords with the ad request.
+                    </p>
+                </div>
+            </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    <fieldset class="login-credentials-fields network_type_dependant {{reporting_networks}} login-credentials">
+        <legend>
+            <h2>Optimization</h2>
+        </legend>
+
+        <div class=" alert-message block-message">
+            <div class="login-credentials-message">
+                MoPub ranks ad networks in order of highest CPM. You can either set the CPM for each of your apps, or MoPub can do it for you. MoPub will optimize your ad networks by pulling the CPM data from each network. MoPub uses your login credentials to retrieve this data.
+            </div>
 
             <ul class="form_fields">
-                <li class="campaign_type_dependant network">
-                    {{ adgroup_form.network_type.label_tag }}
-                    <div>
-                        <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                        <span class="error network_type_dependant admob_native millennial_native">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
-                        :
-                    </div>
-                </li>
-
 
                 <li>
-                    {{ campaign_form.name.label_tag }}
-                    <div>
-                        {{ campaign_form.name }}
-                    </div>
+                {{ login_form.username_str.label_tag }}
+                {{ login_form.username_str }}
+                <span id='username'> </span>
                 </li>
 
                 <li>
-                    {{ campaign_form.description.label_tag }}
-                    <div>
-                        {{ campaign_form.description }}
-                    </div>
+                {{ login_form.password_str.label_tag }}
+                {{ login_form.password_str }}
+                <span id='password'> </span>
                 </li>
 
-                <li>
-                    <select id='optimizationSelect' class='selectmenu'>
-                        <option value="optimize">Auto Optimize</option>
-                        <option value="targeting">Advanced Targeting</option>
-                    </select>
+                {% if network.name == "admob" %}
+                <li class="network_type_dependant admob admob_native">
+                {{ login_form.client_key.label_tag }}
+                {{ login_form.client_key }}
+                <span id='client_key'> </span>
                 </li>
+                {% endif %}
 
             </ul>
-        </fieldset>
 
-            <fieldset class="login-credentials-fields network_type_dependant {{reporting_networks}} login_credentials">
-                <legend>
-                    <h2>Optimization</h2>
-                </legend>
-
-                <div class=" alert-message block-message">
-                    <div class="login-credentials-message">
-                        MoPub ranks ad networks in order of highest CPM. You can either set the CPM for each of your apps, or MoPub can do it for you. MoPub will optimize your ad networks by pulling the CPM data from each network. MoPub uses your login credentials to retrieve this data.
-                    </div>
-
-                    <ul class="form_fields">
-
-                        <li>
-                            {{ login_form.username_str.label_tag }}
-                            <div id='username'>
-                                {{ login_form.username_str }}
-                            </div>
-                        </li>
-
-                        <li>
-                            {{ login_form.password_str.label_tag }}
-                            <div id='password'>
-                                {{ login_form.password_str }}
-                            </div>
-                        </li>
-
-                        <li class="network_type_dependant admob admob_native">
-                            {{ login_form.client_key.label_tag }}
-                            <div>
-                                {{ login_form.client_key }}
-                            </div>
-                        </li>
-
-                    </ul>
-
-                    <div class="form-submit login-credentials-submit">
-                      <a class="button" id="networkSettingsForm-cancel">Cancel</a>
-                      <a class="button" id="networkSettingsForm-submit">Save</a>
-                    </div>
-                </div>
-            </fieldset>
-
-        <fieldset class="advanced_targeting">
-            <legend>
-                <h2>Advanced Targeting</h2>
-                <p>Choose which ad units this campaign will target.</p>
-            </legend>
-
-            <ul class="form_fields" id="apps">
-
-                <li class="campaign_type_dependant network network_type_dependant jumptap">
-                    {{ account_network_config_form.jumptap_pub_id.label_tag }}
-                    <div>
-                        {{ account_network_config_form.jumptap_pub_id }}
-                    </div>
-                </li>
-
-                <li class="campaign_type_dependant network network_type_dependant custom">
-                    {{ adgroup_form.custom_html.label_tag }}
-                    <div>
-                        {{ adgroup_form.custom_html }}
-                        <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
-                        <div id="campaignForm-customHtml-helpContent" class="hidden">
-                            <h3>Custom Network</h3>
-                            MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
-                            <br/>
-                            <br/>
-                            <h4>Example:</h4>
-                            A sample HTML snippet from Glam Media is:
-                            <br/>
-                            <br/>
-                            <code>
-                                &lt;script type="text/javascript"><br/>
-                                window.glam_affiliate_id = 1234567890;<br/>
-                                if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
-                                if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
-                                var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
-                                document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
-                                &lt;/script><br/>
-                            </code>
-                        </div>
-                    </div>
-                </li>
-
-                <li class="campaign_type_dependant network network_type_dependant custom_native">
-                    {{ adgroup_form.custom_method.label_tag }}
-                    <div>
-                        {{ adgroup_form.custom_method }}
-                    </div>
-                </li>
-
-                <li class="cant_optimize">
-                    {{ adgroup_form.bid_strategy.label_tag }}
-                    <div>
-                        {{ adgroup_form.bid_strategy }} @ {{ adgroup_form.bid }} USD
-                        <a class="campaign_type_dependant promo network whatsthis" id="bid-promo-helpLink" href="#">What's this?</a>
-                        <div id="bid-promo-helpContent" class="hidden">
-                            <h3>Promotional CPM</h3>
-                            <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
-                        </div>
-                        <div id="bid-network-helpContent" class="hidden">
-                            <h3>Network Rate</h3>
-                            <h4>Cost Per Click</h4>
-                            <p>MoPub uses the CPC from the ad networks along with realtime CTR statistics from your app to calculate eCPM. Because ad network CTR is highly variable, this allows us to constantly display the most profitable ads.</p>
-                            <p>You can find your CPC on the ad network's site.</p>
-                            <h4>Estimated Cost Per Mille</h4>
-                            <p>Using a static CPM disables automatic eCPM calculation. This is useful for users who have a preexisting contract with a specific ad network.</p>
-                        </div>
-                    </div>
-                </li>
-
-                <li>
-                    {{ adgroup_form.allocation_percentage.label_tag }}
-                    <div>
-                        {{ adgroup_form.allocation_percentage }} % of all requests
-                    </div>
-                </li>
-                <li>
-                    {{ adgroup_form.daily_frequency_cap.label_tag }}
-                    <div>
-                        {{ adgroup_form.daily_frequency_cap }} daily impressions per user<br />
-                        {{ adgroup_form.hourly_frequency_cap }} hourly impressions per user
-                    </div>
-                </li>
-                <li>
-                    {{ adgroup_form.device_targeting.label_tag }}
-                    <div>
-                        {% comment %}
-                        This field should be rendered using a Django widget, but
-                        there is no good option in 1.2 for a Boolean RadioSelect.
-                        {% endcomment %}
-                        <span class="radios">
-                            <ul>
-                                <li><label for="id_device_targeting_0"><input type="radio" id="id_device_targeting_0" value="0" name="device_targeting" {% if not adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> All</label></li>
-                                <li><label for="id_device_targeting_1"><input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> Filter by device and OS</label></li>
-                            </ul>
-                        </span>
-                        <ul id="device_targeting">
-                            <li>
-                                <ul class="device_type">
-                                    <li><label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label></li>
-                                    <li><label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label></li>
-                                    <li><label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label></li>
-                                </ul>
-                                {{ adgroup_form.ios_version_min.label_tag }}
-                                {{ adgroup_form.ios_version_min }}
-                                {{ adgroup_form.ios_version_max.label_tag }}
-                                {{ adgroup_form.ios_version_max }}
-                            </li>
-                            <li>
-                                <label class="device_type">{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</label>
-                                {{ adgroup_form.android_version_min.label_tag }}
-                                {{ adgroup_form.android_version_min }}
-                                {{ adgroup_form.android_version_max.label_tag }}
-                                {{ adgroup_form.android_version_max }}
-                            </li>
-                            <li>
-                                <label class="device_type">{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</label>
-                                <span class="muted">(All versions)</span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-                <li>
-                    <label>Country Targeting:</label>
-                    <div>
-                        <div id="geo_pred_ta" name="geo_predicates"></div>
-                    </div>
-                </li>
-                <li class="countryNumDependent 0 1" style="display: none;">
-                    {{ adgroup_form.region_targeting.label_tag }}
-                    <div>
-                        <span class="radios">{{ adgroup_form.region_targeting }}</span>
-                    </div>
-                </li>
-                <li class="locationDependent city" style="display: none;">
-                    <label>City Targeting:</label>
-                    <div>
-                        <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
-                        <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
-                    </div>
-                </li>
-                <li>
-                    {{ adgroup_form.keywords.label_tag }}
-                    <div>
-                        {{ adgroup_form.keywords }}
-                        <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
-                        <div id="campaignForm-keyword-helpContent" class="hidden">
-                            <h3>Keywords</h3>
-                            <p>
-                                Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
-                                <br/><br/>
-                                e.g. In order to target 24-year-old males or any 25-year-old you can use special keywords
-                                <br/><br/>
-                                m_age:24 AND m_gender:M
-                                <br/>
-                                m_age:25
-                                <br/><br/>
-                                Note: Keywords should only be used if your app is sending keywords with the ad request.
-                            </p>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-        </fieldset>
-
-        <fieldset>
-            <legend>
-                <h2>App Breakdown</h2>
-            </legend>
-
-            <span id="apps_label">
-                Ad Units:<br />
-                <label>( <input id="all-adunits" type="checkbox" /> All )</label>
-            </span>
-
-            <ul id="apps">
-                {% for app in apps %}
-                <li>
-                    <img src="{{ app.icon_url }}" />
-                    <div>
-                        <label>
-                            {{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
-                        </label>
-                        <span class="campaign_type_dependant network">
-                            {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                            <span class="pub_id muted"></span>
-                            <a class="pub_id" href="javascript:void(0);" type="button">change</a>
-                        </span>
-                        <ul class="adunits">
-                            {% for adunit in app.adunits %}
-                            <li>
-                                <label>
-                                    <input {% if adunit.key in adgroup_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" />
-                                    {{ adunit.name }}
-                                </label>
-                                <span class="campaign_type_dependant network">
-                                    {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
-                                    <span class="pub_id muted"></span>
-                                    <a class="pub_id" href="javascript:void(0);" type="button">change</a>
-                                </span>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-        </fieldset>
-
-        <div class="form-submit">
-            <a class="button" id="submit" href="#">Save</a>
-            <a class="button" id="cancel" href="{% url networks %}">Cancel</a>
+            <div class="form-submit login-credentials-submit">
+                <a class="button" id="networkSettingsForm-submit">Enable Optimization</a>
+                <a class="button" id="networkSettingsForm-cancel">No Thanks</a>
+            </div>
+            <div class="form-submit login-credentials-settings hidden">
+                <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
+                <a id="delete-login" style="cursor:pointer; margin:10px;">Turn off Optimization</a>
+            </div>
         </div>
-    </form>
+    </fieldset>
+
+    <fieldset>
+        <legend>
+            <h2>App Breakdown</h2>
+        </legend>
+
+        <span id="apps_label">
+            Ad Units:<br />
+            <label>( <input id="all-adunits" type="checkbox" /> All )</label>
+        </span>
+
+        <ul id="apps">
+            {% for app in apps %}
+            <li>
+            <img src="{{ app.icon_url }}" />
+            <div>
+                <label>
+                    {{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                </label>
+                <span class="campaign_type_dependant network">
+                    {% for field in app.network_config_form %}{{ field }}{% endfor %}
+                    <span class="pub_id muted"></span>
+                    <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                </span>
+                <ul class="adunits">
+                    {% for adunit in app.adunits %}
+                    <li>
+                    <label>
+                        <input {% if adunit.key in adgroup_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" />
+                        {{ adunit.name }}
+                    </label>
+                    <span class="campaign_type_dependant network">
+                        {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
+                        <span class="pub_id muted"></span>
+                        <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                    </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </fieldset>
+
+    <div class="form-submit">
+        <a class="button" id="submit" href="#">Save</a>
+        <a class="button" id="cancel" href="{% url networks %}">Cancel</a>
+    </div>
+</form>
 {% endblock content %}
 

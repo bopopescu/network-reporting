@@ -159,6 +159,7 @@ class AdNetworkStats(db.Model):
         for stat in STAT_NAMES:
             # example: self.revenue += stats.revenue
             setattr(self, stat, getattr(self, stat) + getattr(stats, stat))
+        self.date = self.date or stats.date
         return self
 
     def __sub_(self,

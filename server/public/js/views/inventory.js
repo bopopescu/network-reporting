@@ -90,10 +90,11 @@ var mopub = window.mopub || {};
         },
 
         show_chart: function () {
+            var this_view = this;
             if(this.collection.isFullyLoaded()) {
                 var active_chart = $('#dashboard-stats .stats-breakdown .active');
                 var use_ctr = active_chart.attr('id') === 'stats-breakdown-ctr';
-                mopub.Chart.setupDashboardStatsChart(use_ctr ? 'line' : 'area');
+                mopub.Chart.setupDashboardStatsChart((use_ctr || this_view.options.line_graph) ? 'line' : 'area');
             }
         },
 
@@ -130,10 +131,11 @@ var mopub = window.mopub || {};
                 mopub.dashboardStatsChartData = {
                     pointStart: this_view.options.start_date,
                     pointInterval: 86400000,
-                    impression_count: this_view.collection.get_chart_data('impression_count'),
-                    revenue: this_view.collection.get_chart_data('revenue'),
-                    click_count: this_view.collection.get_chart_data('click_count'),
-                    ctr: this_view.collection.get_chart_data('ctr')
+                    impression_count: this_view.collection.get_chart_data('impression_count', this_view.options.mopub_optimized),
+                    revenue: this_view.collection.get_chart_data('revenue', this_view.options.mopub_optimized),
+                    click_count: this_view.collection.get_chart_data('click_count', this_view.options.mopub_optimized),
+                    ctr: this_view.collection.get_chart_data('ctr', this_view.options.mopub_optimized),
+                    total: false
                 };
                 this_view.show_chart();
             }

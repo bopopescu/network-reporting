@@ -20,19 +20,24 @@ $(function() {
     var NetworksController = { 
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
+                graph_start_date = bootstrapping_data.graph_statr_date,
+                today = bootstrapping_data.today,
+                yesterday = bootstrapping_data.yesterday,
                 networks = bootstrapping_data.networks,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
             var campaigns = new Campaigns(campaign_data);
 
-//            var graph_view = new CollectionGraphView({
-//                collection: campaings,
-//                start_date: graph_start_date,
-//                today: today,
-//                yesterday: yesterday
-//            });
-//            graph_view.render();
-
+            // Load chart
+            var graph_view = new CollectionGraphView({
+                collection: campaigns,
+                start_date: graph_start_date,
+                today: today,
+                yesterday: yesterday,
+                line_graph: false,
+                mopub_optimized: false,
+            });
+            graph_view.render();
 
             // Load mopub collected StatsModel stats keyed on campaign
             campaigns.each(function(campaign) {
@@ -47,6 +52,7 @@ $(function() {
                         });
                     }
                 });
+                console.log(campaign)
             });
 
 

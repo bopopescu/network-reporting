@@ -78,12 +78,7 @@ class NetworksHandler(RequestHandler):
         networks = []
         reporting_networks = []
         campaigns = []
-        reporting = False
 
-        logging.info(DEFAULT_NETWORKS)
-
-        graph_stats = []
-        stats_manager = StatsModelQueryManager(account=self.account)
         for network in DEFAULT_NETWORKS.union(set(OTHER_NETWORKS.keys())):
             campaign = CampaignQueryManager.get_network_campaign(self. \
                     account.key(), network)
@@ -105,27 +100,14 @@ class NetworksHandler(RequestHandler):
                 network_data['pretty_name'] = REPORTING_NETWORKS.get(network,
                         False) or OTHER_NETWORKS[network]
 
-                all_stats = stats_manager.get_stats_for_days(publisher=None,
-                                                             advertiser= \
-                                                                     campaign,
-                                                             days=days)
-                stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
-
-                # Format graph stats
-                temp_stats = copy.copy(stats)
-                temp_stats = temp_stats.to_dict()
-                temp_stats['daily_stats'] = [s2.to_dict() for s2 in
-                        sorted(all_stats, key=lambda s1: s1.date)]
-                temp_stats['name'] = network_data['pretty_name']
-                graph_stats.append(temp_stats)
-
-                network_data['mopub_stats'] = stats
-
                 networks_to_setup -= set([network])
                 additional_networks -= set([network])
 
                 networks.append(network_data)
 
+        # Sort networks alphabetically
+        networks = sorted(networks, key=lambda network_data:
+                network_data['name'])
 
         networks_to_setup_ = []
         # Generate list of main networks that can be setup
@@ -147,13 +129,6 @@ class NetworksHandler(RequestHandler):
 
             additional_networks_.append(network_data)
 
-        # Sort networks alphabetically
-        networks = sorted(networks, key=lambda network_data:
-                network_data['name'])
-
-        from django.utils import simplejson
-
-        graph_stats = simplejson.dumps(graph_stats)
 
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper
@@ -164,7 +139,6 @@ class NetworksHandler(RequestHandler):
                   'start_date': days[0],
                   'end_date': days[-1],
                   'date_range': self.date_range,
-                  'graph_stats': graph_stats,
                   'networks': networks,
                   'networks_to_setup': networks_to_setup_,
                   'additional_networks': additional_networks_,

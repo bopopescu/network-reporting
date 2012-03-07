@@ -3,6 +3,11 @@ API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager
+from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
+        REPORTING_NETWORKS
+# TODO: move this
+from networks.views import OTHER_NETWORKS
+
 from publisher.query_managers import AdUnitQueryManager, \
      AppQueryManager
 from reporting.models import StatsModel
@@ -352,6 +357,10 @@ class CampaignService(RequestHandler):
             stats_dict = summed_stats.to_dict()
 
             stats_dict['daily_stats'] = [s.to_dict() for s in stats]
+
+            stats_dict['name'] = REPORTING_NETWORKS.get(campaign. \
+                    network_type, False) or OTHER_NETWORKS[campaign. \
+                    network_type]
 
             return JSONResponse(stats_dict)
         except Exception, exception:

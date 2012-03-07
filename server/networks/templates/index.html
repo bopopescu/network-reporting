@@ -235,30 +235,19 @@ Make a table for the main ad networks that are not setup
     $(function () {
         account_key = '{{ account_key }}';
 
+        var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
+
+        var today = {% if today != None %}{{ today }}{% else %}null{% endif %};
+
+        var yesterday = {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %};
+
         NetworksController.initialize({
             campaign_data: {{ campaigns|safe }},
             networks: {{ reporting_networks|safe }},
-            ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
-        graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
-
-        today = {% if today != None %}{{ today }}{% else %}null{% endif %};
-
-        yesterday = {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %};
-
-        console.log({{graph_stats|safe}});
-        // TODO: remove hack
-        var adgroups = new AdGroups({{graph_stats|safe}});
-
-        var graph_view = new CollectionGraphView({
-            collection: adgroups,
-            start_date: graph_start_date,
+            graph_start_date: graph_start_date,
             today: today,
             yesterday: yesterday,
-            line_graph: false,
-            mopub_optimized: false,
-        });
-        graph_view.render();
-
+            ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
 
         $('#show-both').click(function() {
             $('.mopub-data').show();

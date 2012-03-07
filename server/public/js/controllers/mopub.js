@@ -2,12 +2,6 @@
  * # MoPub Global JS
  */
 
-//For JSLint Validation:
-//global console: true, Highcharts: true
-
-//mopub singleton object
-var mopub = mopub || {};
-mopub.Utils = mopub.Utils || {};
 
 /*
  * Make sure there's a console.log function in case we forgot to remove debug statements
@@ -26,8 +20,9 @@ if (typeof window.console == "undefined") {
 (function($) {
 
     var mopub = window.mopub || {};
-    var Chart = window.Chart || {};
-    var Stats = window.Stats || {};
+    var Chart = mopub.Chart || {};
+    var Stats = mopub.Stats || {};
+    var Utils = mopub.Utils || {};
 
     $(document).ready(function() {
 
@@ -1055,12 +1050,10 @@ if (typeof window.console == "undefined") {
     };
 
 
-    window.Chart = Chart;
-    window.Stats = Stats;
     window.mopub = mopub;
     window.mopub.Stats = Stats;
     window.mopub.Chart = Chart;
-    window.Mopub = mopub;
+    window.mopub.Controllers = {};
 
 
 })(this.jQuery);

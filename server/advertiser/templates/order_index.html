@@ -45,45 +45,20 @@
     </tr>
   </thead>
   {% for order in orders %}
-    <tbody class="app {% cycle "alt" "primary" %}">
-      <tr class="main app-row" id="app-{{ order.key }}">
-        <td class="name">
-          {% if singular %}
-            Totals
-          {% else %}
-            <a href="{% url advertiser_order_detail campaign_key=order.key %}">
-              {{ order.name }}
-            </a>
-          {% endif %}
-          <img id="{{ order.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
-        </td>
-        {# these stats will be loaded over ajax #}
-        <td class="requests stat">--</td>
-        <td class="impressions stat">--</td>
-        <td class="fill_rate stat">--</td>
-        <td class="clicks stat">--</td>
-        <td class="ctr stat">--</td>
-      </tr>
-      {% for lineitem in order.lineitems %}
-        <tr class="sub adunit-row" id="adunit-{{ lineitem.key }}">
-          <td class="name">
-            <a href="{% url advertiser_lineitem_detail adgroup_key=lineitem.key %}">
-              {{ lineitem.name }}
-            </a>
-            <span class="sparkline"
-                  data-impressions="{{ lineitem.impressions }}"
-                  data-clicks="{{ lineitem.clicks }}"
-                  data-conversions="{{ lineitem.conversions }}"> Loading... </span>
-          </td>
-          {# these stats will be loaded over ajax #}
-          <td class="requests stat">--</td>
-          <td class="impressions stat">--</td>
-          <td class="fill_rate stat">--</td>
-          <td class="clicks stat">--</td>
-          <td class="ctr stat">--</td>
-        </tr>
-      {% endfor %}
-    </tbody>
+    <tr class="main order-row {% cycle "alt" "primary" %}" id="order-{{ order.key }}">
+      <td class="name">
+        <a href="{% url advertiser_order_detail campaign_key=order.key %}">
+          {{ order.name }}
+        </a>
+        <img id="{{ order.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+      </td>
+      {# these stats will be loaded over ajax #}
+      <td class="requests stat">--</td>
+      <td class="impressions stat">--</td>
+      <td class="fill_rate stat">--</td>
+      <td class="clicks stat">--</td>
+      <td class="ctr stat">--</td>
+    </tr>
   {% endfor %}
 </table>
 
@@ -94,6 +69,7 @@
 {% include_script "controllers/orders" %}
 <script type="text/javascript">
     $(function() {
+        var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeIndex({});
     });
 </script>

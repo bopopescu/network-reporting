@@ -38,26 +38,13 @@ class OrderIndexHandler(RequestHandler):
         stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
         orders = CampaignQueryManager.get_campaigns(account=self.account)
         for order in orders:
-            order.lineitems = AdGroupQueryManager.get_adgroups(campaign=order)
-            for lineitem in order.lineitems:
-                s = stats_manager.get_stats_for_days(advertiser=lineitem,
-                                                     days = self.days)
-                # we keep stats as lists so we can do sparklines
-                # there will be an int for each day in self.days
-                lineitem.requests = [int(d.request_count) for d in s]
-                lineitem.impressions = [int(d.impression_count) for d in s]
-                lineitem.clicks = [int(d.click_count) for d in s]
-                lineitem.conversions = [int(d.conversion_count) for d in s]
+            order.stats = stats_manager.get_stats_for_days(advertiser=order,
+                                                           days=self.days)
 
+        total_impressions = sum([s.impression_count for o in orders for s in o.stats])
+        total_clicks = sum([s.click_count for o in orders for s in o.stats])
+        total_conversions = sum([s.conversion_count for o in orders for s in o.stats])
 
-        # Summarize the stats for the rollup
-        # Each of the line item-level stats are kept as lists (so we can do sparklines).
-        # We have to sum them first, and then sum all of the lineitem stats in the adgroup.
-        # That's why theres two sums, like sum([sum(i) for i in j])
-        # REFACTOR: do this over ajax
-        total_impressions = sum([sum(li.impressions) for li in order.lineitems for order in orders])
-        total_clicks = sum([sum(li.clicks) for li in order.lineitems for order in orders])
-        total_conversions = sum([sum(li.conversions) for li in order.lineitems for order in orders])
         totals = {
             "impressions": total_impressions,
             "clicks" : total_clicks,
@@ -110,10 +97,16 @@ class LineItemArchiveHandler(RequestHandler):
     """
     @responsible: pena
     """
+
     def get(self):
+
+        archived_lineitems = AdGroupQueryManager.get_adgroups(account=self.account,
+                                                             archived=True)
         return render_to_response(self.request,
                                   "advertiser/lineitem_archive.html",
-                                  {})
+                                  {
+                                      'archived_lineitems': archived_lineitems
+                                  })
 
 def lineitem_archive(request, *args, **kwargs):
     return LineItemArchiveHandler()(request, use_cache=False, *args, **kwargs)
@@ -147,16 +140,3 @@ class LineItemFormHandler(RequestHandler):
 def lineitem_form(request, *args, **kwargs):
     return LineItemFormHandler()(request, use_cache=False, *args, **kwargs)
 
-
-###########
-# Helpers #
-###########
-
-def format_stats_for_adgroup(adgroup):
-    pass
-
-def format_stats_for_campaign(campaign):
-    pass
-
-def format_stats(model):
-    pass

@@ -287,13 +287,15 @@ def minify_javascript():
 
 
 def update_static_version_numbers():
-    f = open('../versions.yaml','r')
+    versions_path = os.path.join(PWD, '../versions.yaml')
+    f = open(versions_path,'r')
     config = yaml.load(f)
     f.close()
     # REFACTOR: check to see if files have been updated first
     config['scripts'] += 1
     config['styles'] += 1
-    f = open('../versions.yaml','w')
+
+    f = open(versions_path,'w')
     yaml.dump(config, f)
     f.close()
 

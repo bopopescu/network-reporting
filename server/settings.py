@@ -14,7 +14,9 @@
 
 # Django settings for google-app-engine-django project.
 
+import os
 from common.ragendja.settings_pre import *
+
 
 NEW_UI = True
 DEFAULT_FROM_EMAIL = 'olp@mopub.com'
@@ -158,11 +160,11 @@ LOGIN_REQUIRED_PREFIXES = (
 
 ACCOUNT_ACTIVATION_DAYS = 14
 
-STATIC_VERSION_NUMBER = 216
-
+PWD = os.path.dirname(os.path.abspath(__file__))
+VERSIONS_FILE = os.path.join(PWD, 'versions.yaml')
 
 import yaml
-config = yaml.load(open('versions.yaml', 'r'))
+config = yaml.load(open(VERSIONS_FILE, 'r'))
 
 SCRIPTS_VERSION_NUMBER = config['scripts']
 STYLES_VERSION_NUMBER = config['styles']

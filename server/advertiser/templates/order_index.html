@@ -1,0 +1,100 @@
+{% extends "advertiser/base.html" %}
+{% load filters %}
+
+
+{% block content %}
+
+  <div class="campaignData-rollup">
+    <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
+      <thead>
+        <tr style="border:none;">
+          <th width=25%>Impressions</th>
+          <th width=25%>Clicks</th>
+          <th width=25%>CTR</th>
+          <th width=25%>Conversions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border:none;">
+          {% if totals %}
+            <td> {{ totals.impressions|withsep|default_if_none:"0"|withsep }} </td>
+            <td> {{ totals.clicks|withsep|default_if_none:"0" }} </td>
+            <td> {{ totals.ctr|percentage|default_if_none:"0.0%" }} </td>
+            <td> {{ totals.conversions|withsep|default_if_none:"0" }} </td>
+          {% else %}
+            <td> 0 </td>
+            <td> 0 </td>
+            <td> 0.0% </td>
+            <td> 0 </td>
+          {% endif %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+<table class="inventory_table">
+  <thead>
+    <tr>
+      <td class="name"></td>
+      <td class="stat">Requests</td>
+      <td class="stat">Impressions</td>
+      <td class="stat">Fill Rate</td>
+      <td class="stat">Clicks</td>
+      <td class="stat">CTR</td>
+    </tr>
+  </thead>
+  {% for order in orders %}
+    <tbody class="app {% cycle "alt" "primary" %}">
+      <tr class="main app-row" id="app-{{ order.key }}">
+        <td class="name">
+          {% if singular %}
+            Totals
+          {% else %}
+            <a href="{% url advertiser_order_detail campaign_key=order.key %}">
+              {{ order.name }}
+            </a>
+          {% endif %}
+          <img id="{{ order.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+        </td>
+        {# these stats will be loaded over ajax #}
+        <td class="requests stat">--</td>
+        <td class="impressions stat">--</td>
+        <td class="fill_rate stat">--</td>
+        <td class="clicks stat">--</td>
+        <td class="ctr stat">--</td>
+      </tr>
+      {% for lineitem in order.lineitems %}
+        <tr class="sub adunit-row" id="adunit-{{ lineitem.key }}">
+          <td class="name">
+            <a href="{% url advertiser_lineitem_detail adgroup_key=lineitem.key %}">
+              {{ lineitem.name }}
+            </a>
+            <span class="sparkline"
+                  data-impressions="{{ lineitem.impressions }}"
+                  data-clicks="{{ lineitem.clicks }}"
+                  data-conversions="{{ lineitem.conversions }}"> Loading... </span>
+          </td>
+          {# these stats will be loaded over ajax #}
+          <td class="requests stat">--</td>
+          <td class="impressions stat">--</td>
+          <td class="fill_rate stat">--</td>
+          <td class="clicks stat">--</td>
+          <td class="ctr stat">--</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  {% endfor %}
+</table>
+
+
+{% endblock content %}
+
+{% block extraScripts %}
+{% include_script "controllers/orders" %}
+<script type="text/javascript">
+    $(function() {
+        OrdersController.initializeIndex({});
+    });
+</script>
+{% endblock extraScripts %}

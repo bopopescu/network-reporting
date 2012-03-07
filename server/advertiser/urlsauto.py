@@ -2,5 +2,5 @@
 from django.conf.urls.defaults import *
 
 rootpatterns = patterns('',
-    (r'^campaigns/', include('advertiser.urls')),
+    (r'^advertise/', include('advertiser.urls')),
 )

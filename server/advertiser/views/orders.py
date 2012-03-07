@@ -13,8 +13,13 @@ Whenever you see "Campaign", think "Order", and wherever you see
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response
 
-from advertiser.models import Campaign, AdGroup
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
+from reporting.query_managers import StatsModelQueryManager
+
+import logging
+
+ctr = lambda clicks, impressions: (clicks/float(impressions) if impressions
+        else 0)
 
 class OrderIndexHandler(RequestHandler):
     """
@@ -27,16 +32,44 @@ class OrderIndexHandler(RequestHandler):
     """
     def get(self):
 
+        # Grab all of the orders, and for each order, grab all of the line items.
+        # For each of the line items, grab the stats for the date range.
+        # REFACTOR: do this over ajax
+        stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
         orders = CampaignQueryManager.get_campaigns(account=self.account)
-        lineitems = AdGroupQueryManager.get_adgroups(campaigns=orders)
+        for order in orders:
+            order.lineitems = AdGroupQueryManager.get_adgroups(campaign=order)
+            for lineitem in order.lineitems:
+                s = stats_manager.get_stats_for_days(advertiser=lineitem,
+                                                     days = self.days)
+                # we keep stats as lists so we can do sparklines
+                # there will be an int for each day in self.days
+                lineitem.requests = [int(d.request_count) for d in s]
+                lineitem.impressions = [int(d.impression_count) for d in s]
+                lineitem.clicks = [int(d.click_count) for d in s]
+                lineitem.conversions = [int(d.conversion_count) for d in s]
 
+
+        # Summarize the stats for the rollup
+        # Each of the line item-level stats are kept as lists (so we can do sparklines).
+        # We have to sum them first, and then sum all of the lineitem stats in the adgroup.
+        # That's why theres two sums, like sum([sum(i) for i in j])
+        # REFACTOR: do this over ajax
+        total_impressions = sum([sum(li.impressions) for li in order.lineitems for order in orders])
+        total_clicks = sum([sum(li.clicks) for li in order.lineitems for order in orders])
+        total_conversions = sum([sum(li.conversions) for li in order.lineitems for order in orders])
+        totals = {
+            "impressions": total_impressions,
+            "clicks" : total_clicks,
+            "ctr": ctr(total_clicks, total_impressions),
+            "conversions": total_conversions
+        }
 
         return render_to_response(self.request,
                                   "advertiser/order_index.html",
                                   {
                                       'orders': orders,
-                                      'lineitems': lineitems
-
+                                      'totals': totals
                                   })
 
 def order_index(request, *args, **kwargs):
@@ -49,7 +82,8 @@ class OrderDetailHandler(RequestHandler):
     Top level stats rollup for all of the line items within the order.
     Lists each line item within the order with links to line item details.
     """
-    def get(self):
+    def get(self, campaign_key):
+
         return render_to_response(self.request,
                                   "advertiser/order_detail.html",
                                   {})
@@ -112,3 +146,17 @@ class LineItemFormHandler(RequestHandler):
 
 def lineitem_form(request, *args, **kwargs):
     return LineItemFormHandler()(request, use_cache=False, *args, **kwargs)
+
+
+###########
+# Helpers #
+###########
+
+def format_stats_for_adgroup(adgroup):
+    pass
+
+def format_stats_for_campaign(campaign):
+    pass
+
+def format_stats(model):
+    pass

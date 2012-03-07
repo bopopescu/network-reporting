@@ -95,7 +95,7 @@ NETWORK_TYPE_TO_PUB_ID_ATTR = {'dummy':'',
 
 def get_adgroup_name():
     adgroup_index = str(uuid.uuid1()).split('-')[0]
-    return "AdGroup %s" % adgroup_index
+    return "Wow! Line item %s" % adgroup_index
 
 
 def get_creative_name():
@@ -112,7 +112,7 @@ def get_adunit_name():
 
 def get_campaign_name():
     campaign_index = str(uuid.uuid1()).split('-')[0]
-    return "Super Campaign %s" % campaign_index
+    return "Super Order %s" % campaign_index
 
 def get_random_color():
     return "".join([select_rand(COLOR_ALPH) for i in xrange(5)])

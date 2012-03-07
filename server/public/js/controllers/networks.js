@@ -17,10 +17,10 @@ $(function() {
         Toast.error(message, "Error fetching app data.");
     };
 
-    var NetworksController = {
-
+    var NetworksController = { 
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
+                networks = bootstrapping_data.networks,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
             var campaigns = new Campaigns(campaign_data);
@@ -33,8 +33,9 @@ $(function() {
 //            });
 //            graph_view.render();
 
+
+            // Load mopub collected StatsModel stats keyed on campaign
             campaigns.each(function(campaign) {
-                console.log(campaign);
                 new CampaignView({
                     model: campaign
                 });
@@ -46,6 +47,19 @@ $(function() {
                         });
                     }
                 });
+            });
+
+
+            // Load rolled up network stats
+            $.each(networks, function(index, network) {
+                var roll_up = new RollUp({
+                    id: network,
+                    type: 'network'
+                });
+                var roll_up_view = new RollUpView({
+                    model: roll_up
+                });
+                roll_up.fetch({ data: ajax_query_string });
             });
         }
     }

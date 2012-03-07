@@ -227,8 +227,6 @@ Make a table for the main ad networks that are not setup
 </script>
 <script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
 <script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
-<script type="text/javascript" src="/js/controllers/networks.js?v=0"></script>
-<script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=0"></script>
 
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
@@ -237,17 +235,9 @@ Make a table for the main ad networks that are not setup
     $(function () {
         account_key = '{{ account_key }}';
 
-        AdNetworkReportsController.initializeAdReportsIndex({
-            networks_data: [{% for network in reporting_networks %} {
-                network: '{{ network }}',
-                models: []},
-            {% endfor %}],
-            only_networks: true,
-            apps_data: [],
-            ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
-
         NetworksController.initialize({
             campaign_data: {{ campaigns|safe }},
+            networks: {{ reporting_networks|safe }},
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
         graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
 

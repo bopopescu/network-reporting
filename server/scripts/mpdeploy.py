@@ -300,7 +300,9 @@ def update_static_version_numbers():
     f.close()
 
 
-def post_to_hipchat(message, room_id, files={}):
+def post_to_hipchat(message, room_id=None):
+    if not room_id:
+        room_id="21565"
     url = "https://api.hipchat.com/v1/rooms/message?" + \
           "format=json" + \
           "&auth_token=3ec795e1dd7781d59fb5b8731adef1" + \

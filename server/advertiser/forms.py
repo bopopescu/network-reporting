@@ -103,17 +103,19 @@ class CampaignForm(forms.ModelForm):
                     initial['gtee_priority'] = 'low'
                 initial['campaign_type'] = 'gtee'
 
-                if initial.get('bid_strategy', '') == 'cpm':
-                    if initial.get('bid', 0):
-                        if instance.budget_type == 'daily':
-                            budget = instance.budget or 0.0
-                        else:
-                            budget = instance.full_budget or 0.0
-                        initial['budget'] = int(1000.0 * budget / initial['bid'])
-                    else:
-                        initial['budget'] = None
+                # budget
+                if instance.budget_type == 'daily':
+                    budget = instance.budget if instance.budget else None
                 elif instance.budget_type == 'full_campaign':
-                    initial['budget'] = instance.full_budget
+                    budget = instance.full_budget if instance.full_budget else None
+                else:
+                    budget = None
+                if budget and initial.get('bid_strategy', '') == 'cpm':
+                    if initial.get('bid', None):
+                        budget = int(1000.0 * budget / initial['bid'])
+                    else:
+                        budget = None
+                initial['budget'] = budget
 
             elif instance.campaign_type == 'backfill_promo':
                 initial['campaign_type'] = 'promo'
@@ -155,12 +157,6 @@ class CampaignForm(forms.ModelForm):
             end_datetime = end_datetime.replace(tzinfo=Pacific_tzinfo()).astimezone(UTC()).replace(tzinfo=None)
         return end_datetime
 
-    def clean_bid(self):
-        bid = self.cleaned_data.get('bid', None)
-        if bid != None and bid <= 0.0:
-            raise forms.ValidationError("Bid must be greather than zero")
-        return bid
-
     def clean(self):
         cleaned_data = super(CampaignForm, self).clean()
 
@@ -189,27 +185,31 @@ class CampaignForm(forms.ModelForm):
                     cleaned_data['campaign_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
 
                 # budget
-                has_required = True
-                for field in ('bid_strategy', 'bid', 'budget', 'budget_type', 'budget_strategy'):
-                    if not cleaned_data.get(field, None):
-                        if field not in self._errors:
-                            self._errors[field] = ErrorList()
-                        self._errors[field].append("This field is required")
-                        has_required = False
-                if has_required:
-                    # BEWARE HACKS
-                    # if the campaign is a cpm campaign, we need to calculate what the budget
-                    # will be, since budgets are stored in dollar amounts.
-                    if cleaned_data['budget_type'] == 'daily':
-                        cleaned_data['budget'] = self._calculate_budget(cleaned_data['budget'])
-                        cleaned_data['full_budget'] = None
-                    else:
-                        if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
-                            if 'budget_strategy' not in self._errors:
-                                self._errors['budget_strategy'] = ErrorList()
-                            self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
-                        cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
-                        cleaned_data['budget'] = None
+                if not cleaned_data.get('budget', None):
+                    cleaned_data['budget'] = None
+                    cleaned_data['full_budget'] = None
+                else:
+                    has_required = True
+                    for field in ('bid_strategy', 'bid', 'budget_type', 'budget_strategy'):
+                        if not cleaned_data.get(field, None):
+                            if field not in self._errors:
+                                self._errors[field] = ErrorList()
+                            self._errors[field].append("This field is required")
+                            has_required = False
+                    if has_required:
+                        # BEWARE HACKS
+                        # if the campaign is a cpm campaign, we need to calculate what the budget
+                        # will be, since budgets are stored in dollar amounts.
+                        if cleaned_data['budget_type'] == 'daily':
+                            cleaned_data['budget'] = self._calculate_budget(cleaned_data['budget'])
+                            cleaned_data['full_budget'] = None
+                        else:
+                            if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
+                                if 'budget_strategy' not in self._errors:
+                                    self._errors['budget_strategy'] = ErrorList()
+                                self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
+                            cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
+                            cleaned_data['budget'] = None
 
             # promo
             elif cleaned_data['campaign_type'] == 'promo':

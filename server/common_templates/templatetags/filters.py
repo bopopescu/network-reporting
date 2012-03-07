@@ -272,9 +272,11 @@ def adgroup_to_json(adgroup):
             'bid_strategy': adgroup.bid_strategy,
         })
         if adgroup.campaign.gtee() or adgroup.campaign.promo():
+            start_datetime = adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific) if adgroup.campaign.start_datetime else None
+            end_datetime = adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific) if adgroup.campaign.end_datetime else None
             data.update({
-                'start_date': adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d") if adgroup.campaign.start_datetime else None,
-                'end_date': adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d") if adgroup.campaign.end_datetime else None,
+                'start_date': "%d/%d" % (start_datetime.month, start_datetime.day) if start_datetime else None,
+                'end_date': "%d/%d" % (end_datetime.month, end_datetime.day) if end_datetime else None,
                 'apps': [str(key) for key in adgroup.targeted_app_keys],
             })
         if adgroup.campaign.gtee():

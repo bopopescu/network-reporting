@@ -64,7 +64,7 @@
                                 var budget_type = adgroup.get('budget_type');
                                 var budget = adgroup.get('budget');
                                 if(budget_type == 'daily') {
-                                    if(budget != null)
+                                    if(budget)
                                         print(' $' + mopub.Utils.formatNumberWithCommas(budget.toFixed(2)) + ' daily budget.');
                                     else
                                         print(' Unlimited budget.');

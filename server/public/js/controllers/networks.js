@@ -71,7 +71,7 @@ $(function() {
                                 click: function() {
                                     var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
                                     var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
-                                    var num_days=Math.round((to_date.getTime()-from_date.getTime())/(86400000));
+                                    var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
 
                                     var from_day=from_date.getDate();
                                     var from_month=from_date.getMonth()+1;

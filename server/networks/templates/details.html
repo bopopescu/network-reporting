@@ -268,17 +268,23 @@
 </script>
 <script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
 <script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
-<script type="text/javascript" src="/js/controllers/ad_network_reports.js?v=0"></script>
 
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
+{% include_script "controllers/networks" %}
 <script>
     $(function () {
-        account_key = '{{ account_key }}';
+        var account_key = '{{ account_key }}';
 
-        AdNetworkReportsController.initializeAdReportsIndex({
-            networks_data: [{
-                network: '{{ network.name }}',
+        var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
+
+        var today = {% if today != None %}{{ today }}{% else %}null{% endif %};
+
+        var yesterday = {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %};
+
+        NetworkDetailsController.initialize({
+            network_data: [{
+                name: '{{ network.name }}',
                 models: [{% for app in network.mopub_app_stats %}
                 {% if app.pub_id %}{
                     id: '{{ app.pub_id }}',
@@ -287,14 +293,10 @@
                 {% endif %}
                 {% endfor %}]
             }],
-            apps_data: [],
+            graph_start_date: graph_start_date,
+            today: today,
+            yesterday: yesterday,
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
-
-        graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
-
-        today = {% if today != None %}{{ today }}{% else %}null{% endif %};
-
-        yesterday = {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %};
 
         console.log({{graph_stats|safe}});
         // TODO: remove hack

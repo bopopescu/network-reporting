@@ -1,7 +1,8 @@
 __doc__ = """
 API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
-from advertiser.query_managers import AdGroupQueryManager
+from advertiser.query_managers import AdGroupQueryManager, \
+        CampaignQueryManager
 from publisher.query_managers import AdUnitQueryManager, \
      AppQueryManager
 from reporting.models import StatsModel
@@ -325,6 +326,53 @@ class AdGroupService(RequestHandler):
 def adgroup_service(request, *args, **kwargs):
     return AdGroupService()(request, use_cache=False, *args, **kwargs)
 
+
+class CampaignService(RequestHandler):
+    """
+    API Service for delivering serialized AdGroup data
+    """
+    def get(self, campaign_key):
+        try:
+            # Get the adgroup
+            campaign = CampaignQueryManager.get(campaign_key)
+
+            # REFACTOR
+            # ensure the owner of this campaign is the request's
+            # current user
+            if campaign.account.key() != self.account.key():
+                raise Http404
+
+            # Get the stats for the campaign
+            stats_fetcher = StatsModelQueryManager(self.account,
+                                                   offline=self.offline)
+            stats = stats_fetcher.get_stats_for_days(advertiser=campaign,
+                                                     days=self.days)
+            summed_stats = sum(stats, StatsModel())
+
+            stats_dict = summed_stats.to_dict()
+
+            stats_dict['daily_stats'] = [s.to_dict() for s in stats]
+
+            return JSONResponse(stats_dict)
+        except Exception, exception:
+            return JSONResponse({'error': str(exception)})
+
+
+    def post(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+    def put(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+    def delete(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+@login_required
+def campaign_service(request, *args, **kwargs):
+    return CampaignService()(request, use_cache=False, *args, **kwargs)
 
 
 ## Helper Functions

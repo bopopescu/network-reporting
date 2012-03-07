@@ -140,7 +140,7 @@ Make a table for ad networks that are active
                         {% if network.reporting %}
                         <div class="cpm network-data">--</div>
                         {% endif %}
-                        <div class="mopub-cpm mopub-data">{{network.mopub_stats.get_cpm|currency}}</div>
+                        <div class="mopub-cpm mopub-data">--</div>
                     </td>
                     <td class="dataTable-data numeric">
                         {% if network.reporting %}
@@ -152,7 +152,7 @@ Make a table for ad networks that are active
                         {% if network.reporting %}
                         <div class="attempts network-data">--</div>
                         {% endif %}
-                        <div class="mopub-attempts mopub-data">{{network.mopub_stats.request_count|withsep}}</div>
+                        <div class="mopub-attempt_count mopub-data">--</div>
                     </td>
                     {% else %}
                     <td class="dataTable-data numeric"></td>
@@ -164,17 +164,17 @@ Make a table for ad networks that are active
                         </div>
                         {% endif %}
                         <div class="mopub-impressions mopub-data">
-                            {{network.mopub_stats.impression_count|withsep}} ({{network.mopub_stats.fill_rate|percentage}})
+                            <span class="mopub-impression_count">--</span> (<span class="mopub-fill_rate">--</span>)
                         </div>
                     </td>
                     <td class="dataTable-data numeric">
                         {% if network.reporting %}
                         <div class="network-data">
-                            <div class="clicks network-data">--</div>
+                            <span class="clicks">--</span> (<span class="ctr">--</span>)
                         </div>
                         {% endif %}
                         <div class="mopub-clicks mopub-data">
-                            {{network.mopub_stats.click_count|withsep}} ({{network.mopub_stats.ctr|percentage}})
+                            <span class="mopub-click_count">--</span> (<span class="mopub-ctr">--</span>)
                         </div>
                     </td>
                 </tr>
@@ -232,6 +232,7 @@ Make a table for the main ad networks that are not setup
 
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
+{% include_script "controllers/networks" %}
 <script>
     $(function () {
         account_key = '{{ account_key }}';
@@ -245,6 +246,9 @@ Make a table for the main ad networks that are not setup
             apps_data: [],
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
 
+        NetworksController.initialize({
+            campaign_data: {{ campaigns|safe }},
+            ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
         graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
 
         today = {% if today != None %}{{ today }}{% else %}null{% endif %};

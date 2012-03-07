@@ -58,6 +58,7 @@ var mopub = mopub || {};
             return '--';
         }
         switch (stat) {
+          case 'attempt_count':
           case 'click_count':
           case 'conversion_count':
           case 'goal':
@@ -83,6 +84,176 @@ var mopub = mopub || {};
         calculate_fill_rate: calculate_fill_rate,
         format_stat: format_stat
     };
+
+    /*
+     * ## Campaign model
+     */
+
+    var Campaign = Backbone.Model.extend({
+        get_stat: function(stat) {
+            if (!this.has(stat)) {
+                return null;
+            }
+            return this.get(stat);
+        },
+
+        get_formatted_stat: function(stat) {
+            return format_stat(stat, this.get_stat(stat));
+        },
+
+        get_stat_for_day: function(stat, day) {
+            if (!this.has("daily_stats")) {
+                return null;
+            }
+            var daily_stats = this.get("daily_stats");
+            if (day >= daily_stats.length) {
+                return null;
+            }
+            var day_stats = daily_stats[day];
+            if (!stat in day_stats) {
+                return null;
+            }
+            return day_stats[stat];
+        },
+
+        url: function() {
+            return '/api/campaign/' + this.id;
+        }
+    });
+
+
+    /*
+     * ## Campaign Collection
+     */
+    var Campaigns = Backbone.Collection.extend({
+        model: Campaign,
+
+        get_stat_sum: function(stat) {
+            return this.reduce(function(memo, adgroup) {
+                if (memo === null || !adgroup.has(stat)) {
+                    return null;
+                }
+                return memo + adgroup.get(stat);
+            }, 0);
+        },
+
+        get_stat: function(stat) {
+            switch(stat) {
+                case 'ctr':
+                    return calculate_ctr(this.get_stat('impression_count'),
+                                         this.get_stat('click_count'));
+                case 'fill_rate':
+                    return calculate_fill_rate(this.get_stat('request_count'),
+                                               this.get_stat('impression_count'));
+                case 'click_count':
+                case 'conversion_count':
+                case 'impression_count':
+                case 'request_count':
+                case 'revenue':
+                    return this.get_stat_sum(stat);
+                default:
+                    throw 'Unsupported stat "' + stat + '".';
+            }
+        },
+
+        get_formatted_stat: function(stat) {
+            return format_stat(stat, this.get_stat(stat));
+        },
+
+        get_stat_sum_for_day: function(stat, day) {
+            return this.reduce(function(memo, adgroup) {
+                if (memo === null ||
+                    !adgroup.has('daily_stats') ||
+                    day >= adgroup.get('daily_stats').length ||
+                    !(stat in adgroup.get('daily_stats')[day])) {
+                    return null;
+                }
+
+                return memo + adgroup.get('daily_stats')[day][stat];
+            }, 0);
+        },
+
+        get_stat_for_day: function(stat, day) {
+            switch(stat) {
+                case 'ctr':
+                    return calculate_ctr(this.get_stat_for_day('impression_count', day),
+                                         this.get_stat_for_day('click_count', day));
+                case 'fill_rate':
+                    return calculate_fill_rate(this.get_stat_for_day('request_count', day),
+                                               this.get_stat_for_day('impression_count', day));
+                case 'click_count':
+                case 'conversion_count':
+                case 'impression_count':
+                case 'request_count':
+                case 'revenue':
+                    return this.get_stat_sum_for_day(stat, day);
+                default:
+                    throw 'Unsupported stat "' + stat + '".';
+            }
+        },
+
+        get_formatted_stat_for_day: function(stat, day) {
+            return format_stat(stat, this.get_stat_for_day(stat, day));
+        },
+
+        get_total_daily_stats: function(stat) {
+            var total_daily_stats = [];
+            var day;
+            for(day in this.at(0).get('daily_stats')) {
+                total_daily_stats.push(this.get_stat_for_day(stat, day));
+            }
+            return total_daily_stats;
+        },
+
+        get_chart_data: function(stat, mopub_optimized) {
+            var adgroups = this.filter(function(adgroup) {
+                return adgroup.has(stat) && adgroup.has('daily_stats');
+            });
+            if (adgroups.length === 0) {
+                return [];
+            }
+            var sorted_adgroups = _.sortBy(adgroups, function(adgroup) {
+                // dash because we're sorting in reverse order
+                return -adgroup.get('impression_count');
+            });
+            var top_three_adgroups = sorted_adgroups.splice(0, 3);
+            var other_adgroups = new AdGroups(sorted_adgroups);
+            var chart_data = top_three_adgroups.map(function(adgroup) {
+                var adgroup_data = {};
+                adgroup_data[adgroup.get('name')] = _.map(adgroup.get('daily_stats'), function(day) {
+                    return day[stat];
+                });
+                return adgroup_data;
+            });
+            if (other_adgroups.size()) {
+                chart_data.push({
+                    'Others': other_adgroups.get_total_daily_stats(stat)
+                });
+            }
+            if (stat === 'ctr' && mopub_optimized) {
+                chart_data.push({
+                    'MoPub Optimized': this.get_total_daily_stats('ctr')
+                });
+            }
+            return chart_data;
+        },
+
+        get_days: function() {
+            // TODO: make this less hacky
+            return this.reduce(function(memo, adgroup) {
+                return (adgroup.has('daily_stats') &&
+                        adgroup.get('daily_stats').length > memo) ? adgroup.get('daily_stats').length : memo;
+            }, 0);
+        },
+
+        isFullyLoaded: function() {
+            // TODO: make this less hacky
+            return this.reduce(function(memo, adgroup) {
+                return memo && adgroup.has('impression_count');
+            }, true);
+        }
+    });
+
 
     /*
      * ## AdGroup model
@@ -415,6 +586,8 @@ var mopub = mopub || {};
     window.AppCollection = AppCollection;
     window.AdGroup = AdGroup;
     window.AdGroups = AdGroups;
+    window.Campaign = Campaign;
+    window.Campaigns = Campaigns;
     window.ModelHelpers = ModelHelpers;
 
 }(this.jQuery, this.Backbone, this._));

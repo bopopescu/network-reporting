@@ -17,6 +17,34 @@ var mopub = window.mopub || {};
 (function ($, Backbone, _) {
     "use strict";
     /*
+     * ## CampaignView
+     * Parameters:
+     * * collection: Campaign
+     * * el: element that will hold the content
+     * * title: title that will be an h2 at the top of the content
+     * * type: 'network', 'gtee', 'promo', or 'backfill_promo' -- affects which fields are shown
+     * * tables: mapping of... MAPPING OF WHAT? I'M DYING TO KNOW
+     */
+    var CampaignView = Backbone.View.extend({
+        initialize: function () {
+            this.model.bind('change', this.render, this);
+        },
+        render: function () {
+            var metrics = ['cpm', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
+            var this_view = this;
+            var row = $("tr#" + this_view.model.get('network') + "-row");
+
+            $.each(metrics, function (iter, metric) {
+                var selector = '.mopub-' + metric;
+                $(selector, row).text(this_view.model.get_formatted_stat(metric));
+            });
+
+            return this;
+        }
+    });
+
+    
+    /*
      * ## AdGroupsView
      * Parameters:
      * * collection: AdGroups
@@ -336,6 +364,8 @@ var mopub = window.mopub || {};
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
     window.AdGroupsView = AdGroupsView;
+    window.CampaignView = CampaignView;
     window.CollectionGraphView = CollectionGraphView;
 
 }(this.jQuery, this.Backbone, this._));
+

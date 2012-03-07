@@ -77,6 +77,7 @@ class NetworksHandler(RequestHandler):
         additional_networks = set(OTHER_NETWORKS.keys())
         networks = []
         reporting_networks = []
+        campaigns = []
         reporting = False
 
         logging.info(DEFAULT_NETWORKS)
@@ -89,6 +90,9 @@ class NetworksHandler(RequestHandler):
 
             network_data = {}
             if campaign:
+                campaigns.append({'id': str(campaign.key()),
+                                  'network': network})
+
                 if network in REPORTING_NETWORKS:
                     login = AdNetworkLoginManager.get_login(self.account,
                             network).get()
@@ -165,6 +169,7 @@ class NetworksHandler(RequestHandler):
                   'networks_to_setup': networks_to_setup_,
                   'additional_networks': additional_networks_,
                   'reporting_networks': reporting_networks,
+                  'campaigns': simplejson.dumps(campaigns),
                   'MOBFOX': MOBFOX,
               })
 

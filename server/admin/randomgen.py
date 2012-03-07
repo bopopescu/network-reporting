@@ -402,7 +402,8 @@ def main():
     adunits_per_app = dict([(app,[]) for app in apps])
     campaigns_per_app = dict([(app,set()) for app in apps])
 
-    reporting_networks = set(NETWORKS_TO_USE).intersection(set(REPORTING_NETWORKS.keys()))
+    reporting_networks = set(NETWORKS_TO_USE).intersection(set(
+        REPORTING_NETWORKS.keys()))
 
     # Generate logins and initialize login_by_network dict
     login_by_network = {}
@@ -449,9 +450,11 @@ def main():
                                            network=network)
 
                 for i in range(NUM_CREATIVES_PER_ADGROUP):
-                    creatives_per_campaign[campaign].append(generate_creative(account,adgroup))
+                    creatives_per_campaign[campaign].append(generate_creative(
+                        account,adgroup))
 
-        all_site_keys = [a.key() for a in AdUnit.all() if a._account == account.key()]
+        all_site_keys = [a.key() for a in AdUnit.all() if a._account ==
+                account.key()]
 
         network_config = generate_networkconfig()
         app.network_config = network_config
@@ -487,177 +490,17 @@ def main():
                         for creative in creatives_per_campaign[campaign]
                         for adunit in adunits_per_app[app]]
 
-                req_stats = [generate_stats_model(adunit,None,account,cur_date) for adunit in adunits_per_app[app]]
+                req_stats = [generate_stats_model(adunit,None,account,cur_date)
+                        for adunit in adunits_per_app[app]]
                 for stat in req_stats:
-                    stat.impression_count = stat.click_count = stat.conversion_count = 0
+                    stat.impression_count = stat.click_count = \
+                            stat.conversion_count = 0
 
                 stats_manager.put_stats(stats=stats+req_stats)
 
             cur_date+=day
 
     # Generate reporting stats
-    cur_date = APP_STATS_SINCE.date()
-    while cur_date<=dt.date.today():
-        network_totals = {}
-        app_totals = {}
-        for mapper in AdNetworkMapperManager.get_mappers(account):
-            revenue = random.random() * 10000
-            attempts = random.randint(1, 100000)
-            impressions = random.randint(1, attempts)
-            clicks = random.randint(1, impressions)
-            stats = AdNetworkScrapeStats(revenue=revenue,
-                                         attempts=attempts,
-                                         impressions=impressions,
-                                         clicks=clicks,
-                                         date=cur_date,
-                                         ad_network_app_mapper=mapper)
-            stats.put()
-            if mapper.ad_network_name not in network_totals:
-                network_totals[mapper.ad_network_name] = \
-                        AdNetworkNetworkStats(account=account,
-                                              ad_network_name=mapper. \
-                                                      ad_network_name,
-                                              date=cur_date)
-            AdNetworkStatsManager.combined_stats(network_totals[
-                mapper.ad_network_name], stats)
-            if mapper.application.key_ not in app_totals:
-                app_totals[mapper.application.key_] = \
-                        AdNetworkAppStats(account=account,
-                                          application=mapper.application,
-                                          date=cur_date)
-            AdNetworkStatsManager.combined_stats(app_totals[mapper. \
-                    application.key_], stats)
-
-        for stats in network_totals.itervalues():
-            stats.put()
-
-        for stats in app_totals.itervalues():
-            stats.put()
-
-        cur_date+=day
-
-#def gen_networks_page_data():
-def main__():
-    """
-    Create fake data for testing the networks page.
-    """
-    account = generate_account(USERNAME,PASSWORD,USERNAME)
-
-    login_by_network = {}
-    for network in ['admob']:#REPORTING_NETWORKS.keys():
-        login = AdNetworkLoginCredentials(account=account,
-                           ad_network_name=network,
-                           client_key=str(random.random()*10),
-                           send_email=False)
-        login_by_network[network] = login
-        login.put()
-
-    apps = []
-    for i in range(NUM_APPS):
-        apps.append(generate_app(account))
-
-    adgroups_per_app = dict([(app,[]) for app in apps])
-
-    # Initialize campaign_by_networks dict
-    # TODO: handle iad special case
-    campaigns_by_network = {}
-    for network in ['admob']:#NETWORKS.keys():
-        if network == 'iad':
-            network = 'iAd'
-        campaign = Campaign(name=get_campaign_name(),
-                account=account,
-                campaign_type='network',
-                network_type=network)
-        campaign.put()
-        campaigns_by_network[network] = campaign
-
-    for app in apps:
-        for i in range(NUM_ADUNITS_PER_APP):
-            adunit = generate_adunit(app,account)
-            # Create an adgroup for each network for each adunit
-            for network in ['admob']:#NETWORKS.keys():
-                # iAd network_type is stupid
-                if network == 'iad':
-                    network = 'iAd'
-
-                adgroup = generate_adgroup([adunit.key()],
-                                           account,
-                                           campaign=campaigns_by_network[
-                                               network],
-                                           network=network)
-                adgroups_per_app[app].append(adgroup)
-
-        network_config = generate_networkconfig()
-        app.network_config = network_config
-        app.put()
-
-        # Create mappers and set network config pub_ids
-        for network in ['admob']:#REPORTING_NETWORKS.keys():
-            pub_id = str(random.random()*100)
-
-            setattr(network_config, network + '_pub_id', pub_id)
-
-            AdNetworkAppMapper(ad_network_name=network,
-                    publisher_id=pub_id,
-                    ad_network_login=login_by_network[network],
-                    application=app).put()
-        network_config.put()
-
-    today = dt.datetime.now()
-    day = dt.timedelta(days=1)
-
-    stats_manager = StatsModelQueryManager(account=account)
-
-    # Initialize stats_by_network as a dict of networks containing a dict of dates
-    # with the values being blank stats models
-    stats_by_network = {}
-    for network in ['admob']:#NETWORKS.keys():
-        if network == 'iad':
-            network = 'iAd'
-        stats_by_network[network] = {}
-        cur_date = APP_STATS_SINCE
-        while cur_date<=today:
-            stats_by_network[network][cur_date] = StatsModel()
-            cur_date+=day
-
-    # Create stats model stats and save them to db and add them to stats_by_network
-    # dict
-    for app in apps:
-        cur_date = APP_STATS_SINCE
-        while cur_date<=today:
-            all_stats = [generate_stats_model(app,adgroup,account,cur_date)
-                    for adgroup in adgroups_per_app[app]]
-
-            print [adgroup.network_type for adgroup in adgroups_per_app[app]]
-            stats_manager.put_stats(stats=all_stats)
-            logging.info('putting stats')
-
-            for stats in all_stats:
-                if stats.advertiser.network_type in stats_by_network:
-                    logging.info(stats.advertiser.network_type)
-                    logging.info(stats)
-                    stats_by_network[stats.advertiser.network_type][cur_date] \
-                            += stats
-                    stats_by_network[stats.advertiser.network_type][cur_date].advertiser = \
-                            stats.advertiser
-                    logging.info(stats_by_network[stats.advertiser.network_type][cur_date])
-
-            cur_date+=day
-
-    # Save network level stats keyed on campaign
-    for stats_by_date in stats_by_network.values():
-        for stats in stats_by_date.values():
-            stats.publisher = None
-            campaign = campaigns_by_network[
-                    stats.advertiser.network_type]
-            stats.advertiser = campaign
-            # Since it's not rolled up at the date level date queiries are fucked
-            # TODO: find out why not rolling stats up is fucked
-            logging.info(stats_manager.put_stats(stats=stats))
-            logging.info('Putting campaign level stats into db')
-            #stats.put()
-
-    # Generate fake reporting stats
     cur_date = APP_STATS_SINCE.date()
     while cur_date<=dt.date.today():
         network_totals = {}

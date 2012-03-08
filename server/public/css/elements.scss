@@ -406,64 +406,17 @@
 }
 
 
-
 .rollup {
-    $rollup_width: 947px;
-    @include clearfix;
-    @include border-radius;
-    @include vertical-three-colors-gradient(#fff, #f8f8f8, 10%, #eee);
-    width: $rollup_width;
-    border: 1px solid #E8E8E8;
-    border-bottom: 1px solid #DDD;
-    text-shadow: 0 1px 1px $white;
-    margin-bottom: 15px;
-    h2, h4 {
-        width: 230px;
-        margin: 0 auto;
-        padding: 0;
-        text-align: center;
-    }
-    h2 {
-        font-size: 30px;
-        font-weight: 400;
-    }
-    h4 {
-        font-weight: 200;
-        color: $gray;
-    }
-    .data-figure {
-        float: left;
-        margin: 0 5px 5px 0;
-        padding: 0 5px;
-        .figure {
-            font-size: 48px;
-            text-align: center;
-        }
-        .label {
-            font-size: 24px;
-            text-align: center;
-            font-weight: 200;
-        }
-    }
-
-    &.fig2 {
-        .data-figure {
-            width: ($rollup_width/2) - 20px;
-        }
-    }
-
-    &.fig3 {
-        .data-figure {
-            width: ($rollup_width/3) - 20px;
-        }
-    }
-
-    &.fig4 {
-        .data-figure {
-            width: ($rollup_width/4) - 20px;
-        }
-    }
+    @include border-radius(5px);
+//    @include box-shadow(1px 1px 2px #888);
+    background: #EBF2F7;
+    color: #444;
+    margin-bottom: 20px;
+    padding: 5px;
+    border: none;
 }
+
+
 
 .lightswitch {
     @include border-radius(4px);

@@ -56,7 +56,11 @@ class OrderIndexHandler(RequestHandler):
                                   "advertiser/order_index.html",
                                   {
                                       'orders': orders,
-                                      'totals': totals
+                                      'totals': totals,
+
+                                      'start_date': self.start_date,
+                                      'end_date': self.end_date,
+                                      'date_range': self.date_range,
                                   })
 
 def order_index(request, *args, **kwargs):

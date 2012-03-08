@@ -21,6 +21,7 @@ from common.ragendja.settings_pre import *
 NEW_UI = True
 DEFAULT_FROM_EMAIL = 'olp@mopub.com'
 SERVER_EMAIL = 'olp@mopub.com'
+REPLY_TO_EMAIL = 'support@mopub.com'
 
 ADMINS = (
     ('Front End Team', 'fe@mopub.com'),

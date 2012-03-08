@@ -1,11 +1,29 @@
+# Deployed Thursday, March 08, 2012 at 01:29PM PST
+### Deployed by John Pena
+### Tagged deploy-30
+### Bugs Fixed: []
+### Included Commits: 
+ * 03b713a Deployed without finding any bug fixes.
+ 
+# Deployed Thursday, March 08, 2012 at 01:25PM PST
+### Deployed by John Pena
+### Tagged deploy-29
+### Bugs Fixed: []
+### Included Commits:
+* d969928 fixed a datetime bug in the deploy script changelog write function
+* c12d346 using config with iterator
+* 44c5495 Merge branch 'master' of github.com:mopub/mopub
+* 153725b added deadlines to click and impression endpoint db calls
+* 62ee126 Deployed without finding any bug fixes.
+
 # Deployed Thursday, March 08, 2012 at 12:18AM PST
 ### Deployed by John Pena
 ### Tagged deploy-28
 ### Bugs Fixed: []
-### Included Commits: 
- * 56d248d updated the deploy script to post to hipchat
- * fe530ab Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 56d248d updated the deploy script to post to hipchat
+* fe530ab Deployed without finding any bug fixes.
+
 # Deployed Wednesday, March 07, 2012 at 11:31PM PST
 ### Deployed by John Pena
 ### Tagged deploy-27

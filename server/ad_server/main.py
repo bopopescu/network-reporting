@@ -14,6 +14,8 @@ import datetime
 
 urllib.getproxies_macosx_sysconf = lambda: {}
 
+from common.utils.db_deep_get import CONFIG
+
 from google.appengine.api import users, urlfetch, memcache
 from google.appengine.api import taskqueue
 from google.appengine.ext import webapp, db
@@ -72,20 +74,23 @@ class AdImpressionHandler(webapp.RequestHandler):
         # TODO: cache this
         adunit_key = self.request.get('id')
         adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_key)
-        creative_id = self.request.get('cid')
-        creative = adunit_context.get_creative_by_key(creative_id)
-        if creative.ad_group.bid_strategy == 'cpm' and creative.ad_group.bid:
-            budget_service.apply_expense(creative.ad_group.campaign.budget_obj, creative.ad_group.bid/1000)
-
-        raw_udid = self.request.get("udid")
-        if creative:
-            freq_response = AdImpressionHandler.increment_frequency_counts(creative=creative,
-                                       raw_udid=raw_udid)
-        else:
-            freq_response = None
 
         if not self.request.get('testing') == TEST_MODE:
-            stats_accumulator.log(self.request,event=stats_accumulator.IMP_EVENT,adunit=adunit_context.adunit)
+            stats_accumulator.log(self.request, event=stats_accumulator.IMP_EVENT, adunit_id=adunit_key)
+
+
+        creative_id = self.request.get('cid')
+        if adunit_context:
+            creative = adunit_context.get_creative_by_key(creative_id)
+            if creative.ad_group.bid_strategy == 'cpm' and creative.ad_group.bid:
+                budget_service.apply_expense(creative.ad_group.campaign.budget_obj, creative.ad_group.bid/1000)
+
+            raw_udid = self.request.get("udid")
+            if creative:
+                freq_response = AdImpressionHandler.increment_frequency_counts(creative=creative,
+                                           raw_udid=raw_udid)
+            else:
+                freq_response = None
 
         self.response.out.write("OK")
 
@@ -120,13 +125,16 @@ class AdClickHandler(webapp.RequestHandler):
         creative_id = self.request.get('cid')
 
         # Update budgeting
-        creative = Creative.get(Key(creative_id))
-        if creative.ad_group.bid_strategy == 'cpc':
+        try:
+            creative = Creative.get(Key(creative_id), config=CONFIG)
+        except: # db error
+            creative = None
+
+        if creative and creative.ad_group.bid_strategy == 'cpc':
             budget_service.apply_expense(creative.ad_group.campaign.budget_obj, creative.ad_group.bid)
 
-
         # if driving download then we use the user datastore
-        if udid and mobile_app_id and mobile_app_id != CLICK_EVENT_NO_APP_ID:
+        if creative and udid and mobile_app_id and mobile_app_id != CLICK_EVENT_NO_APP_ID:
             # TODO: maybe have this section run asynchronously
             ce_manager = ClickEventManager()
             ce = ce_manager.log_click_event(udid, mobile_app_id, time, adunit_id, creative_id)

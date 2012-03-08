@@ -36,7 +36,7 @@ backends:
   class: B2
 
 - name: file-finalizer
-  instances: 20
+  instances: 10
   options: public
   class: B2
 

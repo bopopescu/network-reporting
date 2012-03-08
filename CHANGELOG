@@ -1,37 +1,58 @@
+# Deployed Thursday, March 08, 2012 at 12:18AM PST
+### Deployed by John Pena
+### Tagged deploy-28
+### Bugs Fixed: []
+### Included Commits: 
+ * 56d248d updated the deploy script to post to hipchat
+ * fe530ab Deployed without finding any bug fixes.
+ 
+# Deployed Wednesday, March 07, 2012 at 11:31PM PST
+### Deployed by John Pena
+### Tagged deploy-27
+### Bugs Fixed: []
+### Included Commits:
+* f520508 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, March 07, 2012 at 11:29PM PST
+### Deployed by John Pena
+### Tagged deploy-26
+### Bugs Fixed: []
+### Included Commits:
+
 # Deployed Monday, March 05, 2012 at 10:48PM PST
 ### Deployed by John Pena
 ### Tagged deploy-24
 ### Bugs Fixed: ['888', '905', '848', '912', '956', '961']
-### Included Commits: 
- * 70a834c fixed a javascript issue in reports
- * 66dc265 Merge branch 'master' of github.com:mopub/mopub
- * a5286c7 fixed marketplace activity icon in the adunit page
- * 9859083 Merge branch '955-reporting-js-fix'
- * 5ff7c1d fixed up the way scripts are loaded in reporting
- * 6d9707b [#935 state:resolved]
- * f86b582 default campaigns to cpm [#888 state:fixed]
- * fa01e4f added latlong jumptap support
- * c004842 fixed javascript import errors, i believe this is actually impacting everyone [#955 state:review-requested assigned:nick]
- * 579e968 strip away white spaces [#905 state:fixed]
- * ee45292 Merge branch 'master' of github.com:mopub/mopub
- * dcf86de cleanup and made status column wider
- * 7252298 Merge branch '964-adunit_names_network_config' of github.com:mopub/mopub
- * b8b9224 [#964:state:fixed]
- * 9674fc7 Merge branch 'new-budget-pace'
- * ac66b5a added clean to keywords [#848 state:fixed]
- * c39e31a added clean to refresh interval [#912 state:fixed]
- * 50986c0 [#956 state:fixed]
- * e83b583 Fixed version
- * 4ffdf61 Merge branch 'master' of github.com:mopub/mopub into new-budget-pace
- * f52ac16 Implemented. TODO: Change column width, fill in proper text for help link
- * 3989cf1 fixed table cells that were using the wrong markup on the mpx page [#961 state:fixed]
- * 177b9b0 only showing adunits in the campaign form targeting section if the adunits arent deleted
- * 8424a10 jslinting
- * 179beca added a loading spinner into inventory tables
- * 8731045 got rid of a redundant css file
- * 186f66f fixed the way the deploy script does datetimes
- * 9110458 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 70a834c fixed a javascript issue in reports
+* 66dc265 Merge branch 'master' of github.com:mopub/mopub
+* a5286c7 fixed marketplace activity icon in the adunit page
+* 9859083 Merge branch '955-reporting-js-fix'
+* 5ff7c1d fixed up the way scripts are loaded in reporting
+* 6d9707b [#935 state:resolved]
+* f86b582 default campaigns to cpm [#888 state:fixed]
+* fa01e4f added latlong jumptap support
+* c004842 fixed javascript import errors, i believe this is actually impacting everyone [#955 state:review-requested assigned:nick]
+* 579e968 strip away white spaces [#905 state:fixed]
+* ee45292 Merge branch 'master' of github.com:mopub/mopub
+* dcf86de cleanup and made status column wider
+* 7252298 Merge branch '964-adunit_names_network_config' of github.com:mopub/mopub
+* b8b9224 [#964:state:fixed]
+* 9674fc7 Merge branch 'new-budget-pace'
+* ac66b5a added clean to keywords [#848 state:fixed]
+* c39e31a added clean to refresh interval [#912 state:fixed]
+* 50986c0 [#956 state:fixed]
+* e83b583 Fixed version
+* 4ffdf61 Merge branch 'master' of github.com:mopub/mopub into new-budget-pace
+* f52ac16 Implemented. TODO: Change column width, fill in proper text for help link
+* 3989cf1 fixed table cells that were using the wrong markup on the mpx page [#961 state:fixed]
+* 177b9b0 only showing adunits in the campaign form targeting section if the adunits arent deleted
+* 8424a10 jslinting
+* 179beca added a loading spinner into inventory tables
+* 8731045 got rid of a redundant css file
+* 186f66f fixed the way the deploy script does datetimes
+* 9110458 Deployed without finding any bug fixes.
+
 # Deployed Friday, March 02, 2012 at 2:39PM PST
 ### Deployed by John Pena
 ### Tagged deploy-23

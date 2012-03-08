@@ -9,25 +9,13 @@ import os
 import datetime
 import re
 import yaml
+import requests
+import clint
+from clint.textui import puts, indent, colored
+import envoy
 
 PWD = os.path.dirname(__file__)
-
 sys.path.append(os.path.join(PWD, '..'))
-
-
-# These only seem to work in python2.7
-try:
-    import clint
-    from clint.textui import puts, indent, colored
-except ImportError:
-    print 'please run `pip install clint`'
-    sys.exit(1)
-
-try:
-    import envoy
-except ImportError:
-    print 'please run `pip install envoy`'
-    sys.exit(1)
 
 
 def prompt_before_executing(original, override=None):
@@ -299,16 +287,32 @@ def minify_javascript():
 
 
 def update_static_version_numbers():
-    f = open('../versions.yaml','r')
+    versions_path = os.path.join(PWD, '../versions.yaml')
+    f = open(versions_path,'r')
     config = yaml.load(f)
     f.close()
     # REFACTOR: check to see if files have been updated first
     config['scripts'] += 1
     config['styles'] += 1
-    f = open('../versions.yaml','w')
+
+    f = open(versions_path,'w')
     yaml.dump(config, f)
     f.close()
 
+
+def post_to_hipchat(message, room_id=None):
+    if not room_id:
+        room_id="21565"
+    url = "https://api.hipchat.com/v1/rooms/message?" + \
+          "format=json" + \
+          "&auth_token=3ec795e1dd7781d59fb5b8731adef1" + \
+          "&room_id=" + room_id + \
+          "&from=Alerts" + \
+          "&message=" + str(message).replace(' ', '%20')
+
+
+    response = requests.post(url)
+    return response
 
 
 
@@ -337,6 +341,7 @@ def main():
             # what the user wanted.
             active_branch_name = git_branch_name()
             deploy_server = clint.args.get(0)
+            deployer = git_get_user()
 
             if active_branch_name != "master":
                 puts(colored.yellow("Careful! You're deploying a non-master branch."))
@@ -388,6 +393,11 @@ def main():
                 commit_message = " ".join(['[#%s state:resolved]' % str(ticket) for ticket in fixed_tickets])
                 git_commit(commit_message)
                 git_push()
+
+                # notify people of a successful deploy on hipichat
+                post_to_hipchat("@all Branch %s just deployed to %s by %s" % (active_branch_name,
+                                                                         deploy_server,
+                                                                         deployer))
 
             else:
                 puts("Skipping ticket update process because you're not deploying to production")

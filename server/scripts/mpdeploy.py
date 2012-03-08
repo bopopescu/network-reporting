@@ -248,7 +248,7 @@ def write_changelog(deploy_tag, fixed_tickets, new_commits):
     changelog_file.close()
 
     # Make the header for the new change
-    new_changelog = ["# Deployed " + datetime.datetime.utcnow().strftime("%A, %B %d, %Y at %I:%M%p PST"),
+    new_changelog = ["# Deployed " + datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M%p PST"),
                      "### Deployed by " + git_get_user(),
                      "### Tagged " + deploy_tag,
                      "### Bugs Fixed: " + str(fixed_tickets),

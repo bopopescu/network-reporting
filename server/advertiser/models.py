@@ -428,20 +428,19 @@ class AdGroup(db.Model):
     @property
     def budget_goal(self):
         campaign = self.campaign
-        if self.bid_strategy == 'cpm':
-            if campaign.budget_type == "daily":
-                try:
+        try:
+            if self.bid_strategy == 'cpm':
+                if campaign.budget_type == 'daily':
                     return int((campaign.budget / self.bid) * 1000)
-                except:
+                else:
                     return int((campaign.full_budget / self.bid) * 1000)
             else:
-                return int((campaign.full_budget / self.bid) * 1000)
-        else:
-            if campaign.budget_type == "daily":
-                return int(campaign.budget)
-            else:
-                return int(campaign.full_budget)
-        return None
+                if campaign.budget_type == 'daily':
+                    return int(campaign.budget)
+                else:
+                    return int(campaign.full_budget)
+        except:
+            return None
 
     @property
     def individual_cost(self):

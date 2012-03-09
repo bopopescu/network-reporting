@@ -1,6 +1,6 @@
-from ad_server.renderers.base_html_renderer import BaseHtmlRenderer 
+from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
 from google.appengine.api import images
-from google.appengine.api.images import InvalidBlobKeyError 
+from google.appengine.api.images import InvalidBlobKeyError
 
 from common.utils import helpers
 import logging
@@ -9,15 +9,15 @@ class TextAndTileRenderer(BaseHtmlRenderer):
     """
     Uses specific TEMPLATE for rendering text/tile creative
 
-    Inheritance Hierarchy:  
+    Inheritance Hierarchy:
     TextAndTileRenderer => BaseHtmlRenderer => BaseCreativeRenderer
     """
     TEMPLATE = 'text_tile.html'
-    
+
     def _setup_html_context(self):
         super(TextAndTileRenderer, self)._setup_html_context()
-        if hasattr(self.creative, 'image_url'):
-            image_url = self.creative.image_url
+        if hasattr(self.creative, 'image_serve_url'):
+            image_url = self.creative.image_serve_url
         else:
             try:
                 image_url = helpers.get_url_for_blob(self.creative.image_blob,

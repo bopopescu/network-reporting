@@ -21,16 +21,7 @@ var mopub = mopub || {};
     /*
      * ## Campaigns
      */
-    var Campaign = Backbone.Model.extend({
-        defaults: {
-            name: '',
-            budget: 0.0,
-            budget_type: '',
-            start_datetime: new Date(),
-            end_datetime: null,
-            active: false
-        }
-    });
+    var Campaign = Backbone.Model.extend({});
 
     /*
      * ## AdGroups

@@ -1,5 +1,5 @@
-from ad_server.renderers.base_html_renderer import BaseHtmlRenderer 
-                                                                     
+from ad_server.renderers.base_html_renderer import BaseHtmlRenderer
+
 from google.appengine.api.images import InvalidBlobKeyError
 
 from common.utils import helpers
@@ -9,10 +9,10 @@ class ImageRenderer(BaseHtmlRenderer):
     """
     Uses image specific TEMPLATE for rendering image creative
 
-    Inheritance Hierarchy:  
+    Inheritance Hierarchy:
     ImageRenderer => BaseHtmlRenderer => BaseCreativeRenderer
     """
-    
+
     TEMPLATE = 'image.html'
 
     def _get_creative_width(self):
@@ -29,8 +29,8 @@ class ImageRenderer(BaseHtmlRenderer):
 
     def _setup_html_context(self):
         super(ImageRenderer, self)._setup_html_context()
-        if hasattr(self.creative, 'image_url'):
-            image_url = self.creative.image_url
+        if hasattr(self.creative, 'image_serve_url'):
+            image_url = self.creative.image_serve_url
         else:
             try:
                 image_url = helpers.get_url_for_blob(self.creative.image_blob,

@@ -95,10 +95,10 @@ class LogService(object):
                                   method='POST',
                                   url='/files/finalize',
                                   payload=post_data_serialized,
-                                  target='file-finalizer')
+                                  target='file-finalizer-%d' % random.randint(0, 2))
 
             # get the appropriate queue shard
-            queue_num = random.randint(10, NUM_FILE_QUEUES-1)
+            queue_num = random.randint(10, NUM_FILE_QUEUESS-1)
             queue_name = FILE_QUEUE_NAME % queue_num
 
             # put task on queue

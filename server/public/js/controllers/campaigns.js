@@ -9,6 +9,14 @@
         Toast.error(message, "Error fetching app data.");
     };
 
+    function dateToString(date) {
+        var day = date.getDate();
+        // FYI, months are indexed from 0
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+
+        return year + "-" + month + "-" + day;
+    }
 
     function setupAdGroupForm() {
         // select the appropriate campaign_type from the hash
@@ -791,7 +799,8 @@
     }
 
 
-    function fetchInventoryForAdGroup(adgroup_key) {
+    function fetchInventoryForAdGroup(adgroup_key, start_date, date_range) {
+        window.start_date = dateToString(start_date);
 
         // Set up an adunit collection, but remap the url to the
         // adgroup endpoint. this way, we'll only get adunits that
@@ -801,8 +810,12 @@
         adgroup_inventory.url = function() {
             return '/api/adgroup/'
                 + this.adgroup_key
-                + '/adunits/';
+                + '/adunits/'
+                + '?r=' + date_range
+                + '&s=' + dateToString(start_date);
         };
+
+        console.log(adgroup_inventory.url());
 
         // Once the adgroup's adunit inventory has been fetched from
         // the server, render each of the adunits in the appropriate
@@ -816,7 +829,9 @@
                     return '/api/adgroup/'
                         + adgroup_key
                         + '/apps/'
-                        + app_key;
+                        + app_key
+                        + '?r=' + date_range
+                        + '&s=' + dateToString(start_date);
                 };
 
                 app.bind('change', function(current_app) {
@@ -971,7 +986,9 @@
             initializeChart();
             initializeDailyCounts();
             initializeDateButtons();
-            fetchInventoryForAdGroup(adgroup_key);
+            fetchInventoryForAdGroup(adgroup_key,
+                                     bootstrapping_data.start_date,
+                                     bootstrapping_data.date_range);
 
             // Set up the click handler for the campaign status menu
             // in the top left of the page.

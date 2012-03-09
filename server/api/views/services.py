@@ -66,6 +66,10 @@ class AppService(RequestHandler):
             # if the adgroup key was specified, then we only want the app's
             # stats to reflect how it performed within that adgroup.
             if adgroup_key:
+
+                logging.warn('\n\n\n')
+                logging.warn(self.start_date)
+                logging.warn(self.end_date)
                 app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
                                                                 adgroup_key,
                                                                 self.start_date,

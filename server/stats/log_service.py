@@ -94,8 +94,7 @@ class LogService(object):
             task = taskqueue.Task(name=None,
                                   method='POST',
                                   url='/files/finalize',
-                                  payload=post_data_serialized,
-                                  target='file-finalizer')
+                                  payload=post_data_serialized,)
 
             # get the appropriate queue shard
             queue_num = random.randint(0, NUM_FILE_QUEUES-1)

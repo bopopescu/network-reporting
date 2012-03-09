@@ -74,6 +74,10 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                              advertiser=None, *args, **kwargs):
         # mongo
         days = date_magic.gen_days(start, end)
+        logging.warn(days[0])
+        logging.warn(days[-1])
+        logging.warn('publisher=' + str(publisher))
+        logging.warn('advertiser=' + str(advertiser))
         query_manager = StatsModelQueryManager(publisher.account)
         stats = query_manager.get_stats_for_days(publisher=publisher,
                                                  advertiser=advertiser,
@@ -95,6 +99,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
     def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
                                         start, end, *args, **kwargs):
         # mongo
+        logging.warn('app')
         app = AppQueryManager.get(app_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         app_stats = self._get_publisher_stats(app, start, end,
@@ -105,6 +110,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
     def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
                                            start, end, *args, **kwargs):
         # mongo
+        logging.warn('adunit')
         adunit = AdUnitQueryManager.get(adunit_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         adunit_stats = self._get_publisher_stats(adunit, start, end,

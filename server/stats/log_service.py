@@ -26,7 +26,7 @@ MAX_LINES_BEFORE_FLUSH = 100
 MAX_TIME_BEFORE_FLUSH = 60 # seconds
 
 FILE_QUEUE_NAME = 'file-finalizer-%02d'
-NUM_FILE_QUEUES = 10
+NUM_FILE_QUEUES = 20
 
 
 class LogService(object):

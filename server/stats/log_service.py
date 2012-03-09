@@ -26,7 +26,7 @@ MAX_LINES_BEFORE_FLUSH = 100
 MAX_TIME_BEFORE_FLUSH = 60 # seconds
 
 FILE_QUEUE_NAME = 'file-finalizer-%02d'
-NUM_FILE_QUEUES = 20
+NUM_FILE_QUEUES = 40
 
 
 class LogService(object):
@@ -97,7 +97,7 @@ class LogService(object):
                                   payload=post_data_serialized,)
 
             # get the appropriate queue shard
-            queue_num = random.randint(0, NUM_FILE_QUEUES-1)
+            queue_num = random.randint(10, NUM_FILE_QUEUES-1)
             queue_name = FILE_QUEUE_NAME % queue_num
 
             # put task on queue

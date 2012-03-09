@@ -1,10 +1,30 @@
+# Deployed Thursday, March 08, 2012 at 09:33PM PST
+### Deployed by John Pena
+### Tagged deploy-31
+### Bugs Fixed: ['1001', '985', '977']
+### Included Commits: 
+ * 9bf352a Merge branch 'master' of github.com:mopub/mopub
+ * c63c545 [#1001 state:fixed] campaigns.py app/adunit model fetching now has date parameters in the url
+ * b361537 not using backend as worker anymore
+ * d64cd00 Merge branch 'master' of github.com:mopub/mopub
+ * f9f5b93 latest changes
+ * b383611 +1 on copyright year [#985 state:fixed]]
+ * 0e31e05 Merge branch 'master' of github.com:mopub/mopub
+ * 0baab80 Fixed and updated admin/d page
+ * 77b8f88 fixed password reset [#977 state:fixed]
+ * 6618722 decrease to 10 backend machines for file-finalizer
+ * 5c57916 Merge branch 'master' of github.com:mopub/mopub
+ * d44cc74 create new backend file-finalizer; point finalize task target to this backend
+ * d656dec fixed image serve url
+ * 2c991fc Deployed without finding any bug fixes.
+ 
 # Deployed Thursday, March 08, 2012 at 01:29PM PST
 ### Deployed by John Pena
 ### Tagged deploy-30
 ### Bugs Fixed: []
-### Included Commits: 
- * 03b713a Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 03b713a Deployed without finding any bug fixes.
+
 # Deployed Thursday, March 08, 2012 at 01:25PM PST
 ### Deployed by John Pena
 ### Tagged deploy-29

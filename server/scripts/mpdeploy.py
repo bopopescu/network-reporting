@@ -283,7 +283,7 @@ def minify_javascript():
 
     puts("Minifying Javascript files in " + JS_DIR)
 
-    puts(colored.green('Javascript Minified'))
+    puts('Javascript Minified')
 
 
 def update_static_version_numbers():

@@ -752,8 +752,10 @@
       };
 
       CampaignsController.initializeAdGroupDetail({
-         kind: {% if campaign.network %}'network'{% else %}'direct'{% endif %},
-         adgroup_key: '{{ adgroup_key }}'
+          kind: {% if campaign.network %}'network'{% else %}'direct'{% endif %},
+          adgroup_key: '{{ adgroup_key }}',
+          start_date: {{ start_date|js_date }},
+          date_range: {{ date_range }}
       });
     });
   </script>

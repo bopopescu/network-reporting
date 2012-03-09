@@ -1,7 +1,6 @@
 import logging
 import datetime
 
-from django.conf import settings
 
 from google.appengine.api import urlfetch
 
@@ -740,7 +739,7 @@ class AdgroupDetailHandler(RequestHandler):
         else:
             message = "<br/>".join(message)
 
-        totals = reduce(lambda x, y: x + y.stats, adunits, StatsModel())
+        totals = adgroup.stats
 
         if today and yesterday:
             stats = {
@@ -796,7 +795,7 @@ class AdgroupDetailHandler(RequestHandler):
                                       'graph_adunits': graph_adunits,
                                       'start_date': days[0],
                                       'end_date': days[-1],
-                                      'date_range': self.date_range,
+                                      'date_range': len(days),
                                       'creative_fragment': creative_fragment,
                                       'message': message
                                   })

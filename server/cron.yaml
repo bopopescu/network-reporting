@@ -25,7 +25,7 @@ cron:
   
 - description: Periodic dashboard refresh (offline)
   url: /admin/prep/?offline=1
-  schedule: every 30 minutes  
+  schedule: every 6 hours  
   timezone: America/Los_Angeles
   target: admin-prep
 

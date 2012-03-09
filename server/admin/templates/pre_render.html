@@ -33,9 +33,7 @@
         </div>
         <div class="stats-breakdown-buttons">
         <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-          <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-          <label for="stats-breakdown-dateOptions-option-0">Today</label>
-          <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+          <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1" checked="checked"/>
           <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
           <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
           <label for="stats-breakdown-dateOptions-option-2">All</label>
@@ -45,6 +43,8 @@
       <div class="chart-loading-text">Loading ...</div> 
       <div class="chart-error-text">Could not load chart</div> 
       <script type="text/javascript"> 
+          $(function() {
+
           mopub.dashboardStatsChartData = {
             pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
             pointInterval: 86400000,
@@ -61,6 +61,8 @@
                 { 'MoPub': [{% for t in stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }
             ] 
           };
+          mopub.Chart.setupDashboardStatsChart('area');
+        }); 
       </script> 
     </div> 
   </div> 
@@ -86,7 +88,6 @@
 			<th width="">MPX$</th>
 			<th width="">MPX%</th>
 			<th width="">MPX CPM</th>			
-	        <th width="">%US</th>
 		</thead>
 		{% for a in apps %}
 		<tr class="alternating-color">
@@ -104,8 +105,7 @@
 			<td class="numeric">{{a.user_count|withsep}}</td>
 			<td class="numeric">{{a.mpx_revenue|currency}}</td>
 			<td class="numeric">{{a.mpx_clear_rate|percentage_rounded}}</td>
-			<td class="numeric">{{a.mpx_cpm}}</td>
-			<td class="numeric">{{a.percent_us|percentage_rounded}}</td>
+			<td class="numeric">{{a.mpx_cpm|currency}}</td>
 		</tr>
 		{% endfor %}
 	</table>

@@ -87,6 +87,7 @@ def dashboard_prep(request, *args, **kwargs):
     # gets all undeleted applications
     start_date = StatsModel.today() - datetime.timedelta(days=(NUM_DAYS-1)) # NOTE: change
     logging.warning('start_date: %s days :%s', start_date, days)
+    days.remove(StatsModel.today())
 
     apps = AppQueryManager.get_all_apps()
 
@@ -112,7 +113,7 @@ def dashboard_prep(request, *args, **kwargs):
     # go and do it
     for app in apps:
         app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],days=days)
-        yesterday = app_stats[-2]
+        yesterday = app_stats[-1]
 
         for app_stat in app_stats:
             # add this site stats to the total for the day and increment user count
@@ -133,8 +134,8 @@ def dashboard_prep(request, *args, **kwargs):
         # get mpx revenue/cpm numbers
         try:
             stats_fetcher = MarketplaceStatsFetcher(yesterday.publisher.account.key())
-            mpx_stats = stats_fetcher.get_app_stats(str(yesterday._publisher), start_date, datetime.date.today())
-            unique_apps[str(yesterday._publisher)].mpx_revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
+            mpx_stats = stats_fetcher.get_app_stats(str(yesterday._publisher), start_date, days[-1])
+            unique_apps[str(yesterday._publisher)].mpx_revenue = float(mpx_stats.get('revenue', 0.0))
             unique_apps[str(yesterday._publisher)].mpx_impression_count = int(mpx_stats.get('impressions', 0))
             unique_apps[str(yesterday._publisher)].mpx_clear_rate = int(mpx_stats.get('impressions', 0)) / float(sum(x.request_count for x in app_stats)) if yesterday.request_count > 0 else 0
             unique_apps[str(yesterday._publisher)].mpx_cpm = mpx_stats.get('ecpm')
@@ -156,8 +157,7 @@ def dashboard_prep(request, *args, **kwargs):
     # params
     render_params = {"stats": total_stats,
         "start_date": start_date,
-        "today": total_stats[-1],
-        "yesterday": total_stats[-2],
+        "yesterday": total_stats[-1],
         "all": StatsModel(request_count=sum([x.request_count for x in total_stats]),
             impression_count=sum([x.impression_count for x in total_stats]),
             click_count=sum([x.click_count for x in total_stats]),
@@ -184,7 +184,7 @@ def dashboard_prep(request, *args, **kwargs):
 
     page = AdminPage(offline=offline,
                      blob_key=files.blobstore.get_blob_key(internal_file_name),
-                     today_requests=total_stats[-1].request_count)
+                     yesterday_requests=total_stats[-1].request_count)
 
     page.put()
 

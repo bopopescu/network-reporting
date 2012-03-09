@@ -615,28 +615,28 @@ class FinalizeHandler(webapp.RequestHandler):
         # therefore explicitly convert all unicode to string using utf-8 encoding
         ascii_log_lines = [helpers.to_ascii(line) for line in log_lines]
 
-        # # create new file in blobstore (file name is GAE internal)
-        # internal_file_name = files.blobstore.create(
-        #                     mime_type="text/plain",
-        #                     _blobinfo_uploaded_filename=blob_file_name+'.log')
+        # create new file in blobstore (file name is GAE internal)
+        internal_file_name = files.blobstore.create(
+                            mime_type="text/plain",
+                            _blobinfo_uploaded_filename=blob_file_name+'.log')
 
-        # # open the file and write lines
-        # with files.open(internal_file_name, 'a') as f:
-        #     f.write('\n'.join(ascii_log_lines)+'\n')
+        # open the file and write lines
+        with files.open(internal_file_name, 'a') as f:
+            f.write('\n'.join(ascii_log_lines)+'\n')
 
-        # # finalize this file
-        # files.finalize(internal_file_name)
+        # finalize this file
+        files.finalize(internal_file_name)
 
-        # posting to S3 directly instead of writing to blobstore (commented out above)
-        now_PST = datetime.datetime.now(Pacific_tzinfo())
-        short_timestamp = now_PST.strftime('%Y-%m%d')
-        long_timestamp = now_PST.strftime('%Y-%m%d-%H%M')
-        s3_filename = '%s_%s.log' % (long_timestamp, str(uuid.uuid4()))
-        s3_path = '/tmp5/logs-%s-full/aws-logfile-%s-0000-full.raw/%s' % (short_timestamp, short_timestamp, s3_filename)
-        S3_FILE.key = s3_path
+        # # posting to S3 directly instead of writing to blobstore (commented out above)
+        # now_PST = datetime.datetime.now(Pacific_tzinfo())
+        # short_timestamp = now_PST.strftime('%Y-%m%d')
+        # long_timestamp = now_PST.strftime('%Y-%m%d-%H%M')
+        # s3_filename = '%s_%s.log' % (long_timestamp, str(uuid.uuid4()))
+        # s3_path = '/tmp5/logs-%s-full/aws-logfile-%s-0000-full.raw/%s' % (short_timestamp, short_timestamp, s3_filename)
+        # S3_FILE.key = s3_path
 
-        file_content = '\n'.join(ascii_log_lines)+'\n'
-        S3_FILE.set_contents_from_string(file_content)
+        # file_content = '\n'.join(ascii_log_lines)+'\n'
+        # S3_FILE.set_contents_from_string(file_content)
 
 
     def get(self):

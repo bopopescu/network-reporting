@@ -26,7 +26,7 @@ MAX_LINES_BEFORE_FLUSH = 100
 MAX_TIME_BEFORE_FLUSH = 60 # seconds
 
 FILE_QUEUE_NAME = 'file-finalizer-%02d'
-NUM_FILE_QUEUES = 10
+NUM_FILE_QUEUES = 50
 
 
 class LogService(object):
@@ -94,10 +94,12 @@ class LogService(object):
             task = taskqueue.Task(name=None,
                                   method='POST',
                                   url='/files/finalize',
-                                  payload=post_data_serialized,)
+                                  payload=post_data_serialized,
+                                  target='file-finalizer-%d' % (random.randint(0,2)))
 
             # get the appropriate queue shard
-            queue_num = random.randint(0, NUM_FILE_QUEUES-1)
+
+            queue_num = random.randint(40, NUM_FILE_QUEUES-1)
             queue_name = FILE_QUEUE_NAME % queue_num
 
             # put task on queue

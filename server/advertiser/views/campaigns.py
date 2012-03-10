@@ -65,7 +65,7 @@ class AdGroupIndexHandler(RequestHandler):
         num_days = 90
         today = datetime.datetime.now(Pacific_tzinfo()).date()
 
-        days = date_magic.gen_days(today - datetime.timedelta(days=num_days), today)
+        days = date_magic.gen_days(today - datetime.timedelta(days=(num_days-1)), today)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
@@ -1035,7 +1035,6 @@ class AddCreativeHandler(RequestHandler):
 
         jsonDict = {'success': False, 'errors': []}
         if base_creative_form.is_valid():
-            logging.error('base_creative_form is_valid')
             base_creative = base_creative_form.save(commit=False)
             ad_type = base_creative.ad_type
             if ad_type == "text":
@@ -1048,7 +1047,6 @@ class AddCreativeHandler(RequestHandler):
                 creative_form = html_creative_form
 
             if creative_form.is_valid():
-                logging.error('creative_form is_valid')
 
                 if not creative_form.instance:  # ensure form posts do not change ownership
                     account = self.account
@@ -1058,7 +1056,6 @@ class AddCreativeHandler(RequestHandler):
                 creative.account = account
                 creative.ad_group = ad_group
                 CreativeQueryManager.put(creative)
-                logging.error('put')
 
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)

@@ -1,0 +1,44 @@
+{% extends 'advertiser/base.html' %}
+
+{% block pageTitleTag %}{% if order_form.instance %}Edit {{ order_form.instance }}{% else %}New Order{% endif %}{% endblock %}
+
+{% block pageTitle %}
+<h1>{% if order_form.instance %}Edit {{ order_form.instance }}{% else %}New Order{% endif %}</h1>
+{% endblock pageTitle %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
+
+{% block content %}
+<form>
+    <fieldset>
+        <legend>
+            <h2>Order</h2>
+            <p>An order allows you to group line items.</p>
+        </legend>
+
+        <ul>
+            <li>
+                {{ order_form.name.label_tag }}
+                <div>
+                    {{ order_form.name }}
+                </div>
+            </li>
+            <li>
+                {{ order_form.advertiser.label_tag }}
+                <div>
+                    {{ order_form.advertiser }}
+                </div>
+            </li>
+            <li>
+                {{ order_form.description.label_tag }}
+                <div>
+                    {{ order_form.description }}
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    <div class="form-submit"><a class="button" id="submit" href="#">Continue</a></div>
+</form>
+{% endblock content %}

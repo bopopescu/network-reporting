@@ -13,7 +13,8 @@ from account.query_managers import AccountQueryManager
 # NOTE: don't be tempted to change this to import *
 # Some of these modules import datetime from datetime, which will
 # screw up all of the datetime calls in this module.
-from advertiser.forms import (CampaignForm, AdGroupForm, BaseCreativeForm,
+from advertiser.forms import (  # CampaignForm, AdGroupForm,
+                              BaseCreativeForm,
                               TextCreativeForm, ImageCreativeForm,
                               TextAndTileCreativeForm, HtmlCreativeForm)
 from advertiser.query_managers import (CampaignQueryManager,

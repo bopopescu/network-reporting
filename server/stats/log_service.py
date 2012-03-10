@@ -95,7 +95,7 @@ class LogService(object):
                                   method='POST',
                                   url='/files/finalize',
                                   payload=post_data_serialized,
-                                  target='file-finalizer-%d' % (random.randint(0,2)))
+                                  target='file-finalizer-%d' % (random.randint(0,3)))
 
             # get the appropriate queue shard
 

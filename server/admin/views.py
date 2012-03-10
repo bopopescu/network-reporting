@@ -140,6 +140,8 @@ def dashboard_prep(request, *args, **kwargs):
             request_total = float(sum(x.request_count for x in app_stats))
             if request_total > 0:
                 unique_apps[str(yesterday._publisher)].mpx_clear_rate = int(mpx_stats.get('impressions', 0)) / request_total
+            else:
+                unique_apps[str(yesterday._publisher)].mpx_clear_rate = 0
             unique_apps[str(yesterday._publisher)].mpx_cpm = mpx_stats.get('ecpm')
         except MPStatsAPIException, e:
             unique_apps[str(yesterday._publisher)].mpx_revenue = 0

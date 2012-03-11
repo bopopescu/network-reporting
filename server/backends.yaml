@@ -35,11 +35,6 @@ backends:
   options: public
   class: B2
 
-- name: file-finalizer
-  instances: 20
-  options: public
-  class: B1
-
 - name: file-finalizer-0
   instances: 20
   options: public
@@ -51,6 +46,16 @@ backends:
   class: B1
 
 - name: file-finalizer-2
+  instances: 20
+  options: public
+  class: B1
+
+- name: file-finalizer-3
+  instances: 20
+  options: public
+  class: B1
+
+- name: file-finalizer-4
   instances: 20
   options: public
   class: B1

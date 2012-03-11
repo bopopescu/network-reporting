@@ -137,7 +137,11 @@ def dashboard_prep(request, *args, **kwargs):
             mpx_stats = stats_fetcher.get_app_stats(str(yesterday._publisher), start_date, days[-1])
             unique_apps[str(yesterday._publisher)].mpx_revenue = float(mpx_stats.get('revenue', 0.0))
             unique_apps[str(yesterday._publisher)].mpx_impression_count = int(mpx_stats.get('impressions', 0))
-            unique_apps[str(yesterday._publisher)].mpx_clear_rate = int(mpx_stats.get('impressions', 0)) / float(sum(x.request_count for x in app_stats)) if yesterday.request_count > 0 else 0
+            request_total = float(sum(x.request_count for x in app_stats))
+            if request_total > 0:
+                unique_apps[str(yesterday._publisher)].mpx_clear_rate = int(mpx_stats.get('impressions', 0)) / request_total
+            else:
+                unique_apps[str(yesterday._publisher)].mpx_clear_rate = 0
             unique_apps[str(yesterday._publisher)].mpx_cpm = mpx_stats.get('ecpm')
         except MPStatsAPIException, e:
             unique_apps[str(yesterday._publisher)].mpx_revenue = 0
@@ -153,6 +157,15 @@ def dashboard_prep(request, *args, **kwargs):
 
     # get folks who want to be on the mailing list
     new_users = Account.gql("where date_added >= :1 order by date_added desc", start_date).fetch(1000)
+    mail = []
+    unsafe_users = []
+    for a in new_users:
+        try:
+            if a.mpuser.mailing_list: mail.append(a)
+        except Exception, e:
+            unsafe_users.append(a)
+            pass
+    new_users = [a for a in new_users if a not in unsafe_users]
 
     # params
     render_params = {"stats": total_stats,
@@ -165,7 +178,7 @@ def dashboard_prep(request, *args, **kwargs):
         "apps": apps,
         "unique_apps": unique_apps,
         "new_users": new_users,
-        "mailing_list": [a for a in new_users if a.mpuser.mailing_list]}
+        "mailing_list": mail}
 
     #need to convert to uni, then ascii for blobstore encoding
     html = to_ascii(to_uni(render_to_string(request,'admin/pre_render.html',render_params)))

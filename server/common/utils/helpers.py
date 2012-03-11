@@ -17,7 +17,7 @@ def get_country_code(headers, default='XX'):
     return headers.get('X-AppEngine-country', default)
 
 def get_user_agent(request):
-    return request.get('ua') or request.headers['User-Agent']
+    return request.get('ua') or request.headers.get('User-Agent', 'None')
 
 def get_client_ip(request):
     return request.get('ip') or request.remote_addr
@@ -156,7 +156,7 @@ def put_all(models, limit=300):
         db.put(sub_models)
         cnt += len(sub_models)
         print "put %d/%d" % (cnt, len(models))
-    
+
 def get_udid_appid(request):
     """
     This is necessary because of a temporary error in Android's conversion tracking URL; there was a

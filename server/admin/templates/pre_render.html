@@ -40,6 +40,7 @@
       <div class="chart-error-text">Could not load chart</div> 
       <script type="text/javascript"> 
           $(function() {
+          $('.stats-breakdown-value.yesterday').show();
 
           mopub.dashboardStatsChartData = {
             pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
@@ -58,7 +59,6 @@
             ] 
           };
           mopub.Chart.setupDashboardStatsChart('area');
-          $('.stats-breakdown-value.yesterday').show();
         }); 
       </script> 
     </div> 

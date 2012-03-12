@@ -73,25 +73,31 @@
       {% endif %}
     {% endif %}
     {% if campaign.network %}
-      <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
+      <a class="button"
+         id="advertisers-adgroups-editAdGroupButton"
+         href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
     {% else %}
-      <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
+      <a class="button"
+         id="advertisers-adgroups-editAdGroupButton"
+         href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
     {% endif %}
   </span>
 {% endblock titleBarRight %}
-
-
 
 {% block content %}
 
   {% if not apps %}
     <div class="alert-message block-message">
-      This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
+      This campaign is not targeted at any <strong>Ad Units</strong>.
+      In order for this campaign to deliver, you will need to target
+      at least one Ad Unit.
     </div>
   {% endif %}
   {% if not creatives %}
     <div class="alert-message block-message">
-      This campaign needs to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
+      This campaign needs to have at least
+      one <strong>Creative</strong> in order to serve.  Set up a
+      creative below.
     </div>
   {% endif %}
   {% if message  %}
@@ -208,7 +214,9 @@
           All dates.
         {% endif %}&nbsp;
 
-        {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
+        {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
+          {{adgroup.campaign.full_budget|currency}} campaign budget.
+        {% endifequal %}
 
 
       {% else %}
@@ -227,7 +235,16 @@
               <tr>
                 <td> {{ campaign.start_datetime|format_date_time|default:"None" }} </td>
                 <td> {{ campaign.end_datetime|format_date_time|default:"None" }} </td>
-                <td> {{campaign.budget.total_spent|currency }} </td>
+
+                {% ifequal adgroup.campaign.budget_type 'daily' %}
+                  <td> {{ campaign.budget.total_spent|currency }} </td>
+                {% endifequal %}
+
+                {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
+                  <td> {{ campaign.full_budget.total_spent|currency }} </td>
+            
+                {% endifequal %}
+
                 <td>
                   {% ifequal adgroup.campaign.budget_type 'daily' %}
                     {% if adgroup.campaign.budget %}
@@ -235,10 +252,6 @@
                     {% else %}
                       Unlimited
                     {% endif %}
-                  {% endifequal %}
-
-                  {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
-                    {{adgroup.campaign.full_budget|currency}} (total)
                   {% endifequal %}
                 </td>
               </tr>

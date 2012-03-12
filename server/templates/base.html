@@ -1,4 +1,4 @@
-{% load filters %}{% load googletags %}<!doctype html>
+{% load filters %}<!doctype html>
 <!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
 <!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
 <!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
@@ -8,22 +8,24 @@
 <head>
   <meta charset="utf-8">
 
-  <title>MoPub - {% block pageTitleTag %}Ad Serving for Mobile Applications{% endblock %}</title>
+  <title>
+    MoPub - {% block pageTitleTag %}Ad Serving for Mobile Applications{% endblock %}
+  </title>
   <meta name="description" content="">
   <meta name="author" content="">
   {% block extraMeta %}{% endblock %}
 
-  {# TypeKit #}
-  <script type="text/javascript" src="https://use.typekit.com/qhz7iwb.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
-
+  {# CSS #}
+  {% include_style "jquery-ui-1.8.7.custom" %}
+  {% include_style "style" %}
+  {% block extraCSS %}{% endblock %}
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  {# CSS #}
-  <link rel="stylesheet" href="/js/libs/jquery-ui-1.8.7.custom/css/mopub/jquery-ui-1.8.7.custom.css" />
-  <link rel="stylesheet" href="/css/style.css?v=51">
-  {% block extraCSS %}{% endblock %}
+
+  {# TypeKit #}
+  <script type="text/javascript" src="https://use.typekit.com/qhz7iwb.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
   {# Google load for jquery and jqueryui #}
   <script src="https://www.google.com/jsapi?key=ABQIAAAAbRw2cYJlVhkm8Sy9e32IvhSp_nRSlbw3drc-oo9CvDm6lSB7YhTn-1GvX4YW6_H-c4ZV_1LYTj_jrw" type="text/javascript"></script>
@@ -33,16 +35,14 @@
       google.load("jqueryui", "1.8.7");
   </script>
 
-  {# Plugins  aggregated from all the *.js files in /public/js/mylibs/*#}
-  <script src="/js/plugins.js?v=25"></script>
-
+  {# Plugins  aggregated from all the *.js files in /public/js/libs/*#}
+  {% include_script "plugins" %}
 
   {# MoPub #}
-  <script src="/js/controllers/mopub.js?v=38"></script>
-  {% block extraScripts %}
-    {# REFACTOR #}
-    <script src="/js/controllers/publisher.js?v=34"></script>
-  {% endblock extraScripts %}
+  {% include_script "app" 1 %}
+  {% include_script "controllers/mopub" %}
+
+  {% block extraScripts %}{% endblock extraScripts %}
 
   {# Mixpanel #}
 
@@ -71,7 +71,9 @@
       })();
   </script>
 </head>
+
 <input type=hidden value="{{user.is_staff}}" id='is_admin_input'></input>
+
 {% endspaceless %}
 
 {% block body_content %}
@@ -166,7 +168,7 @@
         <div class="pageWidth">
           <div id="footer-links">
             <ul id="menu-footer">
-              <li class="menu-item menu-item-type-post_type menu-item-58">&copy; 2011 MoPub Inc.</li>
+              <li class="menu-item menu-item-type-post_type menu-item-58">&copy; 2012 MoPub Inc.</li>
               <li id="menu-item-58" class="menu-item menu-item-type-post_type menu-item-58"><a href="http://www.mopub.com/privacy/">Privacy</a></li>
               <li id="menu-item-57" class="menu-item menu-item-type-post_type menu-item-57"><a href="http://www.mopub.com/mopub-ads-privacy-policy/">Privacy &#8211; Ad Serving</a></li>
               <li id="menu-item-59" class="menu-item menu-item-type-post_type menu-item-59"><a href="http://www.mopub.com/terms/">Terms of Service</a></li>

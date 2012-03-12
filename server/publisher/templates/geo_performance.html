@@ -3,7 +3,7 @@
 {% block pageTitle %}<div class="breadcrumb"><a class="linkIcon breadcrumb-back" href="/inventory/"><span class="ui-icon ui-icon-arrowthick-1-w"></span> Back to Dashboard</a> <h1>Region Performance</h1></div>{% endblock pageTitle %}
 {% block titleBarRight %}{% endblock %}
 {% block extraScripts %}
-<script src="/js/controllers/publisher.js?v=34"></script>
+{% include_script "controllers/publisher" %}
 <script src="http://www.google.com/jsapi"></script>
 <script type="text/javascript">
   google.load('visualization', '1', {'packages': ['geomap']});

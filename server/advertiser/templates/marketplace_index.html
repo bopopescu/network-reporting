@@ -44,7 +44,7 @@
         <tr style="border:none;">
           {% if totals %}
             <td> {{ totals.revenue|currency|default_if_none:"$0.00"|withsep }} </td>
-            <td> {{ totals.impressions|default_if_none:"0" }} </td>
+            <td> {{ totals.impressions|withsep|default_if_none:"0" }} </td>
             <td> {{ totals.ecpm|currency|default_if_none:"$0.00" }} </td>
           {% else %}
             <td> $0.00 </td>
@@ -147,11 +147,11 @@
             <tbody>
               {% for adunit in app.adunits %}
               <tr class="adunit-row incomplete for-app-{{ app.key }}" id="adunit-{{adunit.key}}" style="border:none;">
-                <th class="dataTable-name" style="width:475px;">
+                <td class="dataTable-name" style="width:475px;">
                   <span class="inner" style="width:475px;">
                     <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
                   </span>
-                </th>
+                </td>
                 <td class="dataTable-data numeric revenue" style="border:none;">--</td>
                 <td class="dataTable-data numeric impressions" style="border:none;">--</td>
                 <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
@@ -255,7 +255,7 @@
         <li>
           <input type="radio" class="content_level level3" value="none" name="filter" {% ifequal network_config.filter_level 'none' %}checked='checked'{% endifequal %}/>
           <strong>No filtering</strong> - Allow ads including those with provocative or suggestive imagery.
-          MoPub always blocks illegal or deceptive ads.
+          MoPub always blocks illegal, pornographic and deceptive ads.
         </li>
       </ul>
     </div>
@@ -301,9 +301,11 @@
   <script type="text/html" id="adunit-template">
     {% include "partials/adunit.html" %}
   </script>
-  <script type="text/javascript" src="/js/models.js?v=3"></script>
-  <script type="text/javascript" src="/js/views.js?v=3"></script>
-  <script type="text/javascript" src="/js/controllers/marketplace.js?v=1017"></script>
+
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/marketplace" %}
+
   <script type="text/javascript">
     var mopub = mopub || {};
     $(document).ready(function() {

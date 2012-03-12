@@ -57,7 +57,8 @@ class BaseRegistrationForm(mpforms.MPForm):
         ``RegistrationProfile.objects.create_inactive_user()``).
 
         """
-        self.cleaned_data.update(username=self.request.user.username)
+        if not self.cleaned_data.get('username', None):
+            self.cleaned_data.update(username=self.request.user.username)
         new_user = self.request.user
 
         def _get_model_params(Model):
@@ -108,22 +109,25 @@ class MPGoogleRegistrationForm(BaseRegistrationForm):
 class ChangeSettingsForm(BaseRegistrationForm):
     TEMPLATE='registration/forms/settings_change_form.html'
 
+    email = forms.EmailField(widget=mpwidgets.MPTextInput)
+
     def __init__(self, *args, **kwargs):
         # dict
         initial = kwargs.get("initial",{})
         request = kwargs.get("request")
 
         user = request.user
-        account = AccountQueryManager.get_current_account(user=user)
+        self.account = AccountQueryManager.get_current_account(user=user)
 
+        initial['email'] = user.email
         initial['first_name'] = user.first_name
         initial['last_name'] = user.last_name
         initial['company'] = user.company
         initial['title']=user.title
         initial['phone']=user.phone
         initial['country']=user.country
-        if account.traffic:
-            initial['traffic']=str(int(account.traffic))
+        if self.account.traffic:
+            initial['traffic']=str(int(self.account.traffic))
         else:
             initial['traffic']=None
         initial['mailing_list']=user.mailing_list
@@ -133,6 +137,17 @@ class ChangeSettingsForm(BaseRegistrationForm):
 
         kwargs.update(initial=initial)
         super(ChangeSettingsForm, self).__init__(*args, **kwargs)
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].lower()
+        # Check to make sure this hasn't been registered yet
+        if not(self.account.mpuser.email == email) and UserQueryManager.get_by_email(email):
+            raise forms.ValidationError('This email address is already registered to another.')
+        return email
+
+    def save(self, domain_override=""):
+        self.cleaned_data.update(username=self.cleaned_data['email'])
+        return super(ChangeSettingsForm, self).save(domain_override)
 
 class MPUserAccountForm(BaseRegistrationForm):
     pass
@@ -145,9 +160,9 @@ class MPRegistrationForm(MPGoogleRegistrationForm):
     password2 = forms.CharField(widget=mpwidgets.MPPasswordInput,)
 
     def clean_email(self):
-        email = self.cleaned_data['email']
+        email = self.cleaned_data['email'].lower()
         # Check to make sure this hasn't been registered yet
-        if User.get_by_email(email):
+        if UserQueryManager.get_by_email(email):
             raise forms.ValidationError('This email address has already been used to register an account.')
         return email
 

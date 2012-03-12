@@ -4,9 +4,17 @@ import pickle
 import sys
 import time
 import traceback
+try:
+    import json
+except:
+    import simplejson as json
 
 from datetime import datetime, timedelta
-from multiprocessing import Process, Pipe
+
+try:
+    from multiprocessing import Process, Pipe
+except:
+    pass
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -72,6 +80,7 @@ KEEP_ALIVE = True
 
 MAX_RETRIES = 3
 FINISHED_FILE = '/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_%s.rep'
+FINISHED_FILE_JSON = '/home/ubuntu/mopub/server/reports/aws_reports/reports/finished_%s.json'
 
 STEP_NAME = "Generate_report_%s-%s-%s-%s"
 
@@ -81,8 +90,9 @@ CSTEP_NAME = 'CSTEP%s'
 UPLOAD = CSTEP_NAME % 0 
 BLOB_KEY_PUT = CSTEP_NAME % 1
 PARSE = CSTEP_NAME % 2
-POST_PARSE_PUT = CSTEP_NAME % 3 # I wanted to call this P3 but I took pity
-NOTIFY = CSTEP_NAME % 4
+POST_PARSE_BLOB_PUT = CSTEP_NAME % 3
+POST_PARSE_PUT = CSTEP_NAME % 4 # I wanted to call this P3 but I took pity
+NOTIFY = CSTEP_NAME % 5 
 
 ######## FAILURE REASONS ########
 FAILURE = 'REPFAIL%s'
@@ -95,7 +105,7 @@ PARSING = 'parsing'
 PARSE_ERROR = 'parsingerror'
 
 # All steps must be completed to do things
-MESSAGE_COMPLETION_STEPS = [UPLOAD, BLOB_KEY_PUT, PARSE, POST_PARSE_PUT, NOTIFY]
+MESSAGE_COMPLETION_STEPS = [UPLOAD, BLOB_KEY_PUT, PARSE, POST_PARSE_BLOB_PUT, POST_PARSE_PUT, NOTIFY]
 
 TEST_FAIL_TIMEOUT = 2
 DEFAULT_TIMEOUT = 15
@@ -214,6 +224,8 @@ class ReportMessageHandler(MessageHandler):
         self.message_step_timeouts = {}
         # Map of blobs for messages that failed after blob uploading
         self.message_blob_keys = {}
+        # Map of blobs of the HTML data for reports
+        self.message_html_blob_keys = {}
         # Map of datas for messages that failed after parsing
         self.message_data = {}
         # Map of messages to reports
@@ -229,6 +241,7 @@ class ReportMessageHandler(MessageHandler):
         self.message_completion_statuses[message] = {}
         self.message_step_timeouts[message] = {}
         self.message_blob_keys[message] = None
+        self.message_html_blob_keys[message] = None
         self.message_data[message] = None
         self.message_report[message] = None
         self.message_parse_pipe[message] = None
@@ -269,6 +282,7 @@ class ReportMessageHandler(MessageHandler):
         return (self.message_completion_statuses,
                 self.message_step_timeouts,
                 self.message_blob_keys,
+                self.message_html_blob_keys,
                 self.message_data,
                 self.message_report,
                 )
@@ -277,9 +291,12 @@ class ReportMessageHandler(MessageHandler):
         """ dels all the dict entries, leaks suck"""
         if self.testing and self.message_blob_keys[message]:
             os.remove(os.path.join(TEST_DATA_DIR, self.message_blob_keys[message]))
+        if self.testing and self.message_html_blob_keys[message]:
+            os.remove(os.path.join(TEST_DATA_DIR, self.message_html_blob_keys[message]))
         del(self.message_completion_statuses[message])
         del(self.message_step_timeouts[message])
         del(self.message_blob_keys[message])
+        del(self.message_html_blob_keys[message])
         del(self.message_data[message])
         del(self.message_report[message])
         del(self.message_parse_pipe[message])
@@ -412,6 +429,29 @@ class ReportMessageHandler(MessageHandler):
         except:
             raise BlobUploadError(message = message)
         finished_file.close()
+        return blob_key
+    
+    def upload_html_blob_and_get_key(self, message):
+        report = self.get_message_report(message)
+        json_blob = json.dumps(dict(data=report.html_data))
+
+        if self.testing:
+            fname = gen_random_fname(suffix='.dat')
+            final = open(TEST_DATA_DIR + '/' + fname, 'w')
+            final.write(json_blob)
+            final.close()
+            return fname
+
+        finished_json_file = open(FINISHED_FILE_JSON % message.report_key, 'w')
+        finished_json_file.write(json_blob)
+        finished_json_file.close()
+        finished_json_file = open(FINISHED_FILE_JSON % message.report_key)
+        try:
+            blob_key = upload_file(finished_json_file)
+        except:
+            raise BlobUploadError(message = message)
+        finished_json_file.close()
+        os.remove(FINISHED_FILE_JSON % message.report_key)
         return blob_key
 
 
@@ -587,7 +627,7 @@ class ReportMessageHandler(MessageHandler):
                 jobflowid = e.jobflowid
                 #logger.warning("Message: %s  JobFlowID: %s had a BlobUploadError" % (message, jobflowid))
                 self.set_message_report(message, None)
-                if self.step_timedout(message, UPLOAD):
+                if self.step_timedout(message, [UPLOAD, POST_PARSE_BLOB_PUT]):
                     log("TIMED OUT ON UPLOAD")
                     self.mark_failed(message, jobflowid)
 
@@ -756,6 +796,16 @@ class ReportMessageHandler(MessageHandler):
             sub_proc.start()
 
             return False
+        
+        elif step == POST_PARSE_BLOB_PUT:
+            log("Handling data blob put for %s" % message)
+            blob_key = self.upload_html_blob_and_get_key(message)
+            if force_failure and fail_step == step:
+                os.remove(os.path.join(TEST_DATA_DIR, blob_key))
+                raise BlobUploadError(message = message, jobflowid = jobflowid)
+
+            self.message_html_blob_keys[message] = blob_key
+            return True
 
         # Second put, throws ReportPutErrors
         elif step == POST_PARSE_PUT:
@@ -771,6 +821,7 @@ class ReportMessageHandler(MessageHandler):
                         raise ReportPutError(message = message, jobflowid = jobflowid)
 
                 rep.data = self.message_data[message]
+                rep.html_data_blob = self.message_html_blob_keys[message]
                 rep.completed_at = datetime.now()
                 rep.status = 'Completed'
                 rep.put()

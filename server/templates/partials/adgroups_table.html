@@ -7,13 +7,13 @@
                 <th class="dataTable-data numeric">Revenue</th>
             <% } %>
             <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
-                <th class="dataTable-data numeric">Status</th>
+                <th class="dataTable-data status numeric">Status</th>
             <% } %>
             <th class="dataTable-data numeric"><a id="campaign-ecpm-helpLink" class="whatsthis" href="#"><div class="whatsthis-icon"></div></a> eCPM</th>
             <% if(type == 'network') { %>
                 <th class="dataTable-data numeric">Attempts</th>
             <% } %>
-            <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+            <% if(type == 'gtee') { %>
                 <th class="dataTable-data numeric">Goal</th>
             <% } %>
             <th class="dataTable-data numeric">Impressions</th>
@@ -50,26 +50,28 @@
                             var end_date = adgroup.get('end_date');
                             if(start_date != null) {
                                 if(end_date != null)
-                                    print((start_date.getMonth() + 1) + '/' + start_date.getDate() + ' - ' + (end_date.getMonth() + 1) + '/' + end_date.getDate() + '.');
+                                    print(start_date + ' - ' + end_date + '.');
                                 else
-                                    print('Starts ' + (start_date.getMonth() + 1) + '/' + start_date.getDate() + '.');
+                                    print('Starts ' + start_date + '.');
                             }
                             else {
                                 if(end_date != null)
-                                    print('Ends ' + (end_date.getMonth() + 1) + '/' + end_date.getDate() + '.');
+                                    print('Ends ' + end_date + '.');
                                 else
                                     print('All dates.');
                             }
-                            var budget_type = adgroup.get('budget_type');
-                            var budget = adgroup.get('budget');
-                            if(budget_type == 'daily') {
-                                if(budget != null)
-                                    print(' $' + mopub.Utils.formatNumberWithCommas(budget.toFixed(2)) + ' daily budget.');
-                                else
-                                    print(' Unlimited budget.');
-                            }
-                            else if(budget_type == 'full_campaign') {
-                                print(' ' + mopub.Utils.formatNumberWithCommas(budget) + ' campaign budget.');
+                            if(type == 'gtee') {
+                                var budget_type = adgroup.get('budget_type');
+                                var budget = adgroup.get('budget');
+                                if(budget_type == 'daily') {
+                                    if(budget)
+                                        print(' $' + mopub.Utils.formatNumberWithCommas(budget.toFixed(2)) + ' daily budget.');
+                                    else
+                                        print(' Unlimited budget.');
+                                }
+                                else if(budget_type == 'full_campaign') {
+                                    print(' ' + mopub.Utils.formatNumberWithCommas(budget) + ' campaign budget.');
+                                }
                             }
                         }
                     %></span>
@@ -81,22 +83,23 @@
                     <td class="dataTable-data numeric">
                         <%= adgroup.get_formatted_stat('status') %><%
                             if(adgroup.get_stat('status') == "Running") {
-                                if(adgroup.get_stat('on_schedule') == "on pace") { %>
-                                    <div class="osi-success">
-                                        <a href="#" id="campaign-osi-success-helpLink" class="whatsthis">
-                                            <div class="whatsthis-icon"></div>
-                                        </a>
-                                        On pace
-                                    </div>
-                                <% }
-                                else if(adgroup.get_stat('on_schedule') == "behind") { %>
-                                    <div class="osi-failure">
-                                        <a href="#" id="campaign-osi-failure-helpLink" class="whatsthis">
-                                            <div class="whatsthis-icon"></div>
-                                        </a>
-                                        Behind
-                                    </div>
-                                <% }
+                                if (adgroup.get_stat('pace_type')) {}
+                                    if(adgroup.get_stat('pace_type') == "delivery") { %>
+                                        <div class="delivery">
+                                            <a href="#" id="campaign-delivery-helpLink" class="whatsthis">
+                                                <div class="whatsthis-icon"></div>
+                                            </a>
+                                            Delivery: <%= adgroup.get_formatted_stat('pace') %>
+                                        </div>
+                                    <% }
+                                    else if(adgroup.get_stat('pace_type')) { %>
+                                        <div class="<%= adgroup.get_stat('pace_type') %>">
+                                            <a href="#" id="campaign-pacing-helpLink" class="whatsthis">
+                                                <div class="whatsthis-icon"></div>
+                                            </a>
+                                            Pace: <%= adgroup.get_formatted_stat('pace') %>
+                                        </div>
+                                    <% }
                             }
                         %>
                     </td>
@@ -107,7 +110,7 @@
                 <% if(type == 'network') { %>
                     <td class="dataTable-data numeric"><%= adgroup.get_formatted_stat('request_count') %></td>
                 <% } %>
-                <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
+                <% if(type == 'gtee') { %>
                     <td class="dataTable-data numeric dataTable-goals"><%
                         if(adgroup.get_stat('goal')) {
                             if(adgroup.get('bid_strategy') == 'cpm') { %>

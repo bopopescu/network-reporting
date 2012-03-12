@@ -30,6 +30,7 @@
             <span class="muted unbold">({{ app.app_type_text }})</span>
             {# <span class="appData-id muted unbold hidden"> {{ app.key }} </span> #}
           {% endif %}
+          <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
         </td>
         {# these stats will be loaded over ajax #}
         <td class="requests stat">--</td>

@@ -87,7 +87,7 @@
 {% endblock content %}
 
 {% block extraScripts %}
-  <script src="/js/controllers/publisher.js?v=34"></script>
+  {% include_script "controllers/publisher" %}
   <script type="text/javascript">
     $(function() {
       DashboardController.initializeAppCreate({

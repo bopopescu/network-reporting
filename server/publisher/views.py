@@ -1,13 +1,8 @@
 """
 Views that handle pages for Apps and AdUnits.
 """
-import base64
-import binascii
-import hashlib
+
 import logging
-import math
-import os
-import re
 
 from datetime import (datetime,
                       time,
@@ -19,18 +14,8 @@ import urllib
 # hack to get urllib to work on snow leopard
 urllib.getproxies_macosx_sysconf = lambda: {}
 
-from urllib import urlencode
-from operator import itemgetter
-
-# Appengine
-from google.appengine.api.urlfetch import fetch
-from google.appengine.ext import db
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.api import images
-
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, \
@@ -39,7 +24,7 @@ from common.ragendja.template import render_to_response, \
 
 ## Models
 from advertiser.models import Campaign, AdGroup, HtmlCreative
-from publisher.models import Site, Account, App
+from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
 from account.models import NetworkConfig
@@ -50,7 +35,6 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkLoginManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
-from common.utils.query_managers import CachedQueryManager
 from publisher.query_managers import AppQueryManager, \
      AdUnitQueryManager, \
      AdUnitContextQueryManager
@@ -61,7 +45,6 @@ from common.utils import sswriter, date_magic
 from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 from common.constants import *
-from common.utils.decorators import cache_page_until_post
 from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 from budget import budget_service
@@ -72,17 +55,8 @@ class AppIndexHandler(RequestHandler):
     """
     def get(self):
 
-        # Set start date if passed in, otherwise get most recent days
-        if self.start_date:
-            # REFACTOR -- replace with date_magic functions
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            # REFACTOR -- replace with date_magic functions
-            days = StatsModel.lastdays(self.date_range)
-
         # Get all of the adunit keys for bootstrapping the apps
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
-        adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
         # We list the app traits in the table, and then load their
         # stats over ajax using Backbone. Fetch the apps/adunits for the
@@ -107,7 +81,7 @@ class AppIndexHandler(RequestHandler):
 
         # Get stats totals for the stats breakdown pane
         account_stats_mgr = StatsModelQueryManager(self.account, offline=self.offline)
-        totals_list = account_stats_mgr.get_stats_for_days(days=days)
+        totals_list = account_stats_mgr.get_stats_for_days(days=self.days)
         today = totals_list[-1]
         try:
             yesterday = totals_list[-2]
@@ -162,7 +136,6 @@ class AppIndexHandler(RequestHandler):
                 'yesterday': yesterday.click_count,
                 'total': totals.click_count
             },
-
         }
 
         return render_to_response(self.request,
@@ -171,8 +144,8 @@ class AppIndexHandler(RequestHandler):
                                       'apps': app_values,
                                       'app_keys': app_keys,
                                       'account_stats': simplejson.dumps(response_dict),
-                                      'start_date': days[0],
-                                      'end_date': days[-1],
+                                      'start_date': self.days[0],
+                                      'end_date': self.days[-1],
                                       'date_range': self.date_range,
                                       'stats': stats,
                                       'account': self.account
@@ -180,7 +153,7 @@ class AppIndexHandler(RequestHandler):
 
 @login_required
 def app_index(request,*args,**kwargs):
-    return AppIndexHandler()(request,*args,**kwargs)
+    return AppIndexHandler()(request, use_cache=False, *args, **kwargs)
 
 
 class GeoPerformanceHandler(RequestHandler):
@@ -188,14 +161,6 @@ class GeoPerformanceHandler(RequestHandler):
     App performance stats broken down by geography.
     """
     def get(self):
-        # compute start times; start day before today so
-        # incomplete days don't mess up graphs
-        if self.start_date:
-            # REFACTOR -- replace with date_magic methods
-            days = StatsModel.get_days(self.start_date, self.date_range)
-        else:
-            # REFACTOR -- replace with date_magic methods
-            days = StatsModel.lastdays(self.date_range)
 
         now = datetime.now()
 
@@ -211,7 +176,7 @@ class GeoPerformanceHandler(RequestHandler):
         account_stats_mgr = StatsModelQueryManager(self.account,
                                                    self.offline,
                                                    include_geo=True)
-        all_stats = account_stats_mgr.get_stats_for_days(days=days, use_mongo=False)
+        all_stats = account_stats_mgr.get_stats_for_days(days=self.days, use_mongo=False)
 
         for stats in all_stats:
             totals = totals + StatsModel(request_count=stats.request_count,
@@ -430,15 +395,6 @@ class ShowAppHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, app_key):
-    # Set start date if passed in, otherwise get most recent days
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-            start_date = self.start_date
-            end_date = start_date + timedelta(int(self.date_range) - 1)
-        else:
-            days = StatsModel.lastdays(self.date_range)
-            end_date = date.today()
-            start_date = end_date - timedelta(int(self.date_range) - 1)
 
         # load the site
         app = AppQueryManager.get(app_key)
@@ -446,14 +402,13 @@ class ShowAppHandler(RequestHandler):
         # create a stats manager
         stats_manager = StatsModelQueryManager(self.account, self.offline)
 
-
         app.adunits = AdUnitQueryManager.get_adunits(app=app)
 
         # organize impressions by days
         if len(app.adunits) > 0:
             for adunit in app.adunits:
                 adunit.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                                                                    days=days)
+                                                                    days=self.days)
                 adunit.stats = reduce(lambda x, y: x+y,
                                       adunit.all_stats,
                                       StatsModel())
@@ -463,7 +418,7 @@ class ShowAppHandler(RequestHandler):
                              reverse=True)
 
 
-        app.all_stats = stats_manager.get_stats_for_days(publisher=app, days=days)
+        app.all_stats = stats_manager.get_stats_for_days(publisher=app, days=self.days)
 
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
 
@@ -504,7 +459,7 @@ class ShowAppHandler(RequestHandler):
         for ag in app.adgroups:
             ag.all_stats = stats_manager.get_stats_for_days(publisher = app,
                                                             advertiser = ag,
-                                                            days = days)
+                                                            days = self.days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
             budget_object = ag.campaign.budget_obj
             ag.percent_delivered = budget_service.percent_delivered(budget_object)
@@ -514,12 +469,15 @@ class ShowAppHandler(RequestHandler):
             if ag.campaign.campaign_type in ['marketplace']:
                 try:
                     mpx_stats = stats_fetcher.get_app_stats(str(app_key),
-                                                            start_date,
-                                                            end_date)
+                                                            self.start_date,
+                                                            self.end_date)
                 except MPStatsAPIException, e:
                     mpx_stats = {}
                 ag.stats.revenue = float(mpx_stats.get('revenue'))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
+
+            if ag.campaign.campaign_type in ['network']:
+                ag.calculated_ecpm = calculate_ecpm(ag)
 
 
         promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'],
@@ -546,9 +504,8 @@ class ShowAppHandler(RequestHandler):
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, adgroups = level_camps))
 
-        marketplace_campaigns = filter(lambda x: x.campaign_type, app.adgroups)
-        marketplace_campaigns = sorted(marketplace_campaigns,
-                                       lambda x,y: cmp(x.bid, y.bid))
+        marketplace_campaigns = filter(lambda x: x.campaign_type == 'marketplace', app.adgroups)
+        marketplace_campaigns = sorted(marketplace_campaigns, lambda x,y: cmp(x.bid, y.bid))
 
         network_campaigns = filter(lambda x: x.campaign_type in ['network'], app.adgroups)
         network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
@@ -563,11 +520,11 @@ class ShowAppHandler(RequestHandler):
         # activated adgroups so we can mark it as active/inactive
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
                                         for adgroup in marketplace_campaigns])
+
         try:
             marketplace_activated = marketplace_campaigns[0].campaign.active
         except IndexError:
             marketplace_activated = False
-
 
         return render_to_response(self.request,
                                   'publisher/app.html',
@@ -575,8 +532,8 @@ class ShowAppHandler(RequestHandler):
                                       'app': app,
                                       'app_form_fragment':app_form_fragment,
                                       'adunit_form_fragment':adunit_form_fragment,
-                                      'start_date': days[0],
-                                      'end_date': days[-1],
+                                      'start_date': self.days[0],
+                                      'end_date': self.days[-1],
                                       'date_range': self.date_range,
                                       'today': today,
                                       'yesterday': yesterday,
@@ -594,22 +551,17 @@ class ShowAppHandler(RequestHandler):
 
 @login_required
 def app_show(request,*args,**kwargs):
-    return ShowAppHandler(id="app_key")(request,*args,**kwargs)
+    return ShowAppHandler(id="app_key")(request, use_cache=False, *args,**kwargs)
 
 
-class ExportFileHandler( RequestHandler ):
-    def get( self, key, key_type, f_type ):
-            #XXX make sure this is the right way to do it
+class ExportFileHandler(RequestHandler):
+    def get(self, key, key_type, f_type):
         spec = self.params.get('spec')
-        if self.start_date:
-            days = StatsModel.get_days( self.start_date, self.date_range )
-        else:
-            days = StatsModel.lastdays( self.date_range )
-
-        stat_names, stat_models = self.get_desired_stats(key, key_type, days, spec=spec)
-        logging.warning(stat_models)
-        logging.warning("\n\nDays len:%s\nStats len:%s\n\n" % (len(days),len(stat_models)))
-        return sswriter.write_stats( f_type, stat_names, stat_models, site=key, days=days, key_type=key_type )
+        stat_names, stat_models = self.get_desired_stats(key, key_type,
+                                                         self.days, spec=spec)
+        return sswriter.write_stats( f_type, stat_names,
+                                     stat_models, site=key,
+                                     days=self.days, key_type=key_type)
 
 
     def get_desired_stats(self, key, key_type, days, spec=None):
@@ -649,41 +601,41 @@ class ExportFileHandler( RequestHandler ):
                 if len(apps) == 0:
                     #should probably handle this more gracefully
                     logging.warning("Apps for account is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in apps])
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=a, days=self.days) for a in apps])
             elif spec == 'campaigns':
                 camps = CampaignQueryManager.get_campaigns(account=self.account)
                 if len(camps) == 0:
                     logging.warning("Campaigns for account is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in camps])
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=self.days) for c in camps])
         #Rollups for adgroup data
         elif key_type == 'adgroup':
             if spec == 'creatives':
                 creatives = list(CreativeQueryManager.get_creatives(adgroup=key))
                 if len(creatives) == 0:
                     logging.warning("Creatives for adgroup is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=days) for c in creatives])
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=c, days=self.days) for c in creatives])
             if spec == 'adunits':
                 adunits = map(lambda x: Site.get(x), AdGroupQueryManager.get(key).site_keys)
                 if len(adunits) == 0:
                     logging.warning("Adunits for adgroup is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=days) for a in adunits])
+                return (stat_names, [manager.get_stat_rollup_for_days(advertiser=key, publisher=a, days=self.days) for a in adunits])
             if spec == 'days':
-                return (stat_names, manager.get_stats_for_days(advertiser=key, days=days))
+                return (stat_names, manager.get_stats_for_days(advertiser=key, days=self.days))
         #Rollups + not-rollup for adunit data
         elif key_type == 'adunit':
             if spec == 'campaigns':
                 adgroups = AdGroupQueryManager.get_adgroups(adunit=key)
                 if len(adgroups) == 0:
                     logging.warning("Campaigns for adunit is empty")
-                return (stat_names, [manager.get_stat_rollup_for_days(publisher=key, advertiser=a, days=days) for a in adgroups])
+                return (stat_names, [manager.get_stat_rollup_for_days(publisher=key, advertiser=a, days=self.days) for a in adgroups])
             if spec == 'days':
-                return (stat_names, manager.get_stats_for_days(publisher=key, days=days))
+                return (stat_names, manager.get_stats_for_days(publisher=key, days=self.days))
         #App adunit rollup data
         elif key_type == 'app':
             adunits = AdUnitQueryManager.get_adunits(app=key)
             if len(adunits) == 0:
                 logging.warning("Apps is empty")
-            return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=days) for a in adunits])
+            return (stat_name, [manager.get_stat_rollup_for_days(publisher=a, days=self.days) for a in adunits])
 
 
 @login_required
@@ -715,24 +667,9 @@ class AdUnitShowHandler(RequestHandler):
         if adunit.account.key() != self.account.key():
             raise Http404
 
-        if self.start_date:
-            days = StatsModel.get_days(self.start_date, self.date_range)
-            start_date = self.start_date
-            end_date = start_date + timedelta(int(self.date_range) - 1)
-        else:
-            days = StatsModel.lastdays(self.date_range)
-            end_date = date.today()
-            start_date = end_date - timedelta(int(self.date_range) - 1)
-
-        days = [day if type(day) == datetime \
-                else datetime.combine(day, time()) for day in days]
-
         stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
         adunit.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                                                            days=days)
-        # TODO WTF is this?
-        for i in xrange(len(days)):
-            adunit.all_stats[i].date = days[i]
+                                                            days=self.days)
 
         adunit.stats = reduce(lambda x, y: x+y,
                               adunit.all_stats,
@@ -747,7 +684,7 @@ class AdUnitShowHandler(RequestHandler):
         for ag in adunit.adgroups:
             ag.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
                                                             advertiser=ag,
-                                                            days=days)
+                                                            days=self.days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
             budget_object = ag.campaign.budget_obj
             ag.percent_delivered = budget_service.percent_delivered(budget_object)
@@ -757,12 +694,15 @@ class AdUnitShowHandler(RequestHandler):
             if ag.campaign.campaign_type in ['marketplace']:
                 try:
                     mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()),
-                                                               start_date,
-                                                               end_date)
+                                                               self.start_date,
+                                                               self.end_date)
                 except MPStatsAPIException, e:
                     mpx_stats = {}
                 ag.stats.revenue = float(mpx_stats.get('revenue'))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
+
+            if ag.campaign.campaign_type in ['network']:
+                ag.calculated_ecpm = calculate_ecpm(ag)
 
 
         # to allow the adunit to be edited
@@ -820,11 +760,11 @@ class AdUnitShowHandler(RequestHandler):
                                       'adunit': adunit,
                                       'today': today,
                                       'yesterday': yesterday,
-                                      'start_date': days[0],
-                                      'end_date': days[-1],
+                                      'start_date': self.days[0],
+                                      'end_date': self.days[-1],
                                       'date_range': self.date_range,
                                       'account': self.account,
-                                      'days': days,
+                                      'days': self.days,
                                       'adunit_form_fragment': adunit_form_fragment,
                                       'gtee': gtee_levels,
                                       'promo': promo_campaigns,
@@ -836,7 +776,7 @@ class AdUnitShowHandler(RequestHandler):
 
 @login_required
 def adunit_show(request,*args,**kwargs):
-    return AdUnitShowHandler(id='adunit_key')(request,*args,**kwargs)
+    return AdUnitShowHandler(id='adunit_key')(request, use_cache=False, *args, **kwargs)
 
 
 class AppUpdateAJAXHandler(RequestHandler):
@@ -950,7 +890,6 @@ class AdUnitUpdateAJAXHandler(RequestHandler):
         return JSONResponse(json_dict)
 
     def post(self, adunit_key=None):
-        logging.error('adunit_update_ajax')
         adunit_key = adunit_key or self.request.POST.get('adunit_key')
         if adunit_key:
             # Note this gets things from the cache ?
@@ -1269,9 +1208,29 @@ def create_iad_mapper(account, app):
     if app.iad_pub_id:
         login = AdNetworkLoginManager.get_login(account, network='iad').get()
         if login:
+            mappers = AdNetworkMapperManager.get_mappers_for_app(login=login,
+                    app=app)
+            # Delete the existing mappers if there are no scrape stats for them.
+            for mapper in mappers:
+                if mapper:
+                    stats = mapper.ad_network_stats
+                    if not stats.count():
+                        mapper.delete()
             AdNetworkMapperManager.create(network='iad',
                                           pub_id=app.iad_pub_id,
                                           login=login,
                                           app=app)
 
-
+def calculate_ecpm(adgroup):
+    """
+    Calculate the ecpm for a cpc campaign.
+    REFACTOR: move this to the app/adunit models
+    """
+    if adgroup.cpc:
+        try:
+            return float(adgroup.stats.click_count) * \
+                   float(adgroup.cpc) * \
+                   1000 / float(adgroup.stats.impression_count)
+        except Exception, error:
+            logging.error(error)
+    return adgroup.bid

@@ -1,15 +1,15 @@
-from advertiser.models import Creative
-from publisher.models import Site as AdUnit
 import datetime
-import logging
 import random
 
+from ad_server.adunit_context.adunit_context import CreativeCTR
 from ad_server.debug_console import trace_logging
 
 SAMPLING_FRACTION = .03 # We use a default sampling rate of 3 per 100
 SAMPLING_ECPM = .50 # We use 50 cents as a representative ecpm
 DEFAULT_CTR=0.005 # 0.5% CTR is rather fair
 
+
+# Some convenience functions that are ONLY for testing:
 def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=DEFAULT_CTR, dt=datetime.datetime.now()):
     """ Returns the appropriate click through rate for a given adunit-creative
     pair. Calculates the rate if necessary, always uses a sample size of at 
@@ -44,7 +44,6 @@ def get_ctr(adunit_context, creative, min_sample_size=1000, default_ctr=DEFAULT_
     else:
         return default_ctr
         
-        
 def get_ecpm(adunit_context, creative, min_sample_size=1000, default_ctr=DEFAULT_CTR, dt=datetime.datetime.now()):
     if creative.ad_group.cpc is not None:
         ctr = get_ctr(adunit_context, creative, min_sample_size, default_ctr, dt)
@@ -52,6 +51,13 @@ def get_ecpm(adunit_context, creative, min_sample_size=1000, default_ctr=DEFAULT
     elif creative.ad_group.cpm is not None:
         return float(creative.ad_group.cpm) 
         
+def get_ecpm_for_test(adunit, creative, dt = None):
+    """ For testing, we never want to switch to sampling mode."""
+    result_dict = get_ecpms(adunit, [creative], sampling_fraction = 0, dt_now = dt)
+    return result_dict[creative]
+
+
+# The real functions for use in production:
         
 def get_ecpms(adunit_context, creatives, sampling_fraction=SAMPLING_FRACTION, sampling_ecpm=SAMPLING_ECPM):
     """ Returns a dict: k=creative, v=ecpm, 
@@ -72,3 +78,14 @@ def get_ecpms(adunit_context, creatives, sampling_fraction=SAMPLING_FRACTION, sa
             ecpm_dict[c] = ecpm
         
     return ecpm_dict
+
+def calculate_ecpm(creative_ctr, creative, min_sample_size = 1000, default_ctr = DEFAULT_CTR, dt_now = None):
+    """ The dt_now argument is only used for testing."""
+    if creative.ad_group.cpc is not None:
+        ctr = creative_ctr.get_ctr(default_ctr = default_ctr, min_sample_size = min_sample_size, dt_now = dt_now)
+        return float(ctr * creative.ad_group.cpc * 1000)
+    elif creative.ad_group.cpm is not None:
+        return float(creative.ad_group.cpm)
+    else:
+        return None
+

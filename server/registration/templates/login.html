@@ -1,5 +1,4 @@
 {% extends "registration/base.html" %}
-{% load googletags %}
 
 {% block pageTitle %}<h1>Account - Login</h1>{% endblock %}
 
@@ -54,16 +53,5 @@
       </fieldset>
     </form>
   </div>
-  <div id="google-login-divider">
-  </div>
-  <div id="google-login">
-    <p>Or log in to MoPub with your Google Account</p>
-    <a class="google-login-button" href="{% google_login_url "http://frontend-0.mopub-inc.appspot.com/account/migrate/" %}">&nbsp;</a>
-  </div>
 </div>
-{# <script type="text/javascript"> #}
-{# // HACK bc we're having proxy weirdness #}
-{# var button = $(".google-login-button"); #}
-{# button.attr('href', button.attr('href').replace("frontend-0.mopub-inc.appspot.com",document.domain)); #}
-{# </script> #}
 {% endblock content %}

@@ -16,26 +16,23 @@
 {% endblock navLinks %}
 
 {% block titleBarRight %}
-<span class="titlebar-link">
-  <a class="linkIcon" href="/ad_network_reports/">Ad Network Revenue Report <span class="ui-icon ui-icon-triangle-1-e"></span></a>
-</span>
+  <span class="titlebar-link">
+    <a class="linkIcon" href="/ad_network_reports/">Ad Network Revenue Report <span class="ui-icon ui-icon-triangle-1-e"></span></a>
+  </span>
 {% endblock titleBarRight %}
 
 {% block content %}
   <div class="clearfix">
     {% if network_adgroups %}
       <section class="offset nomargin" id="dashboard-stats">
-
         <h3 class="stats-chart-title">
           Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
         </h3>
-
         {# Controls and stats breakdown for the top realtime stats #}
         <div class="stats">
           {% comment %}
             {% stats_breakdown stats %}
           {% endcomment %}
-
           <div class="stats">
             <div id="stats-breakdown" class="stats-breakdown">
               <table>
@@ -71,13 +68,11 @@
                 <label for="stats-breakdown-dateOptions-option-2">All</label>
               </span>
             </div>
-
-
             <div class="chart stats-chart" id="dashboard-stats-chart"></div>
           </div>
-        </section>
-         {% else %}
-       {% endif %}
+        </div>
+      </section>
+    {% endif %}
   </div>
 
   <br />
@@ -88,11 +83,11 @@
     <div id="adgroups">
     </div>
     <div class="form-submit-left">
-        <span class="buttonWrap">
-            <a class="button pause icon" id="campaignForm-pause">Pause</a>
-            <a class="button play icon" id="campaignForm-resume">Resume</a>
-            <a class="button stop icon" id="campaignForm-delete">Delete</a>
-        </span>
+      <span class="buttonWrap">
+        <a class="button pause icon" id="campaignForm-pause">Pause</a>
+        <a class="button play icon" id="campaignForm-resume">Resume</a>
+        <a class="button stop icon" id="campaignForm-delete">Delete</a>
+      </span>
     </div>
   </form>
 
@@ -113,23 +108,18 @@
   <script type="text/html" id="adgroups-table-template">
     {% include "partials/adgroups_table.html" %}
   </script>
-  <script type="text/javascript" src="/js/models.js?v=0"></script>
-  <script type="text/javascript" src="/js/views.js?v=1"></script>
-  <script type="text/javascript" src="/js/controllers/networks.js?v=0"></script>
+
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/networks" %}
+
   <script>
     $(function() {
 
       NetworksController.initialize({
-        adgroups_data: [
-            {% for adgroup in network_adgroups %}{
-              id: '{{ adgroup.key }}',
-              active: {% if adgroup.active %}true{% else %}false{% endif %},
-              name: '{{ adgroup.name }}',
-              bid_strategy: '{{ adgroup.bid_strategy }}',
-              details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
-              network_type: '{{ adgroup.network_type }}'}{% if not forloop.last %},{% endif %}
-            {% endfor %}
-            ],
+        adgroups_data: [{% for adgroup in network_adgroups %}
+            {{ adgroup|adgroup_to_json|safe }}{% if not forloop.last %},{% endif %}
+        {% endfor %}],
 
         graph_start_date: Date.UTC({{ start_date.year }},
                                    {{ start_date.month|add:"-1" }},

@@ -97,7 +97,13 @@ class StatsWorker(webapp.RequestHandler):
         elapsed = time.time() - start
         logging.error('updating GAE datastore with blob %s took %i minutes and %i seconds' % (blob_key, elapsed/60, elapsed%60))
         logservice.flush()
-        
+
+class ServeReportBlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
+
+    def get(self, report_blob_key):
+        blob_key = str(urllib.unquote(report_blob_key))
+        blob_info = blobstore.BlobInfo.get(blob_key)
+        self.send_blob(blob_info, content_type='application/json')
 
 class UpdateStatsHandler(webapp.RequestHandler):
     def get(self):
@@ -116,6 +122,7 @@ def main():
     application = webapp.WSGIApplication(
           [(URL_HANDLER_PATH, UrlHandler),
            ('/offline/upload', UploadHandler),
+           ('/offline/reports/get_blob/(?P<report_blob_key>[-\w\.]+)/', ServeReportBlobHandler),
            ('/offline/worker', StatsWorker),
            (UPDATE_STATS_HANDLER_PATH, UpdateStatsHandler),
           ], debug=True)

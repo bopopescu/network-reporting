@@ -11,6 +11,7 @@ from django.template import loader
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.api import users, mail
+from google.appengine.ext.webapp import template
 
 #mopub imports
 from account.models import Account
@@ -185,6 +186,8 @@ class Report(db.Model):
     #the actual report (As of 6/13/11 with MR)
     report_blob = blobstore.BlobReferenceProperty()
 
+    html_data_blob = blobstore.BlobReferenceProperty()
+
     # This should never, ever be set on prod
     test_report_blob = db.TextProperty()
 
@@ -320,7 +323,7 @@ class Report(db.Model):
             data.append(value['name'])
 
             for i in range(level_total - level):
-                data.append('')
+                data.append('ALL')
 
             if isinstance(value['stats'], dict):
                 impressions = float(value['stats']['impression_count'])

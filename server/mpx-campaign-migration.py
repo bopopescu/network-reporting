@@ -32,7 +32,7 @@ APP_ID = 'mopub-inc'
 HOST = '38.%s.appspot.com' % APP_ID
 
 def auth_func():
-  return 'olp@mopub.com', 'N47935'
+  return 'olp@mopub.com', 'N47935N47935'
 
 DEREF_CACHE = {}
 

@@ -81,6 +81,13 @@ handlers:
   script: stats/views.py
   login: admin
 
+- url: /_ah/warmup
+  script: ad_server/main.py
+  login: admin
+
+- url: /fetch_api/.*
+  script: fetch_api/api_server.py
+
 - url: /mdb/.*
   script: stats/views.py
   login: admin

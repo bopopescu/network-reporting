@@ -2,11 +2,14 @@ import re
 import time
 from datetime import datetime
 from django import template
-import base64, binascii
+import binascii
 from django.utils import simplejson as json
 import logging
 import string
-from budget.tzinfo import Pacific, utc
+from common.utils.tzinfo import Pacific, utc
+
+from django.conf import settings
+from django.core.urlresolvers import reverse
 
 from country_codes import COUNTRY_CODE_DICT
 
@@ -250,12 +253,125 @@ def country_code_to_name(country_code):
 def to_json(python_obj):
     return json.dumps(python_obj)
 
-@register.simple_tag
-def include_raw(path):
-    return template.loader.find_template(path)[0]
-
 @register.filter
 def as_list(item):
     if type(item) == list:
         return item
     return [item]
+
+
+@register.filter
+def adgroup_to_json(adgroup):
+    data = {}
+    if adgroup:
+        data.update({
+            'id': str(adgroup.key()),
+            'active': adgroup.active,
+            'name': adgroup.name,
+            'details_url': reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}),
+            'bid_strategy': adgroup.bid_strategy,
+        })
+        if adgroup.campaign.gtee() or adgroup.campaign.promo():
+            start_datetime = adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific) if adgroup.campaign.start_datetime else None
+            end_datetime = adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific) if adgroup.campaign.end_datetime else None
+            data.update({
+                'start_date': "%d/%d" % (start_datetime.month, start_datetime.day) if start_datetime else None,
+                'end_date': "%d/%d" % (end_datetime.month, end_datetime.day) if end_datetime else None,
+                'apps': [str(key) for key in adgroup.targeted_app_keys],
+            })
+        if adgroup.campaign.gtee():
+            data.update({
+                'level': 'high' if adgroup.campaign.campaign_type == 'gtee_high' else 'normal' if adgroup.campaign.campaign_type == 'gtee' else 'low',
+                'budget_type': adgroup.campaign.budget_type,
+                'budget': adgroup.campaign.budget if adgroup.campaign.budget_type == "daily" else adgroup.campaign.full_budget,
+                'goal': adgroup.budget_goal,
+            })
+        if adgroup.campaign.network():
+            data.update({
+                'network_type': adgroup.network_type,
+            })
+    return json.dumps(data)
+
+
+# Inclusion tags
+
+@register.simple_tag
+def include_raw(path):
+    """
+    Includes raw file data from `path`. This is useful for loading
+    javascript templates (such as mustache.js templates) that would
+    normally be interpolated with the template context.
+    """
+    return template.loader.find_template(path)[0]
+
+# @register.simple_tag
+# def include_script(script_name,
+#                    load_minified=(not settings.DEBUG),
+#                    overload=settings.DEBUG):
+#     """
+#     Includes a script tag (should be a js file) and considers whether
+#     the script should be loaded (if we're in production, only load the
+#     'app' file, otherwise overload), and what the version number should
+#     be (whatever is in settings.py if we're in production, otherwise a
+#     random number to bust the cache). Just pass in the name, such as
+#     'controllers/networks', don't bother with the '.js'.
+#     """
+#     # clean up the script name
+#     script_name = script_name.replace(".min.js", "")
+#     script_name = script_name.replace(".js", "")
+
+#     # make the script path
+#     path_prefix = "/js/"
+
+#     if load_minified:
+#         path_suffix = ".min.js"
+#     else:
+#         path_suffix = ".js"
+
+#     if overload:
+#         version_number = "?=%s" % str(time.time()).split('.')[0]
+#     else:
+#         version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
+
+#     script_path = path_prefix + script_name + path_suffix + version_number
+
+#     if script_name == 'app' or overload:
+#         return """<script type="text/javascript" src="%s"></script>""" % script_path
+#     else:
+#         return ""
+
+@register.simple_tag
+def include_script(script_name,
+                   load_minified=(not settings.DEBUG),
+                   overload=settings.DEBUG):
+
+    # clean up the script name
+    script_name = script_name.replace(".min.js", "")
+    script_name = script_name.replace(".js", "")
+
+    # make the script path
+    path_prefix = "/js/"
+    path_suffix = ".js"
+    version_number = "?=%s" % str(settings.SCRIPTS_VERSION_NUMBER)
+
+    script_path = path_prefix + script_name + path_suffix + version_number
+
+    if not script_name == 'app':
+        return """<script type="text/javascript" src="%s"></script>""" % script_path
+    else:
+        return ""
+
+@register.simple_tag
+def include_style(style_name):
+    style_name = style_name.replace('.css', '')
+    path_prefix = "/css/"
+    path_suffix = ".css"
+    version_number = "?=%s" % str(settings.STYLES_VERSION_NUMBER)
+
+    style_path = path_prefix + style_name + path_suffix + version_number
+
+    return """<link rel="stylesheet" href="%s" />""" % style_path
+
+@register.filter
+def js_date(date):
+    return "new Date(%s,%s,%s)" % (date.year, date.month-1, date.day)

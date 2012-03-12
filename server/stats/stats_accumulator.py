@@ -99,6 +99,7 @@ def log(request,
     if adunit_id and creative_id and event == REQ_EVENT:
         trace_logging.info("fire and forget--adunit: %s creative:%s"%(adunit_id,creative_id))
         fire_forget_params = dict(id=adunit_id, cid=creative_id, udid=udid or '', ua=user_agent)
+
         _log_attempt(fire_forget_params)
 
     # get account name from the adunit

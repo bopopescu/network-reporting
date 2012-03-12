@@ -14,12 +14,14 @@
 
 # Django settings for google-app-engine-django project.
 
+import os
 from common.ragendja.settings_pre import *
 
+
 NEW_UI = True
-DEBUG = False
 DEFAULT_FROM_EMAIL = 'olp@mopub.com'
 SERVER_EMAIL = 'olp@mopub.com'
+REPLY_TO_EMAIL = 'support@mopub.com'
 
 ADMINS = (
     ('Front End Team', 'fe@mopub.com'),
@@ -159,6 +161,16 @@ LOGIN_REQUIRED_PREFIXES = (
 
 ACCOUNT_ACTIVATION_DAYS = 14
 
+PWD = os.path.dirname(os.path.abspath(__file__))
+VERSIONS_FILE = os.path.join(PWD, 'versions.yaml')
+
+import yaml
+config = yaml.load(open(VERSIONS_FILE, 'r'))
+
+SCRIPTS_VERSION_NUMBER = config['scripts']
+STYLES_VERSION_NUMBER = config['styles']
+STATIC_VERSION_NUMBER = SCRIPTS_VERSION_NUMBER
+
 from common.ragendja.settings_post import *
 
 #add additional settings for local machine settings
@@ -166,3 +178,4 @@ try:
     from local_settings import *
 except ImportError:
     pass
+

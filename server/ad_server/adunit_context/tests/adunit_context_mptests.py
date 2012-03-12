@@ -31,7 +31,7 @@ from publisher.query_managers import AdUnitContextQueryManager, AdUnitQueryManag
 
 from account.query_managers import AccountQueryManager
   
-from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
+from ad_server.adunit_context.adunit_context import AdUnitContext
   
 class TestQueryManagersAdunitContext(unittest.TestCase):
     """ Make sure that adunit_context is appropriately removed from the cache """
@@ -426,6 +426,7 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         
         
         # This sets a new ts value in memcache
+
         ts1 = memcache.get("ts:%s" % adunit_context_key)
         
         hyper_context = hypercache.get(adunit_context_key)                 
@@ -435,6 +436,7 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
         local_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())    
            
         # This does not change the ts value in memcache
+
         ts2 = memcache.get("ts:%s" % adunit_context_key)
         eq_(ts1, ts2)
         
@@ -448,6 +450,7 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
                                                          
         # eq_(datetime.datetime.now(), ts2) 
         # Now the context in memcache is different
+
         context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit.key())  
          
         # This means that the digest has changed              
@@ -464,6 +467,5 @@ class TestQueryManagersAdunitContext(unittest.TestCase):
 
                                                                                       
 
-        
         
         

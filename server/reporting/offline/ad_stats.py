@@ -537,7 +537,7 @@ class UserInfoAccumulator(StatsCounter):
 ####
 # main()
 def auth_func():
-  return "olp@mopub.com", "N47935"
+  return "olp@mopub.com", "N47935N47935"
 
 def main(logfile="/tmp/logfile",app_id="mopub-inc",host="mopub-inc.appspot.com"):
 

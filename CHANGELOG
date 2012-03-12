@@ -1,15 +1,376 @@
+# Deployed Friday, March 09, 2012 at 03:25PM PST
+### Deployed by John Pena
+### Tagged deploy-32
+### Bugs Fixed: []
+### Included Commits: 
+ * 8d78290 Merge branch 'master' of github.com:mopub/mopub
+ * 586df3c only 10 qs for file finalize
+ * 7d9944f fix merge conflict
+ * ea85016 increasing to 60 queues; only last 20 take in new tasks
+ * cc1047f added more backends and sharding final finalizer work amoung them
+ * 7208191 using backends again
+ * 05f6d7a Admin/d loads data properly
+ * 192dad9 removed green highlighting for "javascript minified" statement in deploy script
+ * 6e09286 increase file finalize queue count to 40; evenly distribute load onto last 30 qs
+ * d8637bd Merge branch 'master' of github.com:mopub/mopub
+ * a7fe992 increase file-finalizer queue count to 20; go back to writing to blobstore
+ * c364950 [#1001 state:resolved] [#985 state:resolved] [#977 state:resolved]
+ 
+# Deployed Thursday, March 08, 2012 at 09:33PM PST
+### Deployed by John Pena
+### Tagged deploy-31
+### Bugs Fixed: ['1001', '985', '977']
+### Included Commits:
+* 9bf352a Merge branch 'master' of github.com:mopub/mopub
+* c63c545 [#1001 state:fixed] campaigns.py app/adunit model fetching now has date parameters in the url
+* b361537 not using backend as worker anymore
+* d64cd00 Merge branch 'master' of github.com:mopub/mopub
+* f9f5b93 latest changes
+* b383611 +1 on copyright year [#985 state:fixed]]
+* 0e31e05 Merge branch 'master' of github.com:mopub/mopub
+* 0baab80 Fixed and updated admin/d page
+* 77b8f88 fixed password reset [#977 state:fixed]
+* 6618722 decrease to 10 backend machines for file-finalizer
+* 5c57916 Merge branch 'master' of github.com:mopub/mopub
+* d44cc74 create new backend file-finalizer; point finalize task target to this backend
+* d656dec fixed image serve url
+* 2c991fc Deployed without finding any bug fixes.
+
+# Deployed Thursday, March 08, 2012 at 01:29PM PST
+### Deployed by John Pena
+### Tagged deploy-30
+### Bugs Fixed: []
+### Included Commits:
+* 03b713a Deployed without finding any bug fixes.
+
+# Deployed Thursday, March 08, 2012 at 01:25PM PST
+### Deployed by John Pena
+### Tagged deploy-29
+### Bugs Fixed: []
+### Included Commits:
+* d969928 fixed a datetime bug in the deploy script changelog write function
+* c12d346 using config with iterator
+* 44c5495 Merge branch 'master' of github.com:mopub/mopub
+* 153725b added deadlines to click and impression endpoint db calls
+* 62ee126 Deployed without finding any bug fixes.
+
+# Deployed Thursday, March 08, 2012 at 12:18AM PST
+### Deployed by John Pena
+### Tagged deploy-28
+### Bugs Fixed: []
+### Included Commits:
+* 56d248d updated the deploy script to post to hipchat
+* fe530ab Deployed without finding any bug fixes.
+
+# Deployed Wednesday, March 07, 2012 at 11:31PM PST
+### Deployed by John Pena
+### Tagged deploy-27
+### Bugs Fixed: []
+### Included Commits:
+* f520508 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, March 07, 2012 at 11:29PM PST
+### Deployed by John Pena
+### Tagged deploy-26
+### Bugs Fixed: []
+### Included Commits:
+
+# Deployed Monday, March 05, 2012 at 10:48PM PST
+### Deployed by John Pena
+### Tagged deploy-24
+### Bugs Fixed: ['888', '905', '848', '912', '956', '961']
+### Included Commits:
+* 70a834c fixed a javascript issue in reports
+* 66dc265 Merge branch 'master' of github.com:mopub/mopub
+* a5286c7 fixed marketplace activity icon in the adunit page
+* 9859083 Merge branch '955-reporting-js-fix'
+* 5ff7c1d fixed up the way scripts are loaded in reporting
+* 6d9707b [#935 state:resolved]
+* f86b582 default campaigns to cpm [#888 state:fixed]
+* fa01e4f added latlong jumptap support
+* c004842 fixed javascript import errors, i believe this is actually impacting everyone [#955 state:review-requested assigned:nick]
+* 579e968 strip away white spaces [#905 state:fixed]
+* ee45292 Merge branch 'master' of github.com:mopub/mopub
+* dcf86de cleanup and made status column wider
+* 7252298 Merge branch '964-adunit_names_network_config' of github.com:mopub/mopub
+* b8b9224 [#964:state:fixed]
+* 9674fc7 Merge branch 'new-budget-pace'
+* ac66b5a added clean to keywords [#848 state:fixed]
+* c39e31a added clean to refresh interval [#912 state:fixed]
+* 50986c0 [#956 state:fixed]
+* e83b583 Fixed version
+* 4ffdf61 Merge branch 'master' of github.com:mopub/mopub into new-budget-pace
+* f52ac16 Implemented. TODO: Change column width, fill in proper text for help link
+* 3989cf1 fixed table cells that were using the wrong markup on the mpx page [#961 state:fixed]
+* 177b9b0 only showing adunits in the campaign form targeting section if the adunits arent deleted
+* 8424a10 jslinting
+* 179beca added a loading spinner into inventory tables
+* 8731045 got rid of a redundant css file
+* 186f66f fixed the way the deploy script does datetimes
+* 9110458 Deployed without finding any bug fixes.
+
+# Deployed Friday, March 02, 2012 at 2:39PM PST
+### Deployed by John Pena
+### Tagged deploy-23
+### Bugs Fixed: []
+### Included Commits:
+* a3e0148 fixed tagging issues in mpdeploy and ammended the changelog
+* bdef7ee Merge branch '947-form-budgets' of github.com:mopub/mopub
+* 9e8a505 handled case where gtee campaign does not have budget or full_budget set correctly
+* 6a14d22 Merge branch '947-form-budgets'
+* ba42413 Merge branch '947-form-budgets' of github.com:mopub/mopub into 947-form-budgets
+* 3473aa6 Merge branch 'master' of github.com:mopub/mopub
+* dd0fb39 human-readable datetimes in the changelog and deploy tagging when you use the deploy script
+* 44e8fcd updated campaign form budget validation and tests
+* a885655 Deployed without finding any bug fixes.
+* 6b71f91 Merge branch '947-form-budgets' of github.com:mopub/mopub into 947-form-budgets
+* 401be0f added budget validation, tests
+
+# Deployed Friday, March 02, 2012
+### Deployed by Nafis Jamal
+### Tagged deploy-22
+### Bugs Fixed: []
+### Included Commits:
+* 79a1fd4 Merge branch 'master' of github.com:mopub/mopub
+* 9b135b6 [#954 state:resolved] forcing lower case emails
+* edc7124 [#943 state:resolved]
+* fe7736d Merge branch 'master' of github.com:mopub/mopub
+* 323a220 fixed merge conflict
+
+# Deployed Friday, March 02, 2012
+### Deployed by John Pena
+### Tagged deploy-21
+### Bugs Fixed: ['943']
+### Included Commits:
+* 323a220 fixed merge conflict
+* e8320e7 model cleanup
+* 310114e pylinted services
+* 833e3a0 just some cleanup and pylinting unrelated to this bug
+* e447a75 changed forms to save cpm budgets correctly
+* a8a2b84 fixed a bug in the deploy script that was causing resolved bugs to be marked as resolved again
+* f79d537 Merge branch '879-budget_bugfix' of github.com:mopub/mopub
+* e5de7da fixed bug where input was not disable on form load
+* b502d65 Merge branch '879-budget_bugfix' of github.com:mopub/mopub
+* bc5d301 Merge branch 'master' of github.com:mopub/mopub
+* 4ea755e not end_datetime and budget_type == full_campaign -> budget_strategy = allatonce, plus tests
+* cc3cfb8 Merge branch '943-app-cpms'
+* 8c7828a Merge branch '942-network_config_alerts' of github.com:mopub/mopub
+* 4980f3f Merge branch '950-ad_network_settings' of github.com:mopub/mopub
+* 819690a Merge branch '945' of github.com:mopub/mopub
+* 4878d60 [#943 state:fixed]
+* eafe55a app cpms for network campaigns were rendering as $0.00 because we werent calculating them (we were for adunits)
+* b572295 network config alert no longer appears when all adunits have adunit ids
+* 9812726 Merge branch 'master' of github.com:mopub/mopub into 950-ad_network_settings
+* a9c6f39 added admob and millennial adunit ids to network config page
+* 6e0cdfe added back app.frontend.yaml
+* 402a3b7 added files and update gitignore
+* 6d0970b Merge branch 'master' of github.com:mopub/mopub into 945
+* 76a431e fixed budget/full_budget bug, updated form tests
+* 3d5f0f3 [#939 state:resolved] [#904 state:resolved] [#910 state:resolved] [#925 state:resolved] [#860 state:resolved] [#867 state:resolved] [#874 state:resolved]
+
+# Deployed Thursday, March 01, 2012
+### Deployed by Nafis Jamal
+### Tagged deploy-20
+### Bugs Fixed: ['939', '904', '910', '925', '860', '867', '874']
+### Included Commits:
+* 0c7b7bc added import [#939 state:fixed]
+* a27066f added import [#939 status:fixed]
+* 54af208 removed unused js files
+* 17658b1 added the ability to do maintenance mode
+* 10009eb Merge branch '667-mpx-icon'
+* c6b3c82 fuck those spaces
+* 75f297d [#667 status:fixed]
+* 76a81e7 added header to jumptap [#938 status:fixed]
+* b601275 [#904 state:resolved] [#910 state:resolved] [#925 state:resolved] [#860 state:resolved] [#867 state:resolved] [#874 state:resolved]
+* 75d7738 fixed tzinfo imports
+
+
+# Deployed Wednesday, February 29, 2012
+### Deployed by John Pena
+### Tagged deploy-16
+### Bugs Fixed: ['904', '910', '925', '860', '867', '874']
+### Included Commits:
+* 75d7738 fixed tzinfo imports
+
+
+# Deployed Wednesday, February 29, 2012
+### Deployed by John Pena
+### Tagged deploy-14
+### Bugs Fixed: ['904', '910', '925', '860', '867', '874']
+### Included Commits:
+* d5afb76 [#904 state:resolved] [#910 state:resolved] [#925 state:resolved] [#860 state:resolved] [#867 state:resolved] [#874 state:resolved]
+
+
+# Deployed Wednesday, February 29, 2012
+### Deployed by John Pena
+### Tagged deploy-13
+### Bugs Fixed: ['904', '910', '925', '860', '867', '874']
+### Included Commits:
+* fb15ca2 Merge branch '939-940-form_fixes_tests'
+* 8188353 commiting all changes
+* 69a1450 Merged in adserver changes galore
+* 4c06cef Added this back in, sorry about taking it out
+* ff63b8c Merge branch 'master' into update-network-stats
+* 3b05a9f Change sys.path for check_login_credentials testing
+* 37cbadc Fixes for retying failed logins in the ad_network_reports update_ad_networks script
+* bd1b36b Merge branch 'master' of github.com:mopub/mopub
+* 6bf6022 updated mobile web test
+* 8c0bc5d Merge branch 'update-network-stats' of github.com:mopub/mopub into update-network-stats
+* 4ab25d9 Updated password for connecting to the remote api
+* f7e0940 update_ad_networks.py now takes args for retrying failed logins
+* 3f78dd3 Merge branch 'master' of github.com:mopub/mopub
+* 4a90854 fixed the password
+* 68c5263 QM changes, changed the thing to False from True
+* 894540f Merge
+* 9496297 Merge branch 'master' into ad-network-reports
+* 4d49b44 [#936 state:resolved] after frontend-refactor merge
+* 4efc543 [#904 state:resolved] [#910 state:resolved] [#925 state:resolved] [#860 state:resolved] [#867 state:resolved] [#874 state:resolved]
+
+# Deployed Tuesday, February 28, 2012
+### Deployed by John Pena
+### Tagged deploy-12
+### Bugs Fixed: ['904', '910', '925', '860', '867', '874']
+### Included Commits:
+* 108bb8a frontend refactor. its gold jerry, gold! [#874 status:fixed] [#861 status:fixed] [#867 status:fixed] [#852 status:fixed] [#631 status:fixed] [#863 status:fixed] [#921 status:fixed] [#931 status:fixed]
+* 99d6bd8 fixed spelling error in a js import
+* 74705c5 updated ad_network_reports to use the new include_script template tag
+* f4e9c39 BOOMSLAM FRONTEND REFACTOR MERGE
+* da8adb0 [#936 state:resolved]
+* a307778 Merge branch '931-mpx-content' into frontend-refactor
+* 8e9a7ed fixed merge conflict with master
+* 7c2d18f fixed sorting
+* ed560db fixed a bug that nafis obviously created
+* e1b1c35 removed caching from data-display views so that numbers will line up
+* 1a9a24a Merge branch 'frontend-refactor' of github.com:mopub/mopub into frontend-refactor
+* f9c39fb Merge branch 'frontend-refactor' of github.com:mopub/mopub into frontend-refactor
+* 35b2f39 modified some form datetime tests
+* e59f62b Merge branch 'master' into frontend-refactor
+* a3e1b36 fixed unclosed div bug
+* c21c625 removed a logging statement
+* 08478e6 Merge branch 'master' of github.com:mopub/mopub
+* b9c13ad getting the most recently logged in user
+* 3b521a3 Merge branch 'master' of github.com:mopub/mopub
+* 1381b4d Delete old mapper if no scrape stats exist for it when a new mapper is created from the app settings page for iad
+* 84346da Delete old mapper if no scrape stats exist for it when a new mapper is created from the ad network settings page.
+* be57350 updated olp password
+* fd35f38 Add mp_fail to expandable tag
+* a57617d Add mopub-iframe.js file
+* 3240094 Make non-iframe version of mobile web tag the default
+* a00fed3 ammended include_script filter not to use app for now. we can fix this later
+* 0cf8a4e fixed odd issues where campaigns were being created twice
+* 8e89f2d Merge branch 'frontend-refactor' of github.com:mopub/mopub into frontend-refactor
+* 2e7af4b cleaned up forms, modifying form tests
+* 52755f7 replaced a lot of script tags with include_script
+* 0abaf65 Merge branch 'master' of github.com:mopub/mopub
+* 7d17f95 added name mapper files
+* 3b9132b fixing things to use include_script
+* 8b6d046 fuck you git
+* ad9c619 using an include_script tag for minification and concatenation and including
+* cc61ea8 [#901 state:resolved]
+* 880fba1 Update content filtering description
+* d5d7ab4 Well, that was easy.  [#839 state:review-requested assigned:nafis]
+* 91b5a97 stripping out whitespaces [#904 state:fixed]
+* 5b6b812 added email modification support [#910 state:fixed] (code reviewed by pena)
+* 61afa9d [#925 state:fixed]
+* ea8e81d Merge branch 'master' of github.com:mopub/mopub
+* 26c293e fudged the app_index export button just a little bit lower now
+* 740314d wrote some publisher tests and stubbed out the rest that i want to write
+* 841595f Merge branch 'master' of github.com:mopub/mopub
+* 6ef707f More rawr
+* 5f50bba RAWR
+* 18b3a65 working on making these asshole tests work
+* eb9c44b working on making these asshole tests work
+* 3291254 working on making these asshole tests work
+* 6782759 working on making these asshole tests work
+* ac54e94 More blobstore11111  Construct HTML data on the EC2 side since GAE has memory limits and then breaks?
+* d9fa296 added warmup
+* bc33ed1 added warmup
+* d33cdcd modified user queries
+* 32b4d11 Merge branch 'frontend-refactor' of github.com:mopub/mopub into frontend-refactor
+* 197e2ef Merge branch 'master' of github.com:mopub/mopub
+* 77be4e3 [#844 state:resolved]
+* 2b45210 added date button functionality back in to network adgroup detail pages
+* d29b817 added withsep filter back into impressions in top breakdown
+* 9aeede4 Merge branch 'master' into frontend-refactor
+* aa5642c [#860 state:resolved]
+
+
+# Deployed Thursday, February 23, 2012
+### Deployed by John Pena
+### Tagged deploy-11
+### Bugs Fixed: ['860']
+### Included Commits:
+* cb51212 Merge branch 'master' of github.com:mopub/mopub
+* 9daa9ed Whoooops
+* 4b25a86 [#860 state:resolved]
+
+
+# Deployed Thursday, February 23, 2012
+### Deployed by John Pena
+### Tagged deploy-10
+### Bugs Fixed: ['860']
+### Included Commits:
+* 1c2cc21 Merge branch 'master' of github.com:mopub/mopub
+* 59459a6 Fixed to read only
+* 1851343 Added backwards compatibility
+* 80f24b4 Fix for budget pacing [#860 state:fixed]
+* 0df889e Now using the blobstore instead of just a blob
+* ffdf447 Server-side fix for interstitials not showing up on Ice Cream Sandwich: adding mopubUriInterface call
+* 8dc3630 Minor reporting changes and making colors better
+* 70f7ee3 Merge branch 'master' of github.com:mopub/mopub
+* 204040a Message failures\!
+* a7ba35f Big reporting change
+* 37dc1dc fixed tests
+* 1f93851 removed random number [#898 state:resolved]
+* 3dd79b0 checking that a bid exists first before applying expense
+* bbc94b1 only storing active adgroups
+* d85f24c added use_proxy_bid flag and added that logic to auction
+* 07b7b4e add explit comment in realtime stats to mongo logic in case where creative is empty string
+* c511256 added mp_fail function to mweb js
+* 2300af2 fixed python bug!
+* 3ff8550 fixed python bug!
+* 5fe711b fixed version #
+* f92d946 storing image_serve_url at the time of image creation
+* 8ca4025 fixed MR name and catch errors
+* c73b40b added creative pausers/activaters
+* 49a3c57 Merge branch 'master' of github.com:mopub/mopub
+* 87bd947 changed default queue settings
+* cb453eb changed default queue settings
+* 7b16c33 fixed url for geonames
+* 6d48f63 added mapreduce files
+* 0974090 adding linear backoff to mongo-rt-stats retry logic for mongo migration; comment out putting rt stats to GAE
+* 9c2d436 changing default bid strategy to cpm and returning image_serve_url if possible
+* 57314dc added image_serve_url property to creative objects
+* 8542446 swapping out memcache for datastore based freq capping
+* c28ec00 fixed output so as not to cause 500s
+* 2231313 outputing memcache success
+* 2200453 ensure keys are not ambiguous
+* c07fb34 Merge branch 'master' of github.com:mopub/mopub
+* 46e08b4 shortened keys
+* 16a2c3b Fix for Brightroll interstitial not redirect to lead-behind
+* 05bb357 Fixed pacing indicator to display a different kind of pace as requested by various AdOps folks
+* 20920d1 shortened memcache keys
+* 24a7128 fixed bug
+* 32aac36 only recording in cache impressions that actually care about freq capping
+* 6680ffe Budget updating was being skipped for budgets that hadn't yet started, even if the update would make it so they HAD actually started.  [#881 state:review-requested assigned:nafis]
+* 0878db9 Merge branch 'master' into ad-network-reports
+* 7e89691 Fixed tests so they work with modifications to ad network reports emailing
+* 2c9fc68 Implement simplejson comparisons of header dictionary in renders_mptests
+* deee45e Deployed without finding any bug fixes.
+
+
 # Deployed Monday, February 06, 2012
 ### Deployed by Nafis Jamal
 ### Tagged deploy-10
 ### Bugs Fixed: []
-### Included Commits: 
- * d463649 coercing types from mongostats
- * 7828284 Deployed without finding any bug fixes.
- * 610d416 removed timeout
- * 629baca Deployed without finding any bug fixes.
- * 1cc590c added timeout to mongostats
- * d166c56 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* d463649 coercing types from mongostats
+* 7828284 Deployed without finding any bug fixes.
+* 610d416 removed timeout
+* 629baca Deployed without finding any bug fixes.
+* 1cc590c added timeout to mongostats
+* d166c56 Deployed without finding any bug fixes.
+
 # Deployed Monday, February 06, 2012
 ### Deployed by Nafis Jamal
 ### Tagged deploy-10

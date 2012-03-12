@@ -1,16 +1,18 @@
+"""
+asdfasdf
+"""
 from google.appengine.ext import blobstore
 from google.appengine.ext import db
 from google.appengine.api import users
-
 from django.conf import settings
-
 from account.models import Account, NetworkConfig
 from advertiser.models import Creative
+from simple_models import SimpleApp, SimpleAdUnit
 
 import datetime
-import re
 import time
 import logging
+import re
 
 #
 # A mobile app, which can have multiple Sites on which ads can be displayed
@@ -80,6 +82,23 @@ class App(db.Model):
     secondary_category = db.StringProperty(choices=CATEGORY_CHOICES)
 
     use_proxy_bids = db.BooleanProperty(default=True)
+
+    def simplify(self):
+        return SimpleApp(key = str(self.key()),
+                         account = self.account,
+                         name = self.name,
+                         global_id = self.global_id,
+                         adsense_app_name = self.adsense_app_name,
+                         adsense_app_id = self.adsense_app_id,
+                         admob_textcolor = self.admob_textcolor,
+                         admob_bgcolor = self.admob_bgcolor,
+                         app_type = self.app_type,
+                         package = self.package,
+                         url = self.url,
+                         experimental_fraction = self.experimental_fraction,
+                         network_config = self.network_config,
+                         primary_category = self.primary_category,
+                         secondary_category = self.secondary_category)
 
     def app_type_text(self):
         types = {
@@ -215,6 +234,24 @@ class Site(db.Model):
     t = db.DateTimeProperty(auto_now_add=True)
 
     network_config = db.ReferenceProperty(NetworkConfig, collection_name="adunits")
+
+    def simplify(self):
+        return SimpleAdUnit(key = str(self.key()),
+                            name = self.name,
+                            account = self.account,
+                            app_key = self.app_key,
+                            keywords = self.keywords,
+                            format = self.format,
+                            landscape = self.landscape,
+                            resizable = self.resizable,
+                            custom_height = self.custom_height,
+                            custom_width = self.custom_width,
+                            adsense_channel_id = self.adsense_channel_id,
+                            ad_type = self.ad_type,
+                            refresh_interval = self.refresh_interval,
+                            network_config = self.network_config,
+                            )
+
 
     def toJSON(self):
         d = to_dict(self, ignore = ['account', 'network_config', 'app_key'])

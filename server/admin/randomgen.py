@@ -295,7 +295,7 @@ def main():
         for i in range(NUM_ADUNITS_PER_APP):
             adunits_per_app[app].append(generate_adunit(app,account))
 
-        all_site_keys = [a.key() for a in AdUnit.all()]
+        all_site_keys = [a.key() for a in AdUnit.all() if a._account == account.key()]
 
         for i in range(NUM_CAMPAIGNS_PER_APP):
             budget = generate_budget()

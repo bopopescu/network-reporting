@@ -23,6 +23,11 @@ function mp_cb(data) {
     redo_tags(div);
 }
 
+
+function mp_fail() {
+   window.location = "mopub://failLoad";
+}
+
 (function(){
 
     function gen_key() {

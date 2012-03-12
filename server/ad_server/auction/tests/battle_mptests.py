@@ -2,7 +2,6 @@
 import sys
 import os
 import datetime
-
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
@@ -18,7 +17,6 @@ from advertiser.models import ( Campaign,
 from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
-                                          
 from ad_server.main import  ( AdClickHandler,
                                      AppOpenHandler,
                                      TestHandler,
@@ -267,7 +265,7 @@ class TestAdAuction(unittest.TestCase):
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)         
                                                                                  
         # ecpm if 100000
-        eq_(optimizer.get_ecpm(self.adunit_context, self.expensive_creative), 100000)  
+        eq_(optimizer.get_ecpm(self.adunit, self.expensive_creative), 100000)
          
         # We make the limit min below the ecpm
         network_battle = NetworkBattle(self.client_context,
@@ -292,7 +290,7 @@ class TestAdAuction(unittest.TestCase):
         self.adunit_context = AdUnitContextQueryManager.cache_get_or_insert(self.adunit_id)         
 
         # ecpm if 100000
-        eq_(optimizer.get_ecpm(self.adunit_context, self.expensive_creative), 100000)  
+        eq_(optimizer.get_ecpm(self.adunit, self.expensive_creative), 100000)
 
         # We make the min_cpm more than the ecpm
         network_battle = NetworkBattle(self.client_context,

@@ -178,7 +178,7 @@ def update_datastore():
     
             
 def auth_func():
-    return "olp@mopub.com", "N47935"
+    return "olp@mopub.com", "N47935N47935"
     
                     
 def main():

@@ -55,7 +55,8 @@ class MobFoxScraper(object):
             response = urllib2.urlopen(req)
             line = response.read()
             if line.find("error") != -1:
-                raise MobFoxError(line)
+                continue
+                #raise MobFoxError(line)
 
             line = line.encode("utf-8")
             line = line.replace('&', '&amp;')

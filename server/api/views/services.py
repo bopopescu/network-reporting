@@ -16,17 +16,15 @@ from common.ragendja.template import JSONResponse
 from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      SummedStatsFetcher, \
      DirectSoldStatsFetcher, \
-     AdNetworkStatsFetcher
+     AdNetworkStatsFetcher, \
+     MPStatsAPIException
 
-from common.utils import date_magic
-from common.utils.timezones import Pacific_tzinfo
 from common_templates.templatetags.filters import campaign_status
 
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.http import Http404
 
-import datetime
 import logging
 
 
@@ -39,18 +37,14 @@ class AppService(RequestHandler):
         # make sure app_key/adgroup_key are for apps/adgroups that
         # belong to this user
         if app_key:
-            app = db.get(app_key)
+            app = AppQueryManager.get_app_by_key(app_key)
             if app.account.key() != self.account.key():
                 raise Http404
 
         if adgroup_key:
-            adgroup = db.get(adgroup_key)
+            adgroup = AdGroupQueryManager.get(adgroup_key)
             if adgroup.account.key() != self.account.key():
                 raise Http404
-
-        # Formulate the date range
-        # REFACTOR: move this into RequestHandler
-        start_date, end_date = get_start_and_end_dates(self.request)
 
         # Where are we getting stats from?
         # Choices are 'mpx', 'direct', 'networks', or 'all'
@@ -64,7 +58,7 @@ class AppService(RequestHandler):
             apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
         # If no app key is provided, return a list of all apps for the account
         else:
-            apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
+            apps = [a.toJSON() for a in AppQueryManager.get_apps(self.account)]
 
         # get stats for each app
         for app in apps:
@@ -72,12 +66,15 @@ class AppService(RequestHandler):
             # if the adgroup key was specified, then we only want the app's
             # stats to reflect how it performed within that adgroup.
             if adgroup_key:
+
                 app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
                                                                 adgroup_key,
-                                                                start_date,
-                                                                end_date))
+                                                                self.start_date,
+                                                                self.end_date))
             else:
-                app.update(stats.get_app_stats(str(app['id']), start_date, end_date))
+                app.update(stats.get_app_stats(str(app['id']),
+                                               self.start_date,
+                                               self.end_date))
 
         return JSONResponse(apps)
 
@@ -113,10 +110,6 @@ class AdUnitService(RequestHandler):
         stats_endpoint = self.request.GET.get('endpoint', 'all')
         stats = get_stats_fetcher(self.account.key(), stats_endpoint)
 
-        # REFACTOR: move this to RequestHandler
-        # formulate the date range
-        start_date, end_date = get_start_and_end_dates(self.request)
-
         # REFACTOR: The app key isn't necessary (we can fetch an
         # adunit directly with it's key)
         if app_key:
@@ -135,8 +128,8 @@ class AdUnitService(RequestHandler):
             # Update each app with stats from the selected endpoint
             for adunit in response:
                 adunit_stats = stats.get_adunit_stats(adunit['id'],
-                                                    start_date,
-                                                      end_date)
+                                                      self.start_date,
+                                                      self.end_date)
                 # We update with the app id/key because our
                 # backbone models often need it for reference
                 adunit_stats.update({'app_id':app_key})
@@ -184,8 +177,8 @@ class AdUnitService(RequestHandler):
             for adunit in response:
                 adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
                                                                        adgroup_key,
-                                                                       start_date,
-                                                                       end_date)
+                                                                       self.start_date,
+                                                                       self.end_date)
 
                 # We update with the app and adgroup id/key because our
                 # backbone models often need it for reference
@@ -253,14 +246,6 @@ class AdGroupService(RequestHandler):
     """
     def get(self, adgroup_key):
         try:
-            # Form the date range
-            if self.start_date:
-                end_date = self.start_date + datetime.timedelta(days=self.date_range)
-            else:
-                today = datetime.datetime.now(Pacific_tzinfo()).date()
-                self.start_date = today - datetime.timedelta(days=self.date_range)
-                end_date = today
-            days = date_magic.gen_days(self.start_date, end_date)
 
             # Get the adgroup
             adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -275,7 +260,7 @@ class AdGroupService(RequestHandler):
             stats_fetcher = StatsModelQueryManager(self.account,
                                                    offline=self.offline)
             stats = stats_fetcher.get_stats_for_days(advertiser=adgroup,
-                                                     days=days)
+                                                     days=self.days)
             summed_stats = sum(stats, StatsModel())
 
             # adds ECPM if the adgroup is a CPC adgroup
@@ -288,8 +273,9 @@ class AdGroupService(RequestHandler):
                 stats_fetcher = MarketplaceStatsFetcher(self.account.key())
                 try:
                     mpx_stats = stats_fetcher.get_account_stats(self.start_date,
-                                                                end_date)
+                                                                self.end_date)
                 except MPStatsAPIException, error:
+                    logging.error('MPStatsAPIException: ' + str(error))
                     mpx_stats = {}
                 summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
@@ -297,23 +283,23 @@ class AdGroupService(RequestHandler):
                 summed_stats.cpm = adgroup.cpm
 
             adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+            if adgroup.pace:
+                summed_stats.pace = adgroup.pace[1]
+                if adgroup.pace[0] == "Pacing":
+                    if summed_stats.pace < .5:
+                        summed_stats.pace_type = "pace-failure"
+                    elif summed_stats.pace < .85:
+                        summed_stats.pace_type = "pace-warning"
+                    else:
+                        summed_stats.pace_type = "pace-success"
+                else:
+                    summed_stats.pace_type = "delivery"
+
             percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
             summed_stats.percent_delivered = percent_delivered
             adgroup.percent_delivered = percent_delivered
 
             summed_stats.status = campaign_status(adgroup)
-
-            # Determine the pacing
-            if adgroup.running and  \
-               adgroup.campaign.budget_obj and  \
-               adgroup.campaign.budget_obj.delivery_type != 'allatonce':
-
-                if budget_service.get_osi(adgroup.campaign.budget_obj):
-                    summed_stats.on_schedule = "on pace"
-                else:
-                    summed_stats.on_schedule = "behind"
-            else:
-                summed_stats.on_schedule = "none"
 
             stats_dict = summed_stats.to_dict()
 
@@ -323,11 +309,14 @@ class AdGroupService(RequestHandler):
         except Exception, exception:
             return JSONResponse({'error': str(exception)})
 
+
     def post(self, *args, **kwagrs):
         return JSONResponse({'error': 'Not yet implemented'})
 
+
     def put(self, *args, **kwagrs):
         return JSONResponse({'error': 'Not yet implemented'})
+
 
     def delete(self, *args, **kwagrs):
         return JSONResponse({'error': 'Not yet implemented'})
@@ -340,33 +329,6 @@ def adgroup_service(request, *args, **kwargs):
 
 
 ## Helper Functions
-#
-def get_days(request):
-    if request.GET.get('s', None):
-        year, month, day = str(request.GET.get('s')).split('-')
-        start_date = datetime.date(int(year), int(month), int(day))
-    else:
-        start_date = datetime.date.today()
-    days_in_range = int(request.GET.get('r'))
-
-    return date_magic.gen_days_for_range(start_date, days_in_range)
-
-
-def get_start_and_end_dates(request):
-    if request.GET.get('s', None):
-        year, month, day = str(request.GET.get('s')).split('-')
-        end_date = datetime.date(int(year), int(month), int(day))
-    else:
-        end_date = datetime.date.today()
-
-    if request.GET.get('r', None):
-        days_in_range = int(request.GET.get('r')) - 1
-        start_date = end_date - datetime.timedelta(days_in_range)
-    else:
-        start_date = end_date - datetime.timedelta(13)
-
-    return (start_date, end_date)
-
 
 def get_stats_fetcher(account_key, stats_endpoint):
     """

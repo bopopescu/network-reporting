@@ -60,9 +60,9 @@ class AdNetworkLoginCredentials(db.Model):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),
                 kwargs['ad_network_name']))
         super(AdNetworkLoginCredentials, self).__init__(*args, **kwargs)
-        if 'username' in kwargs:
+        if 'username' in kwargs and not kwargs.get('debug', False):
             self.username = kwargs['username']
-        if 'password' in kwargs:
+        if 'password' in kwargs and not kwargs.get('debug', False):
             self.password = kwargs['password']
 
     def get_username(self):
@@ -150,6 +150,26 @@ class AdNetworkStats(db.Model):
     attempts = db.IntegerProperty(default=0)
     impressions = db.IntegerProperty(default=0)
     clicks = db.IntegerProperty(default=0)
+
+    def __add__(self,
+                stats):
+        """
+        stats1 = self + stats
+        """
+        for stat in STAT_NAMES:
+            # example: self.revenue += stats.revenue
+            setattr(self, stat, getattr(self, stat) + getattr(stats, stat))
+        return self
+
+    def __sub_(self,
+                stats):
+        """
+        stats1 = self - stats
+        """
+        for stat in STAT_NAMES:
+            # example: self.revenue -= stats.revenue
+            setattr(self, stat, getattr(self, stat) - getattr(stats, stat))
+        return self
 
     @property
     def cpm(self):

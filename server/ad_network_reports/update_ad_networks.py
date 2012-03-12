@@ -67,10 +67,17 @@ ADMIN_EMAIL = 'tiago@mopub.com'
 SUPPORT_EMAIL = 'support@mopub.com'
 REPORTING_EMAIL = 'report-monitoring@mopub.com'
 
-def multiprocess_update_all(start_day=None, end_day=None, email=False,
-        processes=1, testing=False):
+def multiprocess_update_all(start_day=None,
+                            end_day=None,
+                            email=False,
+                            processes=1,
+                            testing=False):
     """
     Break up update script into multiple processes.
+
+    Note: it works a day at a time since MobFox and Admob have a limit on the
+    number of requests they can take from a given user within a window of
+    time.
     """
     # Standardize the date
     pacific = timezone('US/Pacific')
@@ -79,11 +86,6 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
     # Set start and end dates
     start_day = start_day or yesterday
     end_day = end_day or yesterday
-
-    login_count = AdNetworkLoginManager.get_all_logins().count()
-
-    # Create the pool of processes
-    pool = Pool(processes=processes)
 
     def get_all_accounts_with_logins():
         logins_query = AdNetworkLoginManager.get_all_logins(
@@ -96,10 +98,15 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
 
     days = date_magic.gen_days(start_day, end_day)
 
-    results = []
-    logging.info("Assigning processes in pool to collect and save stats...")
-    for account in get_all_accounts_with_logins():
-        for day in days:
+    accounts = list(get_all_accounts_with_logins())
+
+    for day in days:
+        # Create the pool of processes
+        pool = Pool(processes=processes)
+
+        results = []
+        logging.info("Assigning processes in pool to collect and save stats...")
+        for account in accounts:
             logging.info("Assigning process in pool to account %s and day %s" %
                     (account.key(), day))
 
@@ -110,30 +117,33 @@ def multiprocess_update_all(start_day=None, end_day=None, email=False,
                     args=(account, day, email_account, testing))))
 
 
-    # Wait for all processes in pool to complete
-    pool.close()
-    pool.join()
+        # Wait for all processes in pool to complete
+        pool.close()
+        pool.join()
 
-    # Save management stats
-    logging.info("Updating management stats...")
-    stats_dict = {}
-    for account, day, result in results:
-        if result.successful():
-            stats = result.get()
-            if stats.day in stats_dict:
-                stats_dict[stats.day].combined(stats)
+        # Save management stats
+        logging.info("Updating management stats...")
+        stats_dict = {}
+        for account, day, result in results:
+            if result.successful():
+                stats = result.get()
+                if stats.day in stats_dict:
+                    stats_dict[stats.day].combined(stats)
+                else:
+                    stats_dict[stats.day] = stats
             else:
-                stats_dict[stats.day] = stats
-        else:
-            raise UpdateException(account, day)
+                raise UpdateException(account, day)
 
-    for stats in stats_dict.itervalues():
-        stats.put_stats()
+        for stats in stats_dict.itervalues():
+            stats.put_stats()
 
     logging.info("Finished.")
 
 
-def update_account_stats(account, day, email, testing=False):
+def update_account_stats(account,
+                         day,
+                         email,
+                         testing=False):
     """
     Call update_login_stats for each login for the account for the day.
 
@@ -224,8 +234,10 @@ def update_account_stats(account, day, email, testing=False):
         raise
 
 
-def update_login_stats_for_check(login, start_day=None, end_day=None,
-        testing=False):
+def update_login_stats_for_check(login,
+                                 start_day=None,
+                                 end_day=None,
+                                 testing=False):
     """
     Collect data for a given login from the start date to yesterday.
 
@@ -242,7 +254,7 @@ def update_login_stats_for_check(login, start_day=None, end_day=None,
     # Collect stats
     stats_list = []
     for day in date_magic.gen_days(start_day, end_day):
-        stats_list += update_login_stats(login, day, from_check=True,
+        stats_list += update_login_stats(login, day, update_aggregates=True,
                 testing=testing)
     login.put()
 
@@ -271,8 +283,62 @@ def update_login_stats_for_check(login, start_day=None, end_day=None,
         s.quit()
 
 
-def update_login_stats(login, day, management_stats=None, from_check=False,
-        logger=None, testing=False):
+def retry_logins(day,
+                 processes=1):
+    """
+    Retry failed logins for a given day.
+    """
+    # Create the pool of processes
+    pool = Pool(processes=processes)
+
+    management_stats = AdNetworkManagementStatsManager(day, assemble=True)
+    failed_logins = management_stats.failed_logins
+    management_stats.clear_failed_logins()
+
+    logging.info("Assigning processes in pool to retry collecting stats for "
+            "%s..." % day)
+    results = []
+    for login_key in failed_logins:
+        login = db.get(login_key)
+        logging.info("Assigning process in pool to login %s and day %s" %
+                login.key())
+        # Using a different management stats for each process and combinding
+        # them later keeps increments atomic
+        temp_stats = AdNetworkManagementStatsManager(day)
+        # Assign process in pool calling update_login_stats and giving it
+        # it's appropriate login
+        results.append((temp_stats,
+            pool.apply_async(update_login_stats,
+                args=(account, day),
+                kwds={'management_stats': temp_stats,
+                      'update_aggregates': True})))
+
+    # Wait for all processes in pool to complete
+    pool.close()
+    pool.join()
+
+    # Save management stats
+    logging.info("Saving scrape stats...")
+    stats_list = []
+    final_stats = management_stats
+    for temp_stats, result in results:
+        if result.successful():
+            stats_list += result.get()
+            final_stats.combined(temp_stats)
+
+    # Flush stats to db
+    db.put([stats for mapper, stats in stats_list])
+    final_stats.put_stats()
+
+    logging.info("Finished.")
+
+
+def update_login_stats(login,
+                       day,
+                       management_stats=None,
+                       update_aggregates=False,
+                       logger=None,
+                       testing=False):
     """
     Update or create stats for the given login and day.
 
@@ -396,7 +462,7 @@ def update_login_stats(login, day, management_stats=None, from_check=False,
                                             clicks=stats.clicks)
         valid_stats_list.append((mapper, scrape_stats))
 
-        if from_check:
+        if update_aggregates:
             AdNetworkAggregateManager.update_stats(login.account, mapper, day,
                     scrape_stats, network=mapper.ad_network_name)
             AdNetworkAggregateManager.update_stats(login.account, mapper, day,
@@ -461,7 +527,7 @@ def send_stats_mail(account, day, stats_list):
                    'revenue': stats.revenue,
                    'attempts': stats.attempts,
                    'impressions': stats.impressions,
-                   'fill_rate': stats.fill_rate,
+                   'fill_rate': stats.fill_rate * 100,
                    'clicks': stats.clicks,
                    'ctr': stats.ctr * 100,
                    'cpm': stats.cpm}
@@ -523,7 +589,7 @@ def send_stats_mail(account, day, stats_list):
                 """ % {'revenue': aggregate_stats.revenue,
                        'attempts': aggregate_stats.attempts,
                        'impressions': aggregate_stats.impressions,
-                       'fill_rate': aggregate_stats.fill_rate,
+                       'fill_rate': aggregate_stats.fill_rate * 100,
                        'clicks': aggregate_stats.clicks,
                        'ctr': aggregate_stats.ctr * 100,
                        'cpm': aggregate_stats.cpm})
@@ -587,8 +653,12 @@ def main(args):
     Updates the database from the given start date to the given end date
     sending emails if the flag is set and using the # of processes given.
 
+    ================
+    To retry failed logins for a given day use:
+    update_networks.py retry [day=xxxx-xx-xx] [processes=xx]
+
     =================
-    start_day, end_day:
+    start_day, end_day, day:
 
     Date arguments must be in the folowing format:
     YEAR-MONTH-DAY
@@ -611,34 +681,51 @@ def main(args):
     number of login credentials.
     """
     HELP = 'help'
+
     START_DAY = 'start_day'
     END_DAY = 'end_day'
     EMAIL = 'email'
     PROCESSES = 'processes'
+
+    RETRY = 'retry'
+    DAY = 'day'
 
     start_day = None
     end_day = None
     email = True
     processes = 1
 
-    if (len(args) > 1):
-        for arg in args[1:]:
-            if HELP == arg:
-                print main.__doc__
-                return
-            if START_DAY + '=' == arg[:len(START_DAY) + 1]:
-                start_day = date(*[int(num) for num in arg[len(START_DAY) +
-                    1:].split('-')])
-            elif END_DAY + '=' == arg[:len(END_DAY) + 1]:
-                end_day = date(*[int(num) for num in arg[len(END_DAY) +
-                    1:].split('-')])
-            elif EMAIL + '=' == arg[:len(EMAIL) + 1]:
-                email = (arg[len(EMAIL) + 1:] in ('y', 'Y'))
-            elif PROCESSES + '=' == arg[:len(PROCESSES) + 1]:
-                processes = int(arg[len(PROCESSES) + 1:])
-
     setup_remote_api()
-    multiprocess_update_all(start_day, end_day, email, processes)
+
+    def field_name_match(arg, field):
+        return field + '=' == arg[:len(field) + 1]
+
+    def parse_day(arg, field):
+        return date(*[int(num) for num in arg[len(field) + 1:].split('-')])
+
+    if (len(args) > 1):
+        if RETRY == args[1]:
+            for arg in args[2:]:
+                if field_name_match(arg, DAY):
+                    day = parse_day(arg, DAY)
+                elif field_name_match(arg, PROCESSES):
+                    processes = int(arg[len(PROCESSES) + 1:])
+            retry_logins(day, processes)
+        else:
+            for arg in args[1:]:
+                if HELP == arg:
+                    print main.__doc__
+                    return
+                elif field_name_match(arg, START_DAY):
+                    start_day = parse_day(arg, START_DAY)
+                elif field_name_match(arg, END_DAY):
+                    end_day = parse_day(arg, END_DAY)
+                elif field_name_match(arg, EMAIL):
+                    email = (arg[len(EMAIL) + 1:] in ('y', 'Y'))
+                elif field_name_match(arg, PROCESSES):
+                    processes = int(arg[len(PROCESSES) + 1:])
+            multiprocess_update_all(start_day, end_day, email, processes)
+
 
 if __name__ == "__main__":
     main(sys.argv)

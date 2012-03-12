@@ -1,21 +1,54 @@
+# Deployed Monday, March 12, 2012 at 03:01PM PST
+### Deployed by John Pena
+### Tagged deploy-33
+### Bugs Fixed: ['1014', '1011', '966', '1010', '1009']
+### Included Commits: 
+ * 85c248f Merge branch '1011-delivery-zeroed'
+ * 9f107ee Merge branch '1014-stats-ascii-fail'
+ * b39a189 Merge branch '966-965-campaign-archive-issues'
+ * b9852b7 removed logging statements that were throwing unicode errors [#1014 state:fixed]
+ * a49a8d3 squashed a name bug
+ * cc318a4 fixed up a bug on the network detail page
+ * d83ea1b changed the adgroup detail "campaign details" section to look like an individual table row in the campaigns page [#1011 state:fixed]
+ * c5885ff maybe this fixed it?
+ * 8cd9380 fixed button issues on the campaign archive page. [#966 state:fixed] [#965 state:fixed]
+ * 65c6510 got rid of old queues and backends
+ * 44c2e63 reduce rate for file-finalizer 31-39 to 10/s
+ * 72ef73e Merge branch 'master' of github.com:mopub/mopub
+ * bac3713 Fix admin/d stats-breakdown loading
+ * 13d0188 removed percent delivered from ad sources table [#1010 state:fixed]
+ * 20a1c2c Merge branch 'master' of github.com:mopub/mopub
+ * e183962 Fixed admin/d MPX%
+ * e491e20 Merge branch 'master' of github.com:mopub/mopub
+ * 59fcbb5 More admin/d fixes
+ * cdc1e0c Merge branch 'master' of github.com:mopub/mopub
+ * da803c4 change rate to 10/s for file finalizer queues
+ * 1c85d2d catching user agent error
+ * b59809a using different version to handle the file finalize
+ * 86b9557 fixed a date range issue on the adgroup index [#1009 state:fixed]
+ * b41c5d0 Merge branch 'master' of github.com:mopub/mopub
+ * b49e851 adding file-finalizer backend 3
+ * 86114cb Removed google login from the UI
+ * a0a487e Deployed without finding any bug fixes.
+ 
 # Deployed Friday, March 09, 2012 at 03:25PM PST
 ### Deployed by John Pena
 ### Tagged deploy-32
 ### Bugs Fixed: []
-### Included Commits: 
- * 8d78290 Merge branch 'master' of github.com:mopub/mopub
- * 586df3c only 10 qs for file finalize
- * 7d9944f fix merge conflict
- * ea85016 increasing to 60 queues; only last 20 take in new tasks
- * cc1047f added more backends and sharding final finalizer work amoung them
- * 7208191 using backends again
- * 05f6d7a Admin/d loads data properly
- * 192dad9 removed green highlighting for "javascript minified" statement in deploy script
- * 6e09286 increase file finalize queue count to 40; evenly distribute load onto last 30 qs
- * d8637bd Merge branch 'master' of github.com:mopub/mopub
- * a7fe992 increase file-finalizer queue count to 20; go back to writing to blobstore
- * c364950 [#1001 state:resolved] [#985 state:resolved] [#977 state:resolved]
- 
+### Included Commits:
+* 8d78290 Merge branch 'master' of github.com:mopub/mopub
+* 586df3c only 10 qs for file finalize
+* 7d9944f fix merge conflict
+* ea85016 increasing to 60 queues; only last 20 take in new tasks
+* cc1047f added more backends and sharding final finalizer work amoung them
+* 7208191 using backends again
+* 05f6d7a Admin/d loads data properly
+* 192dad9 removed green highlighting for "javascript minified" statement in deploy script
+* 6e09286 increase file finalize queue count to 40; evenly distribute load onto last 30 qs
+* d8637bd Merge branch 'master' of github.com:mopub/mopub
+* a7fe992 increase file-finalizer queue count to 20; go back to writing to blobstore
+* c364950 [#1001 state:resolved] [#985 state:resolved] [#977 state:resolved]
+
 # Deployed Thursday, March 08, 2012 at 09:33PM PST
 ### Deployed by John Pena
 ### Tagged deploy-31

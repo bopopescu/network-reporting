@@ -24,11 +24,12 @@ from publisher.models import App
 from publisher.models import Site as AdUnit
 from reporting.query_managers import StatsModelQueryManager
 
+from adserver_constants import USER_PUSH_URL, ADSERVER_ADMIN_HOSTNAME
+
 
 CACHE_TIME = 0 # turned off cache expiration
 
 #TODO(tornado): This needs to be a url that we'll actually use
-ADSERVER = 'someurlgoeshere'
 TEST_ADSERVER = 'localhost:8000'
 AUC_CLEAR_URI = '/gae/adunit_context_clear'
 
@@ -119,13 +120,12 @@ class AdUnitContextQueryManager(CachedQueryManager):
             pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
-            #try:
-            #    full_url = 'http://' + ADSERVER + clear_uri
-            #    urllib2.urlopen(full_url)
-            #except:
-            #    # This isn't implemented, don't do it
-            #    #TODO(tornado): need to implement this and things
-            #    pass
+            #for key in adunit_keys:
+            #    # For each adunit, spin up a TQ to ping the adserver
+            #    # admins with new data
+            #    taskqueue.add(url='/fetch_api/adunit_update_push',
+            #                  queue_name='push_context_update',
+            #                  params={'adunit_key':key})
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)

@@ -15,6 +15,8 @@ from budget.helpers import (build_budget_update_string,
                             get_slice_budget_from_daily,
                             )
 
+from adserver_constants import BUDGET_UPDATE_URL, ADSERVER_ADMIN_HOSTNAME
+
 ZERO_BUDGET = 0.0
 ONE_DAY = timedelta(days=1)
 BUDGET_UPDATE_DATE_FMT = '%Y/%m/%d %H:%M'
@@ -22,7 +24,6 @@ BUDGET_UPDATE_DATE_FMT = '%Y/%m/%d %H:%M'
 #TODO(tornado): This needs to be a url that we'll actually use
 ADSERVER = 'ec2-50-17-0-25.compute-1.amazonaws.com'
 TEST_ADSERVER = 'localhost:8000'
-BUDGET_UPDATE_URI = '/gae/campaign_update'
 
 class BudgetQueryManager(QueryManager):
 
@@ -54,7 +55,7 @@ class BudgetQueryManager(QueryManager):
                                   delivery_type = camp.budget_strategy,
                                   )
         qs = urllib.urlencode(remote_update_dict)
-        update_uri = BUDGET_UPDATE_URI + '?' + qs
+        update_uri = BUDGET_UPDATE_URL + '?' + qs
 
         if testing and fetcher:
             fetcher.fetch(update_uri)
@@ -63,7 +64,7 @@ class BudgetQueryManager(QueryManager):
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
             #try:
-            #    full_url = 'http://' + ADSERVER + update_uri
+            #    full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + update_uri
             #    urllib2.urlopen(full_url)
             #except:
             #    # This isn't implemented yet

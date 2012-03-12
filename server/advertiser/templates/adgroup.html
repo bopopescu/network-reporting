@@ -215,11 +215,10 @@
                 <th class="dataTable-data numeric">Attempts</th>
              {% endif %}
 
-            {% comment %}
             {% if campaign.gtee %}
                 <th class="dataTable-data numeric">Goal</th>
             {% endif %}
-            {% endcomment %}
+
                 
             <th class="dataTable-data numeric">Impressions</th>
             
@@ -252,7 +251,7 @@
               <span class="muted">
                 {# Display the network type if it's a network campaign #}
                 {% if campaign.network %}
-                  {{ campaign.network_type }}.
+                  {{ adgroup.network_type }}.
 
                 {# Otherwise display the start and end datetimes, if we have them. #}
                 {% else %}
@@ -304,12 +303,19 @@
                 <td class="dataTable-data numeric"> {{ adgroup.stats.attempt_count|withsep }} </td>
               {% endif %}
 
-               {% comment %}
               {% if campaign.gtee %}
-                <td class="dataTable-data numeric"> {{ adgroup.budget_goal }} {{ adgroup.bid_strategy }} {{ campaign.budget_type }}</td>
+                <td class="dataTable-data numeric">
+                  {% if campaign.cpc %}
+                    {{ adgroup.budget_goal|currency }} <br />
+                    USD
+                  {% else %}
+                    {{ adgroup.budget_goal|withsep}} <br />
+                    Impressions
+                  {% endif %}                  
+                </td>
               {% endif %}
 
-               {% endcomment %}
+
                 
               <td class="dataTable-data numeric"> {{ adgroup.stats.impression_count|withsep }} </td>
             

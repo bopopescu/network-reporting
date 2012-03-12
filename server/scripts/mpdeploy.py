@@ -395,6 +395,7 @@ def main():
                 git_push()
 
                 # notify people of a successful deploy on hipichat
+                puts("Notifying hipchat")
                 post_to_hipchat("Branch %s just deployed to %s by %s" % (active_branch_name,
                                                                          deploy_server,
                                                                          deployer))

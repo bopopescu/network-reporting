@@ -74,10 +74,6 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                              advertiser=None, *args, **kwargs):
         # mongo
         days = date_magic.gen_days(start, end)
-        logging.warn(days[0])
-        logging.warn(days[-1])
-        logging.warn('publisher=' + str(publisher))
-        logging.warn('advertiser=' + str(advertiser))
         query_manager = StatsModelQueryManager(publisher.account)
         stats = query_manager.get_stats_for_days(publisher=publisher,
                                                  advertiser=advertiser,

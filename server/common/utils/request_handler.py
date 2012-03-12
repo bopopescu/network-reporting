@@ -72,7 +72,6 @@ class RequestHandler(object):
                 self.date_range = 14
             self.days = date_magic.gen_days(self.start_date, self.end_date)
 
-            logging.warn("Days = " + str(self.days))
             # Set self.account
             if self.login:
                 if 'account' in self.params:
@@ -175,7 +174,6 @@ def get_start_and_end_dates(request):
         start_date = datetime.date(int(year), int(month), int(day))
         end_date = start_date + datetime.timedelta(date_range - 1)
     else:
-        logging.warn("YES")
         end_date = datetime.datetime.now(Pacific_tzinfo()).date()
         start_date = end_date - datetime.timedelta(date_range - 1)
 

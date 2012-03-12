@@ -98,3 +98,12 @@
 
 {% endif %}
 {% endblock content %}
+
+{% block extraScripts %}
+{% include_script "controllers/campaigns" %}
+<script type="text/javascript">
+  $(function () {
+    CampaignsController.initializeCampaignArchive();
+  });
+</script>              
+{% endblock extraScripts %}

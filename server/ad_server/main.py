@@ -82,7 +82,7 @@ class AdImpressionHandler(webapp.RequestHandler):
         creative_id = self.request.get('cid')
         if adunit_context:
             creative = adunit_context.get_creative_by_key(creative_id)
-            if creative.ad_group.bid_strategy == 'cpm' and creative.ad_group.bid:
+            if creative and creative.ad_group.bid_strategy == 'cpm' and creative.ad_group.bid:
                 budget_service.apply_expense(creative.ad_group.campaign.budget_obj, creative.ad_group.bid/1000)
 
             raw_udid = self.request.get("udid")

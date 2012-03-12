@@ -19,8 +19,6 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      AdNetworkStatsFetcher, \
      MPStatsAPIException
 
-from common_templates.templatetags.filters import campaign_status
-
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.http import Http404
@@ -299,7 +297,7 @@ class AdGroupService(RequestHandler):
             summed_stats.percent_delivered = percent_delivered
             adgroup.percent_delivered = percent_delivered
 
-            summed_stats.status = campaign_status(adgroup)
+            summed_stats.status = adgroup.status
 
             stats_dict = summed_stats.to_dict()
 

@@ -6,6 +6,8 @@ from urllib import urlencode
 from urllib2 import urlopen
 import time
 
+from django.http import Http404
+
 from google.appengine.api import users
 from google.appengine.api.urlfetch import fetch
 from google.appengine.api import mail
@@ -316,7 +318,7 @@ def migrate_image(request, *args, **kwargs):
     """ Migrates a text and tile image. """
     from google.appengine.api import files
     from common.utils import helpers
-    
+
     params = request.POST or request.GET
 
     app_keys = params.getlist('app_key')

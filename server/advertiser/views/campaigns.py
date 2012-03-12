@@ -573,7 +573,7 @@ def edit_adgroup(request, *args, **kwargs):
 """
 
 
-class AdgroupDetailHandler(RequestHandler):
+class AdGroupDetailHandler(RequestHandler):
     """
     Holy christ, refactor
 
@@ -591,6 +591,9 @@ class AdgroupDetailHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, adgroup_key):
+
+        stats_q = StatsModelQueryManager(self.account, self.offline)
+        
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
@@ -640,20 +643,52 @@ class AdgroupDetailHandler(RequestHandler):
 
         # Show a flash message recommending using reports if selecting more than 30 days
         if self.date_range > 30:
-            self.request.flash['message'] = "For showing more than 30 days we recommend using the <a href='%s'>Reports</a> page." % reverse('reports_index')
+            self.request.flash['message'] = """For showing more than 30 days we recommend
+                                               using the <a href='%s'>Reports</a> page.""" %  \
+                                               reverse('reports_index')
         else:
             del self.request.flash['message']
 
         # Load stats
-        adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+
+        ctr = lambda clicks, impressions: \
+              (clicks/float(impressions) if impressions else 0)
+        ecpm = lambda revenue, impressions: \
+               (revenue/float(impressions)*1000 if impressions else 0)
+        fill_rate = lambda requests, impressions: \
+                    (impressions/float(requests) if requests else 0)
+
+            
+        adgroup.all_stats = stats_q.get_stats_for_days(advertiser=adgroup,days=days)
         adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
+        try:
+            adgroup.stats.ecpm = ecpm(adgroup.stats.revenue,
+                                      adgroup.stats.impression_count)
+        except Exception:
+            pass
+
+        try:
+            adgroup.stats.ctr = ctr(adgroup.stats.click_count,
+                                    adgroup.stats.impression_count)
+        except Exception:
+            pass
+
+        try:
+            adgroup.stats.fill_rate = fill_rate(adgroup.stats.request_count,
+                                                adgroup.stats.impression_count)
+        except Exception:
+            pass
+            
+        
 
         # Load creatives and populate
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
         creatives = list(creatives)
         for c in creatives:
-            c.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=c, days=days)
+            c.all_stats = StatsModelQueryManager(self.account,
+                                                 offline=self.offline).get_stats_for_days(advertiser=c,
+                                                                                          days=days)
             c.stats = reduce(lambda x, y: x + y, c.all_stats, StatsModel())
             # TODO: Should fix DB so that format is always there
             if not c.format:
@@ -847,7 +882,7 @@ class AdgroupDetailHandler(RequestHandler):
 
 @login_required
 def campaign_adgroup_show(request, *args, **kwargs):
-    return AdgroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
+    return AdGroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
 
 
 class PauseAdGroupHandler(RequestHandler):

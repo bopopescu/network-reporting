@@ -34,8 +34,7 @@ class AUCUserPushHandler(webapp.RequestHandler):
         # Dont' handle errors because if there are errors the TQ will be readded
         rpc = urlfetch.create_rpc()
         adunit_key = self.request.get('adunit_key')
-        adunit = Adunit.get(adunit_key)
-        adunit_context = AdUnitContext.wrap(adunit)
+        adunit_context = AdUnitContextQueryManager.get_context(adunit_key)
         pickled_context = pickle.dumps(adunit_context.simplify().to_basic_dict())
         body = urllib.urlencode(dict(data = pickled_context))
         full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + USER_PUSH_URL

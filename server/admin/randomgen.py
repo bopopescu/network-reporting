@@ -1,7 +1,7 @@
 import copy
 import string
 import random
-import datetime as dt
+import datetime
 
 from account.query_managers import AccountQueryManager
 from reporting.query_managers import StatsModelQueryManager
@@ -27,7 +27,7 @@ NUM_CAMPAIGNS_PER_APP = 3
 NUM_CREATIVES_PER_ADGROUP = 1
 NUM_ADUNITS_PER_APP = 3
 
-APP_STATS_SINCE = dt.datetime.now() - dt.timedelta(days=14)
+APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
 
 ### End configuration parameters
@@ -106,7 +106,7 @@ def select_rand_subset(array):
 
 
 def get_random_date():
-    today = dt.date.today()
+    today = datetime.date.today()
     year = 2012
     month = random.randint(1,today.month)
     day = random.randint(1,28 if today.month!= month else random.randint(1,month))

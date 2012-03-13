@@ -95,7 +95,6 @@ class SummedStatsFetcher(AbstractStatsFetcher):
     def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
                                         start, end, *args, **kwargs):
         # mongo
-        logging.warn('app')
         app = AppQueryManager.get(app_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         app_stats = self._get_publisher_stats(app, start, end,
@@ -106,7 +105,6 @@ class SummedStatsFetcher(AbstractStatsFetcher):
     def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
                                            start, end, *args, **kwargs):
         # mongo
-        logging.warn('adunit')
         adunit = AdUnitQueryManager.get(adunit_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
         adunit_stats = self._get_publisher_stats(adunit, start, end,
@@ -347,7 +345,6 @@ class AdNetworkStatsFetcher(object):
                 AD_NETWORK_NAMES.keys()]
         stats = AdNetworkStatsManager.roll_up_stats([stats for stats in
                 stats_list if stats != None])
-        logging.info(stats.dict_)
         return stats.dict_
 
 

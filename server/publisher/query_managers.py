@@ -44,6 +44,11 @@ class AdUnitContextQueryManager(CachedQueryManager):
     Model = AdUnitContext
 
     @classmethod
+    def get_context(cls, adunit_key):
+        adunit = AdUnit.get(adunit_key)
+        adunit_context = AdUnitContext.wrap(adunit)
+
+    @classmethod
     def cache_get_or_insert(cls, adunit_key):
         """ Takes an AdUnit key, tries both hypercache and memcache, if found
             neither, builds the context from the datastore.
@@ -71,11 +76,8 @@ class AdUnitContextQueryManager(CachedQueryManager):
 
         if adunit_context is None:
             trace_logging.warning("memcache miss: fetching adunit_context from db")
-            # get adunit from db
-            adunit = AdUnit.get(adunit_key)
-            # wrap context
             try:
-                adunit_context = AdUnitContext.wrap(adunit)
+                adunit_context = cls.get_context(adunit_key)
                 memcache.set(adunit_context_key,
                              adunit_context,
                              time=CACHE_TIME)

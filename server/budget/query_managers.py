@@ -29,7 +29,7 @@ class BudgetQueryManager(QueryManager):
 
     Model = Budget
     @classmethod
-    def update_or_create_budget_for_campaign(cls, camp, total_spent=0.0, testing=False, fetcher=None):
+    def update_or_create_budget_for_campaign(cls, camp, total_spent=0.0, testing=False, fetcher=None, migrate_total=False):
         # Update budget
         if camp.start_datetime is None:
             camp.start_datetime = datetime.now().replace(tzinfo=utc)
@@ -54,6 +54,8 @@ class BudgetQueryManager(QueryManager):
                                   active = camp.active,
                                   delivery_type = camp.budget_strategy,
                                   )
+        if migrate_total:
+            remote_update_dict['total_spent'] = camp.budget_obj.total_spent
         qs = urllib.urlencode(remote_update_dict)
         update_uri = BUDGET_UPDATE_URL + '?' + qs
 

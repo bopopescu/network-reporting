@@ -271,7 +271,7 @@
 
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
-{% include_script "controllers/networks" %}
+{% include_script "controllers/old_networks" %}
 <script>
     $(function () {
         var account_key = '{{ account_key }}';
@@ -283,6 +283,16 @@
         var yesterday = {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %};
 
         NetworkDetailsController.initialize({
+            adgroups_data: [
+                {% for adgroup in adgroups %}{
+                  id: '{{ adgroup.key }}',
+                  active: {% if adgroup.active %}true{% else %}false{% endif %},
+                  name: '{{ adgroup.name }}',
+                  bid_strategy: '{{ adgroup.bid_strategy }}',
+                  details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
+                  network_type: '{{ adgroup.network_type }}'}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+                ],
             network_data: [{
                 name: '{{ network.name }}',
                 models: [{% for app in network.mopub_app_stats %}

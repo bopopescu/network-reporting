@@ -371,6 +371,8 @@ class NetworkDetailsHandler(RequestHandler):
         for day in days:
             reporting_stats_by_day[day] = AdNetworkStats()
 
+        adgroups = []
+
         stats_manager = StatsModelQueryManager(account=self.account)
         # Iterate through all the apps and populate the stats for network_data
         for app in AppQueryManager.get_apps(self.account):
@@ -405,6 +407,7 @@ class NetworkDetailsHandler(RequestHandler):
                 adgroup = AdGroupQueryManager.get_network_adunit_adgroup(
                         adunit.key(),
                         self.account.key(), network)
+                adgroups.append(adgroup)
 
                 all_stats = stats_manager.get_stats_for_days(publisher=app,
                                                              advertiser=adgroup,
@@ -510,6 +513,7 @@ class NetworkDetailsHandler(RequestHandler):
                   'show_graph' : True,
                   'graph_stats' : graph_stats,
                   'network': network_data,
+                  'adgroups': adgroups,
                   'ADMOB': ADMOB,
                   'IAD': IAD,
                   'INMOBI': INMOBI,

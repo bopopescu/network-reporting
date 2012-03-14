@@ -10,7 +10,7 @@ import time
 if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
 else:
-    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+    sys.path.append('/Users/tiagobandeira/mopub/server')
 from ad_network_reports.scrapers.scraper import Scraper, ScraperSite, \
         NetworkConfidential
 from ad_network_reports.scrapers.network_scrape_record import \
@@ -128,9 +128,11 @@ class AdMobScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'adnetwork@com2usamerica.com'
-    NC.password = '4w47m82l5jfdqw1x'
-    NC.client_key = 'ka820827f7daaf94826ce4cee343837a'
+    NC.username = 'mobiles.republic@gmail.com'
+    NC.password = 'qrvqbd8brqzjdzqb'
+    NC.client_key = 'k76d65f8cf09414ecb2ac44bec871c77'
     NC.ad_network_name = 'admob'
     SCRAPER = AdMobScraper(NC)
-    print SCRAPER.get_site_stats(date.today()) #- timedelta(days=2))
+    print '\n'.join([str(s) for s in sorted(SCRAPER.get_site_stats(date.today() - timedelta(days=2)),
+            key=lambda stats: stats.impressions)])
+

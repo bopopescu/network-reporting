@@ -8,7 +8,7 @@ import logging
 if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
 else:
-    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+    sys.path.append('/Users/tiagobandeira/mopub/server')
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
@@ -244,8 +244,8 @@ if __name__ == '__main__':
     #NC.password = 'Faisal1Chess'
     #NC.username = '2_acrossair@acrossair.com'
     #NC.password = 'imano@314'
-    NC.username = 'salesreports@optimesoftware.com'
-    NC.password = 'Sales2012'
+    NC.username = 'iphone@mobilesrepublic.com'
+    NC.password = 'MbsRpb33'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
     print SCRAPER.get_site_stats(date(2012,1,31))

@@ -106,6 +106,60 @@ var mopub = window.mopub || {};
         }
     });
 
+    var NetworkAdGroupsView = Backbone.View.extend({
+        initialize: function () {
+            this.collection.bind('change', this.render, this);
+        },
+        filtered_collection: function () {
+            // TODO: uses elements not in this view
+            var status = $('#campaigns-filterOptions').find(':checked').val();
+            var app = $('#campaigns-appFilterOptions').val();
+            return new AdGroups(this.collection.reject(function (adgroup) {
+                return (status && status !== adgroup.get('status')) ||
+                       (app && adgroup.get('apps').indexOf(app) === -1);
+            }));
+        },
+        render: function () {
+            var adgroups = this.filtered_collection();
+
+            // TODO: uses elements not in this view, with multiple views there are conflicts
+
+            var html;
+            if (adgroups.size() === 0) {
+                html = '<h2>No ' + this.options.title + '</h2>';
+            } else {
+                html = _.template($('#adgroups-rollup-template').html(), {
+                    adgroups: adgroups,
+                    title: this.options.title,
+                    type: this.options.type
+                });
+
+                if (this.options.tables) {
+                    var type = this.options.type;
+                    _.each(this.options.tables, function (filter, title) {
+                        var filtered_adgroups = new AdGroups(adgroups.filter(filter));
+                        if(filtered_adgroups.length) {
+                            html += _.template($('#adgroups-table-template').html(), {
+                                adgroups: filtered_adgroups,
+                                title: title,
+                                type: type
+                            });
+                        }
+                    });
+                } else {
+                    html += _.template($('#adgroups-table-template').html(), {
+                        adgroups: adgroups,
+                        title: 'Name',
+                        type: this.options.type
+                    });
+                }
+            }
+            $(this.el).html(html);
+            return this;
+        }
+    });
+
+
 
     /*
      * # CollectionGraphView

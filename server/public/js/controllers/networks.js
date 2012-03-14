@@ -64,10 +64,40 @@ $(function() {
     var NetworkDetailsController = { 
         initialize: function(bootstrapping_data) {
             var network_data = bootstrapping_data.network_data,
+                adgroups_data = bootstrapping_data.adgroups_data,
                 graph_start_date = bootstrapping_data.graph_statr_date,
                 today = bootstrapping_data.today,
                 yesterday = bootstrapping_data.yesterday,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
+
+            var adgroups = new AdGroups(adgroups_data);
+
+//            var graph_view = new CollectionGraphView({
+//                collection: adgroups,
+//                start_date: graph_start_date,
+//                today: today,
+//                yesterday: yesterday
+//            });
+//            graph_view.render();
+
+            var adgroups_view = new AdGroupsView({
+                collection: adgroups,
+                el: '#adgroups',
+                title: 'Ad Networks',
+                type: 'network'
+            });
+            adgroups_view.render();
+
+            adgroups.each(function(adgroup) {
+                adgroup.fetch({
+                    data: ajax_query_string,
+                    error: function () {
+                        adgroup.fetch({
+                            error: toast_error
+                        });
+                    }
+                });
+            });
 
             // TODO: make functions and call them
             // Load rolled up network stats

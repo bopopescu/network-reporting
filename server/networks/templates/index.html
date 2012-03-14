@@ -93,14 +93,9 @@
 {% if networks %}
 <section id="dashboard-apps">
 {% if reporting_networks %}
-<span class="buttonset">
-    <input id="show-both" type="radio" name="show-data" value="both" checked="true"/>
-    <label for="show-both" title="Show network stats in green alongside MoPub stats in black.">Show Both</label>
-    <input id="show-network" type="radio" name="show-data" value="network"/>
-    <label for="show-network" title="Show only network stats.">Show Network Data</label>
-    <input id="show-mopub" type="radio" name="show-data" value="mopub"/>
-    <label for="show-mopub" title="Show only MoPub stats.">Show MoPub Data</label>
-</span>
+<div style="float:right">
+    <input type="checkbox" name="show-data" id="show-network" /> Show data reported by network in <span style="color:orange;">orange</span>
+</div>
 {% endif %}
 
 {% comment %}
@@ -111,12 +106,14 @@ Make a table for ad networks that are active
         <table class="dataTable" width=100%>
             <thead>
                 <th class="networkData-icon" style="width:75px"></th>
-                <th class="dataTable-name"> Name </th>
-                <th class="dataTable-data numeric"> eCPM </th>
+                <th class="dataTable-name"> </th>
                 <th class="dataTable-data numeric"> Revenue </th>
+                <th class="dataTable-data numeric"> CPM </th>
                 <th class="dataTable-data numeric"> Attempts </th>
                 <th class="dataTable-data numeric"> Impressions </th>
+                <th class="dataTable-data numeric"> Fill Rate </th>
                 <th class="dataTable-data numeric"> Clicks </th>
+                <th class="dataTable-data numeric"> CTR </th>
             </thead>
         </table>
     </div>
@@ -134,7 +131,14 @@ Make a table for ad networks that are active
                         <a href="{% url network_details network=network.name %}">
                             {{network.pretty_name}}
                         </a>
-                        <div style="font-weight:normal;">Targeting: All</div>
+                        <div>
+                            <a class="show-hide button button-small" id="{{network.name}}" style="width:75px;">Show Apps</a>
+                        </div>
+                    </td>
+                    <td class="dataTable-data numeric">
+                        {% if network.reporting %}
+                        <div class="revenue" style="color:orange;">--</div>
+                        {% endif %}
                     </td>
                     <td class="dataTable-data numeric">
                         {% if network.reporting %}
@@ -143,41 +147,42 @@ Make a table for ad networks that are active
                         <div class="mopub-cpm mopub-data">--</div>
                     </td>
                     <td class="dataTable-data numeric">
-                        {% if network.reporting %}
-                        <div class="revenue network-data">--</div>
-                        {% endif %}
-                    </td>
-                    {% if network.name != MOBFOX %}
-                    <td class="dataTable-data numeric">
-                        {% if network.reporting %}
+                        {% if network.reporting and network.name != MOBFOX %}
                         <div class="attempts network-data">--</div>
                         {% endif %}
                         <div class="mopub-attempt_count mopub-data">--</div>
                     </td>
-                    {% else %}
-                    <td class="dataTable-data numeric"></td>
-                    {% endif %}
                     <td class="dataTable-data numeric">
                         {% if network.reporting %}
-                        <div class="network-data">
-                            <span class="impressions">--</span> (<span class="fill-rate">--</span>)
-                        </div>
+                        <div class="network-data impressions">--</div>
                         {% endif %}
-                        <div class="mopub-impressions mopub-data">
-                            <span class="mopub-impression_count">--</span> (<span class="mopub-fill_rate">--</span>)
-                        </div>
+                        <div class="mopub-impression_count mopub-data">--</div>
                     </td>
                     <td class="dataTable-data numeric">
                         {% if network.reporting %}
-                        <div class="network-data">
-                            <span class="clicks">--</span> (<span class="ctr">--</span>)
-                        </div>
+                        <div class="network-data fill-rate">--</div>
                         {% endif %}
-                        <div class="mopub-clicks mopub-data">
-                            <span class="mopub-click_count">--</span> (<span class="mopub-ctr">--</span>)
-                        </div>
+                        <div class="mopub-data mopub-fill_rate">--</div>
+                    </td>
+                    <td class="dataTable-data numeric">
+                        {% if network.reporting %}
+                        <div class="network-data clicks">--</div>
+                        {% endif %}
+                        <div class="mopub-click_count mopub-data">--</div>
+                    </td>
+                    <td class="dataTable-data numeric">
+                        {% if network.reporting %}
+                        <div class="network-data ctr">--</div>
+                        {% endif %}
+                        <div class="mopub-ctr mopub-data">--</div>
                     </td>
                 </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="appData-details hidden {{network.name}}-row" style="margin: -10px 0 0 86px">
+        <table class="dataTable">
+            <tbody id="app-on-{{network.name}}">
             </tbody>
         </table>
     </div>
@@ -249,21 +254,9 @@ Make a table for the main ad networks that are not setup
             yesterday: yesterday,
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
 
-        $('#show-both').click(function() {
-            $('.mopub-data').show();
-            $('.network-data').show();
-        });
-
-        $('#show-network').click(function() {
-            $('.mopub-data').hide();
-            $('.network-data').show();
-        });
-
-        $('#show-mopub').click(function() {
-            $('.mopub-data').show();
-            $('.network-data').hide();
-        });
-
+        $('#show-network').change(function() {
+            $('.network-data').toggle();
+        }).change();
 
         $('.show-adunits').click(function() {
             var key = $(this).attr('id');

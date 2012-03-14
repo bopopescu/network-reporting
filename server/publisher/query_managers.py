@@ -7,7 +7,7 @@ import datetime
 import urllib2
 
 from google.appengine.ext import db
-from google.appengine.api import memcache
+from google.appengine.api import memcache, taskqueue
 
 from ad_server.debug_console import trace_logging
 import os

@@ -8,6 +8,7 @@ convention, and instead still uses "Campaign" and "AdGroup" for
 compatibility with the ad server.
 
 Whenever you see "Campaign", think "Order", and wherever you see
+"AdGroup", think "LineItem".
 """
 
 from common.utils.request_handler import RequestHandler
@@ -35,28 +36,12 @@ class OrderIndexHandler(RequestHandler):
         # Grab all of the orders, and for each order, grab all of the line items.
         # For each of the line items, grab the stats for the date range.
         # REFACTOR: do this over ajax
-        stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
         orders = CampaignQueryManager.get_campaigns(account=self.account)
-        for order in orders:
-            order.stats = stats_manager.get_stats_for_days(advertiser=order,
-                                                           days=self.days)
-
-        total_impressions = sum([s.impression_count for o in orders for s in o.stats])
-        total_clicks = sum([s.click_count for o in orders for s in o.stats])
-        total_conversions = sum([s.conversion_count for o in orders for s in o.stats])
-
-        totals = {
-            "impressions": total_impressions,
-            "clicks" : total_clicks,
-            "ctr": ctr(total_clicks, total_impressions),
-            "conversions": total_conversions
-        }
 
         return render_to_response(self.request,
                                   "advertiser/order_index.html",
                                   {
                                       'orders': orders,
-                                      'totals': totals,
 
                                       'start_date': self.start_date,
                                       'end_date': self.end_date,
@@ -69,7 +54,6 @@ def order_index(request, *args, **kwargs):
 
 class OrderDetailHandler(RequestHandler):
     """
-    @responsible: ignatius
     Top level stats rollup for all of the line items within the order.
     Lists each line item within the order with links to line item details.
     """
@@ -85,7 +69,6 @@ def order_detail(request, *args, **kwargs):
 
 class LineItemDetailHandler(RequestHandler):
     """
-    @responsible: ignatius
     Almost identical to current campaigns detail page.
     """
     def get(self):
@@ -99,7 +82,6 @@ def lineitem_detail(request, *args, **kwargs):
 
 class LineItemArchiveHandler(RequestHandler):
     """
-    @responsible: pena
     """
 
     def get(self):
@@ -118,7 +100,6 @@ def lineitem_archive(request, *args, **kwargs):
 
 class OrderFormHandler(RequestHandler):
     """
-    @responsible: peter
     New/Edit form page for Orders. With each new order, a new line
     item is required
     """
@@ -133,7 +114,6 @@ def order_form(request, *args, **kwargs):
 
 class LineItemFormHandler(RequestHandler):
     """
-    @responsible: peter
     New/Edit form page for LineItems.
     """
     def get(self):

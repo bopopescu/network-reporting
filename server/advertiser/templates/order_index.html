@@ -66,11 +66,13 @@
 {% endblock content %}
 
 {% block extraScripts %}
-{% include_script "controllers/orders" %}
-<script type="text/javascript">
+  {% include_script "models/inventory" %}
+  {% include_script "views/inventory" %}
+  {% include_script "controllers/orders" %}
+  <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeIndex({});
     });
-</script>
+  </script>
 {% endblock extraScripts %}

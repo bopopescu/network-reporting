@@ -1,7 +1,8 @@
 __doc__ = """
 API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
-from advertiser.query_managers import AdGroupQueryManager
+from advertiser.query_managers import AdGroupQueryManager, \
+     CampaignQueryManager
 from publisher.query_managers import AdUnitQueryManager, \
      AppQueryManager
 from reporting.models import StatsModel
@@ -26,6 +27,7 @@ from django.utils import simplejson
 from django.http import Http404
 
 import logging
+
 
 
 class AppService(RequestHandler):
@@ -239,12 +241,19 @@ def adunit_service(request, *args, **kwargs):
     return AdUnitService()(request, use_cache=False, *args, **kwargs)
 
 
-class AdGroupService(RequestHandler):
+#######################
+# Advertiser services #
+#######################
+
+class AdGroupServiceHandler(RequestHandler):
     """
     API Service for delivering serialized AdGroup data
     """
     def get(self, adgroup_key):
-        try:
+#        try:
+
+            if not adgroup_key:
+                raise Http404
 
             # Get the adgroup
             adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -255,80 +264,102 @@ class AdGroupService(RequestHandler):
             if adgroup.account.key() != self.account.key():
                 raise Http404
 
-            # Get the stats for the adgroup
-            stats_fetcher = StatsModelQueryManager(self.account,
-                                                   offline=self.offline)
-            stats = stats_fetcher.get_stats_for_days(advertiser=adgroup,
-                                                     days=self.days)
-            summed_stats = sum(stats, StatsModel())
+            # Where are we getting stats from?
+            # Choices are 'mpx', 'direct', 'networks', or 'all'
+            stats_endpoint = self.request.GET.get('endpoint', 'all')
 
-            # adds ECPM if the adgroup is a CPC adgroup
-            if adgroup.cpc:
-                e_ctr = summed_stats.ctr or DEFAULT_CTR
-                summed_stats.cpm = float(e_ctr) * float(adgroup.cpc) * 1000
-            elif 'marketplace' in adgroup.campaign.campaign_type:
-                # Overwrite the revenue from MPX if its marketplace
-                # TODO: overwrite clicks as well
-                stats_fetcher = MarketplaceStatsFetcher(self.account.key())
-                try:
-                    mpx_stats = stats_fetcher.get_account_stats(self.start_date,
-                                                                self.end_date)
-                except MPStatsAPIException, error:
-                    logging.error('MPStatsAPIException: ' + str(error))
-                    mpx_stats = {}
-                summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
-                summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
-            else:
-                summed_stats.cpm = adgroup.cpm
+            # Get the stats fetcher
+            stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)
 
-            adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
-            if adgroup.pace:
-                summed_stats.pace = adgroup.pace[1]
-                if adgroup.pace[0] == "Pacing":
-                    if summed_stats.pace < .5:
-                        summed_stats.pace_type = "pace-failure"
-                    elif summed_stats.pace < .85:
-                        summed_stats.pace_type = "pace-warning"
-                    else:
-                        summed_stats.pace_type = "pace-success"
-                else:
-                    summed_stats.pace_type = "delivery"
-
-            percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
-            summed_stats.percent_delivered = percent_delivered
-            adgroup.percent_delivered = percent_delivered
-
-            summed_stats.status = campaign_status(adgroup)
-
-            stats_dict = summed_stats.to_dict()
-
-            stats_dict['daily_stats'] = [s.to_dict() for s in stats]
-
-            return JSONResponse(stats_dict)
-        except Exception, exception:
-            return JSONResponse({'error': str(exception)})
+            # JSONify and update with stats
+            adgroup_jsonified = adgroup.toJSON()
+            stats = stats_fetcher.get_adgroup_stats(adgroup,
+                                                    self.start_date,
+                                                    self.end_date,
+                                                    daily=True)
+            logging.warn(stats)
+            adgroup_jsonified.update(stats)
+        
+            return JSONResponse(adgroup_jsonified)
+#        except Exception, exception:
+ #           return JSONResponse({'error': str(exception)})
 
 
-    def post(self, *args, **kwagrs):
+    def post(self, *args, **kwargs):
         return JSONResponse({'error': 'Not yet implemented'})
 
 
-    def put(self, *args, **kwagrs):
+    def put(self, *args, **kwargs):
         return JSONResponse({'error': 'Not yet implemented'})
 
 
-    def delete(self, *args, **kwagrs):
+    def delete(self, *args, **kwargs):
         return JSONResponse({'error': 'Not yet implemented'})
 
 
 @login_required
 def adgroup_service(request, *args, **kwargs):
-    return AdGroupService()(request, use_cache=False, *args, **kwargs)
+    return AdGroupServiceHandler()(request, use_cache=False, *args, **kwargs)
 
 
+class CampaignServiceHandler(RequestHandler):
+    def get(self, campaign_key=None, *args, **kwargs):
 
-## Helper Functions
+        # Get the campaign from the campaign key if it was
+        # given. Otherwise, get all of the campaigns for the account.
+        if campaign_key:
+            campaign = CampaignQueryManager.get(campaign_key)
+            if campaign.account.key() != self.account.key():
+                raise Http404
+            campaigns = [campaign]
 
+        else:
+            campaigns = CampaignQueryManager.get_campaigns(self.account)
+            logging.warn([campaign for campaign in campaigns])
+            
+        # Get stats and serialize all of the data
+        stats_endpoint = self.request.GET.get('endpoint', 'all')
+        stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)
+        campaigns_jsonified = []
+        for campaign in campaigns:
+            campaign_jsonified = campaign.toJSON()
+            campaign_jsonified['adgroups'] = []
+            for adgroup in campaign.adgroups:
+                stats = stats_fetcher.get_adgroup_stats(adgroup,
+                                                        self.start_date,
+                                                        self.end_date,
+                                                        daily=True)
+                adgroup_jsonified = adgroup.toJSON()
+                adgroup_jsonified.update(stats)
+                campaign_jsonified['adgroups'].append(adgroup_jsonified)
+            campaigns_jsonified.append(campaign_jsonified)
+
+        return JSONResponse(campaigns_jsonified)
+                
+        
+            
+        
+    def post(self, *args, **kwargs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+    def put(self, *args, **kwargs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+    def delete(self, *args, **kwargs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+@login_required
+def campaign_service(request, *args, **kwargs):
+    return CampaignServiceHandler()(request, use_cache=False, *args, **kwargs)    
+
+
+####################
+# Helper Functions #
+####################
+    
 def get_stats_fetcher(account_key, stats_endpoint):
     """
     Creates an appropriate fetcher for realtime stats.

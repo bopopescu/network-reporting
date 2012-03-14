@@ -197,20 +197,20 @@
           <tr>
             <th class="campaignData-icon"></th>
             <th class="dataTable-name"> Name </th>
-            
+
             {% if campaign.gtee %}
                 <th class="dataTable-data numeric">Revenue</th>
             {% endif %}
-                
+
             {% if campaign.gtee or campaign.promo or campaign.backfill_promo %}
                 <th class="dataTable-data status numeric">Status</th>
             {% endif %}
-                
+
             <th class="dataTable-data numeric">
               <a id="campaign-ecpm-helpLink" class="whatsthis" href="#"><div class="whatsthis-icon"></div></a>
               eCPM
             </th>
-            
+
             {% if campaign.network %}
                 <th class="dataTable-data numeric">Attempts</th>
              {% endif %}
@@ -219,15 +219,15 @@
                 <th class="dataTable-data numeric">Goal</th>
             {% endif %}
 
-                
+
             <th class="dataTable-data numeric">Impressions</th>
-            
+
             {% if campaign.network %}
                 <th class="dataTable-data numeric">Fill Rate</th>
             {% endif %}
-                
+
             <th class="dataTable-data numeric">Clicks</th>
-            
+
 
             {% if campaign.network %}
                 <th class="dataTable-data numeric">CTR</th>
@@ -256,13 +256,13 @@
                 {# Otherwise display the start and end datetimes, if we have them. #}
                 {% else %}
                   {% if campaign.start_datetime and campaign.end_datetime %}
-                     {{ campaign.start_datetime }} - {{ campaign.end_datetime }}. 
+                     {{ campaign.start_datetime|format_utc_date_compact }} - {{ campaign.end_datetime|format_utc_date_compact }}.
                   {% else %} {% if campaign.start_datetime %}
-                     Starts {{ campaign.start_datetime }}
+                     Starts {{ campaign.start_datetime|format_utc_date_compact }}
                   {% else %} {% if campaign.end_datetime %}
-                     Ends {{ campaign.end_datetime }}. 
+                     Ends {{ campaign.end_datetime|format_utc_date_compact }}.
                   {% else %}
-                     All dates. 
+                     All dates.
                 {% endif %} {% endif %} {% endif %}  {% endif %}
 
                 {# Display the budget if it's a guaranteed campaign. #}
@@ -280,7 +280,7 @@
               {% if campaign.gtee %}
                 <td class="dataTable-data numeric"> {{ adgroup.stats.revenue|currency }}</td>
               {% endif %}
-                
+
               {% if campaign.gtee or campaign.promo or campaign.backfill_promo %}
                 <td class="dataTable-data status numeric">
                   {% if campaign.active and campaign.has_started and not campaign.is_finished %}
@@ -291,14 +291,14 @@
                     Finished
                   {% else %} {% if not campaign.has_started %}
                     Scheduled
-                  {% endif %} {% endif %} {% endif %} {% endif %}                    
+                  {% endif %} {% endif %} {% endif %} {% endif %}
                 </td>
               {% endif %}
-                
+
               <td class="dataTable-data numeric">
                 {{ adgroup.stats.ecpm|currency }}
               </td>
-            
+
               {% if campaign.network %}
                 <td class="dataTable-data numeric"> {{ adgroup.stats.attempt_count|withsep }} </td>
               {% endif %}
@@ -311,32 +311,32 @@
                   {% else %}
                     {{ adgroup.budget_goal|withsep}} <br />
                     Impressions
-                  {% endif %}                  
+                  {% endif %}
                 </td>
               {% endif %}
 
 
-                
+
               <td class="dataTable-data numeric"> {{ adgroup.stats.impression_count|withsep }} </td>
-            
+
               {% if campaign.network %}
                 <td class="dataTable-data numeric"> {{ adgroup.stats.fill_rate|percentage }}</td>
               {% endif %}
-                
+
               <td class="dataTable-data numeric"> {{ adgroup.stats.click_count|withsep }} </td>
-            
+
 
               {% if campaign.network %}
                 <td class="dataTable-data numeric"> {{ adgroup.stats.ctr|percentage }} </td>
               {% endif %}
-                
+
               {% if campaign.gtee or campaign.promo or campaign.backfill_promo %}
                 <td class="dataTable-data numeric"> {{ adgroup.stats.conversion_count|withsep }}</td>
               {% endif %}
-            
+
             </tr>
         </tbody>
-        
+
       </table>
 
       {% if user.is_admin %}

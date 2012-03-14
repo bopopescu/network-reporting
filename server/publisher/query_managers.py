@@ -126,6 +126,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
                 # For each adunit, spin up a TQ to ping the adserver
                 # admins with new data
                 taskqueue.add(url='/fetch_api/adunit_update_push',
+                              method='GET',
                               queue_name='push-context-update',
                               params={'adunit_key':key})
 

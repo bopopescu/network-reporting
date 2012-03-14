@@ -293,44 +293,59 @@ def retry_logins(day,
 
     management_stats = AdNetworkManagementStatsManager(day, assemble=True)
     failed_logins = management_stats.failed_logins
-    management_stats.clear_failed_logins()
 
     logging.info("Assigning processes in pool to retry collecting stats for "
             "%s..." % day)
     results = []
     for login_key in failed_logins:
-        login = db.get(login_key)
-        logging.info("Assigning process in pool to login %s and day %s" %
-                login.key())
-        # Using a different management stats for each process and combinding
-        # them later keeps increments atomic
-        temp_stats = AdNetworkManagementStatsManager(day)
-        # Assign process in pool calling update_login_stats and giving it
+        logging.info("Assigning process in pool to login %s" % login_key)
+        # Assign process in pool calling retry_login and giving it
         # it's appropriate login
-        results.append((temp_stats,
-            pool.apply_async(update_login_stats,
-                args=(account, day),
-                kwds={'management_stats': temp_stats,
-                      'update_aggregates': True})))
+        results.append(pool.apply_async(retry_login,
+                args=(login_key, day)))
 
+    logging.info("Waiting for processes to complete")
     # Wait for all processes in pool to complete
     pool.close()
     pool.join()
 
-    # Save management stats
+    # Save management stats and scrape stats in batch puts
     logging.info("Saving scrape stats...")
-    stats_list = []
-    final_stats = management_stats
-    for temp_stats, result in results:
+    all_stats = []
+    total_stats = AdNetworkManagementStatsManager(day)
+    for result in results:
         if result.successful():
-            stats_list += result.get()
-            final_stats.combined(temp_stats)
+            stats_list, temp_stats = result.get()
+            all_stats += stats_list
+            total_stats.combined(temp_stats)
+        else:
+            raise RetryException(day)
+
+    management_stats.clear_failed_logins()
+    total_stats.combined(management_stats)
 
     # Flush stats to db
-    db.put([stats for mapper, stats in stats_list])
-    final_stats.put_stats()
+    db.put(all_stats)
+    total_stats.put_stats()
 
     logging.info("Finished.")
+
+
+def retry_login(login_key,
+                day):
+    login = db.get(login_key)
+    # Creating logger for process
+    logger_name = 'retry_%s_on_%s' % (login_key, day)
+    logger = create_logger(logger_name, '/var/tmp/%s.log' % logger_name)
+    # Using a different management stats for each process and combinding
+    # them later keeps increments atomic
+    temp_stats = AdNetworkManagementStatsManager(day)
+
+    logger.info("Created logger and temp management stats, Calling update" \
+            " login stats")
+    # Return a tuple of (list of scrape stats, management stats)
+    return (zip(*update_login_stats(login, day, management_stats=temp_stats,
+            update_aggregates=True, logger=logger))[0], temp_stats)
 
 
 def update_login_stats(login,
@@ -643,6 +658,14 @@ class UpdateException(Exception):
     def __str__(self):
         return "Unsuccessful update attempt for account %s on day %s" % \
                 (self.account.key(), self.day)
+
+
+class RetryException(Exception):
+    def __init__(self, day):
+        self.day = day
+
+    def __str__(self):
+        return "Unsuccessful retry attempt on %s" % self.day
 
 
 def main(args):

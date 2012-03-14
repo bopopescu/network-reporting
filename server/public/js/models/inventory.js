@@ -35,37 +35,36 @@ var mopub = mopub || {};
         return (request_count === 0) ? 0 : impression_count / request_count;
     }
 
-    function format_stat(stat, value) {
-        if (value === null) {
-            return '--';
-        }
-        switch (stat) {
-          case 'click_count':
-          case 'conversion_count':
-          case 'goal':
-          case 'impression_count':
-          case 'request_count':
-            return mopub.Utils.formatNumberWithCommas(value);
-          case 'cpm':
-          case 'revenue':
-            return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
-          case 'conv_rate':
-          case 'ctr':
-          case 'fill_rate':
-            return mopub.Utils.formatNumberAsPercentage(value);
-          case 'status':
-            return value;
-          case 'pace':
-            return (value*100).toFixed() + '%';
-        default:
-            throw 'Unsupported stat "' + stat + '".';
-        }
-    }
 
-    var ModelHelpers = {
-        calculate_ctr: calculate_ctr,
-        calculate_fill_rate: calculate_fill_rate,
-        format_stat: format_stat
+    var StatsMixin = {
+        get_formatted_stat: function (stat) {
+            var value = this.get(stat);
+            if (value === null || value === undefined) {
+                return '--';
+            }
+            switch (stat) {
+              case 'clicks':
+              case 'conversions':
+              case 'goal':
+              case 'impressions':
+              case 'requests':
+                return mopub.Utils.formatNumberWithCommas(value);
+              case 'cpm':
+              case 'revenue':
+                return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
+              case 'conv_rate':
+              case 'ctr':
+              case 'fill_rate':
+                return mopub.Utils.formatNumberAsPercentage(value);
+              case 'status':
+                return value;
+              case 'pace':
+                return (value*100).toFixed() + '%';
+            default:
+                throw 'Unsupported stat "' + stat + '".';
+            }
+        }
+        
     };
 
 
@@ -237,6 +236,8 @@ var mopub = mopub || {};
         }
     });
 
+    _.extend(AdGroup, StatsMixin);
+
     var Campaign = Backbone.Model.extend({
         url: function() {
             var stats_endpoint = this.stats_endpoint;
@@ -249,8 +250,10 @@ var mopub = mopub || {};
         }
     });
 
+    _.extend(Campaign.prototype, StatsMixin);
 
     var CampaignCollection = Backbone.Collection.extend({
+        model: Campaign,
         url: function() {
             var stats_endpoint = this.stats_endpoint;
             return '/api/campaign/'
@@ -263,6 +266,7 @@ var mopub = mopub || {};
 
 
 
+
     /*
      * EXPOSE HIS JUNK
      * (We should find a better way to do this.)
@@ -271,7 +275,6 @@ var mopub = mopub || {};
     window.AdUnitCollection = AdUnitCollection;
     window.App = App;
     window.AppCollection = AppCollection;
-    window.ModelHelpers = ModelHelpers;
     window.AdGroup = AdGroup;
     window.Campaign = Campaign;
     window.CampaignCollection = CampaignCollection;

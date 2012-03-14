@@ -76,34 +76,70 @@ class TestDirectSoldCampaignForm(unittest.TestCase):
     def setUp(self):
         self.data = GUARANTEED_CAMPAIGN_DATA + PROMOTIONAL_CAMPAIGN_DATA
 
-    def test_default_start_datetime(self):
-        """ start_datetime defaults to now """
-        data = copy.deepcopy(self.data)
-        for test_data in data:
-            form = CampaignForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors.as_text())
-            campaign = form.save()
-            self.assertTrue(datetime.datetime.now() - campaign.start_datetime < datetime.timedelta(seconds=1))
-
-    def  test_start_datetime(self):
-        """ start_datetime cannot be before today """
-        data = copy.deepcopy(self.data)
+    def test_new_campaign_datetimes(self):
         now = datetime.datetime.now(Pacific_tzinfo())
-        yesterday = (now - datetime.timedelta(days=1))
-        for test_data in data:
-            test_data['start_datetime_0'] = yesterday.date().strftime('%m/%d/%Y')
-            test_data['start_datetime_1'] = datetime.time().strftime('%I:%M %p')
-            form = CampaignForm(test_data)
-            self.assertFalse(form.is_valid(), "CampaignForm(%s): start_datetime was %s %s but the form validated." % (test_data, test_data['start_datetime_0'], test_data['start_datetime_1']))
-            test_data['start_datetime_0'] = now.date().strftime('%m/%d/%Y')
-            form = CampaignForm(test_data)
-            self.assertTrue(form.is_valid(), form._errors.as_text())
-            campaign = form.save()
-            self.assertEqual(campaign.start_datetime, now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC()).replace(tzinfo=None))
+        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        yesterday = now - datetime.timedelta(days=1)
+        tomorrow = now + datetime.timedelta(days=1)
 
-    def test_datetime_timezones(self):
-        # TODO: make sure timezones don't get f'ed up
-        pass
+        invalid_datetimes = [
+            (None, yesterday),
+            (None, today),
+            (None, now),
+            (yesterday, None),
+            (yesterday, yesterday),
+            (yesterday, today),
+            (yesterday, now),
+            (yesterday, tomorrow),
+            (today, yesterday),
+            (today, today),
+            (now, yesterday),
+            (now, today),
+            (now, now),
+            (tomorrow, yesterday),
+            (tomorrow, today),
+            (tomorrow, now),
+            (tomorrow, tomorrow),
+        ]
+
+        valid_datetimes = [
+            (None, None, now, None),
+            (None, tomorrow, now, tomorrow),
+            (today, None, today, None),
+            (today, now, today, now),
+            (today, tomorrow, today, tomorrow),
+            (now, None, now, None),
+            (now, tomorrow, now, tomorrow),
+            (tomorrow, None, tomorrow, None),
+        ]
+
+        data = copy.deepcopy(self.data)
+        for test_data in data:
+            for start_datetime, end_datetime in invalid_datetimes:
+                test_data['start_datetime_0'] = start_datetime.date().strftime('%m/%d/%Y') if start_datetime else ''
+                test_data['start_datetime_1'] = start_datetime.time().strftime('%I:%M %p') if start_datetime else ''
+                test_data['end_datetime_0'] = end_datetime.date().strftime('%m/%d/%Y') if end_datetime else ''
+                test_data['end_datetime_1'] = end_datetime.time().strftime('%I:%M %p') if end_datetime else ''
+                form = CampaignForm(test_data)
+                self.assertFalse(form.is_valid(), "Form validated with invalid datetimes: start_datetime=%s end_datetime=%s" % (start_datetime, end_datetime))
+            for start_datetime, end_datetime, output_start_datetime, output_end_datetime in valid_datetimes:
+                test_data['start_datetime_0'] = start_datetime.date().strftime('%m/%d/%Y') if start_datetime else ''
+                test_data['start_datetime_1'] = start_datetime.time().strftime('%I:%M %p') if start_datetime else ''
+                test_data['end_datetime_0'] = end_datetime.date().strftime('%m/%d/%Y') if end_datetime else ''
+                test_data['end_datetime_1'] = end_datetime.time().strftime('%I:%M %p') if end_datetime else ''
+                form = CampaignForm(test_data)
+                self.assertTrue(form.is_valid(), form._errors.as_text())
+                campaign = form.save()
+                if output_start_datetime:
+                    self.assertTrue(abs(campaign.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()) - output_start_datetime) < datetime.timedelta(minutes=1),
+                        "start_datetime should have been %s, was %s (start_datetime: %s, end_datetime: %s)." % (output_start_datetime, campaign.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()), start_datetime, end_datetime))
+                else:
+                    self.assertEqual(campaign.start_datetime, None, "Input: start_datetime=%s end_datetime=%s. start_datetime was %s" % (start_datetime, end_datetime, campaign.start_datetime))
+                if output_end_datetime:
+                    self.assertTrue(abs(campaign.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()) - output_end_datetime) < datetime.timedelta(minutes=1),
+                        "end_datetime should have been %s, was %s (start_datetime: %s, end_datetime: %s)." % (output_end_datetime, campaign.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()), start_datetime, end_datetime))
+                else:
+                    self.assertEqual(campaign.end_datetime, None, "Input: start_datetime=%s end_datetime=%s. end_datetime was %s" % (start_datetime, end_datetime, campaign.end_datetime))
 
 
 class TestGuaranteedCampaignForm(unittest.TestCase):

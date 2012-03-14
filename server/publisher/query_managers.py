@@ -126,7 +126,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
                 # For each adunit, spin up a TQ to ping the adserver
                 # admins with new data
                 taskqueue.add(url='/fetch_api/adunit_update_push',
-                              queue_name='push_context_update',
+                              queue_name='push-context-update',
                               params={'adunit_key':key})
 
         logging.info("Deleting from memcache: %s" % keys)

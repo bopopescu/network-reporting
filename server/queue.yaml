@@ -152,7 +152,7 @@ queue:
   rate: 100/s
   bucket_size: 100
 
-- name: push_context_update
+- name: push-context-update
   rate: 100/s
   bucket_size: 100
 

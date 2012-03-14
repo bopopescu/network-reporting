@@ -68,6 +68,7 @@
 {% endblock content %}
 
 {% block extraScripts %}
+  {% include_script "utilities/backbone.localstorage" %}
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}

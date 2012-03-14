@@ -47,6 +47,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
     def get_context(cls, adunit_key):
         adunit = AdUnit.get(adunit_key)
         adunit_context = AdUnitContext.wrap(adunit)
+        return adunit_context
 
     @classmethod
     def cache_get_or_insert(cls, adunit_key):

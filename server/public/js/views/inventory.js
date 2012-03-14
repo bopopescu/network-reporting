@@ -283,7 +283,7 @@ var mopub = window.mopub || {};
             var current_model = this.model;
             var order_row = $('tr.order-row#order-' + this.model.get('key'), this.el);
 
-            var display_fields = ['requests', 
+            var display_fields = ['revenue', 
                                   'impressions', 
                                   'fill_rate', 
                                   'clicks', 
@@ -291,7 +291,7 @@ var mopub = window.mopub || {};
             _.each(display_fields, function(field){
                 $("." + field, order_row).text(current_model.get_formatted_stat(field));
             });
-
+            $(".lineitems", order_row).text(current_model.get('adgroups').length);
             $(".loading-img", order_row).hide();
         }
         

@@ -273,5 +273,7 @@ var mopub = mopub || {};
     window.AppCollection = AppCollection;
     window.ModelHelpers = ModelHelpers;
     window.AdGroup = AdGroup;
+    window.Campaign = Campaign;
+    window.CampaignCollection = CampaignCollection;
 
 }(this.jQuery, this.Backbone, this._));

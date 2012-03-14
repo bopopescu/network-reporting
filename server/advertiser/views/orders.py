@@ -11,11 +11,13 @@ Whenever you see "Campaign", think "Order", and wherever you see
 "AdGroup", think "LineItem".
 """
 
-from common.utils.request_handler import RequestHandler
-from common.ragendja.template import render_to_response
+from django.core.urlresolvers import reverse
 
+from common.utils.request_handler import RequestHandler
+from common.ragendja.template import JSONResponse, render_to_response
+
+from advertiser.forms import OrderForm, LineItemForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
-from reporting.query_managers import StatsModelQueryManager
 
 import logging
 
@@ -80,33 +82,59 @@ def lineitem_detail(request, *args, **kwargs):
     return LineItemDetailHandler()(request, use_cache=False, *args, **kwargs)
 
 
-class LineItemArchiveHandler(RequestHandler):
-    """
-    """
-
-    def get(self):
-
-        archived_lineitems = AdGroupQueryManager.get_adgroups(account=self.account,
-                                                             archived=True)
-        return render_to_response(self.request,
-                                  "advertiser/lineitem_archive.html",
-                                  {
-                                      'archived_lineitems': archived_lineitems
-                                  })
-
-def lineitem_archive(request, *args, **kwargs):
-    return LineItemArchiveHandler()(request, use_cache=False, *args, **kwargs)
-
-
 class OrderFormHandler(RequestHandler):
     """
     New/Edit form page for Orders. With each new order, a new line
     item is required
     """
-    def get(self):
+    def get(self, order_key=None):
+        if order_key:
+            instance = CampaignQueryManager.get(key=order_key)
+        else:
+            instance = None
+
+        order_form = OrderForm(instance=instance)
+
         return render_to_response(self.request,
                                   "advertiser/order_form.html",
-                                  {})
+                                  {
+                                      'order_form': order_form,
+                                  })
+
+    def post(self, order_key=None):
+        if order_key:
+            instance = CampaignQueryManager.get(key=order_key)
+        else:
+            instance = None
+
+        order_form = OrderForm(self.request.POST, instance=instance)
+
+        if order_form.is_valid():
+            order = order_form.save()
+            order.account = self.account
+            order.save()
+
+            return JSONResponse({
+                'success': True,
+                'redirect': reverse('advertiser_order_details', args=(order.key(),)),
+            })
+
+        else:
+            errors = {}
+            for key, value in order_form.errors.items():
+                errors[key] = ' '.join([error for error in value])
+
+            return JSONResponse({
+                'errors': errors,
+                'success': False,
+            })
+
+        return render_to_response(self.request,
+                                  "advertiser/order_form.html",
+                                  {
+                                      'order_form': order_form,
+                                  })
+
 
 def order_form(request, *args, **kwargs):
     return OrderFormHandler()(request, use_cache=False, *args, **kwargs)
@@ -116,11 +144,28 @@ class LineItemFormHandler(RequestHandler):
     """
     New/Edit form page for LineItems.
     """
-    def get(self):
+    def get(self, order_key, line_item_key=None):
+        line_item_form = LineItemForm()
         return render_to_response(self.request,
-                                  "advertiser/lineitem_form.html",
-                                  {})
+                                  "advertiser/line_item_form.html",
+                                  {
+                                      'line_item_form': line_item_form,
+                                  })
 
-def lineitem_form(request, *args, **kwargs):
+
+def line_item_form(request, *args, **kwargs):
     return LineItemFormHandler()(request, use_cache=False, *args, **kwargs)
 
+
+###########
+# Helpers #
+###########
+
+def format_stats_for_adgroup(adgroup):
+    pass
+
+def format_stats_for_campaign(campaign):
+    pass
+
+def format_stats(model):
+    pass

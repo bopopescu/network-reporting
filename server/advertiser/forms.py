@@ -52,12 +52,8 @@ class OrderForm(forms.ModelForm):
 
 
 class LineItemForm(forms.ModelForm):
-    name = forms.CharField(label='Name:',
-                           widget=forms.TextInput(attrs={'class': 'required',
-                                                         'placeholder': 'Line Item Name'}))
     adgroup_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
-                                               ('promo', 'Promotional'),
-                                               ('network', 'Network')),
+                                               ('promo', 'Promotional')),
                                       label='Line Item Type:')
     gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
                                                ('normal', 'Normal'),
@@ -68,6 +64,9 @@ class LineItemForm(forms.ModelForm):
                                                 ('backfill', 'Backfill')),
                                        initial='normal', label='Priority:',
                                        required=False)
+    name = forms.CharField(label='Name:',
+                           widget=forms.TextInput(attrs={'class': 'required',
+                                                         'placeholder': 'Line Item Name'}))
     start_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
                                          label='Start Time:', required=False,
                                          widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
@@ -85,9 +84,12 @@ class LineItemForm(forms.ModelForm):
                                                                               date_format='%m/%d/%Y',
                                                                               time_format='%I:%M %p'))
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     required=False)
+                                     label='Rate:', initial='cpc')
+    bid = forms.FloatField(initial=0.05,
+                           widget=forms.TextInput(attrs={'class': 'float'}))
     daily_budget = forms.FloatField(required=False)
     full_budget = forms.FloatField(required=False)
+    budget = forms.FloatField(required=False)
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily', required=False)
@@ -96,27 +98,6 @@ class LineItemForm(forms.ModelForm):
                                         label='Delivery Speed:',
                                         initial='allatonce', required=False,
                                         widget=forms.RadioSelect)
-    network_type = forms.ChoiceField(choices=(('admob_native', 'AdMob'),
-                                              ('adsense', 'AdSense'),
-                                              ('brightroll', 'BrightRoll'),
-                                              ('ejam', 'TapIt'),
-                                              ('iAd', 'iAd'),
-                                              ('inmobi', 'InMobi'),
-                                              ('jumptap', 'Jumptap'),
-                                              ('millennial_native', 'Millennial Media'),
-                                              ('mobfox', 'MobFox'),
-                                              ('custom', 'Custom Network'),
-                                              ('custom_native', 'Custom Native Network')),
-                                     label='Network Type:', required=False)
-    custom_html = forms.CharField(label='Custom HTML:', required=False,
-                                  widget=forms.Textarea(attrs={'placeholder': 'HTML Custom Content',
-                                                               'rows': 3}))
-    custom_method = forms.CharField(label='Custom Method:', required=False,
-                                    widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
-    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     label='Rate:', initial='cpc')
-    bid = forms.FloatField(initial=0.05,
-                           widget=forms.TextInput(attrs={'class': 'float'}))
     # site_keys defined in __init__
     allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
                                              required=False,
@@ -200,14 +181,8 @@ class LineItemForm(forms.ModelForm):
             if instance.end_datetime:
                 initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
-        if instance:
-            if not initial:
-                initial = {}
-
-            if instance.network_type == 'custom' and instance.net_creative:
-                initial.update(custom_html=instance.net_creative.html_data)
-            elif instance.network_type == 'custom_native' and instance.net_creative:
-                initial.update(custom_method=instance.net_creative.html_data)
+            # TODO: can't change the start date after a campaign has started.
+            # TODO: not change the end date after a campaign has completed
 
             geo_predicates = []
             for geo_predicate in instance.geo_predicates:
@@ -219,24 +194,13 @@ class LineItemForm(forms.ModelForm):
                 initial['region_targeting'] = 'city'
                 initial.update(cities=instance.cities)
 
-            kwargs.update(initial=initial)
-
-        is_staff = kwargs.pop('is_staff', False)
-
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
-        # show deprecated networks if user is staff or instance is that type
-        if is_staff or (instance and instance.network_type == 'admob'):
-            self.fields['network_type'].choices.append(('admob', 'AdMob Javascript (deprecated)'))
-        if is_staff or (instance and instance.network_type == 'millennial'):
-            self.fields['network_type'].choices.append(('millennial', 'Millennial Server-side (deprecated)'))
-        if is_staff or (instance and instance.network_type == 'greystripe'):
-            self.fields['network_type'].choices.append(('greystripe', 'GreyStripe (deprecated)'))
-
         # set choices based on the users adunits
+        # TODO: can we do this a nicer way so we can declare this field with the other fields?
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
     def _calculate_budget(self, budget):
@@ -246,6 +210,7 @@ class LineItemForm(forms.ModelForm):
             return budget
 
     def clean_start_datetime(self):
+        # TODO: can't change the start date after a campaign has started.
         start_datetime = self.cleaned_data.get('start_datetime', None)
         if start_datetime:
             # if this is a new campaign, it must start in the future
@@ -256,6 +221,7 @@ class LineItemForm(forms.ModelForm):
         return start_datetime
 
     def clean_end_datetime(self):
+        # TODO: not change the end date after a campaign has completed
         end_datetime = self.cleaned_data.get('end_datetime', None)
         if end_datetime:
             # end_datetime is entered in Pacific Time
@@ -291,74 +257,61 @@ class LineItemForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(LineItemForm, self).clean()
 
-        # gtee, promo
-        if cleaned_data.get('campaign_type', '') in ('gtee', 'promo'):
-            # start and end datetimes
-            start_datetime = cleaned_data.get('start_datetime', None)
-            end_datetime = cleaned_data.get('end_datetime', None)
-            # if start_datetime is None, use the current time
-            if not start_datetime:
-                cleaned_data['start_datetime'] = datetime.now()
-            # end_datetime must be after start_datetime
-            if start_datetime and end_datetime and end_datetime < start_datetime:
-                if 'end_datetime' not in self._errors:
-                    self._errors['end_datetime'] = ErrorList()
-                self._errors['end_datetime'].append("Stop time must be after start time")
+        # start and end datetimes
+        start_datetime = cleaned_data.get('start_datetime', None)
+        end_datetime = cleaned_data.get('end_datetime', None)
+        # if start_datetime is None, use the current time
+        if not start_datetime:
+            cleaned_data['start_datetime'] = datetime.now()
+        # end_datetime must be after start_datetime
+        if start_datetime and end_datetime and end_datetime < start_datetime:
+            if 'end_datetime' not in self._errors:
+                self._errors['end_datetime'] = ErrorList()
+            self._errors['end_datetime'].append("Stop time must be after start time")
 
-            # gtee
-            if cleaned_data['campaign_type'] == 'gtee':
-                # campaign_type
-                if not cleaned_data.get('gtee_priority', None):
-                    if 'gtee_priority' not in self._errors:
-                        self._errors['gtee_priority'] = ErrorList()
-                    self._errors['gtee_priority'].append('This field is required')
-                elif cleaned_data['gtee_priority'] in ('low', 'high'):
-                    cleaned_data['campaign_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
+        # gtee
+        if cleaned_data['campaign_type'] == 'gtee':
+            # campaign_type
+            if not cleaned_data.get('gtee_priority', None):
+                if 'gtee_priority' not in self._errors:
+                    self._errors['gtee_priority'] = ErrorList()
+                self._errors['gtee_priority'].append('This field is required')
+            elif cleaned_data['gtee_priority'] in ('low', 'high'):
+                cleaned_data['campaign_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
 
-                # budget
-                has_required = True
-                for field in ('bid_strategy', 'bid', 'budget', 'budget_type', 'budget_strategy'):
-                    if not cleaned_data.get(field, None):
-                        if field not in self._errors:
-                            self._errors[field] = ErrorList()
-                        self._errors[field].append("This field is required")
-                        has_required = False
-                if has_required:
-                    # BEWARE HACKS
-                    # if the campaign is a cpm campaign, we need to calculate what the budget
-                    # will be, since budgets are stored in dollar amounts.
-                    if cleaned_data['budget_type'] == 'daily':
-                        cleaned_data['budget'] = self._calculate_budget(cleaned_data['budget'])
-                        cleaned_data['full_budget'] = None
-                    else:
-                        if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
-                            if 'budget_strategy' not in self._errors:
-                                self._errors['budget_strategy'] = ErrorList()
-                            self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
-                        cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
-                        cleaned_data['budget'] = None
+            # budget
+            has_required = True
+            for field in ('bid_strategy', 'bid', 'budget', 'budget_type', 'budget_strategy'):
+                if not cleaned_data.get(field, None):
+                    if field not in self._errors:
+                        self._errors[field] = ErrorList()
+                    self._errors[field].append("This field is required")
+                    has_required = False
+            if has_required:
+                # BEWARE HACKS
+                # if the campaign is a cpm campaign, we need to calculate what the budget
+                # will be, since budgets are stored in dollar amounts.
+                if cleaned_data['budget_type'] == 'daily':
+                    cleaned_data['budget'] = self._calculate_budget(cleaned_data['budget'])
+                    cleaned_data['full_budget'] = None
+                else:
+                    if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
+                        if 'budget_strategy' not in self._errors:
+                            self._errors['budget_strategy'] = ErrorList()
+                        self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
+                    cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
+                    cleaned_data['budget'] = None
 
-            # promo
-            elif cleaned_data['campaign_type'] == 'promo':
-                # priority
-                if not cleaned_data.get('promo_priority', None):
-                    if 'promo_priority' not in self._errors:
-                        self._errors['promo_priority'] = ErrorList()
-                    self._errors['promo_priority'].append('This field is required')
-                elif cleaned_data['promo_priority'] == 'backfill':
-                    cleaned_data['campaign_type'] = 'backfill_promo'
-                # promo campaigns have no budget
-                cleaned_data['budget'] = None
-                cleaned_data['full_budget'] = None
-                cleaned_data['budget_type'] = None
-                cleaned_data['budget_strategy'] = None
-
-        # network
-        elif cleaned_data.get('campaign_type', '') == 'network':
-            # network campaigns have no start and end datetimes
-            cleaned_data['start_datetime'] = None
-            cleaned_data['end_datetime'] = None
-            # network campaigns have no budget
+        # promo
+        elif cleaned_data['campaign_type'] == 'promo':
+            # priority
+            if not cleaned_data.get('promo_priority', None):
+                if 'promo_priority' not in self._errors:
+                    self._errors['promo_priority'] = ErrorList()
+                self._errors['promo_priority'].append('This field is required')
+            elif cleaned_data['promo_priority'] == 'backfill':
+                cleaned_data['campaign_type'] = 'backfill_promo'
+            # promo campaigns have no budget
             cleaned_data['budget'] = None
             cleaned_data['full_budget'] = None
             cleaned_data['budget_type'] = None
@@ -372,23 +325,19 @@ class LineItemForm(forms.ModelForm):
 
     class Meta:
         model = LineItem
-        fields = ('start_datetime',
-                  'end_datetime',
-                  'budget',
-                  'full_budget',
-                  'budget_type',
-                  'budget_strategy',
-                  'bid',
-                  'bid_strategy',
-                  'campaign_type',
+        fields = ('adgroup_type',
                   'gtee_priority',
                   'promo_priority',
                   'name',
-                  'network_type',
-                  'custom_html',
-                  'custom_method',
+                  'start_datetime',
+                  'end_datetime',
                   'bid_strategy',
                   'bid',
+                  'daily_budget',
+                  'full_budget',
+                  'budget',
+                  'budget_type',
+                  'budget_strategy',
                   'site_keys',
                   'allocation_percentage',
                   'daily_frequency_cap',

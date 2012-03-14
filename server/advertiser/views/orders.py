@@ -12,6 +12,7 @@ Whenever you see "Campaign", think "Order", and wherever you see
 """
 
 from django.core.urlresolvers import reverse
+from django.contrib.auth.decorators import login_required
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import JSONResponse, render_to_response
@@ -50,6 +51,8 @@ class OrderIndexHandler(RequestHandler):
                                       'date_range': self.date_range,
                                   })
 
+
+@login_required
 def order_index(request, *args, **kwargs):
     return OrderIndexHandler()(request, use_cache=False, *args, **kwargs)
 
@@ -65,6 +68,8 @@ class OrderDetailHandler(RequestHandler):
                                   "advertiser/order_detail.html",
                                   {})
 
+
+@login_required
 def order_detail(request, *args, **kwargs):
     return OrderDetailHandler()(request, use_cache=False, *args, **kwargs)
 
@@ -78,6 +83,8 @@ class LineItemDetailHandler(RequestHandler):
                                   "advertiser/lineitem_detail.html",
                                   {})
 
+
+@login_required
 def lineitem_detail(request, *args, **kwargs):
     return LineItemDetailHandler()(request, use_cache=False, *args, **kwargs)
 
@@ -89,7 +96,7 @@ class OrderFormHandler(RequestHandler):
     """
     def get(self, order_key=None):
         if order_key:
-            instance = CampaignQueryManager.get(key=order_key)
+            instance = CampaignQueryManager.get(order_key)
         else:
             instance = None
 
@@ -103,7 +110,7 @@ class OrderFormHandler(RequestHandler):
 
     def post(self, order_key=None):
         if order_key:
-            instance = CampaignQueryManager.get(key=order_key)
+            instance = CampaignQueryManager.get(order_key)
         else:
             instance = None
 
@@ -116,7 +123,7 @@ class OrderFormHandler(RequestHandler):
 
             return JSONResponse({
                 'success': True,
-                'redirect': reverse('advertiser_order_details', args=(order.key(),)),
+                'redirect': reverse('advertiser_order_detail', args=(order.key(),)),
             })
 
         else:
@@ -129,13 +136,8 @@ class OrderFormHandler(RequestHandler):
                 'success': False,
             })
 
-        return render_to_response(self.request,
-                                  "advertiser/order_form.html",
-                                  {
-                                      'order_form': order_form,
-                                  })
 
-
+@login_required
 def order_form(request, *args, **kwargs):
     return OrderFormHandler()(request, use_cache=False, *args, **kwargs)
 
@@ -145,14 +147,61 @@ class LineItemFormHandler(RequestHandler):
     New/Edit form page for LineItems.
     """
     def get(self, order_key, line_item_key=None):
-        line_item_form = LineItemForm()
+        if order_key:
+            order = CampaignQueryManager.get(order_key)
+        else:
+            order = None
+
+        if line_item_key:
+            instance = AdGroupQueryManager.get(line_item_key)
+        else:
+            instance = None
+
+        line_item_form = LineItemForm(instance=instance)
+
         return render_to_response(self.request,
                                   "advertiser/line_item_form.html",
                                   {
                                       'line_item_form': line_item_form,
+                                      'order': order,
                                   })
 
+    def post(self, order_key, line_item_key=None):
+        if order_key:
+            order = CampaignQueryManager.get(order_key)
+        else:
+            order = None
 
+        if line_item_key:
+            instance = AdGroupQueryManager.get(line_item_key)
+        else:
+            instance = None
+
+        line_item_form = LineItemForm(self.request.POST, instance=instance)
+
+        if line_item_form.is_valid():
+            line_item = line_item_form.save()
+            line_item.account = self.account
+            line_item.order = order
+            line_item.save()
+
+            return JSONResponse({
+                'success': True,
+                'redirect': reverse('advertiser_order_detail', args=(order.key(),)),
+            })
+
+        else:
+            errors = {}
+            for key, value in line_item_form.errors.items():
+                errors[key] = ' '.join([error for error in value])
+
+            return JSONResponse({
+                'errors': errors,
+                'success': False,
+            })
+
+
+@login_required
 def line_item_form(request, *args, **kwargs):
     return LineItemFormHandler()(request, use_cache=False, *args, **kwargs)
 

@@ -181,9 +181,8 @@ class LineItemForm(forms.ModelForm):
             if instance.end_datetime:
                 initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
-        if instance:
-            if not initial:
-                initial = {}
+            # TODO: can't change the start date after a campaign has started.
+            # TODO: not change the end date after a campaign has completed
 
             geo_predicates = []
             for geo_predicate in instance.geo_predicates:
@@ -195,14 +194,13 @@ class LineItemForm(forms.ModelForm):
                 initial['region_targeting'] = 'city'
                 initial.update(cities=instance.cities)
 
-            kwargs.update(initial=initial)
-
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
         # set choices based on the users adunits
+        # TODO: can we do this a nicer way so we can declare this field with the other fields?
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
 
     def _calculate_budget(self, budget):
@@ -212,6 +210,7 @@ class LineItemForm(forms.ModelForm):
             return budget
 
     def clean_start_datetime(self):
+        # TODO: can't change the start date after a campaign has started.
         start_datetime = self.cleaned_data.get('start_datetime', None)
         if start_datetime:
             # if this is a new campaign, it must start in the future
@@ -222,6 +221,7 @@ class LineItemForm(forms.ModelForm):
         return start_datetime
 
     def clean_end_datetime(self):
+        # TODO: not change the end date after a campaign has completed
         end_datetime = self.cleaned_data.get('end_datetime', None)
         if end_datetime:
             # end_datetime is entered in Pacific Time

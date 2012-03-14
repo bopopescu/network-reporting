@@ -5,7 +5,7 @@ InstallAppengineHelperForDjango()
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-from api_fetch.auc_fetch_handler import AUCFetchHandler
+from fetch_api.auc_fetch_handler import AUCFetchHandler
 
 
 def main():

@@ -10,7 +10,8 @@ import time
 if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
 else:
-    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+    # Assumes it is being called from the server dir
+    sys.path.append(os.environ['PWD'])
 from ad_network_reports.scrapers.scraper import Scraper, ScraperSite, \
         NetworkConfidential
 from ad_network_reports.scrapers.network_scrape_record import \
@@ -70,12 +71,13 @@ class AdMobScraper(Scraper):
         page = 1
         page_total = 999
         sites = []
-        while page < page_total:
+        while page <= page_total:
             self.auth_dict['page'] = page
             req = urllib2.Request(self.SITE_SEARCH_URL + '?' +
                     urllib.urlencode(self.auth_dict))
             site_data = json.load(urllib2.urlopen(req))
             page_total = site_data['page']['total']
+            print '%s / %s' % (page, page_total)
             for site in site_data['data']:
                 new_dict = {}
                 for key, value in site.iteritems():
@@ -104,13 +106,14 @@ class AdMobScraper(Scraper):
         records = []
         page = 1
         page_total = 999
-        while page < page_total:
+        while page <= page_total:
             query_dict['page'] = page
             req = urllib2.Request(str(self.SITE_STAT_URL + '?' + query_string +
                 '&' + urllib.urlencode(query_dict)))
 
             site_stats = json.load(urllib2.urlopen(req))
             page_total = site_stats['page']['total']
+            print '%s / %s' % (page, page_total)
             for stats in site_stats['data']:
                 nsr = NetworkScrapeRecord(revenue = stats['revenue'],
                                           attempts = stats['requests'],
@@ -128,9 +131,13 @@ class AdMobScraper(Scraper):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'adnetwork@com2usamerica.com'
-    NC.password = '4w47m82l5jfdqw1x'
-    NC.client_key = 'ka820827f7daaf94826ce4cee343837a'
+    NC.username = 'mobiles.republic@gmail.com'
+    NC.password = '5qgpktxk5bg8ft83'
+    NC.client_key = 'k76d65f8cf09414ecb2ac44bec871c77'
     NC.ad_network_name = 'admob'
     SCRAPER = AdMobScraper(NC)
-    print SCRAPER.get_site_stats(date.today()) #- timedelta(days=2))
+    all_stats = SCRAPER.get_site_stats(date.today() - timedelta(days=2))
+    print len(all_stats)
+    for stats in all_stats:
+        print stats
+

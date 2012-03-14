@@ -9,7 +9,8 @@ import urllib
 if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/mopub/server')
 else:
-    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+    # Assumes it is being called from the server dir
+    sys.path.append(os.environ['PWD'])
 from ad_network_reports.scrapers.scraper import Scraper, NetworkConfidential
 from ad_network_reports.scrapers.network_scrape_record import \
         NetworkScrapeRecord

@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from django.conf import settings
 
 import datetime
 import logging
@@ -43,14 +44,14 @@ from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import Site as AdUnit, App
 
 
-############### boto S3 ############### 
+############### boto S3 ###############
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 
 S3_CONN = S3Connection('AKIAJKOJXDCZA3VYXP3Q', 'yjMKFo61W0mMYhMgphqa+Lc2WX74+g9fP+FVeyoH')
 BUCKET = S3_CONN.get_bucket('mopub-aws-logging')
 S3_FILE = Key(BUCKET)
-############### boto S3 ############### 
+############### boto S3 ###############
 
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
@@ -489,9 +490,9 @@ class LogTaskHandler(webapp.RequestHandler):
               if account.use_only_mongo:
                   return    # don't move on to traditional realtime stats put below
 
-
-          # traditional put to GAE datastore
-          # query_manager.put_stats(stats_to_put)
+          if settings.DEBUG:
+              # traditional put to GAE datastore
+              query_manager.put_stats(stats_to_put)
           # total_stats = query_manager.all_stats_deltas
 
       # if the transaction is too large then we split it up and try again

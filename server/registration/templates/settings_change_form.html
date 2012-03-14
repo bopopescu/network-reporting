@@ -1,7 +1,5 @@
 {% extends "registration/base.html" %}
 
-{% load googletags %}
-
 {% block pageTitle %}<h1>Account - Edit settings</h1>{% endblock %}
 
 {% load filters %}
@@ -76,9 +74,7 @@
 </fieldset>
 <div class="clear"></div>
 <div class="form-submit">
-    {% if not google_user %}
     <a href="{% url auth_password_change %}">Reset your password.</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    {% endif %}
     <span class="buttonWrap">
         <a href="#" class="button" id="accountForm-submit">
         Submit Changes

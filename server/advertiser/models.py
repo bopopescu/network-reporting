@@ -127,6 +127,12 @@ class Campaign(db.Model):
 # Alias
 Order = Campaign
 
+    def has_started(self):
+        return self.start_datetime < datetime.datetime.now()
+
+    def is_finished(self):
+        return self.end_datetime < datetime.datetime.now()
+
 
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
@@ -411,20 +417,19 @@ class AdGroup(db.Model):
     @property
     def budget_goal(self):
         campaign = self.campaign
-        if self.bid_strategy == 'cpm':
-            if campaign.budget_type == "daily":
-                try:
+        try:
+            if self.bid_strategy == 'cpm':
+                if campaign.budget_type == 'daily':
                     return int((campaign.budget / self.bid) * 1000)
-                except:
+                else:
                     return int((campaign.full_budget / self.bid) * 1000)
             else:
-                return int((campaign.full_budget / self.bid) * 1000)
-        else:
-            if campaign.budget_type == "daily":
-                return int(campaign.budget)
-            else:
-                return int(campaign.full_budget)
-        return None
+                if campaign.budget_type == 'daily':
+                    return int(campaign.budget)
+                else:
+                    return int(campaign.full_budget)
+        except:
+            return None
 
     @property
     def individual_cost(self):

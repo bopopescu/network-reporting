@@ -308,3 +308,5 @@ class PaymentRecord(db.Model):
     scheduled_payment = db.BooleanProperty(default=False)  # Whether this is a scheduled payment of actual payment
     resolved = db.BooleanProperty(default=False)  # For scheduled payment, resolved means it has been paid
     created = db.DateTimeProperty(auto_now_add=True)
+
+    deleted = db.BooleanProperty(default=False)

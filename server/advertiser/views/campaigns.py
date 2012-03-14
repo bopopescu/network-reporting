@@ -1,6 +1,7 @@
 import logging
 import datetime
 
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
@@ -55,7 +56,7 @@ class AdGroupIndexHandler(RequestHandler):
         num_days = 90
         today = datetime.datetime.now(Pacific_tzinfo()).date()
 
-        days = date_magic.gen_days(today - datetime.timedelta(days=num_days), today)
+        days = date_magic.gen_days(today - datetime.timedelta(days=(num_days-1)), today)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
@@ -387,7 +388,7 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
         campaign_form = CampaignForm(instance=adgroup.campaign, initial={'bid': adgroup.bid,
-                                                                         'bid_strategy':adgroup.bid_strategy})
+                                                                         'bid_strategy': adgroup.bid_strategy})
         adgroup_form = AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
@@ -563,7 +564,7 @@ def edit_adgroup(request, *args, **kwargs):
 """
 
 
-class AdgroupDetailHandler(RequestHandler):
+class AdGroupDetailHandler(RequestHandler):
     """
     Holy christ, refactor
 
@@ -581,6 +582,9 @@ class AdgroupDetailHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, adgroup_key):
+
+        stats_q = StatsModelQueryManager(self.account, self.offline)
+        
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
@@ -630,20 +634,52 @@ class AdgroupDetailHandler(RequestHandler):
 
         # Show a flash message recommending using reports if selecting more than 30 days
         if self.date_range > 30:
-            self.request.flash['message'] = "For showing more than 30 days we recommend using the <a href='%s'>Reports</a> page." % reverse('reports_index')
+            self.request.flash['message'] = """For showing more than 30 days we recommend
+                                               using the <a href='%s'>Reports</a> page.""" %  \
+                                               reverse('reports_index')
         else:
             del self.request.flash['message']
 
         # Load stats
-        adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+
+        ctr = lambda clicks, impressions: \
+              (clicks/float(impressions) if impressions else 0)
+        ecpm = lambda revenue, impressions: \
+               (revenue/float(impressions)*1000 if impressions else 0)
+        fill_rate = lambda requests, impressions: \
+                    (impressions/float(requests) if requests else 0)
+
+            
+        adgroup.all_stats = stats_q.get_stats_for_days(advertiser=adgroup,days=days)
         adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
+        try:
+            adgroup.stats.ecpm = ecpm(adgroup.stats.revenue,
+                                      adgroup.stats.impression_count)
+        except Exception:
+            pass
+
+        try:
+            adgroup.stats.ctr = ctr(adgroup.stats.click_count,
+                                    adgroup.stats.impression_count)
+        except Exception:
+            pass
+
+        try:
+            adgroup.stats.fill_rate = fill_rate(adgroup.stats.request_count,
+                                                adgroup.stats.impression_count)
+        except Exception:
+            pass
+            
+        
 
         # Load creatives and populate
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
         creatives = list(creatives)
         for c in creatives:
-            c.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=c, days=days)
+            c.all_stats = StatsModelQueryManager(self.account,
+                                                 offline=self.offline).get_stats_for_days(advertiser=c,
+                                                                                          days=days)
             c.stats = reduce(lambda x, y: x + y, c.all_stats, StatsModel())
             # TODO: Should fix DB so that format is always there
             if not c.format:
@@ -729,7 +765,7 @@ class AdgroupDetailHandler(RequestHandler):
         else:
             message = "<br/>".join(message)
 
-        totals = reduce(lambda x, y: x + y.stats, adunits, StatsModel())
+        totals = adgroup.stats
 
         if today and yesterday:
             stats = {
@@ -785,7 +821,7 @@ class AdgroupDetailHandler(RequestHandler):
                                       'graph_adunits': graph_adunits,
                                       'start_date': days[0],
                                       'end_date': days[-1],
-                                      'date_range': self.date_range,
+                                      'date_range': len(days),
                                       'creative_fragment': creative_fragment,
                                       'message': message
                                   })
@@ -837,7 +873,7 @@ class AdgroupDetailHandler(RequestHandler):
 
 @login_required
 def campaign_adgroup_show(request, *args, **kwargs):
-    return AdgroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
+    return AdGroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
 
 
 class PauseAdGroupHandler(RequestHandler):
@@ -1025,7 +1061,6 @@ class AddCreativeHandler(RequestHandler):
 
         jsonDict = {'success': False, 'errors': []}
         if base_creative_form.is_valid():
-            logging.error('base_creative_form is_valid')
             base_creative = base_creative_form.save(commit=False)
             ad_type = base_creative.ad_type
             if ad_type == "text":
@@ -1038,7 +1073,6 @@ class AddCreativeHandler(RequestHandler):
                 creative_form = html_creative_form
 
             if creative_form.is_valid():
-                logging.error('creative_form is_valid')
 
                 if not creative_form.instance:  # ensure form posts do not change ownership
                     account = self.account
@@ -1048,7 +1082,6 @@ class AddCreativeHandler(RequestHandler):
                 creative.account = account
                 creative.ad_group = ad_group
                 CreativeQueryManager.put(creative)
-                logging.error('put')
 
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)

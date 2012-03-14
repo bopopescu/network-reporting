@@ -2,13 +2,14 @@ import re
 import time
 from datetime import datetime
 from django import template
-import base64, binascii
+import binascii
 from django.utils import simplejson as json
 import logging
 import string
 from common.utils.tzinfo import Pacific, utc
 
 from django.conf import settings
+from django.core.urlresolvers import reverse
 
 from country_codes import COUNTRY_CODE_DICT
 
@@ -259,6 +260,39 @@ def as_list(item):
     return [item]
 
 
+@register.filter
+def adgroup_to_json(adgroup):
+    data = {}
+    if adgroup:
+        data.update({
+            'id': str(adgroup.key()),
+            'active': adgroup.active,
+            'name': adgroup.name,
+            'details_url': reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}),
+            'bid_strategy': adgroup.bid_strategy,
+        })
+        if adgroup.campaign.gtee() or adgroup.campaign.promo():
+            start_datetime = adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific) if adgroup.campaign.start_datetime else None
+            end_datetime = adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific) if adgroup.campaign.end_datetime else None
+            data.update({
+                'start_date': "%d/%d" % (start_datetime.month, start_datetime.day) if start_datetime else None,
+                'end_date': "%d/%d" % (end_datetime.month, end_datetime.day) if end_datetime else None,
+                'apps': [str(key) for key in adgroup.targeted_app_keys],
+            })
+        if adgroup.campaign.gtee():
+            data.update({
+                'level': 'high' if adgroup.campaign.campaign_type == 'gtee_high' else 'normal' if adgroup.campaign.campaign_type == 'gtee' else 'low',
+                'budget_type': adgroup.campaign.budget_type,
+                'budget': adgroup.campaign.budget if adgroup.campaign.budget_type == "daily" else adgroup.campaign.full_budget,
+                'goal': adgroup.budget_goal,
+            })
+        if adgroup.campaign.network():
+            data.update({
+                'network_type': adgroup.network_type,
+            })
+    return json.dumps(data)
+
+
 # Inclusion tags
 
 @register.simple_tag
@@ -318,7 +352,7 @@ def include_script(script_name,
     # make the script path
     path_prefix = "/js/"
     path_suffix = ".js"
-    version_number = "?=%s" % str(settings.STATIC_VERSION_NUMBER)
+    version_number = "?=%s" % str(settings.SCRIPTS_VERSION_NUMBER)
 
     script_path = path_prefix + script_name + path_suffix + version_number
 
@@ -326,3 +360,18 @@ def include_script(script_name,
         return """<script type="text/javascript" src="%s"></script>""" % script_path
     else:
         return ""
+
+@register.simple_tag
+def include_style(style_name):
+    style_name = style_name.replace('.css', '')
+    path_prefix = "/css/"
+    path_suffix = ".css"
+    version_number = "?=%s" % str(settings.STYLES_VERSION_NUMBER)
+
+    style_path = path_prefix + style_name + path_suffix + version_number
+
+    return """<link rel="stylesheet" href="%s" />""" % style_path
+
+@register.filter
+def js_date(date):
+    return "new Date(%s,%s,%s)" % (date.year, date.month-1, date.day)

@@ -1,19 +1,173 @@
+# Deployed Monday, March 12, 2012 at 03:30PM PST
+### Deployed by John Pena
+### Tagged deploy-34
+### Bugs Fixed: ['980']
+### Included Commits: 
+ * a7ce749 [#980 state:fixed]
+ * 7311bc8 removed some dumb logging
+ * 8f340be [#1014 state:resolved] [#1011 state:resolved] [#966 state:resolved] [#1010 state:resolved] [#1009 state:resolved]
+ * 44bc5f1 added delete support for payment history [#980 state:review-requested assigned:pena]
+ 
+# Deployed Monday, March 12, 2012 at 03:01PM PST
+### Deployed by John Pena
+### Tagged deploy-33
+### Bugs Fixed: ['1014', '1011', '966', '1010', '1009']
+### Included Commits:
+* 85c248f Merge branch '1011-delivery-zeroed'
+* 9f107ee Merge branch '1014-stats-ascii-fail'
+* b39a189 Merge branch '966-965-campaign-archive-issues'
+* b9852b7 removed logging statements that were throwing unicode errors [#1014 state:fixed]
+* a49a8d3 squashed a name bug
+* cc318a4 fixed up a bug on the network detail page
+* d83ea1b changed the adgroup detail "campaign details" section to look like an individual table row in the campaigns page [#1011 state:fixed]
+* c5885ff maybe this fixed it?
+* 8cd9380 fixed button issues on the campaign archive page. [#966 state:fixed] [#965 state:fixed]
+* 65c6510 got rid of old queues and backends
+* 44c2e63 reduce rate for file-finalizer 31-39 to 10/s
+* 72ef73e Merge branch 'master' of github.com:mopub/mopub
+* bac3713 Fix admin/d stats-breakdown loading
+* 13d0188 removed percent delivered from ad sources table [#1010 state:fixed]
+* 20a1c2c Merge branch 'master' of github.com:mopub/mopub
+* e183962 Fixed admin/d MPX%
+* e491e20 Merge branch 'master' of github.com:mopub/mopub
+* 59fcbb5 More admin/d fixes
+* cdc1e0c Merge branch 'master' of github.com:mopub/mopub
+* da803c4 change rate to 10/s for file finalizer queues
+* 1c85d2d catching user agent error
+* b59809a using different version to handle the file finalize
+* 86b9557 fixed a date range issue on the adgroup index [#1009 state:fixed]
+* b41c5d0 Merge branch 'master' of github.com:mopub/mopub
+* b49e851 adding file-finalizer backend 3
+* 86114cb Removed google login from the UI
+* a0a487e Deployed without finding any bug fixes.
+
+# Deployed Friday, March 09, 2012 at 03:25PM PST
+### Deployed by John Pena
+### Tagged deploy-32
+### Bugs Fixed: []
+### Included Commits:
+* 8d78290 Merge branch 'master' of github.com:mopub/mopub
+* 586df3c only 10 qs for file finalize
+* 7d9944f fix merge conflict
+* ea85016 increasing to 60 queues; only last 20 take in new tasks
+* cc1047f added more backends and sharding final finalizer work amoung them
+* 7208191 using backends again
+* 05f6d7a Admin/d loads data properly
+* 192dad9 removed green highlighting for "javascript minified" statement in deploy script
+* 6e09286 increase file finalize queue count to 40; evenly distribute load onto last 30 qs
+* d8637bd Merge branch 'master' of github.com:mopub/mopub
+* a7fe992 increase file-finalizer queue count to 20; go back to writing to blobstore
+* c364950 [#1001 state:resolved] [#985 state:resolved] [#977 state:resolved]
+
+# Deployed Thursday, March 08, 2012 at 09:33PM PST
+### Deployed by John Pena
+### Tagged deploy-31
+### Bugs Fixed: ['1001', '985', '977']
+### Included Commits:
+* 9bf352a Merge branch 'master' of github.com:mopub/mopub
+* c63c545 [#1001 state:fixed] campaigns.py app/adunit model fetching now has date parameters in the url
+* b361537 not using backend as worker anymore
+* d64cd00 Merge branch 'master' of github.com:mopub/mopub
+* f9f5b93 latest changes
+* b383611 +1 on copyright year [#985 state:fixed]]
+* 0e31e05 Merge branch 'master' of github.com:mopub/mopub
+* 0baab80 Fixed and updated admin/d page
+* 77b8f88 fixed password reset [#977 state:fixed]
+* 6618722 decrease to 10 backend machines for file-finalizer
+* 5c57916 Merge branch 'master' of github.com:mopub/mopub
+* d44cc74 create new backend file-finalizer; point finalize task target to this backend
+* d656dec fixed image serve url
+* 2c991fc Deployed without finding any bug fixes.
+
+# Deployed Thursday, March 08, 2012 at 01:29PM PST
+### Deployed by John Pena
+### Tagged deploy-30
+### Bugs Fixed: []
+### Included Commits:
+* 03b713a Deployed without finding any bug fixes.
+
+# Deployed Thursday, March 08, 2012 at 01:25PM PST
+### Deployed by John Pena
+### Tagged deploy-29
+### Bugs Fixed: []
+### Included Commits:
+* d969928 fixed a datetime bug in the deploy script changelog write function
+* c12d346 using config with iterator
+* 44c5495 Merge branch 'master' of github.com:mopub/mopub
+* 153725b added deadlines to click and impression endpoint db calls
+* 62ee126 Deployed without finding any bug fixes.
+
+# Deployed Thursday, March 08, 2012 at 12:18AM PST
+### Deployed by John Pena
+### Tagged deploy-28
+### Bugs Fixed: []
+### Included Commits:
+* 56d248d updated the deploy script to post to hipchat
+* fe530ab Deployed without finding any bug fixes.
+
+# Deployed Wednesday, March 07, 2012 at 11:31PM PST
+### Deployed by John Pena
+### Tagged deploy-27
+### Bugs Fixed: []
+### Included Commits:
+* f520508 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, March 07, 2012 at 11:29PM PST
+### Deployed by John Pena
+### Tagged deploy-26
+### Bugs Fixed: []
+### Included Commits:
+
+# Deployed Monday, March 05, 2012 at 10:48PM PST
+### Deployed by John Pena
+### Tagged deploy-24
+### Bugs Fixed: ['888', '905', '848', '912', '956', '961']
+### Included Commits:
+* 70a834c fixed a javascript issue in reports
+* 66dc265 Merge branch 'master' of github.com:mopub/mopub
+* a5286c7 fixed marketplace activity icon in the adunit page
+* 9859083 Merge branch '955-reporting-js-fix'
+* 5ff7c1d fixed up the way scripts are loaded in reporting
+* 6d9707b [#935 state:resolved]
+* f86b582 default campaigns to cpm [#888 state:fixed]
+* fa01e4f added latlong jumptap support
+* c004842 fixed javascript import errors, i believe this is actually impacting everyone [#955 state:review-requested assigned:nick]
+* 579e968 strip away white spaces [#905 state:fixed]
+* ee45292 Merge branch 'master' of github.com:mopub/mopub
+* dcf86de cleanup and made status column wider
+* 7252298 Merge branch '964-adunit_names_network_config' of github.com:mopub/mopub
+* b8b9224 [#964:state:fixed]
+* 9674fc7 Merge branch 'new-budget-pace'
+* ac66b5a added clean to keywords [#848 state:fixed]
+* c39e31a added clean to refresh interval [#912 state:fixed]
+* 50986c0 [#956 state:fixed]
+* e83b583 Fixed version
+* 4ffdf61 Merge branch 'master' of github.com:mopub/mopub into new-budget-pace
+* f52ac16 Implemented. TODO: Change column width, fill in proper text for help link
+* 3989cf1 fixed table cells that were using the wrong markup on the mpx page [#961 state:fixed]
+* 177b9b0 only showing adunits in the campaign form targeting section if the adunits arent deleted
+* 8424a10 jslinting
+* 179beca added a loading spinner into inventory tables
+* 8731045 got rid of a redundant css file
+* 186f66f fixed the way the deploy script does datetimes
+* 9110458 Deployed without finding any bug fixes.
+
 # Deployed Friday, March 02, 2012 at 2:39PM PST
 ### Deployed by John Pena
 ### Tagged deploy-23
 ### Bugs Fixed: []
 ### Included Commits:
- * a3e0148 fixed tagging issues in mpdeploy and ammended the changelog
- * bdef7ee Merge branch '947-form-budgets' of github.com:mopub/mopub
- * 9e8a505 handled case where gtee campaign does not have budget or full_budget set correctly
- * 6a14d22 Merge branch '947-form-budgets'
- * ba42413 Merge branch '947-form-budgets' of github.com:mopub/mopub into 947-form-budgets
- * 3473aa6 Merge branch 'master' of github.com:mopub/mopub
- * dd0fb39 human-readable datetimes in the changelog and deploy tagging when you use the deploy script
- * 44e8fcd updated campaign form budget validation and tests
- * a885655 Deployed without finding any bug fixes.
- * 6b71f91 Merge branch '947-form-budgets' of github.com:mopub/mopub into 947-form-budgets
- * 401be0f added budget validation, tests
+* a3e0148 fixed tagging issues in mpdeploy and ammended the changelog
+* bdef7ee Merge branch '947-form-budgets' of github.com:mopub/mopub
+* 9e8a505 handled case where gtee campaign does not have budget or full_budget set correctly
+* 6a14d22 Merge branch '947-form-budgets'
+* ba42413 Merge branch '947-form-budgets' of github.com:mopub/mopub into 947-form-budgets
+* 3473aa6 Merge branch 'master' of github.com:mopub/mopub
+* dd0fb39 human-readable datetimes in the changelog and deploy tagging when you use the deploy script
+* 44e8fcd updated campaign form budget validation and tests
+* a885655 Deployed without finding any bug fixes.
+* 6b71f91 Merge branch '947-form-budgets' of github.com:mopub/mopub into 947-form-budgets
+* 401be0f added budget validation, tests
 
 # Deployed Friday, March 02, 2012
 ### Deployed by Nafis Jamal

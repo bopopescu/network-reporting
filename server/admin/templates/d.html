@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% load filters %}
 {% block pageTitle %}<h1>MoPub Metrics Dashboard</h1>{% endblock pageTitle %}
-{% block pageTitleTag %}{{page.today_requests|withsep}} served{% endblock pageTitleTag %}
+{% block pageTitleTag %}{{page.yesterday_requests|withsep}} served{% endblock pageTitleTag %}
 {% block titleBarRight %}
 <span class="titlebar-link">
     {% if loading %}
@@ -36,7 +36,18 @@
 			source: all_emails
 		});
 	});
+    $('.stats-breakdown tr').click(function(e) {
+        var row = $(this);
+        if(!row.hasClass('active')) {
+            var table = row.parents('table');
+            $('tr.active', table).removeClass('active');
+            row.addClass('active');
+        }
+        mopub.Chart.setupDashboardStatsChart('area');
+    });
+    $('#stats-breakdown-dateOptions input').click(function() {
+      $('.stats-breakdown-value').hide();
+      $('.stats-breakdown-value.'+$(this).val()).show();
+    });
 </script>
-
-
 {% endblock %}

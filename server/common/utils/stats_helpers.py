@@ -360,7 +360,6 @@ class AdNetworkStatsFetcher(object):
                 AD_NETWORK_NAMES.keys()]
         stats = AdNetworkStatsManager.roll_up_stats([stats for stats in
                 stats_list if stats != None])
-        logging.info(stats.dict_)
         return stats.dict_
 
 

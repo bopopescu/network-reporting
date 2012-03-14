@@ -18,64 +18,70 @@
 {% endblock titleBarRight %}
 
 {% block content %}
-  <link rel='stylesheet' href='/css/dt_jui.css?v=7'>
+  <link rel='stylesheet' href='/css/dt_jui.css?v=7'></link>
     <input id='reportKey' type='hidden' value='{{report.key}}' />
-    <script type='text/javascript' src='/js/mylibs/datatables-treesort.js?v=1'></script>
-    <script type='text/javascript' src='/js/reports-ajaxPoll.js?v=12'></script>
     <form id='reportExportForm' style='display:none;' action='{% url report_export %}' method='POST' accept-charset='utf-8'>
       <input name='report_key' type='text' value='{{report.key}}' />
       <input name='account_key' type='text' value='{{report.account.key}}' />
       <input id='report-exportFtype' name='f_type' type='text' value='' />
     </form>
     <div class='buttonBank buttonBank-right'>
-      {% comment %} <a class='button' id='reports-view-exportReportButton' href='#'>Export</a>
-      <a class='button' id='reports-view-sendReportButton' href='#'>Send</a> {% endcomment %}
       <a class='button' id='reports-view-runReportButton' href='/reports/run/{{report.key}}'>Run Report</a>
       <a class='button' id='reports-view-saveAsButton' href='#'>Save As</a>
       <select name='exportSelect' id='reports-view-exportSelect' class='selectmenu'>
         <option value='exp'>Export</option>
         <option value='xls'>XLS</option>
         <option value='csv'>CSV</option>
-    </select>
-</div>
+      </select>
+    </div>
 
-<h2>
-  {{report.dim_details}}
-  <br/>
-  <span style='font-weight:normal;' class="muted">
-    {{report.start|date:"M j, Y"}} - {{report.end|date:"M j, Y"}} ({{report.interval_details}})
-  </span>
-</h2>
-<div id='table-goes-here' class='tabled'>
-</div>
-<div id='preloader'>
-  <div id='genspinner' class='loading-text'>
-    Generating Report
-    <br />
-    <img src='/images/report-preloader.gif'></img>
-  </div>
-        <br>
-          <div class='loading-center'>
-            Reports may take several minutes to finish.  However, the report will be emailed to you when it is complete.
+    <h2>
+      {{report.dim_details}}
+      <br/>
+      <span style='font-weight:normal;' class="muted">
+        {{report.start|date:"M j, Y"}} - {{report.end|date:"M j, Y"}} ({{report.interval_details}})
+      </span>
+    </h2>
+
+    <div id='table-goes-here' class='tabled'></div>
+
+    <div id='preloader'>
+      <div id='genspinner' class='loading-text'>
+        Generating Report
+        <br />
+        <img src='/images/report-preloader.gif'></img>
+      </div>
+      <br />
+      <div class='loading-center'>
+        Reports may take several minutes to finish.  However, the report will be emailed to you when it is complete.
+      </div>
+    </div>
+
+    <div id='reportForm-container' style='display: none;'>
+      <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
+        <fieldset id="reportAddForm-details" class="alt">
+          <div id="reportAddForm-fragment" class="reportAddForm-fragment">
+            {{report_fragment.as_template}}
           </div>
-        </div>
+          <input name='report_key' type='hidden' value='{{report.key}}' />
+          <input id='saveAs' name='saved' type='hidden' value='False' />
+          <div class='clear'></div>
+          <div class='form-submit'>
+            <span id='reportCreateForm-success' class='hidden'>Success!</span>
+            <span class='buttonWrap'><a href='#' class='button' id='reportCreateForm-submit'>Run</a></span>
+            <span class='buttonWrap'><a href='#' class='button' id='reportCreateForm-cancel'>Cancel</a></span>
+          </div>
+        </fieldset>
+      </form>
+    </div>
 
-        <div id='reportForm-container' style='display: none;'>
-        <form action="{% url add_report %}" method="POST" accept-charset="utf-8" id="reportCreateForm">
-          <fieldset id="reportAddForm-details" class="alt">
-            <div id="reportAddForm-fragment" class="reportAddForm-fragment">
-              {{report_fragment.as_template}}
-            </div>
-            <input name='report_key' type='hidden' value='{{report.key}}' />
-            <input id='saveAs' name='saved' type='hidden' value='False' />
-            <div class='clear'></div>
-            <div class='form-submit'>
-              <span id='reportCreateForm-success' class='hidden'>Success!</span>
-              <span class='buttonWrap'><a href='#' class='button' id='reportCreateForm-submit'>Run</a></span>
-              <span class='buttonWrap'><a href='#' class='button' id='reportCreateForm-cancel'>Cancel</a></span>
-            </div>
-          </fieldset>
-        </form>
-        </div>
+  {% endblock content %}
 
-      {% endblock content %}
+      {% block extraScripts %}
+        {{ block.super }}
+      <script type="text/javascript">
+        $(function() {
+            ReportsController.initializeReports();
+        });
+      </script>
+      {% endblock extraScripts %}

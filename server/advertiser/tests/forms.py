@@ -22,31 +22,16 @@ GUARANTEED_CAMPAIGN_DATA = [
         'campaign_type': 'gtee',
         'gtee_priority': 'high',
         'name': 'Guaranteed High Campaign',
-        'bid_strategy': 'cpc',
-        'bid': 0.1,
-        'budget': 10000,
-        'budget_type': 'daily',
-        'budget_strategy': 'allatonce',
     },
     {
         'campaign_type': 'gtee',
         'gtee_priority': 'normal',
         'name': 'Guaranteed Normal Campaign',
-        'bid_strategy': 'cpc',
-        'bid': 0.1,
-        'budget': 10000,
-        'budget_type': 'daily',
-        'budget_strategy': 'allatonce',
     },
     {
         'campaign_type': 'gtee',
         'gtee_priority': 'low',
         'name': 'Guaranteed Low Campaign',
-        'bid_strategy': 'cpc',
-        'bid': 0.1,
-        'budget': 10000,
-        'budget_type': 'daily',
-        'budget_strategy': 'allatonce',
     },
 ]
 
@@ -128,7 +113,20 @@ class TestGuaranteedCampaignForm(unittest.TestCase):
     def test_budget(self):
         data = copy.deepcopy(self.data)
         for test_data in data:
+            # Unlimited
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+            campaign = form.save()
+            self.assertEqual(campaign.budget, None, "budget was %s, should have been %s" % (campaign.budget, None))
+            self.assertEqual(campaign.full_budget, None, "full_budget was %s, should have been %s" % (campaign.full_budget, None))
+
+            test_data['budget'] = 10000
+            test_data['bid'] = 0.05
+            test_data['budget_strategy'] = 'allatonce'
+
             # CPC Daily
+            test_data['bid_strategy'] = 'cpc'
+            test_data['budget_type'] = 'daily'
             form = CampaignForm(test_data)
             self.assertTrue(form.is_valid(), form._errors.as_text())
             campaign = form.save()
@@ -149,7 +147,7 @@ class TestGuaranteedCampaignForm(unittest.TestCase):
             form = CampaignForm(test_data)
             self.assertTrue(form.is_valid(), form._errors.as_text())
             campaign = form.save()
-            budget = test_data['budget']*test_data['bid']/1000
+            budget = test_data['budget'] * test_data['bid'] / 1000
             self.assertEqual(campaign.budget, budget, "budget was %s, should have been %s" % (campaign.budget, budget))
             self.assertEqual(campaign.full_budget, None, "full_budget was %s, should have been %s" % (campaign.full_budget, None))
 
@@ -158,7 +156,7 @@ class TestGuaranteedCampaignForm(unittest.TestCase):
             form = CampaignForm(test_data)
             self.assertTrue(form.is_valid(), form._errors.as_text())
             campaign = form.save()
-            full_budget = test_data['budget']*test_data['bid']/1000
+            full_budget = test_data['budget'] * test_data['bid'] / 1000
             self.assertEqual(campaign.budget, None, "budget was %s, should have been %s" % (campaign.budget, None))
             self.assertEqual(campaign.full_budget, full_budget, "full_budget was %s, should have been %s" % (campaign.full_budget, full_budget))
 

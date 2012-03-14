@@ -9,7 +9,7 @@ urlpatterns = patterns(
     url(r'^app/create/$', 'create_app', name='publisher_create_app'),
     url(r'^app/(?P<app_key>[-\w\.]+)/delete/$', 'delete_app', name='publisher_delete_app'),
     url(r'^app/(?P<app_key>[-\w\.]+)/update/ajax/$', 'app_update_ajax', name='publisher_app_update_ajax'),
-    url(r'^app/(?P<app_key>[-\w\.]+)/$', 'app_show', name='publisher_app_show'),
+    url(r'^app/(?P<app_key>[-\w\.]+)/$', 'app_detail', name='publisher_app_show'),
 
     url(r'^adunit/create/$', 'create_adunit', name='publisher_create_adunit'),
     url(r'^adunit/(?P<adunit_key>[-\w\.]+)/delete/$', 'delete_adunit', name='publisher_delete_adunit'),

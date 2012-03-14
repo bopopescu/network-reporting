@@ -163,13 +163,13 @@ class CampaignForm(forms.ModelForm):
         # gtee, promo
         if cleaned_data.get('campaign_type', '') in ('gtee', 'promo'):
             # start and end datetimes
-            start_datetime = cleaned_data.get('start_datetime', None)
-            end_datetime = cleaned_data.get('end_datetime', None)
             # if start_datetime is None, use the current time
-            if not start_datetime:
+            if not cleaned_data.get('start_datetime', None):
                 cleaned_data['start_datetime'] = datetime.now()
+            start_datetime = cleaned_data['start_datetime']
+            end_datetime = cleaned_data.get('end_datetime', None)
             # end_datetime must be after start_datetime
-            if start_datetime and end_datetime and end_datetime < start_datetime:
+            if end_datetime and end_datetime <= start_datetime:
                 if 'end_datetime' not in self._errors:
                     self._errors['end_datetime'] = ErrorList()
                 self._errors['end_datetime'].append("Stop time must be after start time")

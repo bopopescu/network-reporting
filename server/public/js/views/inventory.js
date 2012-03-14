@@ -16,68 +16,6 @@ var mopub = window.mopub || {};
 
 (function ($, Backbone, _) {
     "use strict";
-    /*
-     * ## AdGroupsView
-     * Parameters:
-     * * collection: AdGroups
-     * * el: element that will hold the content
-     * * title: title that will be an h2 at the top of the content
-     * * type: 'network', 'gtee', 'promo', or 'backfill_promo' -- affects which fields are shown
-     * * tables: mapping of... MAPPING OF WHAT? I'M DYING TO KNOW
-     */
-    var AdGroupsView = Backbone.View.extend({
-        initialize: function () {
-            this.collection.bind('change', this.render, this);
-        },
-        filtered_collection: function () {
-            // TODO: uses elements not in this view
-            var status = $('#campaigns-filterOptions').find(':checked').val();
-            var app = $('#campaigns-appFilterOptions').val();
-            return new AdGroups(this.collection.reject(function (adgroup) {
-                return (status && status !== adgroup.get('status')) ||
-                       (app && adgroup.get('apps').indexOf(app) === -1);
-            }));
-        },
-        render: function () {
-            var adgroups = this.filtered_collection();
-
-            // TODO: uses elements not in this view, with multiple views there are conflicts
-
-            var html;
-            if (adgroups.size() === 0) {
-                html = '<h2>No ' + this.options.title + '</h2>';
-            } else {
-                html = _.template($('#adgroups-rollup-template').html(), {
-                    adgroups: adgroups,
-                    title: this.options.title,
-                    type: this.options.type
-                });
-
-                if (this.options.tables) {
-                    var type = this.options.type;
-                    _.each(this.options.tables, function (filter, title) {
-                        var filtered_adgroups = new AdGroups(adgroups.filter(filter));
-                        if(filtered_adgroups.length) {
-                            html += _.template($('#adgroups-table-template').html(), {
-                                adgroups: filtered_adgroups,
-                                title: title,
-                                type: type
-                            });
-                        }
-                    });
-                } else {
-                    html += _.template($('#adgroups-table-template').html(), {
-                        adgroups: adgroups,
-                        title: 'Name',
-                        type: this.options.type
-                    });
-                }
-            }
-            $(this.el).html(html);
-            return this;
-        }
-    });
-
 
     /*
      * # CollectionGraphView
@@ -329,6 +267,23 @@ var mopub = window.mopub || {};
 
             return this;
         }
+    });
+
+    var CampaignView = Backbone.View.extend({
+        initialize: function () {
+            try {
+                this.template = _.template($('#adunit-template').html());
+            } catch (e) {
+                // you load the template partial in the page. ok if
+                // you intend to renderInline.
+            }
+        },
+
+        renderInline: function () {
+            var current_model = this.model;
+            var campaign_row = $('tr.campaign-row#campaign-' + this.model.id, this.el);
+        }
+        
     });
 
     window.AdUnitView = AdUnitView;

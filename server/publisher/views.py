@@ -370,7 +370,7 @@ def create_adunit(request,*args,**kwargs):
     return CreateAdUnitHandler()(request,*args,**kwargs)
 
 
-class ShowAppHandler(RequestHandler):
+class AppDetailHandler(RequestHandler):
     """
     REFACTOR
 
@@ -513,8 +513,8 @@ class ShowAppHandler(RequestHandler):
 
 
 @login_required
-def app_show(request,*args,**kwargs):
-    return ShowAppHandler(id="app_key")(request, use_cache=False, *args,**kwargs)
+def app_detail(request,*args,**kwargs):
+    return AppDetailHandler(id="app_key")(request, use_cache=False, *args,**kwargs)
 
 
 class ExportFileHandler(RequestHandler):

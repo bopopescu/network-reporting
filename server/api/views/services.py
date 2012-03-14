@@ -368,11 +368,10 @@ def get_stats_fetcher(account_key, stats_endpoint):
     if stats_endpoint == 'mpx':
         stats = MarketplaceStatsFetcher(account_key)
     elif stats_endpoint == 'direct':
-        stats = DirectSoldStatsFetcher(account_key)
-        stats = []
+        #REFACTOR: this should be DirecSoldStatsFetcher
+        stats = SummedStatsFetcher(account_key)
     elif stats_endpoint == 'networks':
         stats = AdNetworkStatsFetcher(account_key)
-        stats = []
     elif stats_endpoint == 'all':
         stats = SummedStatsFetcher(account_key)
     else:

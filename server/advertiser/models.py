@@ -123,16 +123,7 @@ class Campaign(db.Model):
             'deleted': self.deleted,
         }
 
-
-# Alias
 Order = Campaign
-
-    def has_started(self):
-        return self.start_datetime < datetime.datetime.now()
-
-    def is_finished(self):
-        return self.end_datetime < datetime.datetime.now()
-
 
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
@@ -498,7 +489,12 @@ class AdGroup(db.Model):
     ##################################
 
     def toJSON(self):
-        ignore_fields = ['all_mpusers', 'site_keys', '_app', 'mpuser', 'campaign', 'account']
+        ignore_fields = ['all_mpusers',
+                         'site_keys',
+                         '_app',
+                         'mpuser',
+                         'campaign',
+                         'account']
         d = to_dict(self, ignore=ignore_fields)
         d['campaign_key'] = str(self.campaign.key())
         return d

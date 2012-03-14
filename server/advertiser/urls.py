@@ -31,11 +31,11 @@ urlpatterns = patterns('advertiser.views',
 
     url('^orders/new/$', 'order_form', name='advertiser_order_form_new'),
     url('^orders/(?P<campaign_key>[-\w\.]+)/$', 'order_detail', name='advertiser_order_detail'),
-    url('^orders/(?P<campaign_key>[-\w\.]+)/edit/$', 'order_form', name='advertiser_order_form_edit'),
+    url('^orders/(?P<order_key>[-\w\.]+)/edit/$', 'order_form', name='advertiser_order_form_edit'),
 
-    url('^orders/(?P<campaign_key>[-\w\.]+)/line_items/new/$', 'line_item_form', name='advertiser_line_item_form_new'),
+    url('^orders/(?P<order_key>[-\w\.]+)/line_items/new/$', 'line_item_form', name='advertiser_line_item_form_new'),
     url('^orders/(?P<campaign_key>[-\w\.]+)/line_items/(?P<adgroup_key>[-\w\.]+)/$', 'lineitem_detail', name='advertiser_lineitem_detail'),
-    url('^orders/(?P<campaign_key>[-\w\.]+)/line_items/(?P<adgroup_key>[-\w\.]+)/edit/$', 'line_item_form', name='advertiser_line_item_form_edit'),
+    url('^orders/(?P<order_key>[-\w\.]+)/line_items/(?P<line_item_key>[-\w\.]+)/edit/$', 'line_item_form', name='advertiser_line_item_form_edit'),
 
     url('^archive/$', 'lineitem_archive', name='advertiser_lineitem_archive'),
 

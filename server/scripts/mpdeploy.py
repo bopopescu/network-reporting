@@ -8,31 +8,14 @@ import sys
 import os
 import datetime
 import re
+import yaml
+import requests
+import clint
+from clint.textui import puts, indent, colored
+import envoy
 
 PWD = os.path.dirname(__file__)
-
-# These only seem to work in python2.7
-try:
-    import clint
-    from clint.textui import puts, indent, colored
-except ImportError:
-    sys.path.append(os.path.join(PWD, '../common/clint'))
-    try:
-        import clint
-        from clint.textui import puts, indent, colored
-    except ImportError:
-        print 'please run `pip install clint`'
-        sys.exit(1)
-
-try:
-    import envoy
-except ImportError:
-    sys.path.append(os.path.join(PWD, '../common/envoy'))
-    try:
-        import envoy
-    except ImportError:
-        print 'please run `pip install envoy`'
-        sys.exit(1)
+sys.path.append(os.path.join(PWD, '..'))
 
 
 def prompt_before_executing(original, override=None):
@@ -108,17 +91,21 @@ def git_list_deploy_tags():
     deploy_tags = git("tag -l deploy-*").std_out.strip().split("\n")
     return deploy_tags
 
+def git_get_most_recent_deploy_tag():
+    deploy_tags = git_list_deploy_tags()
+    n = max([int(tag.replace('deploy-', '')) for tag in deploy_tags if tag.find('deploy-') >= 0])
+    return 'deploy-' + str(n)
+
+
 #@prompt_before_executing
 def git_tag_current_deploy():
     """
     Tags the repo with a new deploy name.
     """
-    deploy_tags = git_list_deploy_tags()
-
     # Make the tag name by finding the most recent deploy tag
     # and adding 1 to the deploy number.
     try:
-        deploy_number = max([int(tag.replace('deploy-', '')) for tag in deploy_tags if tag.find('deploy-') >= 0])
+        deploy_number = int(git_get_most_recent_deploy_tag().replace('deploy-',''))
         new_deploy_number = deploy_number + 1
     except IndexError, ValueError:
         new_deploy_number = 0
@@ -126,7 +113,8 @@ def git_tag_current_deploy():
     new_deploy_tag = "deploy-" + str(new_deploy_number)
 
     # Make the message for the deploy
-    message = "Deployed by %s on %s." % (git_get_user(), datetime.datetime.utcnow())
+    deploy_datetime = datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M%p PST")
+    message = "Deployed by %s on %s." % (git_get_user(), deploy_datetime)
 
     # Tag the commit
     #command = 'tag -m \'%s\' -a %s' % (message, new_deploy_tag)
@@ -182,15 +170,7 @@ def git_get_logs_for_changelog():
     Gets a list of abbreviated commits since the last deploy.
     """
     most_recent_id = git_most_recent_commit_id()
-    deploy_tags = git_list_deploy_tags()
-    try:
-        # consider passing this in instead of calculating
-        # in the function. the most recent tag might point to HEAD
-        # which we don't want.
-        most_recent_tag = deploy_tags[-1]
-    except IndexError, ValueError:
-        most_recent_tag = "deploy-1"
-
+    most_recent_tag = git_get_most_recent_deploy_tag()
     log = git('log --pretty=oneline --abbrev-commit ' + most_recent_tag + "..." + most_recent_id)
 
     return log.std_out.split('\n')
@@ -215,7 +195,7 @@ def git_list_resolved_tickets():
     # Get all of the commit log text between the last deploy (tagged deploy-<n>)
     # and the current commit. This is logs all of the commits being deployed.
     most_recent_id = git_most_recent_commit_id()
-    most_recent_deploy_tag = git_list_deploy_tags()[-1]
+    most_recent_deploy_tag = git_get_most_recent_deploy_tag()
     log = git("log " + most_recent_deploy_tag + "..." + most_recent_id).std_out.strip().split("\n")
 
     # Find all of the commits that were tagged with fixes
@@ -268,7 +248,7 @@ def write_changelog(deploy_tag, fixed_tickets, new_commits):
     changelog_file.close()
 
     # Make the header for the new change
-    new_changelog = ["# Deployed " + datetime.datetime.utcnow().strftime("%A, %B %d, %Y"),
+    new_changelog = ["# Deployed " + datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M%p PST"),
                      "### Deployed by " + git_get_user(),
                      "### Tagged " + deploy_tag,
                      "### Bugs Fixed: " + str(fixed_tickets),
@@ -286,6 +266,7 @@ def write_changelog(deploy_tag, fixed_tickets, new_commits):
     changelog_file.writelines([line + '\n' for line in new_changelog])
     changelog_file.close()
 
+
 def minify_javascript():
 
     # we use juicer for minification, alert them if they dont have it
@@ -302,7 +283,36 @@ def minify_javascript():
 
     puts("Minifying Javascript files in " + JS_DIR)
 
-    puts(colored.green('Javascript Minified'))
+    puts('Javascript Minified')
+
+
+def update_static_version_numbers():
+    versions_path = os.path.join(PWD, '../versions.yaml')
+    f = open(versions_path,'r')
+    config = yaml.load(f)
+    f.close()
+    # REFACTOR: check to see if files have been updated first
+    config['scripts'] += 1
+    config['styles'] += 1
+
+    f = open(versions_path,'w')
+    yaml.dump(config, f)
+    f.close()
+
+
+def post_to_hipchat(message, room_id=None):
+    if not room_id:
+        room_id="21565"
+    url = "https://api.hipchat.com/v1/rooms/message?" + \
+          "format=json" + \
+          "&auth_token=3ec795e1dd7781d59fb5b8731adef1" + \
+          "&room_id=" + room_id + \
+          "&from=Alerts" + \
+          "&message=" + str(message).replace(' ', '%20')
+
+
+    response = requests.post(url)
+    return response
 
 
 
@@ -331,6 +341,7 @@ def main():
             # what the user wanted.
             active_branch_name = git_branch_name()
             deploy_server = clint.args.get(0)
+            deployer = git_get_user()
 
             if active_branch_name != "master":
                 puts(colored.yellow("Careful! You're deploying a non-master branch."))
@@ -368,6 +379,10 @@ def main():
                 puts("Minifying Javascript")
                 minify_javascript()
 
+                # Updating version numbers
+                puts("Updating Version Numbers")
+                update_static_version_numbers()
+
                 # Write to the changelog
                 puts("Writing changelog")
                 write_changelog(deploy_tag_name, fixed_tickets, new_commits)
@@ -378,6 +393,12 @@ def main():
                 commit_message = " ".join(['[#%s state:resolved]' % str(ticket) for ticket in fixed_tickets])
                 git_commit(commit_message)
                 git_push()
+
+                # notify people of a successful deploy on hipichat
+                puts("Notifying hipchat")
+                post_to_hipchat("Branch %s just deployed to %s by %s" % (active_branch_name,
+                                                                         deploy_server,
+                                                                         deployer))
 
             else:
                 puts("Skipping ticket update process because you're not deploying to production")

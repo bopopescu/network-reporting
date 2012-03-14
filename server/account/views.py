@@ -17,12 +17,14 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager, AppQueryManager
 import logging
 from common.utils.request_handler import RequestHandler
+from common.utils.decorators import staff_login_required
 
 import urllib2
 import string
 from common.utils import simplejson
 import datetime
 from itertools import groupby
+
 
 class GeneralSettingsHandler(RequestHandler):
     def get(self, *args, **kwargs):
@@ -32,7 +34,7 @@ class GeneralSettingsHandler(RequestHandler):
                                   "account/general_settings.html",
                                   {
                                       "account": self.account,
-                                      "user":user
+                                      "user": user
                                   })
 
 @login_required
@@ -42,8 +44,7 @@ def index(request, *args, **kwargs):
 
 
 class AdNetworkSettingsHandler(RequestHandler):
-    def get(self,account_form=None):
-
+    def get(self, account_form=None):
         if self.params.get("skip"):
             self.account.status = "step4"
             AccountQueryManager.put_accounts(self.account)
@@ -64,12 +65,12 @@ class AdNetworkSettingsHandler(RequestHandler):
                     'mobfox_status']
         network_config_status = {}
 
-        def _get_net_status(account,network):
+        def _get_net_status(account, network):
             status = 0
             # eg. account.admob_pub_id
-            if getattr(account.network_config,network[:-6]+'pub_id',None):
+            if getattr(account.network_config, network[:-6] + 'pub_id', None):
                 for app in apps_for_account:
-                    if getattr(app.network_config,network[:-6]+'pub_id',None):
+                    if getattr(app.network_config, network[:-6] + 'pub_id', None):
                         status = 2
                         return status
                 status = 1
@@ -78,18 +79,17 @@ class AdNetworkSettingsHandler(RequestHandler):
             for app in apps_for_account:
                 # dynamically attach adunits to app
                 app.adunits = AdUnitQueryManager.get_adunits(app=app)
-                if  not getattr(app.network_config,network[:-6]+'pub_id',None):
+                if  not getattr(app.network_config, network[:-6] + 'pub_id', None):
                     broke = True
                 else:
                     status = 3
-            if not broke and len(apps_for_account)!=0:
+            if not broke and len(apps_for_account) != 0:
                 return 4
             else:
                 return status
 
         for network in networks:
-            network_config_status[network] = _get_net_status(self.account,network)
-
+            network_config_status[network] = _get_net_status(self.account, network)
 
         return render_to_response(self.request,
                                   'account/ad_network_settings.html',
@@ -98,9 +98,7 @@ class AdNetworkSettingsHandler(RequestHandler):
                                         'user': user,
                                         "apps": apps_for_account}.items() + network_config_status.items()))
 
-
     def post(self):
-
         account_form = AccountForm(data=self.request.POST, instance=self.account)
         network_config_form = NetworkConfigForm(data=self.request.POST, instance=self.account.network_config)
 
@@ -159,24 +157,25 @@ class AdNetworkSettingsHandler(RequestHandler):
                     adunit_network_config = adunit_form.save(commit=False)
                     AdUnitQueryManager.update_config_and_put(adunit, adunit_network_config)
 
-
-
             if self.account.status == "step3":
                 self.account.status = "step4"
                 AccountQueryManager.put_accounts(self.account)
                 return HttpResponseRedirect(reverse('advertiser_campaign'))
+
         return self.get(account_form=account_form)
 
+
 @login_required
-def ad_network_settings(request,*args,**kwargs):
-    return AdNetworkSettingsHandler()(request,*args,**kwargs)
+def ad_network_settings(request, *args, **kwargs):
+    return AdNetworkSettingsHandler()(request, *args, **kwargs)
 
 
 class CreateAccountHandler(RequestHandler):
-    def get(self,account_form=None):
+    def get(self, account_form=None):
         account_form = account_form or AccountForm(instance=self.account)
-        return render_to_response(self.request,'account/new_account.html',{'account': self.account,
-                                                                           'account_form' : account_form })
+        return render_to_response(self.request, 'account/new_account.html', {'account': self.account,
+                                                                           'account_form': account_form})
+
     def post(self):
         account_form = AccountForm(data=self.request.POST, instance=self.account)
         # Make sure terms and conditions are agreed to
@@ -196,17 +195,20 @@ class CreateAccountHandler(RequestHandler):
 
         return self.get(account_form=account_form)
 
+
 # We use login_required here since we want to let users activate themselves on this page
 @login_required
-def create_account(request,*args,**kwargs):
-    return CreateAccountHandler()(request,*args,**kwargs)
+def create_account(request, *args, **kwargs):
+    return CreateAccountHandler()(request, *args, **kwargs)
+
 
 class LogoutHandler(RequestHandler):
     def get(self):
         return HttpResponseRedirect(users.create_logout_url('/main/'))
 
-def logout(request,*args,**kwargs):
-    return LogoutHandler()(request,*args,**kwargs)
+
+def logout(request, *args, **kwargs):
+    return LogoutHandler()(request, *args, **kwargs)
 
 
 class PaymentInfoChangeHandler(RequestHandler):
@@ -215,7 +217,6 @@ class PaymentInfoChangeHandler(RequestHandler):
         return render_to_response(self.request,
                                   'account/paymentinfo_change.html',
                                   {'form': form})
-
 
     def post(self, *args, **kwargs):
         form = PaymentInfoForm(self.request.POST, instance=self.account.payment_infos.get())
@@ -230,9 +231,11 @@ class PaymentInfoChangeHandler(RequestHandler):
             return redirect('account_index')
         return self.get(payment_form=form)
 
+
 @login_required
 def payment_info_change(request, *args, **kwargs):
     return PaymentInfoChangeHandler()(request, *args, **kwargs)
+
 
 class PaymentHistoryHandler(RequestHandler):
     def get(self, *args, **kwargs):
@@ -272,30 +275,32 @@ class PaymentHistoryHandler(RequestHandler):
                                    'total_paid': total_paid,
                                    'unscheduled_balance': unscheduled_balance,
                                    'start_date': start_date,
-                                   'end_date': end_date })
+                                   'end_date': end_date})
+
     def post(self, *args, **kwargs):
         payment = PaymentRecord()
-        period_start = datetime.datetime.strptime(self.request.POST.get("period_start"),"%m/%d/%Y").date()
-        period_end = datetime.datetime.strptime(self.request.POST.get("period_end"),"%m/%d/%Y").date()
+        period_start = datetime.datetime.strptime(self.request.POST.get("period_start"), "%m/%d/%Y").date()
+        period_end = datetime.datetime.strptime(self.request.POST.get("period_end"), "%m/%d/%Y").date()
 
         if period_start and period_end:
             payment.account = self.account
             payment.period_start = period_start
             payment.period_end = period_end
             # Convert dollars to float. eg. '$2,313.20' becomes '2313.20'
-            amount = ''.join([c for c in self.request.POST.get("amount") if c in string.digits+'.'])
+            amount = ''.join([c for c in self.request.POST.get("amount") if c in string.digits + '.'])
             payment.amount = float(amount)
             payment.status = self.request.POST.get("status")
             if self.request.POST.get("date_executed"):
-                payment.date_executed = datetime.datetime.strptime(self.request.POST.get("date_executed"),"%m/%d/%Y")
+                payment.date_executed = datetime.datetime.strptime(self.request.POST.get("date_executed"),
+                                                                    "%m/%d/%Y")
             if self.request.POST.get("form_type") == "scheduled_payment":
                 payment.scheduled_payment = True
             payment.put()
 
         return self.get()
 
-def get_balance(pub_id, start_date, end_date):
 
+def get_balance(pub_id, start_date, end_date):
     url = "http://mpx.mopub.com/stats/pub" + \
           "?pub=" + str(pub_id) + \
           "&start=" + start_date.strftime("%m-%d-%Y") + \
@@ -312,3 +317,16 @@ def get_balance(pub_id, start_date, end_date):
 @login_required
 def payment_history(request, *args, **kwargs):
     return PaymentHistoryHandler()(request, *args, **kwargs)
+
+
+class PaymentRecordDelete(RequestHandler):
+    def get(self, payment_record_key):
+        payment_record = PaymentRecordQueryManager.get(payment_record_key)
+        PaymentRecord.delete(payment_record)
+        next = self.request.GET.get('next') or reverse('payment_history')
+        return HttpResponseRedirect(next)
+
+
+@staff_login_required
+def payment_delete(request, *args, **kwargs):
+    return PaymentRecordDelete()(request, *args, **kwargs)

@@ -1,13 +1,15 @@
 from __future__ import with_statement
+from django.conf import settings
 
 import datetime
 import logging
+import random
 import sys
 import time
 import traceback
 import urllib
 import urllib2
-import random
+import uuid
 
 from appengine_django import InstallAppengineHelperForDjango
 InstallAppengineHelperForDjango()
@@ -29,6 +31,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 from common.utils import helpers
 from common.utils import simplejson
+from common.utils.timezones import Pacific_tzinfo
 
 from stats import stats_accumulator
 from stats import log_service
@@ -40,6 +43,15 @@ from account.models import Account
 from advertiser.models import Campaign, AdGroup, Creative
 from publisher.models import Site as AdUnit, App
 
+
+############### boto S3 ###############
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+
+S3_CONN = S3Connection('AKIAJKOJXDCZA3VYXP3Q', 'yjMKFo61W0mMYhMgphqa+Lc2WX74+g9fP+FVeyoH')
+BUCKET = S3_CONN.get_bucket('mopub-aws-logging')
+S3_FILE = Key(BUCKET)
+############### boto S3 ###############
 
 
 OVERFLOW_TASK_QUEUE_NAME_FORMAT = "bulk-log-processor-overflow-%02d"
@@ -478,9 +490,9 @@ class LogTaskHandler(webapp.RequestHandler):
               if account.use_only_mongo:
                   return    # don't move on to traditional realtime stats put below
 
-
-          # traditional put to GAE datastore
-          # query_manager.put_stats(stats_to_put)
+          if settings.DEBUG:
+              # traditional put to GAE datastore
+              query_manager.put_stats(stats_to_put)
           # total_stats = query_manager.all_stats_deltas
 
       # if the transaction is too large then we split it up and try again
@@ -615,6 +627,18 @@ class FinalizeHandler(webapp.RequestHandler):
 
         # finalize this file
         files.finalize(internal_file_name)
+
+        # # posting to S3 directly instead of writing to blobstore (commented out above)
+        # now_PST = datetime.datetime.now(Pacific_tzinfo())
+        # short_timestamp = now_PST.strftime('%Y-%m%d')
+        # long_timestamp = now_PST.strftime('%Y-%m%d-%H%M')
+        # s3_filename = '%s_%s.log' % (long_timestamp, str(uuid.uuid4()))
+        # s3_path = '/tmp5/logs-%s-full/aws-logfile-%s-0000-full.raw/%s' % (short_timestamp, short_timestamp, s3_filename)
+        # S3_FILE.key = s3_path
+
+        # file_content = '\n'.join(ascii_log_lines)+'\n'
+        # S3_FILE.set_contents_from_string(file_content)
+
 
     def get(self):
         try:

@@ -252,7 +252,8 @@
 
                           {% status_icon adgroup %}
 
-                          <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{ adgroup.name }}</a><br />
+                          <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
+                            {{ adgroup.name }}</a><br />
                           <span class="muted">
                             {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                               {{adgroup.campaign.start_datetime|format_date}} -
@@ -282,15 +283,18 @@
                             {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
                               {{adgroup.campaign.full_budget|currency}} campaign budget.
                             {% endifequal %}
-                            {% if adgroup.percent_delivered %}
-                              ({{adgroup.percent_delivered|floatformat:1}}%)
-                            {%endif %}
                           </span>
                         </th>
                         <td class="dataTable-data numeric">
                             Guaranteed<br/><span class="muted">{{level.name}}</span></td>
                         <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                        <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                        <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
+                          {% if adgroup.bid_strategy == 'cpc' %}
+                            {{ adgroup.calculated_ecpm|currency }}
+                          {% else %}
+                            {{ adgroup.bid|currency }}
+                          {% endif %}
+                        </td>
                         <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">
                             {{adgroup.stats.click_count|withsep}}<br/>
@@ -337,8 +341,14 @@
                         </span>
                       </th>
                       <td class="dataTable-data numeric">Promotional<br/><span class="muted">Normal</span></td>
-                      <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                      <td class="dataTable-data numeric"> -- </td>
+                      <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
+                          {% if adgroup.bid_strategy == 'cpc' %}
+                            {{ adgroup.calculated_ecpm|currency }}
+                          {% else %}
+                            {{ adgroup.bid|currency }}
+                          {% endif %}
+                        </td>
                       <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
                           {{adgroup.stats.click_count|withsep}}<br/>
@@ -385,14 +395,24 @@
                           {{adgroup.name}}
                         </a>
                         <br/>
-                        <span class="muted">{{adgroup.network_type}}</span>
+                        <span class="muted">
+                          {{adgroup.network_type}}
+                        </span>
                       </td>
 
-                      <td class="dataTable-data numeric">Network</td>
-                      <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric {% if adgroup.cpc %}dataTable-campaign-ecpm{% endif %}">
-                        {{ adgroup.calculated_ecpm|currency }}
+                      <td class="dataTable-data numeric">
+                        Network
                       </td>
+                      <td class="dataTable-data numeric">
+                        - 
+                      </td>
+                      <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
+                          {% if adgroup.bid_strategy == 'cpc' %}
+                            {{ adgroup.calculated_ecpm|currency }}
+                          {% else %}
+                            {{ adgroup.bid|currency }}
+                          {% endif %}
+                        </td>
                       <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
                           {{adgroup.stats.click_count|withsep}}
@@ -451,7 +471,12 @@
                     </tr>
                   {% endfor %}
                   <tr>
-                    <td class="big">Totals</td>
+                    <td>
+                      <span class="big">Totals</span> <br />
+                      <span class="muted">
+                        Totals include any ad sources previously targeted to this app/ad unit
+                      </span>
+                    </td>
                     <td></td>
                     <td class="dataTable-name numeric"><b>{{app.stats.revenue|currency}}</b></td>
                     <td></td>

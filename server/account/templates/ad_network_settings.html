@@ -46,9 +46,12 @@
                     <dd><input type="text" class="input-text" name="admob_pub_id" value="{{account.network_config.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd>
                     <div class="adForm-apps {% if admob_status == 2 or admob_status == 3 or admob_status == 4 %} {% else %} show {% endif %}">
                         {% for app in apps%}
-
-                        <dt>{{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
+                        <dt><strong>App</strong> {{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
                         <dd><input type="text" class="input-text" name="{{app.key}}-__-admob_pub_id" value="{{app.network_config.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd>
+                      {% for adunit in app.adunits %}
+                      <dt><strong>AdUnit</strong> {{adunit.name}}:</dt>
+                      <dd><input type="text" class="input-text" name="{{adunit.key}}-_ADUNIT_-admob_pub_id" value="{{adunit.network_config.admob_pub_id|default_if_none:""}}"  placeholder="ex: a14cdb1922f35xx"/></dd>
+                      {% endfor %}
                         {% endfor %}
 
                       </div>
@@ -261,8 +264,13 @@
                     <dd><input type="text" class="input-text" name="millennial_pub_id" value="{{account.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd>
                     <div class="adForm-apps {% if millennial_status == 2 or millennial_status == 3 or millennial_status == 4 %} {% else %} show {% endif %}">
                       {% for app in apps%}
-                        <dt>{{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
+                        <dt><strong>App</strong> {{app.name}} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>:</dt>
                         <dd><input type="text" class="input-text" name="{{app.key}}-__-millennial_pub_id" value="{{app.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd>
+                      {% for adunit in app.adunits %}
+                      <!-- here -->
+                      <dt><strong>AdUnit</strong> {{adunit.name}}:</dt>
+                      <dd><input type="text" class="input-text" name="{{adunit.key}}-_ADUNIT_-millennial_pub_id" value="{{adunit.network_config.millennial_pub_id|default_if_none:""}}"  placeholder="ex: 36789"/></dd>
+                      {% endfor %}
                       {% endfor %}
 
                     </div>

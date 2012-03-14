@@ -1,40 +1,26 @@
 # !/usr/bin/env python
 """ The AdHandler takes in all requests to m/ad. It """
 
-import os
-import re
 import hashlib
 import random
 import time
 import traceback
-import urllib
 import datetime
 import logging
 
-from common.utils import helpers, simplejson
-from common.utils.helpers import get_country_code, get_user_agent
+from common.utils import helpers
+from common.utils.helpers import get_country_code
 
-from google.appengine.api import urlfetch, memcache
 
 from google.appengine.ext import webapp, db
 
-from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-from ad_server.adunit_context.adunit_context import AdUnitContext, CreativeCTR
+from publisher.query_managers import AdUnitContextQueryManager
 
 from stats import stats_accumulator
-from google.appengine.ext.db import Key
 
 from ad_server.debug_console import trace_logging
-from ad_server import memcache_mangler
 
-from ad_server import frequency_capping
-
-from ad_server.renderers.creative_renderer import BaseCreativeRenderer
-from ad_server.renderers.admob import AdMobRenderer
-from ad_server.renderers.text_and_tile import TextAndTileRenderer
-from ad_server.renderers.adsense import AdSenseRenderer
-
-# unnecessary because we use class introspection
+from ad_server.renderers.get_renderer import get_renderer_for_creative
 
 # RENDERERS = {
 #     "admob": AdMobRenderer,
@@ -52,35 +38,26 @@ from ad_server.renderers.adsense import AdSenseRenderer
 # }
 
 from ad_server.auction import ad_auction
-from ad_server import frequency_capping
 
-from ad_server.auction.battles import (Battle,
-                                       GteeBattle,
-                                       GteeHighBattle,
-                                       GteeLowBattle
-                                      )
 from ad_server.auction.client_context import ClientContext
 
-
-from google.appengine.api.images import InvalidBlobKeyError
-
 TEST_MODE = "3uoijg2349ic(TEST_MODE)kdkdkg58gjslaf"
-
-
 
 # Primary ad auction handler
 # -- Handles ad request parameters and normalizes for the auction logic
 # -- Handles rendering the winning creative into the right HTML
 #
+
+
 class AdHandler(webapp.RequestHandler):
 
     def get(self):
-        if self.request.get('admin_debug_mode','0') == "1":
+        if self.request.get('admin_debug_mode', '0') == "1":
             try:
                 self._get()
             except Exception, e:
                 import sys
-                self.response.out.write("Exception: %s<br/>"%e)
+                self.response.out.write("Exception: %s<br/>" % e)
                 self.response.out.write('TB2: %s' % '<br/>'.join(traceback.format_exception(*sys.exc_info())))
         else:
             self._get()
@@ -98,23 +75,20 @@ class AdHandler(webapp.RequestHandler):
             failure_callback = None
             jsonp = False
 
-
         debug = False
         # For web tester, only shows logging.info
         # Internal web tester, shows all levels of logging
-        if self.request.get('admin_debug_mode','0') == "1":
-            trace_logging.log_levels = [logging.info,logging.debug,logging.warning,
-                                        logging.error,logging.critical]
+        if self.request.get('admin_debug_mode', '0') == "1":
+            trace_logging.log_levels = [logging.info, logging.debug, logging.warning,
+                                        logging.error, logging.critical]
             debug = True
-
-
-        elif self.request.get("debug_mode","0") == "1":
+        elif self.request.get("debug_mode", "0") == "1":
             # Not sure what the use of debug_mode is, deprecating it for now
             trace_logging.error("debug mode is deprecated")
             debug = True
 
         # For trace logger
-        if self.request.get('log_to_console','0') == '1':
+        if self.request.get('log_to_console', '0') == '1':
             log_to_console = True
         else:
             log_to_console = False
@@ -125,89 +99,79 @@ class AdHandler(webapp.RequestHandler):
         trace_logging.info("Requesting URL:")
         trace_logging.info(str(self.request.url))
 
-
         adunit_id = self.request.get("id") or 'agltb3B1Yi1pbmNyDAsSBFNpdGUYkaoMDA'
-        adunit_id = adunit_id.replace(' ','') #remove empty spaces
+        adunit_id = adunit_id.replace(' ', '')  # remove empty spaces
         experimental = self.request.get("exp")
         now = datetime.datetime.now()
 
         # Get or create all the relevant database information for auction
         adunit_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_id)
-        adunit = adunit_context.adunit
+        creative = None
+        adunit = None
+        if adunit_context:
+            adunit = adunit_context.adunit
+            # # Send a fraction of the traffic to the experimental servers
+            experimental_fraction = adunit.app_key.experimental_fraction or 0.0
 
-        # # Send a fraction of the traffic to the experimental servers
-        experimental_fraction = adunit.app_key.experimental_fraction or 0.0
+            # If we are not already on the experimental server, redirect some fraction
+            rand_dec = random.random()  # Between 0 and 1
+            if (not experimental and rand_dec < experimental_fraction):
+                return self._redirect_to_experimental("mopub-hrd", adunit_id)
 
-        # If we are not already on the experimental server, redirect some fraction
-        rand_dec = random.random() # Between 0 and 1
-        if (not experimental and rand_dec < experimental_fraction):
-            return self._redirect_to_experimental("mopub-hrd", adunit_id)
+            stats_accumulator.log(self.request, event=stats_accumulator.REQ_EVENT, adunit=adunit)
 
-        stats_accumulator.log(self.request, event=stats_accumulator.REQ_EVENT, adunit=adunit)
+            trace_logging.warning("User Agent: %s" % helpers.get_user_agent(self.request))
 
-        trace_logging.warning("User Agent: %s" % helpers.get_user_agent(self.request))
+            # We can get country_code from one of two places. It is a 2 character string
+            country_code = self.request.get('country') or get_country_code(self.request.headers)
 
+            if self.request.get('testing') == TEST_MODE:
+                # If we are running tests from ad_server_tests, don't use caching
+                now = datetime.datetime.fromtimestamp(float(self.request.get('dt')))
 
+            # the user's adunit key was not set correctly...
+            if adunit is None:
+                self.error(404)
+                self.response.out.write("Publisher adunit key %s not valid" % adunit_id)
+                return
 
+            # Prepare Keywords
+            keywords = []
+            if adunit.keywords and adunit.keywords != 'None':
+                keywords += adunit.keywords.split(',')
+            if self.request.get("q"):
+                keywords += self.request.get("q").lower().split(',')
 
-        # We can get country_code from one of two places. It is a 2 character string
+            trace_logging.warning("keywords are %s" % keywords)
 
-        country_code = self.request.get('country') or get_country_code(self.request.headers)
+            raw_udid = self.request.get("udid")
 
-        if self.request.get('testing') == TEST_MODE:
-            # If we are running tests from ad_server_tests, don't use caching
-            testing = True
-            adunit_context = AdUnitContext.wrap(adunit)
-            now = datetime.datetime.fromtimestamp(float(self.request.get('dt')))
-        else:
-            testing = False
+            # create a unique request id, but only log this line if the user agent is real
+            request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
 
+            client_context = ClientContext(adunit=adunit,
+                                    keywords=keywords,
+                                    excluded_adgroup_keys=self.request.get_all("exclude"),
+                                    raw_udid=raw_udid,
+                                    mopub_id=helpers.make_mopub_id(raw_udid),
+                                    ll=self.request.get('ll'),
+                                    request_id=request_id,
+                                    now=now,
+                                    user_agent=helpers.get_user_agent(self.request),
+                                    country_code=country_code,
+                                    experimental=experimental,
+                                    client_ip=helpers.get_client_ip(self.request))
 
-        # the user's adunit key was not set correctly...
-        if adunit is None:
-            self.error(404)
-            self.response.out.write("Publisher adunit key %s not valid" % adunit_id)
-            return
+            # Run the ad auction to get the creative to display
+            ad_auction_results = ad_auction.run(client_context, adunit_context)
 
-        # Prepare Keywords
-        keywords = []
-        if adunit.keywords and adunit.keywords != 'None':
-            keywords += adunit.keywords.split(',')
-        if self.request.get("q"):
-            keywords += self.request.get("q").lower().split(',')
-
-        trace_logging.warning("keywords are %s" % keywords)
-
-        raw_udid = self.request.get("udid")
-
-        # create a unique request id, but only log this line if the user agent is real
-        request_id = hashlib.md5("%s:%s" % (self.request.query_string, time.time())).hexdigest()
-
-        client_context = ClientContext(adunit=adunit,
-                                keywords=keywords,
-                                excluded_adgroup_keys=self.request.get_all("exclude"),
-                                raw_udid=raw_udid,
-                                mopub_id=helpers.make_mopub_id(raw_udid),
-                                ll=self.request.get('ll'),
-                                request_id=request_id,
-                                now=now,
-                                user_agent=helpers.get_user_agent(self.request),
-                                country_code=country_code,
-                                experimental=experimental,
-                                client_ip=helpers.get_client_ip(self.request))
-
-        # Run the ad auction to get the creative to display
-        ad_auction_results = ad_auction.run(client_context, adunit_context)
-
-
-        # Unpack the results of the AdAuction
-        creative, on_fail_exclude_adgroups = ad_auction_results
+            # Unpack the results of the AdAuction
+            creative, on_fail_exclude_adgroups = ad_auction_results
 
         # add timer and animations for the ad
         # only send to client if there should be a refresh
         # animation_type = random.randint(0,6)
         # self.response.headers.add_header("X-Animation",str(animation_type))
-
 
         if not creative:
             # TODO: We should have a no response "Renderer"
@@ -217,11 +181,9 @@ class AdHandler(webapp.RequestHandler):
             # We must add refresh always because if one given request
             # does not return an ad, the client should continue trying
             # again.
-            refresh = adunit.refresh_interval
+            refresh = adunit.refresh_interval if adunit else 30
             if refresh:
-                self.response.headers.add_header("X-Refreshtime",str(refresh))
-            track_url = None
-            ad_click_url = None
+                self.response.headers.add_header("X-Refreshtime", str(refresh))
             rendered_creative = None
 
         else:
@@ -241,7 +203,7 @@ class AdHandler(webapp.RequestHandler):
         #         cost_tracker = cost_tracker % creative.adgroup.bid
         #         ad_click_url += cost_tracker
 
-
+            creative.Renderer = get_renderer_for_creative(creative)
             creative_renderer = creative.Renderer(creative=creative,
                                          adunit=adunit,
                                          udid=raw_udid,
@@ -250,10 +212,9 @@ class AdHandler(webapp.RequestHandler):
                                          request_host=self.request.host,
                                          request_url=self.request.url,
                                          request_id=request_id,
-                                         version=int(self.request.get('v','0')),
+                                         version=int(self.request.get('v', '0')),
                                          on_fail_exclude_adgroups=on_fail_exclude_adgroups,
                                          keywords=keywords)
-
 
             rendered_creative, header_context = creative_renderer.render()
             # Add header context values to response.headers
@@ -281,15 +242,13 @@ class AdHandler(webapp.RequestHandler):
     def _redirect_to_experimental(self, experimental_app_name, adunit_id):
         # Create new id for alternate server
         old_key = db.Key(adunit_id)
-        new_key = db.Key.from_path(old_key.kind(), old_key.id_or_name(), _app=experimental_app_name )
+#        new_key = db.Key.from_path(old_key.kind(), old_key.id_or_name(), _app=experimental_app_name)
         new_id = str(old_key)
 
         query_string = self.request.url.split("/m/ad?")[1] + "&exp=1"
         exp_url = "http://" + experimental_app_name + ".appspot.com/m/ad?" + query_string
         # exp_url = "http://localhost:8081/m/ad?" + query_string
 
-        exp_url = exp_url.replace(adunit_id, new_id) # Splice in proper id
+        exp_url = exp_url.replace(adunit_id, new_id)  # Splice in proper id
         trace_logging.info("Redirected to experimental server: " + exp_url)
         return self.redirect(exp_url)
-
-

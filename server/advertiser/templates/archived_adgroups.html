@@ -1,6 +1,5 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
-{% load super_if %}
 
 {% block dateButtons %}{% endblock dateButtons %}
 
@@ -99,3 +98,12 @@
 
 {% endif %}
 {% endblock content %}
+
+{% block extraScripts %}
+{% include_script "controllers/campaigns" %}
+<script type="text/javascript">
+  $(function () {
+    CampaignsController.initializeCampaignArchive();
+  });
+</script>              
+{% endblock extraScripts %}

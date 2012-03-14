@@ -168,8 +168,7 @@ class PaymentInfoForm(mpforms.MPModelForm):
                                                 ACH Routing Number
                                                 """)
             else:
-                required_us_info = [self.data['local_tax_id'],
-                                    self.data['bank_swift_code']]
+                required_us_info = [self.data['bank_swift_code']]
 
                 if not all(required_us_info):
                     raise forms.ValidationError("""The following information is required for accounts outside the United States:

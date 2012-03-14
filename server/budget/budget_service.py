@@ -23,7 +23,7 @@ from budget.memcache_budget import (remaining_ts_budget,
                                     )
 from budget.models import BudgetSliceLog, BudgetSliceCounter, Budget
 from budget.query_managers import BudgetQueryManager
-from budget.tzinfo import Pacific, utc
+from common.utils.tzinfo import Pacific, utc
 
 """
 A service that determines if a campaign can be shown based upon the defined

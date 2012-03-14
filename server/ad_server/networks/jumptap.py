@@ -33,6 +33,9 @@ class JumptapServerSide(ServerSide):
         if language:
             key_values.update(l=language)
 
+        if self.client_context.ll:
+            key_values['ll'] = self.client_context.ll.replace(',', '%2C')
+
         # Jumptap uses all levels of pub_ids
         # 'pub' -- Account Level
         # 'site' -- App Level
@@ -54,7 +57,8 @@ class JumptapServerSide(ServerSide):
 
     @property
     def headers(self):
-        return { 'User-Agent': self.get_user_agent() }
+        return { 'User-Agent': self.get_user_agent(),
+                 'X-Forwarded-For': self.client_context.client_ip, }
      #'Accept-Language': 'en-us' }  # TODO: Accept language from web request
 
     def get_language(self):

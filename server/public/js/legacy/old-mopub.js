@@ -176,14 +176,6 @@ window.logging.warn = window.console.log;
         $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
 
         // Set up stats breakdown
-        $('.stats-breakdown tr').click(function(e) {
-            var row = $(this);
-            if(!row.hasClass('active')) {
-                var table = row.parents('table');
-                $('tr.active', table).removeClass('active');
-                row.addClass('active');
-            }
-        });
 
         // Set up highcharts default options
         Highcharts.setOptions({

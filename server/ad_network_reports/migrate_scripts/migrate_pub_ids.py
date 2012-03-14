@@ -1,7 +1,8 @@
 ﻿import re
 import sys
+import os
 
-sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
+sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
 from google.appengine.ext import db

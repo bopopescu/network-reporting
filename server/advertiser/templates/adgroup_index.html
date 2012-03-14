@@ -1,6 +1,5 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
-{% load super_if %}
 
 {% block pageTitle %}
   <h1>Campaigns</h1>
@@ -51,13 +50,6 @@
 
 {% block content %}
 
-  {# This will pop up when campaign loading over Ajax fails, allowing the user to retry #}
-  <div id="ajaxFailure" style="display:none">
-    <a href="#" id="ajaxDismiss"><img src="../images/icons/199_16x16.png"></img></a>
-    There was a problem retrieving data for some of your campaigns.
-    <a href="#" id="ajaxRetry"><img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong></a>
-  </div>
-
   {% if not apps %}
     <div class="alert-message block-message">
       Before you set up your ad campaigns, we recommend that you set up your App inventory.
@@ -105,12 +97,12 @@
   </div>
 
 
-  <div id="campaign-osi-success-helpContent" class="hidden">
+  <div id="campaign-delivery-helpContent" class="hidden">
     <h3>On Schedule Indicator</h3>
     <p> The on-schedule indicator tells you that your campaign is on track to hit its budget goal based on current traffic and settings.</p>
   </div>
 
-  <div id="campaign-osi-failure-helpContent" class="hidden">
+  <div id="campaign-pacing-helpContent" class="hidden">
     <h3>Behind Schedule Indicator</h3>
     <p> The behind-schedule indicator tells you that your campaign is delivering at less than 95% and may not meet its delivery goal.</p>
     <p> Some possible causes of this problem are:
@@ -125,64 +117,31 @@
 
 
 {% block extraScripts %}
-
-  <script type="text/html" id="adgroups-rollup-template">
+<script type="text/html" id="adgroups-rollup-template">
     {% include "partials/adgroups_rollup.html" %}
-  </script>
-  <script type="text/html" id="adgroups-table-template">
+</script>
+<script type="text/html" id="adgroups-table-template">
     {% include "partials/adgroups_table.html" %}
-  </script>
-  {% include_script "models/inventory" %}
-  {% include_script "views/inventory" %}
-  {% include_script "controllers/campaigns" %}
-  <script>
-    $(function() {
+</script>
 
-    CampaignsController.initializeDirectSold({
-      gtee_adgroups_data: [{% for adgroup in gtee_adgroups %}{
-        id: '{{ adgroup.key }}',
-        active: {% if adgroup.active %}true{% else %}false{% endif %},
-        level: '{% if adgroup.campaign.campaign_type == 'gtee_high' %}high{% else %}{% if adgroup.campaign.campaign_type == 'gtee' %}normal{% else %}low{% endif %}{% endif %}',
-        name: '{{ adgroup.name }}',
-          details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
-          start_date: {% if adgroup.campaign.start_datetime %}new Date({{ adgroup.campaign.start_datetime.year }}, {{ adgroup.campaign.start_datetime.month|add:"-1" }}, {{ adgroup.campaign.start_datetime.day }}){% else %}null{% endif %},
-          end_date: {% if adgroup.campaign.end_datetime %}new Date({{ adgroup.campaign.end_datetime.year }}, {{ adgroup.campaign.end_datetime.month|add:"-1" }}, {{ adgroup.campaign.end_datetime.day }}){% else %}null{% endif %},
-          budget_type: '{{ adgroup.campaign.budget_type }}',
-          budget: {% if adgroup.campaign.budget_type == "daily" %}{% if adgroup.campaign.budget %}{{ adgroup.campaign.budget }}{% else %}null{% endif %}{% else %}{% if adgroup.campaign.full_budget %}{{ adgroup.campaign.full_budget }}{% else %}null{% endif %}{% endif %},
-          goal: {% if adgroup.budget_goal %}{{ adgroup.budget_goal }}{% else %}null{% endif %},
-          bid: {{ adgroup.bid|default_if_none:"null" }},
-          bid_strategy: '{{ adgroup.bid_strategy }}',
-          apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}],
-          promo_adgroups_data: [{% for adgroup in promo_adgroups %}{
-          id: '{{ adgroup.key }}',
-          active: {% if adgroup.active %}true{% else %}false{% endif %},
-          name: '{{ adgroup.name }}',
-          details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
-          start_date: {% if adgroup.campaign.start_datetime %}new Date({{ adgroup.campaign.start_datetime.year }}, {{ adgroup.campaign.start_datetime.month|add:"-1" }}, {{ adgroup.campaign.start_datetime.day }}){% else %}null{% endif %},
-          end_date: {% if adgroup.campaign.end_datetime %}new Date({{ adgroup.campaign.end_datetime.year }}, {{ adgroup.campaign.end_datetime.month|add:"-1" }}, {{ adgroup.campaign.end_datetime.day }}){% else %}null{% endif %},
-          budget_type: '{{ adgroup.campaign.budget_type }}',
-          budget: {% if adgroup.campaign.budget_type == "daily" %}{% if adgroup.campaign.budget %}'{{ adgroup.campaign.budget }}'{% else %}null{% endif %}{% else %}{% if adgroup.campaign.full_budget %}'{{ adgroup.campaign.full_budget }}'{% else %}null{% endif %}{% endif %},
-          goal: {% if adgroup.budget_goal %}{{ adgroup.budget_goal }}{% else %}null{% endif %},
-          bid: {{ adgroup.bid }},
-          bid_strategy: '{{ adgroup.bid_strategy }}',
-          apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}],
-          backfill_promo_adgroups_data: [{% for adgroup in backfill_promo_adgroups %}{
-            id: '{{ adgroup.key }}',
-            deleted: {% if adgroup.deleted %}true{% else %}false{% endif %},
-            active: {% if adgroup.active %}true{% else %}false{% endif %},
-            name: '{{ adgroup.name }}',
-            details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
-            start_date: {% if adgroup.campaign.start_datetime %}new Date({{ adgroup.campaign.start_datetime.year }}, {{ adgroup.campaign.start_datetime.month|add:"-1" }}, {{ adgroup.campaign.start_datetime.day }}){% else %}null{% endif %},
-            end_date: {% if adgroup.campaign.end_datetime %}new Date({{ adgroup.campaign.end_datetime.year }}, {{ adgroup.campaign.end_datetime.month|add:"-1" }}, {{ adgroup.campaign.end_datetime.day }}){% else %}null{% endif %},
-            budget_type: '{{ adgroup.campaign.budget_type }}',
-            budget: {% if adgroup.campaign.budget_type == "daily" %}{% if adgroup.campaign.budget %}'{{ adgroup.campaign.budget }}'{% else %}null{% endif %}{% else %}{% if adgroup.campaign.full_budget %}'{{ adgroup.campaign.full_budget }}'{% else %}null{% endif %}{% endif %},
-            goal: {% if adgroup.budget_goal %}{{ adgroup.budget_goal }}{% else %}null{% endif %},
-            bid: {{ adgroup.bid }},
-            bid_strategy: '{{ adgroup.bid_strategy }}',
-            apps: [{% for app in adgroup.targeted_app_keys %}'{{ app }}'{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}{% endfor %}
-            ],
-          ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}{% if offline %}&offline=1{% endif %}'
+{% include_script "models/inventory" %}
+{% include_script "views/inventory" %}
+{% include_script "controllers/campaigns" %}
+
+<script>
+    $(function() {
+        CampaignsController.initializeDirectSold({
+            gtee_adgroups_data: [{% for adgroup in gtee_adgroups %}
+                {{ adgroup|adgroup_to_json|safe }}{% if not forloop.last %},{% endif %}
+            {% endfor %}],
+            promo_adgroups_data: [{% for adgroup in promo_adgroups %}
+                {{ adgroup|adgroup_to_json|safe }}{% if not forloop.last %},{% endif %}
+            {% endfor %}],
+            backfill_promo_adgroups_data: [{% for adgroup in backfill_promo_adgroups %}
+                {{ adgroup|adgroup_to_json|safe }}{% if not forloop.last %},{% endif %}
+            {% endfor %}],
+            ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}{% if offline %}&offline=1{% endif %}'
         });
     });
-  </script>
+</script>
 {% endblock extraScripts %}

@@ -10,17 +10,19 @@ from google.appengine.ext.db import Key
 from advertiser.models import (Campaign, AdGroup, Creative, TextCreative,
                                TextAndTileCreative, HtmlCreative, ImageCreative)
 from budget.query_managers import BudgetQueryManager
-from budget.tzinfo import UTC
 from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
                               CITY_GEO, REGION_GEO, COUNTRY_GEO)
 from common.utils import helpers
 from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import UTC
 
 from widgets import CustomizableSplitDateTimeWidget
 
 
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
+
+import logging
 
 
 def get_filetype_extension(filename):
@@ -68,10 +70,12 @@ class CampaignForm(forms.ModelForm):
                                                                                           'placeholder': 'HH:MM'},
                                                                               date_format='%m/%d/%Y',
                                                                               time_format='%I:%M %p'))
+    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
+                                     required=False)
+    bid = forms.FloatField(required=False)
     budget = forms.FloatField(label='Delivery Amount:', required=False,
-                              widget=forms.TextInput(attrs={'class': 'float budget_type_dependent daily'}))
-    full_budget = forms.FloatField(label='Delivery Amount:', required=False,
-                                   widget=forms.TextInput(attrs={'class': 'float budget_type_dependent full_campaign'}))
+                              widget=forms.TextInput(attrs={'class': 'float'}))
+    full_budget = forms.FloatField(required=False)
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily', required=False)
@@ -98,6 +102,21 @@ class CampaignForm(forms.ModelForm):
                 elif 'low' in instance.campaign_type:
                     initial['gtee_priority'] = 'low'
                 initial['campaign_type'] = 'gtee'
+
+                # budget
+                if instance.budget_type == 'daily':
+                    budget = instance.budget if instance.budget else None
+                elif instance.budget_type == 'full_campaign':
+                    budget = instance.full_budget if instance.full_budget else None
+                else:
+                    budget = None
+                if budget and initial.get('bid_strategy', '') == 'cpm':
+                    if initial.get('bid', None):
+                        budget = int(1000.0 * budget / initial['bid'])
+                    else:
+                        budget = None
+                initial['budget'] = budget
+
             elif instance.campaign_type == 'backfill_promo':
                 initial['campaign_type'] = 'promo'
                 initial['promo_priority'] = 'backfill'
@@ -114,6 +133,12 @@ class CampaignForm(forms.ModelForm):
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
         # https://docs.djangoproject.com/en/1.2/topics/forms/modelforms/#changing-the-order-of-fields
         self.fields.keyOrder = self.Meta.fields
+
+    def _calculate_budget(self, budget):
+        if self.data.get('bid_strategy', 'cpm') == 'cpm':
+            return float(budget) / 1000.0 * float(self.data.get('bid', 0.0))
+        else:
+            return budget
 
     def clean_start_datetime(self):
         start_datetime = self.cleaned_data.get('start_datetime', None)
@@ -135,51 +160,87 @@ class CampaignForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(CampaignForm, self).clean()
 
-        start_datetime = cleaned_data.get('start_datetime', None)
-        end_datetime = cleaned_data.get('end_datetime', None)
+        # gtee, promo
+        if cleaned_data.get('campaign_type', '') in ('gtee', 'promo'):
+            # start and end datetimes
+            start_datetime = cleaned_data.get('start_datetime', None)
+            end_datetime = cleaned_data.get('end_datetime', None)
+            # if start_datetime is None, use the current time
+            if not start_datetime:
+                cleaned_data['start_datetime'] = datetime.now()
+            # end_datetime must be after start_datetime
+            if start_datetime and end_datetime and end_datetime < start_datetime:
+                if 'end_datetime' not in self._errors:
+                    self._errors['end_datetime'] = ErrorList()
+                self._errors['end_datetime'].append("Stop time must be after start time")
 
-        if cleaned_data.get('campaign_type', None) in ['gtee', 'promo'] and not start_datetime:
-            # if no start time is given, use the current time
-            cleaned_data['start_datetime'] = datetime.now()
-
-        if 'campaign_type' in cleaned_data:
-            # set the correct campaign_type using gtee_prioirty or promo_priority
+            # gtee
             if cleaned_data['campaign_type'] == 'gtee':
-                if cleaned_data.get('gtee_priority', None):
-                    gtee_priority = cleaned_data['gtee_priority']
-                    if gtee_priority == 'low':
-                        cleaned_data['campaign_type'] = 'gtee_low'
-                    elif gtee_priority == 'high':
-                        cleaned_data['campaign_type'] = 'gtee_high'
-                else:
+                # campaign_type
+                if not cleaned_data.get('gtee_priority', None):
                     if 'gtee_priority' not in self._errors:
                         self._errors['gtee_priority'] = ErrorList()
                     self._errors['gtee_priority'].append('This field is required')
-            elif cleaned_data['campaign_type'] == 'promo':
-                if cleaned_data.get('promo_priority', None):
-                    if cleaned_data['promo_priority'] == 'backfill':
-                        cleaned_data['campaign_type'] = 'backfill_promo'
+                elif cleaned_data['gtee_priority'] in ('low', 'high'):
+                    cleaned_data['campaign_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
+
+                # budget
+                if not cleaned_data.get('budget', None):
+                    cleaned_data['budget'] = None
+                    cleaned_data['full_budget'] = None
                 else:
+                    has_required = True
+                    for field in ('bid_strategy', 'bid', 'budget_type', 'budget_strategy'):
+                        if not cleaned_data.get(field, None):
+                            if field not in self._errors:
+                                self._errors[field] = ErrorList()
+                            self._errors[field].append("This field is required")
+                            has_required = False
+                    if has_required:
+                        # BEWARE HACKS
+                        # if the campaign is a cpm campaign, we need to calculate what the budget
+                        # will be, since budgets are stored in dollar amounts.
+                        if cleaned_data['budget_type'] == 'daily':
+                            cleaned_data['budget'] = self._calculate_budget(cleaned_data['budget'])
+                            cleaned_data['full_budget'] = None
+                        else:
+                            if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
+                                if 'budget_strategy' not in self._errors:
+                                    self._errors['budget_strategy'] = ErrorList()
+                                self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
+                            cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
+                            cleaned_data['budget'] = None
+
+            # promo
+            elif cleaned_data['campaign_type'] == 'promo':
+                # priority
+                if not cleaned_data.get('promo_priority', None):
                     if 'promo_priority' not in self._errors:
                         self._errors['promo_priority'] = ErrorList()
                     self._errors['promo_priority'].append('This field is required')
-
-        if cleaned_data.get('budget_type', None):
-            if cleaned_data['budget_type'] == 'daily':
-                cleaned_data['full_budget'] = None
-            else:
+                elif cleaned_data['promo_priority'] == 'backfill':
+                    cleaned_data['campaign_type'] = 'backfill_promo'
+                # promo campaigns have no budget
                 cleaned_data['budget'] = None
+                cleaned_data['full_budget'] = None
+                cleaned_data['budget_type'] = None
+                cleaned_data['budget_strategy'] = None
 
-        if start_datetime and end_datetime and end_datetime < start_datetime:
-            if 'end_datetime' not in self._errors:
-                self._errors['end_datetime'] = ErrorList()
-            self._errors['end_datetime'].append("Stop time must be after start time")
+        # network
+        elif cleaned_data.get('campaign_type', '') == 'network':
+            # network campaigns have no start and end datetimes
+            cleaned_data['start_datetime'] = None
+            cleaned_data['end_datetime'] = None
+            # network campaigns have no budget
+            cleaned_data['budget'] = None
+            cleaned_data['full_budget'] = None
+            cleaned_data['budget_type'] = None
+            cleaned_data['budget_strategy'] = None
 
         return cleaned_data
 
     # It is not standard to override a ModelForm's save method, but we need to
-    # change the tzinfo of the datetimes because we display in Pacific and
-    # store in UTC.  Can this be done in the model?
+    # save the budget information.  TODO: find a better way to do this?
     def save(self, *args, **kwargs):
         campaign = super(CampaignForm, self).save(*args, **kwargs)
 
@@ -203,11 +264,15 @@ class CampaignForm(forms.ModelForm):
                   'start_datetime',
                   'end_datetime',
                   'budget',
+                  'full_budget',
                   'budget_type',
-                  'budget_strategy')
+                  'budget_strategy',
+                  'bid',
+                  'bid_strategy')
 
 
 class AdGroupForm(forms.ModelForm):
+    name = forms.CharField()
     network_type = forms.ChoiceField(choices=(('admob_native', 'AdMob'),
                                               ('adsense', 'AdSense'),
                                               ('brightroll', 'BrightRoll'),
@@ -226,7 +291,7 @@ class AdGroupForm(forms.ModelForm):
     custom_method = forms.CharField(label='Custom Method:', required=False,
                                     widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     label='Rate:', initial='cpc')
+                                     label='Rate:', initial='cpm')
     bid = forms.FloatField(initial=0.05,
                            widget=forms.TextInput(attrs={'class': 'float'}))
     # site_keys defined in __init__
@@ -243,6 +308,7 @@ class AdGroupForm(forms.ModelForm):
                                               coerce=lambda x: bool(int(x)),
                                               initial=False,
                                               label='Device Targeting:',
+                                              required=False,
                                               widget=forms.RadioSelect)
     target_iphone = forms.BooleanField(initial=True, label='iPhone',
                                        required=False)
@@ -265,6 +331,7 @@ class AdGroupForm(forms.ModelForm):
                                                   ('city', 'City')),
                                          initial='all',
                                          label='Region Targeting:',
+                                         required=False,
                                          widget=forms.RadioSelect)
     cities = forms.Field(required=False, widget=forms.SelectMultiple)
     keywords = forms.CharField(required=False,
@@ -331,11 +398,25 @@ class AdGroupForm(forms.ModelForm):
 
     def clean_geo_predicates(self):
         geo_predicates = []
-        for geo_predicate in self.cleaned_data.get('geo_predicates', []):
+        for geo_predicate in self.cleaned_data.get('geo_predicates', []) or []:
             geo_predicate = tuple(geo_predicate.split(','))
             #Make the geo_list such that the one that needs 3 entries corresponds ot idx 2, 2 entires idx 1, 1 entry idx 0
             geo_predicates.append(GEO_LIST[len(geo_predicate) - 1] % geo_predicate)
         return geo_predicates
+
+    def clean_keywords(self):
+        keywords = self.cleaned_data.get('keywords', None)
+        logging.warning("keywords: %s" % keywords)
+        if keywords:
+            if len(keywords) > 500:
+                raise forms.ValidationError('Maximum 500 characters for keywords.')
+        return keywords
+
+    def clean_bid(self):
+        bid = self.cleaned_data.get('bid', None)
+        if bid != None and bid <= 0.0:
+            raise forms.ValidationError("Bid must be greather than zero")
+        return bid
 
     def clean(self):
         cleaned_data = super(AdGroupForm, self).clean()
@@ -433,7 +514,7 @@ class BaseCreativeForm(AbstractCreativeForm):
                   'conv_appid', 'launchpage')
 
     def clean_name(self):
-        data = self.cleaned_data.get('name', None)
+        data = self.cleaned_data.get('name', None).strip()
         if not data:
             raise forms.ValidationError('You must give your creative a name.')
         return data
@@ -624,3 +705,5 @@ LEVELS = (
 
 class ContentFilterForm(forms.Form):
     level = forms.ChoiceField(choices=LEVELS, widget=forms.RadioSelect)
+
+

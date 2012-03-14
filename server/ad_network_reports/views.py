@@ -58,7 +58,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
         #create_fake_data(self.account)
 
         # If a custom daterange is not selected shift days back by one
-        if len(self.request.GET) == 1:
+        if len(self.request.GET) < 2:
             days = [day - timedelta(days=1) for day in self.days]
         else:
             days = self.days
@@ -179,7 +179,7 @@ class ExportFileHandler(RequestHandler):
         Return a file with the aggregate stats data sorted by network or app.
         """
         # If a custom daterange is not selected shift days back by one
-        if len(self.request.GET) == 1:
+        if len(self.request.GET) < 2:
             days = [day - timedelta(days=1) for day in self.days]
         else:
             days = self.days
@@ -213,7 +213,7 @@ class AppDetailHandler(RequestHandler):
         Return a webpage with the list of stats in a table.
         """
         # If a custom daterange is not selected shift days back by one
-        if len(self.request.GET) == 1:
+        if len(self.request.GET) < 2:
             days = [day - timedelta(days=1) for day in self.days]
         else:
             days = self.days
@@ -267,7 +267,7 @@ class ExportAppDetailFileHandler(RequestHandler):
         or csv.
         """
         # If a custom daterange is not selected shift days back by one
-        if len(self.request.GET) == 1:
+        if len(self.request.GET) < 2:
             days = [day - timedelta(days=1) for day in self.days]
         else:
             days = self.days
@@ -300,7 +300,7 @@ class AdNetworkManagementHandler(RequestHandler):
         by network.
         """
         # If a custom daterange is not selected shift days back by one
-        if len(self.request.GET) == 1:
+        if len(self.request.GET) < 2:
             days = [day - timedelta(days=1) for day in self.days]
         else:
             days = self.days

@@ -3,7 +3,7 @@
 {% load fields %}
 {% load filters %}
 
-{% block pageTitleTag %}{% if line_item_form.instance %}Edit {{ line_item_form.instance }}{% else %}New Order{% endif %}{% endblock %}
+{% block pageTitleTag %}{% if line_item_form.instance %}Edit {{ line_item_form.instance }}{% else %}New Line Item{% endif %}{% endblock %}
 
 {% block pageTitle %}
 <h1>{% if line_item_form.instance %}Edit {{ line_item_form.instance }}{% else %}New Line Item{% endif %}</h1>
@@ -62,6 +62,162 @@
             });
     });
 
+    // help links
+    // TODO: make sure all of these are necessary, rename?
+    $('a[id$="-helpLink"]').click(function(e) {
+        console.log('triggered');
+        e.preventDefault();
+        $('#' + $(this).attr('id').replace('-helpLink', '-helpContent')).dialog({
+            buttons: { "Close": function() { $(this).dialog("close"); } }
+        });
+    });
+
+    // date controls
+    $('input[type="text"].date').datepicker({minDate: 0});
+
+    function makeValidTime(timeStr, defHour, defMin, defAmPm) {
+        // Checks to see if a timeStr is valid, returns valid form
+        // AM/PM (and variants) are optional.
+
+        var timePat = /^(\d{1,2}):(\d{2})(\s?(AM|am|PM|pm|aM|pM|Pm|Am))?$/;
+
+        if (defMin < 10) {
+            defMin = '0' + defMin;
+        }
+        var matchArray = timeStr.match(timePat);
+        if (matchArray == null) {
+            return defHour + ':' + defMin + ' ' + defAmPm;
+        }
+
+        hour = matchArray[1];
+        minute = matchArray[2];
+        ampm = matchArray[4];
+
+        // Handle military time stuff
+        if (hour >= 12 && hour <= 23) {
+            hour = hour - 12;
+            // 12:00 AM to 12:00 PM
+            // 12:00    to 12:00 PM
+            //
+            // 15:00 AM to 3:00 PM
+            // 15:00 PM to 3:00 PM
+            // 15:00    to 3:00 PM
+            if (hour == 0) {
+                hour = 12;
+                if (ampm === undefined) {
+                    ampm = 'PM';
+                }
+            }
+            else {
+                ampm = 'PM';
+            }
+        }
+
+        if (hour == 0) {
+            ampm = 'AM';
+            hour = 12;
+        }
+        // Set invalid times to 0 minutes and 12 hours and default to AM
+        if (minute < 0 || minute > 59) {
+            minute = defMin;
+        }
+        if (hour < 0 || hour > 23) {
+            hour = defHour;
+        }
+        if (ampm === undefined) {
+            ampm = defAmPm;
+        }
+
+        else {
+            ampm = ampm.toUpperCase();
+        }
+        return hour + ':' + minute + ' ' + ampm ;
+    }
+
+    $('input[name="start_datetime_0"]').change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != '') {
+            $('input[name="start_datetime_1"]').change();
+        }
+    });
+
+    $('input[name="end_datetime_0"]').change(function(e) {
+        e.preventDefault();
+        var val = $(this).val();
+        if (val != '') {
+            $('input[name="end_datetime_1"]').change();
+        }
+    });
+
+    $('input[name$="_datetime_1"]').change(function(e){
+        e.preventDefault();
+        var name = $(this).attr('name');
+        var val = $(this).val();
+        if (name == 'start_datetime_1') {
+            if($('input[name="start_datetime_0"]').val() == '') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 12, 0, 'AM');
+            }
+        }
+        else if (name == 'end_datetime_1') {
+            if($('input[name="end_datetime_0"]').val() == '') {
+                val = '';
+            } else {
+                val = makeValidTime(val, 11, 59, 'PM');
+            }
+        }
+        $(this).val(val);
+    });
+
+    $('input[name="end_datetime_0"], input[name="end_datetime_1"], select[name="budget_type"], select[name="budget_strategy"]').change(function(){
+        if(!$('input[name="end_datetime_0"]').val() &&
+           !$('input[name="end_datetime_1"]').val() &&
+           $('select[name="budget_type"]').val() == 'full_campaign') {
+            $('input#id_budget_strategy_1').prop('checked', 'checked');
+            $('input#id_budget_strategy_0').removeProp('checked');
+            $('input#id_budget_strategy_0').attr('disabled', 'disabled');
+        }
+        else {
+            $('input#id_budget_strategy_0').removeAttr('disabled');
+        }
+    }).change();
+
+
+    $('#all-adunits').change(function() {
+        // select or deselect all adunits
+        $('input[name="site_keys"]').prop('checked', $(this).prop('checked'));
+    });
+
+    // device targeting
+    $('input[name="device_targeting"]').change(function() {
+        if($(this).val() == '0') {
+            $('#device_targeting').slideUp();
+        }
+        else {
+            $('#device_targeting').slideDown();
+        }
+    });
+    // update on document ready
+    if($('input[name="device_targeting"]').val() == '0') {
+        $('#device_targeting').hide();
+    }
+
+    // change form based on bid_strategy
+    $('select[name="bid_strategy"]').change(function() {
+        bid_strategy = $(this).val();
+            budget_type_options = $('select[name="budget_type"] option');
+        if(bid_strategy == 'cpm') {
+            budget_type_options[0].innerHTML = 'impressions/day';
+            budget_type_options[1].innerHTML = 'total impressions';
+        }
+        else {
+            budget_type_options[0].innerHTML = 'USD/day';
+            budget_type_options[1].innerHTML = 'total USD';
+        }
+    }).change(); // update on document ready
+
     priors = {{ line_item_form.geo_predicates|field_value|to_json|safe }};
     city_priors = {{ line_item_form.cities|field_value|to_json|safe }};
 </script>
@@ -78,20 +234,18 @@
             <p>Line items are individual ad spots.</p>
         </legend>
 
-        <ul class="form_fields">
+        <ul>
             <li>
-                {{ line_item_form.campaign_type.label_tag }}
+                {{ line_item_form.adgroup_type.label_tag }}
                 <div>
-                    {{ line_item_form.campaign_type }}
-                    <a href="#" id="campaignForm-type-helpLink">What's this?</a>
-                    <div id="campaignForm-type-helpContent" class="hidden">
+                    {{ line_item_form.adgroup_type }}
+                    <a href="#" id="adgroup_type-helpLink">What's this?</a>
+                    <div class="hidden" id="adgroup_type-helpContent">
                         <h3>Campaign Type</h3>
                         <h4>Guaranteed</h4>
                         <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
                         <h4>Promotional</h4>
                         <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
-                        <h4>Network</h4>
-                        <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
                     </div>
                 </div>
             </li>
@@ -127,67 +281,17 @@
                 </div>
             </li>
 
-            <li class="campaign_type_dependant gtee promo">
+            <li>
                 {{ line_item_form.start_datetime.label_tag }}
                 <div>
                     {{ line_item_form.start_datetime }} PST
                 </div>
             </li>
 
-            <li class="campaign_type_dependant gtee promo">
+            <li>
                 {{ line_item_form.end_datetime.label_tag }}
                 <div>
                     {{ line_item_form.end_datetime}} PST
-                </div>
-            </li>
-
-            <li class="campaign_type_dependant network">
-                {{ line_item_form.network_type.label_tag }}
-                <div>
-                    {{ line_item_form.network_type }}
-                    <span class="error campaign_type_dependant network network_type_dependant admob_native millennial_native">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
-                    <span class="error campaign_type_dependant network network_type_dependant iAd">(requires client integration steps) <a href="http://help.mopub.com/customer/portal/articles/89183-iads-network" target="_blank">Learn more</a></span>
-                </div>
-            </li>
-
-            <li class="campaign_type_dependant network network_type_dependant jumptap">
-                {{ account_network_config_form.jumptap_pub_id.label_tag }}
-                <div>
-                    {{ account_network_config_form.jumptap_pub_id }}
-                </div>
-            </li>
-
-            <li class="campaign_type_dependant network network_type_dependant custom">
-                {{ line_item_form.custom_html.label_tag }}
-                <div>
-                    {{ line_item_form.custom_html }}
-                    <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
-                    <div id="campaignForm-customHtml-helpContent" class="hidden">
-                        <h3>Custom Network</h3>
-                        MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
-                        <br/>
-                        <br/>
-                        <h4>Example:</h4>
-                        A sample HTML snippet from Glam Media is:
-                        <br/>
-                        <br/>
-                        <code>
-                            &lt;script type="text/javascript"><br/>
-                            window.glam_affiliate_id = 1234567890;<br/>
-                            if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
-                            if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
-                            var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
-                            document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
-                            &lt;/script><br/>
-                        </code>
-                    </div>
-                </div>
-            </li>
-
-            <li class="campaign_type_dependant network network_type_dependant custom_native">
-                {{ line_item_form.custom_method.label_tag }}
-                <div>
-                    {{ line_item_form.custom_method }}
                 </div>
             </li>
 
@@ -195,18 +299,10 @@
                 {{ line_item_form.bid_strategy.label_tag }}
                 <div>
                     {{ line_item_form.bid_strategy }} @ {{ line_item_form.bid }} USD
-                    <a class="campaign_type_dependant promo network whatsthis" id="bid-promo-helpLink" href="#">What's this?</a>
+                    <a class="campaign_type_dependant promo whatsthis" id="bid-promo-helpLink" href="#">What's this?</a>
                     <div id="bid-promo-helpContent" class="hidden">
                         <h3>Promotional CPM</h3>
                         <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
-                    </div>
-                    <div id="bid-network-helpContent" class="hidden">
-                        <h3>Network Rate</h3>
-                        <h4>Cost Per Click</h4>
-                        <p>MoPub uses the CPC from the ad networks along with realtime CTR statistics from your app to calculate eCPM. Because ad network CTR is highly variable, this allows us to constantly display the most profitable ads.</p>
-                        <p>You can find your CPC on the ad network's site.</p>
-                        <h4>Estimated Cost Per Mille</h4>
-                        <p>Using a static CPM disables automatic eCPM calculation. This is useful for users who have a preexisting contract with a specific ad network.</p>
                     </div>
                 </div>
             </li>
@@ -254,11 +350,6 @@
                     <label>
                         {{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
                     </label>
-                    <span class="campaign_type_dependant network">
-                        {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                        <span class="pub_id muted"></span>
-                        <a class="pub_id" href="javascript:void(0);" type="button">change</a>
-                    </span>
                     <ul class="adunits">
                         {% for adunit in app.adunits %}
                           {% if not adunit.deleted %}
@@ -267,11 +358,6 @@
                                 <input {% if adunit.key in line_item_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" />
                                 {{ adunit.name }}
                               </label>
-                              <span class="campaign_type_dependant network">
-                                {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted"></span>
-                                <a class="pub_id" href="javascript:void(0);" type="button">change</a>
-                              </span>
                             </li>
                           {% endif %}
                         {% endfor %}

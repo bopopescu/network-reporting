@@ -52,12 +52,8 @@ class OrderForm(forms.ModelForm):
 
 
 class LineItemForm(forms.ModelForm):
-    name = forms.CharField(label='Name:',
-                           widget=forms.TextInput(attrs={'class': 'required',
-                                                         'placeholder': 'Line Item Name'}))
     adgroup_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
-                                               ('promo', 'Promotional'),
-                                               ('network', 'Network')),
+                                               ('promo', 'Promotional')),
                                       label='Line Item Type:')
     gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
                                                ('normal', 'Normal'),
@@ -68,6 +64,9 @@ class LineItemForm(forms.ModelForm):
                                                 ('backfill', 'Backfill')),
                                        initial='normal', label='Priority:',
                                        required=False)
+    name = forms.CharField(label='Name:',
+                           widget=forms.TextInput(attrs={'class': 'required',
+                                                         'placeholder': 'Line Item Name'}))
     start_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
                                          label='Start Time:', required=False,
                                          widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
@@ -85,9 +84,12 @@ class LineItemForm(forms.ModelForm):
                                                                               date_format='%m/%d/%Y',
                                                                               time_format='%I:%M %p'))
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     required=False)
+                                     label='Rate:', initial='cpc')
+    bid = forms.FloatField(initial=0.05,
+                           widget=forms.TextInput(attrs={'class': 'float'}))
     daily_budget = forms.FloatField(required=False)
     full_budget = forms.FloatField(required=False)
+    budget = forms.FloatField(required=False)
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily', required=False)
@@ -96,27 +98,6 @@ class LineItemForm(forms.ModelForm):
                                         label='Delivery Speed:',
                                         initial='allatonce', required=False,
                                         widget=forms.RadioSelect)
-    network_type = forms.ChoiceField(choices=(('admob_native', 'AdMob'),
-                                              ('adsense', 'AdSense'),
-                                              ('brightroll', 'BrightRoll'),
-                                              ('ejam', 'TapIt'),
-                                              ('iAd', 'iAd'),
-                                              ('inmobi', 'InMobi'),
-                                              ('jumptap', 'Jumptap'),
-                                              ('millennial_native', 'Millennial Media'),
-                                              ('mobfox', 'MobFox'),
-                                              ('custom', 'Custom Network'),
-                                              ('custom_native', 'Custom Native Network')),
-                                     label='Network Type:', required=False)
-    custom_html = forms.CharField(label='Custom HTML:', required=False,
-                                  widget=forms.Textarea(attrs={'placeholder': 'HTML Custom Content',
-                                                               'rows': 3}))
-    custom_method = forms.CharField(label='Custom Method:', required=False,
-                                    widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
-    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     label='Rate:', initial='cpc')
-    bid = forms.FloatField(initial=0.05,
-                           widget=forms.TextInput(attrs={'class': 'float'}))
     # site_keys defined in __init__
     allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
                                              required=False,
@@ -204,11 +185,6 @@ class LineItemForm(forms.ModelForm):
             if not initial:
                 initial = {}
 
-            if instance.network_type == 'custom' and instance.net_creative:
-                initial.update(custom_html=instance.net_creative.html_data)
-            elif instance.network_type == 'custom_native' and instance.net_creative:
-                initial.update(custom_method=instance.net_creative.html_data)
-
             geo_predicates = []
             for geo_predicate in instance.geo_predicates:
                 preds = geo_predicate.split(',')
@@ -221,20 +197,10 @@ class LineItemForm(forms.ModelForm):
 
             kwargs.update(initial=initial)
 
-        is_staff = kwargs.pop('is_staff', False)
-
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
-
-        # show deprecated networks if user is staff or instance is that type
-        if is_staff or (instance and instance.network_type == 'admob'):
-            self.fields['network_type'].choices.append(('admob', 'AdMob Javascript (deprecated)'))
-        if is_staff or (instance and instance.network_type == 'millennial'):
-            self.fields['network_type'].choices.append(('millennial', 'Millennial Server-side (deprecated)'))
-        if is_staff or (instance and instance.network_type == 'greystripe'):
-            self.fields['network_type'].choices.append(('greystripe', 'GreyStripe (deprecated)'))
 
         # set choices based on the users adunits
         self.fields['site_keys'] = forms.MultipleChoiceField(choices=site_keys, required=False)
@@ -372,23 +338,19 @@ class LineItemForm(forms.ModelForm):
 
     class Meta:
         model = LineItem
-        fields = ('start_datetime',
-                  'end_datetime',
-                  'budget',
-                  'full_budget',
-                  'budget_type',
-                  'budget_strategy',
-                  'bid',
-                  'bid_strategy',
-                  'campaign_type',
+        fields = ('adgroup_type',
                   'gtee_priority',
                   'promo_priority',
                   'name',
-                  'network_type',
-                  'custom_html',
-                  'custom_method',
+                  'start_datetime',
+                  'end_datetime',
                   'bid_strategy',
                   'bid',
+                  'daily_budget',
+                  'full_budget',
+                  'budget',
+                  'budget_type',
+                  'budget_strategy',
                   'site_keys',
                   'allocation_percentage',
                   'daily_frequency_cap',

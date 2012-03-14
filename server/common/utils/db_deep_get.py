@@ -16,6 +16,8 @@ import logging
 
 from google.appengine.ext import db
 
+CONFIG = db.create_config(deadline=2)
+
 def deep_get_from_db(root_keys_or_models, other_models = (), prune = None):
     """
     Deep-get a set of Model instances from the App Engine datastore.
@@ -30,13 +32,13 @@ def deep_get_from_db(root_keys_or_models, other_models = (), prune = None):
                 You can use this to avoid pulling down massive amounts of connected objects.
     Return value: A list of the Model instances corresponding to root_keys_or_models, with their references fetched.
     """
-    
+
     fetched_by_key = {}  # Map: key -> Model instance
     keys_to_fetch = set()
     other_models_by_key = dict((model.key(), model) for model in other_models)
-    
+
     root_keys = []
-    
+
     def add_key(key):
         if key is None:
             return
@@ -46,7 +48,7 @@ def deep_get_from_db(root_keys_or_models, other_models = (), prune = None):
             add_model(other_models_by_key[key])
             return
         keys_to_fetch.add(key)
-    
+
     def add_model(model):
         keys_to_fetch.discard(model.key())
         if model.key() in fetched_by_key:
@@ -65,7 +67,7 @@ def deep_get_from_db(root_keys_or_models, other_models = (), prune = None):
                     add_model(referenced_model)
             elif not pruned:
                 add_key(ref_key)
-    
+
     def add_model_without_fetching_children(model):
         # In general, we add to other_models_by_key instead of fetched_by_key.
         # fetched_by_key is only for models whose children have been fetched.
@@ -85,19 +87,19 @@ def deep_get_from_db(root_keys_or_models, other_models = (), prune = None):
             add_key(key_or_model)
             key = key_or_model
         root_keys.append(key)
-    
+
     # Fetch everything
     while keys_to_fetch:
         # Batch-get all the Model instances that we know we need
-        models = db.get(list(keys_to_fetch))
+        models = db.get(list(keys_to_fetch), config=CONFIG)
         for model in models:
             add_model(model)
-    
+
     # Connect everything and return the result
     log_unfetched = set()
     for model in fetched_by_key.itervalues():
         for ref_prop_name in get_all_reference_properties(model.__class__):
-            key = getattr(model.__class__, ref_prop_name).get_value_for_datastore(model) # The key that the model's reference property points to
+            key = getattr(model.__class__, ref_prop_name).get_value_for_datastore(model)  # The key that the model's reference property points to
             if key is not None:
                 if key in fetched_by_key:
                     setattr(model, ref_prop_name, fetched_by_key[key])

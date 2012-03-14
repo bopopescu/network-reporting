@@ -19,24 +19,6 @@ var mopub = mopub || {};
     "use strict";
 
     /*
-     * ## Campaigns
-     */
-    var Campaign = Backbone.Model.extend({
-        defaults: {
-            name: '',
-            budget: 0.0,
-            budget_type: '',
-            start_datetime: new Date(),
-            end_datetime: null,
-            active: false
-        }
-    });
-
-    /*
-     * ## AdGroups
-     */
-
-    /*
      * Helper functions for stats
      */
     function calculate_ctr(impression_count, click_count) {
@@ -86,177 +68,7 @@ var mopub = mopub || {};
         format_stat: format_stat
     };
 
-    /*
-     * ## AdGroup model
-     * This will most likely need to be refactored soon when we change how
-     * AdGroups work on the backend.
-     */
 
-    var AdGroup = Backbone.Model.extend({
-        get_stat: function(stat) {
-            if (!this.has(stat)) {
-                return null;
-            }
-            return this.get(stat);
-        },
-
-        get_formatted_stat: function(stat) {
-            return format_stat(stat, this.get_stat(stat));
-        },
-
-        get_stat_for_day: function(stat, day) {
-            if (!this.has("daily_stats")) {
-                return null;
-            }
-            var daily_stats = this.get("daily_stats");
-            if (day >= daily_stats.length) {
-                return null;
-            }
-            var day_stats = daily_stats[day];
-
-            if (!day_stats.hasOwnProperty(stat)) {
-                return null;
-            }
-            return day_stats[stat];
-        },
-
-        url: function() {
-            return '/api/adgroup/' + this.id;
-        }
-    });
-
-
-    /*
-     * ## Adgroup Collection
-     */
-    var AdGroups = Backbone.Collection.extend({
-        model: AdGroup,
-
-        get_stat_sum: function(stat) {
-            return this.reduce(function(memo, adgroup) {
-                if (memo === null || !adgroup.has(stat)) {
-                    return null;
-                }
-                return memo + adgroup.get(stat);
-            }, 0);
-        },
-
-        get_stat: function(stat) {
-            switch(stat) {
-                case 'ctr':
-                    return calculate_ctr(this.get_stat('impression_count'),
-                                         this.get_stat('click_count'));
-                case 'fill_rate':
-                    return calculate_fill_rate(this.get_stat('request_count'),
-                                               this.get_stat('impression_count'));
-                case 'click_count':
-                case 'conversion_count':
-                case 'impression_count':
-                case 'request_count':
-                case 'revenue':
-                    return this.get_stat_sum(stat);
-                default:
-                    throw 'Unsupported stat "' + stat + '".';
-            }
-        },
-
-        get_formatted_stat: function(stat) {
-            return format_stat(stat, this.get_stat(stat));
-        },
-
-        get_stat_sum_for_day: function(stat, day) {
-            return this.reduce(function(memo, adgroup) {
-                if (memo === null ||
-                    !adgroup.has('daily_stats') ||
-                    day >= adgroup.get('daily_stats').length ||
-                    !(adgroup.get('daily_stats')[day]).hasOwnProperty(stat)) {
-                    return null;
-                }
-
-                return memo + adgroup.get('daily_stats')[day][stat];
-            }, 0);
-        },
-
-        get_stat_for_day: function(stat, day) {
-            switch(stat) {
-                case 'ctr':
-                    return calculate_ctr(this.get_stat_for_day('impression_count', day),
-                                         this.get_stat_for_day('click_count', day));
-                case 'fill_rate':
-                    return calculate_fill_rate(this.get_stat_for_day('request_count', day),
-                                               this.get_stat_for_day('impression_count', day));
-                case 'click_count':
-                case 'conversion_count':
-                case 'impression_count':
-                case 'request_count':
-                case 'revenue':
-                    return this.get_stat_sum_for_day(stat, day);
-                default:
-                    throw 'Unsupported stat "' + stat + '".';
-            }
-        },
-
-        get_formatted_stat_for_day: function(stat, day) {
-            return format_stat(stat, this.get_stat_for_day(stat, day));
-        },
-
-        get_total_daily_stats: function(stat) {
-            var total_daily_stats = [];
-            var day;
-            for(day in this.at(0).get('daily_stats')) {
-                total_daily_stats.push(this.get_stat_for_day(stat, day));
-            }
-            return total_daily_stats;
-        },
-
-        get_chart_data: function(stat) {
-            var adgroups = this.filter(function(adgroup) {
-                return adgroup.has(stat) && adgroup.has('daily_stats');
-            });
-            if (adgroups.length === 0) {
-                return [];
-            }
-            var sorted_adgroups = _.sortBy(adgroups, function(adgroup) {
-                // dash because we're sorting in reverse order
-                return -adgroup.get('impression_count');
-            });
-            var top_three_adgroups = sorted_adgroups.splice(0, 3);
-            var other_adgroups = new AdGroups(sorted_adgroups);
-            var chart_data = top_three_adgroups.map(function(adgroup) {
-                var adgroup_data = {};
-                adgroup_data[adgroup.get('name')] = _.map(adgroup.get('daily_stats'), function(day) {
-                    return day[stat];
-                });
-                return adgroup_data;
-            });
-            if (other_adgroups.size()) {
-                chart_data.push({
-                    'Others': other_adgroups.get_total_daily_stats(stat)
-                });
-            }
-            if (stat === 'ctr') {
-                chart_data.push({
-                    'MoPub Optimized': this.get_total_daily_stats('ctr')
-                });
-            }
-            return chart_data;
-        },
-
-        get_days: function() {
-            // TODO: make this less hacky
-            return this.reduce(function(memo, adgroup) {
-                return (adgroup.has('daily_stats') &&
-                        adgroup.get('daily_stats').length > memo) ? adgroup.get('daily_stats').length : memo;
-            }, 0);
-        },
-
-        isFullyLoaded: function() {
-            // TODO: make this less hacky
-            return this.reduce(function(memo, adgroup) {
-                return memo && adgroup.has('impression_count');
-            }, true);
-        }
-    });
 
 
     /*
@@ -408,6 +220,49 @@ var mopub = mopub || {};
     });
 
 
+
+    /*
+     *  AdGroup
+     */
+
+    var AdGroup = Backbone.Model.extend({
+        url: function() {
+            var stats_endpoint = this.stats_endpoint;
+            return '/api/adgroup/' 
+                + this.id
+                + "?"
+                + window.location.search.substring(1)
+                + '&endpoint='
+                + stats_endpoint;
+        }
+    });
+
+    var Campaign = Backbone.Model.extend({
+        url: function() {
+            var stats_endpoint = this.stats_endpoint;
+            return '/api/campaign/' 
+                + this.id
+                + "?"
+                + window.location.search.substring(1)
+                + '&endpoint='
+                + stats_endpoint;
+        }
+    });
+
+
+    var CampaignCollection = Backbone.Collection.extend({
+        url: function() {
+            var stats_endpoint = this.stats_endpoint;
+            return '/api/campaign/'
+                + "?"
+                + window.location.search.substring(1)
+                + '&endpoint='
+                + stats_endpoint;
+        }
+    });
+
+
+
     /*
      * EXPOSE HIS JUNK
      * (We should find a better way to do this.)
@@ -416,8 +271,9 @@ var mopub = mopub || {};
     window.AdUnitCollection = AdUnitCollection;
     window.App = App;
     window.AppCollection = AppCollection;
-    window.AdGroup = AdGroup;
-    window.AdGroups = AdGroups;
     window.ModelHelpers = ModelHelpers;
+    window.AdGroup = AdGroup;
+    window.Campaign = Campaign;
+    window.CampaignCollection = CampaignCollection;
 
 }(this.jQuery, this.Backbone, this._));

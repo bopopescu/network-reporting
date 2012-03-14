@@ -80,6 +80,15 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                                  days=days)
         return self.format_stats(stats)
 
+    def _get_advertiser_stats(self, advertiser, start, end,
+                              publisher=None, *args, **kwargs):
+        days = date_magic.gen_days(start, end)
+        query_manager = StatsModelQueryManager(advertiser.account)
+        stats = query_manager.get_stats_for_days(publisher=publisher,
+                                                 advertiser=advertiser,
+                                                 days=days)
+        return self.format_stats(stats)
+
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         # mongo
         app = AppQueryManager.get(app_key)
@@ -91,6 +100,12 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         adunit = AdUnitQueryManager.get(adunit_key)
         adunit_stats = self._get_publisher_stats(adunit, start, end)
         return adunit_stats
+
+    def get_adgroup_stats(self, adgroup, start, end, daily=False):
+        if isinstance(adgroup, str):            
+            adgroup = AdGroupQueryManager.get(adgroup)
+        adgroup_stats = self._get_advertiser_stats(adgroup, start, end)
+        return adgroup_stats
 
     def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
                                         start, end, *args, **kwargs):
@@ -345,7 +360,6 @@ class AdNetworkStatsFetcher(object):
                 AD_NETWORK_NAMES.keys()]
         stats = AdNetworkStatsManager.roll_up_stats([stats for stats in
                 stats_list if stats != None])
-        logging.info(stats.dict_)
         return stats.dict_
 
 

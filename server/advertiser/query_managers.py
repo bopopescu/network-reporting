@@ -33,6 +33,12 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
+    def get_campaigns(cls, account):
+        campaigns = cls.Model.all().filter('account =', account)\
+                                   .filter('deleted =', False)
+        return campaigns
+
+    @classmethod
     def get_campaigns_by_types(cls, account, types):
         campaigns = cls.Model.all().filter('account =', account)\
                                    .filter('campaign_type IN', types)\
@@ -213,7 +219,9 @@ class AdGroupQueryManager(QueryManager):
     Model = AdGroup
 
     @classmethod
-    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None, app=None, account=None, deleted=False, limit=MAX_OBJECTS, archived=False):
+    def get_adgroups(cls, campaign=None, campaigns=None, adunit=None,
+                     app=None, account=None, deleted=False, limit=MAX_OBJECTS,
+                     archived=False):
         """ archived=True means we only show archived adgroups. """
         adgroups = AdGroup.all()
         if not (deleted == None):

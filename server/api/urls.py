@@ -28,11 +28,11 @@ urlpatterns = patterns(
         'adunit_service',
         name='adunit_service'),
 
-    # /api/adgroup/
-    # all adgroups for an account
-    url(r'^adgroup/$',
-        'adgroup_service',
-        name='adgroup_service'),
+    # # /api/adgroup/
+    # # all adgroups for an account
+    # url(r'^adgroup/$',
+    #     'adgroup_service',
+    #     name='adgroup_service'),
 
     # /api/adgroup/<adgroup_key>
     # specific adgroup for an account
@@ -55,6 +55,18 @@ urlpatterns = patterns(
     # /api/adgroup/<adgroup_key/adunits/<adunit_key>
     # individual adunit from an adgroup
 
+
+    # api/campaign/
+    # all campaigns and adgroups for campaign_key
+    url(r'^campaign/$',
+        'campaign_service',
+        name='campaign_service'),
+
+    # api/campaign/<campaign_key>
+    # all campaigns and adgroups for campaign_key
+    url(r'^campaign/(?P<campaign_key>[-\w\.]+)$',
+        'campaign_service',
+        name='campaign_service'),
 
     # REFACTOR: move this to ad_network_reports
     url(r'^ad_network/account_roll_up/$',

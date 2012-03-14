@@ -8,6 +8,7 @@ convention, and instead still uses "Campaign" and "AdGroup" for
 compatibility with the ad server.
 
 Whenever you see "Campaign", think "Order", and wherever you see
+"AdGroup", think "LineItem".
 """
 
 from django.core.urlresolvers import reverse
@@ -18,7 +19,6 @@ from common.ragendja.template import JSONResponse, render_to_response
 
 from advertiser.forms import OrderForm, LineItemForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
-from reporting.query_managers import StatsModelQueryManager
 
 import logging
 
@@ -39,41 +39,16 @@ class OrderIndexHandler(RequestHandler):
         # Grab all of the orders, and for each order, grab all of the line items.
         # For each of the line items, grab the stats for the date range.
         # REFACTOR: do this over ajax
-        stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
         orders = CampaignQueryManager.get_campaigns(account=self.account)
-        for order in orders:
-            order.lineitems = AdGroupQueryManager.get_adgroups(campaign=order)
-            for lineitem in order.lineitems:
-                s = stats_manager.get_stats_for_days(advertiser=lineitem,
-                                                     days = self.days)
-                # we keep stats as lists so we can do sparklines
-                # there will be an int for each day in self.days
-                lineitem.requests = [int(d.request_count) for d in s]
-                lineitem.impressions = [int(d.impression_count) for d in s]
-                lineitem.clicks = [int(d.click_count) for d in s]
-                lineitem.conversions = [int(d.conversion_count) for d in s]
-
-
-        # Summarize the stats for the rollup
-        # Each of the line item-level stats are kept as lists (so we can do sparklines).
-        # We have to sum them first, and then sum all of the lineitem stats in the adgroup.
-        # That's why theres two sums, like sum([sum(i) for i in j])
-        # REFACTOR: do this over ajax
-        total_impressions = sum([sum(li.impressions) for li in order.lineitems for order in orders])
-        total_clicks = sum([sum(li.clicks) for li in order.lineitems for order in orders])
-        total_conversions = sum([sum(li.conversions) for li in order.lineitems for order in orders])
-        totals = {
-            "impressions": total_impressions,
-            "clicks" : total_clicks,
-            "ctr": ctr(total_clicks, total_impressions),
-            "conversions": total_conversions
-        }
 
         return render_to_response(self.request,
                                   "advertiser/order_index.html",
                                   {
                                       'orders': orders,
-                                      'totals': totals
+
+                                      'start_date': self.start_date,
+                                      'end_date': self.end_date,
+                                      'date_range': self.date_range,
                                   })
 
 
@@ -84,7 +59,6 @@ def order_index(request, *args, **kwargs):
 
 class OrderDetailHandler(RequestHandler):
     """
-    @responsible: ignatius
     Top level stats rollup for all of the line items within the order.
     Lists each line item within the order with links to line item details.
     """
@@ -102,7 +76,6 @@ def order_detail(request, *args, **kwargs):
 
 class LineItemDetailHandler(RequestHandler):
     """
-    @responsible: ignatius
     Almost identical to current campaigns detail page.
     """
     def get(self):
@@ -116,24 +89,8 @@ def lineitem_detail(request, *args, **kwargs):
     return LineItemDetailHandler()(request, use_cache=False, *args, **kwargs)
 
 
-class LineItemArchiveHandler(RequestHandler):
-    """
-    @responsible: pena
-    """
-    def get(self):
-        return render_to_response(self.request,
-                                  "advertiser/lineitem_archive.html",
-                                  {})
-
-
-@login_required
-def lineitem_archive(request, *args, **kwargs):
-    return LineItemArchiveHandler()(request, use_cache=False, *args, **kwargs)
-
-
 class OrderFormHandler(RequestHandler):
     """
-    @responsible: peter
     New/Edit form page for Orders. With each new order, a new line
     item is required
     """
@@ -145,7 +102,8 @@ class OrderFormHandler(RequestHandler):
 
         order_form = OrderForm(instance=instance)
 
-        return render_to_response(self.request, "advertiser/order_form.html",
+        return render_to_response(self.request,
+                                  "advertiser/order_form.html",
                                   {
                                       'order_form': order_form,
                                   })
@@ -186,7 +144,6 @@ def order_form(request, *args, **kwargs):
 
 class LineItemFormHandler(RequestHandler):
     """
-    @responsible: peter
     New/Edit form page for LineItems.
     """
     def get(self, order_key, line_item_key=None):

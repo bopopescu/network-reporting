@@ -87,7 +87,7 @@
                 {% if account.paymentinfo.country == 'US' %}
                   <dt> US Tax ID: </dt> <dd>{{account.paymentinfo.us_tax_id}} </dd>
                 {% else %}
-                  <dt> Local Tax ID: </dt> <dd>{{account.paymentinfo.local_tax_id}} </dd>
+                  <dt> Local Tax ID: </dt> <dd>{{account.paymentinfo.local_tax_id|default_if_none:"Not entered"}} </dd>
                 {% endif %}
                 <br /><br />
                 <h3> Payment Details </h3>

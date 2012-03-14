@@ -73,18 +73,22 @@ class AdUnitContextQueryManager(CachedQueryManager):
             # get adunit from db
             adunit = AdUnit.get(adunit_key)
             # wrap context
-            adunit_context = AdUnitContext.wrap(adunit)
-            memcache.set(adunit_context_key,
-                         adunit_context,
-                         time=CACHE_TIME)
-            new_timestamp = datetime.datetime.now()
-            memcache.set("ts:%s" % adunit_context_key, new_timestamp)
+            try:
+                adunit_context = AdUnitContext.wrap(adunit)
+                memcache.set(adunit_context_key,
+                             adunit_context,
+                             time=CACHE_TIME)
+                new_timestamp = datetime.datetime.now()
+                memcache.set("ts:%s" % adunit_context_key, new_timestamp)
+            except: # Datastore timeouts usually
+                pass
         else:
             new_timestamp = memcache_ts
 
         # We got new information for the hypercache, give it a new timestamp
-        adunit_context._hyper_ts = new_timestamp
-        hypercache.set(adunit_context_key, adunit_context)
+        if adunit_context:
+            adunit_context._hyper_ts = new_timestamp
+            hypercache.set(adunit_context_key, adunit_context)
 
         return adunit_context
 

@@ -37,6 +37,4 @@ urlpatterns = patterns('advertiser.views',
     url('^orders/(?P<campaign_key>[-\w\.]+)/line_items/(?P<adgroup_key>[-\w\.]+)/$', 'lineitem_detail', name='advertiser_lineitem_detail'),
     url('^orders/(?P<order_key>[-\w\.]+)/line_items/(?P<line_item_key>[-\w\.]+)/edit/$', 'line_item_form', name='advertiser_line_item_form_edit'),
 
-    url('^archive/$', 'lineitem_archive', name='advertiser_lineitem_archive'),
-
 )

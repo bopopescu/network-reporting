@@ -1,5 +1,6 @@
 import logging
 
+
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from google.appengine.ext.db import polymodel
@@ -8,6 +9,7 @@ from account.models import Account
 
 from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSION, MAX_ANDROID_VERSION
 import datetime
+import time
 
 #from ad_server.renderers.creative_renderer import BaseCreativeRenderer
 #from ad_server.renderers.admob import AdMobRenderer
@@ -112,10 +114,16 @@ class Campaign(db.Model):
     def owner(self):
         return property(self.get_owner, self.set_owner)
 
+    def toJSON(self):
+        return {
+            'name': self.name,
+            'advertiser': self.advertiser,
+            'description': self.description,
+            'active': self.active,
+            'deleted': self.deleted,
+        }
 
-# Alias
 Order = Campaign
-
 
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
@@ -400,20 +408,19 @@ class AdGroup(db.Model):
     @property
     def budget_goal(self):
         campaign = self.campaign
-        if self.bid_strategy == 'cpm':
-            if campaign.budget_type == "daily":
-                try:
+        try:
+            if self.bid_strategy == 'cpm':
+                if campaign.budget_type == 'daily':
                     return int((campaign.budget / self.bid) * 1000)
-                except:
+                else:
                     return int((campaign.full_budget / self.bid) * 1000)
             else:
-                return int((campaign.full_budget / self.bid) * 1000)
-        else:
-            if campaign.budget_type == "daily":
-                return int(campaign.budget)
-            else:
-                return int(campaign.full_budget)
-        return None
+                if campaign.budget_type == 'daily':
+                    return int(campaign.budget)
+                else:
+                    return int(campaign.full_budget)
+        except:
+            return None
 
     @property
     def individual_cost(self):
@@ -480,6 +487,17 @@ class AdGroup(db.Model):
     ##################################
     # /end moved from campaign class #
     ##################################
+
+    def toJSON(self):
+        ignore_fields = ['all_mpusers',
+                         'site_keys',
+                         '_app',
+                         'mpuser',
+                         'campaign',
+                         'account']
+        d = to_dict(self, ignore=ignore_fields)
+        d['campaign_key'] = str(self.campaign.key())
+        return d
 
 LineItem = AdGroup
 
@@ -951,3 +969,37 @@ class DummyServerSideFailureCreative(Creative):
 class DummyServerSideSuccessCreative(Creative):
     SIMPLE = SimpleDummySuccessCreative
     #ServerSide = DummyServerSideSuccess
+
+
+# Serialization
+
+SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
+
+def to_dict(model, ignore = None):
+    if ignore == None:
+        ignore = []
+
+    output = {}
+    output.update(id=str(model.key()))
+    properties = model.properties().iteritems()
+
+    for key, prop in properties:
+        value = getattr(model, key)
+        if key in ignore:
+            output[key] = '_ignored'
+        elif value is None or isinstance(value, SIMPLE_TYPES):
+            output[key] = value
+        elif isinstance(value, datetime.date):
+            # Convert date/datetime to ms-since-epoch ("new Date()").
+            ms = time.mktime(value.utctimetuple()) * 1000
+            ms += getattr(value, 'microseconds', 0) / 1000
+            output[key] = int(ms)
+        elif isinstance(value, db.GeoPt):
+            output[key] = {'lat': value.lat, 'lon': value.lon}
+        elif isinstance(value, db.Model):
+            output[key] = to_dict(value)
+        else:
+            output[key] = 'Could not encode'
+            #raise ValueError('cannot encode ' + repr(prop))
+
+    return output

@@ -1,13 +1,23 @@
+# Deployed Wednesday, March 14, 2012 at 11:51AM PST
+### Deployed by Nafis Jamal
+### Tagged deploy-35
+### Bugs Fixed: ['1008', '1017']
+### Included Commits: 
+ * 8085a31 added attributes to simple model
+ * 8e749ce app and adunit tables now calculate ecpms correctly. totals warning included in both tables. [#1008 state:fixed] [#944 state:fixed]
+ * 8b32446 made local tax ids optional for non-US accounts [#1017 state:fixed]
+ * cec3c69 [#980 state:resolved]
+ 
 # Deployed Monday, March 12, 2012 at 03:30PM PST
 ### Deployed by John Pena
 ### Tagged deploy-34
 ### Bugs Fixed: ['980']
-### Included Commits: 
- * a7ce749 [#980 state:fixed]
- * 7311bc8 removed some dumb logging
- * 8f340be [#1014 state:resolved] [#1011 state:resolved] [#966 state:resolved] [#1010 state:resolved] [#1009 state:resolved]
- * 44bc5f1 added delete support for payment history [#980 state:review-requested assigned:pena]
- 
+### Included Commits:
+* a7ce749 [#980 state:fixed]
+* 7311bc8 removed some dumb logging
+* 8f340be [#1014 state:resolved] [#1011 state:resolved] [#966 state:resolved] [#1010 state:resolved] [#1009 state:resolved]
+* 44bc5f1 added delete support for payment history [#980 state:review-requested assigned:pena]
+
 # Deployed Monday, March 12, 2012 at 03:01PM PST
 ### Deployed by John Pena
 ### Tagged deploy-33

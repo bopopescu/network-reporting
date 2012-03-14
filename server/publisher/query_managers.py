@@ -122,12 +122,12 @@ class AdUnitContextQueryManager(CachedQueryManager):
             pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
-            #for key in adunit_keys:
-            #    # For each adunit, spin up a TQ to ping the adserver
-            #    # admins with new data
-            #    taskqueue.add(url='/fetch_api/adunit_update_push',
-            #                  queue_name='push_context_update',
-            #                  params={'adunit_key':key})
+            for key in adunit_keys:
+                # For each adunit, spin up a TQ to ping the adserver
+                # admins with new data
+                taskqueue.add(url='/fetch_api/adunit_update_push',
+                              queue_name='push_context_update',
+                              params={'adunit_key':key})
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)

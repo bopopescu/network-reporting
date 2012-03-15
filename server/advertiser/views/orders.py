@@ -23,8 +23,8 @@ from publisher.query_managers import AppQueryManager
 
 import logging
 
-ctr = lambda clicks, impressions: (clicks/float(impressions) if impressions
-        else 0)
+ctr = lambda clicks, impressions: \
+      (clicks/float(impressions) if impressions else 0)
 
 class OrderIndexHandler(RequestHandler):
     """
@@ -37,25 +37,19 @@ class OrderIndexHandler(RequestHandler):
     """
     def get(self):
 
-        # Grab all of the orders, and for each order, grab all of the line items.
-        # For each of the line items, grab the stats for the date range.
-        # REFACTOR: do this over ajax
-        orders = CampaignQueryManager.get_campaigns(account=self.account)
 
-        return render_to_response(self.request,
-                                  "advertiser/order_index.html",
-                                  {
-                                      'orders': orders,
+        orders = CampaignQueryManager.get_order_campaigns(account=self.account)
+        logging.warn(orders)
 
-                                      'start_date': self.start_date,
-                                      'end_date': self.end_date,
-                                      'date_range': self.date_range,
-                                  })
+        return {
+            'orders': orders,
+        }
 
 
 @login_required
 def order_index(request, *args, **kwargs):
-    return OrderIndexHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/order_index.html"
+    return OrderIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
 class OrderDetailHandler(RequestHandler):
@@ -66,16 +60,16 @@ class OrderDetailHandler(RequestHandler):
     def get(self, order_key):
         order = CampaignQueryManager.get(order_key)
         order_form = OrderForm(instance=order)
-        return render_to_response(self.request,
-                                  "advertiser/order_detail.html",
-                                  {
-                                    'order': order,
-                                    'order_form': order_form})
+        return {
+            'order': order,
+            'order_form': order_form
+        }
 
 
 @login_required
 def order_detail(request, *args, **kwargs):
-    return OrderDetailHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/order_detail.html"
+    return OrderDetailHandler(template=t, id="order_key")(request, use_cache=False, *args, **kwargs)
 
 
 class LineItemDetailHandler(RequestHandler):
@@ -83,20 +77,20 @@ class LineItemDetailHandler(RequestHandler):
     Almost identical to current campaigns detail page.
     """
     def get(self, order_key, line_item_key):
+        
         order = CampaignQueryManager.get(order_key)
         line_item = AdGroupQueryManager.get(line_item_key)
 
-        return render_to_response(self.request,
-                                  "advertiser/lineitem_detail.html",
-                                  {
-                                      'order': order,
-                                      'line_item': line_item
-                                  })
+        return {
+            'order': order,
+            'line_item': line_item
+        }
 
 
 @login_required
 def line_item_detail(request, *args, **kwargs):
-    return LineItemDetailHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/lineitem_detail.html"
+    return LineItemDetailHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
 class OrderFormHandler(RequestHandler):
@@ -157,15 +151,13 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
-        return render_to_response(self.request,
-                                  "advertiser/forms/order_and_line_item_form.html",
-                                  {
-                                      'apps': apps,
-                                      'order': order,
-                                      'order_form': order_form,
-                                      'line_item': line_item,
-                                      'line_item_form': line_item_form,
-                                  })
+        return {
+            'apps': apps,
+            'order': order,
+            'order_form': order_form,
+            'line_item': line_item,
+            'line_item_form': line_item_form,
+        }
 
     def post(self, order_key=None, line_item_key=None):
         if order_key:
@@ -231,7 +223,8 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
 @login_required
 def order_and_line_item_form(request, *args, **kwargs):
-    return OrderAndLineItemFormHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/forms/order_and_line_item_form.html",
+    return OrderAndLineItemFormHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
 ###########

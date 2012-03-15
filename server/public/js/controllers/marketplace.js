@@ -200,7 +200,7 @@ var mopub = mopub || {};
      * only when no errors are returned from the server. Fix this.
      */
     function turnOn () {
-        var on = $.post('/campaigns/marketplace/activation/', {
+        var on = $.post('/advertise/marketplace/activation/', {
             activate: 'true'
         });
 
@@ -221,7 +221,7 @@ var mopub = mopub || {};
      * only when no errors are returned from the server. Fix this.
      */
     function turnOff () {
-        var off = $.post('/campaigns/marketplace/activation/', {
+        var off = $.post('/advertise/marketplace/activation/', {
             activate: 'false'
         });
         $(".targeting-box").attr('disabled', true);
@@ -244,7 +244,7 @@ var mopub = mopub || {};
         }
 
         var creative_data_url = origin
-            + "/campaigns/marketplace/creatives/";
+            + "/advertise/marketplace/creatives/";
         var table = $("#report-table").dataTable({
             bProcessing: true,
             // Use jQueryUI to style the table
@@ -325,7 +325,7 @@ var mopub = mopub || {};
                     // var anchor = $("<a href='#'> Block </a>").click(function (event) {
                     //     var $this = $(this);
                     //     event.preventDefault();
-                    //     var blocklist_xhr = $.post("/campaigns/marketplace/settings/blocklist/", {
+                    //     var blocklist_xhr = $.post("/advertise/marketplace/settings/blocklist/", {
                     //         action: 'add',
                     //         blocklist: domain
                     //     });
@@ -365,7 +365,7 @@ var mopub = mopub || {};
         var anchor = $(this);
         var domain = anchor.attr('id');
         $("img", anchor.parent()).removeClass('hidden');
-        var blocklist_xhr = $.post("/campaigns/marketplace/settings/blocklist/", {
+        var blocklist_xhr = $.post("/advertise/marketplace/settings/blocklist/", {
             action: 'remove',
             blocklist: domain
         });
@@ -416,7 +416,7 @@ var mopub = mopub || {};
                 var loading_img = $("#blindness-spinner").show();
                 var saving = $("#blindness-save-status .saving").show();
 
-                var blindness_xhr = $.post("/campaigns/marketplace/settings/blindness/",{
+                var blindness_xhr = $.post("/advertise/marketplace/settings/blindness/",{
                     activate: $(this).is(":checked")
                 });
 
@@ -480,7 +480,7 @@ var mopub = mopub || {};
                 var domain = $(this).attr('id');
                 $.ajax({
                     type: 'post',
-                    url: '/campaigns/marketplace/settings/blocklist/',
+                    url: '/advertise/marketplace/settings/blocklist/',
                     data: {
                         blocklist: domain,
                         action: "add"
@@ -534,7 +534,7 @@ var mopub = mopub || {};
             $('#blocklist-submit').click(function(e) {
                 e.preventDefault();
                 var blocklist = $("textarea[name='blocklist']").val();
-                var blocklist_xhr = $.post('/campaigns/marketplace/settings/blocklist/', {
+                var blocklist_xhr = $.post('/advertise/marketplace/settings/blocklist/', {
                     action: 'add',
                     blocklist: blocklist
                 });
@@ -566,7 +566,7 @@ var mopub = mopub || {};
                 var filter_level = self.attr('value');
                 var loading_img = $("#filter-spinner").show();
                 var saving = $("#filter-save-status .saving").show();
-                var result = $.post("/campaigns/marketplace/settings/content_filter/", {
+                var result = $.post("/advertise/marketplace/settings/content_filter/", {
                     filter_level: filter_level
                 });
 

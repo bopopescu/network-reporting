@@ -2,32 +2,57 @@
 
 {% load fields %}
 {% load filters %}
+{% load elements %}
 
 {% block pageTitleTag %}
-{% comment %}TODO: title{% endcomment %}
-{% endblock %}
+ MoPub - Order {{ order.name }}
+{% endblock pageTitleTag %}
 
 {% block pageTitle %}
-<h1>{% comment %}TODO: title{% endcomment %}</h1>
+  <h1>{% comment %}TODO: title{% endcomment %}</h1>
 {% endblock pageTitle %}
 
 {% block dateButtons %}
 {% endblock dateButtons %}
 
 {% block content %}
-<form id="order_form" method="post">
-    {% include 'forms/order_form.html' %}
 
-    <div class="form-submit"><a class="button" id="submit" href="#">Continue</a></div>
-</form>
+  <section class="offset" id="dashboard-stats">
 
-<ul>
+    <h3 class="stats-chart-title">
+      Realtime Stats for {{start_date|format_date_compact}} to
+      {{end_date|format_date_compact}}
+    </h3>
+
+    <div class="stats">
+      
+      {# {% stats_breakdown stats %} #}
+
+      <div class="chart stats-chart" id="dashboard-stats-chart"></div>
+      
+    </div>
+  </section>
+
+
+  <section class="offset">
+    <form id="order_form" method="post">
+      {% include 'forms/order_form.html' %}
+      
+
+        <a class="btn right" id="submit" href="#">Continue</a>
+
+    </form>
+  </section>
+  
+  <section>
+    <ul>
     {% for adgroup in order.adgroups %}
-        <li><a href="{% url advertiser_line_item_detail order.key adgroup.key %}">{{ adgroup }}</a></li>
+      <li><a href="{% url advertiser_line_item_detail order.key adgroup.key %}">{{ adgroup }}</a></li>
     {% endfor %}
-    <li><a href="{% url advertiser_line_item_form_new order.key %}">New Line Item</a></li>
-</ul>
-{% endblock %}
+    <a class="btn" href="{% url advertiser_line_item_form_new order.key %}">New Line Item</a>
+  </ul>
+  </section>
+{% endblock content %}
 
 {% block extraScripts %}
 {% include_script "models/inventory" %}

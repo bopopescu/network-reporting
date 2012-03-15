@@ -21,7 +21,6 @@
 
             // Fetch the campaigns
             campaigns.fetch();
-            window.campaigns = campaigns;
         },
 
         initializeOrderDetail: function(bootstrapping_data) {

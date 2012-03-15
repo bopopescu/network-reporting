@@ -84,7 +84,8 @@ class Campaign(db.Model):
     # date of creation
     created = db.DateTimeProperty(auto_now_add=True)
 
-
+    is_order = db.BooleanProperty(default=False)
+    
     def simplify(self):
         return SimpleCampaign(key = str(self.key()),
                               name = self.name,
@@ -125,6 +126,7 @@ class Campaign(db.Model):
         }
 
 Order = Campaign
+
 
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
@@ -332,23 +334,108 @@ class AdGroup(db.Model):
     def default_creative(self, custom_html=None, key_name=None):
         # TODO: These should be moved to ad_server/networks or some such
         c = None
-        if self.network_type == 'adsense': c = AdSenseCreative(key_name=key_name, name="adsense dummy",ad_type="adsense", format="320x50", format_predicates=["format=*"])
-        elif self.network_type == 'iAd': c = iAdCreative(key_name=key_name, name="iAd dummy",ad_type="iAd", format="320x50", format_predicates=["format=320x50"])
-        elif self.network_type == 'admob': c = AdMobCreative(key_name=key_name, name="admob dummy",ad_type="admob", format="320x50", format_predicates=["format=320x50"])
-        elif self.network_type == 'brightroll': c = BrightRollCreative(key_name=key_name, name="brightroll dummy",ad_type="html_full", format="full",format_predicates=["format=*"])
-        elif self.network_type == 'chartboost': c = ChartBoostCreative(key_name=key_name, name="chartboost dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'ejam': c = EjamCreative(key_name=key_name, name="ejam dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'jumptap': c = JumptapCreative(key_name=key_name, name="jumptap dummy",ad_type="html", format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'millennial': c = MillennialCreative(key_name=key_name, name="millennial dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
-        elif self.network_type == 'inmobi': c = InMobiCreative(key_name=key_name, name="inmobi dummy",ad_type="html",format="320x50", format_predicates=["format=320x50"]) # TODO: make sure formats are right
-        elif self.network_type == 'greystripe' : c = GreyStripeCreative(key_name=key_name, name="greystripe dummy",ad_type="greystripe", format="320x50", format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
-        elif self.network_type == 'appnexus': c = AppNexusCreative(key_name=key_name, name="appnexus dummy",ad_type="html",format="320x50",format_predicates=["format=300x250"])
-        elif self.network_type == 'mobfox' : c = MobFoxCreative(key_name=key_name, name="mobfox dummy",ad_type="html",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'custom': c = CustomCreative(key_name=key_name, name='custom', ad_type='html', format='', format_predicates=['format=*'], html_data=custom_html)
-        elif self.network_type == 'custom_native': c = CustomNativeCreative(key_name=key_name, name='custom native dummy', ad_type='custom_native', format='320x50', format_predicates=['format=*'], html_data=custom_html)
-        elif self.network_type == 'admob_native': c = AdMobNativeCreative(key_name=key_name, name="admob native dummy",ad_type="admob_native",format="320x50",format_predicates=["format=320x50"])
-        elif self.network_type == 'millennial_native': c = MillennialNativeCreative(key_name=key_name, name="millennial native dummy",ad_type="millennial_native",format="320x50",format_predicates=["format=320x50"])
-        elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']: c = MarketplaceCreative(key_name=key_name, name='marketplace dummy', ad_type='html')
+        if self.network_type == 'adsense':
+            c = AdSenseCreative(key_name=key_name,
+                                name="adsense dummy",
+                                ad_type="adsense",
+                                format="320x50",
+                                format_predicates=["format=*"])
+        elif self.network_type == 'iAd':
+            c = iAdCreative(key_name=key_name,
+                            name="iAd dummy",
+                            ad_type="iAd",
+                            format="320x50",
+                            format_predicates=["format=320x50"])
+        elif self.network_type == 'admob':
+            c = AdMobCreative(key_name=key_name,
+                              name="admob dummy",
+                              ad_type="admob",
+                              format="320x50",
+                              format_predicates=["format=320x50"])
+        elif self.network_type == 'brightroll':
+            c = BrightRollCreative(key_name=key_name,
+                                   name="brightroll dummy",
+                                   ad_type="html_full",
+                                   format="full",
+                                   format_predicates=["format=*"])
+        elif self.network_type == 'chartboost':
+            c = ChartBoostCreative(key_name=key_name,
+                                   name="chartboost dummy",
+                                   ad_type="html",
+                                   format="320x50",
+                                   format_predicates=["format=320x50"])
+        elif self.network_type == 'ejam':
+            c = EjamCreative(key_name=key_name,
+                             name="ejam dummy",
+                             ad_type="html",
+                             format="320x50",
+                             format_predicates=["format=320x50"])
+        elif self.network_type == 'jumptap':
+            c = JumptapCreative(key_name=key_name,
+                                name="jumptap dummy",
+                                ad_type="html",
+                                format="320x50",
+                                format_predicates=["format=320x50"])
+        elif self.network_type == 'millennial':
+            c = MillennialCreative(key_name=key_name,
+                                   name="millennial dummy",
+                                   ad_type="html",
+                                   format="320x50",
+                                   format_predicates=["format=320x50"]) # TODO: make sure formats are right
+        elif self.network_type == 'inmobi':
+            c = InMobiCreative(key_name=key_name,
+                               name="inmobi dummy",
+                               ad_type="html",
+                               format="320x50",
+                               format_predicates=["format=320x50"]) # TODO: make sure formats are right
+        elif self.network_type == 'greystripe' :
+            c = GreyStripeCreative(key_name=key_name,
+                                   name="greystripe dummy",
+                                   ad_type="greystripe",
+                                   format="320x50",
+                                   format_predicates=["format=*"]) # TODO: only formats 320x320, 320x48, 300x250
+        elif self.network_type == 'appnexus':
+            c = AppNexusCreative(key_name=key_name,
+                                 name="appnexus dummy",
+                                 ad_type="html",
+                                 format="320x50",
+                                 format_predicates=["format=300x250"])
+        elif self.network_type == 'mobfox' :
+            c = MobFoxCreative(key_name=key_name,
+                               name="mobfox dummy",
+                               ad_type="html",
+                               format="320x50",
+                               format_predicates=["format=320x50"])
+        elif self.network_type == 'custom':
+            c = CustomCreative(key_name=key_name,
+                               name='custom',
+                               ad_type='html',
+                               format='',
+                               format_predicates=['format=*'],
+                               html_data=custom_html)
+        elif self.network_type == 'custom_native':
+            c = CustomNativeCreative(key_name=key_name,
+                                     name='custom native dummy',
+                                     ad_type='custom_native',
+                                     format='320x50',
+                                     format_predicates=['format=*'],
+                                     html_data=custom_html)
+        elif self.network_type == 'admob_native':
+            c = AdMobNativeCreative(key_name=key_name,
+                                    name="admob native dummy",
+                                    ad_type="admob_native",
+                                    format="320x50",
+                                    format_predicates=["format=320x50"])
+        elif self.network_type == 'millennial_native':
+            c = MillennialNativeCreative(key_name=key_name,
+                                         name="millennial native dummy",
+                                         ad_type="millennial_native",
+                                         format="320x50",
+                                         format_predicates=["format=320x50"])
+        elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+            c = MarketplaceCreative(key_name=key_name,
+                                    name='marketplace dummy',
+                                    ad_type='html')
 
         if c:
             c.ad_group = self
@@ -490,14 +577,19 @@ class AdGroup(db.Model):
     ##################################
 
     def toJSON(self):
-        ignore_fields = ['all_mpusers',
-                         'site_keys',
-                         '_app',
-                         'mpuser',
-                         'campaign',
-                         'account']
-        d = to_dict(self, ignore=ignore_fields)
-        d['campaign_key'] = str(self.campaign.key())
+        d = {
+            'campaign_key': str(self.campaign.key()),
+            'name': self.name,
+            'created': self.created,
+            'network_type': self.network_type,
+            'bid': self.bid,
+            'bid_strategy': self.bid_strategy,
+            'budget_type': self.budget_type,
+            'budget_strategy': self.budget_strategy,
+            'adgroup_type': self.adgroup_type,
+            'start_datetime': self.start_datetime,
+            'end_datetime': self.end_datetime,
+        }
         return d
 
 LineItem = AdGroup

@@ -48,7 +48,7 @@
   {% for order in orders %}
     <tr class="order-row {% cycle "alt" "primary" %}" id="order-{{ order.key }}">
       <td class="name">
-        <a href="{% url advertiser_order_detail campaign_key=order.key %}">
+        <a href="{% url advertiser_order_detail order_key=order.key %}">
           {{ order.name }}
         </a>
         <img id="{{ order.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
@@ -68,7 +68,6 @@
 {% endblock content %}
 
 {% block extraScripts %}
-  {% include_script "utilities/backbone.localstorage" %}
   {% include_script "models/inventory" %}
   {% include_script "views/inventory" %}
   {% include_script "controllers/orders" %}

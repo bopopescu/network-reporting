@@ -39,10 +39,12 @@ class OrderIndexHandler(RequestHandler):
 
 
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-        logging.warn(orders)
+
+        # Stats for stats breakdown and graph.
 
         return {
             'orders': orders,
+            'stats': format_stats_for_campaign(0)
         }
 
 
@@ -62,7 +64,8 @@ class OrderDetailHandler(RequestHandler):
         order_form = OrderForm(instance=order)
         return {
             'order': order,
-            'order_form': order_form
+            'order_form': order_form,
+            'stats': format_stats_for_campaign(order)
         }
 
 
@@ -83,7 +86,8 @@ class LineItemDetailHandler(RequestHandler):
 
         return {
             'order': order,
-            'line_item': line_item
+            'line_item': line_item,
+            'stats': format_stats_for_adgroup(line_item)
         }
 
 
@@ -232,10 +236,65 @@ def order_and_line_item_form(request, *args, **kwargs):
 ###########
 
 def format_stats_for_adgroup(adgroup):
-    pass
+    stats = {
+        'requests': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0,
+        },
+        'impressions': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0,
+        },
+        'users': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0
+        },
+        'ctr': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0
+        },
+        'clicks': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0
+        },
+    }
+    return stats
+
 
 def format_stats_for_campaign(campaign):
-    pass
+    stats = {
+        'requests': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0,
+        },
+        'impressions': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0,
+        },
+        'users': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0
+        },
+        'ctr': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0
+        },
+        'clicks': {
+            'today': 0,
+            'yesterday': 0,
+            'total': 0
+        },
+    }
+    return stats
 
 def format_stats(model):
     pass

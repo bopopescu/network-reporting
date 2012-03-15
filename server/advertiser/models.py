@@ -578,6 +578,7 @@ class AdGroup(db.Model):
 
     def toJSON(self):
         d = {
+            'key': str(self.key()),
             'campaign_key': str(self.campaign.key()),
             'name': self.name,
             'created': self.created,
@@ -1062,37 +1063,3 @@ class DummyServerSideFailureCreative(Creative):
 class DummyServerSideSuccessCreative(Creative):
     SIMPLE = SimpleDummySuccessCreative
     #ServerSide = DummyServerSideSuccess
-
-
-# Serialization
-
-SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
-
-def to_dict(model, ignore = None):
-    if ignore == None:
-        ignore = []
-
-    output = {}
-    output.update(id=str(model.key()))
-    properties = model.properties().iteritems()
-
-    for key, prop in properties:
-        value = getattr(model, key)
-        if key in ignore:
-            output[key] = '_ignored'
-        elif value is None or isinstance(value, SIMPLE_TYPES):
-            output[key] = value
-        elif isinstance(value, datetime.date):
-            # Convert date/datetime to ms-since-epoch ("new Date()").
-            ms = time.mktime(value.utctimetuple()) * 1000
-            ms += getattr(value, 'microseconds', 0) / 1000
-            output[key] = int(ms)
-        elif isinstance(value, db.GeoPt):
-            output[key] = {'lat': value.lat, 'lon': value.lon}
-        elif isinstance(value, db.Model):
-            output[key] = to_dict(value)
-        else:
-            output[key] = 'Could not encode'
-            #raise ValueError('cannot encode ' + repr(prop))
-
-    return output

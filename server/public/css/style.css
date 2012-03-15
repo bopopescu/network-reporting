@@ -2780,6 +2780,10 @@ a.linkIcon .ui-icon-triangle-1-w {
 /* Dashboard */
 #dashboard-stats {
   padding: 20px 20px 10px 20px; }
+  #dashboard-stats img.preload {
+    position: relative;
+    top: 60px;
+    left: 225px; }
 
 #dashboard-stats-chart {
   height: 185px; }

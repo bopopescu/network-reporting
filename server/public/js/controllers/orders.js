@@ -1,5 +1,26 @@
-(function () {
+(function ($, mopub) {
     "use strict";
+
+    function renderCampaigns(campaigns) {
+        _.each(campaigns.models, function(campaign) {
+            
+            var campaign_view = new CampaignView({
+                model: campaign,
+                el: 'orders_table'
+            });
+            campaign_view.renderInline();
+            
+            var adgroups = new AdGroupCollection(campaign.get('adgroups'));
+            console.log(adgroups);
+            adgroups.each(function(adgroup){
+                var adgroup_view = new AdGroupView({
+                    model: adgroup,
+                    el: 'orders_table'
+                });
+                adgroup_view.renderInline();
+            });
+        });
+    }
 
     var OrdersController = {
         initializeIndex: function(bootstrapping_data) {
@@ -8,15 +29,8 @@
             campaigns.stats_endpoint = 'direct';
 
             // Once the campaigns have been fetched, render them.
-            campaigns.bind('reset', function(campaigns_collection) {
-                
-                _.each(campaigns_collection.models, function(campaign) {
-                    var campaign_view = new CampaignView({
-                        model: campaign,
-                        el: 'orders_table'
-                    });
-                    campaign_view.renderInline();
-                });
+            campaigns.bind('reset', function(campaigns_collection) {                
+                renderCampaigns(campaigns_collection);
             });
 
             // Fetch the campaigns
@@ -24,6 +38,7 @@
         },
 
         initializeOrderDetail: function(bootstrapping_data) {
+
             var validator = $('form#order_form').validate({
                 errorPlacement: function(error, element) {
                     element.closest('div').append(error);
@@ -63,10 +78,12 @@
                 }
             });
 
-            // submit button
-            $('form#order_form #submit').button({
-                icons: {secondary: 'ui-icon-circle-triangle-e'}
+            
+            $("a#order_form_edit").click(function(e){
+                e.preventDefault();
+                $("#order_form_container").show();
             });
+            // submit button
             $('form#order_form #submit').click(function(e) {
                 e.preventDefault();
                 $('form#order_form').submit();

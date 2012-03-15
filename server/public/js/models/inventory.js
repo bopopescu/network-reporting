@@ -400,6 +400,23 @@ var mopub = mopub || {};
 
     _.extend(AdGroup.prototype, StatsMixin, LocalStorageMixin);
 
+    var AdGroupCollection = Backbone.Collection.extend({
+        model: AdGroup,
+        url: function() {
+            var stats_endpoint = this.stats_endpoint;
+            return '/api/campaign/' 
+                + this.campaign_id
+                + "?"
+                + window.location.search.substring(1)
+                + '&endpoint='
+                + stats_endpoint;
+        },
+        parse: function(response) {
+            return response.adunits;
+        }
+    });
+
+
     var Campaign = Backbone.Model.extend({
         url: function() {
             var stats_endpoint = this.stats_endpoint;
@@ -432,12 +449,23 @@ var mopub = mopub || {};
      * EXPOSE HIS JUNK
      * (We should find a better way to do this.)
      */
+    // mopub.Models.AdUnit = AdUnit;
+    // mopub.Models.AdUnitCollection = AdUnitCollection;
+    // mopub.Models.App = App;
+    // mopub.Models.AppCollection = AppCollection;
+    // mopub.Models.AdGroup = AdGroup;
+    // mopub.Models.AdGroupCollection = AdGroupCollection;
+    // mopub.Models.Campaign = Campaign;
+    // mopub.Models.CampaignCollection = CampaignCollection;
+
     window.AdUnit = AdUnit;
     window.AdUnitCollection = AdUnitCollection;
     window.App = App;
     window.AppCollection = AppCollection;
     window.AdGroup = AdGroup;
+    window.AdGroupCollection = AdGroupCollection;
     window.Campaign = Campaign;
     window.CampaignCollection = CampaignCollection;
 
-}(this.jQuery, this.Backbone, this._));
+
+})(window.jQuery, window.Backbone, window._, window.mopub || { Models: {} });

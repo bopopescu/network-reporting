@@ -269,10 +269,11 @@ var mopub = window.mopub || {};
         }
     });
 
+
     var CampaignView = Backbone.View.extend({
         initialize: function () {
             try {
-                this.template = _.template($('#adunit-template').html());
+                this.template = _.template($('#campaign-template').html());
             } catch (e) {
                 // you load the template partial in the page. ok if
                 // you intend to renderInline.
@@ -281,7 +282,7 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var current_model = this.model;
-            var order_row = $('tr.order-row#order-' + this.model.get('key'), this.el);
+            var order_row = $('tr.order-row#order-' + current_model.get('key'), this.el);
 
             var display_fields = ['revenue',
                                   'impressions',
@@ -297,8 +298,36 @@ var mopub = window.mopub || {};
 
     });
 
+    var AdGroupView = Backbone.View.extend({
+        initialize: function () {
+            try {
+                this.template = _.template($('#adgroup-template').html());
+            } catch (e) {
+                // you load the template partial in the page. ok if
+                // you intend to renderInline.
+            }
+        },
+
+        renderInline: function () {
+            var current_model = this.model;
+            console.log(current_model.get('key'));
+            var row = $('tr.lineitem-row#lineitem-' + current_model.get('key'), this.el);
+            console.log(row);
+            var display_fields = ['revenue',
+                                  'impressions',
+                                  'fill_rate',
+                                  'clicks',
+                                  'ctr'];
+            _.each(display_fields, function(field){
+                $("." + field, row).text(current_model.get_formatted_stat(field));
+            });
+        }
+    });
+
+
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
+    window.AdGroupView = AdGroupView;
     window.CampaignView = CampaignView;
     window.CollectionGraphView = CollectionGraphView;
 

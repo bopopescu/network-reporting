@@ -1,6 +1,6 @@
 {% extends "advertiser/base.html" %}
 {% load filters %}
-
+{% load elements %}
 
 {% block content %}
 
@@ -32,38 +32,7 @@
     </table>
   </div>
 
-
-<table class="inventory_table" id="orders_table">
-  <thead>
-    <tr>
-      <td class="name">Order Name</td>
-      <td class="stat">Advertiser</td>
-      <td class="stat">Line Items</td>
-      <td class="stat">Revenue</td>
-      <td class="stat">Impressions</td>
-      <td class="stat">Clicks</td>
-      <td class="stat">CTR</td>
-    </tr>
-  </thead>
-  {% for order in orders %}
-    <tr class="order-row {% cycle "alt" "primary" %}" id="order-{{ order.key }}">
-      <td class="name">
-        <a href="{% url advertiser_order_detail order_key=order.key %}">
-          {{ order.name }}
-        </a>
-        <img id="{{ order.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
-      </td>
-      {# these stats will be loaded over ajax #}
-      <td class="advertiser stat"> {{ order.advertiser }}</td>
-      <td class="lineitems stat"> -- </td>
-      <td class="revenue stat">--</td>
-      <td class="impressions stat">--</td>
-      <td class="clicks stat">--</td>
-      <td class="ctr stat">--</td>
-    </tr>
-  {% endfor %}
-</table>
-
+  {% order_table orders %}
 
 {% endblock content %}
 

@@ -1,0 +1,165 @@
+{% extends 'advertiser/base.html' %}
+
+{% load fields %}
+{% load filters %}
+{% load elements %}
+
+{% block pageTitleTag %}
+{% comment %}TODO: title{% endcomment %}
+{% endblock %}
+
+{% block pageTitle %}
+  <h1>
+    <a href='{% url advertiser_order_index %}'> Orders </a> /
+    <a href='{% url advertiser_order_detail order_key=order.key %}'> {{ order.name }} </a> /
+    {{ line_item.name }}
+  </h1>
+{% endblock pageTitle %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
+
+{% block content %}
+
+  {# The stats breakdown and graph #}
+  <section class="offset" id="dashboard-stats">
+    <h3 class="stats-chart-title">
+      Realtime Stats for {{start_date|format_date_compact}} to
+      {{end_date|format_date_compact}}
+    </h3>
+
+    <div class="stats">
+      {% stats_breakdown stats %}
+      <div class="chart stats-chart" id="dashboard-stats-chart">
+        <img class="preload" src="/images/report-preloader.gif" />
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h3 class="left"> Status for {{ line_item.name }} </h3>
+    <a class="btn right" href="{% url advertiser_line_item_form_edit order.key line_item.key %}">
+      Edit Line Item
+    </a>
+    <table class="dataTable line_itemData-main">
+      <thead>
+        <tr>
+          <th class="line_itemData-icon"></th>
+          <th class="dataTable-name"> Name </th>       
+          <th class="dataTable-data numeric">Revenue</th>                
+          <th class="dataTable-data status numeric">Status</th>                
+          <th class="dataTable-data numeric">
+            <a id="line_item-ecpm-helpLink" class="whatsthis" href="#">
+              <div class="whatsthis-icon"></div>
+            </a>
+            eCPM
+          </th>
+          {% if line_item.gtee %}
+            <th class="dataTable-data numeric">Goal</th>
+          {% endif %}                
+          <th class="dataTable-data numeric">Impressions</th>
+          <th class="dataTable-data numeric">Clicks</th>
+          <th class="dataTable-data numeric">Conv</th>
+        </tr>
+      </thead>
+      <tbody class="primary">
+        <tr class="line_itemData">        
+          <td class="line_itemData-icon">
+            {% status_icon line_item %}
+          </td>
+          <td class="dataTable-name">
+            {{ line_item.name }}
+            <br />
+            <span class="muted">
+              {% if line_item.start_datetime and line_item.end_datetime %}
+                {{ line_item.start_datetime }} - {{ line_item.end_datetime }}. 
+                {% else %} {% if line_item.start_datetime %}
+                Starts {{ line_item.start_datetime }}
+                {% else %} {% if line_item.end_datetime %}
+                Ends {{ line_item.end_datetime }}. 
+                {% else %}
+                  All dates. 
+                  {% endif %} {% endif %} {% endif %}
+                
+                {# Display the budget if it's a guaranteed line_item. #}
+                {% if line_item.gtee %}
+                  {% if line_item.budget_type == "daily" %}
+                {{ line_item.budget|currency }} daily budget.
+              {% else %}
+                {{ line_item.full_budget|currency }} full budget.
+              {% endif %}
+            {% endif %}
+          </span>
+        </td>
+
+        <td class="dataTable-data status numeric">
+          {% if line_item.active and line_item.has_started and not line_item.is_finished %}
+            Running
+            {% else %} {% if not line_item.active %}
+            Paused
+            {% else %} {% if line_item.is_finished %}
+            Finished
+            {% else %} {% if not line_item.has_started %}
+            Scheduled
+            {% endif %} {% endif %} {% endif %} {% endif %}                    
+        </td>
+
+        
+        <td class="dataTable-data numeric">
+          {{ line_item.stats.revenue|currency }}
+        </td>
+                
+        <td class="dataTable-data numeric">
+          {{ line_item.stats.ecpm|currency }}
+        </td>            
+        {% if line_item.gtee %}
+          <td class="dataTable-data numeric">
+            {% if line_item.cpc %}
+              {{ line_item.budget_goal|currency }} <br />
+              USD
+            {% else %}
+              {{ line_item.budget_goal|withsep}} <br />
+              Impressions
+            {% endif %}                  
+          </td>
+        {% endif %}                
+        <td class="dataTable-data numeric">
+          {{ line_item.stats.impression_count|withsep }}
+        </td>             
+        <td class="dataTable-data numeric">
+          {{ line_item.stats.click_count|withsep }}
+        </td>
+        <td class="dataTable-data numeric">
+          {{ line_item.stats.conversion_count|withsep }}
+        </td>            
+      </tr>
+    </tbody>        
+  </table>
+
+  {% if user.is_admin %}
+    <a href="/budget/view/{{line_item.key}}"> Admin Budget View</a>
+  {% endif %}
+</section>
+  
+
+  {# Table that shows all of the adunits being targeted #}
+  <section>
+    <h3 class="left"> Inventory targeted by {{ line_item.name }} </h3>
+    <a class="btn right" href="#"> Change targeting </a>
+  </section>
+{% endblock content %}
+
+{% block extraScripts %}
+{% include_script "models/inventory" %}
+{% include_script "views/inventory" %}
+{% include_script "controllers/orders" %}
+<script type="text/javascript">
+    $(function() {
+        var OrdersController = mopub.Controllers.OrdersController;
+        OrdersController.initializeLineItemDetail({
+            order_key: "{{ order.key }}",
+            lineitem_key: "{{ lineitem.key }}"
+        });
+    });
+</script>
+{% endblock extraScripts %}

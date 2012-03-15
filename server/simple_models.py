@@ -123,7 +123,7 @@ class SimpleModel(object):
         from ad_server.db_stub import get_db_stub
         assert get_db_stub() is not None, "SimpleModel.put() is only for testing. The test db_stub has not been set up."
         get_db_stub().put(self)
-    
+
     @classmethod
     def get(cls, key):
         """ This is ONLY for ad_server testing!!
@@ -552,7 +552,8 @@ class SimpleNetworkConfig(SimpleModel):
                  brightroll_pub_id=None, chartboost_pub_id=None, ejam_pub_id=None,
                  greystripe_pub_id=None, inmobi_pub_id=None, jumptap_pub_id=None,
                  millennial_pub_id=None, mobfox_pub_id=None, rev_share=None,
-                 price_floor=None, blocklist=None, blind=None, blocked_cat=None, blocked_attrs=None):
+                 price_floor=None, blocklist=None, blind=None, blocked_cat=None, blocked_attrs=None,
+                 category_blocklist=None, attribute_blocklist=None):
         self._key = key
         self.admob_pub_id = admob_pub_id
         self.adsense_pub_id = adsense_pub_id
@@ -568,6 +569,8 @@ class SimpleNetworkConfig(SimpleModel):
         self.price_floor = price_floor
         self.blocklist = blocklist
         self.blind = blind
+        self.category_blocklist = category_blocklist
+        self.attribute_blocklist = attribute_blocklist
 
     def key(self):
         return self._key

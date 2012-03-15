@@ -12,7 +12,7 @@ class NetworkScrapeRecord(object):
 
     # For debugging
     def __str__(self):
-        self.__repr__()
+        return self.__repr__()
 
     def __repr__(self):
         properties = copy(self.__dict__)

@@ -176,6 +176,11 @@ def format_time(value):
         return ""
 
 @register.filter
+def format_utc_date_compact(value):
+    value = value.replace(tzinfo=utc).astimezone(Pacific)
+    return "%d/%d" % (value.month, value.day)
+
+@register.filter
 def truncate(value, arg):
     if len(value) > arg:
         try:

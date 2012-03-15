@@ -626,5 +626,3 @@ LEVELS = (
 
 class ContentFilterForm(forms.Form):
     level = forms.ChoiceField(choices=LEVELS, widget=forms.RadioSelect)
-
-

@@ -713,10 +713,6 @@
 
         },
 
-        initializeCreateCampaign: function (bootstrapping_data) {
-            setupAdGroupForm();
-        },
-
         initializeCampaignArchive: function (bootstrapping_data) {
             $.each(['activate', 'delete'], function(iter, action) {
                 $('#campaignForm-' + action).click(function(e) {

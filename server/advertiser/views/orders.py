@@ -19,6 +19,7 @@ from common.ragendja.template import JSONResponse, render_to_response
 
 from advertiser.forms import OrderForm, LineItemForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
+from publisher.query_managers import AppQueryManager
 
 import logging
 
@@ -62,11 +63,14 @@ class OrderDetailHandler(RequestHandler):
     Top level stats rollup for all of the line items within the order.
     Lists each line item within the order with links to line item details.
     """
-    def get(self, campaign_key):
-
+    def get(self, order_key):
+        order = CampaignQueryManager.get(order_key)
+        order_form = OrderForm(instance=order)
         return render_to_response(self.request,
                                   "advertiser/order_detail.html",
-                                  {})
+                                  {
+                                    'order': order,
+                                    'order_form': order_form})
 
 
 @login_required
@@ -78,57 +82,44 @@ class LineItemDetailHandler(RequestHandler):
     """
     Almost identical to current campaigns detail page.
     """
-    def get(self):
+    def get(self, order_key, line_item_key):
+        order = CampaignQueryManager.get(order_key)
+        line_item = AdGroupQueryManager.get(line_item_key)
+
         return render_to_response(self.request,
                                   "advertiser/lineitem_detail.html",
-                                  {})
+                                  {
+                                      'order': order,
+                                      'line_item': line_item
+                                  })
 
 
 @login_required
-def lineitem_detail(request, *args, **kwargs):
+def line_item_detail(request, *args, **kwargs):
     return LineItemDetailHandler()(request, use_cache=False, *args, **kwargs)
 
 
 class OrderFormHandler(RequestHandler):
     """
-    New/Edit form page for Orders. With each new order, a new line
-    item is required
+    Edit order form handler which gets submitted from the order detail page.
     """
-    def get(self, order_key=None):
-        if order_key:
-            instance = CampaignQueryManager.get(order_key)
-        else:
-            instance = None
-
-        order_form = OrderForm(instance=instance)
-
-        return render_to_response(self.request,
-                                  "advertiser/order_form.html",
-                                  {
-                                      'order_form': order_form,
-                                  })
-
-    def post(self, order_key=None):
-        if order_key:
-            instance = CampaignQueryManager.get(order_key)
-        else:
-            instance = None
-
+    def post(self, order_key):
+        instance = CampaignQueryManager.get(order_key)
         order_form = OrderForm(self.request.POST, instance=instance)
 
         if order_form.is_valid():
             order = order_form.save()
-            order.account = self.account
             order.save()
-
+            # TODO: in js reload instead of looking for redirect
             return JSONResponse({
                 'success': True,
-                'redirect': reverse('advertiser_order_detail', args=(order.key(),)),
             })
 
         else:
+            # TODO: dict comprehension?
             errors = {}
             for key, value in order_form.errors.items():
+                # TODO: just join value?
                 errors[key] = ' '.join([error for error in value])
 
             return JSONResponse({
@@ -142,49 +133,86 @@ def order_form(request, *args, **kwargs):
     return OrderFormHandler()(request, use_cache=False, *args, **kwargs)
 
 
-class LineItemFormHandler(RequestHandler):
+class OrderAndLineItemFormHandler(RequestHandler):
     """
-    New/Edit form page for LineItems.
+    New/Edit form page for Orders and LineItems.
     """
-    def get(self, order_key, line_item_key=None):
+    def get(self, order_key=None, line_item_key=None):
         if order_key:
+            # TODO: make sure order belongs to account
             order = CampaignQueryManager.get(order_key)
+            if line_item_key:
+                # TODO: make sure line item belongs to account
+                # TODO: make sure line item belongs to order
+                line_item = AdGroupQueryManager.get(line_item_key)
+            else:
+                line_item = None
         else:
             order = None
+            # TODO: make sure line_item_key is None
+            line_item = None
 
-        if line_item_key:
-            instance = AdGroupQueryManager.get(line_item_key)
-        else:
-            instance = None
+        order_form = OrderForm(instance=order)
+        line_item_form = LineItemForm(instance=line_item)
 
-        line_item_form = LineItemForm(instance=instance)
+        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
         return render_to_response(self.request,
-                                  "advertiser/line_item_form.html",
+                                  "advertiser/forms/order_and_line_item_form.html",
                                   {
-                                      'line_item_form': line_item_form,
+                                      'apps': apps,
                                       'order': order,
+                                      'order_form': order_form,
+                                      'line_item': line_item,
+                                      'line_item_form': line_item_form,
                                   })
 
-    def post(self, order_key, line_item_key=None):
+    def post(self, order_key=None, line_item_key=None):
         if order_key:
+            # TODO: make sure order belongs to account
             order = CampaignQueryManager.get(order_key)
+            if line_item_key:
+                # TODO: make sure line item belongs to account
+                # TODO: make sure line item belongs to order
+                line_item = AdGroupQueryManager.get(line_item_key)
+            else:
+                line_item = None
         else:
             order = None
+            # TODO: make sure line_item_key is None
+            line_item = None
 
-        if line_item_key:
-            instance = AdGroupQueryManager.get(line_item_key)
-        else:
-            instance = None
+        if not order:
+            order_form = OrderForm(self.request.POST, instance=order)
 
-        line_item_form = LineItemForm(self.request.POST, instance=instance)
+            if order_form.is_valid():
+                order = order_form.save()
+                order.account = self.account
+                order.save()
+                CampaignQueryManager.put(order)
+
+            else:
+                # TODO: dict comprehension?
+                errors = {}
+                for key, value in order_form.errors.items():
+                    # TODO: just join value?
+                    errors[key] = ' '.join([error for error in value])
+
+                return JSONResponse({
+                    'errors': errors,
+                    'success': False,
+                })
+
+        line_item_form = LineItemForm(self.request.POST, instance=line_item)
 
         if line_item_form.is_valid():
             line_item = line_item_form.save()
             line_item.account = self.account
-            line_item.order = order
+            line_item.campaign = order
             line_item.save()
+            AdGroupQueryManager.put(line_item)
 
+            # TODO: go to order or line item detail page?
             return JSONResponse({
                 'success': True,
                 'redirect': reverse('advertiser_order_detail', args=(order.key(),)),
@@ -202,8 +230,8 @@ class LineItemFormHandler(RequestHandler):
 
 
 @login_required
-def line_item_form(request, *args, **kwargs):
-    return LineItemFormHandler()(request, use_cache=False, *args, **kwargs)
+def order_and_line_item_form(request, *args, **kwargs):
+    return OrderAndLineItemFormHandler()(request, use_cache=False, *args, **kwargs)
 
 
 ###########

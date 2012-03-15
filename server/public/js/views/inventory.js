@@ -283,12 +283,12 @@ var mopub = window.mopub || {};
             var current_model = this.model;
             var campaign_row = $('tr.campaign-row#campaign-' + this.model.id, this.el);
         }
-        
+
     });
 
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
-    window.AdGroupsView = AdGroupsView;
+    // window.AdGroupsView = AdGroupsView;
     window.CollectionGraphView = CollectionGraphView;
 
 }(this.jQuery, this.Backbone, this._));

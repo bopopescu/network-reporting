@@ -143,8 +143,7 @@ class LineItemForm(forms.ModelForm):
                                                             'rows': 3}))
 
     def __init__(self, *args, **kwargs):
-        initial = args[5] if len(args) > 5 else kwargs.get('initial', None)
-        instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
+        # initial
         if len(args) > 5:
             initial = args[5]
         else:
@@ -152,27 +151,28 @@ class LineItemForm(forms.ModelForm):
                 kwargs['initial'] = {}
             initial = kwargs['initial']
 
+        # instance
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
         if instance:
-            if 'gtee' in instance.campaign_type:
-                if 'high' in instance.campaign_type:
+            if 'gtee' in instance.adgroup_type:
+                if 'high' in instance.adgroup_type:
                     initial['gtee_priority'] = 'high'
-                elif 'low' in instance.campaign_type:
+                elif 'low' in instance.adgroup_type:
                     initial['gtee_priority'] = 'low'
-                initial['campaign_type'] = 'gtee'
+                initial['adgroup_type'] = 'gtee'
 
-                if initial['bid_strategy'] == 'cpm':
+                if instance.bid_strategy == 'cpm':
                     if instance.budget_type == 'daily':
-                        budget = instance.budget or 0.0
+                        budget = instance.daily_budget or 0.0
                     else:
                         budget = instance.full_budget or 0.0
-                    initial['budget'] = int(1000.0 * budget / initial['bid'])
+                    initial['budget'] = int(1000.0 * budget / instance.bid)
                 elif instance.budget_type == 'full_campaign':
                     initial['budget'] = instance.full_budget
 
-            elif instance.campaign_type == 'backfill_promo':
-                initial['campaign_type'] = 'promo'
+            elif instance.adgroup_type == 'backfill_promo':
+                initial['adgroup_type'] = 'promo'
                 initial['promo_priority'] = 'backfill'
 
             # convert datetimes from offset-naive UTC to Pacific
@@ -270,14 +270,14 @@ class LineItemForm(forms.ModelForm):
             self._errors['end_datetime'].append("Stop time must be after start time")
 
         # gtee
-        if cleaned_data['campaign_type'] == 'gtee':
-            # campaign_type
+        if cleaned_data['adgroup_type'] == 'gtee':
+            # adgroup_type
             if not cleaned_data.get('gtee_priority', None):
                 if 'gtee_priority' not in self._errors:
                     self._errors['gtee_priority'] = ErrorList()
                 self._errors['gtee_priority'].append('This field is required')
             elif cleaned_data['gtee_priority'] in ('low', 'high'):
-                cleaned_data['campaign_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
+                cleaned_data['adgroup_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
 
             # budget
             has_required = True
@@ -303,14 +303,14 @@ class LineItemForm(forms.ModelForm):
                     cleaned_data['budget'] = None
 
         # promo
-        elif cleaned_data['campaign_type'] == 'promo':
+        elif cleaned_data['adgroup_type'] == 'promo':
             # priority
             if not cleaned_data.get('promo_priority', None):
                 if 'promo_priority' not in self._errors:
                     self._errors['promo_priority'] = ErrorList()
                 self._errors['promo_priority'].append('This field is required')
             elif cleaned_data['promo_priority'] == 'backfill':
-                cleaned_data['campaign_type'] = 'backfill_promo'
+                cleaned_data['adgroup_type'] = 'backfill_promo'
             # promo campaigns have no budget
             cleaned_data['budget'] = None
             cleaned_data['full_budget'] = None

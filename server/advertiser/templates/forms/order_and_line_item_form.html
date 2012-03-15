@@ -3,238 +3,32 @@
 {% load fields %}
 {% load filters %}
 
-{% block pageTitleTag %}{% if line_item_form.instance %}Edit {{ line_item_form.instance }}{% else %}New Line Item{% endif %}{% endblock %}
+{% block pageTitleTag %}
+{% comment %}TODO: title{% endcomment %}
+{% endblock %}
 
 {% block pageTitle %}
-<h1>{% if line_item_form.instance %}Edit {{ line_item_form.instance }}{% else %}New Line Item{% endif %}</h1>
+<h1>{% comment %}TODO: title{% endcomment %}</h1>
 {% endblock pageTitle %}
 
 {% block dateButtons %}
 {% endblock dateButtons %}
 
 {% block content %}
-<script type="text/javascript">
-    $(function() {
-        var validator = $('form#line_item').validate({
-            errorPlacement: function(error, element) {
-                element.closest('div').append(error);
-            },
-            submitHandler: function(form) {
-                $(form).ajaxSubmit({
-                    data: {ajax: true},
-                    dataType: 'json',
-                    success: function(jsonData, statusText, xhr, $form) {
-                        if(jsonData.success) {
-                            window.location = jsonData.redirect;
-                            $('form#line_item #submit').button({
-                                label: 'Success...',
-                                disabled: true
-                            });
-                        } else {
-                            validator.showErrors(jsonData.errors);
-                            $('form#line_item #submit').button({
-                                label: 'Try Again',
-                                disabled: false
-                            });
-                        }
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        $('form#line_item #submit').button({
-                            label: 'Try Again',
-                            disabled: false
-                        });
-                    },
-                    beforeSubmit: function(arr, $form, options) {
-                        $('form#line_item #submit').button({
-                            label: 'Submitting...',
-                            disabled: true
-                        });
-                    }
-                });
-            }
-        });
+<form id="order_and_line_item_form" method="post">
+    {% if order %}
+        {{ order }}
+    {% else %}
+        {% include 'forms/order_form.html' %}
+    {% endif %}
 
-        $('form#line_item #submit')
-            .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
-            .click(function(e) {
-                e.preventDefault();
-                $('form#line_item').submit();
-            });
-    });
-
-    // help links
-    // TODO: make sure all of these are necessary, rename?
-    $('a[id$="-helpLink"]').click(function(e) {
-        console.log('triggered');
-        e.preventDefault();
-        $('#' + $(this).attr('id').replace('-helpLink', '-helpContent')).dialog({
-            buttons: { "Close": function() { $(this).dialog("close"); } }
-        });
-    });
-
-    // date controls
-    $('input[type="text"].date').datepicker({minDate: 0});
-
-    function makeValidTime(timeStr, defHour, defMin, defAmPm) {
-        // Checks to see if a timeStr is valid, returns valid form
-        // AM/PM (and variants) are optional.
-
-        var timePat = /^(\d{1,2}):(\d{2})(\s?(AM|am|PM|pm|aM|pM|Pm|Am))?$/;
-
-        if (defMin < 10) {
-            defMin = '0' + defMin;
-        }
-        var matchArray = timeStr.match(timePat);
-        if (matchArray == null) {
-            return defHour + ':' + defMin + ' ' + defAmPm;
-        }
-
-        hour = matchArray[1];
-        minute = matchArray[2];
-        ampm = matchArray[4];
-
-        // Handle military time stuff
-        if (hour >= 12 && hour <= 23) {
-            hour = hour - 12;
-            // 12:00 AM to 12:00 PM
-            // 12:00    to 12:00 PM
-            //
-            // 15:00 AM to 3:00 PM
-            // 15:00 PM to 3:00 PM
-            // 15:00    to 3:00 PM
-            if (hour == 0) {
-                hour = 12;
-                if (ampm === undefined) {
-                    ampm = 'PM';
-                }
-            }
-            else {
-                ampm = 'PM';
-            }
-        }
-
-        if (hour == 0) {
-            ampm = 'AM';
-            hour = 12;
-        }
-        // Set invalid times to 0 minutes and 12 hours and default to AM
-        if (minute < 0 || minute > 59) {
-            minute = defMin;
-        }
-        if (hour < 0 || hour > 23) {
-            hour = defHour;
-        }
-        if (ampm === undefined) {
-            ampm = defAmPm;
-        }
-
-        else {
-            ampm = ampm.toUpperCase();
-        }
-        return hour + ':' + minute + ' ' + ampm ;
-    }
-
-    $('input[name="start_datetime_0"]').change(function(e) {
-        e.preventDefault();
-        var val = $(this).val();
-        if (val != '') {
-            $('input[name="start_datetime_1"]').change();
-        }
-    });
-
-    $('input[name="end_datetime_0"]').change(function(e) {
-        e.preventDefault();
-        var val = $(this).val();
-        if (val != '') {
-            $('input[name="end_datetime_1"]').change();
-        }
-    });
-
-    $('input[name$="_datetime_1"]').change(function(e){
-        e.preventDefault();
-        var name = $(this).attr('name');
-        var val = $(this).val();
-        if (name == 'start_datetime_1') {
-            if($('input[name="start_datetime_0"]').val() == '') {
-                val = '';
-            } else {
-                val = makeValidTime(val, 12, 0, 'AM');
-            }
-        }
-        else if (name == 'end_datetime_1') {
-            if($('input[name="end_datetime_0"]').val() == '') {
-                val = '';
-            } else {
-                val = makeValidTime(val, 11, 59, 'PM');
-            }
-        }
-        $(this).val(val);
-    });
-
-    $('input[name="end_datetime_0"], input[name="end_datetime_1"], select[name="budget_type"], select[name="budget_strategy"]').change(function(){
-        if(!$('input[name="end_datetime_0"]').val() &&
-           !$('input[name="end_datetime_1"]').val() &&
-           $('select[name="budget_type"]').val() == 'full_campaign') {
-            $('input#id_budget_strategy_1').prop('checked', 'checked');
-            $('input#id_budget_strategy_0').removeProp('checked');
-            $('input#id_budget_strategy_0').attr('disabled', 'disabled');
-        }
-        else {
-            $('input#id_budget_strategy_0').removeAttr('disabled');
-        }
-    }).change();
-
-
-    $('#all-adunits').change(function() {
-        // select or deselect all adunits
-        $('input[name="site_keys"]').prop('checked', $(this).prop('checked'));
-    });
-
-    // device targeting
-    $('input[name="device_targeting"]').change(function() {
-        if($(this).val() == '0') {
-            $('#device_targeting').slideUp();
-        }
-        else {
-            $('#device_targeting').slideDown();
-        }
-    });
-    // update on document ready
-    if($('input[name="device_targeting"]').val() == '0') {
-        $('#device_targeting').hide();
-    }
-
-    // change form based on bid_strategy
-    $('select[name="bid_strategy"]').change(function() {
-        bid_strategy = $(this).val();
-            budget_type_options = $('select[name="budget_type"] option');
-        if(bid_strategy == 'cpm') {
-            budget_type_options[0].innerHTML = 'impressions/day';
-            budget_type_options[1].innerHTML = 'total impressions';
-        }
-        else {
-            budget_type_options[0].innerHTML = 'USD/day';
-            budget_type_options[1].innerHTML = 'total USD';
-        }
-    }).change(); // update on document ready
-
-    priors = {{ line_item_form.geo_predicates|field_value|to_json|safe }};
-    city_priors = {{ line_item_form.cities|field_value|to_json|safe }};
-</script>
-
-<div>
-    <h2>Order</h2>
-    {{ order }}
-</div>
-
-<form id="line_item" method="post">
-    <fieldset>
+    <fieldset id="line_item_fieldset">
         <legend>
-            <h2>Line Item</h2>
-            <p>Line items are individual ad spots.</p>
+            <h2>Line Item Details</h2>
+            <p>Each Order has one or more Line Items.  A Line Item is a set of creatives and targeting parameters that runs with a specific budget.</p>
         </legend>
 
-        <ul>
+        <ul class="form_fields">
             <li>
                 {{ line_item_form.adgroup_type.label_tag }}
                 <div>
@@ -250,24 +44,24 @@
                 </div>
             </li>
 
-            <li class="campaign_type_dependant gtee">
+            <li class="adgroup_type_dependant gtee">
                 {{ line_item_form.gtee_priority.label_tag }}
                 <div>
                     {{ line_item_form.gtee_priority }}
-                    <a href="#" id="campaignForm-priority-helpLink">What's this?</a>
-                    <div id="campaignForm-priority-helpContent" class="hidden">
+                    <a href="#" id="gtee_priority-helpLink">What's this?</a>
+                    <div id="gtee_priority-helpContent" class="hidden">
                         <h3>Priority</h3>
                         <p>Within a given priority campaigns are run in order of CPM.  By assigning a campaign priority you set it to run before those at a lower priority level.</p>
                     </div>
                 </div>
             </li>
 
-            <li class="campaign_type_dependant promo">
+            <li class="adgroup_type_dependant promo">
                 {{ line_item_form.promo_priority.label_tag }}
                 <div>
                     {{ line_item_form.promo_priority }}
-                    <a href="#" id="campaignForm-promo-priority-helpLink">What's this?</a>
-                    <div id="campaignForm-promo-priority-helpContent" class="hidden">
+                    <a href="#" id="promo_priority-helpLink">What's this?</a>
+                    <div id="promo_priority-helpContent" class="hidden">
                         <h3>Priority</h3>
                         <p>For a promotional campaign, you may pick whether it is prioritized above (<strong>Normal</strong>) or below ad networks (<strong>Backfill</strong>).</p>
                     </div>
@@ -299,15 +93,15 @@
                 {{ line_item_form.bid_strategy.label_tag }}
                 <div>
                     {{ line_item_form.bid_strategy }} @ {{ line_item_form.bid }} USD
-                    <a class="campaign_type_dependant promo whatsthis" id="bid-promo-helpLink" href="#">What's this?</a>
-                    <div id="bid-promo-helpContent" class="hidden">
+                    <a class="adgroup_type_dependant promo whatsthis" id="bid-helpLink" href="#">What's this?</a>
+                    <div id="bid-helpContent" class="hidden">
                         <h3>Promotional CPM</h3>
                         <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
                     </div>
                 </div>
             </li>
 
-            <li class="campaign_type_dependant gtee">
+            <li class="adgroup_type_dependant gtee">
                 {{ line_item_form.budget.label_tag }}
                 <div>
                     {{ line_item_form.budget }}
@@ -315,7 +109,7 @@
                 </div>
             </li>
 
-            <li class="campaign_type_dependant gtee">
+            <li class="adgroup_type_dependant gtee">
                 {{ line_item_form.budget_strategy.label_tag }}
                 <div>
                     <span class="radios">
@@ -369,6 +163,10 @@
     </fieldset>
 
     <fieldset class="hidden" id="advanced">
+        <legend>
+            <h2>Advanced Details</h2>
+        </legend>
+
         <ul class="form_fields">
             <li>
                 {{ line_item_form.allocation_percentage.label_tag }}
@@ -445,8 +243,8 @@
                 {{ line_item_form.keywords.label_tag }}
                 <div>
                     {{ line_item_form.keywords }}
-                    <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
-                    <div id="campaignForm-keyword-helpContent" class="hidden">
+                    <a href="#" id="keywords-helpLink">What's this?</a>
+                    <div id="keywords-helpContent" class="hidden">
                         <h3>Keywords</h3>
                         <p>
                             Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
@@ -470,3 +268,18 @@
     <div class="form-submit"><a class="button" id="submit" href="#">Continue</a></div>
 </form>
 {% endblock %}
+
+{% block extraScripts %}
+{% include_script "models/inventory" %}
+{% include_script "views/inventory" %}
+{% include_script "controllers/orders" %}
+<script type="text/javascript">
+    $(function() {
+        var OrdersController = mopub.Controllers.OrdersController;
+        OrdersController.initializeOrderAndLineItemForm({
+            priors: {{ line_item_form.geo_predicates|field_value|to_json|safe }},
+            city_priors: {{ line_item_form.cities|field_value|to_json|safe }}
+        });
+    });
+</script>
+{% endblock extraScripts %}

@@ -15,18 +15,9 @@
 {% endblock dateButtons %}
 
 {% block content %}
-<form id="order_form" method="post">
-    {% include 'forms/order_form.html' %}
+<div>{{ line_item }}</div>
 
-    <div class="form-submit"><a class="button" id="submit" href="#">Continue</a></div>
-</form>
-
-<ul>
-    {% for adgroup in order.adgroups %}
-        <li><a href="{% url advertiser_line_item_detail order.key adgroup.key %}">{{ adgroup }}</a></li>
-    {% endfor %}
-    <li><a href="{% url advertiser_line_item_form_new order.key %}">New Line Item</a></li>
-</ul>
+<a href="{% url advertiser_line_item_form_edit line_item.campaign.key line_item.key %}">edit</a>
 {% endblock %}
 
 {% block extraScripts %}
@@ -36,7 +27,7 @@
 <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;
-        OrdersController.initializeOrderDetail({});
+        OrdersController.initializeLineItemDetail({});
     });
 </script>
 {% endblock extraScripts %}

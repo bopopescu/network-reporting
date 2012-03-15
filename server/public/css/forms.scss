@@ -295,9 +295,15 @@ input.price_floor_change {
     vertical-align: top;
 }
 
-form#campaign_and_adgroup {
+form#order_and_line_item_form, form#order_form {
     fieldset {
-        padding: 0 25px 25px 25px;
+        padding: 20px 25px 25px 25px;
+    }
+    fieldset#order_fieldset {
+        background-color: #f7f7f7;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
     }
     input[type="text"], textarea {
         padding: 1px 2px 2px 3px;

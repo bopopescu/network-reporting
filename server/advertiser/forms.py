@@ -22,8 +22,6 @@ from advertiser.widgets import CustomizableSplitDateTimeWidget
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
 
-import logging
-
 
 def get_filetype_extension(filename):
     if not type(filename) == str:
@@ -253,7 +251,6 @@ class LineItemForm(forms.ModelForm):
 
     def clean_keywords(self):
         keywords = self.cleaned_data.get('keywords', None)
-        logging.warning("keywords: %s" % keywords)
         if keywords:
             if len(keywords) > 500:
                 raise forms.ValidationError('Maximum 500 characters for keywords.')
@@ -263,13 +260,13 @@ class LineItemForm(forms.ModelForm):
         cleaned_data = super(LineItemForm, self).clean()
 
         # start and end datetimes
-        start_datetime = cleaned_data.get('start_datetime', None)
-        end_datetime = cleaned_data.get('end_datetime', None)
         # if start_datetime is None, use the current time
-        if not start_datetime:
+        if not cleaned_data.get('start_datetime', None):
             cleaned_data['start_datetime'] = datetime.now()
+        start_datetime = cleaned_data['start_datetime']
+        end_datetime = cleaned_data.get('end_datetime', None)
         # end_datetime must be after start_datetime
-        if start_datetime and end_datetime and end_datetime < start_datetime:
+        if end_datetime and end_datetime <= start_datetime:
             if 'end_datetime' not in self._errors:
                 self._errors['end_datetime'] = ErrorList()
             self._errors['end_datetime'].append("Stop time must be after start time")
@@ -285,27 +282,31 @@ class LineItemForm(forms.ModelForm):
                 cleaned_data['adgroup_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
 
             # budget
-            has_required = True
-            for field in ('bid_strategy', 'bid', 'budget', 'budget_type', 'budget_strategy'):
-                if not cleaned_data.get(field, None):
-                    if field not in self._errors:
-                        self._errors[field] = ErrorList()
-                    self._errors[field].append("This field is required")
-                    has_required = False
-            if has_required:
-                # BEWARE HACKS
-                # if the campaign is a cpm campaign, we need to calculate what the budget
-                # will be, since budgets are stored in dollar amounts.
-                if cleaned_data['budget_type'] == 'daily':
-                    cleaned_data['daily_budget'] = self._calculate_budget(cleaned_data['budget'])
-                    cleaned_data['full_budget'] = None
-                else:
-                    if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
-                        if 'budget_strategy' not in self._errors:
-                            self._errors['budget_strategy'] = ErrorList()
-                        self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
-                    cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
-                    cleaned_data['daily_budget'] = None
+            if not cleaned_data.get('budget', None):
+                cleaned_data['daily_budget'] = None
+                cleaned_data['full_budget'] = None
+            else:
+                has_required = True
+                for field in ('bid_strategy', 'bid', 'budget_type', 'budget_strategy'):
+                    if not cleaned_data.get(field, None):
+                        if field not in self._errors:
+                            self._errors[field] = ErrorList()
+                        self._errors[field].append("This field is required")
+                        has_required = False
+                if has_required:
+                    # BEWARE HACKS
+                    # if the campaign is a cpm campaign, we need to calculate what the budget
+                    # will be, since budgets are stored in dollar amounts.
+                    if cleaned_data['budget_type'] == 'daily':
+                        cleaned_data['daily_budget'] = self._calculate_budget(cleaned_data['budget'])
+                        cleaned_data['full_budget'] = None
+                    else:
+                        if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
+                            if 'budget_strategy' not in self._errors:
+                                self._errors['budget_strategy'] = ErrorList()
+                            self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
+                        cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
+                        cleaned_data['daily_budget'] = None
 
         # promo
         elif cleaned_data['adgroup_type'] == 'promo':

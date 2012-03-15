@@ -121,6 +121,7 @@ class Campaign(db.Model):
             'description': self.description,
             'active': self.active,
             'deleted': self.deleted,
+            'key': str(self.key())
         }
 
 Order = Campaign

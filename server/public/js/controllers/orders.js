@@ -9,8 +9,9 @@
 
             // Once the campaigns have been fetched, render them.
             campaigns.bind('reset', function(campaigns_collection) {
+                
                 _.each(campaigns_collection.models, function(campaign) {
-                    var campaign_view = CampaignView({
+                    var campaign_view = new CampaignView({
                         model: campaign,
                         el: 'orders_table'
                     });
@@ -20,6 +21,7 @@
 
             // Fetch the campaigns
             campaigns.fetch();
+            window.campaigns = campaigns;
         },
 
         initializeOrderDetail: function(bootstrapping_data) {

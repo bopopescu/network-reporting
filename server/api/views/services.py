@@ -333,6 +333,11 @@ class CampaignServiceHandler(RequestHandler):
                 adgroup_jsonified = adgroup.toJSON()
                 adgroup_jsonified.update(stats)
                 campaign_jsonified['adgroups'].append(adgroup_jsonified)
+
+            # Get the top level stats for the campaign by summing whats
+            # in the adgroups
+            campaign_jsonified.update(sum_campaign_stats(campaign_jsonified))
+    
             campaigns_jsonified.append(campaign_jsonified)
 
         return JSONResponse(campaigns_jsonified)
@@ -360,6 +365,33 @@ def campaign_service(request, *args, **kwargs):
 ####################
 # Helper Functions #
 ####################
+
+def sum_campaign_stats(campaign):
+    ctr = lambda clicks, impressions: \
+          (clicks/float(impressions) if impressions else 0)
+    ecpm = lambda revenue, impressions: \
+           (revenue/float(impressions)*1000 if impressions else 0)
+    fill_rate = lambda requests, impressions: \
+                (impressions/float(requests) if requests else 0)
+
+    stats = {
+        'revenue': sum([ag['revenue'] for ag in campaign['adgroups']]),
+        'ctr': 0.0,
+        'ecpm': 0.0,
+        'impressions': sum([ag['impressions'] for ag in campaign['adgroups']]),
+        'clicks': sum([ag['clicks'] for ag in campaign['adgroups']]),
+        'requests': sum([ag['requests'] for ag in campaign['adgroups']]),
+        'fill_rate': 0.0,
+        'conversions': sum([ag['conversions'] for ag in campaign['adgroups']]),
+        'conversion_rate': sum([ag['conversion_rate'] for ag in campaign['adgroups']])/len(campaign['adgroups']),
+    }
+
+    stats['ctr'] = ctr(stats['clicks'], stats['impressions'])
+    stats['ecpm'] = ecpm(stats['revenue'], stats['impressions'])
+    stats['fill_rate'] = fill_rate(stats['requests'], stats['impressions'])
+    
+    return stats
+
     
 def get_stats_fetcher(account_key, stats_endpoint):
     """

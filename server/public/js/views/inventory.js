@@ -281,14 +281,25 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var current_model = this.model;
-            var campaign_row = $('tr.campaign-row#campaign-' + this.model.id, this.el);
+            var order_row = $('tr.order-row#order-' + this.model.get('key'), this.el);
+
+            var display_fields = ['revenue',
+                                  'impressions',
+                                  'fill_rate',
+                                  'clicks',
+                                  'ctr'];
+            _.each(display_fields, function(field){
+                $("." + field, order_row).text(current_model.get_formatted_stat(field));
+            });
+            $(".lineitems", order_row).text(current_model.get('adgroups').length);
+            $(".loading-img", order_row).hide();
         }
 
     });
 
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
-    // window.AdGroupsView = AdGroupsView;
+    window.CampaignView = CampaignView;
     window.CollectionGraphView = CollectionGraphView;
 
 }(this.jQuery, this.Backbone, this._));

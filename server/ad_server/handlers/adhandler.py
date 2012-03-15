@@ -247,6 +247,7 @@ class AdHandler(webapp.RequestHandler):
 
         query_string = self.request.url.split("/m/ad?")[1] + "&exp=1"
         exp_url = "http://" + experimental_app_name + ".appspot.com/m/ad?" + query_string
+        exp_ur = "http://adserver.mopub.com/m/ad?" + query_string
         # exp_url = "http://localhost:8081/m/ad?" + query_string
 
         exp_url = exp_url.replace(adunit_id, new_id)  # Splice in proper id

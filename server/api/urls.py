@@ -52,11 +52,17 @@ urlpatterns = patterns(
         'app_service',
         name='adgroup_app_service'),
 
-    # /api/adgroup/<adgroup_key/apps/<app_key>
-    # individual app from an adgroup
+    # /api/campaign/<campaign_key>
+    # individual campaign
     url(r'^campaign/(?P<campaign_key>[-\w\.]+)$',
         'campaign_service',
         name='campaign_service'),
+
+    # /api/network_apps/<network>
+    # all app stats for the network
+    url(r'^network_apps/(?P<network>[-\w\.]+)$',
+        'network_apps_service',
+        name='network_apps_service'),
 
 
     # REFACTOR: move this to ad_network_reports

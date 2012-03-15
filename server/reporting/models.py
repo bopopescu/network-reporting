@@ -127,7 +127,7 @@ class StatsModel(db.Expando):
             return self.request_count
         return 0
 
-    def __init__(self, parent=None, key_name=None, **kwargs):
+    def __init__(self, parent=None, key_name=None, ad_network_stats=None, **kwargs):
         if not key_name and not kwargs.get('key', None):
 
             # rewrite the publisher, advertiser in case they are strings or unicode to db.Key()
@@ -165,6 +165,17 @@ class StatsModel(db.Expando):
                                          device_os=device_os,
                                          device_os_version=device_os_version,
                                          offline=offline)
+
+        # Translation between AdNetworkStats and StatsModel stats
+        AD_NETWORK_STATS = {'revenue': 'revenue',
+                            'attempts': 'request_count',
+                            'impressions': 'impression_count',
+                            'clicks': 'click_count'}
+        if ad_network_stats:
+            kwargs['date'] = datetime.datetime.combine(ad_network_stats.date,
+                    datetime.time())
+            for stat in AD_NETWORK_STATS.keys():
+                kwargs[AD_NETWORK_STATS[stat]] = getattr(ad_network_stats, stat)
 
         return super(StatsModel,self).__init__(parent=parent,key_name=key_name,**kwargs)
 

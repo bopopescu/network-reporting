@@ -17,25 +17,6 @@ var mopub = mopub || {};
 
 (function ($, Backbone, _) {
     "use strict";
-
-    /*
-     * ## Campaigns
-     */
-    var Campaign = Backbone.Model.extend({
-        defaults: {
-            name: '',
-            budget: 0.0,
-            budget_type: '',
-            start_datetime: new Date(),
-            end_datetime: null,
-            active: false
-        }
-    });
-
-    /*
-     * ## AdGroups
-     */
-
     /*
      * Helper functions for stats
      */
@@ -84,6 +65,38 @@ var mopub = mopub || {};
         calculate_fill_rate: calculate_fill_rate,
         format_stat: format_stat
     };
+
+
+    /*
+     * ## NetworkApp Model
+     * contains two StatsModels one for network collected stats the other for
+     * mopub collected stats
+     */
+    var NetworkApp = Backbone.Model.extend({
+    });
+
+
+    /*
+     * ## NetworkApp Collection
+     */
+    var NetworkApps = Backbone.Collection.extend({
+        model: NetworkApp,
+
+        parse: function(response) {
+            console.log('parsing');
+            console.log(response);
+            $.each(response, function (iter, network_app) {
+                network_app.mopub_stats = new StatsModel(network_app.mopub_stats);
+                network_app.network_stats = new StatsModel(network_app.network_stats);
+            });
+            return response;
+        },
+
+        url: function() {
+            return '/api/network_apps/' + this.network;
+        }
+    });
+
 
     /*
      * ## StatsModel
@@ -443,6 +456,8 @@ var mopub = mopub || {};
      * EXPOSE HIS JUNK
      * (We should find a better way to do this.)
      */
+    window.NetworkApp = NetworkApp;
+    window.NetworkApps = NetworkApps;
     window.AdUnit = AdUnit;
     window.AdUnitCollection = AdUnitCollection;
     window.App = App;

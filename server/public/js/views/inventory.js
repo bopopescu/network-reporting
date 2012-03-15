@@ -17,13 +17,57 @@ var mopub = window.mopub || {};
 (function ($, Backbone, _) {
     "use strict";
     /*
+     * ## NetworkAppsView
+     * Parameters:
+     * * model: NetworkApp
+     * * el: element that will hold the content
+     */
+    var NetworkAppsView = Backbone.View.extend({
+        initialize: function () {
+            console.log("initializing view");
+            this.collection.bind('reset', this.render, this);
+
+            this.el = '#' + this.collection.network + '-apps';
+
+            try {
+                this.template = _.template($('#network-app-template').html());
+            } catch (e) {
+                // you load the template partial in the page. ok if
+                // you intend to renderInline.
+            }
+        },
+        render: function () {
+            console.log("rendering collection");
+            var this_view = this;
+
+            console.log(this.collection);
+            var renderedContent;
+            this.collection.each(function (network_app) {
+                renderedContent += _.template($('#network-app-template').html(), {
+                    name: network_app.get('name'),
+                    network: network_app.get('network'),
+                    mopub_stats: network_app.get('mopub_stats'),
+                    network_stats: network_app.get('network_stats'),
+                });
+                //renderedContent += $(this_view.template(network_app.toJSON()));
+            });
+
+            $(this.el).html(renderedContent);
+
+            if (!$('#show-network').is(':checked')) {
+                console.log($(this.el + ' .network-data'));
+                $(this.el + ' .network-data').hide();
+            }
+
+            return this;
+        }
+    });
+
+    
+    /*
      * ## CampaignView
      * Parameters:
-     * * collection: Campaign
-     * * el: element that will hold the content
-     * * title: title that will be an h2 at the top of the content
-     * * type: 'network', 'gtee', 'promo', or 'backfill_promo' -- affects which fields are shown
-     * * tables: mapping of... MAPPING OF WHAT? I'M DYING TO KNOW
+     * * model: Campaign
      */
     var CampaignView = Backbone.View.extend({
         initialize: function () {
@@ -415,6 +459,7 @@ var mopub = window.mopub || {};
         }
     });
 
+    window.NetworkAppsView = NetworkAppsView;
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
     window.AdGroupsView = AdGroupsView;

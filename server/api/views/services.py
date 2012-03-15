@@ -384,6 +384,101 @@ def campaign_service(request, *args, **kwargs):
     return CampaignService()(request, use_cache=False, *args, **kwargs)
 
 
+class NetworkAppsService(RequestHandler):
+    """
+    API Service for delivering serialized AdGroup data
+    """
+    def get(self, network):
+        from ad_network_reports.models import AdNetworkAppMapper, AdNetworkStats
+        from ad_network_reports.query_managers import AdNetworkStatsManager
+
+        #try:
+        network_data = {}
+        stats_manager = StatsModelQueryManager(account=self.account)
+        # Iterate through all the apps and populate the stats for network_data
+        for app in AppQueryManager.get_apps(self.account):
+            network_config = app.network_config
+
+            all_stats = False
+            # Get data from the ad network
+            pub_id = getattr(network_config, network + '_pub_id', '')
+            if pub_id:
+                mapper = AdNetworkAppMapper.get_by_publisher_id(pub_id,
+                        network)
+                if mapper:
+                    # Get reporting graph stats
+                    all_stats = AdNetworkStatsManager. \
+                            get_stats_list_for_mapper_and_days(mapper.key(),
+                                    self.days)
+
+            if all_stats:
+                stats = reduce(lambda x, y: x+y, all_stats,
+                        AdNetworkStats())
+                if app.key() not in network_data:
+                    network_data[app.key()] = app
+                if hasattr(network_data[app.key()], 'network_stats'):
+                    network_data[app.key()].network_stats += stats
+                else:
+                    network_data[app.key()].network_stats = stats
+
+            # Get data collected by MoPub
+            for adunit in AdUnitQueryManager.get_adunits(account=self.
+                    account, app=app):
+                # One adunit per adgroup for network adunits
+                adgroup = AdGroupQueryManager.get_network_adunit_adgroup(
+                        adunit.key(),
+                        self.account.key(), network)
+
+                all_stats = stats_manager.get_stats_for_days(publisher=app,
+                                                             advertiser=
+                                                                adgroup,
+                                                             days=self.days)
+                stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
+
+                if app.key() not in network_data:
+                    network_data[app.key()] = app
+                if hasattr(network_data[app.key()], 'mopub_stats'):
+                    network_data[app.key()].mopub_stats += stats
+                else:
+                    network_data[app.key()].mopub_stats = stats
+
+        network_data = sorted(network_data.values(), key=lambda app_data:
+                app_data.identifier)
+
+        network_apps = []
+        for app in network_data:
+            app_data = app.toJSON()
+            app_data['mopub_stats'] = app.mopub_stats.to_dict()
+            app_data['network_stats'] = \
+                    StatsModel(ad_network_stats=app.network_stats).to_dict()
+            app_data['network'] = network
+            network_apps.append(app_data)
+
+        logging.info(network_apps)
+
+        return JSONResponse(network_apps)
+
+    #except Exception, exception:
+            #return JSONResponse({'error': str(exception)})
+
+
+    def post(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+    def put(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+    def delete(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+@login_required
+def network_apps_service(request, *args, **kwargs):
+    return NetworkAppsService()(request, use_cache=False, *args, **kwargs)
+
+
 ## Helper Functions
 
 def get_stats_fetcher(account_key, stats_endpoint):

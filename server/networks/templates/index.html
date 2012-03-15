@@ -132,7 +132,7 @@ Make a table for ad networks that are active
                             {{network.pretty_name}}
                         </a>
                         <div>
-                            <a class="show-hide button button-small" id="{{network.name}}" style="width:75px;">Show Apps</a>
+                            <a class="show-apps button button-small" id="{{network.name}}" style="width:75px;">Show Apps</a>
                         </div>
                     </td>
                     <td class="dataTable-data numeric">
@@ -179,14 +179,14 @@ Make a table for ad networks that are active
                 </tr>
             </tbody>
         </table>
+        <div class="appData-details hidden {{network.name}}-apps-div" style="margin: -10px 0 0 86px">
+            <table class="dataTable">
+                <tbody id="{{network.name}}-apps">
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
     </div>
-    <div class="appData-details hidden {{network.name}}-row" style="margin: -10px 0 0 86px">
-        <table class="dataTable">
-            <tbody id="app-on-{{network.name}}">
-            </tbody>
-        </table>
-    </div>
-    {% endfor %}
 </div>
 </section>
 {% endif %}
@@ -227,8 +227,8 @@ Make a table for the main ad networks that are not setup
 
 {% block extraScripts %}
 {{ block.super }}
-<script type="text/html" id="app-on-network-row-template">
-    {% include "partials/app_on_network.html" %}
+<script type="text/html" id="network-app-template">
+    {% include "partials/network_app.html" %}
 </script>
 <script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
 <script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
@@ -238,8 +238,6 @@ Make a table for the main ad networks that are not setup
 {% include_script "controllers/networks" %}
 <script>
     $(function () {
-        account_key = '{{ account_key }}';
-
         var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
 
         var today = {% if today != None %}{{ today }}{% else %}null{% endif %};
@@ -258,15 +256,15 @@ Make a table for the main ad networks that are not setup
             $('.network-data').toggle();
         }).change();
 
-        $('.show-adunits').click(function() {
+        $('.show-apps').click(function() {
             var key = $(this).attr('id');
-            var rows = $('.' + key + '-row');
-            if (rows.is(':hidden')) {
-                rows.show();
-                $(this).html("Hide Sites");
-                } else {
-                rows.hide()
-                $(this).html("Show Sites");
+            var div = $('.' + key + '-apps-div');
+            if (div.is(':hidden')) {
+                div.show();
+                $(this).html("Hide Apps");
+            } else {
+                div.hide()
+                $(this).html("Show Apps");
             }
         });
 

@@ -1,11 +1,43 @@
+# Deployed Friday, March 16, 2012 at 02:29PM PST
+### Deployed by John Pena
+### Tagged deploy-37
+### Bugs Fixed: []
+### Included Commits: 
+ * 00566fd fixed a stupid merge conflict
+ * 1a31df4 reports will be restored "soon" instead of yesterday
+ * 07b83e0 Added check in admob scraper to prevent it from breaking when the admob response is messed up
+ * c576f9f sending traffic to new ad server!
+ * 4e963ca sending traffic to new ad server!
+ * ea2054a Merge branch 'master' of github.com:mopub/mopub
+ * 720ccc1 Remove warning message
+ * c268258 Merge branch 'master' of github.com:mopub/mopub
+ * 0485a2a fixed version
+ * f0f07d0 fixed adgroup details datetime formatting
+ * fe3a073 Merge branch 'master' of github.com:mopub/mopub
+ * 9bb240f Merge branch '1032-campaign_datetime_validation' of github.com:mopub/mopub
+ * 84f3e74 Merge branch 'master' into update-network-stats
+ * 8b79d22 Merge branch 'update-network-stats' of github.com:mopub/mopub into update-network-stats
+ * 3dd453a Retry failed login for update ad networks script fixed
+ * 6924fec Fix for ad network reports day range since refactor change to the RequestHandler, fix for Ad Network Reporting Management Stats graph since refactor
+ * 20bd928 Fix for ad network reports day range since refactor change to the RequestHandler
+ * e76f9b5 fixed campaign datetime validation bug, added disturbingly comprehensive campaign datetime tests
+ * 0cfa03e Merge branch 'master' of github.com:mopub/mopub
+ * 76776b0 AdMob pagination fix, using relative paths for testing, stats get put to local GAE datastore for testing client side
+ * 5252103 Deployed without finding any bug fixes.
+ * be4ac46 Merge branch 'master' of github.com:mopub/mopub
+ * 0863bdb Merge branch 'master' of github.com:mopub/mopub
+ * 3a2fe9f Merge branch 'master' of github.com:mopub/mopub
+ * 5728e30 Merge branch 'master' of github.com:mopub/mopub
+ * 4688485 Merge branch 'frontend-refactor' of github.com:mopub/mopub
+ 
 # Deployed Wednesday, March 14, 2012 at 12:18PM PST
 ### Deployed by John Pena
 ### Tagged deploy-36
 ### Bugs Fixed: []
-### Included Commits: 
- * 404e2f5 Warn users that reports are not working now
- * a4b366f [#1008 state:resolved] [#1017 state:resolved]
- 
+### Included Commits:
+* 404e2f5 Warn users that reports are not working now
+* a4b366f [#1008 state:resolved] [#1017 state:resolved]
+
 # Deployed Wednesday, March 14, 2012 at 11:51AM PST
 ### Deployed by Nafis Jamal
 ### Tagged deploy-35

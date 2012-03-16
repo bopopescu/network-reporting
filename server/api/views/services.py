@@ -388,7 +388,7 @@ class NetworkAppsService(RequestHandler):
     """
     API Service for delivering serialized AdGroup data
     """
-    def get(self, network):
+    def get(self, network, adunits=False):
         from ad_network_reports.models import AdNetworkAppMapper, AdNetworkStats
         from ad_network_reports.query_managers import AdNetworkStatsManager
 
@@ -442,12 +442,22 @@ class NetworkAppsService(RequestHandler):
                 else:
                     network_apps_[app.key()].mopub_stats = stats
 
+                if adunits:
+                    adunit = adunit.toJSON()
+                    adunit['stats'] = stats.to_dict()
+                    if hasattr(network_apps_[app.key()], 'adunits'):
+                        network_apps_[app.key()].adunits.append(adunit)
+                    else:
+                        network_apps_[app.key()].adunits = [adunit]
+
         network_apps_ = sorted(network_apps_.values(), key=lambda app_data:
                 app_data.identifier)
 
         network_apps = []
         for app in network_apps_:
             app_data = app.toJSON()
+            if adunits:
+                app_data['adunits'] = app.adunits
             app_data['mopub_stats'] = app.mopub_stats.to_dict()
             app_data['network_stats'] = \
                     StatsModel(ad_network_stats=app.network_stats).to_dict()

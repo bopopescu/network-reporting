@@ -64,6 +64,11 @@ urlpatterns = patterns(
         'network_apps_service',
         name='network_apps_service'),
 
+    # /api/network_apps/<network>/adunits
+    # all app stats for the network including adunits
+    url(r'^network_apps/(?P<network>[-\w\.]+)/(?P<adunits>adunits)$',
+        'network_apps_service',
+        name='network_apps_service'),
 
     # REFACTOR: move this to ad_network_reports
     url(r'^ad_network/account_roll_up/$',

@@ -117,31 +117,41 @@ $(function() {
                 }
             });
 
-            // TODO: make functions and call them
+            console.log('network_data');
+            console.log(network_data);
+            // TODO: remove this shit, stop loopin over networks
             // Load rolled up network stats
-            $.each(network_data, function(index, network) {
-                
-                var roll_up = new RollUp({
-                    id: network.name,
-                    type: 'network'
-                });
-                var roll_up_view = new RollUpView({
-                    model: roll_up
-                });
-                roll_up.fetch({ data: ajax_query_string });
+            var roll_up = new RollUp({
+                id: network_data.name,
+                type: 'network'
             });
+            var roll_up_view = new RollUpView({
+                model: roll_up
+            });
+            roll_up.fetch({ data: ajax_query_string });
             
             // Load stats for app on network
-            $.each(network_data, function(index, network) {
-                if(network.models.length > 0) {
-                    var apps_on_network = new AppOnNetworkCollection(network.models);
-                    apps_on_network.each(function(app_on_network) {
-                        var app_on_network_view = new AppOnNetworkView({
-                            model: app_on_network
-                        });
-                        app_on_network.fetch({ data: ajax_query_string });
-                    });
-                }
+            var apps_on_network = new AppOnNetworkCollection(network_data.models);
+            apps_on_network.each(function(app_on_network) {
+                var app_on_network_view = new AppOnNetworkView({
+                    model: app_on_network
+                });
+                app_on_network.fetch({ data: ajax_query_string });
+            });
+
+
+            // Load NetworkApps Collections
+            // TODO: Render inline
+            var network_apps = new NetworkApps();
+
+            network_apps.network = network_data.name;
+            console.log('network_apps');
+            console.log(network_data.name);
+            var network_apps_view = new NetworkAppsView({
+                collection: network_apps
+            });
+            network_apps.fetch({
+                data: ajax_query_string,
             });
         }
     }

@@ -617,11 +617,11 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
 
     def combined(self,
                  stats_manager):
-        for ad_network_name, stats in stats_manager.stats_dict.iteritems():
+        for network in AD_NETWORK_NAMES.keys():
             for stat in (list(MANAGEMENT_STAT_NAMES) + [FAILED_LOGINS]):
-                setattr(self.stats_dict[ad_network_name], stat, getattr(
-                    self.stats_dict[ad_network_name], stat) + getattr(
-                    stats_manager.stats_dict[ad_network_name], stat))
+                setattr(self.stats_dict[network], stat, getattr(
+                    self.stats_dict[network], stat) + getattr(
+                    stats_manager.stats_dict[network], stat))
 
     def put_stats(self):
         for stats in self.stats_dict.values():

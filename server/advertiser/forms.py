@@ -14,14 +14,13 @@ from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
 from common.utils import helpers
 from common.utils.timezones import Pacific_tzinfo
 from common.utils.tzinfo import UTC
+from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 
-from widgets import CustomizableSplitDateTimeWidget
+from advertiser.widgets import CustomizableSplitDateTimeWidget
 
 
 #THIS ORDER IS VERY IMPORTANT DO NOT CHANGE IT (thanks!)
 GEO_LIST = (COUNTRY_GEO, REGION_GEO, CITY_GEO)
-
-import logging
 
 
 def get_filetype_extension(filename):
@@ -155,6 +154,7 @@ class LineItemForm(forms.ModelForm):
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
         if instance:
+            # gtee
             if 'gtee' in instance.adgroup_type:
                 if 'high' in instance.adgroup_type:
                     initial['gtee_priority'] = 'high'
@@ -162,15 +162,14 @@ class LineItemForm(forms.ModelForm):
                     initial['gtee_priority'] = 'low'
                 initial['adgroup_type'] = 'gtee'
 
-                if instance.bid_strategy == 'cpm':
-                    if instance.budget_type == 'daily':
-                        budget = instance.daily_budget or 0.0
-                    else:
-                        budget = instance.full_budget or 0.0
-                    initial['budget'] = int(1000.0 * budget / instance.bid)
-                elif instance.budget_type == 'full_campaign':
+                if instance.budget_type == 'daily':
+                    initial['budget'] = instance.daily_budget
+                else:
                     initial['budget'] = instance.full_budget
 
+                if instance.bid_strategy == 'cpm':
+                    initial['budget'] = int(1000.0 * initial['budget'] / instance.bid)
+            # promo
             elif instance.adgroup_type == 'backfill_promo':
                 initial['adgroup_type'] = 'promo'
                 initial['promo_priority'] = 'backfill'
@@ -188,11 +187,14 @@ class LineItemForm(forms.ModelForm):
             for geo_predicate in instance.geo_predicates:
                 preds = geo_predicate.split(',')
                 geo_predicates.append(','.join([str(pred.split('=')[1]) for pred in preds]))
-            initial.update(geo_predicates=geo_predicates)
+            initial['geo_predicates'] = geo_predicates
 
+            # TODO: seems like we don't need this?
+            """
             if len(geo_predicates) == 1 and len(instance.cities):
                 initial['region_targeting'] = 'city'
                 initial.update(cities=instance.cities)
+            """
 
         # allows us to set choices on instantiation
         site_keys = kwargs.pop('site_keys', [])
@@ -210,6 +212,7 @@ class LineItemForm(forms.ModelForm):
             return budget
 
     def clean_start_datetime(self):
+        # TODO: if it is an existing campaign, you shouldn't be able to move the start date to the past
         # TODO: can't change the start date after a campaign has started.
         start_datetime = self.cleaned_data.get('start_datetime', None)
         if start_datetime:
@@ -248,7 +251,6 @@ class LineItemForm(forms.ModelForm):
 
     def clean_keywords(self):
         keywords = self.cleaned_data.get('keywords', None)
-        logging.warning("keywords: %s" % keywords)
         if keywords:
             if len(keywords) > 500:
                 raise forms.ValidationError('Maximum 500 characters for keywords.')
@@ -258,13 +260,13 @@ class LineItemForm(forms.ModelForm):
         cleaned_data = super(LineItemForm, self).clean()
 
         # start and end datetimes
-        start_datetime = cleaned_data.get('start_datetime', None)
-        end_datetime = cleaned_data.get('end_datetime', None)
         # if start_datetime is None, use the current time
-        if not start_datetime:
+        if not cleaned_data.get('start_datetime', None):
             cleaned_data['start_datetime'] = datetime.now()
+        start_datetime = cleaned_data['start_datetime']
+        end_datetime = cleaned_data.get('end_datetime', None)
         # end_datetime must be after start_datetime
-        if start_datetime and end_datetime and end_datetime < start_datetime:
+        if end_datetime and end_datetime <= start_datetime:
             if 'end_datetime' not in self._errors:
                 self._errors['end_datetime'] = ErrorList()
             self._errors['end_datetime'].append("Stop time must be after start time")
@@ -280,27 +282,31 @@ class LineItemForm(forms.ModelForm):
                 cleaned_data['adgroup_type'] = 'gtee_%s' % cleaned_data['gtee_priority']
 
             # budget
-            has_required = True
-            for field in ('bid_strategy', 'bid', 'budget', 'budget_type', 'budget_strategy'):
-                if not cleaned_data.get(field, None):
-                    if field not in self._errors:
-                        self._errors[field] = ErrorList()
-                    self._errors[field].append("This field is required")
-                    has_required = False
-            if has_required:
-                # BEWARE HACKS
-                # if the campaign is a cpm campaign, we need to calculate what the budget
-                # will be, since budgets are stored in dollar amounts.
-                if cleaned_data['budget_type'] == 'daily':
-                    cleaned_data['budget'] = self._calculate_budget(cleaned_data['budget'])
-                    cleaned_data['full_budget'] = None
-                else:
-                    if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
-                        if 'budget_strategy' not in self._errors:
-                            self._errors['budget_strategy'] = ErrorList()
-                        self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
-                    cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
-                    cleaned_data['budget'] = None
+            if not cleaned_data.get('budget', None):
+                cleaned_data['daily_budget'] = None
+                cleaned_data['full_budget'] = None
+            else:
+                has_required = True
+                for field in ('bid_strategy', 'bid', 'budget_type', 'budget_strategy'):
+                    if not cleaned_data.get(field, None):
+                        if field not in self._errors:
+                            self._errors[field] = ErrorList()
+                        self._errors[field].append("This field is required")
+                        has_required = False
+                if has_required:
+                    # BEWARE HACKS
+                    # if the campaign is a cpm campaign, we need to calculate what the budget
+                    # will be, since budgets are stored in dollar amounts.
+                    if cleaned_data['budget_type'] == 'daily':
+                        cleaned_data['daily_budget'] = self._calculate_budget(cleaned_data['budget'])
+                        cleaned_data['full_budget'] = None
+                    else:
+                        if not cleaned_data['end_datetime'] and cleaned_data['budget_strategy'] != 'allatonce':
+                            if 'budget_strategy' not in self._errors:
+                                self._errors['budget_strategy'] = ErrorList()
+                            self._errors['budget_strategy'].append("Delivery speed must be all at once for total budget with no stop time")
+                        cleaned_data['full_budget'] = self._calculate_budget(cleaned_data['budget'])
+                        cleaned_data['daily_budget'] = None
 
         # promo
         elif cleaned_data['adgroup_type'] == 'promo':
@@ -312,7 +318,7 @@ class LineItemForm(forms.ModelForm):
             elif cleaned_data['promo_priority'] == 'backfill':
                 cleaned_data['adgroup_type'] = 'backfill_promo'
             # promo campaigns have no budget
-            cleaned_data['budget'] = None
+            cleaned_data['daily_budget'] = None
             cleaned_data['full_budget'] = None
             cleaned_data['budget_type'] = None
             cleaned_data['budget_strategy'] = None
@@ -322,6 +328,19 @@ class LineItemForm(forms.ModelForm):
             cleaned_data['cities'] = []
 
         return cleaned_data
+
+    def save(self, *args, **kwargs):
+        if self.instance and self.instance.site_keys:
+            adunits = AdUnitQueryManager.get(self.instance.site_keys)
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        line_item = super(forms.ModelForm, self).save(*args, **kwargs)
+
+        if line_item.site_keys:
+            adunits = AdUnitQueryManager.get(line_item.site_keys)
+            AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        return line_item
 
     class Meta:
         model = LineItem
@@ -608,5 +627,3 @@ LEVELS = (
 
 class ContentFilterForm(forms.Form):
     level = forms.ChoiceField(choices=LEVELS, widget=forms.RadioSelect)
-
-

@@ -18,6 +18,7 @@ from django.utils import simplejson
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import JSONResponse, render_to_response
 
+from account.query_managers import AccountQueryManager
 from advertiser.forms import OrderForm, LineItemForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from publisher.query_managers import AppQueryManager
@@ -114,12 +115,17 @@ class OrderFormHandler(RequestHandler):
     Edit order form handler which gets submitted from the order detail page.
     """
     def post(self, order_key):
+        if not self.request.is_ajax():
+            raise Http404
+
+        # TODO: make sure order is part of account?
         instance = CampaignQueryManager.get(order_key)
         order_form = OrderForm(self.request.POST, instance=instance)
 
         if order_form.is_valid():
             order = order_form.save()
             order.save()
+            CampaignQueryManager.put(order)
             # TODO: in js reload instead of looking for redirect
             return JSONResponse({
                 'success': True,
@@ -176,6 +182,9 @@ class OrderAndLineItemFormHandler(RequestHandler):
         }
 
     def post(self, order_key=None, line_item_key=None):
+        if not self.request.is_ajax():
+            raise Http404
+
         if order_key:
             # TODO: make sure order belongs to account
             order = CampaignQueryManager.get(order_key)
@@ -211,7 +220,11 @@ class OrderAndLineItemFormHandler(RequestHandler):
                     'success': False,
                 })
 
-        line_item_form = LineItemForm(self.request.POST, instance=line_item)
+        # TODO: do this in the form? maybe pass the account in?
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        site_keys = [(unicode(adunit.key()), '') for adunit in adunits]
+
+        line_item_form = LineItemForm(self.request.POST, instance=line_item, site_keys=site_keys)
 
         if line_item_form.is_valid():
             line_item = line_item_form.save()
@@ -219,6 +232,11 @@ class OrderAndLineItemFormHandler(RequestHandler):
             line_item.campaign = order
             line_item.save()
             AdGroupQueryManager.put(line_item)
+
+            # Onboarding: user is done after they set up their first campaign
+            if self.account.status == "step4":
+                self.account.status = ""
+                AccountQueryManager.put_accounts(self.account)
 
             # TODO: go to order or line item detail page?
             return JSONResponse({
@@ -229,6 +247,13 @@ class OrderAndLineItemFormHandler(RequestHandler):
         else:
             errors = {}
             for key, value in line_item_form.errors.items():
+                # TODO: find a less hacky way to get jQuery validator's
+                # showErrors function to work with the SplitDateTimeWidget
+                if key == 'start_datetime':
+                    key = 'start_datetime_1'
+                elif key == 'end_datetime':
+                    key = 'end_datetime_1'
+                # TODO: just join value?
                 errors[key] = ' '.join([error for error in value])
 
             return JSONResponse({

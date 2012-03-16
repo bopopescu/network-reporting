@@ -1,4 +1,4 @@
-ADSERVER_ADMIN_HOSTNAME = 'ec2-107-20-33-24.compute-1.amazonaws.com'
+ADSERVER_ADMIN_HOSTNAME = 'adserver.mopub.com'
 ADSERVER_HOSTNAME = 'adserver.mopub.com'
 
 

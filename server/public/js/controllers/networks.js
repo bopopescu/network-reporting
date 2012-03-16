@@ -145,6 +145,7 @@ $(function() {
             var network_apps = new NetworkApps();
 
             network_apps.network = network_data.name;
+            network_apps.type = 'adunits';
             console.log('network_apps');
             console.log(network_data.name);
             var network_apps_view = new NetworkAppsView({

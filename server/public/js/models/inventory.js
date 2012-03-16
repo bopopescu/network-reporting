@@ -83,16 +83,26 @@ var mopub = mopub || {};
         model: NetworkApp,
 
         parse: function(response) {
+            var this_collection = this;
+
             console.log('parsing');
             console.log(response);
             $.each(response, function (iter, network_app) {
                 network_app.mopub_stats = new StatsModel(network_app.mopub_stats);
                 network_app.network_stats = new StatsModel(network_app.network_stats);
+                if (this_collection.type == 'adunits') {
+                    $.each(network_app.adunits, function (iter, adunit) {
+                        adunit.stats = new StatsModel(adunit.stats);
+                    });
+                }
             });
             return response;
         },
 
         url: function() {
+            if (this.type == 'adunits') {
+                return '/api/network_apps/' + this.network + '/adunits';
+            }
             return '/api/network_apps/' + this.network;
         }
     });

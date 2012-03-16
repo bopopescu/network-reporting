@@ -40,23 +40,59 @@ var mopub = window.mopub || {};
             console.log("rendering collection");
             var this_view = this;
 
-            console.log(this.collection);
-            var renderedContent;
-            this.collection.each(function (network_app) {
-                renderedContent += _.template($('#network-app-template').html(), {
-                    name: network_app.get('name'),
-                    network: network_app.get('network'),
-                    mopub_stats: network_app.get('mopub_stats'),
-                    network_stats: network_app.get('network_stats'),
+            if (this.collection.type == 'adunits') {
+                var metrics = ['cpm', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
+
+                this.collection.each(function (network_app) {
+                    console.log('NETWORK_APP');
+                    console.log(network_app);
+
+                    var row = $("tr#" + network_app.id + "-row");
+
+                    // Set app level mopub and network stats
+                    $.each(metrics, function (iter, metric) {
+                        var mopub_selector = '.mopub-' + metric;
+                        var network_selector = '.network-' + metric;
+                        $(mopub_selector, row).text(network_app.get('mopub_stats').get_formatted_stat(metric));
+                        $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat(metric));
+                    });
+                    var network_selector = '.network-revenue';
+                    $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat('revenue'));
+
+                    // Set app level mopub and network stats
+                    var renderedContent = '';
+                    $.each(network_app.get('adunits'), function (iter, adunit) {
+                        renderedContent += _.template($('#network-app-template').html(), {
+                            name: adunit.name,
+                            mopub_stats: adunit.stats,
+                            network_stats: false,
+                            buffer: true,
+                        });
+                    });
+
+                    var tbody = $("tbody#" + network_app.id + "-stats");
+                    console.log(tbody);
+
+                    $(tbody).append(renderedContent);
                 });
-                //renderedContent += $(this_view.template(network_app.toJSON()));
-            });
+            } else {
+                var renderedContent = '';
+                this.collection.each(function (network_app) {
+                    renderedContent += _.template($('#network-app-template').html(), {
+                        name: network_app.get('name'),
+                        network: network_app.get('network'),
+                        mopub_stats: network_app.get('mopub_stats'),
+                        network_stats: network_app.get('network_stats'),
+                        buffer: false,
+                    });
+                    //renderedContent += $(this_view.template(network_app.toJSON()));
+                });
 
-            $(this.el).html(renderedContent);
+                $(this.el).html(renderedContent);
 
-            if (!$('#show-network').is(':checked')) {
-                console.log($(this.el + ' .network-data'));
-                $(this.el + ' .network-data').hide();
+                if (!$('#show-network').is(':checked')) {
+                    $(this.el + ' .network-data').hide();
+                }
             }
 
             return this;

@@ -3,4 +3,4 @@ ADSERVER_HOSTNAME = 'adserver.mopub.com'
 
 
 USER_PUSH_URL = '/admin/adunit_user_push'
-BUDGET_UPDATE_URL = '/gae/campaign_update'
+BUDGET_UPDATE_URL = '/admin/campaign_update'

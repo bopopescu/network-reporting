@@ -46,8 +46,9 @@
         <tr>
           <th class="line_itemData-icon"></th>
           <th class="dataTable-name"> Name </th>       
-          <th class="dataTable-data numeric">Revenue</th>                
-          <th class="dataTable-data status numeric">Status</th>                
+          <th class="dataTable-data numeric">Priorty</th>
+          <th class="dataTable-data numeric">Status</th>
+          <th class="dataTable-data status numeric">Revenue</th>                
           <th class="dataTable-data numeric">
             <a id="line_item-ecpm-helpLink" class="whatsthis" href="#">
               <div class="whatsthis-icon"></div>
@@ -91,6 +92,7 @@
             {% endif %}
           </span>
         </td>
+        <td> {{line_item.adgroup_type}} </td>
 
         <td class="dataTable-data status numeric">
           {% if line_item.active and line_item.has_started and not line_item.is_finished %}
@@ -146,6 +148,9 @@
   <section>
     <h3 class="left"> Inventory targeted by {{ line_item.name }} </h3>
     <a class="btn right" href="#"> Change targeting </a>
+
+    {% inventory_table targeted_apps %}
+    
   </section>
 {% endblock content %}
 

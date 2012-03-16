@@ -21,18 +21,20 @@ from common.ragendja.template import JSONResponse, render_to_response
 from account.query_managers import AccountQueryManager
 from advertiser.forms import OrderForm, LineItemForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
-from publisher.query_managers import AppQueryManager
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from reporting.query_managers import StatsModelQueryManager
 from reporting.models import StatsModel
 
 import logging
+
+
+flatten = lambda l: [item for sublist in l for item in sublist]
 
 ctr = lambda clicks, impressions: \
       (clicks/float(impressions) if impressions else 0)
 
 class OrderIndexHandler(RequestHandler):
     """
-    @responsible: pena
     Shows a list of orders and line items.
     Orders show:
       - name, status, advertiser, and a top-level stats rollup.
@@ -40,7 +42,6 @@ class OrderIndexHandler(RequestHandler):
       - name, dates, budgeting information, top-level stats.
     """
     def get(self):
-
 
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
 
@@ -63,16 +64,32 @@ class OrderDetailHandler(RequestHandler):
     Lists each line item within the order with links to line item details.
     """
     def get(self, order_key):
+
+        # Grab the campaign info
         order = CampaignQueryManager.get(order_key)
-        order_form = OrderForm(instance=order)
         
+        # Set up the stats
         stats_q = StatsModelQueryManager(self.account, self.offline)
         all_stats = stats_q.get_stats_for_days(advertiser=order,
                                                      days = self.days)
+
+        # Get the targeted adunits and group them by their app.
+        targeted_adunits = flatten([AdUnitQueryManager.get(line_item.site_keys) \
+                                    for line_item in order.adgroups])
+        # Database I/O could be made faster here by getting a list of
+        # app keys and querying for the list, rather than querying
+        # for each individual app. (au.app makes a query)
+        targeted_apps = [au.app for au in targeted_adunits]
+        for app in targeted_apps:
+            app.adunits = [au for au in targeted_adunits if au.app == app]
+        
+        # Set up the form
+        order_form = OrderForm(instance=order)
         return {
             'order': order,
             'order_form': order_form,
             'stats': format_stats(all_stats),
+            'targeted_apps': targeted_apps
         }
 
 
@@ -87,20 +104,31 @@ class LineItemDetailHandler(RequestHandler):
     Almost identical to current campaigns detail page.
     """
     def get(self, line_item_key, order_key=None):
-        
+
+        # Get the metadata for the lineitem and its order
         order = CampaignQueryManager.get(order_key)
         line_item = AdGroupQueryManager.get(line_item_key)
-        stats_q = StatsModelQueryManager(self.account, self.offline)
 
+        # Get the stats for the date range
+        stats_q = StatsModelQueryManager(self.account, self.offline)
         all_stats = stats_q.get_stats_for_days(advertiser=line_item,
                                                      days = self.days)
-        
         line_item.stats = reduce(lambda x, y: x + y, all_stats, StatsModel())
+
+        # Get the targeted adunits and group them by their app.
+        targeted_adunits = AdUnitQueryManager.get(line_item.site_keys)
+        # Database I/O could be made faster here by getting a list of
+        # app keys and querying for the list, rather than querying
+        # for each individual app. (au.app makes a query)
+        targeted_apps = [au.app for au in targeted_adunits]
+        for app in targeted_apps:
+            app.adunits = [au for au in targeted_adunits if au.app == app]
         
         return {
             'order': order,
             'line_item': line_item,
             'stats': format_stats(all_stats),
+            'targeted_apps': targeted_apps
         }
 
 
@@ -308,3 +336,7 @@ def format_stats(all_stats):
         },
     }
     return stats
+
+        
+        
+        

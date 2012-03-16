@@ -159,7 +159,7 @@
               </thead>
               <tbody>
 
-                {% for adgroup in level.adgroups %}
+                {% for adgroup in gtee %}
                   <tr>
                     <th>
                       {% status_icon adgroup %}
@@ -269,7 +269,7 @@
                       {% if forloop.counter0 == 0 %}
                         <tr>
                           <th>
-                            {% if marketplace_activated and active_mpx_adunit_exists %}
+                            {% if marketplace_activated %}
                               <img src="/images/active.gif" height=9 width=9 />
                             {% else %}
                               <img src="/images/inactive.gif" height=9 width=9 />

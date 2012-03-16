@@ -35,7 +35,7 @@
 
   {# The order edit form, hidden by default #}
   <section class="offset hidden" id="order_form_container">
-    <form id="order_form" method="post">
+    <form id="order_form" method="post" action="{% url advertiser_order_form_edit order.key %}">
       {% include 'forms/order_form.html' %}      
       <a class="btn right" id="submit" href="#">Continue</a>        
     </form>
@@ -48,13 +48,17 @@
     <a class="btn right" href='{% url advertiser_line_item_form_new order.key %}'>
       New Line Item
     </a>
+    <a class="btn right" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
+      Edit this order
+    </a>
     {% order_table order %}  
   </section>
 
   {# Table that shows all of the adunits being targeted #}
   <section>
-    <h3 class="left"> Inventory targeted by {{ order.name }} </h3>
-    <a class="btn right" href="#"> Change targeting </a>
+    <h3 class="left"> Inventory targeted by line items in {{ order.name }} </h3>
+
+    {% inventory_table targeted_apps %}
   </section>
 {% endblock content %}
 

@@ -114,26 +114,28 @@ class AdMobScraper(Scraper):
             site_stats = json.load(urllib2.urlopen(req))
             page_total = site_stats['page']['total']
             print '%s / %s' % (page, page_total)
-            for stats in site_stats['data']:
-                nsr = NetworkScrapeRecord(revenue = stats['revenue'],
-                                          attempts = stats['requests'],
-                                          impressions = stats['impressions'],
-                                          clicks = stats['clicks'])
 
-                if 'site_id' in stats:
-                    nsr.app_tag = stats['site_id']
-                else:
-                    nsr.app_tag = ids[0]
-                records.append(nsr)
+            if site_stats['data']:
+                for stats in site_stats['data']:
+                    nsr = NetworkScrapeRecord(revenue = stats['revenue'],
+                                              attempts = stats['requests'],
+                                              impressions = stats['impressions'],
+                                              clicks = stats['clicks'])
+
+                    if 'site_id' in stats:
+                        nsr.app_tag = stats['site_id']
+                    else:
+                        nsr.app_tag = ids[0]
+                    records.append(nsr)
             page += 1
 
         return records
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    NC.username = 'mobiles.republic@gmail.com'
-    NC.password = '5qgpktxk5bg8ft83'
-    NC.client_key = 'k76d65f8cf09414ecb2ac44bec871c77'
+    NC.username = 'developers@animoca.com'
+    NC.password = '5zfy6wmbx4kcgflq'
+    NC.client_key = 'k0df241c82bfe3c34d8fe7750c1705e6'
     NC.ad_network_name = 'admob'
     SCRAPER = AdMobScraper(NC)
     all_stats = SCRAPER.get_site_stats(date.today() - timedelta(days=2))

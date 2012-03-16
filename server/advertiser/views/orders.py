@@ -86,7 +86,7 @@ class LineItemDetailHandler(RequestHandler):
     """
     Almost identical to current campaigns detail page.
     """
-    def get(self, order_key, line_item_key):
+    def get(self, line_item_key, order_key=None):
         
         order = CampaignQueryManager.get(order_key)
         line_item = AdGroupQueryManager.get(line_item_key)

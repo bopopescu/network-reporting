@@ -30,7 +30,7 @@
       There are no ad sources targeting this ad unit.
       To show ads here, set up a new ad campaign or
       add this ad unit to an existing campaign on the
-      <a href="{% url advertiser_campaign %}">Campaigns</a> page.
+      <a href="{% url advertiser_order_index %}">Campaigns</a> page.
     </div>
   {% endif %}
 
@@ -163,7 +163,10 @@
                   <tr>
                     <th>
                       {% status_icon adgroup %}
-                      <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{ adgroup.name }}</a><br />
+                      <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        {{ adgroup.name }}
+                      </a>
+                      <br />
                       <span class="muted">
                         {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                           {{adgroup.campaign.start_datetime|format_date}} -
@@ -216,10 +219,11 @@
                 {% for adgroup in promo %}
                   <tr>
                     <th>
-                    {% status_icon adgroup %}
-                    <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                      {{adgroup.name}}
-                      </a><br/>
+                      {% status_icon adgroup %}
+                      <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        {{ adgroup.name }}
+                      </a>
+                      <br/>
                       <span class="muted">
                           {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
                             {{adgroup.campaign.start_date|format_date_compact}}
@@ -289,9 +293,10 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                          {{adgroup.name}}
-                        </a><br/>
+                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                          {{ adgroup.name }}
+                        </a>
+                        <br/>
                         <span class="muted">{{adgroup.network_type}}</span>
                       </th>
 
@@ -312,10 +317,10 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                          {{adgroup.name}}
-                        </a><br/>
-
+                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                          {{ adgroup.name }}
+                        </a>
+                        <br/>
                         <span class="muted">
 
                           {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}

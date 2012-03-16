@@ -158,7 +158,16 @@
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeLineItemDetail({
             order_key: "{{ order.key }}",
-            lineitem_key: "{{ lineitem.key }}"
+            lineitem_key: "{{ lineitem.key }}",
+            daily_stats: {
+                requests: {{ stats.requests.series }},
+                impressions: {{ stats.impressions.series }},
+                clicks: {{ stats.clicks.series }},
+                users: {{ stats.users.series }},
+            },
+            start_date:  Date.UTC({{ start_date.year }},
+                                  {{ start_date.month|add:"-1" }}, 
+                                  {{ start_date.day }})
         });
     });
 </script>

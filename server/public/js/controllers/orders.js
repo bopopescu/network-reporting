@@ -1,25 +1,61 @@
 (function ($, mopub) {
     "use strict";
 
-    function renderCampaigns(campaigns) {
-        _.each(campaigns.models, function(campaign) {
+    function initializeDateButtons() {
+        // set up stats breakdown dateOptions
+        $('#stats-breakdown-dateOptions input').click(function() {
+            $('.stats-breakdown-value').hide();
+            $('.stats-breakdown-value.'+$(this).val()).show();
+        });
+    }
+
+    function renderCampaign(campaign) {
             
-            var campaign_view = new CampaignView({
-                model: campaign,
+        var campaign_view = new CampaignView({
+            model: campaign,
+            el: 'orders_table'
+        });
+        campaign_view.renderInline();
+        
+        var adgroups = new AdGroupCollection(campaign.get('adgroups'));
+        adgroups.each(function(adgroup){
+            var adgroup_view = new AdGroupView({
+                model: adgroup,
                 el: 'orders_table'
-            });
-            campaign_view.renderInline();
-            
-            var adgroups = new AdGroupCollection(campaign.get('adgroups'));
-            console.log(adgroups);
-            adgroups.each(function(adgroup){
-                var adgroup_view = new AdGroupView({
-                    model: adgroup,
-                    el: 'orders_table'
                 });
-                adgroup_view.renderInline();
+            adgroup_view.renderInline();
+        });
+    }
+
+    function renderChart(stats, start_date) {
+        mopub.dashboardStatsChartData = {
+            pointStart: start_date,
+            pointInterval: 86400000,
+            requests: [{ "Total": stats.requests }],
+            impressions: [{ "Total": stats.impressions }],
+            clicks: [{ "Total": stats.clicks }],
+            users: [{ "Total": stats.users }]
+        };
+
+        mopub.Chart.setupDashboardStatsChart('area');
+
+        $('.stats-breakdown tr').click(function(e) {
+            $('#dashboard-stats-chart').fadeOut(100, function() {
+                mopub.Chart.setupDashboardStatsChart('area');
+                $(this).show();
             });
         });
+
+        $('.stats-breakdown tr').click(function(e) {
+            var row = $(this);
+            if (!row.hasClass('active')) {
+                var table = row.parents('table');
+                $('tr.active', table).removeClass('active');
+                row.addClass('active');
+            }
+        });
+
+
     }
 
     var OrdersController = {
@@ -29,8 +65,10 @@
             campaigns.stats_endpoint = 'direct';
 
             // Once the campaigns have been fetched, render them.
-            campaigns.bind('reset', function(campaigns_collection) {                
-                renderCampaigns(campaigns_collection);
+            campaigns.bind('reset', function(campaigns_collection) {
+                _.each(campaigns.models, function(campaign) {
+                    renderCampaign(campaign);
+                });
             });
 
             // Fetch the campaigns
@@ -78,11 +116,28 @@
                 }
             });
 
+            var campaign = new Campaign({
+                id: bootstrapping_data.order_key,
+                stats_endpoint: 'direct'
+            });
+
+            campaign.bind('change', function(current_campaign) {
+                renderCampaign(campaign);
+            });
+
+            campaign.fetch();
+
+            renderChart(bootstrapping_data.daily_stats, 
+                        bootstrapping_data.start_date);
             
+            initializeDateButtons();
+
+            // Sets up the click handler for the order form
             $("a#order_form_edit").click(function(e){
                 e.preventDefault();
                 $("#order_form_container").show();
             });
+
             // submit button
             $('form#order_form #submit').click(function(e) {
                 e.preventDefault();
@@ -91,7 +146,9 @@
         },
 
         initializeLineItemDetail: function(bootstrapping_data) {
-
+            renderChart(bootstrapping_data.daily_stats, 
+                        bootstrapping_data.start_date);
+            initializeDateButtons();
         },
 
         initializeOrderAndLineItemForm: function(bootstrapping_data) {

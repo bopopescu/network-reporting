@@ -13,6 +13,7 @@ Whenever you see "Campaign", think "Order", and wherever you see
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
+from django.utils import simplejson
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import JSONResponse, render_to_response
@@ -20,6 +21,8 @@ from common.ragendja.template import JSONResponse, render_to_response
 from advertiser.forms import OrderForm, LineItemForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from publisher.query_managers import AppQueryManager
+from reporting.query_managers import StatsModelQueryManager
+from reporting.models import StatsModel
 
 import logging
 
@@ -44,7 +47,6 @@ class OrderIndexHandler(RequestHandler):
 
         return {
             'orders': orders,
-            'stats': format_stats_for_campaign(0)
         }
 
 
@@ -62,10 +64,14 @@ class OrderDetailHandler(RequestHandler):
     def get(self, order_key):
         order = CampaignQueryManager.get(order_key)
         order_form = OrderForm(instance=order)
+        
+        stats_q = StatsModelQueryManager(self.account, self.offline)
+        all_stats = stats_q.get_stats_for_days(advertiser=order,
+                                                     days = self.days)
         return {
             'order': order,
             'order_form': order_form,
-            'stats': format_stats_for_campaign(order)
+            'stats': format_stats(all_stats),
         }
 
 
@@ -83,11 +89,17 @@ class LineItemDetailHandler(RequestHandler):
         
         order = CampaignQueryManager.get(order_key)
         line_item = AdGroupQueryManager.get(line_item_key)
+        stats_q = StatsModelQueryManager(self.account, self.offline)
 
+        all_stats = stats_q.get_stats_for_days(advertiser=line_item,
+                                                     days = self.days)
+        
+        line_item.stats = reduce(lambda x, y: x + y, all_stats, StatsModel())
+        
         return {
             'order': order,
             'line_item': line_item,
-            'stats': format_stats_for_adgroup(line_item)
+            'stats': format_stats(all_stats),
         }
 
 
@@ -235,66 +247,39 @@ def order_and_line_item_form(request, *args, **kwargs):
 # Helpers #
 ###########
 
-def format_stats_for_adgroup(adgroup):
+def format_stats(all_stats):
+    summed = reduce(lambda x, y: x + y, all_stats, StatsModel())
     stats = {
         'requests': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0,
+            'today': all_stats[0].request_count,
+            'yesterday': all_stats[1].request_count,
+            'total': summed.request_count,
+            'series': [int(s.request_count) for s in all_stats]
         },
         'impressions': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0,
+            'today': all_stats[0].impression_count,
+            'yesterday': all_stats[1].impression_count,
+            'total': summed.impression_count,
+            'series': [int(s.impression_count) for s in all_stats]
         },
         'users': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0
+            'today': all_stats[0].user_count,
+            'yesterday': all_stats[1].user_count,
+            'total': summed.user_count,
+            'series': [int(s.user_count) for s in all_stats]
         },
         'ctr': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0
+            'today': ctr(all_stats[0].click_count,
+                         all_stats[0].impression_count),
+            'yesterday': ctr(all_stats[1].click_count,
+                             all_stats[1].impression_count),
+            'total': ctr(summed.click_count, summed.impression_count),
         },
         'clicks': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0
+            'today': all_stats[0].click_count,
+            'yesterday': all_stats[1].click_count,
+            'total': summed.click_count,
+            'series': [int(s.click_count) for s in all_stats]
         },
     }
     return stats
-
-
-def format_stats_for_campaign(campaign):
-    stats = {
-        'requests': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0,
-        },
-        'impressions': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0,
-        },
-        'users': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0
-        },
-        'ctr': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0
-        },
-        'clicks': {
-            'today': 0,
-            'yesterday': 0,
-            'total': 0
-        },
-    }
-    return stats
-
-def format_stats(model):
-    pass

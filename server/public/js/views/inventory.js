@@ -310,9 +310,7 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var current_model = this.model;
-            console.log(current_model.get('key'));
             var row = $('tr.lineitem-row#lineitem-' + current_model.get('key'), this.el);
-            console.log(row);
             var display_fields = ['revenue',
                                   'impressions',
                                   'fill_rate',

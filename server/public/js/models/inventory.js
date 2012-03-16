@@ -419,13 +419,16 @@ var mopub = mopub || {};
 
     var Campaign = Backbone.Model.extend({
         url: function() {
-            var stats_endpoint = this.stats_endpoint;
+            var stats_endpoint = this.get('stats_endpoint');
             return '/api/campaign/' 
-                + this.id
+                + this.get('id')
                 + "?"
                 + window.location.search.substring(1)
                 + '&endpoint='
                 + stats_endpoint;
+        },
+        parse: function(response) {
+            return response[0];
         }
     });
 

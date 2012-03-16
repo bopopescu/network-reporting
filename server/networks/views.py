@@ -363,6 +363,17 @@ class NetworkDetailsHandler(RequestHandler):
 
         network_data['reporting'] = False
 
+
+        campaign = CampaignQueryManager.get_network_campaign(self. \
+                account.key(), network)
+        # TODO: look for ways to make simpeler by getting stats keyed on
+        # campaign
+        network_data['active'] = campaign.active
+
+        if campaign:
+            campaign_info = {'id': str(campaign.key()),
+                              'network': network}
+
         stats_by_day = {}
         for day in days:
             stats_by_day[day] = StatsModel()
@@ -495,12 +506,6 @@ class NetworkDetailsHandler(RequestHandler):
         graph_stats = simplejson.dumps(graph_stats)
 
 
-        # TODO: look for ways to make simpeler by getting stats keyed on
-        # campaign
-        campaign = CampaignQueryManager.get_network_campaign(self. \
-                account.key(), network)
-        network_data['active'] = campaign.active
-
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper
         # for the account all get loaded via Ajax.
@@ -513,6 +518,7 @@ class NetworkDetailsHandler(RequestHandler):
                   'show_graph' : True,
                   'graph_stats' : graph_stats,
                   'network': network_data,
+                  'campaign': simplejson.dumps(campaign_info),
                   'adgroups': adgroups,
                   'ADMOB': ADMOB,
                   'IAD': IAD,

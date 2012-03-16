@@ -18,6 +18,9 @@ $(function() {
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
             var campaigns = new Campaigns(campaign_data);
+            console.log('campaigns');
+            console.log(campaigns);
+            console.log(campaigns.get_total_daily_stats('attempt_count'));
 
             // Load chart
             var graph_view = new CollectionGraphView({
@@ -83,7 +86,8 @@ $(function() {
 
     var NetworkDetailsController = { 
         initialize: function(bootstrapping_data) {
-            var network_data = bootstrapping_data.network_data,
+            var campaign_data = bootstrapping_data.campaign_data,
+                network_data = bootstrapping_data.network_data,
                 adgroups_data = bootstrapping_data.adgroups_data,
                 graph_start_date = bootstrapping_data.graph_statr_date,
                 today = bootstrapping_data.today,
@@ -100,23 +104,17 @@ $(function() {
 //            });
 //            graph_view.render();
 
-            var adgroups_view = new AdGroupsView({
-                collection: adgroups,
-                el: '#adgroups',
-                title: 'Ad Networks',
-                type: 'network'
+            var campaign = new Campaign(campaign_data);
+            new CampaignView({
+                model: campaign
             });
-            adgroups_view.render();
-
-            adgroups.each(function(adgroup) {
-                adgroup.fetch({
-                    data: ajax_query_string,
-                    error: function () {
-                        adgroup.fetch({
-                            error: toast_error
-                        });
-                    }
-                });
+            campaign.fetch({
+                data: ajax_query_string,
+                error: function () {
+                    campaign.fetch({
+                        error: toast_error
+                    });
+                }
             });
 
             // TODO: make functions and call them

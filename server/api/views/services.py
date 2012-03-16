@@ -393,9 +393,9 @@ class NetworkAppsService(RequestHandler):
         from ad_network_reports.query_managers import AdNetworkStatsManager
 
         #try:
-        network_data = {}
+        network_apps_ = {}
         stats_manager = StatsModelQueryManager(account=self.account)
-        # Iterate through all the apps and populate the stats for network_data
+        # Iterate through all the apps and populate the stats for network_apps_
         for app in AppQueryManager.get_apps(self.account):
             network_config = app.network_config
 
@@ -414,12 +414,12 @@ class NetworkAppsService(RequestHandler):
             if all_stats:
                 stats = reduce(lambda x, y: x+y, all_stats,
                         AdNetworkStats())
-                if app.key() not in network_data:
-                    network_data[app.key()] = app
-                if hasattr(network_data[app.key()], 'network_stats'):
-                    network_data[app.key()].network_stats += stats
+                if app.key() not in network_apps_:
+                    network_apps_[app.key()] = app
+                if hasattr(network_apps_[app.key()], 'network_stats'):
+                    network_apps_[app.key()].network_stats += stats
                 else:
-                    network_data[app.key()].network_stats = stats
+                    network_apps_[app.key()].network_stats = stats
 
             # Get data collected by MoPub
             for adunit in AdUnitQueryManager.get_adunits(account=self.
@@ -435,18 +435,18 @@ class NetworkAppsService(RequestHandler):
                                                              days=self.days)
                 stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
 
-                if app.key() not in network_data:
-                    network_data[app.key()] = app
-                if hasattr(network_data[app.key()], 'mopub_stats'):
-                    network_data[app.key()].mopub_stats += stats
+                if app.key() not in network_apps_:
+                    network_apps_[app.key()] = app
+                if hasattr(network_apps_[app.key()], 'mopub_stats'):
+                    network_apps_[app.key()].mopub_stats += stats
                 else:
-                    network_data[app.key()].mopub_stats = stats
+                    network_apps_[app.key()].mopub_stats = stats
 
-        network_data = sorted(network_data.values(), key=lambda app_data:
+        network_apps_ = sorted(network_apps_.values(), key=lambda app_data:
                 app_data.identifier)
 
         network_apps = []
-        for app in network_data:
+        for app in network_apps_:
             app_data = app.toJSON()
             app_data['mopub_stats'] = app.mopub_stats.to_dict()
             app_data['network_stats'] = \

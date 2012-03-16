@@ -261,10 +261,10 @@ Make a table for the main ad networks that are not setup
             var div = $('.' + key + '-apps-div');
             if (div.is(':hidden')) {
                 div.show();
-                $(this).html("Hide Apps");
+                $(this).text("Hide Apps");
             } else {
                 div.hide()
-                $(this).html("Show Apps");
+                $(this).text("Show Apps");
             }
         });
 

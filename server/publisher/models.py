@@ -82,7 +82,7 @@ class App(db.Model):
     secondary_category = db.StringProperty(choices=CATEGORY_CHOICES)
 
     use_proxy_bids = db.BooleanProperty(default=True)
-
+    
     def simplify(self):
         return SimpleApp(key = str(self.key()),
                          account = self.account,
@@ -162,6 +162,9 @@ class App(db.Model):
                 return pub_id
 
     def toJSON(self):
+        d = {
+
+        }
         d = to_dict(self, ignore = ['icon', 'account', 'network_config'])
         d.update(icon_url=self.icon_url)
         return d

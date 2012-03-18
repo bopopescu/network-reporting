@@ -71,6 +71,8 @@
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeOrderDetail({
             order_key: "{{ order.key }}",
+            targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
+            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
             daily_stats: {
                 requests: {{ stats.requests.series }},
                 impressions: {{ stats.impressions.series }},

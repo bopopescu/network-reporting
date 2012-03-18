@@ -3,21 +3,21 @@ from urllib2 import urlopen
 from common.utils import date_magic
 import datetime
 
-from advertiser.query_managers import AdGroupQueryManager
+from advertiser.query_managers import AdGroupQueryManager, \
+     CampaignQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager, \
         AD_NETWORK_NAMES
 
 from publisher.query_managers import AppQueryManager,\
-     AdUnitQueryManager, \
-     AdUnitContextQueryManager
-from common_templates.templatetags.filters import currency, percentage, percentage_rounded
+     AdUnitQueryManager
+
+from common_templates.templatetags.filters import currency, percentage
 from common.constants import MPX_DSP_IDS
 import logging
 
 from reporting.query_managers import StatsModelQueryManager
-from reporting.models import StatsModel, GEO_COUNTS
 
 try:
     import json
@@ -116,6 +116,15 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                               advertiser=adgroup)
         return app_stats
 
+    def get_campaign_specific_app_stats(self, app_key, campaign_key,
+                                        start, end, *args, **kwargs):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+        app_stats = self._get_publisher_stats(app, start, end,
+                                              advertiser=campaign)
+        return app_stats
+
 
     def get_adgroup_specific_adunit_stats(self, adunit_key, adgroup_key,
                                            start, end, *args, **kwargs):
@@ -126,6 +135,14 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                                  advertiser=adgroup)
         return adunit_stats
 
+    def get_campaign_specific_adunit_stats(self, adunit_key, campaign_key,
+                                        start, end, *args, **kwargs):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+        adunit_stats = self._get_publisher_stats(adunit, start, end,
+                                              advertiser=campaign)
+        return adunit_stats
 
 
 class DirectSoldStatsFetcher(AbstractStatsFetcher):

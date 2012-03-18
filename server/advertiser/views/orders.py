@@ -79,7 +79,7 @@ class OrderDetailHandler(RequestHandler):
         # Database I/O could be made faster here by getting a list of
         # app keys and querying for the list, rather than querying
         # for each individual app. (au.app makes a query)
-        targeted_apps = [au.app for au in targeted_adunits]
+        targeted_apps = set([au.app for au in targeted_adunits])
         for app in targeted_apps:
             app.adunits = [au for au in targeted_adunits if au.app == app]
         
@@ -89,7 +89,8 @@ class OrderDetailHandler(RequestHandler):
             'order': order,
             'order_form': order_form,
             'stats': format_stats(all_stats),
-            'targeted_apps': targeted_apps
+            'targeted_apps': targeted_apps,
+            'targeted_adunits': targeted_adunits
         }
 
 

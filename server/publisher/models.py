@@ -240,7 +240,7 @@ class Site(db.Model):
                             name = self.name,
                             account = self.account,
                             app_key = self.app_key,
-                            keywords = self.keywords,
+                            keywords = str(self.keywords),
                             format = self.format,
                             landscape = self.landscape,
                             resizable = self.resizable,

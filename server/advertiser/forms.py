@@ -83,12 +83,13 @@ class LineItemForm(forms.ModelForm):
                                                                               date_format='%m/%d/%Y',
                                                                               time_format='%I:%M %p'))
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     label='Rate:', initial='cpc')
+                                     label='Rate:', initial='cpm')
     bid = forms.FloatField(initial=0.05,
-                           widget=forms.TextInput(attrs={'class': 'float'}))
+                           widget=forms.TextInput(attrs={'class': 'float required'}))
     daily_budget = forms.FloatField(required=False)
     full_budget = forms.FloatField(required=False)
-    budget = forms.FloatField(required=False)
+    budget = forms.FloatField(required=False,
+                              widget=forms.TextInput(attrs={'class': 'float'}))
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily', required=False)

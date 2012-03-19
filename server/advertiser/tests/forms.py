@@ -154,6 +154,8 @@ class TestLineItemForm(unittest.TestCase):
                 else:
                     self.assertEqual(line_item.end_datetime, None, "Input: start_datetime=%s end_datetime=%s. end_datetime was %s" % (start_datetime, end_datetime, line_item.end_datetime))
 
+    # TODO: keywords > 500 characters causes exception
+
 
 class TestGuaranteedLineItemForm(unittest.TestCase):
     def setUp(self):
@@ -234,8 +236,6 @@ class TestPromotionalLineItemForm(unittest.TestCase):
             self.assertEqual(line_item.full_budget, None, "full_budget was %s, should have been %s" % (line_item.full_budget, None))
             self.assertEqual(line_item.budget_type, 'daily', "budget_type was %s, should have been %s" % (line_item.budget_type, 'daily'))
             self.assertEqual(line_item.budget_strategy, 'allatonce', "budget_strategy was %s, should have been %s" % (line_item.budget_strategy, 'allatonce'))
-
-    # keywords > 500 characters causes exception
 
 
 class TestCreativeForm(unittest.TestCase):

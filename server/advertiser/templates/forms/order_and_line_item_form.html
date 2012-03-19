@@ -145,7 +145,7 @@
                         {{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
                     </label>
                     <ul class="adunits">
-                        {% for adunit in app.adunits %}
+                        {% for adunit in app.all_adunits %}
                           {% if not adunit.deleted %}
                             <li>
                               <label>

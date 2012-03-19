@@ -9,7 +9,7 @@
 
             // Once the campaigns have been fetched, render them.
             campaigns.bind('reset', function(campaigns_collection) {
-                
+
                 _.each(campaigns_collection.models, function(campaign) {
                     var campaign_view = new CampaignView({
                         model: campaign,
@@ -389,10 +389,10 @@
                }); */
 
             // Show location-dependent fields when location targeting is turned on
-            $('#campaign_and_adgroup input[name="region_targeting"]').click(function(e) {
+            $('input[name="region_targeting"]').click(function(e) {
                 var loc_targ = $(this).val();
-                $('.locationDependent', '#campaign_and_adgroup').hide();
-                $('.' + loc_targ + '.locationDependent', '#campaign_and_adgroup').show();
+                $('.locationDependent').hide();
+                $('.' + loc_targ + '.locationDependent').show();
                 if ($(this).val() == 'all') {
                     $('li.token-input-city span.token-input-delete-token').each(function() {
                         $(this).click();

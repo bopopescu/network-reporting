@@ -204,6 +204,7 @@
                     console.dir(current_adunit);
                     renderAdUnit(current_adunit);
                 });
+                
                 adunit.fetch();
             });
 

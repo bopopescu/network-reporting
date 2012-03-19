@@ -167,7 +167,7 @@ def get_udid_appid(request):
     ?id=123udid=456
     ?udid=456&id=123
     """
-    udid = request.get('udid')
+    udid = request.get('udid').lower()
     mobile_appid = request.get('id')
 
     # If we have we can't request udid, we have a broken URL
@@ -176,7 +176,7 @@ def get_udid_appid(request):
         result = re.search('id=(?P<id>.*?)(?P<ampersand>&?)udid=(?P<udid>.*?)$', query_string)
 
         if (result):
-            return result.group('udid'), result.group('id')
+            return result.group('udid').lower(), result.group('id')
             # note: if result.group('ampersand') is empty string, we have a broken url
             # though the return groups are the same regardless
         else:

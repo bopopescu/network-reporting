@@ -965,7 +965,10 @@ class PauseAdGroupHandler(RequestHandler):
         if update_creatives:
             CreativeQueryManager.put(update_creatives)
 
-        return HttpResponseRedirect(self.request.META["HTTP_REFERER"])
+        #TODO: we need a cross-platform default redirect in case
+        # HTTP_REFERER doesn't exist
+        logging.warn(type(self.request.META))
+        return HttpResponseRedirect(self.request.environ.get('HTTP_REFERER'))
 
 
 @login_required

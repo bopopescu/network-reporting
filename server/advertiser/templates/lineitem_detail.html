@@ -45,10 +45,10 @@
       <thead>
         <tr>
           <th class="line_itemData-icon"></th>
-          <th class="dataTable-name"> Name </th>       
+          <th class="dataTable-name"> Name </th>
           <th class="dataTable-data numeric">Priorty</th>
           <th class="dataTable-data numeric">Status</th>
-          <th class="dataTable-data status numeric">Revenue</th>                
+          <th class="dataTable-data status numeric">Revenue</th>
           <th class="dataTable-data numeric">
             <a id="line_item-ecpm-helpLink" class="whatsthis" href="#">
               <div class="whatsthis-icon"></div>
@@ -57,14 +57,14 @@
           </th>
           {% if line_item.gtee %}
             <th class="dataTable-data numeric">Goal</th>
-          {% endif %}                
+          {% endif %}
           <th class="dataTable-data numeric">Impressions</th>
           <th class="dataTable-data numeric">Clicks</th>
           <th class="dataTable-data numeric">Conv</th>
         </tr>
       </thead>
       <tbody class="primary">
-        <tr class="line_itemData">        
+        <tr class="line_itemData">
           <td class="line_itemData-icon">
             {% status_icon line_item %}
           </td>
@@ -73,15 +73,15 @@
             <br />
             <span class="muted">
               {% if line_item.start_datetime and line_item.end_datetime %}
-                {{ line_item.start_datetime }} - {{ line_item.end_datetime }}. 
+                {{ line_item.start_datetime|pacific_time:"n/j" }} - {{ line_item.end_datetime|pacific_time:"n/j" }}.
                 {% else %} {% if line_item.start_datetime %}
-                Starts {{ line_item.start_datetime }}
+                Starts {{ line_item.start_datetime|pacific_time:"n/j" }}
                 {% else %} {% if line_item.end_datetime %}
-                Ends {{ line_item.end_datetime }}. 
+                Ends {{ line_item.end_datetime|pacific_time:"n/j" }}.
                 {% else %}
-                  All dates. 
+                  All dates.
                   {% endif %} {% endif %} {% endif %}
-                
+
                 {# Display the budget if it's a guaranteed line_item. #}
                 {% if line_item.gtee %}
                   {% if line_item.budget_type == "daily" %}
@@ -103,17 +103,17 @@
             Finished
             {% else %} {% if not line_item.has_started %}
             Scheduled
-            {% endif %} {% endif %} {% endif %} {% endif %}                    
+            {% endif %} {% endif %} {% endif %} {% endif %}
         </td>
 
-        
+
         <td class="dataTable-data numeric">
           {{ line_item.stats.revenue|currency }}
         </td>
-                
+
         <td class="dataTable-data numeric">
           {{ line_item.stats.ecpm|currency }}
-        </td>            
+        </td>
         {% if line_item.gtee %}
           <td class="dataTable-data numeric">
             {% if line_item.cpc %}
@@ -122,27 +122,27 @@
             {% else %}
               {{ line_item.budget_goal|withsep}} <br />
               Impressions
-            {% endif %}                  
+            {% endif %}
           </td>
-        {% endif %}                
+        {% endif %}
         <td class="dataTable-data numeric">
           {{ line_item.stats.impression_count|withsep }}
-        </td>             
+        </td>
         <td class="dataTable-data numeric">
           {{ line_item.stats.click_count|withsep }}
         </td>
         <td class="dataTable-data numeric">
           {{ line_item.stats.conversion_count|withsep }}
-        </td>            
+        </td>
       </tr>
-    </tbody>        
+    </tbody>
   </table>
 
   {% if user.is_admin %}
     <a href="/budget/view/{{line_item.key}}"> Admin Budget View</a>
   {% endif %}
 </section>
-  
+
 
   {# Table that shows all of the adunits being targeted #}
   <section>
@@ -150,7 +150,7 @@
     <a class="btn right" href="#"> Change targeting </a>
 
     {% inventory_table targeted_apps %}
-    
+
   </section>
 {% endblock content %}
 
@@ -171,7 +171,7 @@
                 users: {{ stats.users.series }},
             },
             start_date:  Date.UTC({{ start_date.year }},
-                                  {{ start_date.month|add:"-1" }}, 
+                                  {{ start_date.month|add:"-1" }},
                                   {{ start_date.day }})
         });
     });

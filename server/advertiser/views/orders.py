@@ -67,7 +67,7 @@ class OrderDetailHandler(RequestHandler):
 
         # Grab the campaign info
         order = CampaignQueryManager.get(order_key)
-        
+
         # Set up the stats
         stats_q = StatsModelQueryManager(self.account, self.offline)
         all_stats = stats_q.get_stats_for_days(advertiser=order,
@@ -82,7 +82,7 @@ class OrderDetailHandler(RequestHandler):
         targeted_apps = set([au.app for au in targeted_adunits])
         for app in targeted_apps:
             app.adunits = [au for au in targeted_adunits if au.app == app]
-        
+
         # Set up the form
         order_form = OrderForm(instance=order)
         return {
@@ -124,7 +124,7 @@ class LineItemDetailHandler(RequestHandler):
         targeted_apps = [au.app for au in targeted_adunits]
         for app in targeted_apps:
             app.adunits = [au for au in targeted_adunits if au.app == app]
-        
+
         return {
             'order': order,
             'line_item': line_item,
@@ -197,7 +197,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             # TODO: make sure line_item_key is None
             line_item = None
 
-        order_form = OrderForm(instance=order)
+        order_form = OrderForm(instance=order, prefix='order')
         line_item_form = LineItemForm(instance=line_item)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
@@ -229,7 +229,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             line_item = None
 
         if not order:
-            order_form = OrderForm(self.request.POST, instance=order)
+            order_form = OrderForm(self.request.POST, instance=order, prefix='order')
 
             if order_form.is_valid():
                 order = order_form.save()
@@ -270,7 +270,8 @@ class OrderAndLineItemFormHandler(RequestHandler):
             # TODO: go to order or line item detail page?
             return JSONResponse({
                 'success': True,
-                'redirect': reverse('advertiser_order_detail', args=(order.key(),)),
+                'redirect': reverse('advertiser_line_item_detail',
+                                    args=(order.key(), line_item.key())),
             })
 
         else:
@@ -338,6 +339,6 @@ def format_stats(all_stats):
     }
     return stats
 
-        
-        
-        
+
+
+

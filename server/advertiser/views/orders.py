@@ -13,6 +13,7 @@ Whenever you see "Campaign", think "Order", and wherever you see
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
+from django.utils import simplejson
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import JSONResponse, render_to_response
@@ -21,15 +22,19 @@ from account.query_managers import AccountQueryManager
 from advertiser.forms import OrderForm, LineItemForm
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+from reporting.query_managers import StatsModelQueryManager
+from reporting.models import StatsModel
 
 import logging
 
-ctr = lambda clicks, impressions: (clicks/float(impressions) if impressions
-        else 0)
+
+flatten = lambda l: [item for sublist in l for item in sublist]
+
+ctr = lambda clicks, impressions: \
+      (clicks/float(impressions) if impressions else 0)
 
 class OrderIndexHandler(RequestHandler):
     """
-    @responsible: pena
     Shows a list of orders and line items.
     Orders show:
       - name, status, advertiser, and a top-level stats rollup.
@@ -38,25 +43,19 @@ class OrderIndexHandler(RequestHandler):
     """
     def get(self):
 
-        # Grab all of the orders, and for each order, grab all of the line items.
-        # For each of the line items, grab the stats for the date range.
-        # REFACTOR: do this over ajax
-        orders = CampaignQueryManager.get_campaigns(account=self.account)
+        orders = CampaignQueryManager.get_order_campaigns(account=self.account)
 
-        return render_to_response(self.request,
-                                  "advertiser/order_index.html",
-                                  {
-                                      'orders': orders,
+        # Stats for stats breakdown and graph.
 
-                                      'start_date': self.start_date,
-                                      'end_date': self.end_date,
-                                      'date_range': self.date_range,
-                                  })
+        return {
+            'orders': orders,
+        }
 
 
 @login_required
 def order_index(request, *args, **kwargs):
-    return OrderIndexHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/order_index.html"
+    return OrderIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
 class OrderDetailHandler(RequestHandler):
@@ -65,39 +64,79 @@ class OrderDetailHandler(RequestHandler):
     Lists each line item within the order with links to line item details.
     """
     def get(self, order_key):
+
+        # Grab the campaign info
         order = CampaignQueryManager.get(order_key)
+        
+        # Set up the stats
+        stats_q = StatsModelQueryManager(self.account, self.offline)
+        all_stats = stats_q.get_stats_for_days(advertiser=order,
+                                                     days = self.days)
+
+        # Get the targeted adunits and group them by their app.
+        targeted_adunits = flatten([AdUnitQueryManager.get(line_item.site_keys) \
+                                    for line_item in order.adgroups])
+        # Database I/O could be made faster here by getting a list of
+        # app keys and querying for the list, rather than querying
+        # for each individual app. (au.app makes a query)
+        targeted_apps = set([au.app for au in targeted_adunits])
+        for app in targeted_apps:
+            app.adunits = [au for au in targeted_adunits if au.app == app]
+        
+        # Set up the form
         order_form = OrderForm(instance=order)
-        return render_to_response(self.request,
-                                  "advertiser/order_detail.html",
-                                  {
-                                    'order': order,
-                                    'order_form': order_form})
+        return {
+            'order': order,
+            'order_form': order_form,
+            'stats': format_stats(all_stats),
+            'targeted_apps': targeted_apps,
+            'targeted_adunits': targeted_adunits
+        }
 
 
 @login_required
 def order_detail(request, *args, **kwargs):
-    return OrderDetailHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/order_detail.html"
+    return OrderDetailHandler(template=t, id="order_key")(request, use_cache=False, *args, **kwargs)
 
 
 class LineItemDetailHandler(RequestHandler):
     """
     Almost identical to current campaigns detail page.
     """
-    def get(self, order_key, line_item_key):
+    def get(self, line_item_key, order_key=None):
+
+        # Get the metadata for the lineitem and its order
         order = CampaignQueryManager.get(order_key)
         line_item = AdGroupQueryManager.get(line_item_key)
 
-        return render_to_response(self.request,
-                                  "advertiser/line_item_detail.html",
-                                  {
-                                      'order': order,
-                                      'line_item': line_item
-                                  })
+        # Get the stats for the date range
+        stats_q = StatsModelQueryManager(self.account, self.offline)
+        all_stats = stats_q.get_stats_for_days(advertiser=line_item,
+                                                     days = self.days)
+        line_item.stats = reduce(lambda x, y: x + y, all_stats, StatsModel())
+
+        # Get the targeted adunits and group them by their app.
+        targeted_adunits = AdUnitQueryManager.get(line_item.site_keys)
+        # Database I/O could be made faster here by getting a list of
+        # app keys and querying for the list, rather than querying
+        # for each individual app. (au.app makes a query)
+        targeted_apps = [au.app for au in targeted_adunits]
+        for app in targeted_apps:
+            app.adunits = [au for au in targeted_adunits if au.app == app]
+        
+        return {
+            'order': order,
+            'line_item': line_item,
+            'stats': format_stats(all_stats),
+            'targeted_apps': targeted_apps
+        }
 
 
 @login_required
 def line_item_detail(request, *args, **kwargs):
-    return LineItemDetailHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/lineitem_detail.html"
+    return LineItemDetailHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
 class OrderFormHandler(RequestHandler):
@@ -163,15 +202,13 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
 
-        return render_to_response(self.request,
-                                  "advertiser/forms/order_and_line_item_form.html",
-                                  {
-                                      'apps': apps,
-                                      'order': order,
-                                      'order_form': order_form,
-                                      'line_item': line_item,
-                                      'line_item_form': line_item_form,
-                                  })
+        return {
+            'apps': apps,
+            'order': order,
+            'order_form': order_form,
+            'line_item': line_item,
+            'line_item_form': line_item_form,
+        }
 
     def post(self, order_key=None, line_item_key=None):
         if not self.request.is_ajax():
@@ -256,18 +293,51 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
 @login_required
 def order_and_line_item_form(request, *args, **kwargs):
-    return OrderAndLineItemFormHandler()(request, use_cache=False, *args, **kwargs)
+    t = "advertiser/forms/order_and_line_item_form.html",
+    return OrderAndLineItemFormHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
 ###########
 # Helpers #
 ###########
 
-def format_stats_for_adgroup(adgroup):
-    pass
+def format_stats(all_stats):
+    summed = reduce(lambda x, y: x + y, all_stats, StatsModel())
+    stats = {
+        'requests': {
+            'today': all_stats[0].request_count,
+            'yesterday': all_stats[1].request_count,
+            'total': summed.request_count,
+            'series': [int(s.request_count) for s in all_stats]
+        },
+        'impressions': {
+            'today': all_stats[0].impression_count,
+            'yesterday': all_stats[1].impression_count,
+            'total': summed.impression_count,
+            'series': [int(s.impression_count) for s in all_stats]
+        },
+        'users': {
+            'today': all_stats[0].user_count,
+            'yesterday': all_stats[1].user_count,
+            'total': summed.user_count,
+            'series': [int(s.user_count) for s in all_stats]
+        },
+        'ctr': {
+            'today': ctr(all_stats[0].click_count,
+                         all_stats[0].impression_count),
+            'yesterday': ctr(all_stats[1].click_count,
+                             all_stats[1].impression_count),
+            'total': ctr(summed.click_count, summed.impression_count),
+        },
+        'clicks': {
+            'today': all_stats[0].click_count,
+            'yesterday': all_stats[1].click_count,
+            'total': summed.click_count,
+            'series': [int(s.click_count) for s in all_stats]
+        },
+    }
+    return stats
 
-def format_stats_for_campaign(campaign):
-    pass
-
-def format_stats(model):
-    pass
+        
+        
+        

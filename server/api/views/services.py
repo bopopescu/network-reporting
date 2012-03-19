@@ -5,12 +5,6 @@ from advertiser.query_managers import AdGroupQueryManager, \
      CampaignQueryManager
 from publisher.query_managers import AdUnitQueryManager, \
      AppQueryManager
-from reporting.models import StatsModel
-from reporting.query_managers import StatsModelQueryManager
-
-from ad_server.optimizer.optimizer import DEFAULT_CTR
-
-from budget import budget_service
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import JSONResponse
@@ -20,8 +14,6 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      AdNetworkStatsFetcher, \
      MPStatsAPIException
 
-from common_templates.templatetags.filters import campaign_status
-
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.http import Http404
@@ -29,12 +21,11 @@ from django.http import Http404
 import logging
 
 
-
 class AppService(RequestHandler):
     """
     API Service for delivering serialized App data
     """
-    def get(self, app_key=None, adgroup_key=None):
+    def get(self, app_key=None, adgroup_key=None, campaign_key=None):
 
         # make sure app_key/adgroup_key are for apps/adgroups that
         # belong to this user
@@ -62,21 +53,25 @@ class AppService(RequestHandler):
         else:
             apps = [a.toJSON() for a in AppQueryManager.get_apps(self.account)]
 
-        # get stats for each app
         for app in apps:
 
             # if the adgroup key was specified, then we only want the app's
             # stats to reflect how it performed within that adgroup.
             if adgroup_key:
-
-                app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
-                                                                adgroup_key,
-                                                                self.start_date,
-                                                                self.end_date))
+                s = stats.get_adgroup_specific_app_stats(str(app['id']),
+                                                         adgroup_key,
+                                                         self.start_date,
+                                                         self.end_date)
+            elif campaign_key:
+                s = stats.get_campaign_specific_app_stats(str(app['id']),
+                                                          campaign_key,
+                                                          self.start_date,
+                                                          self.end_date)
             else:
-                app.update(stats.get_app_stats(str(app['id']),
-                                               self.start_date,
-                                               self.end_date))
+                s = stats.get_app_stats(str(app['id']),
+                                        self.start_date,
+                                        self.end_date)
+            app.update(s)
 
         return JSONResponse(apps)
 
@@ -102,7 +97,8 @@ class AdUnitService(RequestHandler):
     """
     API Service for delivering serialized AdUnit data
     """
-    def get(self, app_key=None, adgroup_key=None, adunit_key=None):
+    def get(self, adunit_key=None,
+            app_key=None, adgroup_key=None, campaign_key=None):
         """
         Returns individual or lists of JSON-represented adunit
         metadata and stats data
@@ -188,7 +184,38 @@ class AdUnitService(RequestHandler):
                 adunit.update(adunit_stats)
 
             return JSONResponse(response)
+            
+        elif campaign_key:
+            campaign = CampaignQueryManager.get(campaign_key)
 
+            # REFACTOR
+            # ensure the owner of this adgroup is the request's
+            # current user
+            if campaign.account.key() != self.account.key():
+                raise Http404
+
+            adunits = [AdUnitQueryManager.get(adunit_key)]
+            response = [adunit.toJSON() for adunit in adunits]
+
+            # Update each app with stats from the selected endpoint
+            for adunit in response:
+                adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
+                                                                       campaign_key,
+                                                                       self.start_date,
+                                                                       self.end_date)
+
+                
+                # We update with the app and adgroup id/key because our
+                # backbone models often need it for reference
+                adunit_stats.update({
+                    'app_id': str(adunit['app_key']),
+                    'campaign_id': str(campaign_key)
+                })
+                adunit.update(adunit_stats)
+                logging.warn(adunit)
+                
+            return JSONResponse(response[0])
+            
         else:
             return JSONResponse({'error': 'No parameters provided'})
 

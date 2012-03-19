@@ -33,9 +33,11 @@ class CampaignQueryManager(QueryManager):
     Model = Campaign
 
     @classmethod
-    def get_campaigns(cls, account):
+    def get_order_campaigns(cls, account):
         campaigns = cls.Model.all().filter('account =', account)\
-                                   .filter('deleted =', False)
+                                   .filter('deleted =', False)\
+                                   .filter('is_order =', True)
+
         return campaigns
 
     @classmethod

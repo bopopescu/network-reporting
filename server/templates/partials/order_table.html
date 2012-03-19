@@ -1,0 +1,54 @@
+{% load filters %}
+{% load elements %}
+
+<table class="inventory_table" id="orders_table">
+  <thead>
+    <tr>
+      <td class="name">Order Name</td>
+      <td class="stat" style="width: 150px;">Advertiser</td>
+      <td class="stat">Line Items</td>
+      <td class="stat">Revenue</td>
+      <td class="stat">Impressions</td>
+      <td class="stat">Clicks</td>
+      <td class="stat">CTR</td>
+    </tr>
+  </thead>
+  {% for order in orders %}
+    <tbody class="order {% cycle 'alt' 'primary' %}">
+      <tr class="main order-row" id="order-{{ order.key }}">
+        <td class="name">
+          {% if singular %}
+            Totals
+          {% else %}
+            <a href="{% url advertiser_order_detail order_key=order.key %}">
+              {{ order.name }}
+            </a>
+          {% endif %}
+          <img id="{{ order.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif" />
+        </td>
+        {# these stats will be loaded over ajax #}
+        <td class="advertiser stat"> {{ order.advertiser }}</td>
+        <td class="lineitems stat"> -- </td>
+        <td class="revenue stat">--</td>
+        <td class="impressions stat">--</td>
+        <td class="clicks stat">--</td>
+        <td class="ctr stat">--</td>
+      </tr>
+      {% for adgroup in order.adgroups %}
+        <tr class="sub lineitem-row" id="lineitem-{{ adgroup.key }}">
+          <td class="name">
+            <a href="{% url advertiser_line_item_detail order_key=order.key line_item_key=adgroup.key %}">
+              {{ adgroup.name }}
+            </a>
+          </td>
+          <td class="advertiser stat"></td>
+          <td class="lineitems stat"></td>
+          <td class="revenue stat">--</td>
+          <td class="impressions stat">--</td>
+          <td class="clicks stat">--</td>
+          <td class="ctr stat">--</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  {% endfor %}
+</table>

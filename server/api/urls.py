@@ -68,7 +68,19 @@ urlpatterns = patterns(
         'campaign_service',
         name='campaign_service'),
 
-    # REFACTOR: move this to ad_network_reports
+    # api/campaign/<campaign_key>/app/<app_key>
+    # all apps targeted by campaign
+    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/app/(?P<app_key>[-\w\.]+)$',
+        'app_service',
+        name='app_service'),
+
+    # api/campaign/<campaign_key>/adunit/<adunit_key>
+    # all adunits targeted by campaign
+    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/adunit/(?P<adunit_key>[-\w\.]+)$',
+        'adunit_service',
+        name='adunit_service'),
+    
+    # REFACTOR: move this to ad_network_reports or networks
     url(r'^ad_network/account_roll_up/$',
         'account_roll_up_service',
         name='account_roll_up_service'),
@@ -76,7 +88,7 @@ urlpatterns = patterns(
     url(r'^ad_network/daily_stats/$',
         'daily_stats_service',
         name='daily_stats_service'),
-
+    
     url(r'^ad_network/roll_up/(?P<type_>app|network)/id/(?P<id_>[-\w\.]+)$',
         'roll_up_service',
         name='roll_up_service'),

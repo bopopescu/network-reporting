@@ -19,6 +19,15 @@ var mopub = mopub || {};
     "use strict";
 
 
+    // Gets the url from a backbone model/collection. 
+    // Sometimes it's a string, sometimes its a function.
+    // This is used as utility for localStorage caching,
+    // but could be used for anything.
+    var getUrl = function(object) {
+        if (!(object && object.url)) return null;
+        return _.isFunction(object.url) ? object.url() : object.url;
+    };
+
     /*
      * ### UrlError
      * Throw this when you try to fetch a model and it has an
@@ -99,13 +108,6 @@ var mopub = mopub || {};
                 read: 'GET'
             };
             
-            // Gets the url from a backbone model/collection. 
-            // Sometimes it's a string, sometimes its a function.
-            var getUrl = function(object) {
-                if (!(object && object.url)) return null;
-                return _.isFunction(object.url) ? object.url() : object.url;
-            };
-            
             // Taken from Modernizr. Determines if we have
             // localstorage or not.
             function supports_local_storage() {
@@ -141,7 +143,7 @@ var mopub = mopub || {};
             // For older servers, emulate JSON by encoding the request into an HTML-form.
             if (Backbone.emulateJSON) {
                 params.contentType = 'application/x-www-form-urlencoded';
-                params.data        = params.data ? {model : params.data} : {};
+                params.data = params.data ? {model : params.data} : {};
             }
             
             // For older servers, emulate HTTP by mimicking the HTTP method with `_method`
@@ -165,27 +167,38 @@ var mopub = mopub || {};
             // - Look for the cached version and trigger success if it's present.
             // - Modify the AJAX request so it'll save the data on success.
             if (method === 'read' && supports_local_storage()) {
+
+                var key = "mopub-cache/" + params.url;
+
                 // Look for the cached version
-                var namespace = model.cache_namespace || "_",
-                key = "mopub-cache/" + namespace + "/" + params.url,
-                val = localStorage.getItem(key),
-                successFn = params.success;
+                var val = localStorage.getItem(key);
+                var success_function = params.success;
                 
-                // If we have the last response cached, use it with the success callback
+                // If we have the last response cached, use it with
+                // the success callback
                 if (val) {
-                    console.log("Found attributes in localstorage: ");
-                    console.log(val);
                     _.defer(function () {
-                        successFn(JSON.parse(val), "success");
+                        success_function(JSON.parse(val), "success");
                     });
                 }
                 
                 // Overwrite the success callback to save data to localStorage
                 params.success = function (resp, status, xhr) {
-                    successFn(resp, status, xhr);
+                    success_function(resp, status, xhr);
+                    localStorage.removeItem(key);
                     localStorage.setItem(key, xhr.responseText);
-                    console.log('Attributes cached in localstorage.');
                 };
+                
+            } else if (method === 'update' || method === 'delete') {
+                // If we're updating or deleting the model, invalidate
+                // everything associated with it. If the model doesn't
+                // have an invalidations method, we can just use the
+                // url.
+                var invalidations = model.invalidations() || [ params.url ];
+                _.each(invalidations, function(invalidation_key){
+                    var key = "mopub-cache/" + invalidation_key;
+                    localStorage.removeItem(key);
+                });
                 
             }
             
@@ -234,6 +247,19 @@ var mopub = mopub || {};
                 + window.location.search.substring(1)
                 + '&endpoint='
                 + stats_endpoint;
+        },
+        invalidations: function () {
+            var stats_endpoint = this.get('stats_endpoint');
+            // When we invalidate this model, we have to also
+            // invalidate it's potential parent collection
+            var collection_url = '/api/app/'
+                + this.app_id
+                + '/adunits/'
+                + '?'
+                + window.location.search.substring(1)
+                + '&endpoint='
+                + stats_endpoint;
+            return [ this.url(), collection_url ];
         }
     });
 
@@ -258,6 +284,21 @@ var mopub = mopub || {};
                 + window.location.search.substring(1)
                 + '&endpoint='
                 + stats_endpoint;
+        }, 
+        invalidations: function() {
+            var invalids = this.map(this.models, function(model) {
+                return model.invalidations();
+            });
+            return _.flatten(invalids);
+        },
+        parse: function(response) {
+            // We need to make sure each of the adunits knows which
+            // stats endpoint we're using            
+            var collection = this;
+            var adunits = _.map(response, function(adunit){
+                return _.extend(adunit, { stats_endpoint: collection.stats_endpoint });
+            });
+            return adunits;
         }
     });
 
@@ -311,15 +352,8 @@ var mopub = mopub || {};
             }
             return app;
         },
-        get_summed: function (attr) {
-            if (typeof(this.get(attr)) !== 'undefined') {
-                var series = this.get(attr);
-                var sum = _.reduce(series, function(memo, num){
-                    return memo + num;
-                }, 0);
-                return sum;
-            }
-            return null;
+        invalidations: function () {
+            return [ this.url() ];
         }
     });
 
@@ -338,13 +372,11 @@ var mopub = mopub || {};
                 '?' + window.location.search.substring(1) +
                 '&endpoint=' + stats_endpoint;
         },
-        // Not used anymore, but could come in handy
-        fetchAdUnits: function() {
-            this.each(function (app) {
-                app.adunits = new AdUnitCollection();
-                app.adunits.app_id = app.id;
-                app.adunits.fetch();
+        invalidations: function() {
+            var invalids = this.map(this.models, function(model) {
+                return model.invalidations();
             });
+            return _.flatten(invalids);
         }
     });
 
@@ -366,23 +398,41 @@ var mopub = mopub || {};
         }
     });
 
-    _.extend(AdGroup, StatsMixin);
-    _.extend(AdGroup.prototype, LocalStorageMixin);
+    _.extend(AdGroup.prototype, StatsMixin, LocalStorageMixin);
 
-    var Campaign = Backbone.Model.extend({
+    var AdGroupCollection = Backbone.Collection.extend({
+        model: AdGroup,
         url: function() {
             var stats_endpoint = this.stats_endpoint;
             return '/api/campaign/' 
-                + this.id
+                + this.campaign_id
                 + "?"
                 + window.location.search.substring(1)
                 + '&endpoint='
                 + stats_endpoint;
+        },
+        parse: function(response) {
+            return response.adunits;
         }
     });
 
-    _.extend(Campaign.prototype, StatsMixin);
-    _.extend(Campaign.prototype, LocalStorageMixin);
+
+    var Campaign = Backbone.Model.extend({
+        url: function() {
+            var stats_endpoint = this.get('stats_endpoint');
+            return '/api/campaign/' 
+                + this.get('id')
+                + "?"
+                + window.location.search.substring(1)
+                + '&endpoint='
+                + stats_endpoint;
+        },
+        parse: function(response) {
+            return response[0];
+        }
+    });
+
+    _.extend(Campaign.prototype, StatsMixin, LocalStorageMixin);
 
     var CampaignCollection = Backbone.Collection.extend({
         model: Campaign,
@@ -402,12 +452,23 @@ var mopub = mopub || {};
      * EXPOSE HIS JUNK
      * (We should find a better way to do this.)
      */
+    // mopub.Models.AdUnit = AdUnit;
+    // mopub.Models.AdUnitCollection = AdUnitCollection;
+    // mopub.Models.App = App;
+    // mopub.Models.AppCollection = AppCollection;
+    // mopub.Models.AdGroup = AdGroup;
+    // mopub.Models.AdGroupCollection = AdGroupCollection;
+    // mopub.Models.Campaign = Campaign;
+    // mopub.Models.CampaignCollection = CampaignCollection;
+
     window.AdUnit = AdUnit;
     window.AdUnitCollection = AdUnitCollection;
     window.App = App;
     window.AppCollection = AppCollection;
     window.AdGroup = AdGroup;
+    window.AdGroupCollection = AdGroupCollection;
     window.Campaign = Campaign;
     window.CampaignCollection = CampaignCollection;
 
-}(this.jQuery, this.Backbone, this._));
+
+})(window.jQuery, window.Backbone, window._, window.mopub || { Models: {} });

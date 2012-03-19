@@ -2,32 +2,65 @@
 
 {% load fields %}
 {% load filters %}
+{% load elements %}
 
 {% block pageTitleTag %}
-{% comment %}TODO: title{% endcomment %}
-{% endblock %}
+ MoPub - Order {{ order.name }}
+{% endblock pageTitleTag %}
 
 {% block pageTitle %}
-<h1>{% comment %}TODO: title{% endcomment %}</h1>
+  <h1><a href="{% url advertiser_order_index %}">Orders</a> / {{ order.name }}</h1>
 {% endblock pageTitle %}
 
 {% block dateButtons %}
 {% endblock dateButtons %}
 
 {% block content %}
-<form id="order_form" method="post">
-    {% include 'forms/order_form.html' %}
 
-    <div class="form-submit"><a class="button" id="submit" href="#">Continue</a></div>
-</form>
+  {# The stats breakdown and graph #}
+  <section class="offset" id="dashboard-stats">
+    <h3 class="stats-chart-title">
+      Realtime Stats for {{start_date|format_date_compact}} to
+      {{end_date|format_date_compact}}
+    </h3>
 
-<ul>
-    {% for adgroup in order.adgroups %}
-        <li><a href="{% url advertiser_line_item_detail order.key adgroup.key %}">{{ adgroup }}</a></li>
-    {% endfor %}
-    <li><a href="{% url advertiser_line_item_form_new order.key %}">New Line Item</a></li>
-</ul>
-{% endblock %}
+    <div class="stats">
+      {% stats_breakdown stats %}
+      <div class="chart stats-chart" id="dashboard-stats-chart">
+        <img class="preload" src="/images/report-preloader.gif" />
+      </div>
+    </div>
+  </section>
+
+
+  {# The order edit form, hidden by default #}
+  <section class="offset hidden" id="order_form_container">
+    <form id="order_form" method="post" action="{% url advertiser_order_form_edit order.key %}">
+      {% include 'forms/order_form.html' %}      
+      <a class="btn right" id="submit" href="#">Continue</a>        
+    </form>
+  </section>
+
+  
+  {# Table with all of the line items #}
+  <section>
+    <h3 class="left"> Line Items in {{ order.name }} </h3>
+    <a class="btn right" href='{% url advertiser_line_item_form_new order.key %}'>
+      New Line Item
+    </a>
+    <a class="btn right" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
+      Edit this order
+    </a>
+    {% order_table order %}  
+  </section>
+
+  {# Table that shows all of the adunits being targeted #}
+  <section>
+    <h3 class="left"> Inventory targeted by line items in {{ order.name }} </h3>
+
+    {% inventory_table targeted_apps %}
+  </section>
+{% endblock content %}
 
 {% block extraScripts %}
 {% include_script "models/inventory" %}
@@ -36,7 +69,20 @@
 <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;
-        OrdersController.initializeOrderDetail({});
+        OrdersController.initializeOrderDetail({
+            order_key: "{{ order.key }}",
+            targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
+            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
+            daily_stats: {
+                requests: {{ stats.requests.series }},
+                impressions: {{ stats.impressions.series }},
+                clicks: {{ stats.clicks.series }},
+                users: {{ stats.users.series }},
+            },
+            start_date:  Date.UTC({{ start_date.year }},
+                                  {{ start_date.month|add:"-1" }}, 
+                                  {{ start_date.day }})
+        });
     });
 </script>
 {% endblock extraScripts %}

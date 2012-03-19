@@ -220,7 +220,8 @@ def generate_adgroup(campaign, site_keys, account, adgroup_type):
 def generate_campaign(account, budget):
     campaign = Campaign(name=get_campaign_name(),
                         account = account,
-                        advertiser = "John's Hat Co, Inc.")
+                        advertiser = "John's Hat Co, Inc.",
+                        is_order=True)
     campaign.put()
     return campaign
 
@@ -228,7 +229,8 @@ def generate_campaign(account, budget):
 def generate_marketplace_campaign(account, budget):
     campaign = Campaign(name=get_campaign_name(),
                         account = account,
-                        advertiser = "marketplace")
+                        advertiser = "marketplace",
+                        is_order=False)
     campaign.put()
     return campaign
 

@@ -25,7 +25,23 @@ def inventory_table(inventory):
             'singular': True
         }
 
+@register.inclusion_tag("partials/order_table.html")
+def order_table(orders):
+    # If the object isn't iterable (for instance, a single order), put
+    # it in a list so that we can iterate over it in the template
+    if isiterable(orders):
+        return {
+            'orders': orders,
+            'singular': False
+        }
+    else:
+        return {
+            'orders': [orders],
+            'singular': True
+        }
 
+
+        
 @register.inclusion_tag("partials/stats_breakdown.html")
 def stats_breakdown(stats):
     return {'stats': stats }

@@ -677,7 +677,7 @@ class AdUnitShowHandler(RequestHandler):
         backfill_promo_adgroups = filter_by_type(adunit.adgroups, ['backfill_promo'])
 
         try:
-            marketplace_activated = mpx_adgroups[0].campaign.active
+            marketplace_activated = mpx_adgroups[0].active
         except IndexError:
             marketplace_activated = False
 
@@ -688,30 +688,24 @@ class AdUnitShowHandler(RequestHandler):
             yesterday = StatsModel()
 
         # write response
-        return render_to_response(self.request,
-                                  'publisher/adunit.html',
-                                  {
-                                      'site': adunit,
-                                      'adunit': adunit,
-                                      'today': today,
-                                      'yesterday': yesterday,
-                                      'start_date': self.days[0],
-                                      'end_date': self.days[-1],
-                                      'date_range': self.date_range,
-                                      'account': self.account,
-                                      'days': self.days,
-                                      'adunit_form_fragment': adunit_form_fragment,
-                                      'gtee': guaranteed_adgroups,
-                                      'promo': promo_adgroups,
-                                      'marketplace': mpx_adgroups,
-                                      'network': network_adgroups,
-                                      'backfill_promo': backfill_promo_adgroups,
-                                      'marketplace_activated': marketplace_activated
-                                  })
+        return {
+            'site': adunit,
+            'adunit': adunit,
+            'today': today,
+            'yesterday': yesterday,
+            'adunit_form_fragment': adunit_form_fragment,
+            'gtee': guaranteed_adgroups,
+            'promo': promo_adgroups,
+            'marketplace': mpx_adgroups,
+            'network': network_adgroups,
+            'backfill_promo': backfill_promo_adgroups,
+            'marketplace_activated': marketplace_activated
+        }
 
 @login_required
 def adunit_show(request,*args,**kwargs):
-    return AdUnitShowHandler(id='adunit_key')(request, use_cache=False, *args, **kwargs)
+    t='publisher/adunit.html',
+    return AdUnitShowHandler(template=t, id='adunit_key')(request, use_cache=False, *args, **kwargs)
 
 
 class AppUpdateAJAXHandler(RequestHandler):

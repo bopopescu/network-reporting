@@ -1,5 +1,87 @@
-(function () {
+(function ($, mopub) {
     "use strict";
+
+    function initializeDateButtons() {
+        // set up stats breakdown dateOptions
+        $('#stats-breakdown-dateOptions input').click(function() {
+            $('.stats-breakdown-value').hide();
+            $('.stats-breakdown-value.'+$(this).val()).show();
+        });
+    }
+
+    function renderCampaign(campaign) {
+
+        var campaign_view = new CampaignView({
+            model: campaign,
+            el: 'orders_table'
+        });
+        campaign_view.renderInline();
+
+        var adgroups = new AdGroupCollection(campaign.get('adgroups'));
+        adgroups.each(function(adgroup){
+            renderAdGroup(adgroup)
+        });
+    }
+
+    function renderAdGroup(adgroup)  {
+        var adgroup_view = new AdGroupView({
+            model: adgroup,
+            el: 'orders_table'
+        });
+        adgroup_view.renderInline();
+    }
+
+    function renderApp(app) {
+        var app_view = new AppView({
+            model: app,
+            el: 'orders_table'
+        });
+        app_view.renderInline();
+
+        // var adunits = new AdUnitCollection(app.get('adunits'));
+        // adunits.each(function(adunit){
+        //     renderAdUnit(adunit)
+        // });
+    }
+
+    function renderAdUnit(adunit) {
+        var adunit_view = new AdUnitView({
+            model: adunit,
+            el: 'orders_table'
+        });
+        adunit_view.renderInline();
+    }
+
+    function renderChart(stats, start_date) {
+        mopub.dashboardStatsChartData = {
+            pointStart: start_date,
+            pointInterval: 86400000,
+            requests: [{ "Total": stats.requests }],
+            impressions: [{ "Total": stats.impressions }],
+            clicks: [{ "Total": stats.clicks }],
+            users: [{ "Total": stats.users }]
+        };
+
+        mopub.Chart.setupDashboardStatsChart('area');
+
+        $('.stats-breakdown tr').click(function(e) {
+            $('#dashboard-stats-chart').fadeOut(100, function() {
+                mopub.Chart.setupDashboardStatsChart('area');
+                $(this).show();
+            });
+        });
+
+        $('.stats-breakdown tr').click(function(e) {
+            var row = $(this);
+            if (!row.hasClass('active')) {
+                var table = row.parents('table');
+                $('tr.active', table).removeClass('active');
+                row.addClass('active');
+            }
+        });
+
+
+    }
 
     var OrdersController = {
         initializeIndex: function(bootstrapping_data) {
@@ -9,22 +91,17 @@
 
             // Once the campaigns have been fetched, render them.
             campaigns.bind('reset', function(campaigns_collection) {
-
-                _.each(campaigns_collection.models, function(campaign) {
-                    var campaign_view = new CampaignView({
-                        model: campaign,
-                        el: 'orders_table'
-                    });
-                    campaign_view.renderInline();
+                _.each(campaigns.models, function(campaign) {
+                    renderCampaign(campaign);
                 });
             });
 
             // Fetch the campaigns
             campaigns.fetch();
-            window.campaigns = campaigns;
         },
 
         initializeOrderDetail: function(bootstrapping_data) {
+
             var validator = $('form#order_form').validate({
                 errorPlacement: function(error, element) {
                     element.closest('div').append(error);
@@ -64,10 +141,82 @@
                 }
             });
 
-            // submit button
-            $('form#order_form #submit').button({
-                icons: {secondary: 'ui-icon-circle-triangle-e'}
+            // Fill in stats for the campaign/adgroup table
+            var campaign = new Campaign({
+                id: bootstrapping_data.order_key,
+                stats_endpoint: 'direct'
             });
+
+            campaign.bind('change', function(current_campaign) {
+                renderCampaign(campaign);
+            });
+
+            campaign.fetch();
+
+            renderChart(bootstrapping_data.daily_stats,
+                        bootstrapping_data.start_date);
+
+
+            // Fill in stats for the targeting table
+            _.each(bootstrapping_data.targeted_apps, function(app_key) {
+                var app = new App({
+                    id: app_key,
+                    stats_endpoint: 'direct'
+                });
+
+                app.url = function () {
+                    var stats_endpoint = this.get('stats_endpoint');
+                    return '/api/campaign/'
+                        + bootstrapping_data.order_key
+                        + '/app/'
+                        + this.id
+                        + "?"
+                        + window.location.search.substring(1)
+                        + '&endpoint='
+                        + stats_endpoint;
+                };
+
+                app.bind('change', function(current_app){
+                    renderApp(current_app);
+                });
+                app.fetch();
+            });
+
+            _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
+                var adunit = new AdUnit({
+                    id: adunit_key,
+                    stats_endpoint: 'direct'
+                });
+
+                adunit.url = function () {
+                    var stats_endpoint = this.get('stats_endpoint');
+                    return '/api/campaign/'
+                        + bootstrapping_data.order_key
+                        + '/adunit/'
+                        + this.id
+                        + "?"
+                        + window.location.search.substring(1)
+                        + '&endpoint='
+                        + stats_endpoint;
+                };
+
+                adunit.bind('change', function(current_adunit){
+                    console.dir(current_adunit);
+                    renderAdUnit(current_adunit);
+                });
+                adunit.fetch();
+            });
+
+            // set up controls
+            initializeDateButtons();
+
+            // Sets up the click handler for the order form
+            $("a#order_form_edit").click(function(e){
+                e.preventDefault();
+                $("#order_form_container").show();
+            });
+
+            // submit button
             $('form#order_form #submit').click(function(e) {
                 e.preventDefault();
                 $('form#order_form').submit();
@@ -75,7 +224,9 @@
         },
 
         initializeLineItemDetail: function(bootstrapping_data) {
-
+            renderChart(bootstrapping_data.daily_stats,
+                        bootstrapping_data.start_date);
+            initializeDateButtons();
         },
 
         initializeOrderAndLineItemForm: function(bootstrapping_data) {

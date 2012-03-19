@@ -186,7 +186,7 @@ class SimpleAdUnit(SimpleModel):
         self.account = account.simplify()
         self.name = name
         self._key = key
-        self.keywords = keywords
+        self.keywords = str(keywords)
         self.app_key = app_key.simplify()
         self.format = format
         self.landscape = landscape

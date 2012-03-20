@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+﻿{% extends 'common/base.html' %}
 {% load filters %}
 {% block navLinks %}
   <li><a href="{% url app_index %}">Dashboard</a></li>
@@ -151,7 +151,7 @@
 {% endblock extraScripts %}
 
 {% block dateButtons %}
-  {% include "partials/datecontrols.html" %}
+  {% include "common/partials/datecontrols.html" %}
 {% endblock dateButtons %}
 
 

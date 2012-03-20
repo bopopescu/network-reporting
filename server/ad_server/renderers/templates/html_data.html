@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends 'common/base.html' %}
 
 {% block head %}
   {{ block.super }}
@@ -37,10 +37,10 @@
         {% endif %}
         // calls a user defined function if it exists
         // useful for starting animations, videos, etc
-        // this would exist as part of the html for the 
+        // this would exist as part of the html for the
         // "html" creative
-        if(typeof webviewDidAppearHelper == 'function') { 
-          webviewDidAppearHelper(); 
+        if(typeof webviewDidAppearHelper == 'function') {
+          webviewDidAppearHelper();
         }
     }
     window.addEventListener("load", function() {
@@ -58,7 +58,7 @@
   </div>
   <script type="text/javascript">
     // just call mopubFinishLoad upon window's load
-    if (typeof htmlWillCallFinishLoad == "undefined" || !htmlWillCallFinishLoad) { 
+    if (typeof htmlWillCallFinishLoad == "undefined" || !htmlWillCallFinishLoad) {
       if(typeof mopubFinishLoad == 'function') {
         window.onload = mopubFinishLoad;
       }

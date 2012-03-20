@@ -17,6 +17,11 @@ var mopub = mopub || {};
 
 (function ($, Backbone, _) {
     "use strict";
+
+    /*
+     * ## AdGroups
+     */
+
     /*
      * Helper functions for stats
      */
@@ -55,6 +60,8 @@ var mopub = mopub || {};
             return mopub.Utils.formatNumberAsPercentage(value);
           case 'status':
             return value;
+          case 'pace':
+            return (value*100).toFixed() + '%';
         default:
             throw 'Unsupported stat "' + stat + '".';
         }
@@ -132,7 +139,8 @@ var mopub = mopub || {};
                 return null;
             }
             var day_stats = daily_stats[day];
-            if (!stat in day_stats) {
+
+            if (!day_stats.hasOwnProperty(stat)) {
                 return null;
             }
             return day_stats[stat];
@@ -183,7 +191,7 @@ var mopub = mopub || {};
                 if (memo === null ||
                     !adgroup.has('daily_stats') ||
                     day >= adgroup.get('daily_stats').length ||
-                    !(stat in adgroup.get('daily_stats')[day])) {
+                    !(adgroup.get('daily_stats')[day]).hasOwnProperty(stat)) {
                     return null;
                 }
 

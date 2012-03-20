@@ -39,6 +39,7 @@
       <th class="dataTable-date-short">Amount</th>
       <th class="dataTable-date-short">Payment Date</th>
       <th>Status</th>
+      {% if user.is_admin %}<th></th>{% endif %}
     </thead>
     <tbody>
       {% for record in payment_records %}
@@ -48,6 +49,13 @@
         <td>{{record.amount|currency}}</td>
         <td>{{record.date_executed|date:"m/d/Y"}}</td>
         <td>{{record.status|default_if_none:""}}</td>
+        {% if user.is_admin %}
+        <td>
+          <form action="{% url payment_delete payment_record_key=record.key %}" method="GET" id="pr_{{record.key}}">
+            <input class='button' type="submit" name="delete" value="Delete" onclick="return delete_confirm();"/>
+          </form>
+        </td>
+        {% endif %}
       </tr>
       {% endfor %}
     </tbody>
@@ -59,6 +67,13 @@
 
 <section>
 {% if user.is_admin %}
+  <script type="text/javascript">
+      function delete_confirm()
+      {
+       return confirm("Are you sure you want to delete this payment record?");
+      }
+  </script>
+  </script>
   <script type="text/javascript">
   (function($){
     $(document).ready(function() {

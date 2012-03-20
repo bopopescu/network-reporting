@@ -162,10 +162,11 @@
                     {% for adgroup in level.adgroups %}
                       <tr>
                         <th>
-
                           {% status_icon adgroup %}
-
-                          <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">{{ adgroup.name }}</a><br />
+                          <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
+                            {{ adgroup.name }}
+                          </a>
+                          <br />
                           <span class="muted">
                             {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
                               {{adgroup.campaign.start_datetime|format_date}} -
@@ -195,15 +196,18 @@
                             {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
                               {{adgroup.campaign.full_budget|currency}} campaign budget.
                             {% endifequal %}
-                            {% if adgroup.percent_delivered %}
-                              ({{adgroup.percent_delivered|floatformat:1}}%)
-                            {%endif %}
                           </span>
                         </th>
                         <td class="dataTable-data numeric">
                             Guaranteed<br/><span class="muted">{{level.name}}</span></td>
                         <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                        <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                        <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
+                          {% if adgroup.bid_strategy == 'cpc' %}
+                            {{ adgroup.calculated_ecpm|currency }}
+                          {% else %}
+                            {{ adgroup.bid|currency }}
+                          {% endif %}
+                        </td>
                         <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">
                             {{adgroup.stats.click_count|withsep}}<br/>
@@ -251,7 +255,13 @@
                       </th>
                       <td class="dataTable-data numeric">Promotional<br/><span class="muted">Normal</span></td>
                       <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                      <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
+                        {% if adgroup.bid_strategy == 'cpc' %}
+                          {{ adgroup.calculated_ecpm|currency }}
+                        {% else %}
+                          {{ adgroup.bid|currency }}
+                        {% endif %}
+                      </td>
                       <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
                           {{adgroup.stats.click_count|withsep}}<br/>
@@ -268,7 +278,7 @@
                       {% if forloop.counter0 == 0 %}
                         <tr>
                           <th>
-                            {% if marketplace_activated and active_mpx_adunit_exists %}
+                            {% if marketplace_activated %}
                               <img src="/images/active.gif" height=9 width=9 />
                             {% else %}
                               <img src="/images/inactive.gif" height=9 width=9 />
@@ -347,7 +357,13 @@
                       </th>
                       <td class="dataTable-data numeric">Promotional<br/><span class="muted">Backfill</span></td>
                       <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
+                      <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
+                        {% if adgroup.bid_strategy == 'cpc' %}
+                          {{ adgroup.calculated_ecpm|currency }}
+                        {% else %}
+                          {{ adgroup.bid|currency }}
+                        {% endif %}
+                      </td>
                       <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
                           {{adgroup.stats.click_count|withsep}}<br/>
@@ -359,8 +375,14 @@
                       </td>
                     </tr>
                   {% endfor %}
+
                   <tr>
-                    <td class="big">Totals</td>
+                    <td>
+                      <span class="big">Totals</span> <br />
+                      <span class="muted">
+                        Totals include any ad sources previously targeted to this app/ad unit
+                      </span>
+                    </td>
                     <td></td>
                     <td class="dataTable-name numeric"><b>{{adunit.stats.revenue|currency}}</b></td>
                     <td></td>
@@ -374,6 +396,7 @@
                         {{adunit.stats.conv_rate|percentage}}</b>
                     </td>
                   </tr>
+
                 </tbody>
               </tbody>
             </table>

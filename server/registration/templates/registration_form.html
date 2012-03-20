@@ -1,6 +1,4 @@
 {% extends "registration/base.html" %}
-{% load googletags %}
-
 
 {% block pageTitle %}<h1>Register</h1>{% endblock %}
 {% block dateButtons %}{% endblock dateButtons %}
@@ -18,7 +16,7 @@
           {% block helper_text %}
           <legend>Get started with MoPub</legend> 
           <p>
-            <div>Help us serve you better by filling out the following information, or <span> <a href="{% google_login_url '/account/register/google/' %}">register with your Google Account</a></span>.</div>
+            <div>Help us serve you better by filling out the following information.</div>
             <div>Already have an account? <a href="{% url django.contrib.auth.views.login %}">Log in here.</a></div>
           </p>
           {% endblock helper_text %}
@@ -37,7 +35,7 @@ mpq.push(["track", "Register account"]);
 
 <!-- Google Code for Signup Conversion Page -->
 <script type="text/javascript">
-/* <![CDATA[ */
+/* <![CDATA[ */ 
 var google_conversion_id = 1008928244;
 var google_conversion_language = "en";
 var google_conversion_format = "1";

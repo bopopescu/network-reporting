@@ -144,6 +144,12 @@ class AdUnitForm(mpforms.MPModelForm):
                                            widget=mpwidgets.MPRadioWidget,
                                            choices=DEVICE_FORMAT_CHOICES)
 
+    def clean_refresh_interval(self):
+        refresh_interval = self.cleaned_data['refresh_interval']
+        if refresh_interval < 0:
+            raise forms.ValidationError('Refresh interval should be a positive integer.')
+        return refresh_interval
+
     class Meta:
         model = Site
         fields = ('name',

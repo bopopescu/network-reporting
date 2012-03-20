@@ -147,11 +147,11 @@
             <tbody>
               {% for adunit in app.adunits %}
               <tr class="adunit-row incomplete for-app-{{ app.key }}" id="adunit-{{adunit.key}}" style="border:none;">
-                <th class="dataTable-name" style="width:475px;">
+                <td class="dataTable-name" style="width:475px;">
                   <span class="inner" style="width:475px;">
                     <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
                   </span>
-                </th>
+                </td>
                 <td class="dataTable-data numeric revenue" style="border:none;">--</td>
                 <td class="dataTable-data numeric impressions" style="border:none;">--</td>
                 <td class="dataTable-data numeric ecpm" style="border:none;">--</td>

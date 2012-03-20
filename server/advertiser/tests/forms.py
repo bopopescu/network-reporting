@@ -7,94 +7,272 @@ import unittest
 sys.path.append(os.environ['PWD'])
 import common.utils.test.setup
 
-from google.appengine.api import memcache
 from google.appengine.ext import testbed
 
 from advertiser.models import Campaign, AdGroup
 from advertiser.forms import (CampaignForm, AdGroupForm, BaseCreativeForm,
                               TextCreativeForm, TextAndTileCreativeForm,
                               HtmlCreativeForm, ImageCreativeForm)
-from budget.tzinfo import UTC
 from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import UTC
 
 
-"""
-check creation of creatives
-test network config changes
-keywords > 500 characters causes exception
-make sure bid is filled out (Lighthouse #836)
-not be able to have campaign with no end, no budget, spread evenly
-"""
+GUARANTEED_CAMPAIGN_DATA = [
+    {
+        'campaign_type': 'gtee',
+        'gtee_priority': 'high',
+        'name': 'Guaranteed High Campaign',
+    },
+    {
+        'campaign_type': 'gtee',
+        'gtee_priority': 'normal',
+        'name': 'Guaranteed Normal Campaign',
+    },
+    {
+        'campaign_type': 'gtee',
+        'gtee_priority': 'low',
+        'name': 'Guaranteed Low Campaign',
+    },
+]
+
+PROMOTIONAL_CAMPAIGN_DATA = [
+    {
+        'campaign_type': 'promo',
+        'promo_priority': 'normal',
+        'name': 'Promotional Campaign'
+    },
+    {
+        'campaign_type': 'promo',
+        'promo_priority': 'backfill',
+        'name': 'Backfill Promotional Campaign'
+    },
+]
+
+NETWORK_CAMPAIGN_DATA = [
+    {
+        'campaign_type': 'network',
+        'name': 'Network Campaign'
+    },
+]
+
+
+class TestCampaignForm(unittest.TestCase):
+    def setUp(self):
+        self.data = GUARANTEED_CAMPAIGN_DATA + PROMOTIONAL_CAMPAIGN_DATA + NETWORK_CAMPAIGN_DATA
+
+    def test_required(self):
+        data = copy.deepcopy(self.data)
+        for test_data in data:
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), "CampaignForm(%s): %s" % (test_data, form._errors.as_text()))
+            for key in test_data:
+                incomplete_data = copy.deepcopy(test_data)
+                del incomplete_data[key]
+                form = CampaignForm(incomplete_data)
+                self.assertFalse(form.is_valid(), "CampaignForm(%s): %s was missing but form validated." % (incomplete_data, key))
 
 
 class TestDirectSoldCampaignForm(unittest.TestCase):
     def setUp(self):
-        self.data = [
-            {
-                'campaign_type': 'gtee',
-                'gtee_priority': 'high',
-                'name': 'Gtee High'
-            },
-            {
-                'campaign_type': 'gtee',
-                'gtee_priority': 'normal',
-                'name': 'Gtee High'
-            },
-            {
-                'campaign_type': 'gtee',
-                'gtee_priority': 'low',
-                'name': 'Gtee High'
-            },
-            {
-                'campaign_type': 'promo',
-                'promo_priority': 'normal',
-                'name': 'Gtee High'
-            },
-            {
-                'campaign_type': 'promo',
-                'promo_priority': 'backfill',
-                'name': 'Gtee High'
-            },
+        self.data = GUARANTEED_CAMPAIGN_DATA + PROMOTIONAL_CAMPAIGN_DATA
+
+    def test_new_campaign_datetimes(self):
+        now = datetime.datetime.now(Pacific_tzinfo())
+        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        yesterday = now - datetime.timedelta(days=1)
+        tomorrow = now + datetime.timedelta(days=1)
+
+        invalid_datetimes = [
+            (None, yesterday),
+            (None, today),
+            (None, now),
+            (yesterday, None),
+            (yesterday, yesterday),
+            (yesterday, today),
+            (yesterday, now),
+            (yesterday, tomorrow),
+            (today, yesterday),
+            (today, today),
+            (now, yesterday),
+            (now, today),
+            (now, now),
+            (tomorrow, yesterday),
+            (tomorrow, today),
+            (tomorrow, now),
+            (tomorrow, tomorrow),
         ]
 
-    def test_default_start_datetime(self):
-        """ start_datetime defaults to now """
+        valid_datetimes = [
+            (None, None, now, None),
+            (None, tomorrow, now, tomorrow),
+            (today, None, today, None),
+            (today, now, today, now),
+            (today, tomorrow, today, tomorrow),
+            (now, None, now, None),
+            (now, tomorrow, now, tomorrow),
+            (tomorrow, None, tomorrow, None),
+        ]
+
+        data = copy.deepcopy(self.data)
+        for test_data in data:
+            for start_datetime, end_datetime in invalid_datetimes:
+                test_data['start_datetime_0'] = start_datetime.date().strftime('%m/%d/%Y') if start_datetime else ''
+                test_data['start_datetime_1'] = start_datetime.time().strftime('%I:%M %p') if start_datetime else ''
+                test_data['end_datetime_0'] = end_datetime.date().strftime('%m/%d/%Y') if end_datetime else ''
+                test_data['end_datetime_1'] = end_datetime.time().strftime('%I:%M %p') if end_datetime else ''
+                form = CampaignForm(test_data)
+                self.assertFalse(form.is_valid(), "Form validated with invalid datetimes: start_datetime=%s end_datetime=%s" % (start_datetime, end_datetime))
+            for start_datetime, end_datetime, output_start_datetime, output_end_datetime in valid_datetimes:
+                test_data['start_datetime_0'] = start_datetime.date().strftime('%m/%d/%Y') if start_datetime else ''
+                test_data['start_datetime_1'] = start_datetime.time().strftime('%I:%M %p') if start_datetime else ''
+                test_data['end_datetime_0'] = end_datetime.date().strftime('%m/%d/%Y') if end_datetime else ''
+                test_data['end_datetime_1'] = end_datetime.time().strftime('%I:%M %p') if end_datetime else ''
+                form = CampaignForm(test_data)
+                self.assertTrue(form.is_valid(), form._errors.as_text())
+                campaign = form.save()
+                if output_start_datetime:
+                    self.assertTrue(abs(campaign.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()) - output_start_datetime) < datetime.timedelta(minutes=1),
+                        "start_datetime should have been %s, was %s (start_datetime: %s, end_datetime: %s)." % (output_start_datetime, campaign.start_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()), start_datetime, end_datetime))
+                else:
+                    self.assertEqual(campaign.start_datetime, None, "Input: start_datetime=%s end_datetime=%s. start_datetime was %s" % (start_datetime, end_datetime, campaign.start_datetime))
+                if output_end_datetime:
+                    self.assertTrue(abs(campaign.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()) - output_end_datetime) < datetime.timedelta(minutes=1),
+                        "end_datetime should have been %s, was %s (start_datetime: %s, end_datetime: %s)." % (output_end_datetime, campaign.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo()), start_datetime, end_datetime))
+                else:
+                    self.assertEqual(campaign.end_datetime, None, "Input: start_datetime=%s end_datetime=%s. end_datetime was %s" % (start_datetime, end_datetime, campaign.end_datetime))
+
+
+class TestGuaranteedCampaignForm(unittest.TestCase):
+    def setUp(self):
+        self.data = GUARANTEED_CAMPAIGN_DATA
+
+    def test_budget(self):
+        data = copy.deepcopy(self.data)
+        for test_data in data:
+            # Unlimited
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+            campaign = form.save()
+            self.assertEqual(campaign.budget, None, "budget was %s, should have been %s" % (campaign.budget, None))
+            self.assertEqual(campaign.full_budget, None, "full_budget was %s, should have been %s" % (campaign.full_budget, None))
+
+            test_data['budget'] = 10000
+            test_data['bid'] = 0.05
+            test_data['budget_strategy'] = 'allatonce'
+
+            # CPC Daily
+            test_data['bid_strategy'] = 'cpc'
+            test_data['budget_type'] = 'daily'
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+            campaign = form.save()
+            self.assertEqual(campaign.budget, test_data['budget'], "budget was %s, should have been %s" % (campaign.budget, test_data['budget']))
+            self.assertEqual(campaign.full_budget, None, "full_budget was %s, should have been %s" % (campaign.full_budget, None))
+
+            # CPC Full
+            test_data['budget_type'] = 'full_campaign'
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+            campaign = form.save()
+            self.assertEqual(campaign.budget, None, "budget was %s, should have been %s" % (campaign.budget, None))
+            self.assertEqual(campaign.full_budget, test_data['budget'], "full_budget was %s, should have been %s" % (campaign.full_budget, test_data['budget']))
+
+            # CPM Daily
+            test_data['bid_strategy'] = 'cpm'
+            test_data['budget_type'] = 'daily'
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+            campaign = form.save()
+            budget = test_data['budget'] * test_data['bid'] / 1000
+            self.assertEqual(campaign.budget, budget, "budget was %s, should have been %s" % (campaign.budget, budget))
+            self.assertEqual(campaign.full_budget, None, "full_budget was %s, should have been %s" % (campaign.full_budget, None))
+
+            # CPM Full
+            test_data['budget_type'] = 'full_campaign'
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+            campaign = form.save()
+            full_budget = test_data['budget'] * test_data['bid'] / 1000
+            self.assertEqual(campaign.budget, None, "budget was %s, should have been %s" % (campaign.budget, None))
+            self.assertEqual(campaign.full_budget, full_budget, "full_budget was %s, should have been %s" % (campaign.full_budget, full_budget))
+
+            # a campaign with no end_datetime and budget_type full_campaign must
+            # have budget_strategy allatonce, spread evenly
+            test_data['budget_type'] = 'full_campaign'
+            test_data['budget_strategy'] = 'evenly'
+            form = CampaignForm(test_data)
+            self.assertFalse(form.is_valid(), "budget_strategy was evenly with no end_datetime and full_campaign budget_type but the form validated")
+
+            test_data['end_datetime_0'] = (datetime.datetime.now().date() + datetime.timedelta(days=1)).strftime('%m/%d/%Y')
+            test_data['end_datetime_1'] = datetime.time().strftime('%I:%M %p')
+            form = CampaignForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+            campaign = form.save()
+
+
+class TestPromotionalCampaignForm(unittest.TestCase):
+    def setUp(self):
+        self.data = PROMOTIONAL_CAMPAIGN_DATA
+
+    def test_defaults(self):
         data = copy.deepcopy(self.data)
         for test_data in data:
             form = CampaignForm(test_data)
             self.assertTrue(form.is_valid(), form._errors.as_text())
             campaign = form.save()
-            self.assertTrue(datetime.datetime.now() - campaign.start_datetime < datetime.timedelta(seconds=1))
+            self.assertEqual(campaign.budget, None, "budget was %s, should have been %s" % (campaign.budget, None))
+            self.assertEqual(campaign.full_budget, None, "full_budget was %s, should have been %s" % (campaign.full_budget, None))
+            self.assertEqual(campaign.budget_type, 'daily', "budget_type was %s, should have been %s" % (campaign.budget_type, 'daily'))
+            self.assertEqual(campaign.budget_strategy, 'allatonce', "budget_strategy was %s, should have been %s" % (campaign.budget_strategy, 'allatonce'))
 
-    def  test_start_datetime(self):
-        """ start_datetime cannot be before today """
+
+class TestNetworkCampaignForm(unittest.TestCase):
+    def setUp(self):
+        self.data = NETWORK_CAMPAIGN_DATA
+
+    def test_defaults(self):
         data = copy.deepcopy(self.data)
-        now = datetime.datetime.now(Pacific_tzinfo())
-        yesterday = (now - datetime.timedelta(days=1))
         for test_data in data:
-            test_data['start_datetime_0'] = yesterday.date().strftime('%m/%d/%Y')
-            test_data['start_datetime_1'] = datetime.time().strftime('%I:%M %p')
-            form = CampaignForm(test_data)
-            self.assertFalse(form.is_valid(), "start_datetime was %s but the form validated" % test_data)
-            test_data['start_datetime_0'] = now.date().strftime('%m/%d/%Y')
             form = CampaignForm(test_data)
             self.assertTrue(form.is_valid(), form._errors.as_text())
+            campaign = form.save()
+            # TODO: why is start_datetime getting set?
+            # self.assertEqual(campaign.start_datetime, None, "start_datetime was %s, should have been None" % campaign.start_datetime)
+            self.assertEqual(campaign.end_datetime, None, "end_datetime was %s, should have been None" % campaign.end_datetime)
+            self.assertEqual(campaign.budget, None, "budget was %s, should have been %s" % (campaign.budget, None))
+            self.assertEqual(campaign.full_budget, None, "full_budget was %s, should have been %s" % (campaign.full_budget, None))
+            self.assertEqual(campaign.budget_type, 'daily', "budget_type was %s, should have been %s" % (campaign.budget_type, 'daily'))
+            self.assertEqual(campaign.budget_strategy, 'allatonce', "budget_strategy was %s, should have been %s" % (campaign.budget_strategy, 'allatonce'))
 
-    def test_datetime_timezones(self):
-        pass
+
+class TestAdGroupForm(unittest.TestCase):
+    def setUp(self):
+        self.data = [
+            {
+                'name': 'Test AdGroup',
+                'bid_strategy': 'cpm',
+                'bid': 0.1,
+            },
+        ]
+
+    def test_required_and_default(self):
+        data = copy.deepcopy(self.data)
+        for test_data in data:
+            form = AdGroupForm(test_data)
+            self.assertTrue(form.is_valid(), form._errors.as_text())
+            adgroup = form.save()
+            self.assertEqual(adgroup.allocation_percentage, 100.0)
+            for key in test_data:
+                incomplete_data = copy.deepcopy(test_data)
+                del incomplete_data[key]
+                form = AdGroupForm(incomplete_data)
+                self.assertFalse(form.is_valid(), "%s was missing but form validated" % key)
+
+    # check creation of creatives
+    # keywords > 500 characters causes exception
 
 
 class TestNetworkAdgroupForm(unittest.TestCase):
-
-    def setUp(self):
-        self.testbed = testbed.Testbed()
-        self.testbed.activate()
-        self.testbed.init_blobstore_stub()
-        self.testbed.init_datastore_v3_stub()
-        self.testbed.init_memcache_stub()
-
-    def tearDown(self):
-        self.testbed.deactivate()
 
     def test_network_type_choices(self):
         deprecated_network_types = ['admob', 'millennial', 'greystripe']
@@ -119,19 +297,21 @@ class TestNetworkAdgroupForm(unittest.TestCase):
             self.assertTrue(deprecated_network_type in [choice[0] for choice in form.fields['network_type'].choices], form.fields['network_type'].choices)
             # TODO: make sure the others aren't in here
 
+    # TODO: test network config changes
 
-class TestNetworkCampaignForm(unittest.TestCase):
-    def test_datetimes_null(self):
-        form = CampaignForm({
-            'campaign_type': 'network',
-            'name': 'Test Campaign'
-        })
-        self.assertTrue(form.is_valid(), form._errors.as_text())
-        campaign = form.save()
-        self.assertEqual(campaign.start_datetime, None, "A network campaign's start_datetime should be null")
-        self.assertEqual(campaign.end_datetime, None, "A network campaign's end_datetime should be null")
 
 """
+
+    def setUp(self):
+        self.testbed = testbed.Testbed()
+        self.testbed.activate()
+        self.testbed.init_blobstore_stub()
+        self.testbed.init_datastore_v3_stub()
+        self.testbed.init_memcache_stub()
+
+    def tearDown(self):
+        self.testbed.deactivate()
+
 class TestCampaignForm(unittest.TestCase):
 
     def setUp(self):

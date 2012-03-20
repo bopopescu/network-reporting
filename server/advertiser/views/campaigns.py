@@ -1,7 +1,6 @@
 import logging
 import datetime
 
-from django.conf import settings
 
 from google.appengine.api import urlfetch
 
@@ -39,7 +38,6 @@ from advertiser.query_managers import (CampaignQueryManager,
                                        HtmlCreativeQueryManager)
 from ad_server.optimizer.optimizer import DEFAULT_CTR
 from budget import budget_service
-from budget.tzinfo import Pacific, utc
 from common.ragendja.template import (JSONResponse, render_to_response,
                                       render_to_string)
 from common.utils import date_magic, helpers, sswriter
@@ -48,6 +46,7 @@ from common.utils.request_handler import RequestHandler
 from common.utils.stats_helpers import (MarketplaceStatsFetcher,
                                         MPStatsAPIException)
 from common.utils.timezones import Pacific_tzinfo
+from common.utils.tzinfo import Pacific, utc
 from publisher.models import Site
 from publisher.query_managers import (AdUnitQueryManager, AppQueryManager,
                                       AdUnitContextQueryManager)
@@ -66,7 +65,7 @@ class AdGroupIndexHandler(RequestHandler):
         num_days = 90
         today = datetime.datetime.now(Pacific_tzinfo()).date()
 
-        days = date_magic.gen_days(today - datetime.timedelta(days=num_days), today)
+        days = date_magic.gen_days(today - datetime.timedelta(days=(num_days-1)), today)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
@@ -232,7 +231,8 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
             app.network_config_form = AppNetworkConfigForm(instance=app.network_config, prefix="app_%s" % app.key())
             app.adunits = []
             for adunit in app.all_adunits:
-                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config, prefix="adunit_%s" % adunit.key())
+                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config,
+                                                                     prefix="adunit_%s" % adunit.key())
                 app.adunits.append(adunit)
 
         return render_to_response(self.request,
@@ -312,12 +312,13 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
                     if adgroup.network_type in ('admob_native', 'brightroll',
                                                 'ejam', 'inmobi', 'jumptap',
                                                 'millennial_native', 'mobfox'):
+
                         # get rid of _native in admob_native, millennial_native
                         network_config_field = "%s_pub_id" % adgroup.network_type.replace('_native', '')
 
                         for app in apps:
                             network_config = app.network_config or NetworkConfig()
-                            setattr(network_config, network_config_field, self.request.POST.get("app_%s_pub_id" % app.key(), ''))
+                            setattr(network_config, network_config_field, self.request.POST.get("app_%s-%s" % (app.key(), network_config_field), ''))
                             AppQueryManager.update_config_and_put(app, network_config)
 
                         # NetworkConfig for AdUnits
@@ -325,13 +326,13 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
                                                     'millennial_native'):
                             for adunit in adunits:
                                 network_config = adunit.network_config or NetworkConfig()
-                                setattr(network_config, network_config_field, self.request.POST.get("adunit_%s_pub_id" % adunit.key(), ''))
+                                setattr(network_config, network_config_field, self.request.POST.get("adunit_%s-%s" % (adunit.key(), network_config_field), ''))
                                 AdUnitQueryManager.update_config_and_put(adunit, network_config)
 
                             # NetworkConfig for Account
                             if adgroup.network_type == 'jumptap':
                                 network_config = self.account.network_config or NetworkConfig()
-                                setattr(network_config, network_config_field, self.request.POST.get('account_pub_id', ''))
+                                setattr(network_config, network_config_field, self.request.POST.get('jumptap_pub_id', ''))
                                 AccountQueryManager.update_config_and_put(self.account, network_config)
 
                 # Delete Cache. We leave this in views.py because we
@@ -395,16 +396,19 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
     def get(self, adgroup_key):
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
-        campaign_form = CampaignForm(instance=adgroup.campaign)
+        campaign_form = CampaignForm(instance=adgroup.campaign, initial={'bid': adgroup.bid,
+                                                                         'bid_strategy': adgroup.bid_strategy})
         adgroup_form = AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         for app in apps:
-            app.network_config_form = AppNetworkConfigForm(instance=app.network_config, prefix="app_%s" % app.key())
+            app.network_config_form = AppNetworkConfigForm(instance=app.network_config,
+                                                           prefix="app_%s" % app.key())
             app.adunits = []
             for adunit in app.all_adunits:
-                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config, prefix="adunit_%s" % adunit.key())
+                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config,
+                                                                     prefix="adunit_%s" % adunit.key())
                 app.adunits.append(adunit)
 
         return render_to_response(self.request,
@@ -426,23 +430,96 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
         apps = AppQueryManager.get_apps(account=self.account)
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
-        campaign_form = CampaignForm(self.request.POST, instance=adgroup.campaign)
+        campaign_form = CampaignForm(self.request.POST, instance=adgroup.campaign, initial={'bid': adgroup.bid,
+                                                                                            'bid_strategy': adgroup.bid_strategy})
+
         if campaign_form.is_valid():
             campaign = campaign_form.save()
 
             adgroup_form = AdGroupForm(self.request.POST, instance=adgroup, site_keys=[(unicode(adunit.key()), '') for adunit in adunits], is_staff=self.request.user.is_staff)
             if adgroup_form.is_valid():
+
+                # Delete Cache. We leave this in views.py because we
+                # must delete the adunits that the adgroup used to have as well
+                if adgroup.site_keys:
+                    adunits = AdUnitQueryManager.get(adgroup.site_keys)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
                 adgroup = adgroup_form.save()
 
-                apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
-                for app in apps:
-                    app_network_config_form = AppNetworkConfigForm(self.request.POST, instance=app.network_config, prefix="app_%s" % app.key())
-                    app_network_config = app_network_config_form.save()
-                    AppQueryManager.update_config_and_put(app, app_network_config)
-                    for adunit in app.all_adunits:
-                        adunit_network_config_form = AdUnitNetworkConfigForm(self.request.POST, instance=adunit.network_config, prefix="adunit_%s" % adunit.key())
-                        adunit_network_config = adunit_network_config_form.save()
-                        AdUnitQueryManager.update_config_and_put(adunit, adunit_network_config)
+                # TODO: put this in the adgroup form
+                if not adgroup.campaign.campaign_type == 'network':
+                    adgroup.network_type = None
+                adgroup.save()
+
+                #put adgroup so creative can have a reference to it
+                AdGroupQueryManager.put(adgroup)
+
+                if campaign.campaign_type == "network":
+                    html_data = None
+                    if adgroup.network_type == 'custom':
+                        html_data = self.request.POST.get('custom_html', '')
+                    elif adgroup.network_type == 'custom_native':
+                        html_data = self.request.POST.get('custom_method', '')
+                    #build default creative with custom_html data if custom or none if anything else
+                    creative = adgroup.default_creative(html_data)
+                    if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
+                        #if the adgroup has a creative AND the new creative and old creative are the same class,
+                        #ignore the new creative and set the variable to point to the old one
+                        creative = adgroup.net_creative
+                        if adgroup.network_type == 'custom':
+                            #if the network is a custom one, the creative might be the same, but the data might be new, set the old
+                            #creative to have the (possibly) new data
+                            creative.html_data = html_data
+                        elif adgroup.network_type == 'custom_native':
+                            creative.html_data = html_data
+                    elif adgroup.net_creative:
+                        #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.
+                        #at this point we know that there was an old creative AND it's different from the new creative so
+                        #and delete the old creative just marks as deleted!
+                        CreativeQueryManager.delete(adgroup.net_creative)
+
+                    # the creative should always have the same account as the adgroup
+                    creative.account = adgroup.account
+                    #put the creative so we can reference it
+                    CreativeQueryManager.put(creative)
+                    #set adgroup to reference the correct creative
+                    adgroup.net_creative = creative.key()
+                    #put the adgroup again with the new (or old) creative reference
+                    AdGroupQueryManager.put(adgroup)
+
+                    # NetworkConfig for Apps
+                    if adgroup.network_type in ('admob_native', 'brightroll',
+                                                'ejam', 'inmobi', 'jumptap',
+                                                'millennial_native', 'mobfox'):
+
+                        # get rid of _native in admob_native, millennial_native
+                        network_config_field = "%s_pub_id" % adgroup.network_type.replace('_native', '')
+
+                        for app in apps:
+                            network_config = app.network_config or NetworkConfig()
+                            setattr(network_config, network_config_field, self.request.POST.get("app_%s-%s" % (app.key(), network_config_field), ''))
+                            AppQueryManager.update_config_and_put(app, network_config)
+
+                        # NetworkConfig for AdUnits
+                        if adgroup.network_type in ('admob_native', 'jumptap',
+                                                    'millennial_native'):
+                            for adunit in adunits:
+                                network_config = adunit.network_config or NetworkConfig()
+                                setattr(network_config, network_config_field, self.request.POST.get("adunit_%s-%s" % (adunit.key(), network_config_field), ''))
+                                AdUnitQueryManager.update_config_and_put(adunit, network_config)
+
+                            # NetworkConfig for Account
+                            if adgroup.network_type == 'jumptap':
+                                network_config = self.account.network_config or NetworkConfig()
+                                setattr(network_config, network_config_field, self.request.POST.get('jumptap_pub_id', ''))
+                                AccountQueryManager.update_config_and_put(self.account, network_config)
+
+                # Delete Cache. We leave this in views.py because we
+                # must delete the adunits that the adgroup used to have as well
+                if adgroup.site_keys:
+                    adunits = AdUnitQueryManager.get(adgroup.site_keys)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
                 CampaignQueryManager.put(campaign)
                 AdGroupQueryManager.put(adgroup)
@@ -496,7 +573,7 @@ def edit_adgroup(request, *args, **kwargs):
 """
 
 
-class AdgroupDetailHandler(RequestHandler):
+class AdGroupDetailHandler(RequestHandler):
     """
     Holy christ, refactor
 
@@ -514,6 +591,9 @@ class AdgroupDetailHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, adgroup_key):
+
+        stats_q = StatsModelQueryManager(self.account, self.offline)
+        
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
@@ -563,20 +643,52 @@ class AdgroupDetailHandler(RequestHandler):
 
         # Show a flash message recommending using reports if selecting more than 30 days
         if self.date_range > 30:
-            self.request.flash['message'] = "For showing more than 30 days we recommend using the <a href='%s'>Reports</a> page." % reverse('reports_index')
+            self.request.flash['message'] = """For showing more than 30 days we recommend
+                                               using the <a href='%s'>Reports</a> page.""" %  \
+                                               reverse('reports_index')
         else:
             del self.request.flash['message']
 
         # Load stats
-        adgroup.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=adgroup, days=days)
+
+        ctr = lambda clicks, impressions: \
+              (clicks/float(impressions) if impressions else 0)
+        ecpm = lambda revenue, impressions: \
+               (revenue/float(impressions)*1000 if impressions else 0)
+        fill_rate = lambda requests, impressions: \
+                    (impressions/float(requests) if requests else 0)
+
+            
+        adgroup.all_stats = stats_q.get_stats_for_days(advertiser=adgroup,days=days)
         adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
+        try:
+            adgroup.stats.ecpm = ecpm(adgroup.stats.revenue,
+                                      adgroup.stats.impression_count)
+        except Exception:
+            pass
+
+        try:
+            adgroup.stats.ctr = ctr(adgroup.stats.click_count,
+                                    adgroup.stats.impression_count)
+        except Exception:
+            pass
+
+        try:
+            adgroup.stats.fill_rate = fill_rate(adgroup.stats.request_count,
+                                                adgroup.stats.impression_count)
+        except Exception:
+            pass
+            
+        
 
         # Load creatives and populate
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
         creatives = list(creatives)
         for c in creatives:
-            c.all_stats = StatsModelQueryManager(self.account, offline=self.offline).get_stats_for_days(advertiser=c, days=days)
+            c.all_stats = StatsModelQueryManager(self.account,
+                                                 offline=self.offline).get_stats_for_days(advertiser=c,
+                                                                                          days=days)
             c.stats = reduce(lambda x, y: x + y, c.all_stats, StatsModel())
             # TODO: Should fix DB so that format is always there
             if not c.format:
@@ -649,17 +761,20 @@ class AdgroupDetailHandler(RequestHandler):
                 or not self.account.network_config:
 
                 for app in apps.values():
-                    if (app.network_config \
-                        and not getattr(app.network_config, adgroup_network_type + '_pub_id')) \
-                        or not app.network_config:
+                    if not (app.network_config and
+                            getattr(app.network_config, adgroup_network_type + '_pub_id')):
 
-                        message.append("The application " + app.name + " needs to have a <strong>" + adgroup_network_type.title() + " Network ID</strong> in order to serve. Specify a " + adgroup_network_type.title() + " Network ID on <a href=%s>your account's ad network settings</a> page." % reverse("ad_network_settings"))
+                        for adunit in app.all_adunits:
+                            if not (adunit.network_config and
+                                    getattr(adunit.network_config, adgroup_network_type + '_pub_id')):
+                                message.append("The application " + app.name + " needs to have a <strong>" + adgroup_network_type.title() + " Network ID</strong> in order to serve. Specify a " + adgroup_network_type.title() + " Network ID on <a href=%s>your account's ad network settings</a> page." % reverse("ad_network_settings"))
+                                break
         if message == []:
             message = None
         else:
             message = "<br/>".join(message)
 
-        totals = reduce(lambda x, y: x + y.stats, adunits, StatsModel())
+        totals = adgroup.stats
 
         if today and yesterday:
             stats = {
@@ -715,7 +830,7 @@ class AdgroupDetailHandler(RequestHandler):
                                       'graph_adunits': graph_adunits,
                                       'start_date': days[0],
                                       'end_date': days[-1],
-                                      'date_range': self.date_range,
+                                      'date_range': len(days),
                                       'creative_fragment': creative_fragment,
                                       'message': message
                                   })
@@ -767,7 +882,7 @@ class AdgroupDetailHandler(RequestHandler):
 
 @login_required
 def campaign_adgroup_show(request, *args, **kwargs):
-    return AdgroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
+    return AdGroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
 
 
 class PauseAdGroupHandler(RequestHandler):
@@ -850,7 +965,10 @@ class PauseAdGroupHandler(RequestHandler):
         if update_creatives:
             CreativeQueryManager.put(update_creatives)
 
-        return HttpResponseRedirect(self.request.META["HTTP_REFERER"])
+        #TODO: we need a cross-platform default redirect in case
+        # HTTP_REFERER doesn't exist
+        logging.warn(type(self.request.META))
+        return HttpResponseRedirect(self.request.environ.get('HTTP_REFERER'))
 
 
 @login_required
@@ -955,7 +1073,6 @@ class AddCreativeHandler(RequestHandler):
 
         jsonDict = {'success': False, 'errors': []}
         if base_creative_form.is_valid():
-            logging.error('base_creative_form is_valid')
             base_creative = base_creative_form.save(commit=False)
             ad_type = base_creative.ad_type
             if ad_type == "text":
@@ -968,7 +1085,6 @@ class AddCreativeHandler(RequestHandler):
                 creative_form = html_creative_form
 
             if creative_form.is_valid():
-                logging.error('creative_form is_valid')
 
                 if not creative_form.instance:  # ensure form posts do not change ownership
                     account = self.account
@@ -978,7 +1094,6 @@ class AddCreativeHandler(RequestHandler):
                 creative.account = account
                 creative.ad_group = ad_group
                 CreativeQueryManager.put(creative)
-                logging.error('put')
 
                 jsonDict.update(success=True)
                 return self.json_response(jsonDict)

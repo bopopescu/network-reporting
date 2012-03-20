@@ -48,7 +48,6 @@ $(function() {
                 });
             });
 
-
             // Load rolled up network stats
             $.each(networks, function(index, network) {
                 var network = new RollUp({

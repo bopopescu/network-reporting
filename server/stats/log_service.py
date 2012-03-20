@@ -26,7 +26,7 @@ MAX_LINES_BEFORE_FLUSH = 100
 MAX_TIME_BEFORE_FLUSH = 60 # seconds
 
 FILE_QUEUE_NAME = 'file-finalizer-%02d'
-NUM_FILE_QUEUES = 10
+NUM_FILE_QUEUES = 50
 
 
 class LogService(object):
@@ -36,7 +36,6 @@ class LogService(object):
         self.flush_timer = flush_time
         self.lines = []
         self.last_flush = datetime.datetime.now()
-
 
     def log(self, line):
         # some lines contain non-UTF-8 encoded chars or have invalid bytes
@@ -48,6 +47,7 @@ class LogService(object):
             # logging.error('%s: %s' % (e, line))
 
         self.lines.append(line)
+
         if self._should_flush():
             try:
                 self.schedule_flush()
@@ -56,7 +56,6 @@ class LogService(object):
             except:
                 exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
                 # logging.error(exception_traceback)
-
 
     def _should_flush(self):
         """
@@ -95,10 +94,12 @@ class LogService(object):
             task = taskqueue.Task(name=None,
                                   method='POST',
                                   url='/files/finalize',
-                                  payload=post_data_serialized)
+                                  payload=post_data_serialized,
+                                  target='38-fetcher')
 
             # get the appropriate queue shard
-            queue_num = random.randint(0, NUM_FILE_QUEUES-1)
+
+            queue_num = random.randint(40, NUM_FILE_QUEUES-1)
             queue_name = FILE_QUEUE_NAME % queue_num
 
             # put task on queue
@@ -110,12 +111,12 @@ class LogService(object):
             self.last_flush = datetime.datetime.now()
         except taskqueue.TaskAlreadyExistsError:
             logging.info("task %s already exists"%task_name)
+
         except UnicodeDecodeError, e:
             logging.warning(e)
         except Exception, e:
             exception_traceback = ''.join(traceback.format_exception(*sys.exc_info()))
             # logging.error(exception_traceback)
-
 
 def get_blob_name_for_time(t, blob_file_name="apache"):
     # 2011050215 for 3pm May 2, 2011 PST

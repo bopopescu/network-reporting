@@ -1,5 +1,6 @@
 {% extends 'advertiser/base.html' %}
 {% load filters %}
+{% load elements %}
 
 
 {% block pageTitle %}
@@ -73,25 +74,31 @@
       {% endif %}
     {% endif %}
     {% if campaign.network %}
-      <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
+      <a class="button"
+         id="advertisers-adgroups-editAdGroupButton"
+         href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
     {% else %}
-      <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
+      <a class="button"
+         id="advertisers-adgroups-editAdGroupButton"
+         href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit campaign settings</a>
     {% endif %}
   </span>
 {% endblock titleBarRight %}
-
-
 
 {% block content %}
 
   {% if not apps %}
     <div class="alert-message block-message">
-      This campaign is not targeted at any <strong>Ad Units</strong>.  In order for this campaign to deliver, you will need to target at least one Ad Unit.
+      This campaign is not targeted at any <strong>Ad Units</strong>.
+      In order for this campaign to deliver, you will need to target
+      at least one Ad Unit.
     </div>
   {% endif %}
   {% if not creatives %}
     <div class="alert-message block-message">
-      This campaign needs to have at least one <strong>Creative</strong> in order to serve.  Set up a creative below.
+      This campaign needs to have at least
+      one <strong>Creative</strong> in order to serve.  Set up a
+      creative below.
     </div>
   {% endif %}
   {% if message  %}
@@ -101,7 +108,9 @@
   {% endif %}
   <div class="separated" id="chartWrapper">
     <section class="offset nomargin" id="dashboard-stats">
-      <h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
+      <h3 class="stats-chart-title">
+        Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+      </h3>
       <div class="stats">
         <div class="stats-breakdown">
           <table>
@@ -182,70 +191,153 @@
     {% endif %}
 
     <div>
-      {% if campaign.network %}
 
-        {% if adgroup.active %}
-          <img src="/images/active.gif" width="9" height="9"/>
-        {% else %}
-          <img src="/images/paused.gif" width="9" height="9"/>
-        {% endif %}
+      <table class="dataTable campaignData-main">
+        <thead>
+          <tr>
+            <th class="campaignData-icon"></th>
+            <th class="dataTable-name"> Name </th>
 
-        {{ adgroup|campaign_status }} -
+            {% if campaign.gtee %}
+                <th class="dataTable-data numeric">Revenue</th>
+            {% endif %}
 
-        {% if campaign.start_datetime and campaign.end_datetime %}
-          From {{campaign.start_datetime|format_date_time}} to {{campaign.end_datetime|format_date_time}}.
-        {% endif %}
+            {% if campaign.gtee or campaign.promo or campaign.backfill_promo %}
+                <th class="dataTable-data status numeric">Status</th>
+            {% endif %}
 
-        {% if campaign.start_datetime and not campaign.end_datetime %}
-          Starts {{campaign.start_datetime|format_date_time}}.
-        {% endif %}
+            <th class="dataTable-data numeric">
+              <a id="campaign-ecpm-helpLink" class="whatsthis" href="#"><div class="whatsthis-icon"></div></a>
+              eCPM
+            </th>
 
-        {% if not campaign.start_datetime and campaign.end_datetime %}
-          Ends {{campaign.start_datetime|format_date_time}}.
-        {% endif %}
+            {% if campaign.network %}
+                <th class="dataTable-data numeric">Attempts</th>
+             {% endif %}
 
-        {% if not campaign.start_datetime and not campaign.end_datetime %}
-          All dates.
-        {% endif %}&nbsp;
-
-        {% ifequal adgroup.campaign.budget_type 'full_campaign' %}{{adgroup.campaign.full_budget|currency}} campaign budget.{% endifequal %}
+            {% if campaign.gtee %}
+                <th class="dataTable-data numeric">Goal</th>
+            {% endif %}
 
 
-      {% else %}
+            <th class="dataTable-data numeric">Impressions</th>
 
-        <div class="campaignData-rollup">
-          <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-            <thead>
-              <tr>
-                <th width=25%>Start Date</th>
-                <th width=25%>End Date</th>
-                <th width=25%>Delivered</th>
-                <th width=25%>Budget</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td> {{ campaign.start_datetime|format_date_time|default:"None" }} </td>
-                <td> {{ campaign.end_datetime|format_date_time|default:"None" }} </td>
-                <td> {{campaign.budget.total_spent|currency }} </td>
-                <td>
-                  {% ifequal adgroup.campaign.budget_type 'daily' %}
-                    {% if adgroup.campaign.budget %}
-                      {{adgroup.campaign.budget|currency}} (daily)
-                    {% else %}
-                      Unlimited
-                    {% endif %}
-                  {% endifequal %}
+            {% if campaign.network %}
+                <th class="dataTable-data numeric">Fill Rate</th>
+            {% endif %}
 
-                  {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
-                    {{adgroup.campaign.full_budget|currency}} (total)
-                  {% endifequal %}
+            <th class="dataTable-data numeric">Clicks</th>
+
+
+            {% if campaign.network %}
+                <th class="dataTable-data numeric">CTR</th>
+            {% endif %}
+            {% if campaign.gtee or campaign.promo or campaign.backfill_promo %}
+                <th class="dataTable-data numeric">Conv</th>
+            {% endif %}
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr class="campaignData">
+
+            <td class="campaignData-icon">
+              {% status_icon campaign %}
+            </td>
+
+            <td class="dataTable-name">
+              {{ adgroup.name }}
+              <br />
+              <span class="muted">
+                {# Display the network type if it's a network campaign #}
+                {% if campaign.network %}
+                  {{ adgroup.network_type }}.
+
+                {# Otherwise display the start and end datetimes, if we have them. #}
+                {% else %}
+                  {% if campaign.start_datetime and campaign.end_datetime %}
+                     {{ campaign.start_datetime|format_utc_date_compact }} - {{ campaign.end_datetime|format_utc_date_compact }}.
+                  {% else %} {% if campaign.start_datetime %}
+                     Starts {{ campaign.start_datetime|format_utc_date_compact }}
+                  {% else %} {% if campaign.end_datetime %}
+                     Ends {{ campaign.end_datetime|format_utc_date_compact }}.
+                  {% else %}
+                     All dates.
+                {% endif %} {% endif %} {% endif %}  {% endif %}
+
+                {# Display the budget if it's a guaranteed campaign. #}
+                {% if campaign.gtee %}
+                  {% if campaign.budget_type == "daily" %}
+                    {{ campaign.budget|currency }} daily budget.
+                  {% else %}
+                    {{ campaign.full_budget|currency }} full budget.
+                  {% endif %}
+                {% endif %}
+                </span>
+              </td>
+
+
+              {% if campaign.gtee %}
+                <td class="dataTable-data numeric"> {{ adgroup.stats.revenue|currency }}</td>
+              {% endif %}
+
+              {% if campaign.gtee or campaign.promo or campaign.backfill_promo %}
+                <td class="dataTable-data status numeric">
+                  {% if campaign.active and campaign.has_started and not campaign.is_finished %}
+                    Running
+                  {% else %} {% if not campaign.active %}
+                    Paused
+                  {% else %} {% if campaign.is_finished %}
+                    Finished
+                  {% else %} {% if not campaign.has_started %}
+                    Scheduled
+                  {% endif %} {% endif %} {% endif %} {% endif %}
                 </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      {% endif %}
+              {% endif %}
+
+              <td class="dataTable-data numeric">
+                {{ adgroup.stats.ecpm|currency }}
+              </td>
+
+              {% if campaign.network %}
+                <td class="dataTable-data numeric"> {{ adgroup.stats.attempt_count|withsep }} </td>
+              {% endif %}
+
+              {% if campaign.gtee %}
+                <td class="dataTable-data numeric">
+                  {% if campaign.cpc %}
+                    {{ adgroup.budget_goal|currency }} <br />
+                    USD
+                  {% else %}
+                    {{ adgroup.budget_goal|withsep}} <br />
+                    Impressions
+                  {% endif %}
+                </td>
+              {% endif %}
+
+
+
+              <td class="dataTable-data numeric"> {{ adgroup.stats.impression_count|withsep }} </td>
+
+              {% if campaign.network %}
+                <td class="dataTable-data numeric"> {{ adgroup.stats.fill_rate|percentage }}</td>
+              {% endif %}
+
+              <td class="dataTable-data numeric"> {{ adgroup.stats.click_count|withsep }} </td>
+
+
+              {% if campaign.network %}
+                <td class="dataTable-data numeric"> {{ adgroup.stats.ctr|percentage }} </td>
+              {% endif %}
+
+              {% if campaign.gtee or campaign.promo or campaign.backfill_promo %}
+                <td class="dataTable-data numeric"> {{ adgroup.stats.conversion_count|withsep }}</td>
+              {% endif %}
+
+            </tr>
+        </tbody>
+
+      </table>
 
       {% if user.is_admin %}
         <a href="/budget/view/{{adgroup.key}}"> Admin Budget View</a>
@@ -752,8 +844,10 @@
       };
 
       CampaignsController.initializeAdGroupDetail({
-         kind: {% if campaign.network %}'network'{% else %}'direct'{% endif %},
-         adgroup_key: '{{ adgroup_key }}'
+          kind: {% if campaign.network %}'network'{% else %}'direct'{% endif %},
+          adgroup_key: '{{ adgroup_key }}',
+          start_date: {{ start_date|js_date }},
+          date_range: {{ date_range }}
       });
     });
   </script>

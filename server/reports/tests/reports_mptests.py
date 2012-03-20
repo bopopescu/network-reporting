@@ -26,9 +26,6 @@ from reports.models import Report, ScheduledReport
 from reports.aws_reports.report_mapper import mapper_test, reduce_test
 from reports.aws_reports.parse_utils import MO, WEEK, DAY, HOUR, DATE_FMT, DATE_FMT_HR, DATE_HR_LEN, DATE_LEN
 from reports.query_managers import ReportQueryManager
-from reporting.aws_logging.stats_updater import update_model, put_models
-from reporting.models import StatsModel
-from reporting.query_managers import StatsModelQueryManager
 
 #allows me to seed the random number generator so every time
 #we get the same sequence of random numbers

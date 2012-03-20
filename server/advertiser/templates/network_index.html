@@ -117,16 +117,9 @@
     $(function() {
 
       NetworksController.initialize({
-        adgroups_data: [
-            {% for adgroup in network_adgroups %}{
-              id: '{{ adgroup.key }}',
-              active: {% if adgroup.active %}true{% else %}false{% endif %},
-              name: '{{ adgroup.name }}',
-              bid_strategy: '{{ adgroup.bid_strategy }}',
-              details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
-              network_type: '{{ adgroup.network_type }}'}{% if not forloop.last %},{% endif %}
-            {% endfor %}
-            ],
+        adgroups_data: [{% for adgroup in network_adgroups %}
+            {{ adgroup|adgroup_to_json|safe }}{% if not forloop.last %},{% endif %}
+        {% endfor %}],
 
         graph_start_date: Date.UTC({{ start_date.year }},
                                    {{ start_date.month|add:"-1" }},

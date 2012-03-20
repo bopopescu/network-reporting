@@ -1,36 +1,16 @@
 """
 Views that handle pages for Apps and AdUnits.
 """
-import base64
-import binascii
-import hashlib
-import logging
-import math
-import os
-import re
 
-from datetime import (datetime,
-                      time,
-                      date,
-                      timedelta,
-                      )
+import logging
+import datetime
 
 import urllib
 # hack to get urllib to work on snow leopard
 urllib.getproxies_macosx_sysconf = lambda: {}
 
-from urllib import urlencode
-from operator import itemgetter
-
-# Appengine
-from google.appengine.api.urlfetch import fetch
-from google.appengine.ext import db
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.api import images
-
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, \
@@ -39,7 +19,7 @@ from common.ragendja.template import render_to_response, \
 
 ## Models
 from advertiser.models import Campaign, AdGroup, HtmlCreative, NETWORKS
-from publisher.models import Site, Account, App
+from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
 from account.models import NetworkConfig
@@ -50,7 +30,6 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkLoginManager
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
                                       CreativeQueryManager
-from common.utils.query_managers import CachedQueryManager
 from publisher.query_managers import AppQueryManager, \
      AdUnitQueryManager, \
      AdUnitContextQueryManager
@@ -61,7 +40,6 @@ from common.utils import sswriter, date_magic
 from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 from common.constants import *
-from common.utils.decorators import cache_page_until_post
 from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
 from budget import budget_service
@@ -74,7 +52,6 @@ class AppIndexHandler(RequestHandler):
 
         # Get all of the adunit keys for bootstrapping the apps
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
-        adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
 
         # We list the app traits in the table, and then load their
         # stats over ajax using Backbone. Fetch the apps/adunits for the
@@ -180,7 +157,7 @@ class GeoPerformanceHandler(RequestHandler):
     """
     def get(self):
 
-        now = datetime.now()
+        now = datetime.datetime.now()
 
         apps = AppQueryManager.get_apps(self.account)
 
@@ -396,7 +373,7 @@ def create_adunit(request,*args,**kwargs):
     return CreateAdUnitHandler()(request,*args,**kwargs)
 
 
-class ShowAppHandler(RequestHandler):
+class AppDetailHandler(RequestHandler):
     """
     REFACTOR
 
@@ -419,25 +396,25 @@ class ShowAppHandler(RequestHandler):
         app = AppQueryManager.get(app_key)
 
         # create a stats manager
-        stats_manager = StatsModelQueryManager(self.account, self.offline)
+        stats_q = StatsModelQueryManager(self.account, self.offline)
+        mpx_stats_q = MarketplaceStatsFetcher(self.account.key())
 
         app.adunits = AdUnitQueryManager.get_adunits(app=app)
 
         # organize impressions by days
         if len(app.adunits) > 0:
             for adunit in app.adunits:
-                adunit.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                adunit.all_stats = stats_q.get_stats_for_days(publisher=adunit,
                                                                     days=self.days)
                 adunit.stats = reduce(lambda x, y: x+y,
                                       adunit.all_stats,
                                       StatsModel())
 
         app.adunits = sorted(app.adunits,
-                             key=lambda adunit: adunit.stats.request_count,
+                             key=lambda adunit: adunit.name,
                              reverse=True)
 
-
-        app.all_stats = stats_manager.get_stats_for_days(publisher=app, days=self.days)
+        app.all_stats = stats_q.get_stats_for_days(publisher=app, days=self.days)
 
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
 
@@ -453,10 +430,8 @@ class ShowAppHandler(RequestHandler):
                                                      StatsModel()) \
                                               for stats in bundled_adunits]
 
-        # in order to make the app editable
+        # Create edit form and new adunit forms
         app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
-
-        # in order to have a creat adunit form
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
 
         today = app.all_stats[-1]
@@ -464,7 +439,9 @@ class ShowAppHandler(RequestHandler):
             yesterday = app.all_stats[-2]
         except IndexError:
             yesterday = StatsModel()
+
         app.stats = reduce(lambda x, y: x+y, app.all_stats, StatsModel())
+
         # this is the max active users over the date range
         # NOT total unique users
         app.stats.user_count = max([sm.user_count for sm in app.all_stats])
@@ -472,11 +449,9 @@ class ShowAppHandler(RequestHandler):
         # get adgroups targeting this app
         app.adgroups = AdGroupQueryManager.get_adgroups(app=app)
 
-        # used the get marketplace stats from mpx servers
-        stats_fetcher = MarketplaceStatsFetcher(self.account.key())
 
         for ag in app.adgroups:
-            ag.all_stats = stats_manager.get_stats_for_days(publisher = app,
+            ag.all_stats = stats_q.get_stats_for_days(publisher = app,
                                                             advertiser = ag,
                                                             days = self.days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
@@ -487,28 +462,27 @@ class ShowAppHandler(RequestHandler):
             # TODO: overwrite clicks as well
             if ag.campaign.campaign_type in ['marketplace']:
                 try:
-                    mpx_stats = stats_fetcher.get_app_stats(str(app_key),
+                    mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
                                                             self.start_date,
                                                             self.end_date)
                 except MPStatsAPIException, e:
+                    logging.warn(str(e))
                     mpx_stats = {}
-                ag.stats.revenue = float(mpx_stats.get('revenue'))
+
+                ag.stats.revenue = float(mpx_stats.get('revenue', 0.0))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
-
-        promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'],
-                                 app.adgroups)
+            if ag.campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo'] \
+               and ag.cpc:
+                ag.calculated_ecpm = calculate_ecpm(ag)
 
 
         # Sort out all of the campaigns that are targeting this app
-        promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], app.adgroups)
-        promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
-
-        gtee_types = ['gtee_high', 'gtee_low', 'gtee']
-        guarantee_campaigns = filter(lambda x: x.campaign.campaign_type in gtee_types,
-                                     app.adgroups)
-        guarantee_campaigns = sorted(guarantee_campaigns,
-                                     lambda x,y: cmp(y.bid, x.bid))
+        promo_campaigns = filter_adgroups(app.adgroups, ['promo'])
+        guarantee_campaigns = filter_adgroups(app.adgroups, ['gtee_high', 'gtee_low', 'gtee'])
+        marketplace_campaigns = filter_adgroups(app.adgroups, ['marketplace'])
+        network_campaigns = filter_adgroups(app.adgroups, ['network'])
+        backfill_promo_campaigns = filter_adgroups(app.adgroups, ['backfill_promo'])
 
         levels = ('high', '', 'low')
         gtee_str = "gtee_%s"
@@ -520,59 +494,46 @@ class ShowAppHandler(RequestHandler):
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, adgroups = level_camps))
 
-        marketplace_campaigns = filter(lambda x: x.campaign_type, app.adgroups)
-        marketplace_campaigns = sorted(marketplace_campaigns,
-                                       lambda x,y: cmp(x.bid, y.bid))
-
-        network_campaigns = filter(lambda x: x.campaign_type in ['network'], app.adgroups)
-        network_campaigns = sorted(network_campaigns, lambda x,y: cmp(y.bid, x.bid))
-
-        backfill_promo_campaigns = filter(lambda x: x.campaign_type in ['backfill_promo'],
-                                          app.adgroups)
-        backfill_promo_campaigns = sorted(backfill_promo_campaigns,
-                                          lambda x,y: cmp(y.bid, x.bid))
-
 
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
                                         for adgroup in marketplace_campaigns])
+
         try:
             marketplace_activated = marketplace_campaigns[0].campaign.active
         except IndexError:
             marketplace_activated = False
 
-
-        return render_to_response(self.request,
-                                  'publisher/app.html',
-                                  {
-                                      'app': app,
-                                      'app_form_fragment':app_form_fragment,
-                                      'adunit_form_fragment':adunit_form_fragment,
-                                      'start_date': self.days[0],
-                                      'end_date': self.days[-1],
-                                      'date_range': self.date_range,
-                                      'today': today,
-                                      'yesterday': yesterday,
-                                      'account': self.account,
-                                      'helptext': help_text,
-                                      'gtee': gtee_levels,
-                                      'promo': promo_campaigns,
-                                      'marketplace': marketplace_campaigns,
-                                      'marketplace_activated': marketplace_activated,
-                                      'active_mpx_adunit_exists': active_mpx_adunit_exists,
-                                      'network': network_campaigns,
-                                      'backfill_promo': backfill_promo_campaigns,
-                                  })
+        return {
+            'app': app,
+            'app_form_fragment':app_form_fragment,
+            'adunit_form_fragment':adunit_form_fragment,
+            'start_date': self.days[0],
+            'end_date': self.days[-1],
+            'date_range': self.date_range,
+            'today': today,
+            'yesterday': yesterday,
+            'account': self.account,
+            'helptext': help_text,
+            'gtee': gtee_levels,
+            'promo': promo_campaigns,
+            'marketplace': marketplace_campaigns,
+            'marketplace_activated': marketplace_activated,
+            'active_mpx_adunit_exists': active_mpx_adunit_exists,
+            'network': network_campaigns,
+            'backfill_promo': backfill_promo_campaigns,
+        }
 
 
 @login_required
-def app_show(request,*args,**kwargs):
-    return ShowAppHandler(id="app_key")(request, use_cache=False, *args,**kwargs)
+def app_detail(request,*args,**kwargs):
+    t = 'publisher/app.html'
+    return AppDetailHandler(id="app_key", template=t)(request, use_cache=False, *args,**kwargs)
 
 
-class ExportFileHandler( RequestHandler ):
-    def get( self, key, key_type, f_type ):
+class ExportFileHandler(RequestHandler):
+    def get(self, key, key_type, f_type):
         spec = self.params.get('spec')
         stat_names, stat_models = self.get_desired_stats(key, key_type,
                                                          self.days, spec=spec)
@@ -679,8 +640,9 @@ class AdUnitShowHandler(RequestHandler):
     """
 
     def get(self, adunit_key):
-    # load the site
+        # load the site
         adunit = AdUnitQueryManager.get(adunit_key)
+
         if adunit.account.key() != self.account.key():
             raise Http404
 
@@ -718,7 +680,7 @@ class AdUnitShowHandler(RequestHandler):
                 ag.stats.revenue = float(mpx_stats.get('revenue'))
                 ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
-            if ag.campaign.campaign_type in ['network']:
+            if ag.campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
                 ag.calculated_ecpm = calculate_ecpm(ag)
 
 
@@ -726,37 +688,23 @@ class AdUnitShowHandler(RequestHandler):
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(adunit=adunit)
 
 
-        promo_campaigns = filter(lambda x: x.campaign_type in ['promo'], adunit.adgroups)
-        promo_campaigns = sorted(promo_campaigns, lambda x,y: cmp(y.bid, x.bid))
+        # Sort out all of the campaigns that are targeting this app
+        promo_campaigns = filter_adgroups(adunit.adgroups, ['promo'])
+        guarantee_campaigns = filter_adgroups(adunit.adgroups, ['gtee_high', 'gtee_low', 'gtee'])
+        marketplace_campaigns = filter_adgroups(adunit.adgroups, ['marketplace'])
+        network_campaigns = filter_adgroups(adunit.adgroups, ['network'])
+        backfill_promo_campaigns = filter_adgroups(adunit.adgroups, ['backfill_promo'])
 
-        gtee_types = ['gtee_high', 'gtee_low', 'gtee']
-        guarantee_campaigns = filter(lambda x: x.campaign_type in gtee_types,
-                                     adunit.adgroups)
-        guarantee_campaigns = sorted(guarantee_campaigns, lambda x,y: cmp(y.bid, x.bid))
         levels = ('high', '', 'low')
         gtee_str = "gtee_%s"
         gtee_levels = []
         for level in levels:
             this_level = gtee_str % level if level else "gtee"
             name = level if level else 'normal'
-            level_camps = filter(lambda x:x.campaign_type == this_level,
+            level_camps = filter(lambda x:x.campaign.campaign_type == this_level,
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, adgroups = level_camps))
 
-        marketplace_campaigns = filter(lambda x: x.campaign_type in ['marketplace'],
-                                       adunit.adgroups)
-        marketplace_campaigns = sorted(marketplace_campaigns,
-                                       lambda x,y: cmp(x.bid, y.bid))
-
-        network_campaigns = filter(lambda x: x.campaign_type in ['network'],
-                                   adunit.adgroups)
-        network_campaigns = sorted(network_campaigns,
-                                   lambda x,y: cmp(y.bid, x.bid))
-
-        backfill_promo_campaigns = filter(lambda x: x.campaign_type in ['backfill_promo'],
-                                          adunit.adgroups)
-        backfill_promo_campaigns = sorted(backfill_promo_campaigns,
-                                          lambda x,y: cmp(y.bid, x.bid))
 
         try:
             marketplace_activated = marketplace_campaigns[0].campaign.active
@@ -1035,8 +983,8 @@ class AppExportHandler(RequestHandler):
         ///-(    \'   \\
     """
     def post(self, app_key, file_type, start, end):
-        start = datetime.strptime(start,'%m%d%y')
-        end = datetime.strptime(end,'%m%d%y')
+        start = datetime.datetime.strptime(start,'%m%d%y')
+        end = datetime.datetime.strptime(end,'%m%d%y')
         days = date_magic.gen_days(start, end)
 
         app = AppQueryManager.get(app_key)
@@ -1064,8 +1012,8 @@ def app_export(request, *args, **kwargs):
 
 class DashboardExportHandler(RequestHandler):
     def post(self, file_type, start, end):
-        start = datetime.strptime(start,'%m%d%y')
-        end = datetime.strptime(end,'%m%d%y')
+        start = datetime.datetime.strptime(start,'%m%d%y')
+        end = datetime.datetime.strptime(end,'%m%d%y')
         days = date_magic.gen_days(start, end)
 
         data = []
@@ -1252,11 +1200,21 @@ def create_iad_mapper(account, app):
                                           app=app)
 
 def calculate_ecpm(adgroup):
+    """
+    Calculate the ecpm for a cpc campaign.
+    REFACTOR: move this to the app/adunit models
+    """
     if adgroup.cpc:
         try:
-            return adgroup.stats.click_count * \
-                   adgroup.cpc * \
-                   1000 / adgroup.stats.impression_count
+            return float(adgroup.stats.click_count) * \
+                   float(adgroup.bid) * \
+                   1000.0 / float(adgroup.stats.impression_count)
         except Exception, error:
             logging.error(error)
     return adgroup.bid
+
+
+def filter_adgroups(adgroups, cfilter):
+    filtered_adgroups = filter(lambda x: x.campaign.campaign_type in cfilter, adgroups)
+    filtered_adgroups = sorted(filtered_adgroups, lambda x,y: cmp(y.bid, x.bid))
+    return filtered_adgroups

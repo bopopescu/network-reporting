@@ -1,8 +1,7 @@
 import copy
 import string
 import random
-import datetime as dt
-import logging
+import datetime
 
 from account.query_managers import AccountQueryManager
 from advertiser.query_managers import AdGroupQueryManager
@@ -56,8 +55,7 @@ NUM_CREATIVES_PER_ADGROUP = 1
 NUM_ADUNITS_PER_APP = 2#3
 
 NETWORKS_TO_USE = ['admob']
-
-APP_STATS_SINCE = dt.datetime.combine(dt.date.today(), dt.time()) - dt.timedelta(days=14)
+APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
 ### End configuration parameters
 
@@ -135,18 +133,18 @@ def select_rand_subset(array):
 
 
 def get_random_date():
-    today = dt.date.today()
+    today = datetime.date.today()
     year = 2012
     month = random.randint(1,today.month)
     day = random.randint(1,28 if today.month!= month else random.randint(1,month))
-    return dt.date(year,month,day)
+    return datetime.date(year,month,day)
 
 def get_random_datetime():
-    today = dt.datetime.now()
+    today = datetime.datetime.now()
     year = 2012
     month = random.randint(1,today.month)
     day = random.randint(1,28 if today.month!= month else random.randint(1,month))
-    return dt.datetime(year,month,day)
+    return datetime.datetime(year,month,day)
 
 
 ####
@@ -367,8 +365,8 @@ def main_():
                 creatives_per_campaign[campaign].append(generate_creative(account,adgroup))
 
 
-    today = dt.datetime.now()
-    day = dt.timedelta(days=1)
+    today = datetime.datetime.now()
+    day = datetime.timedelta(days=1)
 
     s = StatsModelQueryManager(account=account)
 
@@ -472,8 +470,8 @@ def main():
                     application=app).put()
         network_config.put()
 
-    today = dt.datetime.now()
-    day = dt.timedelta(days=1)
+    today = datetime.datetime.now()
+    day = datetime.timedelta(days=1)
 
     stats_manager = StatsModelQueryManager(account=account)
 
@@ -482,7 +480,6 @@ def main():
         cur_date = APP_STATS_SINCE
         while cur_date<=today:
             for campaign in campaigns:
-                logging.info('generating StatsModel stats')
                 stats= [generate_stats_model(adunit,
                                              creative,
                                              account,
@@ -502,7 +499,7 @@ def main():
 
     # Generate reporting stats
     cur_date = APP_STATS_SINCE.date()
-    while cur_date<=dt.date.today():
+    while cur_date<=datetime.date.today():
         network_totals = {}
         app_totals = {}
         for mapper in AdNetworkMapperManager.get_mappers(account):

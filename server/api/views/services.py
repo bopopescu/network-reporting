@@ -22,16 +22,13 @@ from common.ragendja.template import JSONResponse
 from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      SummedStatsFetcher, \
      DirectSoldStatsFetcher, \
-     AdNetworkStatsFetcher
-
-from common.utils.timezones import Pacific_tzinfo
-from common_templates.templatetags.filters import campaign_status
+     AdNetworkStatsFetcher, \
+     MPStatsAPIException
 
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.http import Http404
 
-import datetime
 import logging
 
 
@@ -65,7 +62,7 @@ class AppService(RequestHandler):
             apps = [AppQueryManager.get_app_by_key(app_key).toJSON()]
         # If no app key is provided, return a list of all apps for the account
         else:
-            apps = [app.toJSON() for app in AppQueryManager.get_apps(self.account)]
+            apps = [a.toJSON() for a in AppQueryManager.get_apps(self.account)]
 
         # get stats for each app
         for app in apps:
@@ -73,6 +70,7 @@ class AppService(RequestHandler):
             # if the adgroup key was specified, then we only want the app's
             # stats to reflect how it performed within that adgroup.
             if adgroup_key:
+
                 app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
                                                                 adgroup_key,
                                                                 self.start_date,
@@ -281,6 +279,7 @@ class AdGroupService(RequestHandler):
                     mpx_stats = stats_fetcher.get_account_stats(self.start_date,
                                                                 self.end_date)
                 except MPStatsAPIException, error:
+                    logging.error('MPStatsAPIException: ' + str(error))
                     mpx_stats = {}
                 summed_stats.revenue = float(mpx_stats.get('revenue', '$0.00').replace('$','').replace(',',''))
                 summed_stats.impression_count = int(mpx_stats.get('impressions', 0))
@@ -288,23 +287,23 @@ class AdGroupService(RequestHandler):
                 summed_stats.cpm = adgroup.cpm
 
             adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+            if adgroup.pace:
+                summed_stats.pace = adgroup.pace[1]
+                if adgroup.pace[0] == "Pacing":
+                    if summed_stats.pace < .5:
+                        summed_stats.pace_type = "pace-failure"
+                    elif summed_stats.pace < .85:
+                        summed_stats.pace_type = "pace-warning"
+                    else:
+                        summed_stats.pace_type = "pace-success"
+                else:
+                    summed_stats.pace_type = "delivery"
+
             percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
             summed_stats.percent_delivered = percent_delivered
             adgroup.percent_delivered = percent_delivered
 
-            summed_stats.status = campaign_status(adgroup)
-
-            # Determine the pacing
-            if adgroup.running and  \
-               adgroup.campaign.budget_obj and  \
-               adgroup.campaign.budget_obj.delivery_type != 'allatonce':
-
-                if budget_service.get_osi(adgroup.campaign.budget_obj):
-                    summed_stats.on_schedule = "on pace"
-                else:
-                    summed_stats.on_schedule = "behind"
-            else:
-                summed_stats.on_schedule = "none"
+            summed_stats.status = adgroup.status
 
             stats_dict = summed_stats.to_dict()
 

@@ -77,20 +77,17 @@ class OrderDetailHandler(RequestHandler):
         # Get the targeted adunits and group them by their app.
         targeted_adunits = flatten([AdUnitQueryManager.get(line_item.site_keys) \
                                     for line_item in order.adgroups])
-        # Database I/O could be made faster here by getting a list of
-        # app keys and querying for the list, rather than querying
-        # for each individual app. (au.app makes a query)
-        targeted_apps = set([au.app for au in targeted_adunits])
-        for app in targeted_apps:
-            app.adunits = [au for au in targeted_adunits if au.app == app]
+        targeted_apps = get_targeted_apps(targeted_adunits)
 
         # Set up the form
         order_form = OrderForm(instance=order)
+        
         return {
             'order': order,
             'order_form': order_form,
             'stats': format_stats(all_stats),
-            'targeted_apps': targeted_apps,
+            'targeted_apps': targeted_apps.values(),
+            'targeted_app_keys': targeted_apps.keys(),
             'targeted_adunits': targeted_adunits
         }
 
@@ -117,20 +114,16 @@ class LineItemDetailHandler(RequestHandler):
                                                      days = self.days)
         line_item.stats = reduce(lambda x, y: x + y, all_stats, StatsModel())
 
-        # Get the targeted adunits and group them by their app.
+        # Get the targeted adunits and apps
         targeted_adunits = AdUnitQueryManager.get(line_item.site_keys)
-        # Database I/O could be made faster here by getting a list of
-        # app keys and querying for the list, rather than querying
-        # for each individual app. (au.app makes a query)
-        targeted_apps = [au.app for au in targeted_adunits]
-        for app in targeted_apps:
-            app.adunits = [au for au in targeted_adunits if au.app == app]
+        targeted_apps = get_targeted_apps(targeted_adunits)
 
         return {
             'order': order,
             'line_item': line_item,
             'stats': format_stats(all_stats),
-            'targeted_apps': targeted_apps
+            'targeted_apps': targeted_apps.values(),
+            'targeted_app_keys': targeted_apps.keys()
         }
 
 
@@ -344,5 +337,17 @@ def format_stats(all_stats):
     return stats
 
 
-
-
+def get_targeted_apps(adunits):
+    # Database I/O could be made faster here by getting a list of
+    # app keys and querying for the list, rather than querying
+    # for each individual app. (au.app makes a query)
+    targeted_apps = {}
+    for adunit in adunits:
+        app_key = str(adunit.app.key())
+        app = targeted_apps.get(app_key)
+        if not app:
+            app = adunit.app
+            app.adunits = []
+            targeted_apps[app_key] = app                
+        targeted_apps[app_key].adunits += [adunit]
+    return targeted_apps

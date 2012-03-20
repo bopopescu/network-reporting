@@ -81,7 +81,7 @@ var mopub = window.mopub || {};
     /*
      * ## AppView
      *
-     * See templates/partials/app.html to see how this is rendered in HTML.
+     * See common/templates/partials/app.html to see how this is rendered in HTML.
      * This renders an app as a table row. It also adds the call to load
      * adunits over ajax and put them in the table.
      */
@@ -127,7 +127,7 @@ var mopub = window.mopub || {};
     /*
      * ## AdUnitView
      *
-     * See templates/partials/adunit.html to see how this is rendered in HTML
+     * See common/templates/partials/adunit.html to see how this is rendered in HTML
      * Renders an adunit as a row in a table. Also ads the event handler to
      * submit the price floor change over ajax when the price_floor field is changed.
      */

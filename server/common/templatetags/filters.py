@@ -10,10 +10,12 @@ from common.utils.tzinfo import Pacific, utc
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.template.defaultfilters import date as date_filter
 
 from country_codes import COUNTRY_CODE_DICT
 
 register = template.Library()
+
 
 @register.filter
 def attrs(bound_field, attrs_json):
@@ -24,30 +26,28 @@ def attrs(bound_field, attrs_json):
     bound_field.add_attrs(attrs=parsed)
     return bound_field
 
+
 @register.filter
 def raw(bound_field):
-    """
-    Parses a json attrs object from template and passes them to the bound_field
-    """
-    bound_field.TEMPLATE = 'raw_bound_field.html'
+    bound_field.TEMPLATE = 'common/raw_bound_field.html'
     return bound_field
+
 
 @register.filter
 def raw_required(bound_field):
-    """
-    Parses a json attrs object from template and passes them to the bound_field
-    """
-    bound_field.TEMPLATE = 'raw_bound_field_required.html'
+    bound_field.TEMPLATE = 'common/raw_bound_field_required.html'
     return bound_field
+
 
 @register.filter
 def raw_required_with_errors(bound_field):
-    bound_field.TEMPLATE = 'raw_bound_field_required_with_errors.html'
+    bound_field.TEMPLATE = 'common/raw_bound_field_required_with_errors.html'
     return bound_field
+
 
 @register.filter
 def widget_only(bound_field):
-    bound_field.TEMPLATE = 'widget_only.html'
+    bound_field.TEMPLATE = 'common/widget_only.html'
     return bound_field
 
 
@@ -59,20 +59,22 @@ def label(bound_field, label):
     bound_field.add_label(label)
     return bound_field
 
+
 @register.filter
 def awesome_number_formatter(value):
     if value:
         value = withsep(int(value))
         endings = ['K', 'M', 'B', 'T', 'Q']
         parts = value.split(',')
-        if 1 < len(parts) < 7 :
-            return parts[0] + endings[len(parts)-2]
+        if 1 < len(parts) < 7:
+            return parts[0] + endings[len(parts) - 2]
         elif len(parts) >= 7:
             return value
         else:
             return parts[0]
     else:
         return "0"
+
 
 @register.filter
 def currency(value):
@@ -85,15 +87,17 @@ def currency(value):
     else:
         return "$0.00"
 
+
 @register.filter
 def currency_no_symbol(value):
     if value:
         try:
-            return "---" # "%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
+            return "---"  # "%s%s" % (withsep(int(value)), ("%0.2f" % value)[-3:])
         except Exception:
-            return "---" # "0.00"
+            return "---"  # "0.00"
     else:
-        return "---" # "0.00"
+        return "---"  # "0.00"
+
 
 @register.filter
 def percentage(value):
@@ -104,6 +108,7 @@ def percentage(value):
             return "0.00%"
     else:
         return "0.00%"
+
 
 @register.filter
 def percentage_rounded(value):
@@ -135,8 +140,10 @@ def withsep(value):
     else:
         return "0"
 
+
 @register.filter
 def format_date(value):
+    """DEPRECATED: use Django's built-in date filter."""
     if value:
         try:
             return value.strftime("%a, %b %d, %Y")
@@ -145,8 +152,10 @@ def format_date(value):
     else:
         return ""
 
+
 @register.filter
 def format_date_compact(value):
+    """DEPRECATED: use Django's built-in date filter."""
     if value:
         try:
             return "%d/%d" % (value.month, value.day)
@@ -155,8 +164,10 @@ def format_date_compact(value):
     else:
         return ""
 
+
 @register.filter
 def format_date_time(value):
+    """DEPRECATED: use {{ value|pacific_time:"m/d/Y h:i A" }}."""
     if value:
         try:
             return value.replace(tzinfo=utc).astimezone(Pacific).strftime("%m/%d/%Y %I:%M %p")
@@ -165,8 +176,10 @@ def format_date_time(value):
     else:
         return ""
 
+
 @register.filter
 def format_time(value):
+    """DEPRECATED: use Django's built-in time filter."""
     if value:
         try:
             return value.strftime("%I:%M %p")
@@ -175,20 +188,39 @@ def format_time(value):
     else:
         return ""
 
+
 @register.filter
 def format_utc_date_compact(value):
+    """DEPRECATED: use {{ value|pacific_time:"n/j" }}."""
     value = value.replace(tzinfo=utc).astimezone(Pacific)
     return "%d/%d" % (value.month, value.day)
+
+
+@register.filter
+def pacific_time(value, arg=None):
+    """
+    Convert value to Pacific Time and return it as a string formatted using
+    Django's build-in time filter.
+    """
+    try:
+        if not value.tzinfo:
+            value = value.replace(tzinfo=utc)
+        value = value.astimezone(Pacific)
+        return date_filter(value, arg)
+    except Exception:
+        return ""
+
 
 @register.filter
 def truncate(value, arg):
     if len(value) > arg:
         try:
-            return "%s..." % value[:(arg-3)]
+            return "%s..." % value[:(arg - 3)]
         except Exception:
             return value
     else:
         return value
+
 
 @register.filter
 def time_ago_in_words(value):
@@ -212,6 +244,7 @@ def time_ago_in_words(value):
                 return "one day"
             else:
                 return "%d days" % (d.days)
+
 
 @register.filter
 def campaign_status(adgroup):
@@ -240,11 +273,13 @@ def campaign_status(adgroup):
     else:
         return "Unknown"
 
+
 @register.filter
 def binary_data(data):
     if data:
         return "data:image/png;base64,%s" % binascii.b2a_base64(data)
     return None
+
 
 @register.filter
 def country_code_to_name(country_code):
@@ -254,9 +289,11 @@ def country_code_to_name(country_code):
         logging.warning("No country name for code: %s"%country_code)
         return None
 
+
 @register.filter
 def to_json(python_obj):
     return json.dumps(python_obj)
+
 
 @register.filter
 def as_list(item):
@@ -277,11 +314,9 @@ def adgroup_to_json(adgroup):
             'bid_strategy': adgroup.bid_strategy,
         })
         if adgroup.campaign.gtee() or adgroup.campaign.promo():
-            start_datetime = adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific) if adgroup.campaign.start_datetime else None
-            end_datetime = adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific) if adgroup.campaign.end_datetime else None
             data.update({
-                'start_date': "%d/%d" % (start_datetime.month, start_datetime.day) if start_datetime else None,
-                'end_date': "%d/%d" % (end_datetime.month, end_datetime.day) if end_datetime else None,
+                'start_date': pacific_time(adgroup.campaign.start_datetime, "n/j") if adgroup.campaign.start_datetime else None,
+                'end_date': "%d/%d" % pacific_time(adgroup.campaign.end_datetime, "n/j") if adgroup.campaign.end_datetime else None,
                 'apps': [str(key) for key in adgroup.targeted_app_keys],
             })
         if adgroup.campaign.gtee():
@@ -308,6 +343,7 @@ def include_raw(path):
     normally be interpolated with the template context.
     """
     return template.loader.find_template(path)[0]
+
 
 # @register.simple_tag
 # def include_script(script_name,
@@ -345,6 +381,7 @@ def include_raw(path):
 #     else:
 #         return ""
 
+
 @register.simple_tag
 def include_script(script_name,
                    load_minified=(not settings.DEBUG),
@@ -366,6 +403,7 @@ def include_script(script_name,
     else:
         return ""
 
+
 @register.simple_tag
 def include_style(style_name):
     style_name = style_name.replace('.css', '')
@@ -377,6 +415,7 @@ def include_style(style_name):
 
     return """<link rel="stylesheet" href="%s" />""" % style_path
 
+
 @register.filter
 def js_date(date):
-    return "new Date(%s,%s,%s)" % (date.year, date.month-1, date.day)
+    return "new Date(%s, %s, %s)" % (date.year, date.month - 1, date.day)

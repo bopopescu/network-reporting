@@ -66,7 +66,7 @@ class LineItemForm(forms.ModelForm):
     name = forms.CharField(label='Name:',
                            widget=forms.TextInput(attrs={'class': 'required',
                                                          'placeholder': 'Line Item Name'}))
-    start_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
+    start_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
                                          label='Start Time:', required=False,
                                          widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                             'placeholder': 'MM/DD/YYYY'},
@@ -74,7 +74,7 @@ class LineItemForm(forms.ModelForm):
                                                                                             'placeholder': 'HH:MM'},
                                                                                 date_format='%m/%d/%Y',
                                                                                 time_format='%I:%M %p'))
-    end_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p',),
+    end_datetime = forms.DateTimeField(input_formats=('%m/%d/%Y %I:%M %p', '%m/%d/%Y %H:%M'),
                                        label='Stop Time:', required=False,
                                        widget=CustomizableSplitDateTimeWidget(date_attrs={'class': 'date',
                                                                                           'placeholder': 'MM/DD/YYYY'},
@@ -83,12 +83,13 @@ class LineItemForm(forms.ModelForm):
                                                                               date_format='%m/%d/%Y',
                                                                               time_format='%I:%M %p'))
     bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     label='Rate:', initial='cpc')
+                                     label='Rate:', initial='cpm')
     bid = forms.FloatField(initial=0.05,
-                           widget=forms.TextInput(attrs={'class': 'float'}))
+                           widget=forms.TextInput(attrs={'class': 'float required'}))
     daily_budget = forms.FloatField(required=False)
     full_budget = forms.FloatField(required=False)
-    budget = forms.FloatField(required=False)
+    budget = forms.FloatField(required=False,
+                              widget=forms.TextInput(attrs={'class': 'float'}))
     budget_type = forms.ChoiceField(choices=(('daily', 'USD/day'),
                                              ('full_campaign', 'total USD')),
                                     initial='daily', required=False)
@@ -167,7 +168,7 @@ class LineItemForm(forms.ModelForm):
                 else:
                     initial['budget'] = instance.full_budget
 
-                if instance.bid_strategy == 'cpm':
+                if initial['budget'] != None and instance.bid_strategy == 'cpm':
                     initial['budget'] = int(1000.0 * initial['budget'] / instance.bid)
             # promo
             elif instance.adgroup_type == 'backfill_promo':

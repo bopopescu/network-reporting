@@ -34,11 +34,11 @@ urlpatterns = patterns('advertiser.views',
     url('^orders/new/$',
         'order_and_line_item_form',
         name='advertiser_order_and_line_item_form_new'),
-                       
+
     url('^orders/(?P<order_key>[-\w\.]+)/$',
         'order_detail',
         name='advertiser_order_detail'),
-                       
+
     url('^orders/(?P<order_key>[-\w\.]+)/edit/$',
         'order_form',
         name='advertiser_order_form_edit'),
@@ -46,11 +46,11 @@ urlpatterns = patterns('advertiser.views',
     url('^orders/(?P<order_key>[-\w\.]+)/line_items/new/$',
         'order_and_line_item_form',
         name='advertiser_line_item_form_new'),
-                       
+
     url('^orders/(?P<order_key>[-\w\.]+)/line_items/(?P<line_item_key>[-\w\.]+)/$',
         'line_item_detail',
         name='advertiser_line_item_detail'),
-                       
+
     url('^orders/(?P<order_key>[-\w\.]+)/line_items/(?P<line_item_key>[-\w\.]+)/edit/$',
         'order_and_line_item_form',
         name='advertiser_line_item_form_edit'),

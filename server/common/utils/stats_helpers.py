@@ -13,7 +13,7 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
 from publisher.query_managers import AppQueryManager,\
      AdUnitQueryManager
 
-from common_templates.templatetags.filters import currency, percentage
+from common.templatetags.filters import currency, percentage
 from common.constants import MPX_DSP_IDS
 import logging
 
@@ -102,7 +102,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         return adunit_stats
 
     def get_adgroup_stats(self, adgroup, start, end, daily=False):
-        if isinstance(adgroup, str):            
+        if isinstance(adgroup, str):
             adgroup = AdGroupQueryManager.get(adgroup)
         adgroup_stats = self._get_advertiser_stats(adgroup, start, end)
         return adgroup_stats

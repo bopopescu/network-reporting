@@ -8,8 +8,8 @@ def server_error(request, *args, **kwargs):
         import sys,logging
         from django.views import debug
         return debug.technical_500_response(request, *sys.exc_info())
-    return HttpResponseServerError(render_to_string(request, '500.html'))
+    return HttpResponseServerError(render_to_string(request, 'common/500.html'))
 
 def maintenance(request, *args, **kwargs):
     return HttpResponseServerError(render_to_string(request,
-        'maintenance.html'))
+        'common/maintenance.html'))

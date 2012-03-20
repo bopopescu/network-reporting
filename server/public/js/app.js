@@ -107,7 +107,7 @@ $(document).ready(checkReport(retry));
 */
 
 (function(){
-	
+
 	var Tinycon = {};
 	var currentFavicon = null;
 	var originalFavicon = null;
@@ -123,47 +123,47 @@ $(document).ready(checkReport(retry));
 		background: '#F03D25',
 		fallback: true
 	};
-	
+
 	var ua = function(browser){
 		var agent = navigator.userAgent.toLowerCase();
 		return agent.indexOf(browser) !== -1;
 	};
-	
+
 	var browser = {
 		chrome: ua('chrome'),
 		webkit: ua('chrome') || ua('safari'),
 		safari: ua('safari') && !ua('chrome'),
 		mozilla: ua('mozilla') && !ua('chrome') && !ua('safari')
 	};
-	
+
 	// private
 	var getFaviconTag = function(){
-		
+
 		var links = document.getElementsByTagName('link');
-		
+
 		for(var i=0; i < links.length; i++) {
 			if (links[i].getAttribute('rel') === 'icon') {
 				return links[i];
 			}
 		}
-		
+
 		return false;
 	};
-	
+
 	var removeFaviconTag = function(){
-	
+
 		var links = document.getElementsByTagName('link');
 		var head = document.getElementsByTagName('head')[0];
-		
+
 		for(var i=0; i < links.length; i++) {
 			if (links[i].getAttribute('rel') === 'icon') {
 				head.removeChild(links[i]);
 			}
 		}
 	};
-	
+
 	var getCurrentFavicon = function(){
-		
+
 		if (!originalFavicon || !currentFavicon) {
 			var tag = getFaviconTag();
 			originalFavicon = currentFavicon = tag ? tag.getAttribute('href') : '/favicon.ico';
@@ -171,64 +171,64 @@ $(document).ready(checkReport(retry));
 
 		return currentFavicon;
 	};
-	
+
 	var getCanvas = function (){
-		
+
 		if (!canvas) {
 			canvas = document.createElement("canvas");
 			canvas.width = 16;
 			canvas.height = 16;
 		}
-		
+
 		return canvas;
 	};
-	
+
 	var setFaviconTag = function(url){
 		removeFaviconTag();
-		
+
 		var link = document.createElement('link');
 		link.type = 'image/x-icon';
 		link.rel = 'icon';
 		link.href = url;
 		document.getElementsByTagName('head')[0].appendChild(link);
 	};
-	
+
 	var log = function(message){
 		if (window.console) window.console.log(message);
 	};
-	
+
 	var drawFavicon = function(num, colour) {
 
 		// fallback to updating the browser title if unsupported
 		if (!getCanvas().getContext || (!browser.chrome && !browser.mozilla)) {
 			return updateTitle(num);
 		}
-		
+
 		var context = getCanvas().getContext("2d");
 		var colour = colour || '#000000';
 		var num = num || 0;
-		
+
 		faviconImage = new Image();
 		faviconImage.onload = function() {
-			
-			// clear canvas  
+
+			// clear canvas
 			context.clearRect(0, 0, 16, 16);
 
 			// draw original favicon
 			context.drawImage(faviconImage, 0, 0);
-			
+
 			// draw bubble over the top
 			if (num > 0) drawBubble(context, num, colour);
-			
+
 			// refresh tag in page
 			refreshFavicon();
 		};
-		
+
 		faviconImage.src = getCurrentFavicon();
 	};
-	
+
 	var updateTitle = function(num) {
-		
+
 		if (options.fallback) {
 			if (num > 0) {
 				document.title = '('+num+') ' + originalTitle;
@@ -237,9 +237,9 @@ $(document).ready(checkReport(retry));
 			}
 		}
 	};
-	
+
 	var drawBubble = function(context, num, colour) {
-		
+
 		// bubble needs to be larger for double digits
 		var len = (num+"").length-1;
 		var width = options.width + (6*len);
@@ -251,75 +251,75 @@ $(document).ready(checkReport(retry));
 		context.fillStyle = options.background;
 		context.strokeStyle = options.background;
 		context.lineWidth = 1;
-		
+
 		// bubble
 		context.fillRect(w,h,width-1,options.height);
-		
+
 		// rounded left
 		context.beginPath();
 		context.moveTo(w-0.5,h+1);
 		context.lineTo(w-0.5,15);
 		context.stroke();
-		
+
 		// rounded right
 		context.beginPath();
 		context.moveTo(15.5,h+1);
 		context.lineTo(15.5,15);
 		context.stroke();
-		
+
 		// bottom shadow
 		context.beginPath();
 		context.strokeStyle = "rgba(0,0,0,0.3)";
 		context.moveTo(w,16);
 		context.lineTo(15,16);
 		context.stroke();
-		
+
 		// number
 		context.fillStyle = options.colour;
 		context.textAlign = "right";
 		context.textBaseline = "top";
-		
+
 		// unfortunately webkit/mozilla are a pixel different in text positioning
-		context.fillText(num, 15, browser.webkit ? 6 : 7);  
+		context.fillText(num, 15, browser.webkit ? 6 : 7);
 	};
-	
+
 	var refreshFavicon = function(){
 		// check support
 		if (!getCanvas().getContext) return;
-		
+
 		setFaviconTag(getCanvas().toDataURL());
 	};
-	
-	
+
+
 	// public
 	Tinycon.setOptions = function(custom){
 		options = {};
-		
+
 		for(var i in defaults){
 			options[i] = custom[i] ? custom[i] : defaults[i];
 		}
 		return this;
 	};
-	
+
 	Tinycon.setImage = function(url){
 		currentFavicon = url;
 		refreshFavicon();
 		return this;
 	};
-	
+
 	Tinycon.setBubble = function(num, colour){
-		
+
 		// validate
 		if(isNaN(num)) return log('Bubble must be a number');
-		
+
 		drawFavicon(num, colour);
 		return this;
 	};
-	
+
 	Tinycon.reset = function(){
 		Tinycon.setImage(originalFavicon);
 	};
-	
+
 	Tinycon.setOptions(defaults);
 	window.Tinycon = Tinycon;
 })();
@@ -487,7 +487,7 @@ $.TokenData = function(data,type) {
     var name;
     var input;
     var id;
-    var code; 
+    var code;
     function city_input() {
         var value = raw.lat + ',' + raw.lng + ':' + raw.adminCode1 + ':' + raw.name + ':' + raw.countryCode;
         return $('<input type="hidden" class="' + raw.countryCode + '" name="cities" id="' + raw.name.replace(/ /gi, '_') + '" value="' + value + '" />');
@@ -544,7 +544,7 @@ $.TokenList = function (input, settings) {
 
     // Save the tokens
     var saved_tokens = [];
-    
+
     // Keep track of the number of tokens in the list
     var token_count = 0;
     var token_id    = 0;
@@ -731,7 +731,7 @@ $.TokenList = function (input, settings) {
     // Functions
     //
 
- 
+
   //If more than two countries exist, select Everywhere, disable other options, and get rid of all of their inputs
   function verify_token_inputs() {
     var countries = $('.token-input-country').length;
@@ -747,7 +747,7 @@ $.TokenList = function (input, settings) {
         //disable everything else
         $('input[name="location-targeting"]').each(
             function(i) {
-                if ($(this).val() != 'all') { 
+                if ($(this).val() != 'all') {
                     $(this).attr('disabled', true);
                 }
                 //Select "Everywhere"
@@ -755,7 +755,7 @@ $.TokenList = function (input, settings) {
                     $(this).click();
                 }
         });
-    } 
+    }
     // turn all buttons back on
     else {
         $('input[name="location-targeting"]').each(
@@ -763,7 +763,7 @@ $.TokenList = function (input, settings) {
                 $(this).attr('disabled', false);
         });
     }
-    
+
     // Only show countryNumDpdnt things that match the current number
     // of countries in the input
     var children = $('#geo_pred_ta').children().length;
@@ -797,7 +797,7 @@ $.TokenList = function (input, settings) {
                         delete_token($(this).parent());
                         return false;
                     });
-                $.data(this_token.get(0), "tokeninput", token_data); 
+                $.data(this_token.get(0), "tokeninput", token_data);
 
                 // Clear input box and make sure it keeps focus
                 input_box
@@ -808,7 +808,7 @@ $.TokenList = function (input, settings) {
                 hide_dropdown();
 
                 // Save this token id
-                token_data.input().appendTo( hidden_input ); 
+                token_data.input().appendTo( hidden_input );
             }
         }
         input_box.blur();
@@ -839,7 +839,7 @@ $.TokenList = function (input, settings) {
       var value = datas.name;
       var token_type;
       var this_token = $("<li><p>"+ value +"</p> </li>");
-          
+
       if (datas.type == 'city') {
           this_token.addClass('token-input-city')
           .addClass(datas.raw.countryCode);
@@ -861,7 +861,7 @@ $.TokenList = function (input, settings) {
               delete_token($(this).parent());
               return false;
           });
-      $.data(this_token.get(0), "tokeninput", datas); 
+      $.data(this_token.get(0), "tokeninput", datas);
       return this_token;
     }
 
@@ -886,18 +886,18 @@ $.TokenList = function (input, settings) {
         // [country], region], city]
         // so US is US, California is US,CA and San Francisco is US,CA,SF (or some something like that)
         // This is because the django forms are going to take this id, split it on ',' and then assign
-        // the first value as country_name, 2nd as region_name, and 3rd as city_name 
+        // the first value as country_name, 2nd as region_name, and 3rd as city_name
         li_data.input().appendTo(hidden_input);
 
         token_count++;
         //Strictly increasing number so we can name the hidden inputs
         token_id++;
-        
+
         if(settings.tokenLimit !== null && token_count >= settings.tokenLimit) {
             input_box.hide();
             hide_dropdown();
         }
-				
+
 				// Execute the onAdd callback if defined
 				if($.isFunction(callback)) {
 				  callback(li_data.id);
@@ -966,27 +966,27 @@ $.TokenList = function (input, settings) {
         var r_nme = token_data.name.replace(/ /gi, '_');
         $('#'+ r_id).remove();
         $('#'+ r_nme).remove();
-        
+
         if (token_data.type == 'country') {
             $('li.'+token_data.id+'.token-input-city').each( function(i) {
                     delete_token($(this));
                 });
         }
-        
+
         token_count--;
-       
+
         if ($('.token-input-country').length === 0) {
             $('#advertiser-LocationSpec-all').click();
         }
-        
+
         if (settings.tokenLimit !== null) {
             input_box
                 .show()
                 .val("")
                 .focus();
         }
-        
-				
+
+
         // Execute the onDelete callback if defined
         if($.isFunction(callback)) {
           callback(token_data.id);
@@ -1016,7 +1016,7 @@ $.TokenList = function (input, settings) {
     // Highlight the query part of the search term
 	function highlight_term(value, term) {
         var ret_val = value.replace(new RegExp("(?![^&;]+;)(?!<[^<>]*)(" + term + ")(?![^<>]*>)(?![^&;]+;)", "gi"), "<b>$1</b>");
-		return ret_val; 
+		return ret_val;
 	}
 
     var slide_state = false;
@@ -1054,7 +1054,7 @@ $.TokenList = function (input, settings) {
                     if(i == 0) {
                         select_dropdown_item(this_li);
                     }
-                    $.data(this_li.get(0), "tokeninput", tokenData); 
+                    $.data(this_li.get(0), "tokeninput", tokenData);
                 }
             }
             dropdown.replaceWith(drop_clone);
@@ -1132,10 +1132,10 @@ $.TokenList = function (input, settings) {
 			      results = settings.onResult.call(this, results);
 			  }
               cache.add(query, settings.jsonContainer ? results[settings.jsonContainer] : results);
-              var pop = {type: settings.type, data:results.geonames}; 
-              populate_dropdown(query, pop); 
+              var pop = {type: settings.type, data:results.geonames};
+              populate_dropdown(query, pop);
             };
-            
+
             if(settings.method == "POST") {
 			    $.post(settings.url + queryStringDelimiter + settings.queryParam + "=" + encodeURIComponent(query), {}, callback, settings.contentType);
 		    } else {
@@ -1186,14 +1186,14 @@ $.TokenList.Cache = function (options) {
         data = {};
         size = 0;
     };
-    
+
     function res_sort( query ) {
         function actual_sort( a, b ) {
             return q_dist( query, a.value ) - q_dist( query, b.value );
         }
         return actual_sort;
     }
-    
+
     function q_dist( query, value ) {
         return value.length - query.length;
     }
@@ -1212,7 +1212,7 @@ $.TokenList.Cache = function (options) {
                       if (matchSubset( x.value, q ) ) {
                           var add = true;
                           for( var idx in csub ) {
-                              var dat = csub[idx]; 
+                              var dat = csub[idx];
                               if ( x.result == dat.result ) {
                                   add = false;
                                   break;
@@ -1223,7 +1223,7 @@ $.TokenList.Cache = function (options) {
                             }
                         }
                     });
-               } 
+               }
            }
            return csub.sort(res_sort(q));
         }
@@ -1286,8 +1286,8 @@ $.TokenList.Cache = function (options) {
     }
     setTimeout(populate, 25);
 
-            
-                           
+
+
 
     function add(query, results) {
         if(size > settings.max_size) {
@@ -1306,7 +1306,7 @@ $.TokenList.Cache = function (options) {
         populate: populate,
         add: add
     };
-    
+
 
 //    this.get = function (query) {
 //        return data[query];
@@ -1908,7 +1908,7 @@ var mopub = mopub || {};
     /*
      * ## AppOnNetworkView
      *
-     * See templates/partials/app_on_network.html to see how this is rendered in HTML.
+     * See common/templates/partials/app_on_network.html to see how this is rendered in HTML.
      * This renders an app on a network as a table row.
      */
     var AppOnNetworkView = Backbone.View.extend({
@@ -2108,7 +2108,7 @@ var mopub = window.mopub || {};
     /*
      * ## AppView
      *
-     * See templates/partials/app.html to see how this is rendered in HTML.
+     * See common/templates/partials/app.html to see how this is rendered in HTML.
      * This renders an app as a table row. It also adds the call to load
      * adunits over ajax and put them in the table.
      */
@@ -2154,7 +2154,7 @@ var mopub = window.mopub || {};
     /*
      * ## AdUnitView
      *
-     * See templates/partials/adunit.html to see how this is rendered in HTML
+     * See common/templates/partials/adunit.html to see how this is rendered in HTML
      * Renders an adunit as a row in a table. Also ads the event handler to
      * submit the price floor change over ajax when the price_floor field is changed.
      */
@@ -2313,28 +2313,28 @@ var mopub = mopub || {};
 (function($){
 	// dom ready
 	$(document).ready(function() {
-		
+
 		// Hack to add the correct class to input fields
 		$('input:text').addClass('input-text');
 	    $('input:password').addClass('input-text');
-	    
+
 
 		$(".button.continue")
-    		.button({ 
-    			icons: { secondary: "ui-icon-circle-triangle-e" } 
+    		.button({
+    			icons: { secondary: "ui-icon-circle-triangle-e" }
     		})
 
-		
+
 		// Submit button
 		$('#accountForm-submit')
-			.button({ 
-				icons: { secondary: "ui-icon-circle-triangle-e" } 
+			.button({
+				icons: { secondary: "ui-icon-circle-triangle-e" }
 			})
 			.click(function(e) {
 				e.preventDefault();
 				$('#accountForm').submit();
 		});
-		
+
 		// set up showing/hiding of app details
 		$('.adForm').each(function() {
 			var details = $(this);
@@ -2344,11 +2344,11 @@ var mopub = mopub || {};
 			var infodialog = $('.accountInfoForm', details);
 			var appbutton = $('.adForm-fields-appButton', details);
 			var apps = $('.adForm-apps', details);
-			
+
 			data.togglebutton = button;
 			data.togglebutton.showText = 'Show details';
 			data.togglebutton.hideText = 'Hide details';
-			
+
 			apps.togglebutton = appbutton;
 			apps.togglebutton.showText = 'Show apps';
 			apps.togglebutton.hideText = 'Hide apps';
@@ -2358,7 +2358,7 @@ var mopub = mopub || {};
 				if(buttonTextElement.length == 0) buttonTextElement = buttonElement;
 				return buttonTextElement;
 			}
-			
+
 			function setButtonTextElement(buttonElement, text) {
 			  getButtonTextElement(buttonElement).text(text);
 			}
@@ -2369,7 +2369,7 @@ var mopub = mopub || {};
 				container.togglebutton.button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
 				setButtonTextElement(container.togglebutton, container.togglebutton.hideText);
 			}
-			
+
 			function didHideContainer(container) {
 				container.removeClass('show');
 				container.addClass('hide');
@@ -2384,7 +2384,7 @@ var mopub = mopub || {};
 				data.hide();
 				didHideContainer(data);
 			}
-			
+
 			button.click(function(e) {
 				e.preventDefault();
 				if(data.hasClass('show')) {
@@ -2396,9 +2396,9 @@ var mopub = mopub || {};
 					didShowContainer(data);
 				}
 			});
-			
-			infobutton.button({ 
-				icons: { secondary: "ui-icon-info" } 
+
+			infobutton.button({
+				icons: { secondary: "ui-icon-info" }
 			})
 			.click(function(e) {
 				e.preventDefault();
@@ -2406,7 +2406,7 @@ var mopub = mopub || {};
 				  width: 570,
 					buttons: [
 						{
-							text: 'Close', 
+							text: 'Close',
 							click: function() {
 								$(this).dialog("close");
 							}
@@ -2414,7 +2414,7 @@ var mopub = mopub || {};
 					]
 				});
 			});
-			
+
 			appbutton.button({
 			  icons: { primary: "ui-icon-triangle-1-s" }
 			})
@@ -2429,7 +2429,7 @@ var mopub = mopub || {};
 					didShowContainer(apps);
 				}
 			}).click();
-			
+
             if (apps.hasClass('show')) {
                 didShowContainer(apps);
             }
@@ -2437,7 +2437,7 @@ var mopub = mopub || {};
                 apps.hide();
                 didHideContainer(apps);
             }
-			
+
 		});
 	});
 })(this.jQuery);
@@ -6310,11 +6310,11 @@ var mopub = mopub || {};
 (function($){
 	// dom ready
 	$(document).ready(function() {
-				
+
 		/*---------------------------------------/
 		/ UI
 		/---------------------------------------*/
-		
+
 		// Header icons
 		$('#header-icons a').css({ opacity: 0.25 }).hover(function() {
 			$(this).stop().animate({ opacity: 0.75 }, 200);

@@ -1,16 +1,9 @@
-from django.template import NodeList, \
-     Template, \
-     Context, \
-     Variable, \
-     Library, \
-     Node, \
-     loader, \
-     TemplateSyntaxError, \
-     VariableDoesNotExist
+from django.template import Library
 
 register = Library()
 
-@register.inclusion_tag("partials/inventory_table.html")
+
+@register.inclusion_tag("common/partials/inventory_table.html")
 def inventory_table(inventory):
     # If the object isn't iterable (for instance, a single app), put
     # it in a list so that we can iterate over it in the template
@@ -25,7 +18,8 @@ def inventory_table(inventory):
             'singular': True
         }
 
-@register.inclusion_tag("partials/order_table.html")
+
+@register.inclusion_tag("common/partials/order_table.html")
 def order_table(orders):
     # If the object isn't iterable (for instance, a single order), put
     # it in a list so that we can iterate over it in the template
@@ -41,24 +35,23 @@ def order_table(orders):
         }
 
 
-        
-@register.inclusion_tag("partials/stats_breakdown.html")
+@register.inclusion_tag("common/partials/stats_breakdown.html")
 def stats_breakdown(stats):
-    return {'stats': stats }
+    return {'stats': stats}
 
 
-@register.inclusion_tag("partials/status_icon.html")
+@register.inclusion_tag("common/partials/status_icon.html")
 def status_icon(adgroup):
     """
     Returns an image tag based on the adgroup's status
     (deleted/active/inactive/paused).
     """
-    return {'adgroup': adgroup }
+    return {'adgroup': adgroup}
 
 
 def isiterable(item):
     try:
-        item_iterater = iter(item)
+        iter(item)
     except TypeError:
         return False
     return True

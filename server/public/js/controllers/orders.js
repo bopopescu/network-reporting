@@ -10,13 +10,13 @@
     }
 
     function renderCampaign(campaign) {
-            
+
         var campaign_view = new CampaignView({
             model: campaign,
             el: 'orders_table'
         });
         campaign_view.renderInline();
-        
+
         var adgroups = new AdGroupCollection(campaign.get('adgroups'));
         adgroups.each(function(adgroup){
             renderAdGroup(adgroup)
@@ -30,7 +30,7 @@
         });
         adgroup_view.renderInline();
     }
-    
+
     function renderApp(app) {
         var app_view = new AppView({
             model: app,
@@ -153,7 +153,7 @@
 
             campaign.fetch();
 
-            renderChart(bootstrapping_data.daily_stats, 
+            renderChart(bootstrapping_data.daily_stats,
                         bootstrapping_data.start_date);
 
 
@@ -225,7 +225,7 @@
         },
 
         initializeLineItemDetail: function(bootstrapping_data) {
-            renderChart(bootstrapping_data.daily_stats, 
+            renderChart(bootstrapping_data.daily_stats,
                         bootstrapping_data.start_date);
             initializeDateButtons();
         },
@@ -313,9 +313,9 @@
                     return defHour + ':' + defMin + ' ' + defAmPm;
                 }
 
-                hour = matchArray[1];
-                minute = matchArray[2];
-                ampm = matchArray[4];
+                var hour = matchArray[1];
+                var minute = matchArray[2];
+                var ampm = matchArray[4];
 
                 // Handle military time stuff
                 if (hour >= 12 && hour <= 23) {
@@ -408,7 +408,6 @@
                 }
             }).change();
 
-
             $('#all-adunits').change(function() {
                 // select or deselect all adunits
                 $('input[name="site_keys"]').prop('checked', $(this).prop('checked'));
@@ -424,7 +423,7 @@
                 }
             });
             // update on document ready
-            if($('input[name="device_targeting"]').val() == '0') {
+            if($('input[name="device_targeting"]:checked').val() == '0') {
                 $('#device_targeting').hide();
             }
 
@@ -541,10 +540,10 @@
                }); */
 
             // Show location-dependent fields when location targeting is turned on
-            $('#campaign_and_adgroup input[name="region_targeting"]').click(function(e) {
+            $('input[name="region_targeting"]').click(function(e) {
                 var loc_targ = $(this).val();
-                $('.locationDependent', '#campaign_and_adgroup').hide();
-                $('.' + loc_targ + '.locationDependent', '#campaign_and_adgroup').show();
+                $('.locationDependent').hide();
+                $('.' + loc_targ + '.locationDependent').show();
                 if ($(this).val() == 'all') {
                     $('li.token-input-city span.token-input-delete-token').each(function() {
                         $(this).click();

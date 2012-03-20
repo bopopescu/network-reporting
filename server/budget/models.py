@@ -462,6 +462,15 @@ class Budget(db.Model):
 class BudgetSliceCounter(db.Model):
     """ The global count, maintain slice state for all budgets """
     slice_num = db.IntegerProperty()
+    last_synced_slice = db.IntegerProperty()
+
+    @property
+    def unsynced_slices(self):
+        return slice_num - last_synced_slice
+
+class BudgetSliceSyncStatus(db.Model):
+    slice_num = db.IntegerProperty()
+    synced = db.BooleanProperty(default=False)
 
 
 class BudgetChangeLog(db.Model):
@@ -503,6 +512,14 @@ class BudgetSliceLog(db.Model):
     # How much was actually spent
     actual_spending = db.FloatProperty()
 
+    ########################## USED FOR SYNCING
+    # Has this log been synced FROM gae TO EC2
+    gae_synced = db.BooleanProperty(default=False)
+
+    # Has this log been sycned WITH EC2 data TO GAE
+    ec2_synced = db.BooleanProperty(default=False)
+    ec2_spending = db.FloatProperty(default=0.0)
+
 
     def __init__(self, parent=None, key_name=None, **kwargs):
         if not key_name and not kwargs.get('key', None):
@@ -515,6 +532,13 @@ class BudgetSliceLog(db.Model):
                                                     **kwargs)
     def __repr__(self):
         return "BSliceLog(Slice: %s, Des. Spend: %s, Act. Spend: %s, Prev Spend: %s, Prev Brake: %s)" % (self.slice_num, self.desired_spending, self.actual_spending, self.prev_total_spending, self.prev_braking_fraction)
+
+    @property
+    def sync_spending(self):
+        if self.ec2_synced:
+            return self.actual_spending - self.ec2_spending
+        else:
+            return self.actual_spending
 
     @property
     def final_total_spending(self):

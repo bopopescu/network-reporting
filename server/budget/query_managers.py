@@ -22,7 +22,7 @@ ONE_DAY = timedelta(days=1)
 BUDGET_UPDATE_DATE_FMT = '%Y/%m/%d %H:%M'
 
 #TODO(tornado): This needs to be a url that we'll actually use
-ADSERVER = 'ec2-50-17-0-25.compute-1.amazonaws.com'
+ADSERVER = 'adserver.mopub.com'
 TEST_ADSERVER = 'localhost:8000'
 
 class BudgetQueryManager(QueryManager):

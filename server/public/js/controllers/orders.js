@@ -312,9 +312,9 @@
                     return defHour + ':' + defMin + ' ' + defAmPm;
                 }
 
-                hour = matchArray[1];
-                minute = matchArray[2];
-                ampm = matchArray[4];
+                var hour = matchArray[1];
+                var minute = matchArray[2];
+                var ampm = matchArray[4];
 
                 // Handle military time stuff
                 if (hour >= 12 && hour <= 23) {
@@ -407,7 +407,6 @@
                 }
             }).change();
 
-
             $('#all-adunits').change(function() {
                 // select or deselect all adunits
                 $('input[name="site_keys"]').prop('checked', $(this).prop('checked'));
@@ -423,7 +422,7 @@
                 }
             });
             // update on document ready
-            if($('input[name="device_targeting"]').val() == '0') {
+            if($('input[name="device_targeting"]:checked').val() == '0') {
                 $('#device_targeting').hide();
             }
 

@@ -1,14 +1,7 @@
-from django.template import NodeList, \
-     Template, \
-     Context, \
-     Variable, \
-     Library, \
-     Node, \
-     loader, \
-     TemplateSyntaxError, \
-     VariableDoesNotExist
+from django.template import Library
 
 register = Library()
+
 
 @register.inclusion_tag("partials/inventory_table.html")
 def inventory_table(inventory):
@@ -24,6 +17,7 @@ def inventory_table(inventory):
             'inventory': [inventory],
             'singular': True
         }
+
 
 @register.inclusion_tag("partials/order_table.html")
 def order_table(orders):
@@ -41,10 +35,9 @@ def order_table(orders):
         }
 
 
-        
 @register.inclusion_tag("partials/stats_breakdown.html")
 def stats_breakdown(stats):
-    return {'stats': stats }
+    return {'stats': stats}
 
 
 @register.inclusion_tag("partials/status_icon.html")
@@ -53,12 +46,12 @@ def status_icon(adgroup):
     Returns an image tag based on the adgroup's status
     (deleted/active/inactive/paused).
     """
-    return {'adgroup': adgroup }
+    return {'adgroup': adgroup}
 
 
 def isiterable(item):
     try:
-        item_iterater = iter(item)
+        iter(item)
     except TypeError:
         return False
     return True

@@ -13,6 +13,7 @@ Whenever you see "Campaign", think "Order", and wherever you see
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
+from django.http import Http404
 from django.utils import simplejson
 
 from common.utils.request_handler import RequestHandler
@@ -143,6 +144,9 @@ class OrderFormHandler(RequestHandler):
     """
     Edit order form handler which gets submitted from the order detail page.
     """
+    def get(self, order_key):
+        raise Http404
+
     def post(self, order_key):
         if not self.request.is_ajax():
             raise Http404

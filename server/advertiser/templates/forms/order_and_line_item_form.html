@@ -17,7 +17,32 @@
 {% block content %}
 <form id="order_and_line_item_form" method="post">
     {% if order %}
-        {{ order }}
+        <fieldset id="order_fieldset">
+            <legend>
+                <h2>Order Details</h2>
+            </legend>
+
+            <ul class="form_fields">
+                <li>
+                    <label>Name:</label>
+                    <div>
+                        {{ order.name }}
+                    </div>
+                </li>
+                <li>
+                    <label>Advertiser:</label>
+                    <div>
+                        {{ order.advertiser }}
+                    </div>
+                </li>
+                <li>
+                    <label>Description:</label>
+                    <div>
+                        {{ order.description }}
+                    </div>
+                </li>
+            </ul>
+        </fieldset>
     {% else %}
         {% include 'forms/order_form.html' %}
     {% endif %}

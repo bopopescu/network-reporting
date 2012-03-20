@@ -4,7 +4,7 @@ register = Library()
 
 
 @register.inclusion_tag("common/partials/inventory_table.html")
-def inventory_table(inventory):
+def inventory_table(inventory, include_targeting=False):
     # If the object isn't iterable (for instance, a single app), put
     # it in a list so that we can iterate over it in the template
     if isiterable(inventory):
@@ -20,18 +20,24 @@ def inventory_table(inventory):
 
 
 @register.inclusion_tag("common/partials/order_table.html")
-def order_table(orders):
+def order_table(orders, include_status=False):
+    """
+    Renders an order or a group of orders in a table.
+    If include_targeting is true, it'll include
+    """
     # If the object isn't iterable (for instance, a single order), put
     # it in a list so that we can iterate over it in the template
     if isiterable(orders):
         return {
             'orders': orders,
-            'singular': False
+            'singular': False,
+            'include_status': include_status
         }
     else:
         return {
             'orders': [orders],
-            'singular': True
+            'singular': True,
+            'include_status': include_status
         }
 
 
@@ -47,7 +53,6 @@ def status_icon(adgroup):
     (deleted/active/inactive/paused).
     """
     return {'adgroup': adgroup}
-
 
 def isiterable(item):
     try:

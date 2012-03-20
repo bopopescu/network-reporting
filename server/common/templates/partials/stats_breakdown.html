@@ -1,5 +1,5 @@
 {% load filters %}
-
+  
 <div class="stats-breakdown">
   <table>
     <tbody>
@@ -29,8 +29,9 @@
             <span class="inner">{{stats.requests.yesterday|withsep}}</span>
           </td>
           <td class="stats-breakdown-value all">
-          <span class="inner">{{stats.requests.total|withsep}}</span>
+            <span class="inner">{{stats.requests.total|withsep}}</span>
           </td>
+          
           <th class="stats-breakdown-name">
             <span class="inner">Requests</span>
           </th>
@@ -103,24 +104,6 @@
         </tr>
       {% endif %}
 
-        {% comment %}
-      {% if stats.ctr %}
-        <tr id="stats-breakdown-ctr">
-          <td class="stats-breakdown-value today">
-            <span class="inner">{{stats.ctr.today|percentage}}</span>
-          </td>
-          <td class="stats-breakdown-value yesterday">
-            <span class="inner">{{stats.ctr.yesterday|percentage}}</span>
-          </td>
-          <td class="stats-breakdown-value all">
-          <span class="inner">{{stats.ctr.total|percentage}}</span>
-          </td>
-          <th class="stats-breakdown-name">
-            <span class="inner">CTR</span>
-          </th>
-        </tr>
-      {% endif %}
-      {% endcomment %}
 
       {% if stats.users %}
         <tr id="stats-breakdown-users">
@@ -141,21 +124,4 @@
 
     </tbody>
   </table>
-</div>
-
-<div class="stats-breakdown-buttons">
-  <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-    <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-    <label for="stats-breakdown-dateOptions-option-0">
-      Today
-    </label>
-    <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-    <label for="stats-breakdown-dateOptions-option-1">
-      Yesterday
-    </label>
-    <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-    <label for="stats-breakdown-dateOptions-option-2">
-      All
-    </label>
-  </span>
 </div>

@@ -2595,9 +2595,13 @@ a.disabled {
 
 .btn-primary, .btn-primary:hover, .btn-warning, .btn-warning:hover, .btn-danger, .btn-danger:hover, .btn-success, .btn-success:hover, .btn-info, .btn-info:hover, .btn-inverse, .btn-inverse:hover {
   color: white; }
+  .btn-primary:visited, .btn-primary:hover:visited, .btn-warning:visited, .btn-warning:hover:visited, .btn-danger:visited, .btn-danger:hover:visited, .btn-success:visited, .btn-success:hover:visited, .btn-info:visited, .btn-info:hover:visited, .btn-inverse:visited, .btn-inverse:hover:visited {
+    color: white; }
 
 .btn-primary.active, .btn-warning.active, .btn-danger.active, .btn-success.active, .btn-info.active, .btn-inverse.active {
   color: rgba(255, 255, 255, 0.75); }
+  .btn-primary.active:visited, .btn-warning.active:visited, .btn-danger.active:visited, .btn-success.active:visited, .btn-info.active:visited, .btn-inverse.active:visited {
+    color: rgba(255, 255, 255, 0.75); }
 
 .btn-primary {
   background-color: #0044cc;

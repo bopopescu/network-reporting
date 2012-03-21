@@ -38,7 +38,7 @@
 
   <br />
   
-  <div class="btn-group">
+  <div class="left btn-group">
     <button class="btn status_change" data-toggle="pause">
       <i class="icon-pause"></i> Pause
     </button>
@@ -46,9 +46,16 @@
       <i class="icon-play"></i> Resume
     </button>
     <button class="btn status_change" data-toggle="archive">
-      <i class="icon-stop"></i> Archive
+      <i class="icon-inbox"></i> Archive
     </button>
   </div>
+
+  <div class="right">
+    <a class="btn" href="#">
+      Go to the archive <i class="icon-chevron-right"></i>
+    </a>
+  </div>
+  
 {% endblock content %}
 
 {% block extraScripts %}

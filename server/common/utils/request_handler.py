@@ -119,7 +119,9 @@ class RequestHandler(object):
                     "date_range": self.date_range,
                     "days":self.days,
                     "offline": self.offline,
-                    "account": self.account
+                    "account": self.account,
+                    "True": True,
+                    "False": False,
                 })
                 return render_to_response(self.request,
                                           self.template,

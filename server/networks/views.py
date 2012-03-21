@@ -23,7 +23,8 @@ from ad_network_reports.query_managers import ADMOB, \
 from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
         REPORTING_NETWORKS
 
-from common.utils.date_magic import gen_days_for_range
+from common.utils.date_magic import gen_days_for_range, \
+        gen_last_days
 from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, \
         render_to_string, \
@@ -55,7 +56,8 @@ from publisher.query_managers import AdUnitQueryManager
 
 import copy
 
-OTHER_NETWORKS = {'millennial': 'Millennial',
+OTHER_NETWORKS = {'mobfox': 'MobFox',
+                  'millennial': 'Millennial',
                   'ejam': 'eJam',
                   'chartboost': 'ChartBoost',
                   'appnexus': 'AppNexus',
@@ -175,6 +177,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             login_form = LoginCredentialsForm()
 
+        # TODO: different adgroup form linked to each adunit
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=
                 self.account.network_config)
@@ -186,11 +189,36 @@ class EditNetworkHandler(RequestHandler):
         for app in apps:
             app.network_config_form = AppNetworkConfigForm(instance= \
                     app.network_config, prefix="app_%s" % app.key())
+            app.pub_id = app.network_config_form.fields.get(network + '_pub_id',
+                    False)
+
+
+            seven_day_stats = AdNetworkStats()
+
+            fourteen_day_stats = AdNetworkStats()
+            last_7_days = gen_last_days(omit=1)
+            last_14_days = gen_last_days(date_range=14, omit=1)
+            for mapper in AdNetworkMapperManager.get_mappers_for_app(
+                    AdNetworkLoginManager.get_login(self.account, network).
+                            get(), app):
+                seven_day_stats += AdNetworkStatsManager. \
+                        get_stats_for_mapper_and_days(mapper, last_7_days)[0]
+                fourteen_day_stats += AdNetworkStatsManager. \
+                        get_stats_for_mapper_and_days(mapper, last_14_days)[0]
+
+            app.seven_day_stats = seven_day_stats
+            app.fourteen_day_stats = fourteen_day_stats
+
+            logging.info(app.network_config_form.fields)
+            logging.info(network + '_pub_id')
+            logging.info(app.pub_id.__dict__)
             app.adunits = []
             for adunit in app.all_adunits:
                 adunit.network_config_form = AdUnitNetworkConfigForm(
                         instance=adunit.network_config, prefix="adunit_%s" %
                         adunit.key())
+                adunit.pub_id = adunit.network_config_form.fields.get(network +
+                        '_pub_id', False)
                 app.adunits.append(adunit)
 
         # TODO: Strip campaign crap from edit_network_form.html

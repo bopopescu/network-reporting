@@ -132,6 +132,9 @@ table.dataTable {
 
 .dataTable-data {
   width: 75px;
+  &.pub_id_data { 
+      width: 200px
+  }
 }
 
 .dataTable-date {
@@ -257,3 +260,4 @@ tr.adunit-row td:not(.icon){
 img.app-icon {
     @include border-radius(6px);
 }
+

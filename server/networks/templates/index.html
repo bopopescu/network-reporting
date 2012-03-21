@@ -185,8 +185,8 @@ Make a table for ad networks that are active
                 </tbody>
             </table>
         </div>
-        {% endfor %}
     </div>
+    {% endfor %}
 </div>
 </section>
 {% endif %}
@@ -276,6 +276,67 @@ Make a table for the main ad networks that are not setup
         });
 
         $('#network-editSelect').find('li').first().hide();
+
+        // taken from mopub-dashboard.js #appEditForm (could be combined)
+        $('#networkSettingsForm-submit')
+            .button({
+                icons: { secondary: "ui-icon-circle-triangle-e" }
+            })
+
+            .click(function(e) {
+                e.preventDefault();
+                $('#networkSettingsForm-loading').show();
+                $('#settings-form-message').hide();
+
+                // check if all emails are valid
+                var valid = true;
+                var list = $('#network-settingsForm textarea').val().split(',');
+                for (var i = 0; i < list.length; i++) {
+                    if (!isValidEmailAddress(list[i])) {
+                        valid = false;
+                    }
+                }
+
+                if (valid) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/ad_network_reports/settings/',
+                        data : $('#networkForm').serialize(),
+                        success : function(resp) {
+                            $('#networkSettingsForm-loading').hide();
+                            $('#network-settingsForm').slideUp('fast');
+                        },
+                        error : function(jqXHR, textStatus, errorThrown) {
+                            $('#settings-form-message').html("Couldn't update settings.");
+                            $('#settings-form-message').show();
+                            $('#networkSettingsForm-loading').hide();
+                        }
+                    });
+                    //$('#networkForm').submit();
+                } else {
+                    $('#settings-form-message')
+                        .html("Please enter a valid email address or a list of valid email addresses.");
+                    $('#settings-form-message').show();
+                    $('#networkSettingsForm-loading').hide();
+                }
+            });
+
+        $('#networkSettingsForm-cancel')
+            .click(function(e) {
+                e.preventDefault();
+                $('#network-settingsForm').slideUp('fast');
+            });
+
+        $('#network-settingsButton')
+            .button({ icons: { primary: "ui-icon-wrench" } })
+            .click(function(e) {
+                e.preventDefault();
+                if ($('#network-settingsForm').is(':visible')) {
+                    $('#network-settingsForm').slideUp('fast');
+                } else {
+                    $('#network-settingsForm').slideDown('fast');
+                }
+            });
     });
 </script>
 {% endblock extraScripts %}

@@ -31,16 +31,17 @@
             submitHandler: function(form) {
                 $(form).ajaxSubmit({
                     data: {ajax: true},
-                    dataType: 'json',
+                    dataType: 'text',
                     success: function(jsonData, statusText, xhr, $form) {
+                        var data = $.parseJSON(jsonData);
                         if(jsonData.success) {
-                            window.location = jsonData.redirect;
+                            window.location = data.redirect;
                             $('form#campaign_and_adgroup #submit').button({
                                 label: 'Success...',
                                 disabled: true
                             });
                         } else {
-                            validator.showErrors(jsonData.errors);
+                            validator.showErrors(data.errors);
                             $('form#campaign_and_adgroup #submit').button({
                                 label: 'Try Again',
                                 disabled: false
@@ -54,8 +55,10 @@
                         });
                     },
                     beforeSubmit: function(arr, $form, options) {
-                        $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
-                                                                       disabled: true});
+                        $('form#campaign_and_adgroup #submit').button({
+                            label: 'Submitting...',
+                            disabled: true
+                        });
                     }
                 });
             }

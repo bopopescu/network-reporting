@@ -69,7 +69,7 @@ class BudgetSyncCronHandler(webapp.RequestHandler):
 class BudgetSyncWorker(webapp.RequestHandler):
 
     def get(self):
-        timeslice = int(self.request.get('slice_num'))
+        slice_num = int(self.request.get('slice_num'))
         status = BudgetSliceSyncStatus.all().filter('slice_num =', slice_num).get()
         if status is None:
             status = BudgetSliceSyncStatus(slice_num=slice_num,

@@ -15,6 +15,18 @@
             priors = {{ adgroup.geo_predicates|to_json|safe }};
             city_priors = {{ adgroup.cities|to_json|safe }};
 
+            $('.all-adunits').click(function() {
+                var key = $(this).attr('id').replace('-all-adunits', '');
+                if ($(this).is(':checked')) {
+                    $('.' + key + '-adunit').attr("checked", "checked");
+                } else {
+                    $('.' + key + '-adunit').removeAttr("checked");
+                }
+                });
+                
+
+            // set cpms when copy all cpm button is clicked for either 14 day
+            // or 7 day
             $.each(['7-day', '14-day'], function(iter, days) {
                 $('#copy-' + days).click(function() {
                     $('.' + days + '-cpm').each(function() {
@@ -22,7 +34,7 @@
                         var cpm = parseFloat($(this).text().replace('$', '')).toString();
                         $('#' + key + '-field').val(cpm);
                         });
-                    })
+                    });
                 });
 
             {% if network.name in REPORTING_NETWORKS %}
@@ -433,8 +445,8 @@
                         <th class="appData-icon" style="width:75px"></th>
                         <th class="dataTable-name"> </th>
                         <th class="dataTable-data"> Enabled </th>
-                        <th class="dataTable-data pub_id_data"> Ad Network ID </th>
-                        <th class="dataTable-data"> Rate (USD) </th>
+                        <th class="dataTable-data pub-id-data"> Ad Network ID </th>
+                        <th class="dataTable-data cpm-data"> Rate (USD) </th>
                         <th class="dataTable-data">
                             <div>
                                 <a id="copy-7-day" style="cursor:pointer">
@@ -466,16 +478,17 @@
                                 {{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
                             </td>
                             <td class="dataTable-data">
-                                <input id="{{app.key}}-all-adunits" type="checkbox" /> (All)
+                                <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> (All)
                             </td>
-                            <td class="dataTable-data pub_id_data">
+                            <td class="dataTable-data pub-id-data">
                                 <span class="campaign_type_dependant network">
                                     {% for field in app.network_config_form %}{{ field }}{% endfor %}
                                     <span class="pub_id muted"></span>
                                 </span>
                             </td>
-                            <td class="dataTable-data">
-                                <input id="{{app.key}}-cpm-field" type="text" style="width:50px" />
+                            <td class="dataTable-data cpm-data" style="width:150px">
+                                <input id="{{app.key}}-cpm-field" type="text" style="width:50px;" />
+                                {{ adgroup_form.bid_strategy }} 
                             </td>
                             <td class="dataTable-data 7-day-cpm" id="{{app.key}}-7-day-cpm">
                                 {{ app.seven_day_stats.cpm|currency }}
@@ -495,16 +508,16 @@
                                     {{ adunit.name }}
                                 </td>
                                 <td class="dataTable-data">
-                                    <input {% if adunit.key in adgroup_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" />
+                                    <input {% if adunit.key in adunit.adgroup_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" class="{{ app.key }}-adunit" />
                                 </td>
-                                <td class="dataTable-data pub_id_data">
+                                <td class="dataTable-data pub-id-data">
                                     <span class="campaign_type_dependant network">
                                         {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
                                         <span class="pub_id muted"></span>
                                     </span>
                                 </td>
-                                <td class="dataTable-data">
-                                    <input id="{{adunit.key}}-cpm" type="text" style="width:50px" />
+                                <td class="dataTable-data cpm-data">
+                                    {{ adunit.adgroup_form.bid }}
                                 </td>
                                 <td class="dataTable-data">
                                 </td>

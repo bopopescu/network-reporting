@@ -132,8 +132,11 @@ table.dataTable {
 
 .dataTable-data {
   width: 75px;
-  &.pub_id_data { 
+  &.pub-id-data { 
       width: 200px
+  }
+  &.cpm-data { 
+      width: 150px
   }
 }
 

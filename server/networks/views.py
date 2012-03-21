@@ -214,6 +214,11 @@ class EditNetworkHandler(RequestHandler):
             logging.info(app.pub_id.__dict__)
             app.adunits = []
             for adunit in app.all_adunits:
+                adgroup = AdGroupQueryManager.get_network_adunit_adgroup(
+                        adunit.key(), self.account.key(), network, True)
+                adunit.adgroup_form = AdGroupForm(is_staff=
+                        self.request.user.is_staff, instance=adgroup)
+
                 adunit.network_config_form = AdUnitNetworkConfigForm(
                         instance=adunit.network_config, prefix="adunit_%s" %
                         adunit.key())

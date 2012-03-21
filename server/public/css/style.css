@@ -1442,6 +1442,8 @@ form#campaign_and_adgroup input[type="text"].number, form#campaign_and_adgroup i
   width: 70px; }
 form#campaign_and_adgroup input[type="text"].pub_id {
   width: 150px; }
+form#campaign_and_adgroup input[type="text"]#id_bid.float {
+  width: 50px; }
 form#campaign_and_adgroup input.error, form#campaign_and_adgroup textarea.error {
   background: #fff2f2;
   border-color: #e6a1a1;
@@ -1730,8 +1732,10 @@ table.dataTable {
 
 .dataTable-data {
   width: 75px; }
-  .dataTable-data.pub_id_data {
+  .dataTable-data.pub-id-data {
     width: 200px; }
+  .dataTable-data.cpm-data {
+    width: 150px; }
 
 .dataTable-date {
   width: 175px; }

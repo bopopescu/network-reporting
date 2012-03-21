@@ -321,6 +321,9 @@ form#campaign_and_adgroup {
     input[type="text"].pub_id {
         width: 150px;
     }
+    input[type="text"]#id_bid.float {
+        width: 50px;
+    }
     input.error, textarea.error {
         background: #fff2f2;
         border-color: #e6a1a1;

@@ -116,7 +116,6 @@ def build_sync_to_ec2_rpc(slice_log, wait_list, status_dict, updated_logs):
                       total_spent=slice_log.sync_spending)
     qs = urlencode(query_dict)
     full_url = 'http://' + ADSERVER_HOSTNAME + BUDGET_SYNC_URL + '?' + qs
-    logging.info(full_url)
     urlfetch.make_fetch_call(rpc, full_url, method=urlfetch.GET)
     return rpc
 
@@ -128,7 +127,6 @@ def build_sync_to_ec2_callback(rpc, slice_log, wait_list, status_dict, updated_l
             handle_sync_to_ec2_error(slice_log, wait_list, status_dict, updated_logs)
             return
         data = result.content
-        logging.info(data)
         if data not in ['SYNCED', u'SYNCED']:
             handle_sync_to_ec2_error(slice_log, wait_list, status_dict, updated_logs)
             return

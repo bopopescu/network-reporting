@@ -174,6 +174,7 @@ class StatsModel(db.Expando):
         if ad_network_stats:
             kwargs['date'] = datetime.datetime.combine(ad_network_stats.date,
                     datetime.time())
+            kwargs['_advertiser'] = True
             for stat in AD_NETWORK_STATS.keys():
                 kwargs[AD_NETWORK_STATS[stat]] = getattr(ad_network_stats, stat)
 

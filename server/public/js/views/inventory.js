@@ -59,7 +59,7 @@ var mopub = window.mopub || {};
                     var network_selector = '.network-revenue';
                     $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat('revenue'));
 
-                    // Set app level mopub and network stats
+                    // Set adunit level mopub and network stats
                     var renderedContent = '';
                     $.each(network_app.get('adunits'), function (iter, adunit) {
                         renderedContent += _.template($('#network-app-template').html(), {

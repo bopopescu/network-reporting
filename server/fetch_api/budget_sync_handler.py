@@ -87,6 +87,7 @@ class BudgetSyncWorker(webapp.RequestHandler):
         rpcs = []
         for log in logs:
             if log.gae_synced:
+                waiting_nums.remove(log.slice_num)
                 continue
             rpcs.append(build_sync_to_ec2_rpc(log, waiting_nums, statuses, updated_logs))
         for rpc in rpcs:

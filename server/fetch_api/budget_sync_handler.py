@@ -116,6 +116,7 @@ def build_sync_to_ec2_rpc(slice_log, wait_list, status_dict, updated_logs):
                       total_spent=slice_log.sync_spending)
     qs = urlencode(query_dict)
     full_url = 'http://' + ADSERVER_HOSTNAME + BUDGET_SYNC_URL + '?' + qs
+    logging.info(full_url)
     urlfetch.make_fetch_call(rpc, full_url, method=urlfetch.GET)
     return rpc
 

@@ -15,6 +15,16 @@
             priors = {{ adgroup.geo_predicates|to_json|safe }};
             city_priors = {{ adgroup.cities|to_json|safe }};
 
+            $.each(['7-day', '14-day'], function(iter, days) {
+                $('#copy-' + days).click(function() {
+                    $('.' + days + '-cpm').each(function() {
+                        var key = $(this).attr('id').replace('-' + days, '');
+                        var cpm = parseFloat($(this).text().replace('$', '')).toString();
+                        $('#' + key + '-field').val(cpm);
+                        });
+                    })
+                });
+
             {% if network.name in REPORTING_NETWORKS %}
             $('.login-credentials').show();
             $('.advanced_targeting').hide();
@@ -426,11 +436,19 @@
                         <th class="dataTable-data pub_id_data"> Ad Network ID </th>
                         <th class="dataTable-data"> Rate (USD) </th>
                         <th class="dataTable-data">
-                            <div> <a style="cursor:pointer"> Copy All </a> </div>
+                            <div>
+                                <a id="copy-7-day" style="cursor:pointer">
+                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
+                                </a>
+                            </div>
                             <div> 7-Day CPM </div>
                         </th>
                         <th class="dataTable-data"> 
-                            <div> <a style="cursor:pointer"> Copy All </a> </div>
+                            <div>
+                                <a id="copy-14-day" style="cursor:pointer">
+                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
+                                </a>
+                            </div>
                             <div> 14-Day CPM </div>
                         </th>
                     </thead>
@@ -457,12 +475,12 @@
                                 </span>
                             </td>
                             <td class="dataTable-data">
-                                <input id="{{app.key}}-cpm" type="text" style="width:50px" />
+                                <input id="{{app.key}}-cpm-field" type="text" style="width:50px" />
                             </td>
-                            <td class="dataTable-data">
+                            <td class="dataTable-data 7-day-cpm" id="{{app.key}}-7-day-cpm">
                                 {{ app.seven_day_stats.cpm|currency }}
                             </td>
-                            <td class="dataTable-data">
+                            <td class="dataTable-data 14-day-cpm" id="{{app.key}}-14-day-cpm">
                                 {{ app.fourteen_day_stats.cpm|currency }}
                             </td>
                         </tr>

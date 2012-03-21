@@ -100,24 +100,29 @@
         // icon appropriately.
         status_promise.success(function(){
             _.each(adgroups, function(adgroup) {
+
+                // Hide the loading image 
                 $("#" + adgroup + "-img").toggleClass('hidden');
+
                 var status_img = $('#status-' + adgroup);
-                console.log(status);
-                
+                var status_change_controls = $('.status_change_control');
+                var lineitem_tds = $('#lineitem-' + adgroup + ' td:not(.controls)');
                 if (status == 'play' || status == 'run') {
-                    $('#lineitem-' + adgroup).fadeTo(500, 1);
-                    $('.status_change_control').fadeTo(500, 1);
+                    $(lineitem_tds).fadeTo(500, 1);
+                    $('#lineitem-' + adgroup).removeClass('archived');
                     $(status_img).attr('src', '/images/active.gif');
+
                 } else if (status == 'pause') {
-                    $('#lineitem-' + adgroup).fadeTo(500, 1);
-                    $('.status_change_control').fadeTo(500, 1);
+                    $(lineitem_tds).fadeTo(500, 0.2);
                     $(status_img).attr('src', '/images/paused.gif');
+
                 } else if (status == 'archive') {
-                    $('#lineitem-' + adgroup).fadeTo(500, 0.2);
-                    $('.status_change_control').fadeTo(500, 1);
+                    $('#lineitem-' + adgroup).addClass('archived');
+                    $(lineitem_tds).fadeTo(500, 0.2);
+                    $(status_img).attr('src', '/images/archived.gif');
+
                 } else if (status == 'delete') {
-                    $('#lineitem-' + adgroup).fadeTo(500, 0.2);
-                    $('.status_change_control').fadeTo(500, 1);
+                    $(lineitem_tds).fadeTo(500, 0.2);
                     $(status_img).attr('src', '/images/deleted.gif');
                 }
             });
@@ -146,9 +151,35 @@
         });
     }
 
+    function toggleArchiveButton() {
+        var archive_button = $("#archive-button");
+
+        // If the archived line items are hidden,
+        // show them. The `state-hide` class indicates that
+        // the archived line items are hidden.
+        if (archive_button.hasClass('state-hide')) {
+            $('.archived').removeClass('hidden');
+            archive_button.removeClass('state-hide');
+
+        // If the archived line items are showing,
+        // hide them. If `state-hide` is missing, it means
+        // they're showing, so we add it back in once we've
+        // hidden them. 
+        } else {
+            $('.archived').addClass('hidden');
+            archive_button.addClass('state-hide');
+        }
+
+        // Flip the icon and text in the button.
+        $(".button-text-icon", archive_button).toggleClass('hidden');
+    }
+
+
     var OrdersController = {
         initializeIndex: function(bootstrapping_data) {
             initializeStatusControls();
+            $("#archive-button").click(toggleArchiveButton);
+
             // Create a campaign collection for the account
             var campaigns = new CampaignCollection();
             campaigns.stats_endpoint = 'direct';

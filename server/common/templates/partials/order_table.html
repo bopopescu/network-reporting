@@ -14,9 +14,6 @@
       <th class="stat">Impressions</th>
       <th class="stat">Clicks</th>
       <th class="stat">CTR</th>
-      {% if include_targeting %}
-        <th class="stat" style="width: 110px;">Targeting</th>
-      {% endif %}
     </tr>
   </thead>
 
@@ -41,41 +38,36 @@
       <td class="impressions stat">--</td>
       <td class="clicks stat">--</td>
       <td class="ctr stat">--</td>
-      {% if include_targeting %}
-        <td></td>
-      {% endif %}
     </tr>
     
     {% for adgroup in order.adgroups %}
 
-      <tr class="sub lineitem-row"
-          id="lineitem-{{ adgroup.key }}"
-          {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>
+      {% if not adgroup.deleted %}
+
+        <tr class="sub lineitem-row{% if adgroup.archived %} archived hidden{% endif %}"
+            id="lineitem-{{ adgroup.key }}">
         
-        {% if include_status %}
-          <td>
-            <input class="status_change_control" id="{{adgroup.key}}" type="checkbox" />
-            {% status_icon adgroup %}
+          {% if include_status %}
+            <td class="controls">
+              <input class="status_change_control" id="{{adgroup.key}}" type="checkbox" />
+              {% status_icon adgroup %}
+            </td>
+          {% endif %}
+          <td class="name" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>
+            <a href="{% url advertiser_line_item_detail order_key=order.key line_item_key=adgroup.key %}">
+              {{ adgroup.name }}
+              <img id="{{ adgroup.key }}-img" class="hidden loading-img" src="/images/icons-custom/spinner-12.gif" />
+            </a>
           </td>
-        {% endif %}
-        <td class="name">
-          <a href="{% url advertiser_line_item_detail order_key=order.key line_item_key=adgroup.key %}">
-            {{ adgroup.name }}
-            <img id="{{ adgroup.key }}-img" class="hidden loading-img" src="/images/icons-custom/spinner-12.gif" />
-          </a>
-        </td>
-        <td class="advertiser stat"></td>
-        <td class="lineitems stat"></td>
-        <td class="revenue stat">--</td>
-        <td class="impressions stat">--</td>
-        <td class="clicks stat">--</td>
-        <td class="ctr stat">--</td>
-        {% if include_targeting %}
-          <td class="stat">
-          </td>
-        {% endif %}
-      </tr>
+          <td class="advertiser stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}></td>
+          <td class="lineitems stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}></td>
+          <td class="revenue stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>--</td>
+          <td class="impressions stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>--</td>
+          <td class="clicks stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>--</td>
+          <td class="ctr stat" {% if not adgroup.active %}opacity=".2" style="opacity: 0.2;"{% endif %}>--</td>
+        </tr>
+      {% endif %}
     {% endfor %}
-  </tbody>
-{% endfor %}
+    </tbody>
+  {% endfor %}
 </table>

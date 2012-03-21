@@ -45,10 +45,9 @@ class OrderIndexHandler(RequestHandler):
     def get(self):
 
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-        live_orders = [order for order in orders if not (order.archived or order.deleted)]
 
         return {
-            'orders': live_orders,
+            'orders': orders,
         }
 
 

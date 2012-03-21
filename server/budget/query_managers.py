@@ -69,13 +69,13 @@ class BudgetQueryManager(QueryManager):
             pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
-            #try:
-            #    full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + update_uri
-            #    urllib2.urlopen(full_url)
-            #except:
-            #    # This isn't implemented yet
-            #    #TODO(tornado): need to implement this and things
-            #    pass
+            try:
+                full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + update_uri
+                urllib2.urlopen(full_url)
+            except:
+                # This isn't implemented yet
+                #TODO(tornado): need to implement this and things
+                pass
 
         if camp.budget_obj:
             budget = camp.budget_obj

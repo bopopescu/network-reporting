@@ -39,17 +39,19 @@
       <td class="clicks stat">--</td>
       <td class="ctr stat">--</td>
     </tr>
+    
     {% for adgroup in order.adgroups %}
       <tr class="sub lineitem-row" id="lineitem-{{ adgroup.key }}">
         {% if include_status %}
           <td>
-            <input type="checkbox" />
+            <input class="status_change_control" id="{{adgroup.key}}" type="checkbox" />
             {% status_icon adgroup %}
           </td>
         {% endif %}
         <td class="name">
           <a href="{% url advertiser_line_item_detail order_key=order.key line_item_key=adgroup.key %}">
             {{ adgroup.name }}
+            <img id="{{ adgroup.key }}-img" class="hidden loading-img" src="/images/icons-custom/spinner-12.gif" />
           </a>
         </td>
         <td class="advertiser stat"></td>

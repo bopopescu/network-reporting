@@ -30,6 +30,9 @@ urlpatterns = patterns('advertiser.views',
     url('^orders/$',
         'order_index',
         name='advertiser_order_index'),
+                       
+    url('^orders/status/$',
+        'line_item_status_change'),
 
     url('^orders/new/$',
         'order_and_line_item_form',

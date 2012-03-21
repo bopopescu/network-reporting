@@ -286,6 +286,7 @@ section {
     @include border-radius(10px);
     padding: 25px;
     background: $off_white;
+    border-bottom: 1px solid darken($off_white, 5%);
 }
 
 .content-main {

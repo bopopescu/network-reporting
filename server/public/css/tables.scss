@@ -36,6 +36,10 @@
     tbody {
         &.alt, tr.alt {
             background: #F7F7F7;
+            &:last-child {
+                border-bottom: 1px solid darken(#f7f7f7, 3%);
+                @include bottom-border-radius();
+            }
         }
         tr.main td {
             font-weight: 600;

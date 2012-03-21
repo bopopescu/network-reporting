@@ -58,9 +58,15 @@
     {% order_table order 1%}
     <br />
     <div class="btn-group">
-      <a class="btn" href="#"> <i class="icon-pause"></i> Pause</a>
-      <a class="btn" href="#"> <i class="icon-play"></i> Resume</a>
-      <a class="btn" href="#"> <i class="icon-stop"></i> Archive</a>
+      <button class="btn status_change" data-toggle="pause">
+        <i class="icon-pause"></i> Pause
+      </button>
+      <button class="btn status_change" data-toggle="play">
+        <i class="icon-play"></i> Resume
+      </button>
+      <button class="btn status_change" data-toggle="archive">
+        <i class="icon-stop"></i> Archive
+      </button>
     </div>
   </section>
 

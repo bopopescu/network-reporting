@@ -243,9 +243,8 @@ a.disabled {
 
 // Top
 @mixin top-border-radius($radius: 5px) {
-    -webkit-border-radius: $radius $radius 0 0;
-    -moz-border-radius: $radius $radius 0 0;
-    border-radius: $radius $radius 0 0;
+    @include top-left-border-radius($radius);
+    @include top-right-border-radius($radius);
 }
 
 // Bottom

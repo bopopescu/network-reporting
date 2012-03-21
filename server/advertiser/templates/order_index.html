@@ -34,8 +34,21 @@
     </table>
   </div>
 
-  {% order_table orders %}
+  {% order_table orders 1 %}
 
+  <br />
+  
+  <div class="btn-group">
+    <button class="btn status_change" data-toggle="pause">
+      <i class="icon-pause"></i> Pause
+    </button>
+    <button class="btn status_change" data-toggle="play">
+      <i class="icon-play"></i> Resume
+    </button>
+    <button class="btn status_change" data-toggle="archive">
+      <i class="icon-stop"></i> Archive
+    </button>
+  </div>
 {% endblock content %}
 
 {% block extraScripts %}

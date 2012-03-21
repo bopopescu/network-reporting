@@ -133,6 +133,59 @@ def line_item_detail(request, *args, **kwargs):
     return LineItemDetailHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
+class LineItemStatusChangeHandler(RequestHandler):
+    """
+    Changes the status of a line item or list of line items.
+    """
+    def post(self):
+        # Pull out the params
+        logging.warn(self.request.POST)
+        line_items = self.request.POST.getlist('line_items[]')
+        status = self.request.POST.get('status', None)
+
+        logging.warn(line_items)
+        logging.warn(status)
+        
+        if line_items and status:
+            for line_item_key in line_items:
+                adgroup = AdGroupQueryManager.get(line_item_key)
+                updated = False
+                if adgroup.account.key() == self.account.key():
+                    if status == 'run' or status == 'play':
+                        adgroup.active = True
+                        adgroup.archived = False
+                        updated = True
+                    elif status == 'pause':
+                        adgroup.active = False
+                        adgroup.archived = False
+                        updated = True
+                    elif status == 'archive':
+                        adgroup.active = False
+                        adgroup.archived = True
+                        updated = True
+                    elif status == 'delete':
+                        adgroup.deleted = True
+                        adgroup.active = False
+                        updated = True
+                        
+                    if updated:
+                        AdGroupQueryManager.put(adgroup)
+            return JSONResponse({
+                'success': True,
+            })
+                                                                            
+        else:
+            return JSONResponse({
+                'success': False,
+                'errors': 'Bad Parameters'
+            })
+
+            
+@login_required
+def line_item_status_change(request, *args, **kwargs):
+    return LineItemStatusChangeHandler()(request, use_cache=False, *args, **kwargs)
+    
+
 class OrderFormHandler(RequestHandler):
     """
     Edit order form handler which gets submitted from the order detail page.

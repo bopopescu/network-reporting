@@ -1,6 +1,10 @@
 (function ($, mopub) {
     "use strict";
 
+    /*
+     * # Utility functions
+     */
+
     function initializeDateButtons() {
         // set up stats breakdown dateOptions
         $('#stats-breakdown-dateOptions input').click(function() {
@@ -19,7 +23,7 @@
 
         var adgroups = new AdGroupCollection(campaign.get('adgroups'));
         adgroups.each(function(adgroup){
-            renderAdGroup(adgroup)
+            renderAdGroup(adgroup);
         });
     }
 
@@ -79,12 +83,72 @@
                 row.addClass('active');
             }
         });
+    }
 
+    function changeStatus(adgroups, status) {
 
+        _.each(adgroups, function(adgroup) {
+            $("#" + adgroup + "-img").removeClass('hidden');
+        });
+
+        var status_promise = $.post('/advertise/orders/status/', {
+            line_items: adgroups,
+            status: status
+        });
+
+        // On success, hide the loading spinner and change the status
+        // icon appropriately.
+        status_promise.success(function(){
+            _.each(adgroups, function(adgroup) {
+                $("#" + adgroup + "-img").toggleClass('hidden');
+                var status_img = $('#status-' + adgroup);
+                console.log(status);
+                
+                if (status == 'play' || status == 'run') {
+                    $('#lineitem-' + adgroup).fadeTo(500, 1);
+                    $('.status_change_control').fadeTo(500, 1);
+                    $(status_img).attr('src', '/images/active.gif');
+                } else if (status == 'pause') {
+                    $('#lineitem-' + adgroup).fadeTo(500, 1);
+                    $('.status_change_control').fadeTo(500, 1);
+                    $(status_img).attr('src', '/images/paused.gif');
+                } else if (status == 'archive') {
+                    $('#lineitem-' + adgroup).fadeTo(500, 0.2);
+                    $('.status_change_control').fadeTo(500, 1);
+                } else if (status == 'delete') {
+                    $('#lineitem-' + adgroup).fadeTo(500, 0.2);
+                    $('.status_change_control').fadeTo(500, 1);
+                    $(status_img).attr('src', '/images/deleted.gif');
+                }
+            });
+ 
+        });
+
+        status_promise.error(function () {
+            _.each(adgroups, function(adgroup) {
+                $("#" + adgroup + "-img").addsClass('hidden');
+            });
+        });
+    }
+
+    // Sets up the status control event handlers
+    function initializeStatusControls() {
+        $(".status_change.btn").click(function(e){
+            e.preventDefault();
+            var status = $(this).attr('data-toggle');
+            var checked_adgroups = $(".status_change_control:checked");
+            var keys = _.map(checked_adgroups, function (row) {
+                return $(row).attr('id');
+            });
+
+            changeStatus(keys, status);
+
+        });
     }
 
     var OrdersController = {
         initializeIndex: function(bootstrapping_data) {
+            initializeStatusControls();
             // Create a campaign collection for the account
             var campaigns = new CampaignCollection();
             campaigns.stats_endpoint = 'direct';
@@ -101,7 +165,9 @@
         },
 
         initializeOrderDetail: function(bootstrapping_data) {
-
+            initializeStatusControls();
+            initializeDateButtons();
+            
             var validator = $('form#order_form').validate({
                 errorPlacement: function(error, element) {
                     element.closest('div').append(error);
@@ -207,9 +273,6 @@
                 
                 adunit.fetch();
             });
-
-            // set up controls
-            initializeDateButtons();
 
             // Sets up the click handler for the order form
             $("a#order_form_edit").click(function(e){

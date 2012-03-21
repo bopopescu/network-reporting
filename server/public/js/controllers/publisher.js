@@ -138,11 +138,6 @@ var mopub = mopub || {};
                 .addClass($(this).val());
         }).filter(':checked').click();
 
-        $('input[name="name"]').change(function() {
-            var name = $.trim($(this).val());
-            $('#appForm-adUnitName').val(name + ' banner ad');
-        });
-
         // Search button
         $('#appForm-search-button')
             .button({ icons: { primary: "ui-icon-search" }})
@@ -303,18 +298,23 @@ var mopub = mopub || {};
      */
     function initializeNewAdunitForm() {
 
+        function setDefaultAdUnitName() {
+            if ($(this).attr("id") == "appForm-adUnitFormat-full") {
+                $('#appForm-adUnitName').val('goat');
+            }
+        };
+
         // Set up device format selection UI
         $("#adunit-device_format_phone")
             .parent()
             .buttonset();
 
-        $("#adunit-device_format_phone")
-            .click(function(e){
-                $('#adForm-tablet-container').hide();
-                $('#adForm-phone-container')
-                    .show()
-                    .find('input[type="radio"]')[0].click();
-            });
+        $("#adunit-device_format_phone").click(function(e){
+            $('#adForm-tablet-container').hide();
+            $('#adForm-phone-container')
+                .show()
+                .find('input[type="radio"]')[0].click();
+        });
 
         // Click handler for the tablet format
         $('#adunit-device_format_tablet').click(function(e){
@@ -375,10 +375,37 @@ var mopub = mopub || {};
             }
         });
 
+        function setDefaultAdUnitName(id) {
+            var nameField = $('#appForm-adUnitName');
+            
+            if (id === 'appForm-adUnitFormat-banner' ||
+                id === 'appForm-adUnitFormat-tablet-banner') {
+                nameField.val('Banner Ad');
+            }
+            else if (id === 'appForm-adUnitFormat-medium' ||
+                id === 'appForm-adUnitFormat-tablet-medium') {
+                nameField.val('Mrect Ad');
+            }
+            else if (id === 'appForm-adUnitFormat-full' ||
+                id === 'appForm-adUnitFormat-full-tablet') { // sigh this is not a typo
+                nameField.val('Fullscreen Ad');
+            }
+            else if (id === 'appForm-adUnitFormat-custom' ||
+                id === 'appForm-adUnitFormat-tablet-custom') {
+                nameField.val('Custom Ad');
+            }
+            else if (id === 'appForm-adUnitFormat-tablet-leaderboard') {
+                nameField.val('Leaderboard Ad');
+            }
+            else if (id === 'appForm-adUnitFormat-wide-tablet-skyscraper') {
+                nameField.val('Skyscraper Ad');
+            }
+        };
 
         // Set up format selection UI for phone
         $('#adForm-phone-formats').each(function() {
             var container = $(this);
+
             $('input[type="radio"]', container).click(function(e) {
                 var radio = $(this);
                 var formatContainer = radio.parents('.adForm-format');
@@ -404,20 +431,22 @@ var mopub = mopub || {};
                     $custom_onlys.hide();
                 }
 
-                }).filter(':checked').click();
+                setDefaultAdUnitName($(this).attr("id"));
 
-                $('.adForm-format-image', container).click(function(e) {
-                    var image = $(this);
-                    var formatContainer = image.parents('.adForm-format');
-                    $('input[type="radio"]', formatContainer).click();
-                });
+            }).filter(':checked').click();
 
-                $('.adForm-format-details input[type="text"]', container).focus(function() {
-                    var input = $(this);
-                    var formatContainer = input.parents('.adForm-format');
-                    $('input[type="radio"]', formatContainer).click();
-                });
+            $('.adForm-format-image', container).click(function(e) {
+                var image = $(this);
+                var formatContainer = image.parents('.adForm-format');
+                $('input[type="radio"]', formatContainer).click();
             });
+
+            $('.adForm-format-details input[type="text"]', container).focus(function() {
+                var input = $(this);
+                var formatContainer = input.parents('.adForm-format');
+                $('input[type="radio"]', formatContainer).click();
+            });
+        });
 
         // Set up format selection UI for tablet
         $('#adForm-tablet-formats').each(function(){
@@ -448,6 +477,8 @@ var mopub = mopub || {};
                 } else {
                     $custom_onlys.hide();
                 }
+
+                setDefaultAdUnitName($(this).attr("id"));
 
             }).first().click(); //initialize by activating the first
         });

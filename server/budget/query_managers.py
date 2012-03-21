@@ -54,9 +54,9 @@ class BudgetQueryManager(QueryManager):
                                   active = camp.active,
                                   delivery_type = camp.budget_strategy,
                                   )
-        if camp.budget_type == 'daily':
+        if camp.has_daily_budget:
             remote_update_dict['static_total_budget'] = None
-        elif camp.budget_type == 'full_campaign':
+        elif camp.has_full_budget:
             remote_update_dict['static_daily_budget'] = None
         if migrate_total:
             remote_update_dict['total_spent'] = camp.budget_obj.total_spent
@@ -121,13 +121,13 @@ class BudgetQueryManager(QueryManager):
             if not camp.budget_strategy == camp.budget_obj.delivery_type:
                 update_dict['delivery_type'] = camp.budget_strategy
 
-            if camp.budget_type == 'daily':
+            if camp.has_daily_budget:
                 slice_budget = get_slice_budget_from_daily(camp.budget)
                 # Only update the update dict if new values
                 if not slice_budget == camp.budget_obj.static_slice_budget:
                     update_dict['static_total_budget'] = None
                     update_dict['static_slice_budget'] = slice_budget
-            elif camp.budget_type == 'full_campaign':
+            elif camp.has_full_budget:
                 if not camp.full_budget == camp.budget_obj.static_total_budget:
                     update_dict['static_total_budget'] = camp.full_budget
                     update_dict['static_slice_budget'] = None
@@ -138,7 +138,7 @@ class BudgetQueryManager(QueryManager):
                 cls.prep_update_budget(camp.budget_obj, **update_dict)
             return camp.budget_obj
         # Create budget
-        elif camp.budget_type == 'full_campaign':
+        elif camp.has_full_budget:
             budget = Budget(start_datetime = camp.start_datetime,
                             end_datetime = camp.end_datetime,
                             active = camp.active,
@@ -150,7 +150,7 @@ class BudgetQueryManager(QueryManager):
             budget.put()
             return budget
 
-        elif camp.budget_type == 'daily':
+        elif camp.has_daily_budget:
             budget = Budget(start_datetime = camp.start_datetime,
                             end_datetime = camp.end_datetime,
                             active = camp.active,

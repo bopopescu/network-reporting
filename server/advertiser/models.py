@@ -100,6 +100,14 @@ class Campaign(db.Model):
 
     blind = db.BooleanProperty(default=False)
 
+    @property
+    def has_daily_budget(self):
+        return self.budget and self.budget_type == 'daily'
+
+    @property
+    def has_full_budget(self):
+        return self.full_budget and self.budget_type == 'full_campaign'
+
     def simplify(self):
         if self.start_date and not self.start_datetime:
             strt = self.start_date

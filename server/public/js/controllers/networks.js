@@ -71,8 +71,6 @@ $(function() {
                 var network_apps = new NetworkApps();
 
                 network_apps.network = network;
-                console.log('network_apps');
-                console.log(network_apps);
                 var network_apps_view = new NetworkAppsView({
                     collection: network_apps
                 });
@@ -80,7 +78,6 @@ $(function() {
                     data: ajax_query_string,
                 });
 
-                console.log(network_apps.length);
             });
         }
     }
@@ -89,21 +86,24 @@ $(function() {
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
                 network_data = bootstrapping_data.network_data,
-                adgroups_data = bootstrapping_data.adgroups_data,
                 graph_start_date = bootstrapping_data.graph_statr_date,
                 today = bootstrapping_data.today,
                 yesterday = bootstrapping_data.yesterday,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
-            var adgroups = new AdGroups(adgroups_data);
+            var network_details = new NetworkDetailsDailyStats();
+            network_details.network = network_data.name;
+            network_details.fetch({ data: ajax_query_string });
 
-//            var graph_view = new CollectionGraphView({
-//                collection: adgroups,
-//                start_date: graph_start_date,
-//                today: today,
-//                yesterday: yesterday
-//            });
-//            graph_view.render();
+            var graph_view = new CollectionGraphView({
+                collection: network_details,
+                start_date: graph_start_date,
+                today: today,
+                yesterday: yesterday,
+                line_graph: true,
+                mopub_optimized: false,
+            });
+            graph_view.render();
 
             var campaign = new Campaign(campaign_data);
             new CampaignView({
@@ -118,8 +118,6 @@ $(function() {
                 }
             });
 
-            console.log('network_data');
-            console.log(network_data);
             // TODO: remove this shit, stop loopin over networks
             // Load rolled up network stats
             var roll_up = new RollUp({
@@ -147,8 +145,6 @@ $(function() {
 
             network_apps.network = network_data.name;
             network_apps.type = 'adunits';
-            console.log('network_apps');
-            console.log(network_data.name);
             var network_apps_view = new NetworkAppsView({
                 collection: network_apps
             });

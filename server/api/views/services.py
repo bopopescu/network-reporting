@@ -1,6 +1,7 @@
 __doc__ = """
 API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
+from datetime import datetime, time
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager
 from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
@@ -486,6 +487,129 @@ class NetworkAppsService(RequestHandler):
 @login_required
 def network_apps_service(request, *args, **kwargs):
     return NetworkAppsService()(request, use_cache=False, *args, **kwargs)
+
+
+class NetworkDetailsDailyStatsService(RequestHandler):
+    """
+    API Service for delivering serialized AdGroup data
+    """
+    def get(self, network):
+        from ad_network_reports.models import AdNetworkAppMapper, AdNetworkStats
+        from ad_network_reports.query_managers import AdNetworkStatsManager
+
+        reporting = True
+        #try:
+        stats_by_day = {}
+        for day in self.days:
+            stats_by_day[day] = StatsModel()
+
+        reporting_stats_by_day = {}
+        for day in self.days:
+            reporting_stats_by_day[day] = AdNetworkStats()
+
+        adgroups = []
+
+        stats_manager = StatsModelQueryManager(account=self.account)
+        # Iterate through all the apps and populate stats_by_day
+        for app in AppQueryManager.get_apps(self.account):
+            network_config = app.network_config
+            # Get data from the ad network
+            pub_id = getattr(network_config, network + '_pub_id', '')
+            if pub_id:
+                mapper = AdNetworkAppMapper.get_by_publisher_id(pub_id,
+                        network)
+                if mapper:
+                    # Get reporting graph stats
+                    reporting_stats = AdNetworkStatsManager. \
+                            get_stats_list_for_mapper_and_days(mapper.key(),
+                                    self.days)
+                    for stats in reporting_stats:
+                        if stats.date in reporting_stats_by_day:
+                            reporting_stats_by_day[stats.date] += stats
+                    reporting = True
+
+            # Get data collected by MoPub
+            adunits = []
+            for adunit in AdUnitQueryManager.get_adunits(account=self.account,
+                    app=app):
+                # One adunit per adgroup for network adunits
+                adgroup = AdGroupQueryManager.get_network_adunit_adgroup(
+                        adunit.key(),
+                        self.account.key(), network)
+                adgroups.append(adgroup)
+
+                all_stats = stats_manager.get_stats_for_days(publisher=app,
+                                                             advertiser=adgroup,
+                                                             days=self.days)
+                for stats in all_stats:
+                    if stats.date.date() in stats_by_day:
+                        stats_by_day[stats.date.date()] += stats
+
+
+        # Format graph stats
+        from django.utils import simplejson
+
+        graph_stats = []
+        # Format mopub collected graph stats
+        mopub_graph_stats = reduce(lambda x, y: x+y, stats_by_day.values(),
+                StatsModel())
+
+        daily_stats = sorted(stats_by_day.values(), key=lambda
+                stats: stats.date)
+        daily_stats = [s.to_dict() for s in daily_stats]
+
+
+        mopub_graph_stats = mopub_graph_stats.to_dict()
+        mopub_graph_stats['daily_stats'] = daily_stats
+        mopub_graph_stats['name'] = "From MoPub"
+
+        graph_stats.append(mopub_graph_stats)
+
+        # Format network collected graph stats
+        if reporting:
+            reporting_graph_stats = reduce(lambda x, y: x+y,
+                    reporting_stats_by_day.values(), AdNetworkStats())
+
+            daily_stats = [StatsModel(request_count=stats.attempts,
+                impression_count=stats.impressions,
+                click_count=stats.clicks,
+                date=datetime.combine(stats.date, time())).to_dict()
+                for stats in reporting_stats_by_day.values()]
+            daily_stats = sorted(daily_stats, key=lambda stats: stats['date'])
+
+            reporting_graph_stats = StatsModel(request_count= \
+                    reporting_graph_stats.attempts,
+                    impression_count=reporting_graph_stats.impressions,
+                    click_count=reporting_graph_stats.clicks).to_dict()
+            reporting_graph_stats['daily_stats'] = daily_stats
+            reporting_graph_stats['name'] = "From Networks"
+
+            graph_stats.append(reporting_graph_stats)
+
+        #graph_stats = simplejson.dumps(graph_stats)
+
+        return JSONResponse(graph_stats)
+
+    #except Exception, exception:
+            #return JSONResponse({'error': str(exception)})
+
+
+    def post(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+    def put(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+    def delete(self, *args, **kwagrs):
+        return JSONResponse({'error': 'Not yet implemented'})
+
+
+@login_required
+def network_details_daily_stats_service(request, *args, **kwargs):
+    return NetworkDetailsDailyStatsService()(request, use_cache=False, *args,
+            **kwargs)
 
 
 ## Helper Functions

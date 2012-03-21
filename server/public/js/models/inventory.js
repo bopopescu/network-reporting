@@ -319,6 +319,19 @@ var mopub = mopub || {};
 
 
     /*
+     * ## AdGroup model
+     * This will most likely need to be refactored soon when we change how
+     * AdGroups work on the backend.
+     */
+
+    var NetworkDetailsDailyStats = StatsModels.extend({
+        url: function() {
+            return '/api/network_details_daily_stats/' + this.network;
+        }
+    });
+
+
+    /*
      * ## AdUnit
      */
     var AdUnit = Backbone.Model.extend({
@@ -482,6 +495,8 @@ var mopub = mopub || {};
     window.Campaign = Campaign;
     window.Campaigns = Campaigns;
     window.ModelHelpers = ModelHelpers;
+
+    window.NetworkDetailsDailyStats = NetworkDetailsDailyStats;
 
 
 }(this.jQuery, this.Backbone, this._));

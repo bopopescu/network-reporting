@@ -24,7 +24,6 @@ var mopub = window.mopub || {};
      */
     var NetworkAppsView = Backbone.View.extend({
         initialize: function () {
-            console.log("initializing view");
             this.collection.bind('reset', this.render, this);
 
             this.el = '#' + this.collection.network + '-apps';
@@ -37,15 +36,12 @@ var mopub = window.mopub || {};
             }
         },
         render: function () {
-            console.log("rendering collection");
             var this_view = this;
 
             if (this.collection.type == 'adunits') {
                 var metrics = ['cpm', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
 
                 this.collection.each(function (network_app) {
-                    console.log('NETWORK_APP');
-                    console.log(network_app);
 
                     var row = $("tr#" + network_app.id + "-row");
 
@@ -71,7 +67,6 @@ var mopub = window.mopub || {};
                     });
 
                     var tbody = $("tbody#" + network_app.id + "-stats");
-                    console.log(tbody);
 
                     $(tbody).append(renderedContent);
                 });
@@ -248,7 +243,7 @@ var mopub = window.mopub || {};
 
     var CollectionGraphView = Backbone.View.extend({
         initialize: function () {
-            this.collection.bind('change', this.render, this);
+            this.collection.bind('reset', this.render, this);
         },
 
         show_chart: function () {

@@ -70,6 +70,12 @@ urlpatterns = patterns(
         'network_apps_service',
         name='network_apps_service'),
 
+    # /api/network_details_daily_stats/<network>/
+    # all app stats for the network including adunits
+    url(r'^network_details_daily_stats/(?P<network>[-\w\.]+)$',
+        'network_details_daily_stats_service',
+        name='network_details_dailty_stats_service'),
+
     # REFACTOR: move this to ad_network_reports
     url(r'^ad_network/account_roll_up/$',
         'account_roll_up_service',

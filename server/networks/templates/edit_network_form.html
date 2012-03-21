@@ -442,7 +442,7 @@
             <div class="appData-columnHeaders">
                 <table class="dataTable" width=100%>
                     <thead>
-                        <th class="appData-icon" style="width:75px"></th>
+                        <th class="appData-icon"></th>
                         <th class="dataTable-name"> </th>
                         <th class="dataTable-data"> Enabled </th>
                         <th class="dataTable-data pub-id-data"> Ad Network ID </th>
@@ -472,10 +472,12 @@
                     <tbody>
                         <tr>
                             <td class="appData-icon">
-                                <img src="{{ app.icon_url }}" />
+                                <a href="/inventory/app/{{app.key_}}">
+                                    <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
+                                </a>
                             </td>
                             <td class="dataTable-name">
-                                {{ app.name }} <span class="muted">({% ifequal app.app_type "iphone" %}iOS{% endifequal %}{% ifequal app.app_type "android" %}Android{% endifequal %}{% ifequal app.app_type "mweb" %}Mobile Web{% endifequal %})</span>
+                                {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
                             </td>
                             <td class="dataTable-data">
                                 <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> (All)

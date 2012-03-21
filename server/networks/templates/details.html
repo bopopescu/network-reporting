@@ -272,16 +272,6 @@
 
         NetworkDetailsController.initialize({
             campaign_data: {{ campaign|safe }},
-            adgroups_data: [
-                {% for adgroup in adgroups %}{
-                  id: '{{ adgroup.key }}',
-                  active: {% if adgroup.active %}true{% else %}false{% endif %},
-                  name: '{{ adgroup.name }}',
-                  bid_strategy: '{{ adgroup.bid_strategy }}',
-                  details_url: '{% url advertiser_adgroup_show adgroup_key=adgroup.key %}',
-                  network_type: '{{ adgroup.network_type }}'}{% if not forloop.last %},{% endif %}
-                {% endfor %}
-                ],
             network_data: {
                 name: '{{ network.name }}',
                 models: [{% for app in network.mopub_app_stats %}
@@ -297,19 +287,6 @@
             yesterday: yesterday,
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
 
-        console.log({{graph_stats|safe}});
-        // TODO: remove hack
-        var adgroups = new AdGroups({{graph_stats|safe}});
-
-        var graph_view = new CollectionGraphView({
-            collection: adgroups,
-            start_date: graph_start_date,
-            today: today,
-            yesterday: yesterday,
-            line_graph: true,
-            mopub_optimized: false,
-        });
-        graph_view.render();
 
         $('#show-network').change(function() {
             $('.network-data').toggle();

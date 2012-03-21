@@ -139,7 +139,7 @@ def build_sync_to_ec2_callback(rpc, slice_log, wait_list, status_dict, updated_l
         wait_list.remove(slice_log.slice_num)
         # If this is the last callback we're waiting on finalize this sync
         if wait_list == []:
-            finalize_sync(status_dict, updated_logs)
+            finalize_sync(status_dict, updated_logs, slice_log.slice_num)
     return handle_result
 
 def handle_sync_to_ec2_error(slice_log, wait_list, status_dict, updated_logs):
@@ -147,9 +147,9 @@ def handle_sync_to_ec2_error(slice_log, wait_list, status_dict, updated_logs):
     status_dict[slice_log.slice_num] = SYNC_FAIL
     wait_list.remove(slice_log.slice_num)
     if wait_list == []:
-        finalize_sync(status_dict, updated_logs)
+        finalize_sync(status_dict, updated_logs, slice_log.slice_num)
 
-def finalize_sync(status_dict, updated_logs):
+def finalize_sync(status_dict, updated_logs, slice_num):
     # Batch put all the updated logs
     db.put(updated_logs)
     fully_synced = True

@@ -94,14 +94,22 @@ class BudgetSyncWorker(webapp.RequestHandler):
             if log.sync_spending == 0.0:
                 waiting_nums.remove(log.slice_num)
                 log.gae_synced = True
+                statuses[log.slice_num] = SYNC_SUCC
                 no_spending.append(log)
                 continue
             rpcs.append(build_sync_to_ec2_rpc(log, waiting_nums, statuses, updated_logs))
         if no_spending:
             db.put(no_spending)
+        all_none = True
         for rpc in rpcs:
             if rpc is not None:
+                all_none = False
                 rpc.wait()
+        if all_none:
+            status = BudgetSliceSyncStatus.all().filter('slice_num =', slice_num).get()
+            status.synced = True
+            status.put()
+
 
 def build_sync_to_ec2_rpc(slice_log, wait_list, status_dict, updated_logs):
     rpc = urlfetch.create_rpc()

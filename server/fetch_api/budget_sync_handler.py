@@ -54,7 +54,7 @@ class BudgetSyncCronHandler(webapp.RequestHandler):
         for key in sorted(status_dict.keys()):
             if not status_dict[key]:
                 break
-            last_synced_slice = status_dict[key]
+            last_synced_slice = key
 
         master_counter.last_synced_slice = last_synced_slice
         master_counter.put()

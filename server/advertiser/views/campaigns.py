@@ -1012,9 +1012,9 @@ class AddCreativeHandler(RequestHandler):
 
         # text_creative_form is unused in the template, why?
         return self.render(base_creative_form=base_creative_form,
-                                    text_creative_form=text_creative_form,
-                                    image_creative_form=image_creative_form,
-                                    text_tile_creative_form=text_tile_creative_form,
+                           text_creative_form=text_creative_form,
+                           image_creative_form=image_creative_form,
+                           text_tile_creative_form=text_tile_creative_form,
                                     html_creative_form=html_creative_form)
 
     def render(self, template=None, **kwargs):
@@ -1022,6 +1022,15 @@ class AddCreativeHandler(RequestHandler):
         return render_to_string(self.request, template_name=template_name, data=kwargs)
 
     def json_response(self, json_dict):
+        # Some browsers won't accept the application/json mimetype.
+        # Transfer as text/plain if that's the case.
+        # HACK
+        # broken_browsers = ['Firefox', 'MSIE']
+        # for browser in broken_browsers:
+        #     if self.request.META['HTTP_USER_AGENT'].find(browser) > 0:
+        #         json_str = simplejson.dumps(json_dict)
+        #         return HttpResponse(json_str)
+        
         return JSONResponse(json_dict)
 
     def post(self):

@@ -26,6 +26,13 @@
      */
     var DailyStatsCollection = Backbone.Collection.extend({
         model: AppOnNetwork,
+
+        get_daily_stats: function (stat) {
+            return _.map(this.models, function(model){
+                return model.get(stat);
+                });
+        },
+
         url: function () {
             return '/api/ad_network/daily_stats/'
         },

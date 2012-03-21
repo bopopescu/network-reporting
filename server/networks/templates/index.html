@@ -94,7 +94,7 @@
 <section id="dashboard-apps">
 {% if reporting_networks %}
 <div style="float:right">
-    <input type="checkbox" name="show-data" id="show-network" /> Show data reported by network in <span style="color:orange;">orange</span>
+    <input type="checkbox" name="show-data" id="show-network" /> Show data reported by networks in <span style="color:orange;">orange</span>
 </div>
 {% endif %}
 
@@ -230,8 +230,9 @@ Make a table for the main ad networks that are not setup
 <script type="text/html" id="network-app-template">
     {% include "partials/network_app.html" %}
 </script>
-<script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
-<script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
+
+{% include_script "models/ad_network_reports" %}
+{% include_script "views/ad_network_reports" %}
 
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}

@@ -18,13 +18,12 @@ $(function() {
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
             var campaigns = new Campaigns(campaign_data);
-            console.log('campaigns');
-            console.log(campaigns);
-            console.log(campaigns.get_total_daily_stats('attempt_count'));
+            var network_stats = new DailyStatsCollection();
 
             // Load chart
-            var graph_view = new CollectionGraphView({
+            var graph_view = new NetworkGraphView({
                 collection: campaigns,
+                network_stats: network_stats,
                 start_date: graph_start_date,
                 today: today,
                 yesterday: yesterday,
@@ -32,6 +31,9 @@ $(function() {
                 mopub_optimized: false,
             });
             graph_view.render();
+
+            // Load network collected stats for graph
+            network_stats.fetch({ data: ajax_query_string });
 
             // Load mopub collected StatsModel stats keyed on campaign
             campaigns.each(function(campaign) {

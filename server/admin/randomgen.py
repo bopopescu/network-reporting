@@ -54,7 +54,7 @@ NUM_CAMPAIGNS_PER_APP = 1#3
 NUM_CREATIVES_PER_ADGROUP = 1
 NUM_ADUNITS_PER_APP = 2#3
 
-NETWORKS_TO_USE = ['admob']
+NETWORKS_TO_USE = ['admob', 'jumptap']
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
 ### End configuration parameters

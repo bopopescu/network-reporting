@@ -299,10 +299,54 @@ var mopub = window.mopub || {};
                     ctr: this_view.collection.get_chart_data('ctr', this_view.options.mopub_optimized),
                     total: false
                 };
-                this_view.show_chart();
             }
         }
     });
+
+    var NetworkGraphView = CollectionGraphView.extend({
+        render: function () {
+            var this_view = this;
+            if (this_view.collection.isFullyLoaded()) {
+
+                var metrics = ['impression_count', 'revenue', 'click_count', 'ctr'];
+
+                // Render the stats breakdown for "all""
+                $.each(metrics, function (iter, metric) {
+                    var selector = '#stats-breakdown-' + metric + ' .all .inner';
+                    $(selector).html(this_view.collection.get_formatted_stat(metric));
+                });
+
+                if (this_view.options.yesterday !== null && this_view.options.today !== null) {
+
+                    // Render the stats breakdown for yesterday
+                    $.each(metrics, function (iter, metric) {
+                        var selector = '#stats-breakdown-' + metric + ' .yesterday .inner';
+                        $(selector).html(this_view.collection.get_formatted_stat_for_day(metric,
+                                         this_view.options.yesterday));
+                    });
+
+                    // Render the stats breakdown for yesterday
+                    $.each(metrics, function (iter, metric) {
+                        var selector = '#stats-breakdown-' + metric + ' .today .inner';
+                        $(selector).html(this_view.collection.get_formatted_stat_for_day(metric,
+                                         this_view.options.today));
+                    });
+                }
+
+                // Chart
+                mopub.dashboardStatsChartData = {
+                    pointStart: this_view.options.start_date,
+                    pointInterval: 86400000,
+                    impression_count: [{'From MoPub': this_view.collection.get_total_daily_stats('impression_count')}, {'From Networks': this_view.options.network_stats.get_daily_stats('impression_count')}],
+                    revenue: [{'From MoPub': this_view.collection.get_total_daily_stats('revenue')}, {'From Networks': this_view.options.network_stats.get_daily_stats('revenue')}],
+                    click_count: [{'From MoPub': this_view.collection.get_total_daily_stats('click_count')}, {'From Networks': this_view.options.network_stats.get_daily_stats('click_count')}],
+                    ctr: [{'From MoPub': this_view.collection.get_total_daily_stats('ctr')}, {'From Networks': this_view.options.network_stats.get_daily_stats('ctr')}],
+                    total: false
+                };
+            }
+        }
+    });
+
 
     /*
      * ## AppView
@@ -501,6 +545,7 @@ var mopub = window.mopub || {};
     window.AdGroupsView = AdGroupsView;
     window.CampaignView = CampaignView;
     window.CollectionGraphView = CollectionGraphView;
+    window.NetworkGraphView = NetworkGraphView;
 
 }(this.jQuery, this.Backbone, this._));
 

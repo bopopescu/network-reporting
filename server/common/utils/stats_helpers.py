@@ -350,8 +350,12 @@ class AdNetworkStatsFetcher(object):
 
     @classmethod
     def get_daily_stats(cls, account, days):
-        return [AdNetworkAggregateManager.get_stats_for_day(account, day)
-                .dict_ for day in days]
+        all_stats = []
+        for day in days:
+            stats = AdNetworkAggregateManager.get_stats_for_day(account, day)
+            stats.date = day
+            all_stats.append(StatsModel(ad_network_stats=stats).to_dict())
+        return all_stats
 
 
     @classmethod

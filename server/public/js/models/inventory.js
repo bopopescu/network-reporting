@@ -92,8 +92,6 @@ var mopub = mopub || {};
         parse: function(response) {
             var this_collection = this;
 
-            console.log('parsing');
-            console.log(response);
             $.each(response, function (iter, network_app) {
                 network_app.mopub_stats = new StatsModel(network_app.mopub_stats);
                 network_app.network_stats = new StatsModel(network_app.network_stats);
@@ -146,7 +144,6 @@ var mopub = mopub || {};
             return day_stats[stat];
         },
     });
-
 
     /*
      * ## StatsModels Collection
@@ -485,5 +482,6 @@ var mopub = mopub || {};
     window.Campaign = Campaign;
     window.Campaigns = Campaigns;
     window.ModelHelpers = ModelHelpers;
+
 
 }(this.jQuery, this.Backbone, this._));

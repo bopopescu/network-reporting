@@ -54,11 +54,11 @@ $(function() {
             account_roll_up.fetch({ data: ajax_query_string });
 
             // Load graph data
-//            var daily_stats = new DailyStatsCollection();
-//            var daily_stats_view = new DailyStatsView({
-//                collection: daily_stats
-//            });
-//            daily_stats.fetch({ data: ajax_query_string });
+            var daily_stats = new DailyStatsCollection();
+            var daily_stats_view = new DailyStatsView({
+                collection: daily_stats
+            });
+            daily_stats.fetch({ data: ajax_query_string });
 
             // Load rolled up network stats
             var i;

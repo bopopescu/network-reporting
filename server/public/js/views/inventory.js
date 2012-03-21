@@ -244,6 +244,7 @@ var mopub = window.mopub || {};
     var CollectionGraphView = Backbone.View.extend({
         initialize: function () {
             this.collection.bind('reset', this.render, this);
+            this.collection.bind('change', this.render, this);
         },
 
         show_chart: function () {
@@ -294,6 +295,7 @@ var mopub = window.mopub || {};
                     ctr: this_view.collection.get_chart_data('ctr', this_view.options.mopub_optimized),
                     total: false
                 };
+                $('#stats-breakdown-impression_count').click()
             }
         }
     });
@@ -338,6 +340,7 @@ var mopub = window.mopub || {};
                     ctr: [{'From MoPub': this_view.collection.get_total_daily_stats('ctr')}, {'From Networks': this_view.options.network_stats.get_daily_stats('ctr')}],
                     total: false
                 };
+                $('#stats-breakdown-impression_count').click()
             }
         }
     });

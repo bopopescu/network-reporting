@@ -563,8 +563,6 @@ class NetworkDetailsDailyStatsService(RequestHandler):
         mopub_graph_stats['daily_stats'] = daily_stats
         mopub_graph_stats['name'] = "From MoPub"
 
-        graph_stats.append(mopub_graph_stats)
-
         # Format network collected graph stats
         if reporting:
             reporting_graph_stats = reduce(lambda x, y: x+y,
@@ -585,6 +583,8 @@ class NetworkDetailsDailyStatsService(RequestHandler):
             reporting_graph_stats['name'] = "From Networks"
 
             graph_stats.append(reporting_graph_stats)
+
+        graph_stats.append(mopub_graph_stats)
 
         #graph_stats = simplejson.dumps(graph_stats)
 

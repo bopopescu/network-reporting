@@ -120,7 +120,7 @@ def build_sync_to_ec2_rpc(slice_log, wait_list, status_dict, updated_logs):
 
 
 def build_sync_to_ec2_callback(rpc, slice_log, wait_list, status_dict, updated_logs):
-    def handle_result(rpc):
+    def handle_result():
         result = rpc.get_result()
         if result.status_code >= 500:
             handle_sync_to_ec2_error(slice_log, wait_list, status_dict, updated_logs)

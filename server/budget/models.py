@@ -462,7 +462,7 @@ class Budget(db.Model):
 class BudgetSliceCounter(db.Model):
     """ The global count, maintain slice state for all budgets """
     slice_num = db.IntegerProperty()
-    last_synced_slice = db.IntegerProperty()
+    last_synced_slice = db.IntegerProperty(default=4441198)
 
     @property
     def unsynced_slices(self):

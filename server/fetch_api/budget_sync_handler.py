@@ -123,11 +123,13 @@ def build_sync_to_ec2_rpc(slice_log, wait_list, status_dict, updated_logs):
 def build_sync_to_ec2_callback(rpc, slice_log, wait_list, status_dict, updated_logs):
     def handle_result():
         result = rpc.get_result()
+        data = result.content
         if result.status_code >= 500:
+            logging.warning(data)
             handle_sync_to_ec2_error(slice_log, wait_list, status_dict, updated_logs)
             return
-        data = result.content
         if data not in ['SYNCED', u'SYNCED']:
+            logging.warning(data)
             handle_sync_to_ec2_error(slice_log, wait_list, status_dict, updated_logs)
             return
         # Successful sync! mark the appropriate fields

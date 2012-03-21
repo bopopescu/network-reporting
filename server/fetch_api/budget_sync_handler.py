@@ -1,4 +1,5 @@
 from urllib import urlencode
+import logging
 
 from google.appengine.ext import webapp, db
 from google.appengine.api import urlfetch, taskqueue
@@ -126,6 +127,7 @@ def build_sync_to_ec2_callback(rpc, slice_log, wait_list, status_dict, updated_l
             handle_sync_to_ec2_error(slice_log, wait_list, status_dict, updated_logs)
             return
         data = result.content
+        logging.info(data)
         if data not in ['SYNCED', u'SYNCED']:
             handle_sync_to_ec2_error(slice_log, wait_list, status_dict, updated_logs)
             return

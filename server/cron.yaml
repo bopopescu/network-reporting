@@ -39,3 +39,4 @@ cron:
   url: /fetch_api/budget/sync/cron
   schedule: every 5 minutes
   timezone: America/Los_Angeles
+  target: frontend-boom

@@ -466,7 +466,7 @@ class BudgetSliceCounter(db.Model):
 
     @property
     def unsynced_slices(self):
-        return slice_num - last_synced_slice
+        return self.slice_num - self.last_synced_slice
 
 class BudgetSliceSyncStatus(db.Model):
     slice_num = db.IntegerProperty()

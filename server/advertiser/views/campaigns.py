@@ -967,7 +967,6 @@ class PauseAdGroupHandler(RequestHandler):
 
         #TODO: we need a cross-platform default redirect in case
         # HTTP_REFERER doesn't exist
-        logging.warn(type(self.request.META))
         return HttpResponseRedirect(self.request.environ.get('HTTP_REFERER'))
 
 
@@ -1123,6 +1122,8 @@ def creative_create(request, *args, **kwargs):
 
 class DisplayCreativeHandler(RequestHandler):
     def get(self, creative_key):
+        if creative_key == 'mraid.js':
+            return HttpResponse("")
         c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image":
 

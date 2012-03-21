@@ -85,18 +85,31 @@ class BudgetSyncWorker(webapp.RequestHandler):
         updated_logs = []
         statuses = {}
         rpcs = []
+        no_spending = []
         for log in logs:
             if log.gae_synced:
                 waiting_nums.remove(log.slice_num)
                 continue
+            if log.sync_spending == 0.0:
+                waiting_nums.remove(log.slice_num)
+                log.gae_synced = True
+                no_spending.append(log)
+                continue
             rpcs.append(build_sync_to_ec2_rpc(log, waiting_nums, statuses, updated_logs))
+        if no_spending:
+            db.put(no_spending)
         for rpc in rpcs:
-            rpc.wait()
+            if rpc is not None:
+                rpc.wait()
 
 def build_sync_to_ec2_rpc(slice_log, wait_list, status_dict, updated_logs):
     rpc = urlfetch.create_rpc()
     callback = build_sync_to_ec2_callback(rpc, slice_log, wait_list, status_dict, updated_logs)
     rpc.callback = callback
+    camp = slice_log.budget.campaign.get()
+    if camp is None:
+        wait_list.remove(slice_log.slice_num)
+        return
     query_dict = dict(campaign_key = str(slice_log.budget.campaign.get().key()),
                       slice_num=slice_log.slice_num,
                       total_spent=slice_log.sync_spending)

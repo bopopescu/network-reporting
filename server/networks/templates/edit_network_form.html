@@ -15,6 +15,11 @@
             priors = {{ adgroup.geo_predicates|to_json|safe }};
             city_priors = {{ adgroup.cities|to_json|safe }};
 
+            $('.cpm-field').keyup(function() {
+                var key = $(this).attr('id').replace('-app', '');
+                $('.' + key).val($(this).val());
+                });
+
             $('.all-adunits').click(function() {
                 var key = $(this).attr('id').replace('-all-adunits', '');
                 if ($(this).is(':checked')) {
@@ -33,6 +38,7 @@
                         var key = $(this).attr('id').replace('-' + days, '');
                         var cpm = parseFloat($(this).text().replace('$', '')).toString();
                         $('#' + key + '-field').val(cpm);
+                        $('#' + key + '-field').keyup();
                         });
                     });
                 });
@@ -52,54 +58,53 @@
                 $('.advanced_targeting').toggle();
                 })
 
-            $("#networkSettingsForm-submit").click(function() {
-                    // Hack to serialize sub-section of forms data.
-                    // Add a new form and hide it.
-                    $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
-                    // Clone the fieldset into the new form.
-                    $('#form-to-submit').html($('.login-credentials-fields').clone());
-                    // Serialize the data.
-                    var data = $('#form-to-submit').serialize();
-                    // Remove the form.
-                    $('#form-to-submit').remove();
-                    data += ("&account_key={{account_key}}" + "&ad_network_name={{network.name}}");
+            // TODO: merge this with controllers/campaigns.js form
+            function setupNetworkForm() {
+                // select the appropriate campaign_type from the hash
+                if (window.location.hash.substring(1) !== '') {
+                    $('select[name="campaign_type"]').val(window.location.hash.substring(1));
+                }
 
-                    // Check if data submitted in the form is valid login
-                    // information for the ad network
-                    var message = $('.login-credentials-message');
-                    $(message).html("Verifying login credentials...");
-
-                    $.ajax({url: 'https://checklogincredentials.mopub.com',
-                        data: data,
-                        crossDomain: true,
-                        dataType: "jsonp",
-                        success: function(valid) {
-                            // Upon success notify the user
-                            if (valid) {
-                                $(message).html("MoPub is currently optimizing {{network.pretty_name}} by pulling data from {{network.pretty_name}} using the following credentials.");
-                                var username = $('#id_username_str').val();
-                                var password = $('#id_password_str').val();
-                                var client_key = $('#id_client_key').val();
-
-                                $('#id_username_str').hide();
-                                $('#id_password_str').hide();
-                                $('#id_client_key').hide();
-
-                                $('#username').text(username);
-                                var hidden_password = "";
-                                $.each( password, function(c){
-                                    hidden_password += "*";
+                var validator = $('form#campaign_and_adgroup').validate({
+                    errorPlacement: function(error, element) {
+                        element.closest('li > div').append(error);
+                    },
+                    submitHandler: function(form) {
+                        $(form).ajaxSubmit({
+                            data: {ajax: true},
+                            dataType: 'json',
+                            success: function(jsonData, statusText, xhr, $form) {
+                                if(jsonData.success) {
+                                    window.location = jsonData.redirect;
+                                    $('form#campaign_and_adgroup #submit').button({
+                                        label: 'Success...',
+                                        disabled: true
+                                    });
+                                } else {
+                                    console.log(jsonData.errors);
+                                    validator.showErrors(jsonData.errors);
+                                    $('form#campaign_and_adgroup #submit').button({
+                                        label: 'Try Again',
+                                        disabled: false
+                                    });
+                                }
+                            },
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                $('form#campaign_and_adgroup #submit').button({
+                                    label: 'Try Again',
+                                    disabled: false
                                 });
-                                $('#password').text(hidden_password);
-                                $('#client_key').text(client_key);
-                                $('.login-credentials-submit').hide();
-                                $('.login-credentials-settings').show();
-                            } else {
-                                $(message).html("Invalid login information.");
+                            },
+                            beforeSubmit: function(arr, $form, options) {
+                                $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
+                                                                               disabled: true});
                             }
-                        }
-                    });
-            });
+                        });
+                    }
+                });
+            }
+
+            setupNetworkForm();
 
             $("#edit-login").click(function() {
                     $('#id_username_str').show();
@@ -184,7 +189,7 @@
 {% endblock pageTitle %}
 
 {% block content %}
-<form action="{% url advertiser_campaign_create %}" id="campaign_and_adgroup" method="post">
+<form action="{% url edit_network network=network.name %}" id="campaign_and_adgroup" method="post">
 
     <div class="alert-message block-message">
         ... help text for intitial setup ...
@@ -489,13 +494,13 @@
                                 </span>
                             </td>
                             <td class="dataTable-data cpm-data" style="width:150px">
-                                <input id="{{app.key}}-cpm-field" type="text" style="width:50px;" />
+                                <input id="{{app.key}}-app-cpm-field" class="cpm-field" type="text" style="width:50px;" />
                                 {{ adgroup_form.bid_strategy }} 
                             </td>
-                            <td class="dataTable-data 7-day-cpm" id="{{app.key}}-7-day-cpm">
+                            <td class="dataTable-data 7-day-cpm network-data" id="{{app.key}}-7-day-app-cpm">
                                 {{ app.seven_day_stats.cpm|currency }}
                             </td>
-                            <td class="dataTable-data 14-day-cpm" id="{{app.key}}-14-day-cpm">
+                            <td class="dataTable-data 14-day-cpm network-data" id="{{app.key}}-14-day-app-cpm">
                                 {{ app.fourteen_day_stats.cpm|currency }}
                             </td>
                         </tr>

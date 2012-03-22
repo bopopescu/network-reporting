@@ -464,7 +464,6 @@ class NetworkAppsService(RequestHandler):
             app_data['network'] = network
             network_apps.append(app_data)
 
-        logging.info(network_apps)
 
         return JSONResponse(network_apps)
 

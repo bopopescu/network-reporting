@@ -34,7 +34,7 @@
                     dataType: 'text',
                     success: function(jsonData, statusText, xhr, $form) {
                         var data = $.parseJSON(jsonData);
-                        if(jsonData.success) {
+                        if(data.success) {
                             window.location = data.redirect;
                             $('form#campaign_and_adgroup #submit').button({
                                 label: 'Success...',

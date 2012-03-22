@@ -217,25 +217,23 @@
             </div>
             </li>
 
+        </ul>
+    </fieldset>
+
+    <a class="button" id="targeting">Advanced</a>
+
+    <fieldset class="advanced_targeting">
+        <legend>
+            <h2>Advanced Settings</h2>
+        </legend>
+
+        <ul class="form_fields" id="apps">
             <li>
             {{ campaign_form.description.label_tag }}
             <div>
                 {{ campaign_form.description }}
             </div>
             </li>
-
-        </ul>
-    </fieldset>
-
-    <a class="button" id="targeting">Advanced Targeting</a>
-
-    <fieldset class="advanced_targeting">
-        <legend>
-            <h2>Advanced Targeting</h2>
-            <p>Choose which ad units this campaign will target.</p>
-        </legend>
-
-        <ul class="form_fields" id="apps">
 
             <li class="campaign_type_dependant network network_type_dependant jumptap">
             {{ account_network_config_form.jumptap_pub_id.label_tag }}
@@ -275,26 +273,6 @@
             {{ adgroup_form.custom_method.label_tag }}
             <div>
                 {{ adgroup_form.custom_method }}
-            </div>
-            </li>
-
-            <li class="cant_optimize">
-            {{ adgroup_form.bid_strategy.label_tag }}
-            <div>
-                {{ adgroup_form.bid_strategy }} @ {{ adgroup_form.bid }} USD
-                <a class="campaign_type_dependant promo network whatsthis" id="bid-promo-helpLink" href="#">What's this?</a>
-                <div id="bid-promo-helpContent" class="hidden">
-                    <h3>Promotional CPM</h3>
-                    <p>MoPub uses CPM to prioritize which promotional campaign will be displayed.  To raise the priority of a campaign, increase the CPM.</p>
-                </div>
-                <div id="bid-network-helpContent" class="hidden">
-                    <h3>Network Rate</h3>
-                    <h4>Cost Per Click</h4>
-                    <p>MoPub uses the CPC from the ad networks along with realtime CTR statistics from your app to calculate eCPM. Because ad network CTR is highly variable, this allows us to constantly display the most profitable ads.</p>
-                    <p>You can find your CPC on the ad network's site.</p>
-                    <h4>Estimated Cost Per Mille</h4>
-                    <p>Using a static CPM disables automatic eCPM calculation. This is useful for users who have a preexisting contract with a specific ad network.</p>
-                </div>
             </div>
             </li>
 
@@ -452,6 +430,7 @@
                         <th class="dataTable-data"> Enabled </th>
                         <th class="dataTable-data pub-id-data"> Ad Network ID </th>
                         <th class="dataTable-data cpm-data"> Rate (USD) </th>
+                        {% if reporting %}
                         <th class="dataTable-data">
                             <div>
                                 <a id="copy-7-day" style="cursor:pointer">
@@ -468,6 +447,7 @@
                             </div>
                             <div> 14-Day CPM </div>
                         </th>
+                        {% endif %}
                     </thead>
                 </table>
             </div>
@@ -494,15 +474,17 @@
                                 </span>
                             </td>
                             <td class="dataTable-data cpm-data" style="width:150px">
-                                <input id="{{app.key}}-app-cpm-field" class="cpm-field" type="text" style="width:50px;" />
+                                <input id="{{app.key}}-app-cpm-field" class="cpm-field bid" type="text" style="width:50px;" />
                                 {{ adgroup_form.bid_strategy }} 
                             </td>
+                            {% if reporting %}
                             <td class="dataTable-data 7-day-cpm network-data" id="{{app.key}}-7-day-app-cpm">
                                 {{ app.seven_day_stats.cpm|currency }}
                             </td>
                             <td class="dataTable-data 14-day-cpm network-data" id="{{app.key}}-14-day-app-cpm">
                                 {{ app.fourteen_day_stats.cpm|currency }}
                             </td>
+                            {% endif %}
                         </tr>
                     </tbody>
                 </table>
@@ -526,10 +508,12 @@
                                 <td class="dataTable-data cpm-data">
                                     {{ adunit.adgroup_form.bid }}
                                 </td>
+                                {% if reporting %}
                                 <td class="dataTable-data">
                                 </td>
                                 <td class="dataTable-data">
                                 </td>
+                                {% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>

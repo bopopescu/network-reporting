@@ -420,10 +420,11 @@ def main():
     for network in NETWORKS_TO_USE:
         if network == 'iad':
             network = 'iAd'
-        campaign = Campaign(name=get_campaign_name(),
-                account=account,
+        campaign = Campaign(account=account,
                 campaign_type='network',
-                network_type=network)
+                network_type=network,
+                name=REPORTING_NETWORKS.get(network, False) or \
+                        OTHER_NETWORKS[network])
         campaign.put()
 
         creatives_per_campaign[campaign] = []

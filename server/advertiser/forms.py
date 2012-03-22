@@ -272,7 +272,7 @@ class CampaignForm(forms.ModelForm):
 
 
 class AdGroupForm(forms.ModelForm):
-    name = forms.CharField(required=False)
+    name = forms.CharField()
     network_type = forms.ChoiceField(choices=(('admob_native', 'AdMob'),
                                               ('adsense', 'AdSense'),
                                               ('brightroll', 'BrightRoll'),

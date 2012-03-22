@@ -103,8 +103,7 @@ class NetworksHandler(RequestHandler):
                         network_data['reporting'] = True
 
                 network_data['name'] = network
-                network_data['pretty_name'] = REPORTING_NETWORKS.get(network,
-                        False) or OTHER_NETWORKS[network]
+                network_data['pretty_name'] = get_pretty_name(network)
 
                 networks_to_setup -= set([network])
                 additional_networks -= set([network])
@@ -120,8 +119,7 @@ class NetworksHandler(RequestHandler):
         for network in sorted(networks_to_setup):
             network_data = {}
             network_data['name'] = network
-            network_data['pretty_name'] =  REPORTING_NETWORKS.get(network,
-                        False) or OTHER_NETWORKS[network]
+            network_data['pretty_name'] = get_pretty_name(network)
 
             networks_to_setup_.append(network_data)
 
@@ -130,8 +128,7 @@ class NetworksHandler(RequestHandler):
         for network in sorted(additional_networks):
             network_data = {}
             network_data['name'] = network
-            network_data['pretty_name'] =  REPORTING_NETWORKS.get(network,
-                        False) or OTHER_NETWORKS[network]
+            network_data['pretty_name'] = get_pretty_name(network)
 
             additional_networks_.append(network_data)
 
@@ -162,16 +159,19 @@ class EditNetworkHandler(RequestHandler):
             network):
         network_data = {}
         network_data['name'] = network
-        network_data['pretty_name'] = REPORTING_NETWORKS.get(network, False) \
-                or OTHER_NETWORKS.get(network)
+        network_data['pretty_name'] = get_pretty_name(network)
+        reporting = False
 
         campaign = CampaignQueryManager.get_network_campaign(self. \
                 account.key(), network)
         if campaign:
             campaign_form = CampaignForm(instance=campaign)
         else:
-            campaign_form = CampaignForm()
+            # Set the default campaign name to the network name
+            default_data = {'name': network_data['pretty_name']}
+            campaign_form = CampaignForm(default_data)
 
+        # Create the login credentials form
         login = AdNetworkLoginManager.get_login(self.account,
                 network).get()
         if login:
@@ -181,6 +181,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             login_form = LoginCredentialsForm()
 
+        # Create the default adgroup form
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
                 prefix='default')
         account_network_config_form = AccountNetworkConfigForm(instance=
@@ -205,6 +206,7 @@ class EditNetworkHandler(RequestHandler):
             for mapper in AdNetworkMapperManager.get_mappers_for_app(
                     AdNetworkLoginManager.get_login(self.account, network).
                             get(), app):
+                reporting = True
                 seven_day_stats += AdNetworkStatsManager. \
                         get_stats_for_mapper_and_days(mapper, last_7_days)[0]
                 fourteen_day_stats += AdNetworkStatsManager. \
@@ -221,8 +223,9 @@ class EditNetworkHandler(RequestHandler):
                 adunit.adgroup_form = AdGroupForm(is_staff=
                         self.request.user.is_staff, instance=adgroup,
                         prefix=str(adunit.key()))
+                # Add class based on app that adunit is under
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
-                        ' ' + str(app.key()) + '-cpm-field'
+                        ' ' + str(app.key()) + '-cpm-field bid'
 
                 adunit.network_config_form = AdUnitNetworkConfigForm(
                         instance=adunit.network_config, prefix="adunit_%s" %
@@ -244,6 +247,7 @@ class EditNetworkHandler(RequestHandler):
                                       'account_network_config_form':
                                             account_network_config_form,
                                       'apps': apps,
+                                      'reporting': reporting,
                                   })
 
     def post(self,
@@ -257,22 +261,45 @@ class EditNetworkHandler(RequestHandler):
         query_dict = self.request.POST.copy()
         query_dict['campaign_type'] = 'network'
         campaign_form = CampaignForm(query_dict)
-        logging.info('self.request.POST')
-        logging.info(query_dict)
 
         if campaign_form.is_valid():
             logging.info('campaign form is valid')
             campaign = campaign_form.save()
             campaign.account = self.account
+            #TODO: convert to valid network type
+            campaign.network_type = network
             campaign.save()
 
+            # Copy default form fields to all adgroup adunit forms
+            for key, val in query_dict.iteritems():
+                if key[:len('default')] == 'default':
+                    for adunit in adunits:
+                        if str(adunit.key()) + key[len('default'):] not in query_dict:
+                            query_dict[str(adunit.key()) + key[len('default'):]] = \
+                                    val
+
             # TODO: copy all global adgroup settings to adunit level adgroups
-            adgroup_form = AdGroupForm(self.request.POST,
-                    site_keys=[(unicode(adunit.key()), '') for adunit in
-                        adunits],
-                    is_staff=self.request.user.is_staff, prefix='default')
-            logging.info(adgroup_form.is_valid())
-            if adgroup_form.is_valid():
+#            default_adgroup_form = AdGroupForm(self.request.POST,
+#                    site_keys=[(unicode(adunit.key()), '') for adunit in
+#                        adunits],
+#                    is_staff=self.request.user.is_staff, prefix='default')
+
+            adgroup_form_is_valid = True
+            for adunit in adunits:
+                query_dict[str(adunit.key()) + '-name'] = campaign.name + '-' + \
+                        str(adunit.key())
+                logging.info('query_dict')
+                logging.info(query_dict)
+                adgroup_form = AdGroupForm(query_dict,
+                        site_keys=[(unicode(adunit.key()), '')],
+                        is_staff=self.request.user.is_staff,
+                        prefix=str(adunit.key()))
+                logging.info('adgroup_form.__dict__')
+                logging.info(adgroup_form.__dict__)
+                if not adgroup_form.is_valid():
+                    adgroup_form_is_valid = False
+                    break
+            if adgroup_form_is_valid:
                 logging.info('adgroup form is valid')
 
                 #budget_service.update_budget(campaign, save_campaign = False)
@@ -417,8 +444,7 @@ class NetworkDetailsHandler(RequestHandler):
 
         network_data = {}
         network_data['name'] = network
-        network_data['pretty_name'] = REPORTING_NETWORKS.get(network, False) or \
-                OTHER_NETWORKS.get(network, False)
+        network_data['pretty_name'] = get_pretty_name(network)
 
         if not network_data['pretty_name']:
             raise Http404
@@ -592,4 +618,9 @@ class NetworkDetailsHandler(RequestHandler):
 @login_required
 def network_details(request, *args, **kwargs):
     return NetworkDetailsHandler()(request, *args, **kwargs)
+
+## Helpers
+#
+def get_pretty_name(network):
+    return REPORTING_NETWORKS.get(network, False) or OTHER_NETWORKS[network]
 

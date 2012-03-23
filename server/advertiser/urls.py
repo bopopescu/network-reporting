@@ -2,11 +2,6 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('advertiser.views',
-
-    url(r'^creative/create/$', 'creative_create', name='advertiser_creative_create'),
-    url(r'^creative/manage/$', 'creative_manage', name='advertiser_creative_manage'),
-    url(r'^creative/image/(?P<creative_key>[-\w\.]+)$', 'creative_image', name='advertiser_creative_image'),
-    url(r'^creative/html/(?P<creative_key>[-\w\.]+)$', 'creative_html', name='advertiser_creative_html'),
     url(r'^bid/pause/$', 'bid_pause', name='advertiser_bid_pause'),
 
     url(r'^adserver_test/$', 'adserver_test', name='advertiser_adserver_test'),
@@ -43,16 +38,27 @@ urlpatterns = patterns('advertiser.views',
         'order_form',
         name='advertiser_order_form_edit'),
 
-    url('^orders/(?P<order_key>[-\w\.]+)/line_items/new/$',
+    url('^orders/(?P<order_key>[-\w\.]+)/new_line_item/$',
         'order_and_line_item_form',
         name='advertiser_line_item_form_new'),
 
-    url('^orders/(?P<order_key>[-\w\.]+)/line_items/(?P<line_item_key>[-\w\.]+)/$',
+    url('^line_items/(?P<line_item_key>[-\w\.]+)/$',
         'line_item_detail',
         name='advertiser_line_item_detail'),
 
-    url('^orders/(?P<order_key>[-\w\.]+)/line_items/(?P<line_item_key>[-\w\.]+)/edit/$',
+    url('^line_items/(?P<line_item_key>[-\w\.]+)/edit/$',
         'order_and_line_item_form',
         name='advertiser_line_item_form_edit'),
 
+    url('^line_items/(?P<line_item_key>[-\w\.]+)/new_creative/$',
+        'creative_form',
+        name='advertiser_creative_form_new'),
+
+    url('^creatives/(?P<creative_key>[-\w\.]+)/edit/$',
+        'creative_form',
+        name='advertiser_creative_form_edit'),
+
+    url(r'^creative/manage/$', 'creative_manage', name='advertiser_creative_manage'),
+    url(r'^creative/image/(?P<creative_key>[-\w\.]+)$', 'creative_image', name='advertiser_creative_image'),
+    url(r'^creative/html/(?P<creative_key>[-\w\.]+)$', 'creative_html', name='advertiser_creative_html'),
 )

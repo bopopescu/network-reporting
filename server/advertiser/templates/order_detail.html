@@ -1,6 +1,5 @@
 {% extends 'advertiser/base.html' %}
 
-{% load fields %}
 {% load filters %}
 {% load elements %}
 
@@ -36,12 +35,12 @@
   {# The order edit form, hidden by default #}
   <section class="offset hidden" id="order_form_container">
     <form id="order_form" method="post" action="{% url advertiser_order_form_edit order.key %}">
-      {% include 'forms/order_form.html' %}      
-      <a class="btn right" id="submit" href="#">Continue</a>        
+      {% include 'forms/order_form.html' %}
+      <a class="btn right" id="submit" href="#">Continue</a>
     </form>
   </section>
 
-  
+
   {# Table with all of the line items #}
   <section>
     <h3 class="left"> Line Items in {{ order.name }} </h3>
@@ -51,7 +50,7 @@
     <a class="btn right" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
       Edit this order
     </a>
-    {% order_table order %}  
+    {% order_table order %}
   </section>
 
   {# Table that shows all of the adunits being targeted #}
@@ -80,7 +79,7 @@
                 users: {{ stats.users.series }},
             },
             start_date:  Date.UTC({{ start_date.year }},
-                                  {{ start_date.month|add:"-1" }}, 
+                                  {{ start_date.month|add:"-1" }},
                                   {{ start_date.day }})
         });
     });

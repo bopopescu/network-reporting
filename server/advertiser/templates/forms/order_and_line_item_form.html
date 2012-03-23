@@ -1,7 +1,7 @@
 {% extends 'advertiser/base.html' %}
 
-{% load fields %}
 {% load filters %}
+{% load forms %}
 
 {% block pageTitleTag %}
 {% comment %}TODO: title{% endcomment %}
@@ -57,7 +57,13 @@
             <li>
                 {{ line_item_form.adgroup_type.label_tag }}
                 <div>
-                    {{ line_item_form.adgroup_type }}
+                    {% comment %}TODO: do this in a tag or something{% endcomment %}
+                    {% if line_item_form.instance %}
+                        {{ line_item_form.instance.adgroup_type }}
+                        <input name="adgroup_type" type="hidden" value="{% if line_item_form.instance.gtee %}Guaranteed{% else %}Promotional{% endif %}" />
+                    {% else %}
+                        {{ line_item_form.adgroup_type }}
+                    {% endif %}
                     <a href="#" id="adgroup_type-helpLink">What's this?</a>
                     <div class="hidden" id="adgroup_type-helpContent">
                         <h3>Campaign Type</h3>

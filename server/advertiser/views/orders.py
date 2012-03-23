@@ -105,16 +105,15 @@ class LineItemDetailHandler(RequestHandler):
     """
     Almost identical to current campaigns detail page.
     """
-    def get(self, line_item_key, order_key=None):
+    def get(self, line_item_key):
 
-        # Get the metadata for the lineitem and its order
-        order = CampaignQueryManager.get(order_key)
+        # Get the metadata for the lineitem
         line_item = AdGroupQueryManager.get(line_item_key)
 
         # Get the stats for the date range
         stats_q = StatsModelQueryManager(self.account, self.offline)
         all_stats = stats_q.get_stats_for_days(advertiser=line_item,
-                                                     days = self.days)
+                                               days=self.days)
         line_item.stats = reduce(lambda x, y: x + y, all_stats, StatsModel())
 
         # Get the targeted adunits and group them by their app.
@@ -127,7 +126,7 @@ class LineItemDetailHandler(RequestHandler):
             app.adunits = [au for au in targeted_adunits if au.app == app]
 
         return {
-            'order': order,
+            'order': line_item.order,
             'line_item': line_item,
             'stats': format_stats(all_stats),
             'targeted_apps': targeted_apps
@@ -137,7 +136,7 @@ class LineItemDetailHandler(RequestHandler):
 @login_required
 def line_item_detail(request, *args, **kwargs):
     t = "advertiser/lineitem_detail.html"
-    return LineItemDetailHandler(template=t)(request, use_cache=False, *args, **kwargs)
+    return LineItemDetailHandler(template=t, id="line_item_key")(request, use_cache=False, *args, **kwargs)
 
 
 class OrderFormHandler(RequestHandler):
@@ -151,7 +150,7 @@ class OrderFormHandler(RequestHandler):
         if not self.request.is_ajax():
             raise Http404
 
-        # TODO: make sure order is part of account?
+        # TODO: make sure this is a gtee or promo order
         instance = CampaignQueryManager.get(order_key)
         order_form = OrderForm(self.request.POST, instance=instance)
 
@@ -179,7 +178,7 @@ class OrderFormHandler(RequestHandler):
 
 @login_required
 def order_form(request, *args, **kwargs):
-    return OrderFormHandler()(request, use_cache=False, *args, **kwargs)
+    return OrderFormHandler(id="order_key")(request, use_cache=False, *args, **kwargs)
 
 
 class OrderAndLineItemFormHandler(RequestHandler):
@@ -271,7 +270,6 @@ class OrderAndLineItemFormHandler(RequestHandler):
                 self.account.status = ""
                 AccountQueryManager.put_accounts(self.account)
 
-            # TODO: go to order or line item detail page?
             return JSONResponse({
                 'success': True,
                 'redirect': reverse('advertiser_line_item_detail',
@@ -298,8 +296,65 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
 @login_required
 def order_and_line_item_form(request, *args, **kwargs):
-    t = "advertiser/forms/order_and_line_item_form.html",
-    return OrderAndLineItemFormHandler(template=t)(request, use_cache=False, *args, **kwargs)
+    template = "advertiser/forms/order_and_line_item_form.html",
+    return OrderAndLineItemFormHandler(template=template)(request, use_cache=False, *args, **kwargs)
+
+
+@login_required
+def order_and_line_item_form(request, *args, **kwargs):
+    template = "advertiser/forms/order_and_line_item_form.html",
+    return OrderAndLineItemFormHandler(template=template)(request, use_cache=False, *args, **kwargs)
+
+
+class CreativeFormHandler(RequestHandler):
+    def get(self, order_key, line_item_key, creative_key=None):
+        raise Http404
+
+    def post(self, order_key, line_item_key, creative_key=None):
+        if order_key:
+            # TODO: make sure order belongs to account
+            order = CampaignQueryManager.get(order_key)
+            if line_item_key:
+                # TODO: make sure line item belongs to account
+                # TODO: make sure line item belongs to order
+                line_item = AdGroupQueryManager.get(line_item_key)
+            else:
+                line_item = None
+        else:
+            order = None
+            # TODO: make sure line_item_key is None
+            line_item = None
+
+        if creative_form.is_valid():
+
+            return JSONResponse({
+                'success': True,
+                'redirect': reverse('advertiser_line_item_detail',
+                                    args=(order.key(), line_item.key())),
+            })
+
+        else:
+            errors = {}
+            for key, value in line_item_form.errors.items():
+                # TODO: find a less hacky way to get jQuery validator's
+                # showErrors function to work with the SplitDateTimeWidget
+                if key == 'start_datetime':
+                    key = 'start_datetime_1'
+                elif key == 'end_datetime':
+                    key = 'end_datetime_1'
+                # TODO: just join value?
+                errors[key] = ' '.join([error for error in value])
+
+            return JSONResponse({
+                'errors': errors,
+                'success': False,
+            })
+
+
+@login_required
+def creative_form(request, *args, **kwargs):
+    template = "advertiser/forms/order_and_line_item_form.html",
+    return OrderAndLineItemFormHandler(template=template)(request, use_cache=False, *args, **kwargs)
 
 
 ###########
@@ -342,7 +397,3 @@ def format_stats(all_stats):
         },
     }
     return stats
-
-
-
-

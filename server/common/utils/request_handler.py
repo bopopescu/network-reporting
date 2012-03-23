@@ -1,5 +1,3 @@
-import logging
-
 import datetime
 
 from account.query_managers import AccountQueryManager
@@ -117,15 +115,13 @@ class RequestHandler(object):
                     "start_date": self.start_date,
                     "end_date": self.end_date,
                     "date_range": self.date_range,
-                    "days":self.days,
+                    "days": self.days,
                     "offline": self.offline,
                     "account": self.account
                 })
                 return render_to_response(self.request,
                                           self.template,
                                           response)
-
-
 
             elif request.method == "POST":
                 if self.login and self.request.user.is_authenticated():

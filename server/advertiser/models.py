@@ -433,7 +433,7 @@ class AdGroup(db.Model):
                                          ad_type="millennial_native",
                                          format="320x50",
                                          format_predicates=["format=320x50"])
-        elif self.campaign.campaign_type in ['marketplace', 'backfill_marketplace']:
+        elif self.adgroup_type in ['marketplace', 'backfill_marketplace']:
             c = MarketplaceCreative(key_name=key_name,
                                     name='marketplace dummy',
                                     ad_type='html')
@@ -554,16 +554,16 @@ class AdGroup(db.Model):
             return 1
 
     def gtee(self):
-        return self.campaign_type in ['gtee', 'gtee_high', 'gtee_low']
+        return self.adgroup_type in ['gtee', 'gtee_high', 'gtee_low']
 
     def promo(self):
-        return self.campaign_type in ['promo', 'backfill_promo']
+        return self.adgroup_type in ['promo', 'backfill_promo']
 
     def network(self):
-        return self.campaign_type in ['network']
+        return self.adgroup_type in ['network']
 
     def marketplace(self):
-        return self.campaign_type in ['marketplace']
+        return self.adgroup_type in ['marketplace']
 
     def is_active_for_date(self, date):
         """ Start and end dates are inclusive """

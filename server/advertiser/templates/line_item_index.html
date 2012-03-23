@@ -4,6 +4,10 @@
 
 {% block dateButtons %}{% endblock dateButtons %}
 
+{% block pageTitle %}
+<h1> Line Items </h1>
+{% endblock pageTitle %}
+
 {% block content %}
 
   <div class="rollup">
@@ -51,9 +55,9 @@
   
   <div class="right">
     <div class="btn-group">
-      <a class="btn" href="{% url advertiser_line_item_index %}">
+      <a class="btn" href="{% url advertiser_order_index %}">
         <i class="icon-eye-open"></i>
-        Go to Line Items
+        Go to Orders
       </a>
     </div>
     <div class="btn-group">
@@ -62,10 +66,23 @@
         Add a new order
       </a>
     </div>
+    <div class="btn-group">
+      <a class="btn" href="#"> Showing <span id="filter-toggled">All</span> </a>
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li> <a href="#" data-toggle="running"> Running </a> </li>
+        <li> <a href="#" data-toggle="running"> Scheduled </a> </li>
+        <li> <a href="#" data-toggle="running"> Paused </a> </li>
+        <li> <a href="#" data-toggle="running"> Completed </a> </li>
+        <li> <a href="#" data-toggle="running"> Archived </a> </li>
+      </ul>
+    </div>
   </div>
 
   
-  {% order_table orders %}
+  {% line_item_table line_items %}
 
     
 {% endblock content %}

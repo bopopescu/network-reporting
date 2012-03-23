@@ -18,13 +18,20 @@
     <img id="{{ line_item.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
   </td>
   
-  <td class="advertiser stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}"></td>
-  <td class="type stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}"></td>
-  <td class="priority stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
+  <td class="advertiser stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">
+    {{ line_item.campaign.advertiser }}
+  </td>
+  <td class="type stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">
+    {{line_item.adgroup_type}}
+  </td>
   <td class="goal stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
   <td class="revenue stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
   <td class="impressions stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
   <td class="clicks stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
   <td class="ctr stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
-  <td class="progress stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
+  <td class="delivery stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">
+    <div class="progress progress-striped">
+      <div class="bar" style="width: 50%"></div>
+    </div>
+  </td>
 </tr>

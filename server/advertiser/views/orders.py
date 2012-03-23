@@ -64,6 +64,7 @@ class LineItemIndexHandler(RequestHandler):
     """
     def get(self, *args, **kwargs):
         line_items = AdGroupQueryManager.get_adgroups(account=self.account)
+        line_items = [l for l in line_items if not (l.campaign.advertiser == "marketplace")]
         return {
             'line_items': line_items
         }

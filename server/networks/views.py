@@ -4,6 +4,7 @@ from account.forms import AccountNetworkConfigForm, \
         AppNetworkConfigForm, \
         AdUnitNetworkConfigForm
 from account.query_managers import AccountQueryManager
+from account.models import NetworkConfig
 
 from ad_network_reports.forms import LoginCredentialsForm
 from ad_network_reports.models import AdNetworkAppMapper, \
@@ -218,7 +219,7 @@ class EditNetworkHandler(RequestHandler):
             # Create different adgroup form for each adunit
             app.adunits = []
             for adunit in app.all_adunits:
-                adgroup = AdGroupQueryManager.get_network_adunit_adgroup(
+                adgroup = AdGroupQueryManager.get_network_adgroup(
                         adunit.key(), self.account.key(), network, True)
                 adunit.adgroup_form = AdGroupForm(is_staff=
                         self.request.user.is_staff, instance=adgroup,
@@ -260,7 +261,15 @@ class EditNetworkHandler(RequestHandler):
 
         query_dict = self.request.POST.copy()
         query_dict['campaign_type'] = 'network'
-        campaign_form = CampaignForm(query_dict)
+
+        campaign = CampaignQueryManager.get_network_campaign(self. \
+                account.key(), network)
+        if campaign:
+            campaign_form = CampaignForm(query_dict, instance=campaign)
+        else:
+            campaign_form = CampaignForm(query_dict)
+
+        adunit_keys = [(unicode(adunit.key())) for adunit in adunits]
 
         if campaign_form.is_valid():
             logging.info('campaign form is valid')
@@ -278,92 +287,94 @@ class EditNetworkHandler(RequestHandler):
                             query_dict[str(adunit.key()) + key[len('default'):]] = \
                                     val
 
-            # TODO: copy all global adgroup settings to adunit level adgroups
-#            default_adgroup_form = AdGroupForm(self.request.POST,
-#                    site_keys=[(unicode(adunit.key()), '') for adunit in
-#                        adunits],
-#                    is_staff=self.request.user.is_staff, prefix='default')
-
-            adgroup_form_is_valid = True
+            adgroup_forms_are_valid = True
+            adgroup_forms = []
             for adunit in adunits:
-                query_dict[str(adunit.key()) + '-name'] = campaign.name + '-' + \
-                        str(adunit.key())
-                logging.info('query_dict')
-                logging.info(query_dict)
-                adgroup_form = AdGroupForm(query_dict,
-                        site_keys=[(unicode(adunit.key()), '')],
-                        is_staff=self.request.user.is_staff,
-                        prefix=str(adunit.key()))
-                logging.info('adgroup_form.__dict__')
-                logging.info(adgroup_form.__dict__)
-                if not adgroup_form.is_valid():
-                    adgroup_form_is_valid = False
-                    break
-            if adgroup_form_is_valid:
-                logging.info('adgroup form is valid')
+                network_adgroup = AdGroupQueryManager.get_network_adgroup(
+                        adunit.key(), self.account.key(), network)
 
-                #budget_service.update_budget(campaign, save_campaign = False)
+                query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
+
+                adgroup_form = AdGroupForm(query_dict,
+                        site_keys=[(unicode(adunit.key()))],
+                        is_staff=self.request.user.is_staff,
+                        prefix=str(adunit.key()),
+                        instance=network_adgroup)
+                if not adgroup_form.is_valid():
+                    adgroup_forms_are_valid = False
+                    break
+                adgroup_forms.append(adgroup_form)
+
+            if adgroup_forms_are_valid:
+                logging.info('adgroup forms are valid')
+
                 # And then put in datastore again.
                 CampaignQueryManager.put(campaign)
 
-                adgroup = adgroup_form.save()
-                adgroup.account = campaign.account
-                adgroup.campaign = campaign
-                adgroup.network_type = network
+                for adgroup_form in adgroup_forms:
+                    adgroup = adgroup_form.save()
+                    adgroup.campaign = campaign
+                    adgroup.network_type = network
 
-                html_data = None
-                if adgroup.network_type == 'custom':
-                    html_data = self.request.POST.get('custom_html', '')
-                elif adgroup.network_type == 'custom_native':
-                    html_data = self.request.POST.get('custom_method', '')
-                #build default creative with custom_html data if custom or none if anything else
-                creative = adgroup.default_creative(html_data)
-                if adgroup.net_creative and creative.__class__ == adgroup.net_creative.__class__:
-                    #if the adgroup has a creative AND the new creative and old creative are the same class,
-                    #ignore the new creative and set the variable to point to the old one
-                    creative = adgroup.net_creative
+                    html_data = None
                     if adgroup.network_type == 'custom':
-                        #if the network is a custom one, the creative might be the same, but the data might be new, set the old
-                        #creative to have the (possibly) new data
-                        creative.html_data = html_data
+                        html_data = self.request.POST.get('custom_html', '')
                     elif adgroup.network_type == 'custom_native':
-                        creative.html_data = html_data
-                elif adgroup.net_creative:
-                    #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.
-                    #at this point we know that there was an old creative AND it's different from the new creative so
-                    #and delete the old creative just marks as deleted!
-                    CreativeQueryManager.delete(adgroup.net_creative)
+                        html_data = self.request.POST.get('custom_method', '')
+                    # build default creative with custom_html data if custom or
+                    # none if anything else
+                    creative = adgroup.default_creative(html_data)
+                    if adgroup.net_creative and creative.__class__ == \
+                            adgroup.net_creative.__class__:
+                        # if the adgroup has a creative AND the new creative and
+                        # old creative are the same class,
+                        # ignore the new creative and set the variable to point
+                        # to the old one
+                        creative = adgroup.net_creative
+                        if adgroup.network_type == 'custom':
+                            # if the network is a custom one, the creative
+                            # might be the same, but the data might be new, set
+                            # the old creative to have the (possibly) new data
+                            creative.html_data = html_data
+                        elif adgroup.network_type == 'custom_native':
+                            creative.html_data = html_data
+                    elif adgroup.net_creative:
+                        #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.
+                        #at this point we know that there was an old creative AND it's different from the new creative so
+                        #and delete the old creative just marks as deleted!
+                        CreativeQueryManager.delete(adgroup.net_creative)
 
-                # the creative should always have the same account as the adgroup
-                creative.account = adgroup.account
-                #put the creative so we can reference it
-                # TODO: must there be a seperate creative for each adunit /
-                # adgroup?
-                # CreativeQueryManager.put(creative)
-                # set adgroup to reference the correct creative
-                # adgroup.net_creative = creative.key()
+                    # the creative should always have the same account as the adgroup
+                    creative.account = adgroup.account
+                    #put the creative so we can reference it
+                    # TODO: must there be a seperate creative for each adunit /
+                    # adgroup?
+                    # CreativeQueryManager.put(creative)
+                    # set adgroup to reference the correct creative
+                    # adgroup.net_creative = creative.key()
+
+                    AdGroupQueryManager.put(adgroup)
 
                 # TODO: resolve admob / admob native
                 # NetworkConfig for Apps
-                if adgroup.network_type in ('admob', 'brightroll',
-                                            'ejam', 'inmobi', 'jumptap',
-                                            'millennial_native', 'mobfox'):
+                if network in ('admob', 'brightroll', 'ejam', 'inmobi',
+                        'jumptap', 'millennial_native', 'mobfox'):
                     # get rid of _native in admob_native, millennial_native
-                    network_config_field = "%s_pub_id" % adgroup.network_type. \
+                    network_config_field = "%s_pub_id" % network. \
                             replace('_native', '')
 
                     for app in apps:
                         network_config = app.network_config or NetworkConfig()
                         setattr(network_config, network_config_field,
-                                self.request.POST.get("app_%s_pub_id" %
-                                    app.key(), ''))
+                                self.request.POST.get("app_%s-%s" %
+                                    (app.key(), network_config_field), ''))
                         AppQueryManager.update_config_and_put(app,
                                 network_config)
 
-                    for adunit in adunits:
-                        # NetworkConfig for AdUnits
-                        if adgroup.network_type in ('admob_native', 'jumptap',
-                                                    'millennial_native'):
+                    # NetworkConfig for AdUnits
+                    if network in ('admob_native', 'jumptap',
+                            'millennial_native'):
+                        for adunit in adunits:
                             network_config = adunit.network_config or \
                                     NetworkConfig()
                             setattr(network_config, network_config_field,
@@ -372,16 +383,8 @@ class EditNetworkHandler(RequestHandler):
                             AdUnitQueryManager.update_config_and_put(adunit,
                                     network_config)
 
-                        adgroup_form = AdGroupForm(self.request.POST,
-                                site_keys=[(unicode(adunit.key()), '')
-                                    for adunit in adunits],
-                                is_staff=self.request.user.is_staff,
-                                prefix=str(adunit.key()))
-                        logging.info('adgroup_form.__dict__')
-                        logging.info(adgroup_form.__dict__)
-
                         # NetworkConfig for Account
-                        if adgroup.network_type == 'jumptap':
+                        if network == 'jumptap':
                             network_config = self.account.network_config or \
                                     NetworkConfig()
                             setattr(network_config, network_config_field, \
@@ -390,9 +393,9 @@ class EditNetworkHandler(RequestHandler):
                                     self.account, network_config)
 
                 # Delete Cache. We leave this in views.py because we
-                # must delete the adunits that the adgroup used to have as well
-                if adgroup.site_keys:
-                    adunits = AdUnitQueryManager.get(adgroup.site_keys)
+                # must delete the adunits that the adgroups used to have as well
+                if adunit_keys:
+                    adunits = AdUnitQueryManager.get(adunit_keys)
                     AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
                 # Onboarding: user is done after they set up their first
@@ -401,19 +404,15 @@ class EditNetworkHandler(RequestHandler):
                     self.account.status = ""
                     AccountQueryManager.put_accounts(self.account)
 
-                CampaignQueryManager.put(campaign)
-                AdGroupQueryManager.put(adgroup)
 
                 return JSONResponse({
                     'success': True,
                     'redirect': reverse('network_details', args=(network,)),
                 })
             else:
-                logging.info('sending back adgroup errors')
                 errors = {}
                 for key, value in adgroup_form.errors.items():
                     errors[key] = ' '.join([error for error in value])
-                logging.info(errors)
         else:
             errors = {}
             for key, value in campaign_form.errors.items():
@@ -475,27 +474,14 @@ class NetworkDetailsHandler(RequestHandler):
         stats_manager = StatsModelQueryManager(account=self.account)
         # Iterate through all the apps and populate the stats for network_data
         for app in AppQueryManager.get_apps(self.account):
-            network_config = app.network_config
-            # Get data from the ad network
-            pub_id = getattr(network_config, network + '_pub_id', '')
-            if pub_id:
-                mapper = AdNetworkAppMapper.get_by_publisher_id(pub_id,
-                        network)
-                if mapper:
-                    if 'mopub_app_stats' not in network_data:
-                        network_data['mopub_app_stats'] = {}
-                    if app.key() not in network_data['mopub_app_stats']:
-                        network_data['mopub_app_stats'][app.key()] = app
-                    network_data['mopub_app_stats'][app.key()].pub_id = pub_id
-
-                    # Get reporting graph stats
-                    reporting_stats = AdNetworkStatsManager. \
-                            get_stats_list_for_mapper_and_days(mapper.key(),
-                                    days)
-                    for stats in reporting_stats:
-                        if stats.date in reporting_stats_by_day:
-                            reporting_stats_by_day[stats.date] += stats
-
+            login = AdNetworkLoginManager.get_login(self.account,
+                    network).get()
+            if login:
+                mappers = AdNetworkMapperManager.get_mappers_for_app(login,
+                        app)
+                logging.info('mappers')
+                logging.info(mappers)
+                if mappers.count(limit=1):
                     network_data['reporting'] = True
 
             # Get data collected by MoPub
@@ -503,7 +489,7 @@ class NetworkDetailsHandler(RequestHandler):
             for adunit in AdUnitQueryManager.get_adunits(account=self.account,
                     app=app):
                 # One adunit per adgroup for network adunits
-                adgroup = AdGroupQueryManager.get_network_adunit_adgroup(
+                adgroup = AdGroupQueryManager.get_network_adgroup(
                         adunit.key(),
                         self.account.key(), network)
                 adgroups.append(adgroup)
@@ -551,49 +537,6 @@ class NetworkDetailsHandler(RequestHandler):
                         adunit.name)
 
 
-        # Format graph stats
-        from django.utils import simplejson
-
-        graph_stats = []
-        # Format mopub collected graph stats
-        mopub_graph_stats = reduce(lambda x, y: x+y, stats_by_day.values(),
-                StatsModel())
-
-        daily_stats = sorted(stats_by_day.values(), key=lambda
-                stats: stats.date)
-        daily_stats = [s.to_dict() for s in daily_stats]
-
-
-        mopub_graph_stats = mopub_graph_stats.to_dict()
-        mopub_graph_stats['daily_stats'] = daily_stats
-        mopub_graph_stats['name'] = "From MoPub"
-
-        graph_stats.append(mopub_graph_stats)
-
-        # Format network collected graph stats
-        if network_data['reporting']:
-            reporting_graph_stats = reduce(lambda x, y: x+y,
-                    reporting_stats_by_day.values(), AdNetworkStats())
-
-            daily_stats = [StatsModel(request_count=stats.attempts,
-                impression_count=stats.impressions,
-                click_count=stats.clicks,
-                date=datetime.combine(stats.date, time())).to_dict()
-                for stats in reporting_stats_by_day.values()]
-            daily_stats = sorted(daily_stats, key=lambda stats: stats['date'])
-
-            reporting_graph_stats = StatsModel(request_count= \
-                    reporting_graph_stats.attempts,
-                    impression_count=reporting_graph_stats.impressions,
-                    click_count=reporting_graph_stats.clicks).to_dict()
-            reporting_graph_stats['daily_stats'] = daily_stats
-            reporting_graph_stats['name'] = "From Networks"
-
-            graph_stats.append(reporting_graph_stats)
-
-        graph_stats = simplejson.dumps(graph_stats)
-
-
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper
         # for the account all get loaded via Ajax.
@@ -604,7 +547,6 @@ class NetworkDetailsHandler(RequestHandler):
                   'end_date' : days[-1],
                   'date_range' : self.date_range,
                   'show_graph' : True,
-                  'graph_stats' : graph_stats,
                   'network': network_data,
                   'campaign': simplejson.dumps(campaign_info),
                   'adgroups': adgroups,
@@ -622,5 +564,6 @@ def network_details(request, *args, **kwargs):
 ## Helpers
 #
 def get_pretty_name(network):
-    return REPORTING_NETWORKS.get(network, False) or OTHER_NETWORKS[network]
+    return REPORTING_NETWORKS.get(network, False) or \
+            OTHER_NETWORKS.get(network, False) or 'Custom'
 

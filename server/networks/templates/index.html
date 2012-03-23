@@ -254,7 +254,11 @@ Make a table for the main ad networks that are not setup
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
 
         $('#show-network').change(function() {
-            $('.network-data').toggle();
+            if ($(this).is(':checked')) {
+                $('.network-data').show();
+            } else {
+                $('.network-data').hide();
+            }
         }).change();
 
         $('.show-apps').click(function() {

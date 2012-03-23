@@ -1,11 +1,13 @@
 __doc__ = """
 API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
-from datetime import datetime, time
+from datetime import datetime, time, date
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager
 from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
-        REPORTING_NETWORKS
+        REPORTING_NETWORKS, \
+        AdNetworkLoginManager, \
+        AdNetworkMapperManager
 # TODO: move this
 from networks.views import OTHER_NETWORKS
 
@@ -397,19 +399,27 @@ class NetworkAppsService(RequestHandler):
         stats_manager = StatsModelQueryManager(account=self.account)
         # Iterate through all the apps and populate the stats for network_apps_
         for app in AppQueryManager.get_apps(self.account):
-            network_config = app.network_config
-
+            login = AdNetworkLoginManager.get_login(self.account,
+                    network).get()
             all_stats = False
-            # Get data from the ad network
-            pub_id = getattr(network_config, network + '_pub_id', '')
-            if pub_id:
-                mapper = AdNetworkAppMapper.get_by_publisher_id(pub_id,
-                        network)
-                if mapper:
-                    # Get reporting graph stats
-                    all_stats = AdNetworkStatsManager. \
-                            get_stats_list_for_mapper_and_days(mapper.key(),
-                                    self.days)
+            if login:
+                mappers = AdNetworkMapperManager.get_mappers_for_app(login,
+                        app)
+                if mappers.count(limit=1):
+                    stats_by_day = {}
+                    for day in self.days:
+                        stats_by_day[day] = AdNetworkStats(date=date.today())
+
+                    for mapper in mappers:
+                        all_stats = AdNetworkStatsManager. \
+                                get_stats_list_for_mapper_and_days(mapper.key(),
+                                        self.days)
+                        for stats in all_stats:
+                            if stats.date in stats_by_day:
+                                stats_by_day[stats.date] += stats
+
+                    all_stats = sorted(stats_by_day.values(), key=lambda stats:
+                            stats.date)
 
             if all_stats:
                 stats = reduce(lambda x, y: x+y, all_stats,
@@ -425,7 +435,7 @@ class NetworkAppsService(RequestHandler):
             for adunit in AdUnitQueryManager.get_adunits(account=self.
                     account, app=app):
                 # One adunit per adgroup for network adunits
-                adgroup = AdGroupQueryManager.get_network_adunit_adgroup(
+                adgroup = AdGroupQueryManager.get_network_adgroup(
                         adunit.key(),
                         self.account.key(), network)
 
@@ -459,8 +469,11 @@ class NetworkAppsService(RequestHandler):
             if adunits:
                 app_data['adunits'] = app.adunits
             app_data['mopub_stats'] = app.mopub_stats.to_dict()
-            app_data['network_stats'] = \
+            if hasattr(app, 'network_stats'):
+                app_data['network_stats'] = \
                     StatsModel(ad_network_stats=app.network_stats).to_dict()
+            else:
+                app_data['network_stats'] = StatsModel().to_dict()
             app_data['network'] = network
             network_apps.append(app_data)
 
@@ -500,31 +513,33 @@ class NetworkDetailsDailyStatsService(RequestHandler):
         #try:
         stats_by_day = {}
         for day in self.days:
-            stats_by_day[day] = StatsModel()
+            stats_by_day[day] = StatsModel(date=datetime.now())
 
         reporting_stats_by_day = {}
         for day in self.days:
-            reporting_stats_by_day[day] = AdNetworkStats()
+            reporting_stats_by_day[day] = AdNetworkStats(date=date.today())
 
         adgroups = []
 
         stats_manager = StatsModelQueryManager(account=self.account)
         # Iterate through all the apps and populate stats_by_day
         for app in AppQueryManager.get_apps(self.account):
-            network_config = app.network_config
-            # Get data from the ad network
-            pub_id = getattr(network_config, network + '_pub_id', '')
-            if pub_id:
-                mapper = AdNetworkAppMapper.get_by_publisher_id(pub_id,
-                        network)
-                if mapper:
+            login = AdNetworkLoginManager.get_login(self.account,
+                    network).get()
+            if login:
+                mappers = AdNetworkMapperManager.get_mappers_for_app(login,
+                        app)
+                if mappers.count(limit=1):
                     # Get reporting graph stats
-                    reporting_stats = AdNetworkStatsManager. \
-                            get_stats_list_for_mapper_and_days(mapper.key(),
-                                    self.days)
-                    for stats in reporting_stats:
-                        if stats.date in reporting_stats_by_day:
-                            reporting_stats_by_day[stats.date] += stats
+
+                    for mapper in mappers:
+                        reporting_stats = AdNetworkStatsManager. \
+                                get_stats_list_for_mapper_and_days(mapper.key(),
+                                        self.days)
+
+                        for stats in reporting_stats:
+                            if stats.date in reporting_stats_by_day:
+                                reporting_stats_by_day[stats.date] += stats
                     reporting = True
 
             # Get data collected by MoPub
@@ -532,7 +547,7 @@ class NetworkDetailsDailyStatsService(RequestHandler):
             for adunit in AdUnitQueryManager.get_adunits(account=self.account,
                     app=app):
                 # One adunit per adgroup for network adunits
-                adgroup = AdGroupQueryManager.get_network_adunit_adgroup(
+                adgroup = AdGroupQueryManager.get_network_adgroup(
                         adunit.key(),
                         self.account.key(), network)
                 adgroups.append(adgroup)

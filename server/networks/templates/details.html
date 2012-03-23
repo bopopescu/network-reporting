@@ -186,7 +186,7 @@
     </div>
     {% for app in network.mopub_app_stats %}
     <div class="{% cycle 'appData' 'appData appData-alt' %}">
-        <div class="appData-details {{network.name}}-row" style="margin: -10px 0 0 86px">
+        <div class="appData-details {{network.name}}-row" style="margin: -10px 0 0">
             <div class="appData-details-inner show">
                 <table class="dataTable">
                     <tbody id="{{app.key}}-stats">
@@ -206,17 +206,21 @@
                             </td>
                             {% endif %}
                             <td class="dataTable-data numeric">
+                                {% if network.reporting %}
                                 <div class="network-cpm network-data"></div>
+                                {% endif %}
                                 <div class="mopub-cpm mopub-data"></div>
                             </td>
                             <td class="dataTable-data numeric">
-                                {% if network.name != MOBFOX %}
+                                {% if network.reporting and network.name != MOBFOX %}
                                 <div class="network-attempt_count network-data"></div>
                                 {% endif %}
                                 <div class="mopub-attempt_count mopub-data"></div>
                             </td>
                             <td class="dataTable-data numeric">
+                                {% if network.reporting %}
                                 <div class="network-data network-impression_count"></div>
+                                {% endif %}
                                 <div class="mopub-impression_count mopub-data"></div>
                             </td>
                             <td class="dataTable-data numeric">

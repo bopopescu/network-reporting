@@ -259,7 +259,7 @@ class SimpleAdUnit(SimpleModel):
     app = property(_get_app, _set_app)
 
 class SimpleCampaign(SimpleModel):
-    def __init__(self, key=None, name=None, campaign_type=None, start_datetime=None, end_datetime=None, active=None, deleted=None, account=None):
+    def __init__(self, key=None, name=None, campaign_type=None, start_datetime=None, end_datetime=None, active=None, deleted=None, account=None, budget_type=None, full_budget=None, daily_budget=None):
         self._key = key
         self.name = name
         self.campaign_type = campaign_type
@@ -268,6 +268,9 @@ class SimpleCampaign(SimpleModel):
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
         self.account = account.simplify()
+        self.budget_type = budget_type
+        self.full_budget = full_budget
+        self.daily_budget = daily_budget
 
     def __str__(self):
         return self.__repr__()

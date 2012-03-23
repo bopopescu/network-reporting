@@ -1,0 +1,58 @@
+{% load elements %}
+{% load filters %}
+
+<tr class='main order-row {% if order.archived %} archived hidden{% endif %}' id="{{ order.key }}">
+
+  {% comment %}
+    Status (active/paused/archived) We need to display a table cell if
+    either the order or line item needs controls, otherwise the table
+    wont render correctly.
+  {% endcomment %}
+  {% if order_status or line_item_status %}
+    {% if order_status %}
+      <td class="controls">
+        <input class="status_change_control" id="{{order.key}}" type="checkbox" />
+        {% status_icon order %}
+      </td>
+    {% else %}
+      <td></td>
+    {% endif %}
+  {% endif %}
+
+  {% comment %}
+    If we're rendering a single order, then we just display "Totals"
+    as the name.
+  {% endcomment %}
+  <td class="name">
+    {% if singular %} Totals {% else %}
+      <a href="{% url advertiser_order_detail order_key=order.key %}">
+        {{ order.name }}
+      </a>
+    {% endif %}
+    <img id="{{ order.key }}-img" class="loading-img" src="/images/spin-small.gif" /> 
+  </td>
+        
+  {% comment %}
+    These stats will be loaded over ajax.  Opacity is set to 0.2 if
+    the campaign is paused.
+  {% endcomment %}
+  <td class="advertiser stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+    {{ order.advertiser }}
+  </td>
+  <td class="items stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+    --
+  </td>
+  <td class="revenue stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+    --
+  </td>
+  <td class="impressions stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+    --
+  </td>
+  <td class="clicks stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+    --
+  </td>
+  <td class="ctr stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+    --
+  </td>
+</tr>
+

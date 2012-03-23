@@ -1,11 +1,15 @@
 {% if adgroup.deleted %}
-  <img src="/images/deleted.gif" height=9 width=9 />
+  <img id="status-{{ adgroup.key }}" src="/images/deleted.gif" height=9 width=9 style="margin-top:4px"/>
 {% endif %}
 
 {% if adgroup.active and not adgroup.deleted %}
-  <img src="/images/active.gif" height=9 width=9 />
+  <img id="status-{{ adgroup.key }}" src="/images/active.gif" height=9 width=9  style="margin-top:4px"/>
 {% endif %}
 
-{% if not adgroup.active and not adgroup.deleted %}
-  <img src="/images/paused.gif" height=9 width=9 />
+{% if not adgroup.active and not adgroup.deleted and not adgroup.archived %}
+  <img id="status-{{ adgroup.key }}" src="/images/paused.gif" height=9 width=9  style="margin-top:4px"/>
+{% endif %}
+
+{% if adgroup.archived %}
+  <img id="status-{{ adgroup.key }}" src="/images/archived.gif" height=9 width=9  style="margin-top:4px"/>
 {% endif %}

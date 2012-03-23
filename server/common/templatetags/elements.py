@@ -4,7 +4,7 @@ register = Library()
 
 
 @register.inclusion_tag("common/partials/inventory_table.html")
-def inventory_table(inventory):
+def inventory_table(inventory, include_targeting=False):
     # If the object isn't iterable (for instance, a single app), put
     # it in a list so that we can iterate over it in the template
     if isiterable(inventory):
@@ -20,20 +20,48 @@ def inventory_table(inventory):
 
 
 @register.inclusion_tag("common/partials/order_table.html")
-def order_table(orders):
+def order_table(orders, order_status=False, show_line_items=False,
+                line_item_status=False):
+    """
+    Renders an order or a group of orders in a table.
+    If include_targeting is true, it'll include
+    """
+    singular = False
+
     # If the object isn't iterable (for instance, a single order), put
     # it in a list so that we can iterate over it in the template
-    if isiterable(orders):
-        return {
-            'orders': orders,
-            'singular': False
-        }
-    else:
-        return {
-            'orders': [orders],
-            'singular': True
-        }
+    if not isiterable(orders):
+        singular = True
+        orders = [orders]
+        
+    return {
+        'orders': orders,
+        'singular': singular,
+        'order_status': order_status,
+        'show_line_items': show_line_items,
+        'line_item_status': line_item_status,
+    }
 
+    
+@register.inclusion_tag("common/partials/order_row.html")
+def order_row(order, order_status=False, line_item_status=False):
+    return {
+        'order': order,
+        'order_status': order_status,
+        'line_item_status': line_item_status,
+    }
+
+    
+@register.inclusion_tag("common/partials/line_item_row.html")
+def line_item_row(line_item, order_status=False, line_item_status=False):
+    return {
+        'line_item': line_item,
+        'order_status': order_status,
+        'line_item_status': line_item_status
+    }
+
+    
+    
 
 @register.inclusion_tag("common/partials/stats_breakdown.html")
 def stats_breakdown(stats):
@@ -47,7 +75,6 @@ def status_icon(adgroup):
     (deleted/active/inactive/paused).
     """
     return {'adgroup': adgroup}
-
 
 def isiterable(item):
     try:

@@ -1,4 +1,4 @@
-{% extends 'advertiser/base.html' %}
+x{% extends 'advertiser/base.html' %}
 
 {% load filters %}
 {% load elements %}
@@ -44,21 +44,50 @@
   {# Table with all of the line items #}
   <section>
     <h3 class="left"> Line Items in {{ order.name }} </h3>
-    <a class="btn right" href='{% url advertiser_line_item_form_new order.key %}'>
-      New Line Item
-    </a>
-    <a class="btn right" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
-      Edit this order
-    </a>
-    {% order_table order %}
+    <div class="right">
+      <a class="btn" href='#' onclick="$('#order_form_container').toggleClass('hidden');">
+        <i class="icon-edit"></i>
+        Edit this order
+      </a>
+      <a class="btn" href='{% url advertiser_line_item_form_new order.key %}'>
+        <i class="icon-plus"></i>
+        New Line Item
+      </a>
+    </div>
+
+    {% comment %}
+    Unfortunately we can't use kwargs (yet), so keywords are all
+    just True/False switches. Here's what the args mean.
+    1. a list of (or single) order(s)
+    2. show order-level controls
+    3. display the line items for each order
+    4. for each line item, display line-item level controls.
+
+    Controls are just a check box and a status icon.
+  {% endcomment %}
+
+  {% order_table order False True True %}
+
+    <br />
+    <div class="btn-group">
+      <button class="btn status_change" data-toggle="pause">
+        <i class="icon-pause"></i> Pause
+      </button>
+      <button class="btn status_change" data-toggle="play">
+        <i class="icon-play"></i> Resume
+      </button>
+      <button class="btn status_change" data-toggle="archive">
+        <i class="icon-stop"></i> Archive
+      </button>
+    </div>
   </section>
 
   {# Table that shows all of the adunits being targeted #}
   <section>
     <h3 class="left"> Inventory targeted by line items in {{ order.name }} </h3>
-
     {% inventory_table targeted_apps %}
   </section>
+
 {% endblock content %}
 
 {% block extraScripts %}

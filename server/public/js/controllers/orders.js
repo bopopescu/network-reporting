@@ -1,6 +1,10 @@
 (function ($, mopub) {
     "use strict";
 
+    /*
+     * # Utility functions
+     */
+
     function initializeDateButtons() {
         // set up stats breakdown dateOptions
         $('#stats-breakdown-dateOptions input').click(function() {
@@ -19,7 +23,7 @@
 
         var adgroups = new AdGroupCollection(campaign.get('adgroups'));
         adgroups.each(function(adgroup){
-            renderAdGroup(adgroup)
+            renderAdGroup(adgroup);
         });
     }
 
@@ -79,12 +83,112 @@
                 row.addClass('active');
             }
         });
-
-
     }
+
+    function changeStatus(ad_sources, status) {
+
+        console.log(ad_sources);
+
+        _.each(ad_sources, function(ad_source) {
+            $("#" + ad_source + "-img").removeClass('hidden');
+        });
+        
+        var promise = $.ajax({
+            url: '/advertise/ad_source/status/',
+            type: 'POST',
+            data: {
+                ad_sources: ad_sources,
+                status: status
+            },
+            cache: false,
+            dataType: "json",
+            success: function (data, text_status, xhr) {
+                if (data.success) {
+                    _.each(ad_sources, function(ad_source) {
+                        
+                        // Hide the loading image 
+                        $("#" + ad_source + "-img").toggleClass('hidden');
+
+                        // get the stuff we're going to edit
+                        var status_img = $('#status-' + ad_source);
+                        var status_change_controls = $('.status_change_control');
+                        var ad_source_tds = $('#' +ad_source + ' td:not(.controls)');
+
+                        if (status == 'play' || status == 'run') {
+                            $(ad_source_tds).fadeTo(500, 1);
+                            $('#' + ad_source).removeClass('archived');
+                            $(status_img).attr('src', '/images/active.gif');
+                            
+                        } else if (status == 'pause') {
+                            $(ad_source_tds).fadeTo(500, 0.2);
+                            $(status_img).attr('src', '/images/paused.gif');
+                            
+                        } else if (status == 'archive') {
+                            $('#' + ad_source).addClass('archived');
+                            $(ad_source_tds).fadeTo(500, 0.2);
+                            $(status_img).attr('src', '/images/archived.gif');
+                            
+                        } else if (status == 'delete') {
+                            $(ad_source_tds).fadeTo(500, 0.2);
+                            $(status_img).attr('src', '/images/deleted.gif');
+                        }
+                    });
+                } else {
+                    _.each(ad_sources, function(ad_source) {
+                        $("#" + ad_source + "-img").addClass('hidden');
+                    });
+                }
+            },
+            error: function (data, text_status, xhr) {
+                _.each(ad_sources, function(ad_source) {
+                    $("#" + ad_source + "-img").addClass('hidden');
+                });
+            }
+        });
+    }
+
+    // Sets up the status control event handlers
+    function initializeStatusControls() {
+        $(".status_change.btn").click(function(e){
+            e.preventDefault();
+            var status = $(this).attr('data-toggle');
+            var checked_adgroups = $(".status_change_control:checked");
+            console.log(checked_adgroups);
+            var keys = _.map(checked_adgroups, function (row) {
+                return $(row).attr('id');
+            });
+
+            console.log(keys);
+
+            changeStatus(keys, status);
+
+        });
+    }
+
+    function toggleArchiveButton() {
+        var archive_button = $("#archive-button");
+
+        // If the archived line items are hidden,
+        // show them. The `state-hide` class indicates that
+        // the archived line items are hidden.
+        if (archive_button.hasClass('active')) {
+            $('.archived').addClass('hidden');
+            archive_button.removeClass('active');
+        } else {
+            $('.archived').removeClass('hidden');
+            archive_button.addClass('active');
+        }
+
+        // Flip the icon and text in the button.
+        $(".button-text-icon", archive_button).toggleClass('hidden');
+    }
+
 
     var OrdersController = {
         initializeIndex: function(bootstrapping_data) {
+            initializeStatusControls();
+            $("#archive-button").click(toggleArchiveButton);
+
             // Create a campaign collection for the account
             var campaigns = new CampaignCollection();
             campaigns.stats_endpoint = 'direct';
@@ -101,7 +205,9 @@
         },
 
         initializeOrderDetail: function(bootstrapping_data) {
-
+            initializeStatusControls();
+            initializeDateButtons();
+            
             var validator = $('form#order_form').validate({
                 errorPlacement: function(error, element) {
                     element.closest('div').append(error);
@@ -204,11 +310,9 @@
                     console.dir(current_adunit);
                     renderAdUnit(current_adunit);
                 });
+                
                 adunit.fetch();
             });
-
-            // set up controls
-            initializeDateButtons();
 
             // Sets up the click handler for the order form
             $("a#order_form_edit").click(function(e){

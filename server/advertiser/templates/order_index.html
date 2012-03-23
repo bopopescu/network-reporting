@@ -34,8 +34,48 @@
     </table>
   </div>
 
-  {% order_table orders %}
 
+  {# Filters #}
+
+      {# Order activity controls #}
+  <div class="left btn-group">
+    <button class="btn status_change" data-toggle="pause">
+      <i class="icon-pause"></i> Pause
+    </button>
+    <button class="btn status_change" data-toggle="play">
+      <i class="icon-play"></i> Resume
+    </button>
+    <button class="btn status_change" data-toggle="archive">
+      <i class="icon-inbox"></i> Archive
+    </button>
+  </div>
+  
+  <div class="right">
+    <button id="archive-button" class="btn state-hide">
+      <span class="button-text-icon">
+        <i class="icon-eye-open"></i> Show
+      </span>
+      <span class="button-text-icon hidden">
+        <i class="icon-eye-close"></i> Hide
+      </span>
+      Archived
+    </button>
+  </div>
+
+  
+  {% comment %}
+    Unfortunately we can't use kwargs (yet), so keywords are all
+    just True/False switches. Here's what the args mean.
+    1. a list of (or single) order(s)
+    2. show order-level controls
+    3. display the line items for each order
+    4. for each line item, display line-item level controls.
+
+    Controls are just a check box and a status icon. 
+  {% endcomment %}
+  {% order_table orders True False False %}
+
+    
 {% endblock content %}
 
 {% block extraScripts %}

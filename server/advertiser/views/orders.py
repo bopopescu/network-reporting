@@ -34,6 +34,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 ctr = lambda clicks, impressions: \
       (clicks/float(impressions) if impressions else 0)
 
+
 class OrderIndexHandler(RequestHandler):
     """
     Shows a list of orders and line items.
@@ -45,12 +46,29 @@ class OrderIndexHandler(RequestHandler):
     def get(self):
 
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-
-        # Stats for stats breakdown and graph.
-
+        logging.warn(orders)
         return {
             'orders': orders,
         }
+
+
+class LineItemIndexHandler(RequestHandler):
+    """
+    Very similar to the order index handler, displays a list of active
+    (non-deleted) orders.
+    """
+    def get(self, *args, **kwargs):
+        line_items = AdGroupQueryManager.get_adgroups(account=self.account)
+        return {
+            'line_items': line_items
+        }
+
+
+@login_required
+def line_item_index(request, *args, **kwargs):
+    t = "advertiser/line_item_index.html"
+    return LineItemIndexHandler(template=t)(request, *args, **kwargs)
+
 
 
 @login_required
@@ -77,28 +95,26 @@ class OrderDetailHandler(RequestHandler):
         # Get the targeted adunits and group them by their app.
         targeted_adunits = flatten([AdUnitQueryManager.get(line_item.site_keys) \
                                     for line_item in order.adgroups])
-        # Database I/O could be made faster here by getting a list of
-        # app keys and querying for the list, rather than querying
-        # for each individual app. (au.app makes a query)
-        targeted_apps = set([au.app for au in targeted_adunits])
-        for app in targeted_apps:
-            app.adunits = [au for au in targeted_adunits if au.app == app]
+        targeted_apps = get_targeted_apps(targeted_adunits)
 
         # Set up the form
         order_form = OrderForm(instance=order)
+
         return {
             'order': order,
             'order_form': order_form,
             'stats': format_stats(all_stats),
-            'targeted_apps': targeted_apps,
+            'targeted_apps': targeted_apps.values(),
+            'targeted_app_keys': targeted_apps.keys(),
             'targeted_adunits': targeted_adunits
         }
 
 
 @login_required
 def order_detail(request, *args, **kwargs):
-    t = "advertiser/order_detail.html"
-    return OrderDetailHandler(template=t, id="order_key")(request, use_cache=False, *args, **kwargs)
+    handler = OrderDetailHandler(template="advertiser/order_detail.html",
+                                 id="order_key")
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 class LineItemDetailHandler(RequestHandler):
@@ -116,20 +132,16 @@ class LineItemDetailHandler(RequestHandler):
                                                days=self.days)
         line_item.stats = reduce(lambda x, y: x + y, all_stats, StatsModel())
 
-        # Get the targeted adunits and group them by their app.
+        # Get the targeted adunits and apps
         targeted_adunits = AdUnitQueryManager.get(line_item.site_keys)
-        # Database I/O could be made faster here by getting a list of
-        # app keys and querying for the list, rather than querying
-        # for each individual app. (au.app makes a query)
-        targeted_apps = [au.app for au in targeted_adunits]
-        for app in targeted_apps:
-            app.adunits = [au for au in targeted_adunits if au.app == app]
+        targeted_apps = get_targeted_apps(targeted_adunits)
 
         return {
             'order': line_item.order,
             'line_item': line_item,
             'stats': format_stats(all_stats),
-            'targeted_apps': targeted_apps
+            'targeted_apps': targeted_apps.values(),
+            'targeted_app_keys': targeted_apps.keys()
         }
 
 
@@ -137,6 +149,64 @@ class LineItemDetailHandler(RequestHandler):
 def line_item_detail(request, *args, **kwargs):
     t = "advertiser/lineitem_detail.html"
     return LineItemDetailHandler(template=t, id="line_item_key")(request, use_cache=False, *args, **kwargs)
+
+
+class AdSourceStatusChangeHandler(RequestHandler):
+    """
+    Changes the status of a line item or list of line items.
+    """
+    def post(self):
+        # Pull out the params
+        logging.warn(self.request.POST)
+        ad_sources = self.request.POST.getlist('ad_sources[]')
+        status = self.request.POST.get('status', None)
+
+        logging.warn(ad_sources)
+        logging.warn(status)
+
+        if ad_sources and status:
+            for ad_source_key in ad_sources:
+                try:
+                    ad_source = AdGroupQueryManager.get(ad_source_key)
+                    manager_used = AdGroupQueryManager
+                except:
+                    ad_source = CampaignQueryManager.get(ad_source_key)
+                    manager_used = CampaignQueryManager
+                updated = False
+                if ad_source.account.key() == self.account.key():
+                    if status == 'run' or status == 'play':
+                        ad_source.active = True
+                        ad_source.archived = False
+                        updated = True
+                    elif status == 'pause':
+                        ad_source.active = False
+                        ad_source.archived = False
+                        updated = True
+                    elif status == 'archive':
+                        ad_source.active = False
+                        ad_source.archived = True
+                        updated = True
+                    elif status == 'delete':
+                        ad_source.deleted = True
+                        ad_source.active = False
+                        updated = True
+
+                    if updated:
+                        manager_used.put(ad_source)
+            return JSONResponse({
+                'success': True,
+            })
+
+        else:
+            return JSONResponse({
+                'success': False,
+                'errors': 'Bad Parameters'
+            })
+
+
+@login_required
+def ad_source_status_change(request, *args, **kwargs):
+    return AdSourceStatusChangeHandler()(request, use_cache=False, *args, **kwargs)
 
 
 class OrderFormHandler(RequestHandler):
@@ -397,3 +467,19 @@ def format_stats(all_stats):
         },
     }
     return stats
+
+
+def get_targeted_apps(adunits):
+    # Database I/O could be made faster here by getting a list of
+    # app keys and querying for the list, rather than querying
+    # for each individual app. (au.app makes a query)
+    targeted_apps = {}
+    for adunit in adunits:
+        app_key = str(adunit.app.key())
+        app = targeted_apps.get(app_key)
+        if not app:
+            app = adunit.app
+            app.adunits = []
+            targeted_apps[app_key] = app
+        targeted_apps[app_key].adunits += [adunit]
+    return targeted_apps

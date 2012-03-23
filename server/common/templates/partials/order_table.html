@@ -1,54 +1,30 @@
 {% load filters %}
 {% load elements %}
 
-<table class="inventory_table" id="orders_table">
+<table class="inventory_table" id="order_table">
   <thead>
     <tr>
-      <td class="name">Order Name</td>
-      <td class="stat" style="width: 150px;">Advertiser</td>
-      <td class="stat">Line Items</td>
-      <td class="stat">Revenue</td>
-      <td class="stat">Impressions</td>
-      <td class="stat">Clicks</td>
-      <td class="stat">CTR</td>
+      {% if order_status or line_item_status %}
+        <th style="width: 24px;"></th>
+      {% endif %}
+      <th class="name">Order Name</th>
+      <th class="stat" style="width: 150px;">Advertiser</th>
+      <th class="stat">Line Items</th>
+      <th class="stat">Revenue</th>
+      <th class="stat">Impressions</th>
+      <th class="stat">Clicks</th>
+      <th class="stat">CTR</th>
     </tr>
   </thead>
+
   {% for order in orders %}
-    <tbody class="order {% cycle 'alt' 'primary' %}">
-      <tr class="main order-row" id="order-{{ order.key }}">
-        <td class="name">
-          {% if singular %}
-            Totals
-          {% else %}
-            <a href="{% url advertiser_order_detail order_key=order.key %}">
-              {{ order.name }}
-            </a>
-          {% endif %}
-          <img id="{{ order.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif" />
-        </td>
-        {# these stats will be loaded over ajax #}
-        <td class="advertiser stat"> {{ order.advertiser }}</td>
-        <td class="lineitems stat"> -- </td>
-        <td class="revenue stat">--</td>
-        <td class="impressions stat">--</td>
-        <td class="clicks stat">--</td>
-        <td class="ctr stat">--</td>
-      </tr>
-      {% for adgroup in order.adgroups %}
-        <tr class="sub lineitem-row" id="lineitem-{{ adgroup.key }}">
-          <td class="name">
-            <a href="{% url advertiser_line_item_detail order_key=order.key line_item_key=adgroup.key %}">
-              {{ adgroup.name }}
-            </a>
-          </td>
-          <td class="advertiser stat"></td>
-          <td class="lineitems stat"></td>
-          <td class="revenue stat">--</td>
-          <td class="impressions stat">--</td>
-          <td class="clicks stat">--</td>
-          <td class="ctr stat">--</td>
-        </tr>
-      {% endfor %}
+    <tbody class="{% cycle 'alt' 'primary' %}">
+      {% order_row order order_status line_item_status %}
+      {% if show_line_items and order.adgroups %}        
+        {% for adgroup in order.adgroups %}
+          {% line_item_row adgroup order_status line_item_status %}
+        {% endfor %}
+      {% endif %}
     </tbody>
   {% endfor %}
 </table>

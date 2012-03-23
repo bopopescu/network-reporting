@@ -222,8 +222,8 @@ class TestPromotionalCampaignForm(unittest.TestCase):
             campaign = form.save()
             self.assertEqual(campaign.budget, None, "budget was %s, should have been %s" % (campaign.budget, None))
             self.assertEqual(campaign.full_budget, None, "full_budget was %s, should have been %s" % (campaign.full_budget, None))
-            self.assertEqual(campaign.budget_type, 'daily', "budget_type was %s, should have been %s" % (campaign.budget_type, 'daily'))
-            self.assertEqual(campaign.budget_strategy, 'allatonce', "budget_strategy was %s, should have been %s" % (campaign.budget_strategy, 'allatonce'))
+            self.assertEqual(campaign.budget_type, None, "budget_type was %s, should have been %s" % (campaign.budget_type, None))
+            self.assertEqual(campaign.budget_strategy, None, "budget_strategy was %s, should have been %s" % (campaign.budget_strategy, None))
 
 
 class TestNetworkCampaignForm(unittest.TestCase):
@@ -241,8 +241,8 @@ class TestNetworkCampaignForm(unittest.TestCase):
             self.assertEqual(campaign.end_datetime, None, "end_datetime was %s, should have been None" % campaign.end_datetime)
             self.assertEqual(campaign.budget, None, "budget was %s, should have been %s" % (campaign.budget, None))
             self.assertEqual(campaign.full_budget, None, "full_budget was %s, should have been %s" % (campaign.full_budget, None))
-            self.assertEqual(campaign.budget_type, 'daily', "budget_type was %s, should have been %s" % (campaign.budget_type, 'daily'))
-            self.assertEqual(campaign.budget_strategy, 'allatonce', "budget_strategy was %s, should have been %s" % (campaign.budget_strategy, 'allatonce'))
+            self.assertEqual(campaign.budget_type, None, "budget_type was %s, should have been %s" % (campaign.budget_type, None))
+            self.assertEqual(campaign.budget_strategy, None, "budget_strategy was %s, should have been %s" % (campaign.budget_strategy, None))
 
 
 class TestAdGroupForm(unittest.TestCase):

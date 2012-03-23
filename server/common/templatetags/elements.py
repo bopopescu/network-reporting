@@ -20,8 +20,7 @@ def inventory_table(inventory, include_targeting=False):
 
 
 @register.inclusion_tag("common/partials/order_table.html")
-def order_table(orders, order_status=False, show_line_items=False,
-                line_item_status=False):
+def order_table(orders, show_status=True):
     """
     Renders an order or a group of orders in a table.
     If include_targeting is true, it'll include
@@ -37,27 +36,45 @@ def order_table(orders, order_status=False, show_line_items=False,
     return {
         'orders': orders,
         'singular': singular,
-        'order_status': order_status,
-        'show_line_items': show_line_items,
-        'line_item_status': line_item_status,
+        'show_status': show_status,
     }
 
     
 @register.inclusion_tag("common/partials/order_row.html")
-def order_row(order, order_status=False, line_item_status=False):
+def order_row(order, show_status=True):
     return {
         'order': order,
-        'order_status': order_status,
-        'line_item_status': line_item_status,
+        'show_status': show_status,
+    }
+
+
+@register.inclusion_tag("common/partials/line_item_table.html")
+def line_item_table(line_items, show_status=True):
+    """
+    Renders an line_item or a group of line_items in a table.
+    If include_targeting is true, it'll include
+    """
+    singular = False
+
+    # If the object isn't iterable (for instance, a single line_item), put
+    # it in a list so that we can iterate over it in the template
+    if not isiterable(line_items):
+        singular = True
+        line_items = [line_items]
+        
+    return {
+        'line_items': line_items,
+        'singular': singular,
+        'show_status': show_status
     }
 
     
+    
 @register.inclusion_tag("common/partials/line_item_row.html")
-def line_item_row(line_item, order_status=False, line_item_status=False):
+def line_item_row(line_item, show_status=False):
     return {
         'line_item': line_item,
-        'order_status': order_status,
-        'line_item_status': line_item_status
+        'show_status': show_status
     }
 
     

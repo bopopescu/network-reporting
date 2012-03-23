@@ -4,7 +4,7 @@
 <table class="inventory_table" id="order_table">
   <thead>
     <tr>
-      {% if order_status or line_item_status %}
+      {% if show_status %}
         <th style="width: 24px;"></th>
       {% endif %}
       <th class="name">Order Name</th>
@@ -19,12 +19,7 @@
 
   {% for order in orders %}
     <tbody class="{% cycle 'alt' 'primary' %}">
-      {% order_row order order_status line_item_status %}
-      {% if show_line_items and order.adgroups %}        
-        {% for adgroup in order.adgroups %}
-          {% line_item_row adgroup order_status line_item_status %}
-        {% endfor %}
-      {% endif %}
+      {% order_row order show_status %}
     </tbody>
   {% endfor %}
 </table>

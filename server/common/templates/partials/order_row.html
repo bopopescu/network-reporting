@@ -8,22 +8,20 @@
     either the order or line item needs controls, otherwise the table
     wont render correctly.
   {% endcomment %}
-  {% if order_status or line_item_status %}
-    {% if order_status %}
-      <td class="controls">
-        <input class="status_change_control" id="{{order.key}}" type="checkbox" />
-        {% status_icon order %}
-      </td>
-    {% else %}
-      <td></td>
-    {% endif %}
+  {% if show_status %}
+    <td class="controls">
+      <input class="status_change_control" id="{{order.key}}" type="checkbox" />
+      {% status_icon order %}
+    </td>
+  {% else %}
+    <td></td>
   {% endif %}
 
   {% comment %}
     If we're rendering a single order, then we just display "Totals"
     as the name.
   {% endcomment %}
-  <td class="name">
+  <td class="name" {% if not order.active %}{% opacity "0.4" %}{% endif %}>
     {% if singular %} Totals {% else %}
       <a href="{% url advertiser_order_detail order_key=order.key %}">
         {{ order.name }}
@@ -33,25 +31,25 @@
   </td>
         
   {% comment %}
-    These stats will be loaded over ajax.  Opacity is set to 0.2 if
+    These stats will be loaded over ajax.  Opacity is set to 0.4 if
     the campaign is paused.
   {% endcomment %}
-  <td class="advertiser stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+  <td class="advertiser stat" {% if not order.active %}{% opacity "0.4" %}{% endif %}>
     {{ order.advertiser }}
   </td>
-  <td class="items stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+  <td class="items stat" {% if not order.active %}{% opacity "0.4" %}{% endif %}>
     --
   </td>
-  <td class="revenue stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+  <td class="revenue stat" {% if not order.active %}{% opacity "0.4" %}{% endif %}>
     --
   </td>
-  <td class="impressions stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+  <td class="impressions stat" {% if not order.active %}{% opacity "0.4" %}{% endif %}>
     --
   </td>
-  <td class="clicks stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+  <td class="clicks stat" {% if not order.active %}{% opacity "0.4" %}{% endif %}>
     --
   </td>
-  <td class="ctr stat" {% if not order.active %}{% opacity "0.2" %}{% endif %}>
+  <td class="ctr stat" {% if not order.active %}{% opacity "0.4" %}{% endif %}>
     --
   </td>
 </tr>

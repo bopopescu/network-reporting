@@ -51,6 +51,11 @@ class OrderIndexHandler(RequestHandler):
             'orders': orders,
         }
 
+@login_required
+def order_index(request, *args, **kwargs):
+    t = "advertiser/order_index.html"
+    return OrderIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
+        
 
 class LineItemIndexHandler(RequestHandler):
     """
@@ -68,13 +73,6 @@ class LineItemIndexHandler(RequestHandler):
 def line_item_index(request, *args, **kwargs):
     t = "advertiser/line_item_index.html"
     return LineItemIndexHandler(template=t)(request, *args, **kwargs)
-
-        
-
-@login_required
-def order_index(request, *args, **kwargs):
-    t = "advertiser/order_index.html"
-    return OrderIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
 class OrderDetailHandler(RequestHandler):
@@ -121,11 +119,11 @@ class LineItemDetailHandler(RequestHandler):
     """
     Almost identical to current campaigns detail page.
     """
-    def get(self, line_item_key, order_key=None):
+    def get(self, line_item_key):
 
         # Get the metadata for the lineitem and its order
-        order = CampaignQueryManager.get(order_key)
         line_item = AdGroupQueryManager.get(line_item_key)
+        order = line_item.campaign
 
         # Get the stats for the date range
         stats_q = StatsModelQueryManager(self.account, self.offline)
@@ -158,13 +156,9 @@ class AdSourceStatusChangeHandler(RequestHandler):
     """
     def post(self):
         # Pull out the params
-        logging.warn(self.request.POST)
         ad_sources = self.request.POST.getlist('ad_sources[]')
         status = self.request.POST.get('status', None)
 
-        logging.warn(ad_sources)
-        logging.warn(status)
-        
         if ad_sources and status:
             for ad_source_key in ad_sources:
                 try:

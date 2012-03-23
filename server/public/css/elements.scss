@@ -421,22 +421,23 @@ button.btn, input[type="submit"].btn {
 
 // Make the div behave like a button
 .btn-group {
+    display: inline-block;
   position: relative;
   @include clearfix(); // clears the floated buttons
 }
 
 // Space out series of button groups
 .btn-group + .btn-group {
-  margin-left: 5px;
+    margin-left: 5px;
 }
 
 // Optional: Group multiple button groups together for a toolbar
 .btn-toolbar {
-  margin-top: $baseLineHeight / 2;
-  margin-bottom: $baseLineHeight / 2;
-  .btn-group {
-    display: inline-block;
-  }
+    margin-top: $baseLineHeight / 2;
+    margin-bottom: $baseLineHeight / 2;
+    .btn-group {
+        display: inline-block;
+    }
 }
 
 // Float them, remove border radius, then re-add to first and last elements
@@ -456,6 +457,7 @@ button.btn, input[type="submit"].btn {
       -moz-border-radius-bottomleft: 4px;
           border-bottom-left-radius: 4px;
 }
+
 .btn-group .btn:last-child, .btn-group .dropdown-toggle {
      -webkit-border-top-right-radius: 4px;
          -moz-border-radius-topright: 4px;
@@ -474,6 +476,7 @@ button.btn, input[type="submit"].btn {
       -moz-border-radius-bottomleft: 6px;
           border-bottom-left-radius: 6px;
 }
+
 .btn-group .btn.large:last-child, .btn-group .large.dropdown-toggle {
      -webkit-border-top-right-radius: 6px;
          -moz-border-radius-topright: 6px;
@@ -526,32 +529,28 @@ button.btn, input[type="submit"].btn {
 
 // Reposition the caret
 .btn .caret {
-  margin-top: 7px;
-  margin-left: 0;
-}
-.btn:hover .caret, .open.btn-group .caret {
-  @include opacity(1);
+    margin-top: 7px;
+    margin-left: 0;
 }
 
 
 // Account for other colors
 .btn-primary, .btn-danger, .btn-info, .btn-success, .btn-inverse {
-  .caret {
-    border-top-color: $white;
-    @include opacity(0.75);
-  }
+    .caret {
+        border-top-color: $white;
+    }
 }
 
 // Small button dropdowns
 .btn-small .caret {
-  margin-top: 4px;
+    margin-top: 4px;
 }
 
 
 // DROPDOWN MENUS
 // --------------
 
-// Use the .menu class on any <li> element within the topbar or ul.tabs and you'll get some superfancy dropdowns
+// Use the .menu class on any <li> element within the topbar or ul.tabs and youll get some superfancy dropdowns
 .dropdown {
   position: relative;
 }
@@ -564,27 +563,25 @@ button.btn, input[type="submit"].btn {
 }
 // Dropdown arrow/caret
 .caret {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  text-indent: -99999px;
-  // IE7 won't do the border trick if there's a text indent, but it doesn't
-  // do the content that text-indent is hiding, either, so were ok.
-  *text-indent: 0;
-  vertical-align: top;
-  border-left:  4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top:   4px solid $black;
-  @include opacity(0.3);
-  content: "\2193";
+    display: inline-block;
+    width: 0;
+    height: 0;
+    text-indent: -99999px;
+    // IE7 wont do the border trick if theres a text indent, but it doesnt
+    // do the content that text-indent is hiding, either, so were ok.
+    *text-indent: 0;
+    vertical-align: top;
+    border-left:  4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top:   4px solid $black;
+//    @include opacity(0.3);
+    content: "\2193";
 }
 .dropdown .caret {
   margin-top: 8px;
   margin-left: 2px;
 }
-.dropdown:hover .caret, .open.dropdown .caret {
-  @include opacity(1);
-}
+
 // The dropdown menu (ul)
 .dropdown-menu {
   position: absolute;
@@ -650,7 +647,7 @@ button.btn, input[type="submit"].btn {
 .dropdown-menu li > a:hover, .dropdown-menu .active > a, .dropdown-menu .active > a:hover {
   color: $white;
   text-decoration: none;
-  background-color: $linkColor;
+  background-color: $link_color;
 }
 
 // Open state for the dropdown

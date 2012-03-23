@@ -37,7 +37,7 @@
 
   <section>
     <h3 class="left"> Status for {{ line_item.name }} </h3>
-    <a class="btn right" href="{% url advertiser_line_item_form_edit order.key line_item.key %}">
+    <a class="btn right" href="{% url advertiser_line_item_form_edit line_item.key %}">
       Edit Line Item
     </a>
     <table class="dataTable line_itemData-main">

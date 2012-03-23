@@ -20,7 +20,9 @@ from common.utils.request_handler import RequestHandler
 from common.ragendja.template import JSONResponse, render_to_response
 
 from account.query_managers import AccountQueryManager
-from advertiser.forms import OrderForm, LineItemForm
+from advertiser.forms import (OrderForm, LineItemForm, BaseCreativeForm,
+                              ImageCreativeForm, TextAndTileCreativeForm,
+                              HtmlCreativeForm)
 from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
 from reporting.query_managers import StatsModelQueryManager
@@ -126,6 +128,12 @@ class LineItemDetailHandler(RequestHandler):
         # Get the metadata for the lineitem
         line_item = AdGroupQueryManager.get(line_item_key)
 
+        # Create creative forms
+        base_creative_form = BaseCreativeForm()
+        image_creative_form = ImageCreativeForm()
+        text_tile_creative_form = TextAndTileCreativeForm()
+        html_creative_form = HtmlCreativeForm()
+
         # Get the stats for the date range
         stats_q = StatsModelQueryManager(self.account, self.offline)
         all_stats = stats_q.get_stats_for_days(advertiser=line_item,
@@ -137,8 +145,12 @@ class LineItemDetailHandler(RequestHandler):
         targeted_apps = get_targeted_apps(targeted_adunits)
 
         return {
-            'order': line_item.order,
+            'order': line_item.campaign,
             'line_item': line_item,
+            'base_creative_form': base_creative_form,
+            'text_tile_creative_form': text_tile_creative_form,
+            'image_creative_form': image_creative_form,
+            'html_creative_form': html_creative_form,
             'stats': format_stats(all_stats),
             'targeted_apps': targeted_apps.values(),
             'targeted_app_keys': targeted_apps.keys()
@@ -362,12 +374,6 @@ class OrderAndLineItemFormHandler(RequestHandler):
                 'errors': errors,
                 'success': False,
             })
-
-
-@login_required
-def order_and_line_item_form(request, *args, **kwargs):
-    template = "advertiser/forms/order_and_line_item_form.html",
-    return OrderAndLineItemFormHandler(template=template)(request, use_cache=False, *args, **kwargs)
 
 
 @login_required

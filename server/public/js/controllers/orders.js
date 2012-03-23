@@ -85,54 +85,65 @@
         });
     }
 
-    function changeStatus(adgroups, status) {
+    function changeStatus(ad_sources, status) {
 
-        _.each(adgroups, function(adgroup) {
-            $("#" + adgroup + "-img").removeClass('hidden');
+        console.log(ad_sources);
+
+        _.each(ad_sources, function(ad_source) {
+            $("#" + ad_source + "-img").removeClass('hidden');
         });
+        
+        var promise = $.ajax({
+            url: '/advertise/ad_source/status/',
+            type: 'POST',
+            data: {
+                ad_sources: ad_sources,
+                status: status
+            },
+            cache: false,
+            dataType: "json",
+            success: function (data, text_status, xhr) {
+                if (data.success) {
+                    _.each(ad_sources, function(ad_source) {
+                        
+                        // Hide the loading image 
+                        $("#" + ad_source + "-img").toggleClass('hidden');
 
-        var status_promise = $.post('/advertise/orders/status/', {
-            line_items: adgroups,
-            status: status
-        });
+                        // get the stuff we're going to edit
+                        var status_img = $('#status-' + ad_source);
+                        var status_change_controls = $('.status_change_control');
+                        var ad_source_tds = $('#' +ad_source + ' td:not(.controls)');
 
-        // On success, hide the loading spinner and change the status
-        // icon appropriately.
-        status_promise.success(function(){
-            _.each(adgroups, function(adgroup) {
-
-                // Hide the loading image 
-                $("#" + adgroup + "-img").toggleClass('hidden');
-
-                var status_img = $('#status-' + adgroup);
-                var status_change_controls = $('.status_change_control');
-                var lineitem_tds = $('#lineitem-' + adgroup + ' td:not(.controls)');
-                if (status == 'play' || status == 'run') {
-                    $(lineitem_tds).fadeTo(500, 1);
-                    $('#lineitem-' + adgroup).removeClass('archived');
-                    $(status_img).attr('src', '/images/active.gif');
-
-                } else if (status == 'pause') {
-                    $(lineitem_tds).fadeTo(500, 0.2);
-                    $(status_img).attr('src', '/images/paused.gif');
-
-                } else if (status == 'archive') {
-                    $('#lineitem-' + adgroup).addClass('archived');
-                    $(lineitem_tds).fadeTo(500, 0.2);
-                    $(status_img).attr('src', '/images/archived.gif');
-
-                } else if (status == 'delete') {
-                    $(lineitem_tds).fadeTo(500, 0.2);
-                    $(status_img).attr('src', '/images/deleted.gif');
+                        if (status == 'play' || status == 'run') {
+                            $(ad_source_tds).fadeTo(500, 1);
+                            $('#' + ad_source).removeClass('archived');
+                            $(status_img).attr('src', '/images/active.gif');
+                            
+                        } else if (status == 'pause') {
+                            $(ad_source_tds).fadeTo(500, 0.2);
+                            $(status_img).attr('src', '/images/paused.gif');
+                            
+                        } else if (status == 'archive') {
+                            $('#' + ad_source).addClass('archived');
+                            $(ad_source_tds).fadeTo(500, 0.2);
+                            $(status_img).attr('src', '/images/archived.gif');
+                            
+                        } else if (status == 'delete') {
+                            $(ad_source_tds).fadeTo(500, 0.2);
+                            $(status_img).attr('src', '/images/deleted.gif');
+                        }
+                    });
+                } else {
+                    _.each(ad_sources, function(ad_source) {
+                        $("#" + ad_source + "-img").addClass('hidden');
+                    });
                 }
-            });
- 
-        });
-
-        status_promise.error(function () {
-            _.each(adgroups, function(adgroup) {
-                $("#" + adgroup + "-img").addsClass('hidden');
-            });
+            },
+            error: function (data, text_status, xhr) {
+                _.each(ad_sources, function(ad_source) {
+                    $("#" + ad_source + "-img").addClass('hidden');
+                });
+            }
         });
     }
 
@@ -142,9 +153,12 @@
             e.preventDefault();
             var status = $(this).attr('data-toggle');
             var checked_adgroups = $(".status_change_control:checked");
+            console.log(checked_adgroups);
             var keys = _.map(checked_adgroups, function (row) {
                 return $(row).attr('id');
             });
+
+            console.log(keys);
 
             changeStatus(keys, status);
 
@@ -157,17 +171,12 @@
         // If the archived line items are hidden,
         // show them. The `state-hide` class indicates that
         // the archived line items are hidden.
-        if (archive_button.hasClass('state-hide')) {
-            $('.archived').removeClass('hidden');
-            archive_button.removeClass('state-hide');
-
-        // If the archived line items are showing,
-        // hide them. If `state-hide` is missing, it means
-        // they're showing, so we add it back in once we've
-        // hidden them. 
-        } else {
+        if (archive_button.hasClass('active')) {
             $('.archived').addClass('hidden');
-            archive_button.addClass('state-hide');
+            archive_button.removeClass('active');
+        } else {
+            $('.archived').removeClass('hidden');
+            archive_button.addClass('active');
         }
 
         // Flip the icon and text in the button.

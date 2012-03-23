@@ -20,12 +20,12 @@ def inventory_table(inventory, include_targeting=False):
 
 
 @register.inclusion_tag("common/partials/order_table.html")
-def order_table(orders, include_status=False):
+def order_table(orders, order_status=False, show_line_items=False,
+                line_item_status=False):
     """
     Renders an order or a group of orders in a table.
     If include_targeting is true, it'll include
     """
-    
     singular = False
 
     # If the object isn't iterable (for instance, a single order), put
@@ -37,9 +37,31 @@ def order_table(orders, include_status=False):
     return {
         'orders': orders,
         'singular': singular,
-        'include_status': include_status,
+        'order_status': order_status,
+        'show_line_items': show_line_items,
+        'line_item_status': line_item_status,
     }
 
+    
+@register.inclusion_tag("common/partials/order_row.html")
+def order_row(order, order_status=False, line_item_status=False):
+    return {
+        'order': order,
+        'order_status': order_status,
+        'line_item_status': line_item_status,
+    }
+
+    
+@register.inclusion_tag("common/partials/line_item_row.html")
+def line_item_row(line_item, order_status=False, line_item_status=False):
+    return {
+        'line_item': line_item,
+        'order_status': order_status,
+        'line_item_status': line_item_status
+    }
+
+    
+    
 
 @register.inclusion_tag("common/partials/stats_breakdown.html")
 def stats_breakdown(stats):

@@ -34,6 +34,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 ctr = lambda clicks, impressions: \
       (clicks/float(impressions) if impressions else 0)
 
+
 class OrderIndexHandler(RequestHandler):
     """
     Shows a list of orders and line items.
@@ -45,11 +46,30 @@ class OrderIndexHandler(RequestHandler):
     def get(self):
 
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-
+        logging.warn(orders)
         return {
             'orders': orders,
         }
 
+
+class LineItemIndexHandler(RequestHandler):
+    """
+    Very similar to the order index handler, displays a list of active
+    (non-deleted) orders.
+    """
+    def get(self, *args, **kwargs):
+        line_items = AdGroupQueryManager.get_adgroups(account=self.account)
+        return {
+            'line_items': line_items
+        }
+        
+        
+@login_required
+def line_item_index(request, *args, **kwargs):
+    t = "advertiser/line_item_index.html"
+    return LineItemIndexHandler(template=t)(request, *args, **kwargs)
+
+        
 
 @login_required
 def order_index(request, *args, **kwargs):
@@ -92,8 +112,9 @@ class OrderDetailHandler(RequestHandler):
 
 @login_required
 def order_detail(request, *args, **kwargs):
-    t = "advertiser/order_detail.html"
-    return OrderDetailHandler(template=t, id="order_key")(request, use_cache=False, *args, **kwargs)
+    handler = OrderDetailHandler(template="advertiser/order_detail.html",
+                                 id="order_key")
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 class LineItemDetailHandler(RequestHandler):
@@ -123,7 +144,7 @@ class LineItemDetailHandler(RequestHandler):
             'targeted_apps': targeted_apps.values(),
             'targeted_app_keys': targeted_apps.keys()
         }
-
+        
 
 @login_required
 def line_item_detail(request, *args, **kwargs):
@@ -131,43 +152,48 @@ def line_item_detail(request, *args, **kwargs):
     return LineItemDetailHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
-class LineItemStatusChangeHandler(RequestHandler):
+class AdSourceStatusChangeHandler(RequestHandler):
     """
     Changes the status of a line item or list of line items.
     """
     def post(self):
         # Pull out the params
         logging.warn(self.request.POST)
-        line_items = self.request.POST.getlist('line_items[]')
+        ad_sources = self.request.POST.getlist('ad_sources[]')
         status = self.request.POST.get('status', None)
 
-        logging.warn(line_items)
+        logging.warn(ad_sources)
         logging.warn(status)
         
-        if line_items and status:
-            for line_item_key in line_items:
-                adgroup = AdGroupQueryManager.get(line_item_key)
+        if ad_sources and status:
+            for ad_source_key in ad_sources:
+                try:
+                    ad_source = AdGroupQueryManager.get(ad_source_key)
+                    manager_used = AdGroupQueryManager
+                except:
+                    ad_source = CampaignQueryManager.get(ad_source_key)
+                    manager_used = CampaignQueryManager
                 updated = False
-                if adgroup.account.key() == self.account.key():
+                if ad_source.account.key() == self.account.key():
                     if status == 'run' or status == 'play':
-                        adgroup.active = True
-                        adgroup.archived = False
+                        ad_source.active = True
+                        ad_source.archived = False
                         updated = True
                     elif status == 'pause':
-                        adgroup.active = False
-                        adgroup.archived = False
+                        ad_source.active = False
+                        ad_source.archived = False
                         updated = True
                     elif status == 'archive':
-                        adgroup.active = False
-                        adgroup.archived = True
+                        ad_source.active = False
+                        ad_source.archived = True
                         updated = True
                     elif status == 'delete':
-                        adgroup.deleted = True
-                        adgroup.active = False
+                        ad_source.deleted = True
+                        ad_source.active = False
                         updated = True
                         
                     if updated:
-                        AdGroupQueryManager.put(adgroup)
+                        manager_used.put(ad_source)
             return JSONResponse({
                 'success': True,
             })
@@ -180,8 +206,8 @@ class LineItemStatusChangeHandler(RequestHandler):
 
             
 @login_required
-def line_item_status_change(request, *args, **kwargs):
-    return LineItemStatusChangeHandler()(request, use_cache=False, *args, **kwargs)
+def ad_source_status_change(request, *args, **kwargs):
+    return AdSourceStatusChangeHandler()(request, use_cache=False, *args, **kwargs)
     
 
 class OrderFormHandler(RequestHandler):

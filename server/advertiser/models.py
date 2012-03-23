@@ -76,6 +76,7 @@ class Campaign(db.Model):
 
     # current state
     active = db.BooleanProperty(default=True)
+    archived = db.BooleanProperty(default=False)
     deleted = db.BooleanProperty(default=False)
 
     # who owns this?

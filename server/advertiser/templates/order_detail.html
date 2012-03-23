@@ -55,7 +55,20 @@
         New Line Item
       </a>
     </div>
-    {% order_table order True  %}
+    
+    {% comment %}
+    Unfortunately we can't use kwargs (yet), so keywords are all
+    just True/False switches. Here's what the args mean.
+    1. a list of (or single) order(s)
+    2. show order-level controls
+    3. display the line items for each order
+    4. for each line item, display line-item level controls.
+
+    Controls are just a check box and a status icon. 
+  {% endcomment %}
+  
+  {% order_table order False True True %}
+  
     <br />
     <div class="btn-group">
       <button class="btn status_change" data-toggle="pause">

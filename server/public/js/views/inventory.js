@@ -282,7 +282,7 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var current_model = this.model;
-            var order_row = $('tr.order-row#order-' + current_model.get('key'), this.el);
+            var order_row = $('tr.order-row#' + current_model.get('key'), this.el);
 
             var display_fields = ['revenue',
                                   'impressions',
@@ -310,7 +310,7 @@ var mopub = window.mopub || {};
 
         renderInline: function () {
             var current_model = this.model;
-            var row = $('tr.lineitem-row#lineitem-' + current_model.get('key'), this.el);
+            var row = $('tr.lineitem-row#' + current_model.get('key'), this.el);
             var display_fields = ['revenue',
                                   'impressions',
                                   'fill_rate',

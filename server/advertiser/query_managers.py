@@ -334,7 +334,7 @@ class CreativeQueryManager(QueryManager):
     Model = Creative
 
     @classmethod
-    def get_creatives(cls,adgroup=None,ad_type=None,ad_types=None,account=None,deleted=False,limit=MAX_OBJECTS):
+    def get_creatives(cls, adgroup=None, ad_type=None, ad_types=None, account=None, deleted=False, limit=MAX_OBJECTS):
         creatives = Creative.all()
         if not (deleted == None):
             creatives = creatives.filter("deleted =", deleted)
@@ -348,7 +348,7 @@ class CreativeQueryManager(QueryManager):
             creatives = creatives.filter("ad_type =", ad_type)
         return creatives.fetch(limit)
 
-    def put_creatives(self,creatives):
+    def put_creatives(self, creatives):
         return db.put(creatives)
 
     @classmethod
@@ -379,13 +379,11 @@ class CreativeQueryManager(QueryManager):
             else:
                 adgroups = pub_ags
         if adgroups:
-            return reduce(lambda x, y: x+y, [[c for c in ag.creatives] for ag in adgroups])
+            return reduce(lambda x, y: x + y, [[c for c in ag.creatives] for ag in adgroups])
         crtvs = Creative.all().filter('account =', account)
         if deleted is not None:
             crtvs = crtvs.filter('deleted =', deleted)
         return crtvs
-
-
 
     @classmethod
     @wraps_first_arg
@@ -401,11 +399,13 @@ class CreativeQueryManager(QueryManager):
         return put_response
 
 
-class TextCreativeQueryManager(CreativeQueryManager):
-    Model = TextCreative
 class TextAndTileCreativeQueryManager(CreativeQueryManager):
     Model = TextAndTileCreative
+
+
 class HtmlCreativeQueryManager(CreativeQueryManager):
     Model = HtmlCreative
+
+
 class ImageCreativeQueryManager(CreativeQueryManager):
     Model = ImageCreative

@@ -14,14 +14,11 @@ from account.query_managers import AccountQueryManager
 # NOTE: don't be tempted to change this to import *
 # Some of these modules import datetime from datetime, which will
 # screw up all of the datetime calls in this module.
-from advertiser.forms import (  # CampaignForm, AdGroupForm,
-                              BaseCreativeForm,
-                              TextCreativeForm, ImageCreativeForm,
+from advertiser.forms import (BaseCreativeForm, ImageCreativeForm,
                               TextAndTileCreativeForm, HtmlCreativeForm)
 from advertiser.query_managers import (CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager,
-                                       TextCreativeQueryManager,
                                        ImageCreativeQueryManager,
                                        TextAndTileCreativeQueryManager,
                                        HtmlCreativeQueryManager)
@@ -584,7 +581,7 @@ class AdGroupDetailHandler(RequestHandler):
     def get(self, adgroup_key):
 
         stats_q = StatsModelQueryManager(self.account, self.offline)
-        
+
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
@@ -649,7 +646,7 @@ class AdGroupDetailHandler(RequestHandler):
         fill_rate = lambda requests, impressions: \
                     (impressions/float(requests) if requests else 0)
 
-            
+
         adgroup.all_stats = stats_q.get_stats_for_days(advertiser=adgroup,days=days)
         adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
@@ -670,8 +667,8 @@ class AdGroupDetailHandler(RequestHandler):
                                                 adgroup.stats.impression_count)
         except Exception:
             pass
-            
-        
+
+
 
         # Load creatives and populate
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
@@ -982,9 +979,7 @@ class AddCreativeHandler(RequestHandler):
 
         # TODO: Shouldn't I be able to just cast???
         if creative:
-            if creative.ad_type == "text":
-                text_creative = TextCreativeQueryManager.get(creative.key())
-            elif creative.ad_type == "text_icon":
+            if creative.ad_type == "text_icon":
                 text_tile_creative = TextAndTileCreativeQueryManager.get(creative.key())
             elif creative.ad_type == 'image':
                 image_creative = ImageCreativeQueryManager.get(creative.key())
@@ -993,17 +988,14 @@ class AddCreativeHandler(RequestHandler):
 
         # NOTE: creative is usually None so the default form is actually unbound
         base_creative_form = base_creative_form or BaseCreativeForm(instance=creative)
-        text_creative_form = text_creative_form or TextCreativeForm(instance=text_creative)
         image_creative_form = image_creative_form or ImageCreativeForm(instance=image_creative)
         text_tile_creative_form = text_tile_creative_form or TextAndTileCreativeForm(instance=text_tile_creative)
         html_creative_form = html_creative_form or HtmlCreativeForm(instance=html_creative)
 
-        # text_creative_form is unused in the template, why?
         return self.render(base_creative_form=base_creative_form,
-                                    text_creative_form=text_creative_form,
-                                    image_creative_form=image_creative_form,
-                                    text_tile_creative_form=text_tile_creative_form,
-                                    html_creative_form=html_creative_form)
+                           image_creative_form=image_creative_form,
+                           text_tile_creative_form=text_tile_creative_form,
+                           html_creative_form=html_creative_form)
 
     def render(self, template=None, **kwargs):
         template_name = template or self.TEMPLATE
@@ -1037,16 +1029,13 @@ class AddCreativeHandler(RequestHandler):
             creative = None
 
         creative_form = None
-        text_creative = None
         image_creative = None
         text_tile_creative = None
         html_creative = None
 
         # TODO: Shouldn't I be able to just cast???
         if creative:
-            if creative.ad_type == "text":
-                text_creative = TextCreativeQueryManager.get(creative.key())
-            elif creative.ad_type == "text_icon":
+            if creative.ad_type == "text_icon":
                 text_tile_creative = TextAndTileCreativeQueryManager.get(creative.key())
             elif creative.ad_type == "image":
                 image_creative = ImageCreativeQueryManager.get(creative.key())
@@ -1054,7 +1043,6 @@ class AddCreativeHandler(RequestHandler):
                 html_creative = HtmlCreativeQueryManager.get(creative.key())
 
         base_creative_form = BaseCreativeForm(data=self.request.POST, instance=creative)
-        text_creative_form = TextCreativeForm(data=self.request.POST, instance=text_creative)
         image_creative_form = ImageCreativeForm(data=self.request.POST, files=self.request.FILES, instance=image_creative)
         text_tile_creative_form = TextAndTileCreativeForm(data=self.request.POST, files=self.request.FILES, instance=text_tile_creative)
         html_creative_form = HtmlCreativeForm(data=self.request.POST, instance=html_creative)
@@ -1063,9 +1051,7 @@ class AddCreativeHandler(RequestHandler):
         if base_creative_form.is_valid():
             base_creative = base_creative_form.save(commit=False)
             ad_type = base_creative.ad_type
-            if ad_type == "text":
-                creative_form = text_creative_form
-            elif ad_type == "text_icon":
+            if ad_type == "text_icon":
                 creative_form = text_tile_creative_form
             elif ad_type == "image":
                 creative_form = image_creative_form

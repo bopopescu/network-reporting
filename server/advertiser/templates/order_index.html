@@ -67,6 +67,18 @@
   
   {% order_table orders %}
 
+  <div class="right">
+    <div class="btn-group">
+      <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li> <a href="#" data-toggle="running"> XLS </a> </li>
+        <li> <a href="#" data-toggle="running"> CSV </a> </li>
+      </ul>
+    </div>
+  </div>
     
 {% endblock content %}
 

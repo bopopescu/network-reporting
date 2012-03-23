@@ -1,6 +1,5 @@
 {% extends 'advertiser/base.html' %}
 
-{% load fields %}
 {% load filters %}
 {% load elements %}
 
@@ -64,6 +63,48 @@
     {% inventory_table targeted_apps %}
 
   </section>
+
+<section id="dashboard-apps">
+    <a class="button" id="advertiser-adgroups-addCreativeButton" href="#">Add a creative</a>
+
+    <h2>Creatives</h2>
+
+    <form action="{% url advertiser_creative_create %}" enctype="multipart/form-data" method="post">
+        <fieldset id="creativeAddForm-details" class="alt">
+            {% include 'advertiser/forms/creative_form.html' %}
+            </div>
+            <div class="clear"></div>
+            <div class="form-submit">
+            <span id="creativeCreateForm-success" class="hidden">Success!</span>
+            <span class="buttonWrap">
+            <a href="#" class="button" id="creativeCreateForm-submit">Save</a>
+            </span>
+            <span class="buttonWrap">
+            <a href="#" class="button" id="creativeCreateForm-cancel">Cancel</a>
+            </span>
+        </fieldset>
+    </form>
+
+    {% for c in creatives %}
+    <div id="{{c.key}}-edit" class="hidden advertiser-creativeEditForm">
+    <form action="{% url advertiser_creative_create %}" method="POST" accept-charset="utf-8" id="creativeEditForm-{{forloop.counter0}}" enctype="multipart/form-data" class="creativeEditForm">
+    <input type="hidden" name="adgroup_key" value="{{adgroup.key}}"/>
+    <input type="hidden" name="creative_key" value="{{c.key}}"/>
+    <fieldset id="creativeAddForm-details-{{forloop.counter0}}" class="alt">
+    <div id="creativeEditForm-fragment-{{forloop.counter0}}" class="creativeEditForm-fragment">
+    {{c.html_fragment}}
+    </div>
+    <div class="clear"></div>
+    <div class="form-submit">
+    <span id="creativeCreateForm-success" class="hidden creativeEditForm-success">Success!</span>
+    <span class="buttonWrap"><a href="#" class="button creativeEditForm-submit" id="creativeCreateForm-submit">Save</a></span>
+    <span class="buttonWrap"><a href="#" class="button creativeEditForm-cancel" id="creativeCreateForm-cancel">Cancel</a></span>
+    </div>
+    </fieldset>
+    </form>
+    </div>
+    {% endfor %}
+</section>
 {% endblock content %}
 
 {% block extraScripts %}

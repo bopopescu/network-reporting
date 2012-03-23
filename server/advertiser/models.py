@@ -86,7 +86,7 @@ class Campaign(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
 
     is_order = db.BooleanProperty(default=False)
-    
+
     def simplify(self):
         return SimpleCampaign(key = str(self.key()),
                               name = self.name,

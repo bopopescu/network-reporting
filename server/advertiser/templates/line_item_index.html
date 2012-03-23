@@ -61,12 +61,6 @@
       </a>
     </div>
     <div class="btn-group">
-      <a class="btn" href="{% url advertiser_order_and_line_item_form_new %}">
-        <i class="icon-plus"></i>
-        Add a new order
-      </a>
-    </div>
-    <div class="btn-group">
       <a class="btn" href="#"> Showing <span id="filter-toggled">All</span> </a>
       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
         <span class="caret"></span>
@@ -84,6 +78,20 @@
   
   {% line_item_table line_items %}
 
+  <br />
+
+  <div class="right">
+    <div class="btn-group">
+      <a class="btn" href="#"><i class="icon-download-alt"></i> Export</a>
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li> <a href="#" data-toggle="running"> XLS </a> </li>
+        <li> <a href="#" data-toggle="running"> CSV </a> </li>
+      </ul>
+    </div>
+  </div>
     
 {% endblock content %}
 

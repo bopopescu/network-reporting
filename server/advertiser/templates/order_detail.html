@@ -1,6 +1,5 @@
 {% extends 'advertiser/base.html' %}
 
-{% load fields %}
 {% load filters %}
 {% load elements %}
 
@@ -36,12 +35,12 @@
   {# The order edit form, hidden by default #}
   <section class="offset hidden" id="order_form_container">
     <form id="order_form" method="post" action="{% url advertiser_order_form_edit order.key %}">
-      {% include 'forms/order_form.html' %}      
-      <a class="btn right" id="submit" href="#">Continue</a>        
+      {% include 'forms/order_form.html' %}
+      <a class="btn right" id="submit" href="#">Continue</a>
     </form>
   </section>
 
-  
+
   {# Table with all of the line items #}
   <section>
     <h3 class="left"> Status of {{ order.name }} </h3>
@@ -64,6 +63,7 @@
         New Line Item
       </a>
     </div>
+    
     <div class="btn-group">
       <a class="btn" href="#"> Showing <span id="filter-toggled">All</span> </a>
       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
@@ -107,7 +107,7 @@
     
     {% inventory_table targeted_apps %}
   </section>
-  
+
 {% endblock content %}
 
 {% block extraScripts %}
@@ -128,7 +128,7 @@
                 users: {{ stats.users.series }},
             },
             start_date:  Date.UTC({{ start_date.year }},
-                                  {{ start_date.month|add:"-1" }}, 
+                                  {{ start_date.month|add:"-1" }},
                                   {{ start_date.day }})
         });
     });

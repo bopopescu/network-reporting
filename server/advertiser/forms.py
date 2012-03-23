@@ -43,6 +43,26 @@ class OrderForm(forms.ModelForm):
                                                                'rows': 3,
                                                                'placeholder': 'Order for My New App'}))
 
+    def __init__(self, *args, **kwargs):
+
+        # instance
+        instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
+
+        if instance and not instance.is_order:
+            # TODO: figure out what type of exception this should really be, ValueError?
+            raise Exception("Campaign instance must be an order.")
+
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        order = super(forms.ModelForm, self).save(*args, **kwargs)
+
+        # TODO: this is dumb, do something else
+        order.is_order = True
+        order.save()
+
+        return order
+
     class Meta:
         model = Order
         fields = ('name',
@@ -51,6 +71,8 @@ class OrderForm(forms.ModelForm):
 
 
 class LineItemForm(forms.ModelForm):
+    # TODO: include campaign and confirm campaign.is_order
+
     adgroup_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
                                                ('promo', 'Promotional')),
                                       label='Line Item Type:')
@@ -155,6 +177,7 @@ class LineItemForm(forms.ModelForm):
         instance = args[9] if len(args) > 9 else kwargs.get('instance', None)
 
         if instance:
+            # TODO: make sure you cannot change adgroup_type except for priority
             # gtee
             if 'gtee' in instance.adgroup_type:
                 if 'high' in instance.adgroup_type:
@@ -448,17 +471,6 @@ class BaseCreativeForm(AbstractCreativeForm):
             if url.find("://") == -1:
                 raise forms.ValidationError("You need to specify a protocol (like http://) at the beginning of your url")
         return url
-
-
-class TextCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/text_creative_form.html'
-
-    class Meta:
-        model = TextCreative
-        fields = ('headline', 'line1', 'line2') + \
-                 ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
 
 
 class TextAndTileCreativeForm(AbstractCreativeForm):

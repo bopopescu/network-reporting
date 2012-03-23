@@ -383,7 +383,7 @@
             });
 
             // toggle fields based on adgroup_type
-            $('select[name="adgroup_type"]').change(function() {
+            $('[name="adgroup_type"]').change(function() {
                 var adgroup_type = $(this).val();
                 $('.adgroup_type_dependant').each(function() {
                     $(this).toggle($(this).hasClass(adgroup_type));

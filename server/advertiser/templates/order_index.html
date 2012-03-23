@@ -51,6 +51,24 @@
   </div>
   
   <div class="right">
+
+    <div class="btn-group">
+      <a class="btn" href="#"> Filter </a>
+      <a class="btn droptown-toggle" data-toggle="dropdown" href="#">
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li> <a href="#"> Running </a> </li>
+        <li> <a href="#"> Scheduled </a> </li>
+        <li> <a href="#"> Paused </a> </li>
+        <li> <a href="#"> Completed </a> </li>
+        <li> <a href="#"> Archived </a> </li>
+        <li class="divider"> </li>
+        <li> <a href="#"> Clear all filters </a> </li>
+      </ul>
+    </div>
+    
+    {% comment %}
     <button id="archive-button" class="btn state-hide">
       <span class="button-text-icon">
         <i class="icon-eye-open"></i> Show
@@ -60,6 +78,7 @@
       </span>
       Archived
     </button>
+    {% endcomment %}
   </div>
 
   

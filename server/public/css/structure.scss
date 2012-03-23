@@ -10,6 +10,21 @@
  */
 
 
+// GRID
+// --------------------------------------------------
+
+// Default 940px grid
+$gridColumns:             12 !default;
+$gridColumnWidth:         60px !default;
+$gridGutterWidth:         20px !default;
+$gridRowWidth:            ($gridColumns * $gridColumnWidth) + ($gridGutterWidth * ($gridColumns - 1)) !default;
+
+// Fluid grid
+$fluidGridColumnWidth:    6.382978723% !default;
+$fluidGridGutterWidth:    2.127659574% !default;
+
+
+
 html, body {
     margin: 0;
     padding: 0;

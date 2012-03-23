@@ -1,12 +1,19 @@
+# Deployed Friday, March 23, 2012 at 12:42PM PST
+### Deployed by John Pena
+### Tagged deploy-41
+### Bugs Fixed: []
+### Included Commits: 
+ * f4c9e1b Deployed without finding any bug fixes.
+ 
 # Deployed Friday, March 23, 2012 at 12:34PM PST
 ### Deployed by John Pena
 ### Tagged deploy-40
 ### Bugs Fixed: []
-### Included Commits: 
- * aec6ebe Merge branch '958-end-datetime' of github.com:mopub/mopub
- * 830cbc2 [#1059 state:resolved]
- * df73e00 fixed the problem but we should test to ensure we didnt fuck other things up
- 
+### Included Commits:
+* aec6ebe Merge branch '958-end-datetime' of github.com:mopub/mopub
+* 830cbc2 [#1059 state:resolved]
+* df73e00 fixed the problem but we should test to ensure we didnt fuck other things up
+
 # Deployed Wednesday, March 21, 2012 at 07:32PM PST
 ### Deployed by John Pena
 ### Tagged deploy-39

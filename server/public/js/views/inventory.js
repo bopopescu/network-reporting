@@ -66,9 +66,9 @@ var mopub = window.mopub || {};
                         });
                     });
 
-                    var tbody = $("tbody#" + network_app.id + "-stats");
+                    var tbody = $("tbody#" + network_app.id + "-adunits");
 
-                    $(tbody).append(renderedContent);
+                    $(tbody).html(renderedContent);
                 });
             } else {
                 var renderedContent = '';

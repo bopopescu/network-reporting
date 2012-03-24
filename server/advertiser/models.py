@@ -299,6 +299,38 @@ class AdGroup(db.Model):
     # Each incoming request will be matched against all of these combinations
     geo_predicates = db.StringListProperty(default=["country_name=*"])
 
+    def status(self):
+        if self.deleted:
+            return "deleted"
+        elif self.archived:
+            return "archived"
+        elif self.active:
+            now = datetime.datetime.now()
+            if (self.start_datetime <= now if self.start_datetime else True) and \
+               (now <= self.end_datetime if self.end_datetime else True):
+                return "running"
+            elif self.start_datetime <= now:
+                return "scheduled"
+            else:
+                return "completed"
+        else:
+            return "paused"
+        return "running"
+
+
+    def adgroup_type_display(self):
+        kinds = {
+            'gtee_high': "Guaranteed (High)",
+            'gtee': "Guaranteed",
+            'gtee_low': "Guaranteed (Low)",
+            'promo': "Promotional",
+            "backfill_promo": "Backfill Promotional",
+            "network": "Network",
+            "marketplace": "Marketplace"
+        }
+
+        return kinds[self.adgroup_type]
+
     def simplify(self):
         return SimpleAdGroup(key = str(self.key()),
                              campaign = self.campaign,

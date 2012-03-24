@@ -428,6 +428,11 @@ def include_style(style_name):
 def js_date(date):
     return "new Date(%s, %s, %s)" % (date.year, date.month - 1, date.day)
 
+    
 @register.simple_tag
 def opacity(amt):
     return """opacity="%s" style="opacity: %s;\"""" % (amt, amt)
+
+@register.filter
+def capitalize(s):
+    return string.capitalize(s)

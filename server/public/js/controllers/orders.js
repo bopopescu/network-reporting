@@ -120,16 +120,16 @@
                             $(status_img).attr('src', '/images/active.gif');
                             
                         } else if (status == 'pause') {
-                            $(ad_source_tds).fadeTo(500, 0.2);
+                            $(ad_source_tds).fadeTo(500, 0.4);
                             $(status_img).attr('src', '/images/paused.gif');
                             
                         } else if (status == 'archive') {
                             $('#' + ad_source).addClass('archived');
-                            $(ad_source_tds).fadeTo(500, 0.2);
+                            $(ad_source_tds).fadeTo(500, 0.4);
                             $(status_img).attr('src', '/images/archived.gif');
                             
                         } else if (status == 'delete') {
-                            $(ad_source_tds).fadeTo(500, 0.2);
+                            $(ad_source_tds).fadeTo(500, 0.4);
                             $(status_img).attr('src', '/images/deleted.gif');
                         }
                     });
@@ -145,6 +145,22 @@
                 });
             }
         });
+    }
+
+    function filterLineItems(filter_by, table_id) {
+        
+        var table = $(table_id);
+        var table_rows = $('tr.lineitem-row', table);
+
+        _.each(table_rows, function(table_row) {
+            $(table_row).hide();
+        });
+        _.each(table_rows, function(table_row) {
+            if ($(table_row).hasClass(filter_by)){
+                $(table_row).show(500);
+            }    
+        });
+        
     }
 
     // Sets up the status control event handlers
@@ -185,7 +201,7 @@
 
 
     var OrdersController = {
-        initializeIndex: function(bootstrapping_data) {
+        initializeOrderIndex: function(bootstrapping_data) {
             initializeStatusControls();
             $("#archive-button").click(toggleArchiveButton);
 
@@ -203,7 +219,28 @@
             // Fetch the campaigns
             campaigns.fetch();
         },
+        initializeLineItemIndex: function (bootstrapping_data) {
+            
+            initializeStatusControls();
 
+            $(".filter-toggle").click(function(e) {
+                e.preventDefault();
+                var toggled = $('i.toggle-check', $(this));
+                if (!toggled.hasClass('invisible')){
+                    toggled.addClass('invisible');
+                    filterLineItems("lineitem-row", "#line_item_table");
+                } else {
+                    $('.toggle-check').addClass('invisible');
+                    filterLineItems($(this).attr('data-toggle'), "#line_item_table");
+                    $('i.toggle-check', $(this)).removeClass('invisible');
+                }
+            });
+
+            $("#filter-button").click(function(e) {
+                e.preventDefault();
+                filterLineItems("lineitem-row", "#line_item_table");
+            });
+        },
         initializeOrderDetail: function(bootstrapping_data) {
             initializeStatusControls();
             initializeDateButtons();

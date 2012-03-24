@@ -1,35 +1,47 @@
 {% load filters %}
 {% load elements %}
 
-<tr class="sub lineitem-row" id="lineitem-{{ line_item.key }}">
+<tr class="sub lineitem-row {{ line_item.status }}" id="{{ line_item.key }}">
   {% if show_status %}
     <td class="controls">
-      <input class="status_change_control" id="{{line_item.key}}" type="checkbox" />
+      <input class="status_change_control" id="{{line_item.key}}" type="checkbox"></input>
       {% status_icon line_item %}
     </td>
   {% else %}
     <td></td>
   {% endif %}
   
-  <td class="name">
+  <td class="name" {% if not line_item.active %}{% opacity "0.2" %}{% endif %}>
     <a href="{% url advertiser_line_item_detail line_item_key=line_item.key %}">
       {{ line_item.name }}
     </a>
+    <br />
+    <span class="muted"> {{ line_item.status|capitalize }} </span>
     <img id="{{ line_item.key }}-img" class="hidden loading-img" src="/images/spin-small.gif" />
   </td>
   
-  <td class="advertiser stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">
+  <td class="advertiser stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
     {{ line_item.campaign.advertiser }}
   </td>
-  <td class="type stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">
-    {{line_item.adgroup_type}}
+  <td class="type stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    {{ line_item.adgroup_type_display }}
   </td>
-  <td class="goal stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
-  <td class="revenue stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
-  <td class="impressions stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
-  <td class="clicks stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
-  <td class="ctr stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">--</td>
-  <td class="delivery stat {% if not line_item.active %}{% opacity "0.2" %}{% endif %}">
+  <td class="goal stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    100000 Impressions
+  </td>
+  <td class="revenue stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    --
+  </td>
+  <td class="impressions stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    --
+  </td>
+  <td class="clicks stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    --
+  </td>
+  <td class="ctr stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
+    --
+  </td>
+  <td class="delivery stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
     <div class="progress progress-striped">
       <div class="bar" style="width: 50%"></div>
     </div>

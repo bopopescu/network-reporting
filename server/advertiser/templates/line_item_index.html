@@ -61,16 +61,43 @@
       </a>
     </div>
     <div class="btn-group">
-      <a class="btn" href="#"> Showing <span id="filter-toggled">All</span> </a>
+      <a class="btn" href="#" id="filter-button">
+        Show All 
+      </a>
       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
         <span class="caret"></span>
       </a>
       <ul class="dropdown-menu">
-        <li> <a href="#" data-toggle="running"> Running </a> </li>
-        <li> <a href="#" data-toggle="running"> Scheduled </a> </li>
-        <li> <a href="#" data-toggle="running"> Paused </a> </li>
-        <li> <a href="#" data-toggle="running"> Completed </a> </li>
-        <li> <a href="#" data-toggle="running"> Archived </a> </li>
+        <li>
+          <a class="filter-toggle" href="#" data-toggle="running">
+            <i class="icon-ok toggle-check invisible"></i>
+            Running
+          </a>
+        </li>
+        <li>
+          <a class="filter-toggle" href="#" data-toggle="scheduled">
+            <i class="icon-ok toggle-check invisible"></i>
+            Scheduled
+          </a>
+        </li>
+        <li>
+          <a class="filter-toggle" href="#" data-toggle="completed">
+            <i class="icon-ok toggle-check invisible"></i>
+            Completed
+          </a>
+        </li>
+        <li>
+          <a class="filter-toggle" href="#" data-toggle="paused">
+            <i class="icon-ok toggle-check invisible"></i>
+            Paused
+          </a>
+        </li>
+        <li>
+          <a class="filter-toggle" href="#" data-toggle="archived">
+            <i class="icon-ok toggle-check invisible"></i>
+            Archived
+          </a>
+        </li>                
       </ul>
     </div>
   </div>
@@ -102,7 +129,7 @@
   <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;
-        OrdersController.initializeIndex({});
+        OrdersController.initializeLineItemIndex({});
     });
   </script>
 {% endblock extraScripts %}

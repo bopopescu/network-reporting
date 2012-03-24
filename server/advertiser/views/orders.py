@@ -124,13 +124,7 @@ class LineItemDetailHandler(RequestHandler):
     """
     def get(self, line_item_key):
 
-<<<<<<< HEAD
-        # Get the metadata for the lineitem and its order
-=======
-        # Get the metadata for the lineitem
->>>>>>> dda6c84b9eb87ba875d444c8c0f2485d48bf4504
         line_item = AdGroupQueryManager.get(line_item_key)
-        order = line_item.campaign
 
         # Create creative forms
         base_creative_form = BaseCreativeForm()
@@ -165,7 +159,6 @@ class LineItemDetailHandler(RequestHandler):
 def line_item_detail(request, *args, **kwargs):
     t = "advertiser/lineitem_detail.html"
     return LineItemDetailHandler(template=t, id="line_item_key")(request, use_cache=False, *args, **kwargs)
-
 
 class AdSourceStatusChangeHandler(RequestHandler):
     """

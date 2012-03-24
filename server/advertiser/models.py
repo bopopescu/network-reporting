@@ -62,6 +62,15 @@ from simple_models import (SimpleAdGroup,
 # from budget import budget_service
 
 
+class NetworkStates:
+    """
+    Network states
+    """
+    # STANDARD_CAMPAIGN is not a new network campaign
+    STANDARD_CAMPAIGN = 0
+    DEFAULT_NETWORK_CAMPAIGN = 1
+    CUSTOM_NETWORK_CAMPAIGN = 2
+
 class Campaign(db.Model):
     """ A campaign.    Campaigns have budgetary and time based restrictions. """
     name = db.StringProperty(required=True)
@@ -119,6 +128,8 @@ class Campaign(db.Model):
                                               "custom_native",
                                               "admob_native",
                                               "millennial_native"])
+    network_state = db.IntegerProperty(default=NetworkStates. \
+            STANDARD_CAMPAIGN)
 
     def simplify(self):
         if self.start_date and not self.start_datetime:
@@ -199,17 +210,6 @@ class Campaign(db.Model):
         return self.end_datetime < datetime.datetime.now()
 
 
-class NetworkStates:
-    """
-    Network states
-    """
-    USER_CREATED_ADGROUP = 0
-    PAUSED_USER_CREATED_ADGROUP = 1
-    NETWORK_ADUNIT_ADGROUP = 2
-    OPTIMIZED_NETWORK_ADUNIT_ADGROUP = 3
-    NETWORK_ADGROUP = 4
-    OPTIMIZED_NETWORK_ADGROUP = 5
-
 NETWORKS = ["iAd", "admob", "millennial", "ejam","chartboost", "appnexus", \
         "inmobi", "mobfox", "jumptap", "brightroll", "greystripe", \
         "admob_native"]
@@ -281,10 +281,6 @@ class AdGroup(db.Model):
 
     account = db.ReferenceProperty(Account)
     t = db.DateTimeProperty(auto_now_add=True)
-
-    # networks flag
-    network_state = db.IntegerProperty(default=NetworkStates. \
-            USER_CREATED_ADGROUP)
 
     # marketplace price floor
     mktplace_price_floor = db.FloatProperty(default=0.25, required=False)

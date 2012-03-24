@@ -13,8 +13,7 @@ from advertiser.models import AdGroup
 from advertiser.models import Creative, TextCreative, \
                               TextAndTileCreative, \
                               HtmlCreative,\
-                              ImageCreative, \
-                              NetworkStates
+                              ImageCreative
 
 from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
@@ -44,7 +43,7 @@ class CampaignQueryManager(QueryManager):
                                    .filter('deleted =', False)
         return campaigns
 
-    # TODO: multiple network campaigns
+    # TODO: Remove
     @classmethod
     def get_network_campaign(cls, account, network_type):
         network = cls.Model.all().filter('campaign_type =', 'network') \
@@ -54,10 +53,14 @@ class CampaignQueryManager(QueryManager):
         return network
 
     @classmethod
-    def get_network_campaigns(cls, account):
+    def get_network_campaigns(cls, account, network_type='', is_new=False):
         networks = cls.Model.all().filter('campaign_type =', 'network')\
                       .filter('deleted =',False)\
                       .filter('account =',account)
+        if is_new:
+            networks.filter('network_type !=', '')
+        if network_type:
+            networks.filter('network_type =', network_type)
         return networks
 
     @classmethod
@@ -301,7 +304,6 @@ class AdGroupQueryManager(QueryManager):
         adgroup.account = db.Key(account_key)
         adgroup.campaign = db.Key(campaign_key)
         adgroup.network_type = network_type
-        adgroup.network_state = NetworkStates.NETWORK_ADUNIT_ADGROUP
         # only targetted at one adunit
         adgroup.site_keys = [db.Key(adunit_key)]
 

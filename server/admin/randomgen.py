@@ -21,7 +21,6 @@ from reporting.models import *
 from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
         REPORTING_NETWORKS
 
-from advertiser.models import NetworkStates
 
 from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppMapper, \
@@ -215,7 +214,6 @@ def generate_adgroup(site_keys,account,campaign=None,network=None):
 
     else:
         adgroup = AdGroup(network_type=network,
-                          network_state=NetworkStates.NETWORK_ADUNIT_ADGROUP,
                           bid_strategy='cpm',
                           account=account,
                           site_keys=site_keys,
@@ -422,6 +420,7 @@ def main():
         campaign = Campaign(account=account,
                 campaign_type='network',
                 network_type=network,
+                network_state=NetworkStates.DEFAULT_NETWORK_CAMPAIGN,
                 name=REPORTING_NETWORKS.get(network, False) or \
                         OTHER_NETWORKS[network])
         campaign.put()

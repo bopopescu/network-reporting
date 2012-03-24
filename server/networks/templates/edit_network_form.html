@@ -43,16 +43,6 @@
                     });
                 });
 
-            {% if network.name in REPORTING_NETWORKS %}
-            $('.login-credentials').show();
-            $('.advanced_targeting').hide();
-            {% else %}
-            $('.login-credentials').hide();
-            $('.advanced_targeting').show();
-
-            $('#optimizationSelect-button').hide();
-            {% endif %}
-
             // make necessary changes based on wether optimize is checked
             $('#targeting').click(function() {
                 $('.advanced_targeting').toggle();
@@ -238,7 +228,7 @@
 {% endblock pageTitle %}
 
 {% block content %}
-<form action="{% url edit_network network=network.name %}" id="campaign_and_adgroup" method="post">
+<form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
 
     <div class="alert-message block-message">
         ... help text for intitial setup ...
@@ -259,19 +249,23 @@
             </li>
 
 
+            {% if custom_campaign %}
             <li>
             {{ campaign_form.name.label_tag }}
             <div>
                 {{ campaign_form.name }}
             </div>
             </li>
+            {% endif %}
 
         </ul>
     </fieldset>
 
+    {% if login_form %}
     <a class="button" id="targeting">Advanced</a>
+    {% endif %}
 
-    <fieldset class="advanced_targeting">
+    <fieldset class="advanced_targeting {% if login_form %}hidden{% endif %}">
         <legend>
             <h2>Advanced Settings</h2>
         </legend>
@@ -420,6 +414,7 @@
         </ul>
     </fieldset>
 
+    {% if login_form %}
     <fieldset class="login-credentials-fields network_type_dependant {{reporting_networks}} login-credentials">
         <legend>
             <h2>Revenue Reporting</h2>
@@ -464,6 +459,7 @@
             </div>
         </div>
     </fieldset>
+    {% endif %}
 
     <fieldset>
         <legend>

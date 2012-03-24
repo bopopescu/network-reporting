@@ -51,7 +51,8 @@ from google.appengine.ext import db
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager, \
         CreativeQueryManager
-from advertiser.models import NetworkStates
+from advertiser.models import NetworkStates, \
+        Campaign
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
@@ -105,6 +106,7 @@ class NetworksHandler(RequestHandler):
 
                 network_data['name'] = network
                 network_data['pretty_name'] = get_pretty_name(network)
+                network_data['campaign_key'] = campaign.key()
 
                 networks_to_setup -= set([network])
                 additional_networks -= set([network])
@@ -157,20 +159,21 @@ def networks(request, *args, **kwargs):
 
 class EditNetworkHandler(RequestHandler):
     def get(self,
-            network):
+            network='',
+            campaign_key=None):
+        if campaign_key:
+            campaign = Campaign.get(campaign_key)
+            network = campaign.network_type
+            campaign_form = CampaignForm(instance=campaign)
+        else:
+            # Set the default campaign name to the network name
+            default_data = {'name': get_pretty_name(network)}
+            campaign_form = CampaignForm(default_data)
+
         network_data = {}
         network_data['name'] = network
         network_data['pretty_name'] = get_pretty_name(network)
         reporting = False
-
-        campaign = CampaignQueryManager.get_network_campaign(self. \
-                account.key(), network)
-        if campaign:
-            campaign_form = CampaignForm(instance=campaign)
-        else:
-            # Set the default campaign name to the network name
-            default_data = {'name': network_data['pretty_name']}
-            campaign_form = CampaignForm(default_data)
 
         # Create the login credentials form
         login = AdNetworkLoginManager.get_login(self.account,
@@ -219,13 +222,17 @@ class EditNetworkHandler(RequestHandler):
             # Create different adgroup form for each adunit
             app.adunits = []
             for adunit in app.all_adunits:
-                adgroup = AdGroupQueryManager.get_network_adgroup(
-                        campaign.key(), adunit.key(),
-                        self.account.key(), network, True)
+                adgroup = None
+                if campaign_key:
+                    adgroup = AdGroupQueryManager.get_network_adgroup(
+                            campaign.key(), adunit.key(),
+                            self.account.key(), network, True)
                 adunit.adgroup_form = AdGroupForm(is_staff=
                         self.request.user.is_staff, instance=adgroup,
                         prefix=str(adunit.key()))
                 # Add class based on app that adunit is under
+                adunit.adgroup_form.fields['active'].widget.attrs['class'] = \
+                        str(app.key()) + '-adunit'
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
                         ' ' + str(app.key()) + '-cpm-field bid'
 
@@ -372,15 +379,16 @@ class EditNetworkHandler(RequestHandler):
                         AppQueryManager.update_config_and_put(app,
                                 network_config)
 
+                    # TODO: resolve admob / admob native
                     # NetworkConfig for AdUnits
-                    if network in ('admob_native', 'jumptap',
+                    if network in ('admob', 'admob_native', 'jumptap',
                             'millennial_native'):
                         for adunit in adunits:
                             network_config = adunit.network_config or \
                                     NetworkConfig()
                             setattr(network_config, network_config_field,
-                                    self.request.POST.get("adunit_%s_pub_id" %
-                                        adunit.key(), ''))
+                                    self.request.POST.get("adunit_%s-%s" %
+                                        (adunit.key(), network_config_field), ''))
                             AdUnitQueryManager.update_config_and_put(adunit,
                                     network_config)
 
@@ -408,7 +416,8 @@ class EditNetworkHandler(RequestHandler):
 
                 return JSONResponse({
                     'success': True,
-                    'redirect': reverse('network_details', args=(network,)),
+                    'redirect': reverse('network_details',
+                        args=(str(campaign.key()),)),
                 })
             else:
                 errors = {}
@@ -436,12 +445,12 @@ def edit_network(request, *args, **kwargs):
 
 class NetworkDetailsHandler(RequestHandler):
     def get(self,
-            network):
+            campaign_key):
         """
         Return a webpage with the network statistics.
         """
-        days = gen_days_for_range(self.start_date, self.date_range)
-
+        campaign = Campaign.get(campaign_key)
+        network = campaign.network_type
         network_data = {}
         network_data['name'] = network
         network_data['pretty_name'] = get_pretty_name(network)
@@ -460,80 +469,28 @@ class NetworkDetailsHandler(RequestHandler):
 
         if campaign:
             campaign_info = {'id': str(campaign.key()),
-                              'network': network}
-
-        stats_by_day = {}
-        for day in days:
-            stats_by_day[day] = StatsModel()
-
-        reporting_stats_by_day = {}
-        for day in days:
-            reporting_stats_by_day[day] = AdNetworkStats()
-
-        adgroups = []
+                             'network': network}
 
         stats_manager = StatsModelQueryManager(account=self.account)
         # Iterate through all the apps and populate the stats for network_data
         for app in AppQueryManager.get_apps(self.account):
             login = AdNetworkLoginManager.get_login(self.account,
                     network).get()
-            if login:
+            if login and not network_data['reporting']:
                 mappers = AdNetworkMapperManager.get_mappers_for_app(login,
                         app)
                 if mappers.count(limit=1):
                     network_data['reporting'] = True
 
-            # Get data collected by MoPub
-            adunits = []
-            for adunit in AdUnitQueryManager.get_adunits(account=self.account,
-                    app=app):
-                # One adunit per adgroup for network adunits
-                adgroup = AdGroupQueryManager.get_network_adgroup(
-                        campaign.key(), adunit.key(),
-                        self.account.key(), network)
-                adgroups.append(adgroup)
-
-                all_stats = stats_manager.get_stats_for_days(publisher=app,
-                                                             advertiser=adgroup,
-                                                             days=days)
-                for stats in all_stats:
-                    if stats.date.date() in stats_by_day:
-                        stats_by_day[stats.date.date()] += stats
-
-                stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
-
-                adunit.stats = stats
-                if 'mopub_app_stats' not in network_data:
-                    network_data['mopub_app_stats'] = {}
-                if app.key() not in network_data['mopub_app_stats']:
-                    network_data['mopub_app_stats'][app.key()] = app
-                if not hasattr(network_data['mopub_app_stats'][app.key()],
-                        'adunits'):
-                    network_data['mopub_app_stats'][app.key()].adunits = []
-
-                network_data['mopub_app_stats'][app.key()].adunits.append(
-                        adunit)
-
-                if hasattr(network_data['mopub_app_stats'][app.key()],
-                        'stats'):
-                    network_data['mopub_app_stats'][app.key()].stats += \
-                            stats
-                else:
-                    network_data['mopub_app_stats'][app.key()].stats = \
-                            stats
-
-                if 'mopub_stats' in network_data:
-                    network_data['mopub_stats'] += stats
-                else:
-                    network_data['mopub_stats'] = stats
+            if 'mopub_app_stats' not in network_data:
+                network_data['mopub_app_stats'] = {}
+            if app.key() not in network_data['mopub_app_stats']:
+                network_data['mopub_app_stats'][app.key()] = app
 
         if 'mopub_app_stats' in network_data:
             network_data['mopub_app_stats'] = sorted(network_data[
                 'mopub_app_stats'].values(), key=lambda
                     app_data: app_data.identifier)
-            for app in network_data['mopub_app_stats']:
-                app.adunits = sorted(app.adunits, key=lambda adunit:
-                        adunit.name)
 
 
         # Aggregate stats (rolled up stats at the app and network level for the
@@ -542,13 +499,13 @@ class NetworkDetailsHandler(RequestHandler):
         return render_to_response(self.request,
               'networks/details.html',
               {
-                  'start_date' : days[0],
-                  'end_date' : days[-1],
+                  'start_date' : self.days[0],
+                  'end_date' : self.days[-1],
                   'date_range' : self.date_range,
                   'show_graph' : True,
                   'network': network_data,
                   'campaign': simplejson.dumps(campaign_info),
-                  'adgroups': adgroups,
+                  'campaign_key': str(campaign.key()),
                   'ADMOB': ADMOB,
                   'IAD': IAD,
                   'INMOBI': INMOBI,

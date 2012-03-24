@@ -6,11 +6,15 @@ urlpatterns = patterns('networks.views',
             'networks',
             name='networks'),
 
-        url(r'^edit/(?P<network>[-\w\.]+)/$',
+        url(r'^create/(?P<network>[-\w\.]+)/$',
             'edit_network',
             name='edit_network'),
 
-        url(r'^details/(?P<network>[-\w\.]+)/$',
+        url(r'^edit/(?P<campaign_key>[-\w\.]+)$',
+            'edit_network',
+            name='edit_network'),
+
+        url(r'^details/(?P<campaign_key>[-\w\.]+)/$',
             'network_details',
             name='network_details'),
         )

@@ -310,6 +310,7 @@ class AdGroupForm(forms.ModelForm):
                                               label='Device Targeting:',
                                               required=False,
                                               widget=forms.RadioSelect)
+    active = forms.BooleanField(label='Active:', required=False)
     target_iphone = forms.BooleanField(initial=True, label='iPhone',
                                        required=False)
     target_ipod = forms.BooleanField(initial=True, label='iPod', required=False)
@@ -360,6 +361,8 @@ class AdGroupForm(forms.ModelForm):
             if len(geo_predicates) == 1 and len(instance.cities):
                 initial['region_targeting'] = 'city'
                 initial.update(cities=instance.cities)
+
+            initial['active'] = instance.active
 
             kwargs.update(initial=initial)
 
@@ -431,6 +434,7 @@ class AdGroupForm(forms.ModelForm):
         model = AdGroup
         fields = ('name',
                   'network_type',
+                  'active',
                   'custom_html',
                   'custom_method',
                   'bid_strategy',

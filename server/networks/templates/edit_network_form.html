@@ -546,7 +546,7 @@
                                     {{ adunit.name }}
                                 </td>
                                 <td class="dataTable-data">
-                                    <input {% if adunit.key in adunit.adgroup_form.site_keys|display_value %}checked="checked"{% endif %} name="site_keys" type="checkbox" value="{{ adunit.key }}" class="{{ app.key }}-adunit" />
+                                    {{ adunit.adgroup_form.active }}
                                 </td>
                                 <td class="dataTable-data pub-id-data">
                                     <span class="campaign_type_dependant network">

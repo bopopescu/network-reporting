@@ -123,12 +123,12 @@ Make a table for ad networks that are active
             <tbody>
                 <tr id="{{network.name}}-row">
                     <td class="networkData-icon">
-                        <a href="{% url network_details network=network.name %}">
+                        <a href="{% url network_details campaign_key=network.campaign_key %}">
                             <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
                         </a>
                     </td>
                     <td class="dataTable-name">
-                        <a href="{% url network_details network=network.name %}">
+                        <a href="{% url network_details campaign_key=network.campaign_key %}">
                             {{network.pretty_name}}
                         </a>
                         <div>

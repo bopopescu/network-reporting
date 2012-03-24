@@ -19,15 +19,15 @@
       <tbody>
         <tr style="border:none;">
           {% if totals %}
-            <td> {{ totals.impressions|withsep|default_if_none:"0"|withsep }} </td>
-            <td> {{ totals.clicks|withsep|default_if_none:"0" }} </td>
-            <td> {{ totals.ctr|percentage|default_if_none:"0.0%" }} </td>
-            <td> {{ totals.conversions|withsep|default_if_none:"0" }} </td>
+            <td id="rollup-impressions"> {{ totals.impressions|withsep|default_if_none:"0"|withsep }} </td>
+            <td id="rollup-clicks"> {{ totals.clicks|withsep|default_if_none:"0" }} </td>
+            <td id="rollup-ctr"> {{ totals.ctr|percentage|default_if_none:"0.0%" }} </td>
+            <td id="rollup-conversions"> {{ totals.conversions|withsep|default_if_none:"0" }} </td>
           {% else %}
-            <td> 0 </td>
-            <td> 0 </td>
-            <td> 0.0% </td>
-            <td> 0 </td>
+            <td id="rollup-impressions"> -- </td>
+            <td id="rollup-clicks"> -- </td>
+            <td id="rollup-ctr"> -- </td>
+            <td id="rollup-conversions"> -- </td>
           {% endif %}
         </tr>
       </tbody>

@@ -87,8 +87,6 @@
 
     function changeStatus(ad_sources, status) {
 
-        console.log(ad_sources);
-
         _.each(ad_sources, function(ad_source) {
             $("#" + ad_source + "-img").removeClass('hidden');
         });
@@ -201,6 +199,7 @@
 
 
     var OrdersController = {
+
         initializeOrderIndex: function(bootstrapping_data) {
             initializeStatusControls();
             $("#archive-button").click(toggleArchiveButton);
@@ -214,11 +213,31 @@
                 _.each(campaigns.models, function(campaign) {
                     renderCampaign(campaign);
                 });
+
+                var impressions = campaigns_collection.reduce(function(total, n){
+                    return total + n.get('impressions'); 
+                }, 0);
+                var clicks = campaigns_collection.reduce(function(total, n){ 
+                    return total + n.get('clicks'); 
+                }, 0);
+                var conversions = campaigns_collection.reduce(function(total, n){ 
+                    return total + n.get('conversions'); 
+                }, 0);
+                var ctr = 0;
+                if (impressions > 0){
+                    ctr = clicks / impressions;
+                }
+                
+                $("#rollup-impressions").text(mopub.Utils.formatNumberWithCommas(impressions));
+                $("#rollup-clicks").text(mopub.Utils.formatNumberWithCommas(clicks));
+                $("#rollup-ctr").text(mopub.Utils.formatNumberAsPercentage(ctr));
+                $("#rollup-conversions").text(mopub.Utils.formatNumberWithCommas(conversions));
             });
 
             // Fetch the campaigns
             campaigns.fetch();
         },
+
         initializeLineItemIndex: function (bootstrapping_data) {
             
             initializeStatusControls();
@@ -241,6 +260,7 @@
                 filterLineItems("lineitem-row", "#line_item_table");
             });
         },
+
         initializeOrderDetail: function(bootstrapping_data) {
             initializeStatusControls();
             initializeDateButtons();
@@ -284,6 +304,10 @@
                 }
             });
 
+            /*
+             * Data Load
+             */
+
             // Fill in stats for the campaign/adgroup table
             var campaign = new Campaign({
                 id: bootstrapping_data.order_key,
@@ -294,11 +318,7 @@
                 renderCampaign(campaign);
             });
 
-            campaign.fetch();
-
-            renderChart(bootstrapping_data.daily_stats,
-                        bootstrapping_data.start_date);
-
+            campaign.fetch();            
 
             // Fill in stats for the targeting table
             _.each(bootstrapping_data.targeted_apps, function(app_key) {
@@ -350,6 +370,15 @@
                 
                 adunit.fetch();
             });
+
+
+            renderChart(bootstrapping_data.daily_stats,
+                        bootstrapping_data.start_date);
+
+
+            /*
+             * Click Handlers // Miscellaneous
+             */
 
             // Sets up the click handler for the order form
             $("a#order_form_edit").click(function(e){

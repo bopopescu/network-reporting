@@ -5,7 +5,7 @@
   <thead>
     <tr>
       {% if show_status %}
-        <th style="width: 24px;"></th>
+        <th style="width: 24px;"> {# Status icon and checkbox #}</th>
       {% endif %}
       <th class="name">Line Item Name</th>
       <th class="stat" style="width: 150px;">Advertiser</th>
@@ -16,6 +16,7 @@
       <th class="stat">Clicks</th>
       <th class="stat">CTR</th>
       <th class="stat">Progress</th>
+      <th class="stat" style="width:10px">{# More info #}</th>
     </tr>
   </thead>
 

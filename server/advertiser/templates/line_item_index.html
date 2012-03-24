@@ -55,7 +55,7 @@
   
   <div class="right">
     <div class="btn-group">
-      <a class="btn" href="{% url advertiser_order_index %}">
+      <a class="btn" href='{% url advertiser_order_index %}'>
         <i class="icon-arrow-left"></i>
         Go to Orders
       </a>
@@ -71,38 +71,37 @@
       <ul class="dropdown-menu">
         <li>
           <a class="filter-toggle" href="#" data-toggle="running">
-            <i class="icon-ok toggle-check invisible"></i>
+            <i class="icon-chevron-right toggle-check invisible"></i>
             Running
           </a>
         </li>
         <li>
           <a class="filter-toggle" href="#" data-toggle="scheduled">
-            <i class="icon-ok toggle-check invisible"></i>
+            <i class="icon-chevron-right toggle-check invisible"></i>
             Scheduled
           </a>
         </li>
         <li>
           <a class="filter-toggle" href="#" data-toggle="completed">
-            <i class="icon-ok toggle-check invisible"></i>
+            <i class="icon-chevron-right toggle-check invisible"></i>
             Completed
           </a>
         </li>
         <li>
           <a class="filter-toggle" href="#" data-toggle="paused">
-            <i class="icon-ok toggle-check invisible"></i>
+            <i class="icon-chevron-right toggle-check invisible"></i>
             Paused
           </a>
         </li>
         <li>
           <a class="filter-toggle" href="#" data-toggle="archived">
-            <i class="icon-ok toggle-check invisible"></i>
+            <i class="icon-chevron-right toggle-check invisible"></i>
             Archived
           </a>
         </li>                
       </ul>
     </div>
   </div>
-
   
   {% line_item_table line_items %}
 

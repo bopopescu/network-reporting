@@ -1,7 +1,7 @@
 {% load elements %}
 {% load filters %}
 
-<tr class='main order-row {% if order.archived %} archived hidden{% endif %}' id="{{ order.key }}">
+<tr class='sub order-row {% if order.archived %} archived hidden{% endif %}' id="{{ order.key }}">
 
   {% comment %}
     Status (active/paused/archived) We need to display a table cell if

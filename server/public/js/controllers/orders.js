@@ -114,15 +114,22 @@
 
                         if (status == 'play' || status == 'run') {
                             $(ad_source_tds).fadeTo(500, 1);
-                            $('#' + ad_source).removeClass('archived');
+                            $('#' + ad_source).addClass('running')
+                                .removeClass('archived')
+                                .removeClass('paused');
                             $(status_img).attr('src', '/images/active.gif');
                             
                         } else if (status == 'pause') {
                             $(ad_source_tds).fadeTo(500, 0.4);
+                            $('#' + ad_source).addClass('paused')
+                                .removeClass('archived')
+                                .removeClass('running');
                             $(status_img).attr('src', '/images/paused.gif');
                             
                         } else if (status == 'archive') {
-                            $('#' + ad_source).addClass('archived');
+                            $('#' + ad_source).addClass('archived')
+                                .removeClass('running')
+                                .removeClass('paused');
                             $(ad_source_tds).fadeTo(500, 0.4);
                             $(status_img).attr('src', '/images/archived.gif');
                             
@@ -258,6 +265,14 @@
             $("#filter-button").click(function(e) {
                 e.preventDefault();
                 filterLineItems("lineitem-row", "#line_item_table");
+            });
+            
+            $("tr.lineitem-row .moreinfo").popover({
+                placement: 'bottom',
+                title: "About this line item",
+                content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt <strong>motherfucker</strong>.',
+                delay: { hide: 250 }
+
             });
         },
 

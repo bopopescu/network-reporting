@@ -300,10 +300,24 @@ var mopub = mopub || {};
                         var response = {
                             aaData: creative_data
                         };
+
+                        try {
+                            mpq.push(['track', 'Creative Review Load Success']);
+                        } catch (x) {
+                            // noop
+                        }
+
                         fnCallback(response, textStatus, jqXHR);
                     },
                     dataType: "jsonp",
-                    cache: false
+                    cache: false,
+                    error: function(data, textStatus, jqXHR) {
+                        try {
+                            mpq.push(['track', 'Creative Review Load Fail']);
+                        } catch (x) {
+                            // noop
+                        }
+                    }
                 } );
             },
             // Callback function that takes table data and renders it

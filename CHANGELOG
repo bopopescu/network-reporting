@@ -1,10 +1,18 @@
+# Deployed Friday, March 23, 2012 at 08:47PM PST
+### Deployed by John Pena
+### Tagged deploy-44
+### Bugs Fixed: []
+### Included Commits: 
+ * ed28aaa tracking how often marketplace creative review fails to load
+ * a0ab442 Deployed without finding any bug fixes.
+ 
 # Deployed Friday, March 23, 2012 at 07:40PM PST
 ### Deployed by John Pena
 ### Tagged deploy-43
 ### Bugs Fixed: []
-### Included Commits: 
- * 8c6d943 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 8c6d943 Deployed without finding any bug fixes.
+
 # Deployed Friday, March 23, 2012 at 07:36PM PST
 ### Deployed by John Pena
 ### Tagged deploy-42

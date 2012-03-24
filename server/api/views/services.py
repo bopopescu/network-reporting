@@ -458,12 +458,13 @@ class NetworkAppsService(RequestHandler):
                     network_apps_[app.key()].mopub_stats = stats
 
                 if adunits:
-                    adunit = adunit.toJSON()
-                    adunit['stats'] = stats.to_dict()
+                    adunit_data = adunit.toJSON()
+                    adunit_data['url'] = '/inventory/adunit/' + str(adunit.key())
+                    adunit_data['stats'] = stats.to_dict()
                     if hasattr(network_apps_[app.key()], 'adunits'):
-                        network_apps_[app.key()].adunits.append(adunit)
+                        network_apps_[app.key()].adunits.append(adunit_data)
                     else:
-                        network_apps_[app.key()].adunits = [adunit]
+                        network_apps_[app.key()].adunits = [adunit_data]
 
         network_apps_ = sorted(network_apps_.values(), key=lambda app_data:
                 app_data.identifier)
@@ -471,6 +472,7 @@ class NetworkAppsService(RequestHandler):
         network_apps = []
         for app in network_apps_:
             app_data = app.toJSON()
+            app_data['url'] = '/inventory/app/' + str(app.key())
             if adunits:
                 app_data['adunits'] = app.adunits
             app_data['mopub_stats'] = app.mopub_stats.to_dict()

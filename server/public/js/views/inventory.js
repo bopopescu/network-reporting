@@ -60,12 +60,14 @@ var mopub = window.mopub || {};
                     $.each(network_app.get('adunits'), function (iter, adunit) {
                         renderedContent += _.template($('#network-app-template').html(), {
                             name: adunit.name,
+                            url: adunit.url,
                             mopub_stats: adunit.stats,
                             network_stats: false,
                             buffer: true,
                         });
                     });
 
+                    console.log(network_app);
                     var tbody = $("tbody#" + network_app.id + "-adunits");
 
                     $(tbody).html(renderedContent);
@@ -75,6 +77,7 @@ var mopub = window.mopub || {};
                 this.collection.each(function (network_app) {
                     renderedContent += _.template($('#network-app-template').html(), {
                         name: network_app.get('name'),
+                        url: network_app.get('url'),
                         network: network_app.get('network'),
                         mopub_stats: network_app.get('mopub_stats'),
                         network_stats: network_app.get('network_stats'),

@@ -52,7 +52,7 @@ NUM_ACCOUNTS = 1
 NUM_APPS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
 NUM_CAMPAIGNS_PER_APP = 1#3
 NUM_CREATIVES_PER_ADGROUP = 1
-NUM_ADUNITS_PER_APP = 2#3
+NUM_ADUNITS_PER_APP = 1#3
 
 NETWORKS_TO_USE = ['admob', 'jumptap']
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
@@ -192,9 +192,8 @@ def generate_adgroup(site_keys,account,campaign=None,network=None):
     if campaign:
         if campaign.campaign_type=="network":
             if network:
-                adgroup = AdGroupQueryManager.get_network_adgroup(site_keys[0],
-                        account.key(), network)
-                adgroup.campaign = campaign
+                adgroup = AdGroupQueryManager.get_network_adgroup(campaign.key(), site_keys[0],
+                         account.key(), network)
                 adgroup.put()
                 return adgroup
             else:
@@ -449,8 +448,8 @@ def main():
                                            network=network)
 
                 for i in range(NUM_CREATIVES_PER_ADGROUP):
-                    creatives_per_campaign[campaign].append(generate_creative(
-                        account,adgroup))
+                    creative = generate_creative(account,adgroup)
+                    creatives_per_campaign[campaign].append(creative)
 
         all_site_keys = [a.key() for a in AdUnit.all() if a._account ==
                 account.key()]

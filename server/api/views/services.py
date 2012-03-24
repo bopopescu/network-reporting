@@ -3,7 +3,8 @@ API for fetching JSON serialized data for Apps, AdUnits, and AdGroups.
 """
 from datetime import datetime, time, date
 from advertiser.query_managers import AdGroupQueryManager, \
-        CampaignQueryManager
+        CampaignQueryManager, \
+        CreativeQueryManager
 from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
         REPORTING_NETWORKS, \
         AdNetworkLoginManager, \
@@ -339,34 +340,35 @@ class CampaignService(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, campaign_key):
-        try:
-            # Get the adgroup
-            campaign = CampaignQueryManager.get(campaign_key)
+        #try:
+        # Get the adgroup
+        campaign = CampaignQueryManager.get(campaign_key)
 
-            # REFACTOR
-            # ensure the owner of this campaign is the request's
-            # current user
-            if campaign.account.key() != self.account.key():
-                raise Http404
+        # REFACTOR
+        # ensure the owner of this campaign is the request's
+        # current user
+        if campaign.account.key() != self.account.key():
+            raise Http404
 
-            # Get the stats for the campaign
-            stats_fetcher = StatsModelQueryManager(self.account,
-                                                   offline=self.offline)
-            stats = stats_fetcher.get_stats_for_days(advertiser=campaign,
-                                                     days=self.days)
-            summed_stats = sum(stats, StatsModel())
+        # Get the stats for the campaign
+        stats_fetcher = StatsModelQueryManager(self.account,
+                                               offline=self.offline)
+        stats = stats_fetcher.get_stats_for_days(advertiser=campaign,
+                                                 days=self.days)
 
-            stats_dict = summed_stats.to_dict()
+        summed_stats = sum(stats, StatsModel())
 
-            stats_dict['daily_stats'] = [s.to_dict() for s in stats]
+        stats_dict = summed_stats.to_dict()
 
-            stats_dict['name'] = REPORTING_NETWORKS.get(campaign. \
-                    network_type, False) or OTHER_NETWORKS[campaign. \
-                    network_type]
+        stats_dict['daily_stats'] = [s.to_dict() for s in stats]
 
-            return JSONResponse(stats_dict)
-        except Exception, exception:
-            return JSONResponse({'error': str(exception)})
+        stats_dict['name'] = REPORTING_NETWORKS.get(campaign. \
+                network_type, False) or OTHER_NETWORKS[campaign. \
+                network_type]
+
+        return JSONResponse(stats_dict)
+        #except Exception, exception:
+            #return JSONResponse({'error': str(exception)})
 
 
     def post(self, *args, **kwagrs):
@@ -393,6 +395,9 @@ class NetworkAppsService(RequestHandler):
     def get(self, network, adunits=False):
         from ad_network_reports.models import AdNetworkAppMapper, AdNetworkStats
         from ad_network_reports.query_managers import AdNetworkStatsManager
+
+        campaign = CampaignQueryManager.get_network_campaign(self.account,
+                network)
 
         #try:
         network_apps_ = {}
@@ -436,7 +441,7 @@ class NetworkAppsService(RequestHandler):
                     account, app=app):
                 # One adunit per adgroup for network adunits
                 adgroup = AdGroupQueryManager.get_network_adgroup(
-                        adunit.key(),
+                        campaign.key(), adunit.key(),
                         self.account.key(), network)
 
                 all_stats = stats_manager.get_stats_for_days(publisher=app,
@@ -509,8 +514,12 @@ class NetworkDetailsDailyStatsService(RequestHandler):
         from ad_network_reports.models import AdNetworkAppMapper, AdNetworkStats
         from ad_network_reports.query_managers import AdNetworkStatsManager
 
-        reporting = True
         #try:
+        reporting = True
+
+        campaign = CampaignQueryManager.get_network_campaign(self.account,
+                network)
+
         stats_by_day = {}
         for day in self.days:
             stats_by_day[day] = StatsModel(date=datetime.now())
@@ -548,7 +557,7 @@ class NetworkDetailsDailyStatsService(RequestHandler):
                     app=app):
                 # One adunit per adgroup for network adunits
                 adgroup = AdGroupQueryManager.get_network_adgroup(
-                        adunit.key(),
+                        campaign.key(), adunit.key(),
                         self.account.key(), network)
                 adgroups.append(adgroup)
 

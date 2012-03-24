@@ -220,7 +220,8 @@ class EditNetworkHandler(RequestHandler):
             app.adunits = []
             for adunit in app.all_adunits:
                 adgroup = AdGroupQueryManager.get_network_adgroup(
-                        adunit.key(), self.account.key(), network, True)
+                        campaign.key(), adunit.key(),
+                        self.account.key(), network, True)
                 adunit.adgroup_form = AdGroupForm(is_staff=
                         self.request.user.is_staff, instance=adgroup,
                         prefix=str(adunit.key()))
@@ -291,7 +292,7 @@ class EditNetworkHandler(RequestHandler):
             adgroup_forms = []
             for adunit in adunits:
                 network_adgroup = AdGroupQueryManager.get_network_adgroup(
-                        adunit.key(), self.account.key(), network)
+                        campaign.key(), adunit.key(), self.account.key(), network)
 
                 query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
 
@@ -479,8 +480,6 @@ class NetworkDetailsHandler(RequestHandler):
             if login:
                 mappers = AdNetworkMapperManager.get_mappers_for_app(login,
                         app)
-                logging.info('mappers')
-                logging.info(mappers)
                 if mappers.count(limit=1):
                     network_data['reporting'] = True
 
@@ -490,7 +489,7 @@ class NetworkDetailsHandler(RequestHandler):
                     app=app):
                 # One adunit per adgroup for network adunits
                 adgroup = AdGroupQueryManager.get_network_adgroup(
-                        adunit.key(),
+                        campaign.key(), adunit.key(),
                         self.account.key(), network)
                 adgroups.append(adgroup)
 

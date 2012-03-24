@@ -44,6 +44,7 @@ class CampaignQueryManager(QueryManager):
                                    .filter('deleted =', False)
         return campaigns
 
+    # TODO: multiple network campaigns
     @classmethod
     def get_network_campaign(cls, account, network_type):
         network = cls.Model.all().filter('campaign_type =', 'network') \
@@ -267,7 +268,7 @@ class AdGroupQueryManager(QueryManager):
 
     # TODO: Make all of this DRY
     @classmethod
-    def get_network_adgroup(cls, adunit_key, account_key, network_type,
+    def get_network_adgroup(cls, campaign_key, adunit_key, account_key, network_type,
             get_from_db=False):
         """
         Returns the only adgroup that can belong to this adunit
@@ -282,11 +283,12 @@ class AdGroupQueryManager(QueryManager):
         # Force to string
         adunit_key = str(adunit_key)
         account_key = str(account_key)
+        campaign_key = str(campaign_key)
 
         # By using a key_name that is one-to-one mapped with the
         # adunit, we can assure that there is only ever one
         # adgroup per adunit
-        ag_key_name = cls._get_network_key_name(adunit_key)
+        ag_key_name = cls._get_network_key_name(campaign_key, adunit_key)
 
         # if db = True, retrieve from the database vs creating a local copy
         if get_from_db:
@@ -297,6 +299,7 @@ class AdGroupQueryManager(QueryManager):
         # set up the rest of the properties
         adgroup.bid_strategy = 'cpm'
         adgroup.account = db.Key(account_key)
+        adgroup.campaign = db.Key(campaign_key)
         adgroup.network_type = network_type
         adgroup.network_state = NetworkStates.NETWORK_ADUNIT_ADGROUP
         # only targetted at one adunit
@@ -305,11 +308,11 @@ class AdGroupQueryManager(QueryManager):
         return adgroup
 
     @classmethod
-    def _get_network_key_name(cls, adunit_key):
+    def _get_network_key_name(cls, campaign_key, adunit_key):
         """
         Returns the key_name based on the adunit_key
         """
-        return 'ntwk:%s' % adunit_key
+        return 'ntwk:%s:%s' % (campaign_key, adunit_key)
 
     @classmethod
     def get_marketplace_adgroup(cls, adunit_key, account_key, get_from_db=False):

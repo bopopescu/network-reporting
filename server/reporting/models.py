@@ -216,10 +216,9 @@ class StatsModel(db.Expando):
 
     def __add__(self,s):
         include_geo = s.include_geo and self.include_geo
-        obj = StatsModel(parent=self.parent_key() or s.parent_key(),
+        attributes = dict(parent=self.parent_key() or s.parent_key(),
                           key_name=self.key().name() or self.key.name(),
                           publisher=StatsModel.publisher.get_value_for_datastore(self) or StatsModel.publisher.get_value_for_datastore(s),
-                          advertiser=StatsModel.advertiser.get_value_for_datastore(self) or StatsModel.advertiser.get_value_for_datastore(s),
                           account=StatsModel.account.get_value_for_datastore(self) or StatsModel.account.get_value_for_datastore(s),
                           date=self.date or s.date,
                           date_hour=self.date_hour or s.date_hour,
@@ -239,8 +238,13 @@ class StatsModel(db.Expando):
                           impression_user_count=self.impression_user_count,
                           click_user_count=self.click_user_count,
                           reqs=self.reqs+s.reqs,
-                          offline=self.offline,
-                         )
+                          offline=self.offline)
+        advertiser = StatsModel.advertiser.get_value_for_datastore(self) or \
+                StatsModel.advertiser.get_value_for_datastore(s)
+        # If an advertiser exists for self or s set it
+        if not isinstance(advertiser, bool):
+            attributes['advertiser'] = advertiser
+        obj = StatsModel(**attributes)
         obj.include_geo = include_geo
 
         # add dynamic geo properties

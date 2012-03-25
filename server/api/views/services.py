@@ -26,6 +26,7 @@ from common.ragendja.template import JSONResponse
 from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      SummedStatsFetcher, \
      DirectSoldStatsFetcher, \
+     NetworkStatsFetcher, \
      AdNetworkStatsFetcher, \
      MPStatsAPIException
 
@@ -393,10 +394,6 @@ class NetworkAppsService(RequestHandler):
 
         campaign = CampaignQueryManager.get_network_campaign(self.account,
                 network)
-        logging.info('CAMPAIGN')
-        logging.info(network)
-        logging.info(self.account)
-        logging.info(campaign)
 
         #try:
         network_apps_ = {}

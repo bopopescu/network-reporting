@@ -278,6 +278,7 @@
 
         NetworkDetailsController.initialize({
             campaign_data: {{ campaign|safe }},
+            reporting: {% if network.reporting %}true{% else %}false{% endif %},
             network: '{{ network.name }}',
             graph_start_date: graph_start_date,
             today: today,

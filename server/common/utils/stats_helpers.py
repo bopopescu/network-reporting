@@ -9,6 +9,7 @@ from advertiser.query_managers import AdGroupQueryManager, \
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager, \
+        NetworkStatsQueryManager, \
         AD_NETWORK_NAMES
 
 from publisher.query_managers import AppQueryManager,\

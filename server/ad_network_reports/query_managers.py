@@ -35,6 +35,8 @@ from google.appengine.ext import db
 from publisher.query_managers import AppQueryManager, \
         ALL_NETWORKS
 
+from reporting.models import StatsModel
+
 AD_NETWORK_NAMES = {'admob': 'AdMob',
                     'jumptap': 'JumpTap',
                     'iad': 'iAd',
@@ -482,10 +484,10 @@ class AdNetworkStatsManager(CachedQueryManager):
 
 
 class NetworkStatsQueryManager(CachedQueryManager):
-    def __init__(account):
+    def __init__(self, account):
         self.account = account
 
-    def get_stats_for_days(network, days):
+    def get_stats_for_days(self, network, days):
         """
         Return list of stats model stats for the given days.
         """

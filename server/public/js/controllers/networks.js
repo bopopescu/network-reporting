@@ -86,6 +86,7 @@ $(function() {
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
                 network = bootstrapping_data.network,
+                reporting = bootstrapping_data.reporting,
                 graph_start_date = bootstrapping_data.graph_start_date,
                 today = bootstrapping_data.today,
                 yesterday = bootstrapping_data.yesterday,
@@ -98,13 +99,19 @@ $(function() {
 
             // get network campaign data
             // endpoint=network
-            var network_campaign_data = jQuery.extend({}, campaign_data);
-            network_campaign_data.endpoint = 'network';
-            network_campaign_data.name = 'From Networks';
-            var network_campaign = new Campaign(network_campaign_data);
+            if (reporting) {
+                var network_campaign_data = jQuery.extend({}, campaign_data);
+                network_campaign_data.stats_endpoint = 'networks';
+                network_campaign_data.name = 'From Networks';
+                var network_campaign = new Campaign(network_campaign_data);
 
-            // create campaigns collection
-            campaigns = new Campaigns([mopub_campaign, network_campaign]);
+                // create campaigns collection
+                campaigns = new Campaigns([mopub_campaign, network_campaign]);
+            } else {
+                // create campaigns collection
+                campaigns = new Campaigns([mopub_campaign]);
+            }
+
 
             var graph_view = new CollectionGraphView({
                 collection: campaigns,

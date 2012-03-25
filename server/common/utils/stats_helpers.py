@@ -3,7 +3,9 @@ from urllib2 import urlopen
 from common.utils import date_magic
 import datetime
 
-from advertiser.query_managers import AdGroupQueryManager
+from account.query_managers import AccountQueryManager
+from advertiser.query_managers import AdGroupQueryManager, \
+        CampaignQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager, \
@@ -37,8 +39,8 @@ fill_rate = lambda requests, impressions: (impressions/float(requests) if
 
 class AbstractStatsFetcher(object):
 
-    def __init__(self, pub_id):
-        self.pub_id = str(pub_id)
+    def __init__(self, account_key):
+        self.account_key = str(account_key)
 
     def get_app_stats(self, app_key, start, end, daily=False):
         raise NotImplementedError('Implement this method fool')
@@ -70,26 +72,38 @@ class AbstractStatsFetcher(object):
 
 
 class SummedStatsFetcher(AbstractStatsFetcher):
-    def _get_publisher_stats(self, publisher, start, end,
-                             advertiser=None, *args, **kwargs):
+    def _get_publisher_stats(self, start, end, publisher=None,
+                             advertiser=None, format_stats=True,
+                             *args, **kwargs):
         # mongo
         days = date_magic.gen_days(start, end)
-        query_manager = StatsModelQueryManager(publisher.account)
+        query_manager = StatsModelQueryManager(AccountQueryManager.get(
+            self.account_key))
         stats = query_manager.get_stats_for_days(publisher=publisher,
                                                  advertiser=advertiser,
                                                  days=days)
-        return self.format_stats(stats)
+        if format_stats:
+            return self.format_stats(stats)
+        else:
+            return stats
+
+    def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
+        # mongo
+        campaign = CampaignQueryManager.get(campaign_key)
+        campaign_stats = self._get_publisher_stats(start, end,
+                advertiser=campaign, format_stats=False)
+        return campaign_stats
 
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         # mongo
         app = AppQueryManager.get(app_key)
-        app_stats = self._get_publisher_stats(app, start, end)
+        app_stats = self._get_publisher_stats(start, end, publisher=app)
         return app_stats
 
     def get_adunit_stats(self, adunit_key, start, end, daily=False):
         # mongo
         adunit = AdUnitQueryManager.get(adunit_key)
-        adunit_stats = self._get_publisher_stats(adunit, start, end)
+        adunit_stats = self._get_publisher_stats(start, end, publisher=adunit)
         return adunit_stats
 
     def get_adgroup_specific_app_stats(self, app_key, adgroup_key,
@@ -97,7 +111,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         # mongo
         app = AppQueryManager.get(app_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
-        app_stats = self._get_publisher_stats(app, start, end,
+        app_stats = self._get_publisher_stats(start, end, publisher=app,
                                               advertiser=adgroup)
         return app_stats
 
@@ -107,7 +121,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         # mongo
         adunit = AdUnitQueryManager.get(adunit_key)
         adgroup = AdGroupQueryManager.get(adgroup_key)
-        adunit_stats = self._get_publisher_stats(adunit, start, end,
+        adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
                                                  advertiser=adgroup)
         return adunit_stats
 
@@ -336,7 +350,18 @@ class MarketplaceStatsFetcher(object):
 
         return {}
 
+class NetworkStatsFetcher(AbstractStatsFetcher):
+    def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
+        # ad network stats
+        campaign = CampaignQueryManager.get(campaign_key)
+        days = date_magic.gen_days(start, end)
+        query_manager = NetworkStatsQueryManager(
+                AccountQueryManager.get(self.account_key))
+        stats = query_manager.get_stats_for_days(campaign.network_type,
+                days=days)
+        return stats
 
+# TODO: refactor stuff that uses this and remove it
 class AdNetworkStatsFetcher(object):
     @classmethod
     def get_account_roll_up_stats(cls, account, days):

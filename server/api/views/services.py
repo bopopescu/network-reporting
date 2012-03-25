@@ -341,7 +341,6 @@ class CampaignService(RequestHandler):
     """
     def get(self, campaign_key):
         #try:
-        # Get the adgroup
         campaign = CampaignQueryManager.get(campaign_key)
 
         # REFACTOR
@@ -351,20 +350,16 @@ class CampaignService(RequestHandler):
             raise Http404
 
         # Get the stats for the campaign
-        stats_fetcher = StatsModelQueryManager(self.account,
-                                               offline=self.offline)
-        stats = stats_fetcher.get_stats_for_days(advertiser=campaign,
-                                                 days=self.days)
+        stats_endpoint = self.request.GET.get('endpoint', 'all')
+        stats = get_stats_fetcher(self.account.key(), stats_endpoint)
+        campaign_stats = stats.get_campaign_stats(campaign_key,
+                self.start_date, self.end_date)
 
-        summed_stats = sum(stats, StatsModel())
+        summed_stats = sum(campaign_stats, StatsModel())
 
         stats_dict = summed_stats.to_dict()
 
-        stats_dict['daily_stats'] = [s.to_dict() for s in stats]
-
-        stats_dict['name'] = REPORTING_NETWORKS.get(campaign. \
-                network_type, False) or OTHER_NETWORKS[campaign. \
-                network_type]
+        stats_dict['daily_stats'] = [s.to_dict() for s in campaign_stats]
 
         return JSONResponse(stats_dict)
         #except Exception, exception:
@@ -398,6 +393,10 @@ class NetworkAppsService(RequestHandler):
 
         campaign = CampaignQueryManager.get_network_campaign(self.account,
                 network)
+        logging.info('CAMPAIGN')
+        logging.info(network)
+        logging.info(self.account)
+        logging.info(campaign)
 
         #try:
         network_apps_ = {}
@@ -649,8 +648,7 @@ def get_stats_fetcher(account_key, stats_endpoint):
         stats = DirectSoldStatsFetcher(account_key)
         stats = []
     elif stats_endpoint == 'networks':
-        stats = AdNetworkStatsFetcher(account_key)
-        stats = []
+        stats = NetworkStatsFetcher(account_key)
     elif stats_endpoint == 'all':
         stats = SummedStatsFetcher(account_key)
     else:

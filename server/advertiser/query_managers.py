@@ -46,22 +46,22 @@ class CampaignQueryManager(QueryManager):
     # TODO: Remove
     @classmethod
     def get_network_campaign(cls, account, network_type):
-        network = cls.Model.all().filter('campaign_type =', 'network') \
+        campaign = cls.Model.all().filter('campaign_type =', 'network') \
                       .filter('deleted =',False) \
                       .filter('account =',account) \
                       .filter('network_type =', network_type).get()
-        return network
+        return campaign
 
     @classmethod
     def get_network_campaigns(cls, account, network_type='', is_new=False):
-        networks = cls.Model.all().filter('campaign_type =', 'network')\
+        campaaigns = cls.Model.all().filter('campaign_type =', 'network')\
                       .filter('deleted =',False)\
                       .filter('account =',account)
         if is_new:
-            networks.filter('network_type !=', '')
+            campaaigns.filter('network_type !=', '')
         if network_type:
-            networks.filter('network_type =', network_type)
-        return networks
+            campaaigns.filter('network_type =', network_type)
+        return campaaigns
 
     @classmethod
     def get_marketplace(cls, account, from_db=False):

@@ -149,7 +149,7 @@ var mopub = mopub || {};
      * ## StatsModels Collection
      */
     var StatsModels = Backbone.Collection.extend({
-        model: Campaign,
+        model: StatsModel,
 
         get_stat_sum: function(stat) {
             return this.reduce(function(memo, adgroup) {
@@ -283,8 +283,19 @@ var mopub = mopub || {};
      */
 
     var Campaign = StatsModel.extend({
+        defaults : {
+            stats_endpoint: 'all'
+        },
         url: function() {
-            return '/api/campaign/' + this.id;
+            // window.location.search.substring(1) is used to preserve date ranges from the url
+            // this makes the fetching work with the datepicker.
+            var stats_endpoint = this.get('stats_endpoint');
+            return '/api/campaign/'
+                + this.id
+                + '?'
+                + window.location.search.substring(1)
+                + '&endpoint='
+                + stats_endpoint;
         }
     });
 

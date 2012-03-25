@@ -11,7 +11,7 @@ $(function() {
     var NetworksController = { 
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
-                graph_start_date = bootstrapping_data.graph_statr_date,
+                graph_start_date = bootstrapping_data.graph_start_date,
                 today = bootstrapping_data.today,
                 yesterday = bootstrapping_data.yesterday,
                 networks = bootstrapping_data.networks,
@@ -85,18 +85,29 @@ $(function() {
     var NetworkDetailsController = { 
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
-                network_data = bootstrapping_data.network_data,
-                graph_start_date = bootstrapping_data.graph_statr_date,
+                network = bootstrapping_data.network,
+                graph_start_date = bootstrapping_data.graph_start_date,
                 today = bootstrapping_data.today,
                 yesterday = bootstrapping_data.yesterday,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
-            var network_details = new NetworkDetailsDailyStats();
-            network_details.network = network_data.name;
-            network_details.fetch({ data: ajax_query_string });
+            // get mopub campaign data
+            // endpoint=all
+            campaign_data.name = 'From MoPub';
+            var mopub_campaign = new Campaign(campaign_data);
+
+            // get network campaign data
+            // endpoint=network
+            var network_campaign_data = jQuery.extend({}, campaign_data);
+            network_campaign_data.endpoint = 'network';
+            network_campaign_data.name = 'From Networks';
+            var network_campaign = new Campaign(network_campaign_data);
+
+            // create campaigns collection
+            campaigns = new Campaigns([mopub_campaign, network_campaign]);
 
             var graph_view = new CollectionGraphView({
-                collection: network_details,
+                collection: campaigns,
                 start_date: graph_start_date,
                 today: today,
                 yesterday: yesterday,
@@ -105,23 +116,24 @@ $(function() {
             });
             graph_view.render();
 
-            var campaign = new Campaign(campaign_data);
             new CampaignView({
-                model: campaign
+                model: mopub_campaign
             });
-            campaign.fetch({
-                data: ajax_query_string,
-                error: function () {
-                    campaign.fetch({
-                        error: toast_error
-                    });
-                }
+            campaigns.each(function(campaign) {
+                campaign.fetch({
+                    data: ajax_query_string,
+                    error: function () {
+                        campaign.fetch({
+                            error: toast_error
+                        });
+                    }
+                });
             });
 
             // TODO: remove this shit, stop loopin over networks
             // Load rolled up network stats
             var roll_up = new RollUp({
-                id: network_data.name,
+                id: network,
                 type: 'network'
             });
             var roll_up_view = new RollUpView({
@@ -129,21 +141,11 @@ $(function() {
             });
             roll_up.fetch({ data: ajax_query_string });
             
-            // Load stats for app on network
-            var apps_on_network = new AppOnNetworkCollection(network_data.models);
-            apps_on_network.each(function(app_on_network) {
-                var app_on_network_view = new AppOnNetworkView({
-                    model: app_on_network
-                });
-                app_on_network.fetch({ data: ajax_query_string });
-            });
-
 
             // Load NetworkApps Collections
-            // TODO: Render inline
             var network_apps = new NetworkApps();
 
-            network_apps.network = network_data.name;
+            network_apps.network = network;
             network_apps.type = 'adunits';
             var network_apps_view = new NetworkAppsView({
                 collection: network_apps

@@ -9,7 +9,7 @@
 
 {% block titleBarRight %}
 <span class="titlebar-right">
-    <a class="button" href="{% url edit_network campaign_key=campaign_key %}">Edit Network Settings</a>
+    <a class="button" id="network-settingsButton" href="{% url edit_network campaign_key=campaign_key %}">Edit Network Settings</a>
 </span>
 {% endblock titleBarRight %}
 
@@ -278,16 +278,7 @@
 
         NetworkDetailsController.initialize({
             campaign_data: {{ campaign|safe }},
-            network_data: {
-                name: '{{ network.name }}',
-                models: [{% for app in network.mopub_app_stats %}
-                {% if app.pub_id %}{
-                    id: '{{ app.pub_id }}',
-                    app_identifier: '{{ app.identifier }}',
-                    network: '{{ network.name }}'},
-                {% endif %}
-                {% endfor %}]
-            },
+            network: '{{ network.name }}',
             graph_start_date: graph_start_date,
             today: today,
             yesterday: yesterday,
@@ -298,6 +289,8 @@
             $('.network-data').toggle();
         }).change();
 
+        $('#network-settingsButton')
+            .button({ icons: { primary: "ui-icon-wrench" } })
     });
 </script>
 {% endblock extraScripts %}

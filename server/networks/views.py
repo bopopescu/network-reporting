@@ -51,8 +51,7 @@ from google.appengine.ext import db
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager, \
         CreativeQueryManager
-from advertiser.models import NetworkStates, \
-        Campaign
+from advertiser.models import NetworkStates
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
@@ -163,7 +162,7 @@ class EditNetworkHandler(RequestHandler):
             network='',
             campaign_key=''):
         if campaign_key:
-            campaign = Campaign.get(campaign_key)
+            campaign = CampaignQueryManager.get(campaign_key)
             network = campaign.network_type
             campaign_name = campaign.name
             campaign_form = CampaignForm(instance=campaign)
@@ -198,9 +197,6 @@ class EditNetworkHandler(RequestHandler):
             else:
                 login_form = LoginCredentialsForm()
 
-        # Create the default adgroup form
-        adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
-                prefix='default')
         account_network_config_form = AccountNetworkConfigForm(instance=
                 self.account.network_config)
 
@@ -208,6 +204,7 @@ class EditNetworkHandler(RequestHandler):
                 ' admob_native'
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        adgroup = None
         for app in apps:
             app.network_config_form = AppNetworkConfigForm(instance= \
                     app.network_config, prefix="app_%s" % app.key())
@@ -256,6 +253,10 @@ class EditNetworkHandler(RequestHandler):
                         '_pub_id', False)
                 app.adunits.append(adunit)
 
+        # Create the default adgroup form
+        adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
+                instance=adgroup, prefix='default')
+
         return render_to_response(self.request,
                                   'networks/edit_network_form.html',
                                   {
@@ -289,12 +290,14 @@ class EditNetworkHandler(RequestHandler):
         campaign = None
         custom_campaign = False
         if campaign_key:
-            campaign = Campaign.get(campaign_key)
+            campaign = CampaignQueryManager.get(campaign_key)
             network = campaign.network_type
             custom_campaign = campaign.network_state == \
                     NetworkStates.CUSTOM_NETWORK_CAMPAIGN
-        if campaign:
-            campaign_form = CampaignForm(query_dict, instance=campaign)
+            if campaign:
+                if not custom_campaign:
+                    query_dict['name'] = campaign.name
+                campaign_form = CampaignForm(query_dict, instance=campaign)
         else:
             # Do no other network campaigns exist?
             custom_campaign = CampaignQueryManager.get_network_campaigns(self.account,
@@ -476,7 +479,7 @@ class NetworkDetailsHandler(RequestHandler):
         """
         Return a webpage with the network statistics.
         """
-        campaign = Campaign.get(campaign_key)
+        campaign = CampaignQueryManager.get(campaign_key)
         network = campaign.network_type
         network_data = {}
         network_data['name'] = network

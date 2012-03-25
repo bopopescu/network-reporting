@@ -26,7 +26,8 @@ var mopub = window.mopub || {};
         initialize: function () {
             this.collection.bind('reset', this.render, this);
 
-            this.el = '#' + this.collection.network + '-apps';
+            this.el = '#' + this.collection.campaign_key + '-apps';
+            console.log(this.el);
 
             try {
                 this.template = _.template($('#network-app-template').html());
@@ -67,6 +68,7 @@ var mopub = window.mopub || {};
                         });
                     });
 
+                    console.log('network_app');
                     console.log(network_app);
                     var tbody = $("tbody#" + network_app.id + "-adunits");
 
@@ -83,7 +85,6 @@ var mopub = window.mopub || {};
                         network_stats: network_app.get('network_stats'),
                         buffer: false,
                     });
-                    //renderedContent += $(this_view.template(network_app.toJSON()));
                 });
 
                 $(this.el).html(renderedContent);
@@ -110,7 +111,7 @@ var mopub = window.mopub || {};
         render: function () {
             var metrics = ['cpm', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
             var this_view = this;
-            var row = $("tr#" + this_view.model.get('network') + "-row");
+            var row = $("tr#" + this_view.model.id + "-row");
 
             $.each(metrics, function (iter, metric) {
                 var selector = '.mopub-' + metric;

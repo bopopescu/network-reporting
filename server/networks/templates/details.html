@@ -9,7 +9,7 @@
 
 {% block titleBarRight %}
 <span class="titlebar-right">
-    <a class="button" id="network-settingsButton" href="{% url edit_network campaign_key=campaign_key %}">Edit Network Settings</a>
+    <a class="button" id="network-settingsButton" href="{% url edit_network campaign_key=network.campaign_key %}">Edit Network Settings</a>
 </span>
 {% endblock titleBarRight %}
 
@@ -116,7 +116,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr id="{{network.name}}-row">
+            <tr id="{{network.campaign_key}}-row">
                 {% if network.reporting %}
                 <td class="dataTable-data numeric">
                     <div class="revenue" style="color:orange;">--</div>

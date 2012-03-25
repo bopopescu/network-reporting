@@ -48,36 +48,20 @@ $(function() {
                         });
                     }
                 });
-            });
 
-            // Load rolled up network stats
-            $.each(networks, function(index, network) {
-                var network = new RollUp({
-                    id: network,
-                    type: 'network'
-                });
-                new RollUpView({
-                    model: network
-                });
-                network.fetch({
-                    data: ajax_query_string,
-                });
-            });
-
-
-            // Load NetworkApps Collections
-            // TODO: Possibly include rolled up data
-            $.each(networks, function(index, network) {
+                // Load NetworkApps Collections
                 var network_apps = new NetworkApps();
 
-                network_apps.network = network;
+                console.log(campaign);
+                network_apps.campaign_key = campaign.id;
+
+                network_apps.network = campaign.get('network');
                 var network_apps_view = new NetworkAppsView({
                     collection: network_apps
                 });
                 network_apps.fetch({
                     data: ajax_query_string,
                 });
-
             });
         }
     }

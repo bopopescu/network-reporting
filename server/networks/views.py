@@ -83,8 +83,8 @@ class NetworksHandler(RequestHandler):
         networks_to_setup = copy.copy(DEFAULT_NETWORKS)
         additional_networks = set(OTHER_NETWORKS.keys())
         networks = []
-        reporting_networks = []
         campaigns = []
+        reporting_networks = False
 
         for campaign in CampaignQueryManager.get_network_campaigns(
                 self.account, is_new=True):
@@ -101,7 +101,7 @@ class NetworksHandler(RequestHandler):
                             network).get()
 
                     if login:
-                        reporting_networks.append(network)
+                        reporting_networks = True
                         network_data['reporting'] = True
 
                 network_data['name'] = network
@@ -485,7 +485,7 @@ class NetworkDetailsHandler(RequestHandler):
         network_data['name'] = network
         network_data['pretty_name'] = campaign.name
 
-        if not network_data['pretty_name']:
+        if not campaign:
             raise Http404
 
         network_data['reporting'] = False
@@ -493,10 +493,10 @@ class NetworkDetailsHandler(RequestHandler):
         # TODO: look for ways to make simpeler by getting stats keyed on
         # campaign
         network_data['active'] = campaign.active
+        network_data['campaign_key'] = str(campaign.key())
 
-        if campaign:
-            campaign_info = {'id': str(campaign.key()),
-                             'network': network}
+        campaign_data = {'id': str(campaign.key()),
+                         'network': network}
 
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
@@ -528,8 +528,7 @@ class NetworkDetailsHandler(RequestHandler):
                   'date_range' : self.date_range,
                   'show_graph' : True,
                   'network': network_data,
-                  'campaign': simplejson.dumps(campaign_info),
-                  'campaign_key': str(campaign.key()),
+                  'campaign': simplejson.dumps(campaign_data),
                   'ADMOB': ADMOB,
                   'IAD': IAD,
                   'INMOBI': INMOBI,

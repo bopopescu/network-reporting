@@ -121,7 +121,7 @@ Make a table for ad networks that are active
     <div class="{% cycle 'appData' 'appData appData-alt' %}">
         <table class="dataTable appData-main">
             <tbody>
-                <tr id="{{network.name}}-row">
+                <tr id="{{network.campaign_key}}-row">
                     <td class="networkData-icon">
                         <a href="{% url network_details campaign_key=network.campaign_key %}">
                             <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
@@ -132,7 +132,7 @@ Make a table for ad networks that are active
                             {{network.pretty_name}}
                         </a>
                         <div>
-                            <a class="show-apps button button-small" id="{{network.name}}" style="width:75px;">Show Apps</a>
+                            <a class="show-apps button button-small" id="{{network.campaign_key}}" style="width:75px;">Show Apps</a>
                         </div>
                     </td>
                     <td class="dataTable-data numeric">
@@ -179,9 +179,9 @@ Make a table for ad networks that are active
                 </tr>
             </tbody>
         </table>
-        <div class="appData-details hidden {{network.name}}-apps-div" style="margin: -10px 0 0 86px">
+        <div class="appData-details hidden {{network.campaign_key}}-apps-div" style="margin: -10px 0 0 86px">
             <table class="dataTable">
-                <tbody id="{{network.name}}-apps">
+                <tbody id="{{network.campaign_key}}-apps">
                 </tbody>
             </table>
         </div>
@@ -247,7 +247,6 @@ Make a table for the main ad networks that are not setup
 
         NetworksController.initialize({
             campaign_data: {{ campaigns|safe }},
-            networks: {{ reporting_networks|safe }},
             graph_start_date: graph_start_date,
             today: today,
             yesterday: yesterday,

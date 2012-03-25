@@ -1692,6 +1692,11 @@ a.disabled {
   .inventory_table td.stat, .inventory_table th.stat {
     text-align: right;
     width: 65px; }
+    .inventory_table td.stat.advertiser, .inventory_table th.stat.advertiser {
+      width: 130px;
+      height: 40px;
+      text-overflow: ellipsis;
+      overflow: hidden; }
   .inventory_table td.icon, .inventory_table th.icon {
     padding: 0 11px 0 10px;
     width: 45px; }

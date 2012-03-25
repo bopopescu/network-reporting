@@ -86,15 +86,10 @@ urlpatterns = patterns(
     ###############
 
 
-    # Top level indexes
+    # Top level entry point
     url('^orders/$',
         'order_index',
         name='advertiser_order_index'),
-
-    url('^line_items/$',
-        'line_item_index',
-        name='advertiser_line_item_index'),
-
 
     # Forms
     # Note: these need to come before the detail
@@ -131,4 +126,7 @@ urlpatterns = patterns(
     # Status changing (active/pause/archive)
     url('^ad_source/status/$',
         'ad_source_status_change'),
+
+    # Exporting
+    # coming soon
 )

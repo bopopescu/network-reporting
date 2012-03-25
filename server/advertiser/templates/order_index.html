@@ -34,50 +34,136 @@
     </table>
   </div>
 
+  <ul class="tabs">
+    <li class="active"> <a href="#orders"> Orders </a> </li>
+    <li> <a href="#line_items"> Line Items </a> </li>
+  </ul>
 
 
-  {# Order activity controls #}
-  <div class="left btn-group">
-    <button class="btn status_change" data-toggle="pause">
-      <i class="icon-pause"></i> Pause
-    </button>
-    <button class="btn status_change" data-toggle="play">
-      <i class="icon-play"></i> Resume
-    </button>
-    <button class="btn status_change" data-toggle="archive">
-      <i class="icon-inbox"></i> Archive
-    </button>
-  </div>
+  {% comment %}
+    Order Tab
+  {% endcomment %}
+  <div class="active tab-section" id="orders">
   
-  <div class="right">
-    <div class="btn-group">
-      <a class="btn" href="{% url advertiser_line_item_index %}">
-        <i class="icon-arrow-left"></i>
-        Go to Line Items
-      </a>
+    {# Order activity controls #}
+    <div class="left btn-group">
+      <button class="btn status_change" data-toggle="pause">
+        <i class="icon-pause"></i> Pause
+      </button>
+      <button class="btn status_change" data-toggle="play">
+        <i class="icon-play"></i> Resume
+      </button>
+      <button class="btn status_change" data-toggle="archive">
+        <i class="icon-inbox"></i> Archive
+      </button>
     </div>
-    <div class="btn-group">
-      <a class="btn" href="{% url advertiser_order_and_line_item_form_new %}">
-        <i class="icon-plus"></i>
-        Add a new order
-      </a>
+    
+    <div class="right">
+      <div class="btn-group">
+        <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
+          <i class="icon-plus"></i> Add a new order
+        </a>
+      </div>
+    </div>
+
+  
+    {% order_table orders %}
+
+    <div class="right">
+      <div class="btn-group">
+        <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="#" data-toggle="running"> XLS </a> </li>
+          <li> <a href="#" data-toggle="running"> CSV </a> </li>
+        </ul>
+      </div>
     </div>
   </div>
 
   
-  {% order_table orders %}
+  {% comment %}
+    Line Items Tab
+  {% endcomment %}
+  <div class="tab-section" id="line_items">
 
-  <div class="right">
-    <div class="btn-group">
-      <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
-      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-        <span class="caret"></span>
-      </a>
-      <ul class="dropdown-menu">
-        <li> <a href="#" data-toggle="running"> XLS </a> </li>
-        <li> <a href="#" data-toggle="running"> CSV </a> </li>
-      </ul>
+    {# Order activity controls #}
+    <div class="left btn-group">
+      <button class="btn status_change" data-toggle="pause">
+        <i class="icon-pause"></i> Pause
+      </button>
+      <button class="btn status_change" data-toggle="play">
+        <i class="icon-play"></i> Resume
+      </button>
+      <button class="btn status_change" data-toggle="archive">
+        <i class="icon-inbox"></i> Archive
+      </button>
     </div>
+    
+    <div class="right">
+      <div class="btn-group">
+        <a class="btn" href="#" id="filter-button">
+          <i class="icon-eye-open"></i>
+          Show All 
+        </a>
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="filter-toggle" href="#" data-toggle="running">
+              <i class="icon-chevron-right toggle-check invisible"></i>
+              Running
+            </a>
+          </li>
+          <li>
+            <a class="filter-toggle" href="#" data-toggle="scheduled">
+              <i class="icon-chevron-right toggle-check invisible"></i>
+              Scheduled
+            </a>
+          </li>
+          <li>
+            <a class="filter-toggle" href="#" data-toggle="completed">
+              <i class="icon-chevron-right toggle-check invisible"></i>
+              Completed
+            </a>
+          </li>
+          <li>
+            <a class="filter-toggle" href="#" data-toggle="paused">
+              <i class="icon-chevron-right toggle-check invisible"></i>
+              Paused
+            </a>
+          </li>
+          <li>
+            <a class="filter-toggle" href="#" data-toggle="archived">
+              <i class="icon-chevron-right toggle-check invisible"></i>
+              Archived
+            </a>
+          </li>                
+        </ul>
+      </div>
+    </div>
+    
+    {% line_item_table line_items %}
+    
+    <br />
+
+    <div class="right">
+      <div class="btn-group">
+        <a class="btn" href="#"><i class="icon-download-alt"></i> Export</a>
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="#" data-toggle="export-xls"> XLS </a> </li>
+          <li> <a href="#" data-toggle="export-csv"> CSV </a> </li>
+          <li> <a href="#" data-toggle="export-json"> JSON </a> </li>
+        </ul>
+      </div>
+    </div>
+   
   </div>
     
 {% endblock content %}
@@ -89,7 +175,7 @@
   <script type="text/javascript">
     $(function() {
         var OrdersController = mopub.Controllers.OrdersController;
-        OrdersController.initializeOrderIndex({});
+        OrdersController.initializeIndex({});
     });
   </script>
 {% endblock extraScripts %}

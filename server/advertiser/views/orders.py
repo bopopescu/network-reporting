@@ -48,9 +48,12 @@ class OrderIndexHandler(RequestHandler):
     def get(self):
 
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
-        logging.warn(orders)
+        line_items = AdGroupQueryManager.get_adgroups(account=self.account)
+        line_items = [l for l in line_items if not (l.campaign.advertiser == "marketplace")]
+
         return {
             'orders': orders,
+            'line_items': line_items
         }
 
 @login_required
@@ -58,25 +61,6 @@ def order_index(request, *args, **kwargs):
     t = "advertiser/order_index.html"
     return OrderIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
         
-
-class LineItemIndexHandler(RequestHandler):
-    """
-    Very similar to the order index handler, displays a list of active
-    (non-deleted) orders.
-    """
-    def get(self, *args, **kwargs):
-        line_items = AdGroupQueryManager.get_adgroups(account=self.account)
-        line_items = [l for l in line_items if not (l.campaign.advertiser == "marketplace")]
-        return {
-            'line_items': line_items
-        }
-
-
-@login_required
-def line_item_index(request, *args, **kwargs):
-    t = "advertiser/line_item_index.html"
-    return LineItemIndexHandler(template=t)(request, *args, **kwargs)
-
     
 class OrderDetailHandler(RequestHandler):
     """

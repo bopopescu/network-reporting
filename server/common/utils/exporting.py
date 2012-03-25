@@ -1,0 +1,43 @@
+from common.utils.xlwt import Workbook
+import datetime
+
+def create_xls(*args, **kwargs):
+    """
+    Pass in kwargs like this:
+    create_xls(apps=[app1, app2, app3],
+               apps_fields=['name', 'start_datetime', 'end_datetime'],
+               adunits=[adunit1, adunit2],
+               adunits_fields=['name', 'app'])
+    And out will come an excel file with:
+    Name  Primary Field   Secondary Field
+    =====================================
+    App1  Entertainment   Games
+    App2  Home            Gardening
+    App3  Business        Networking
+
+    Name     App
+    =============
+    AdUnit1  App1
+    AdUnit2  App1
+    """
+    wb = Workbook()
+    sheet = wb.add_sheet('MoPub -- %s' % str(datetime.date.today()))
+
+    headers = [header for header in kwargs.keys() if header.find('_fields')]
+    if len(headers) == 0:
+        raise ValueError('No fields were passed to create_xls among %s' % str(kwargs.keys()))
+
+    for header in headers:
+        fields = kwargs[header]
+        for field in fields:
+            pass
+            # (finishing later)
+
+def create_csv(*args, **kwargs):
+    pass
+
+def create_json(*args, **kwargs):
+    pass
+
+def create_xml(*args, **kwargs):
+    pass

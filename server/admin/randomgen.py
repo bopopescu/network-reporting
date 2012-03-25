@@ -30,6 +30,7 @@ NUM_APPS = 2
 NUM_CAMPAIGNS_PER_APP = 3
 NUM_CREATIVES_PER_ADGROUP = 1
 NUM_ADUNITS_PER_APP = 5
+NUM_ADGROUPS_PER_CAMPAIGN = 3
 
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
@@ -355,10 +356,12 @@ def main():
 
             creatives_per_campaign[campaign] = []
             campaigns_per_app[app].append(campaign)
-            adgroup = generate_adgroup(campaign,
-                                       select_rand_subset(all_site_keys),
-                                       account,
-                                       adgroup_type)
+
+            for i in xrange(NUM_ADGROUPS_PER_CAMPAIGN):
+                adgroup = generate_adgroup(campaign,
+                                           select_rand_subset(all_site_keys),
+                                           account,
+                                           adgroup_type)
             for i in xrange(NUM_CREATIVES_PER_ADGROUP):
                 creatives_per_campaign[campaign].append(generate_creative(account,adgroup))
 

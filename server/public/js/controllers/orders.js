@@ -186,41 +186,39 @@
         });
     }
 
-    function toggleArchiveButton() {
-        var archive_button = $("#archive-button");
-
-        // If the archived line items are hidden,
-        // show them. The `state-hide` class indicates that
-        // the archived line items are hidden.
-        if (archive_button.hasClass('active')) {
-            $('.archived').addClass('hidden');
-            archive_button.removeClass('active');
-        } else {
-            $('.archived').removeClass('hidden');
-            archive_button.addClass('active');
-        }
-
-        // Flip the icon and text in the button.
-        $(".button-text-icon", archive_button).toggleClass('hidden');
-    }
-
-
+    
+    
+    /*
+     * # OrdersController is the controller for everything 
+     *   under /advertise/orders/, including:
+     * - /advertise/orders/  (`initializeIndex`)
+     * - /advertise/order/<key>  (`initializeOrderDetail`)
+     * - /advertiser/line_item/<key>  (`initializeLineItemDetail`)
+     */
     var OrdersController = {
 
-        initializeOrderIndex: function(bootstrapping_data) {
+        /*
+         * Renders everything in the 
+         */
+        initializeIndex: function(bootstrapping_data) {
             initializeStatusControls();
-            $("#archive-button").click(toggleArchiveButton);
 
-            // Create a campaign collection for the account
+            /*
+             * Create a campaign collection, fetch all of the
+             * campaigns, and render all of them inline
+             */
             var campaigns = new CampaignCollection();
             campaigns.stats_endpoint = 'direct';
-
-            // Once the campaigns have been fetched, render them.
+            
             campaigns.bind('reset', function(campaigns_collection) {
+                
+                // render each of the rows
                 _.each(campaigns.models, function(campaign) {
                     renderCampaign(campaign);
                 });
-
+                
+                // sum up the impressions/clicks/conversions/ctr from
+                // all of the campaigns
                 var impressions = campaigns_collection.reduce(function(total, n){
                     return total + n.get('impressions'); 
                 }, 0);
@@ -234,21 +232,28 @@
                 if (impressions > 0){
                     ctr = clicks / impressions;
                 }
-                
+
+                // then render the stats info at the top                
                 $("#rollup-impressions").text(mopub.Utils.formatNumberWithCommas(impressions));
                 $("#rollup-clicks").text(mopub.Utils.formatNumberWithCommas(clicks));
                 $("#rollup-ctr").text(mopub.Utils.formatNumberAsPercentage(ctr));
                 $("#rollup-conversions").text(mopub.Utils.formatNumberWithCommas(conversions));
             });
 
-            // Fetch the campaigns
             campaigns.fetch();
-        },
 
-        initializeLineItemIndex: function (bootstrapping_data) {
-            
-            initializeStatusControls();
+            /*
+             * Clear the checked rows when you click a different tab.
+             */
+            $("ul.tabs").click(function() {
+                $(".status_change_control").each(function(){
+                    $(this).attr('checked', false);
+                });
+            });
 
+            /*
+             * Set up the filters and the filter button
+             */
             $(".filter-toggle").click(function(e) {
                 e.preventDefault();
                 var toggled = $('i.toggle-check', $(this));
@@ -261,18 +266,23 @@
                     $('i.toggle-check', $(this)).removeClass('invisible');
                 }
             });
-
+            
             $("#filter-button").click(function(e) {
                 e.preventDefault();
                 filterLineItems("lineitem-row", "#line_item_table");
             });
             
+            /*
+             * Create the popovers on the line item table rows
+             */
             $("tr.lineitem-row .moreinfo").popover({
                 placement: 'bottom',
                 title: "About this line item",
-                content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt <strong>motherfucker</strong>.',
+                content: 'Lorem ipsum dolor sit amet, consectetur' + 
+                    ' adipisicing elit, sed do eiusmod tempor incididunt' +
+                    ' <strong>motherfucker</strong>.',
                 delay: { hide: 250 }
-
+                
             });
         },
 

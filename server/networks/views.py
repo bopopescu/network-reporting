@@ -83,7 +83,7 @@ class NetworksHandler(RequestHandler):
         networks_to_setup = copy.copy(DEFAULT_NETWORKS)
         additional_networks = set(OTHER_NETWORKS.keys())
         networks = []
-        campaigns = []
+        campaigns_data = []
         reporting_networks = False
 
         for campaign in CampaignQueryManager.get_network_campaigns(
@@ -92,8 +92,8 @@ class NetworksHandler(RequestHandler):
 
             network_data = {}
             if campaign:
-                campaigns.append({'id': str(campaign.key()),
-                                  'network': network})
+                campaign_data = {'id': str(campaign.key()),
+                                 'network': network}
 
                 if campaign.network_state == NetworkStates.DEFAULT_NETWORK_CAMPAIGN \
                         and network in REPORTING_NETWORKS:
@@ -102,6 +102,7 @@ class NetworksHandler(RequestHandler):
 
                     if login:
                         reporting_networks = True
+                        campaign_data['reporting'] = True
                         network_data['reporting'] = True
 
                 network_data['name'] = network
@@ -112,6 +113,7 @@ class NetworksHandler(RequestHandler):
                 additional_networks.add(network)
 
                 networks.append(network_data)
+                campaigns_data.append(campaign_data)
 
         # Sort networks alphabetically
         networks = sorted(networks, key=lambda network_data:
@@ -149,7 +151,7 @@ class NetworksHandler(RequestHandler):
                   'networks_to_setup': networks_to_setup_,
                   'additional_networks': additional_networks_,
                   'reporting_networks': reporting_networks,
-                  'campaigns': simplejson.dumps(campaigns),
+                  'campaigns_data': simplejson.dumps(campaigns_data),
                   'MOBFOX': MOBFOX,
               })
 

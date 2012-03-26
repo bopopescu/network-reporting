@@ -109,12 +109,12 @@ var mopub = window.mopub || {};
             this.model.bind('change', this.render, this);
         },
         render: function () {
-            var metrics = ['cpm', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
+            var metrics = ['revenue', 'cpm', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
             var this_view = this;
             var row = $("tr#" + this_view.model.id + "-row");
 
-            $.each(metrics, function (iter, metric) {
-                var selector = '.mopub-' + metric;
+            _.each(metrics, function (metric) {
+                var selector = '.' + this_view.model.get('stats_endpoint') + '-' + metric;
                 $(selector, row).text(this_view.model.get_formatted_stat(metric));
             });
 

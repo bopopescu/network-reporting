@@ -119,44 +119,44 @@
             <tr id="{{network.campaign_key}}-row">
                 {% if network.reporting %}
                 <td class="dataTable-data numeric">
-                    <div class="revenue" style="color:orange;">--</div>
+                    <div class="networks-revenue" style="color:orange;">--</div>
                 </td>
                 {% endif %}
                 <td class="dataTable-data numeric">
                     {% if network.reporting %}
-                    <div class="cpm network-data">--</div>
+                    <div class="networks-cpm network-data">--</div>
                     {% endif %}
-                    <div class="mopub-cpm mopub-data">--</div>
+                    <div class="all-cpm mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
                     {% if network.reporting and network.name != MOBFOX %}
-                    <div class="attempts network-data">--</div>
+                    <div class="networks-attempt_count network-data">--</div>
                     {% endif %}
-                    <div class="mopub-attempt_count mopub-data">--</div>
+                    <div class="all-attempt_count mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
                     {% if network.reporting %}
-                    <div class="network-data impressions">--</div>
+                    <div class="networks-impression_count network-data">--</div>
                     {% endif %}
-                    <div class="mopub-impression_count mopub-data">--</div>
+                    <div class="all-impression_count mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
                     {% if network.reporting %}
-                    <div class="network-data fill-rate">--</div>
+                    <div class="networks-fill_rate network-data">--</div>
                     {% endif %}
-                    <div class="mopub-data mopub-fill_rate">--</div>
+                    <div class="all-fill_rate mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
                     {% if network.reporting %}
-                    <div class="network-data clicks">--</div>
+                    <div class="networks-click_count network-data">--</div>
                     {% endif %}
-                    <div class="mopub-click_count mopub-data">--</div>
+                    <div class="all-click_count mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
                     {% if network.reporting %}
-                    <div class="network-data ctr">--</div>
+                    <div class="networks-ctr network-data">--</div>
                     {% endif %}
-                    <div class="mopub-ctr mopub-data">--</div>
+                    <div class="all-ctr mopub-data">--</div>
                 </td>
             </tr>
         </tbody>

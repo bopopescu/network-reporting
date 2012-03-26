@@ -98,6 +98,14 @@
 
             setupNetworkForm();
 
+            $('form#campaign_and_adgroup #submit')
+                .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
+                .click(function(e) {
+                    e.preventDefault();
+                    $('form#campaign_and_adgroup').submit();
+                });
+
+
             $("#networkSettingsForm-submit").click(function() {
                     // Hack to serialize sub-section of forms data.
                     // Add a new form and hide it.
@@ -179,6 +187,22 @@
                     $(this).toggle($(this).hasClass(network_type));
             });
 
+            // device targeting
+            $('input[name="device_targeting"]').change(function() {
+                console.log('$(this).val()');
+                console.log($(this));
+                console.log($(this).val());
+                if($(this).val() == '0') {
+                    $('#device_targeting').slideUp();
+                }
+                else {
+                    $('#device_targeting').slideDown();
+                    console.log('setting display');
+                    $('#device_targeting').css('display', '');
+                    console.log($('#device_targeting').css('display'));
+                }
+            });
+
             // Show location-dependent fields when location targeting is turned on
             $('#campaign_and_adgroup input[name="region_targeting"]').click(function(e) {
                 var loc_targ = $(this).val();
@@ -200,9 +224,90 @@
 
             $('.pub_id').hide()
             $('.' + '{{ network.name }}' + '_pub_id').show()
+
+            /* GEO TARGETING */
+            var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';
+            var pre = {type: 'country', data: []};
+            var city_pre = {type: 'city', data: []};
+            //Not being used right now
+            //var state_pre = {type: 'state', data: []};
+            for (var count = 0; count < countries.length; count++) {
+                var dat = countries[count];
+                if ($.inArray(dat.code, priors) != -1) {
+                    pre.data.push(dat);
+                }
+                if (pre.length == priors.length)
+                    break;
+            }
+            //city is ll:ste:name:ccode;
+            for (var i in city_priors) {
+                if (city_priors.hasOwnProperty(i)) {
+                    var datas = city_priors[i].split(':');
+                    var ll = datas[0].split(',');
+                    var ste = datas[1];
+                    var name = datas[2];
+                    var ccode = datas[3];
+                    city_pre.data.push(
+                            { lat: ll[0],
+                              lng: ll[1],
+                              countryCode: ccode,
+                              adminCode1: ste,
+                              name: name
+                              });
+                }
+            }
+            $('#city_ta').tokenInput(geo_s, {
+                country: 'US',
+                doImmediate: false,
+                hintText: 'Type in a city name',
+                queryParam: 'name_startsWith',
+                featureClass: 'P',
+                prePopulate: city_pre,
+                contentType: 'json',
+                type: 'city',
+                minChars: 3,
+                method: 'get'
+            });
+            //Verify that all cities in city_pre are in the SINGLE country that is pre
+
+            //Need to create data object that is array of dictionary [ {name, id} ]
+            $('#geo_pred_ta').tokenInput(null, {
+                data: countries,
+                hintText: 'Type in a country name',
+                formatResult: function( row ) {
+                    return row.name;
+                },
+                formatMatch: function( row, i, max ){
+                    return [row.name, row.code];
+                },
+                prePopulate: pre
+            });
+            /* Not doing states atm
+            $('#state_ta').tokenInput(geo_s, {
+                country: 'US',
+                doImmediate: false,
+                queryParam: 'name_startsWith',
+                featureCode: 'ADM1',
+                contentType: 'json',
+                prePopulate: state_pre,
+                type: 'state',
+                minChars: 5,
+                method: 'get'
+            }); */
+
+            // Show location-dependent fields when location targeting is turned on
+            $('#campaign_and_adgroup input[name="region_targeting"]').click(function(e) {
+                var loc_targ = $(this).val();
+                $('.locationDependent', '#campaign_and_adgroup').hide();
+                $('.' + loc_targ + '.locationDependent', '#campaign_and_adgroup').show();
+                if ($(this).val() == 'all') {
+                    $('li.token-input-city span.token-input-delete-token').each(function() {
+                        $(this).click();
+                    });
+                }
+            }).filter(':checked').click();
     });
 </script>
-<script type="text/javascript" src="/js/controllers/networks_form.js?v=2"></script>
 {% endblock extraScripts %}
 
 

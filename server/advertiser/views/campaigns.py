@@ -435,6 +435,8 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
 
         if campaign_form.is_valid():
             campaign = campaign_form.save()
+            campaign.account = self.account
+            campaign.save()
 
             adgroup_form = AdGroupForm(self.request.POST, instance=adgroup, site_keys=[(unicode(adunit.key()), '') for adunit in adunits], is_staff=self.request.user.is_staff)
             if adgroup_form.is_valid():
@@ -445,8 +447,10 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
                     adunits = AdUnitQueryManager.get(adgroup.site_keys)
                     AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
+                # TODO: need to make sure a network type is selected if the campaign is a network campaign
                 adgroup = adgroup_form.save()
-
+                adgroup.account = campaign.account
+                adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':
                     adgroup.network_type = None
@@ -593,7 +597,7 @@ class AdGroupDetailHandler(RequestHandler):
     def get(self, adgroup_key):
 
         stats_q = StatsModelQueryManager(self.account, self.offline)
-        
+
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
@@ -658,7 +662,7 @@ class AdGroupDetailHandler(RequestHandler):
         fill_rate = lambda requests, impressions: \
                     (impressions/float(requests) if requests else 0)
 
-            
+
         adgroup.all_stats = stats_q.get_stats_for_days(advertiser=adgroup,days=days)
         adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
@@ -679,8 +683,8 @@ class AdGroupDetailHandler(RequestHandler):
                                                 adgroup.stats.impression_count)
         except Exception:
             pass
-            
-        
+
+
 
         # Load creatives and populate
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
@@ -1029,7 +1033,7 @@ class AddCreativeHandler(RequestHandler):
         #     if self.request.META['HTTP_USER_AGENT'].find(browser) > 0:
         #         json_str = simplejson.dumps(json_dict)
         #         return HttpResponse(json_str)
-        
+
         return JSONResponse(json_dict)
 
     def post(self):

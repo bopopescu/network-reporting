@@ -40,6 +40,7 @@ from publisher.query_managers import AppQueryManager, \
 
 from datetime import datetime, date, timedelta, time
 from django.contrib.auth.decorators import login_required
+from django.forms import ModelForm
 from django.http import HttpResponseRedirect
 from django.utils import simplejson
 from django.shortcuts import redirect
@@ -258,7 +259,7 @@ class EditNetworkHandler(RequestHandler):
 
         # Create the default adgroup form
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
-                instance=adgroup, prefix='default')
+                instance=adgroup)
 
         return render_to_response(self.request,
                                   'networks/edit_network_form.html',
@@ -320,13 +321,14 @@ class EditNetworkHandler(RequestHandler):
             #TODO: convert to valid network type
             campaign.network_type = network
 
+            # Get a set of the AdGroupForm field names
+            fields = set(AdGroupForm.base_fields.keys())
             # Copy default form fields to all adgroup adunit forms
             for key, val in query_dict.iteritems():
-                if key[:len('default')] == 'default':
+                if key in fields:
                     for adunit in adunits:
-                        if str(adunit.key()) + key[len('default'):] not in query_dict:
-                            query_dict[str(adunit.key()) + key[len('default'):]] = \
-                                    val
+                        if str(adunit.key()) + '-' + key not in query_dict:
+                            query_dict[str(adunit.key()) + '-' + key] = val
 
             adgroup_forms_are_valid = True
             adgroup_forms = []

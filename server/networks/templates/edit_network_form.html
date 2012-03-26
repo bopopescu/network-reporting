@@ -179,6 +179,18 @@
                     $(this).toggle($(this).hasClass(network_type));
             });
 
+            // Show location-dependent fields when location targeting is turned on
+            $('#campaign_and_adgroup input[name="region_targeting"]').click(function(e) {
+                var loc_targ = $(this).val();
+                $('.locationDependent', '#campaign_and_adgroup').hide();
+                $('.' + loc_targ + '.locationDependent', '#campaign_and_adgroup').show();
+                if ($(this).val() == 'all') {
+                    $('li.token-input-city span.token-input-delete-token').each(function() {
+                        $(this).click();
+                    });
+                }
+            }).filter(':checked').click();
+
             $('a.pub_id').click(function() {
                 var pub_id = pub_ids[network_type];
                 $(this).siblings('input[name$="'+pub_id+'"]').show();

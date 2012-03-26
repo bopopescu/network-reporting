@@ -59,7 +59,7 @@
 
                 var validator = $('form#campaign_and_adgroup').validate({
                     errorPlacement: function(error, element) {
-                        element.closest('li > div').append(error);
+                        element.closest('div').append(error);
                     },
                     submitHandler: function(form) {
                         $(form).ajaxSubmit({
@@ -311,8 +311,12 @@
             <li>
             {{ adgroup_form.daily_frequency_cap.label_tag }}
             <div>
-                {{ adgroup_form.daily_frequency_cap }} daily impressions per user<br />
+                <div>
+                {{ adgroup_form.daily_frequency_cap }} daily impressions per user
+                </div>
+                <div>
                 {{ adgroup_form.hourly_frequency_cap }} hourly impressions per user
+                </div>
             </div>
             </li>
             <li>
@@ -534,7 +538,9 @@
                                     </span>
                                 </td>
                                 <td class="dataTable-data cpm-data">
+                                    <div>
                                     {{ adunit.adgroup_form.bid }}
+                                    </div>
                                 </td>
                                 {% if reporting %}
                                 <td class="dataTable-data">

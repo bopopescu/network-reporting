@@ -457,6 +457,8 @@ class EditNetworkHandler(RequestHandler):
             else:
                 errors = {}
                 for key, value in adgroup_form.errors.items():
+                    if key in set(['bid', 'active']):
+                        key = adgroup_form.prefix + '-' + key
                     errors[key] = ' '.join([error for error in value])
         else:
             errors = {}

@@ -74,6 +74,7 @@ $(function() {
                 line_graph: false,
                 mopub_optimized: false,
             });
+
             $('#show-network').change(function() {
                 if ($(this).is(':checked')) {
                     $('.network-data').show();

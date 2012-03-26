@@ -899,22 +899,27 @@ if (typeof window.console == "undefined") {
 
         $.each(activeData, function(i, seriesObject) {
             var seriesName, seriesData, seriesLineWidth;
+            var seriesColor = colors[i]
 
             $.each(seriesObject, function(name, value) {
                 seriesName = name;
-                seriesData = value;
+                if ($.isArray(value)) {
+                    seriesData = value;
+                } else {
+                    seriesData = value.data;
+                    seriesColor = value.color;
+                }
 
                 if (seriesType == 'line') {
                     seriesLineWidth = (seriesName == 'MoPub Optimized') ? 3 : 2;
                 } else seriesLineWidth = 4;
             });
 
-            chartSeries.push({
-                name: seriesName,
-                data: seriesData,
-                color: colors[i],
-                lineWidth: seriesLineWidth
-            });
+            seriesAttributes = {name: seriesName,
+                                data: seriesData,
+                                color: seriesColor,
+                                lineWidth: seriesLineWidth}
+            chartSeries.push(seriesAttributes);
         });
 
         // setup HighCharts chart

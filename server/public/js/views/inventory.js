@@ -336,7 +336,7 @@ var mopub = window.mopub || {};
                         pointStart: this_view.options.start_date,
                         pointInterval: 86400000,
                         impression_count: [{'From MoPub': mopub_campaigns.get_total_daily_stats('impression_count')}, {'From Networks': network_campaigns.get_total_daily_stats('impression_count')}],
-                        revenue: [{'From Networks': network_campaigns.get_total_daily_stats('revenue')}],
+                        revenue: [{'From Networks': {'data': network_campaigns.get_total_daily_stats('revenue'), 'color': '#e57300'}}],
                         click_count: [{'From MoPub': mopub_campaigns.get_total_daily_stats('click_count')}, {'From Networks': network_campaigns.get_total_daily_stats('click_count')}],
                         ctr: [{'From MoPub': mopub_campaigns.get_total_daily_stats('ctr')}, {'From Networks': network_campaigns.get_total_daily_stats('ctr')}],
                         total: false

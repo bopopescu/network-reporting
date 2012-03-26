@@ -277,8 +277,7 @@
         var yesterday = {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %};
 
         NetworkDetailsController.initialize({
-            campaign_data: {{ campaign|safe }},
-            reporting: {% if network.reporting %}true{% else %}false{% endif %},
+            campaign_data: {{ campaign_data|safe }},
             network: '{{ network.name }}',
             graph_start_date: graph_start_date,
             today: today,

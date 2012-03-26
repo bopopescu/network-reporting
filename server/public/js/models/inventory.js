@@ -94,7 +94,12 @@ var mopub = mopub || {};
 
             $.each(response, function (iter, network_app) {
                 network_app.mopub_stats = new StatsModel(network_app.mopub_stats);
-                network_app.network_stats = new StatsModel(network_app.network_stats);
+                if (network_app.network_stats) {
+                    network_app.network_stats = new StatsModel(network_app.network_stats);
+                } else {
+                    network_app.network_stats = false;
+                }
+
                 if (this_collection.type == 'adunits') {
                     $.each(network_app.adunits, function (iter, adunit) {
                         adunit.stats = new StatsModel(adunit.stats);
@@ -106,9 +111,9 @@ var mopub = mopub || {};
 
         url: function() {
             if (this.type == 'adunits') {
-                return '/api/network_apps/' + this.network + '/adunits';
+                return '/api/network_apps/' + this.campaign_key + '/adunits';
             }
-            return '/api/network_apps/' + this.network;
+            return '/api/network_apps/' + this.campaign_key;
         }
     });
 

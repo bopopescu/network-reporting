@@ -502,8 +502,10 @@ class NetworkDetailsHandler(RequestHandler):
 
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
-            network_data['reporting'] = AdNetworkLoginManager. \
-                    get_login(self.account, network).get()
+            if AdNetworkLoginManager.get_login(self.account,
+                    network).get():
+                network_data['reporting'] = True
+                campaign_data['reporting'] = True
 
         stats_manager = StatsModelQueryManager(account=self.account)
         # Iterate through all the apps and populate the stats for network_data
@@ -530,7 +532,7 @@ class NetworkDetailsHandler(RequestHandler):
                   'date_range' : self.date_range,
                   'show_graph' : True,
                   'network': network_data,
-                  'campaign': simplejson.dumps(campaign_data),
+                  'campaign_data': simplejson.dumps(campaign_data),
                   'ADMOB': ADMOB,
                   'IAD': IAD,
                   'INMOBI': INMOBI,

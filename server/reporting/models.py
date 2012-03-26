@@ -174,6 +174,7 @@ class StatsModel(db.Expando):
         if ad_network_stats:
             kwargs['date'] = datetime.datetime.combine(ad_network_stats.date,
                     datetime.time())
+            # This is a hack to get attempt_count from to_dict
             kwargs['_advertiser'] = True
             for stat in AD_NETWORK_STATS.keys():
                 kwargs[AD_NETWORK_STATS[stat]] = getattr(ad_network_stats, stat)
@@ -244,6 +245,10 @@ class StatsModel(db.Expando):
         # If an advertiser exists for self or s set it
         if not isinstance(advertiser, bool):
             attributes['advertiser'] = advertiser
+        else:
+            # This is a hack to get attempt_count from to_dict when
+            # AdNetworkStats are converted to StatsModel stats
+            attributes['_advertiser'] = advertiser
         obj = StatsModel(**attributes)
         obj.include_geo = include_geo
 

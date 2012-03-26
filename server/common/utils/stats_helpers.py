@@ -1,9 +1,10 @@
 from urllib import urlencode
 from urllib2 import urlopen
 from common.utils import date_magic
-import datetime
+from datetime import datetime, date, time
 
 from account.query_managers import AccountQueryManager
+from advertiser.models import NetworkStates
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
@@ -153,10 +154,10 @@ class MarketplaceStatsFetcher(object):
         adunit_query = self._get_inventory_query('adunit_id', adunits or [])
         pub_query = self._get_inventory_query('pub_id', pubs or [])
 
-        if isinstance(start, datetime.date):
+        if isinstance(start, date):
             start = start.strftime("%m-%d-%Y")
 
-        if isinstance(end, datetime.date):
+        if isinstance(end, date):
             end = end.strftime("%m-%d-%Y")
 
         #TODO: cleanup possible trailing &&
@@ -215,10 +216,10 @@ class MarketplaceStatsFetcher(object):
          'clicks': 0}
 
         """
-        if isinstance(start, datetime.date):
+        if isinstance(start, date):
             start = start.strftime("%m-%d-%Y")
 
-        if isinstance(end, datetime.date):
+        if isinstance(end, date):
             end = end.strftime("%m-%d-%Y")
 
         url = "%s%spub=%s&start=%s&end=%s" % \
@@ -356,10 +357,15 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
         # ad network stats
         campaign = CampaignQueryManager.get(campaign_key)
         days = date_magic.gen_days(start, end)
-        query_manager = NetworkStatsQueryManager(
-                AccountQueryManager.get(self.account_key))
-        stats = query_manager.get_stats_for_days(campaign.network_type,
-                days=days)
+        if campaign.network_state == \
+                NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
+            query_manager = NetworkStatsQueryManager(
+                    AccountQueryManager.get(self.account_key))
+            stats = query_manager.get_stats_for_days(campaign.network_type,
+                    days=days)
+        else:
+            stats = [StatsModel(date=datetime.combined(day, time())) for day in
+                    days]
         return stats
 
 # TODO: refactor stuff that uses this and remove it

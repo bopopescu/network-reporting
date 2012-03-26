@@ -43,7 +43,6 @@ $(function() {
                 // Create CampaignView and fetch mopub campaign and network
                 // campaign if campaign has reporting
                 _.each(campaigns_list, function(campaign) {
-                    console.log(campaign.get('stats_endpoint'));
                     new CampaignView({
                         model: campaign
                     });
@@ -53,10 +52,8 @@ $(function() {
 
                 // Load NetworkApps Collections
                 var network_apps = new NetworkApps();
-
                 network_apps.campaign_key = campaign_data.id;
 
-                network_apps.network = campaign_data.network;
                 var network_apps_view = new NetworkAppsView({
                     collection: network_apps
                 });
@@ -84,7 +81,6 @@ $(function() {
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
                 network = bootstrapping_data.network,
-                reporting = bootstrapping_data.reporting,
                 graph_start_date = bootstrapping_data.graph_start_date,
                 today = bootstrapping_data.today,
                 yesterday = bootstrapping_data.yesterday,
@@ -95,21 +91,32 @@ $(function() {
             campaign_data.name = 'From MoPub';
             var mopub_campaign = new Campaign(campaign_data);
 
+            var campaigns_list = []
             // get network campaign data
             // endpoint=network
-            if (reporting) {
+            if (campaign_data.reporting) {
                 var network_campaign_data = jQuery.extend({}, campaign_data);
                 network_campaign_data.stats_endpoint = 'networks';
                 network_campaign_data.name = 'From Networks';
                 var network_campaign = new Campaign(network_campaign_data);
 
-                // create campaigns collection
-                campaigns = new Campaigns([mopub_campaign, network_campaign]);
+                campaigns_list = [mopub_campaign, network_campaign];
             } else {
-                // create campaigns collection
-                campaigns = new Campaigns([mopub_campaign]);
+                campaigns_list = [mopub_campaign];
             }
 
+            // Create CampaignView and fetch mopub campaign and network
+            // campaign if campaign has reporting
+            _.each(campaigns_list, function(campaign) {
+                new CampaignView({
+                    model: campaign
+                });
+
+                campaign.fetch({ data: ajax_query_string, });
+            });
+
+            // create campaigns collection
+            campaigns = new Campaigns(campaigns_list);
 
             var graph_view = new CollectionGraphView({
                 collection: campaigns,
@@ -121,28 +128,10 @@ $(function() {
             });
             graph_view.render();
 
-            new CampaignView({
-                model: mopub_campaign
-            });
-            new CampaignView({
-                model: network_campaign
-            });
-
-            campaigns.each(function(campaign) {
-                campaign.fetch({
-                    data: ajax_query_string,
-                    error: function () {
-                        campaign.fetch({
-                            error: toast_error
-                        });
-                    }
-                });
-            });
-
             // Load NetworkApps Collections
             var network_apps = new NetworkApps();
 
-            network_apps.network = network;
+            network_apps.campaign_key = campaign_data.id;
             network_apps.type = 'adunits';
             var network_apps_view = new NetworkAppsView({
                 collection: network_apps

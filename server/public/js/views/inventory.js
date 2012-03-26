@@ -27,7 +27,6 @@ var mopub = window.mopub || {};
             this.collection.bind('reset', this.render, this);
 
             this.el = '#' + this.collection.campaign_key + '-apps';
-            console.log(this.el);
 
             try {
                 this.template = _.template($('#network-app-template').html());
@@ -51,10 +50,15 @@ var mopub = window.mopub || {};
                         var mopub_selector = '.mopub-' + metric;
                         var network_selector = '.network-' + metric;
                         $(mopub_selector, row).text(network_app.get('mopub_stats').get_formatted_stat(metric));
-                        $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat(metric));
+                        if (network_app.get('network_stats')) {
+                            $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat(metric));
+                        }
                     });
                     var network_selector = '.network-revenue';
-                    $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat('revenue'));
+
+                    if (network_app.get('network_stats')) {
+                        $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat('revenue'));
+                    }
 
                     // Set adunit level mopub and network stats
                     var renderedContent = '';
@@ -68,8 +72,6 @@ var mopub = window.mopub || {};
                         });
                     });
 
-                    console.log('network_app');
-                    console.log(network_app);
                     var tbody = $("tbody#" + network_app.id + "-adunits");
 
                     $(tbody).html(renderedContent);
@@ -77,6 +79,7 @@ var mopub = window.mopub || {};
             } else {
                 var renderedContent = '';
                 this.collection.each(function (network_app) {
+
                     renderedContent += _.template($('#network-app-template').html(), {
                         name: network_app.get('name'),
                         url: network_app.get('url'),

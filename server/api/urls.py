@@ -60,13 +60,13 @@ urlpatterns = patterns(
 
     # /api/network_apps/<network>
     # all app stats for the network
-    url(r'^network_apps/(?P<network>[-\w\.]+)$',
+    url(r'^network_apps/(?P<campaign_key>[-\w\.]+)$',
         'network_apps_service',
         name='network_apps_service'),
 
     # /api/network_apps/<network>/adunits
     # all app stats for the network including adunits
-    url(r'^network_apps/(?P<network>[-\w\.]+)/(?P<adunits>adunits)$',
+    url(r'^network_apps/(?P<campaign_key>[-\w\.]+)/(?P<adunits>adunits)$',
         'network_apps_service',
         name='network_apps_service'),
 

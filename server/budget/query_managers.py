@@ -32,11 +32,11 @@ class BudgetQueryManager(QueryManager):
     def update_or_create_budget_for_campaign(cls, camp, total_spent=0.0, testing=False, fetcher=None, migrate_total=False):
         # Update budget
         if camp.start_datetime is None:
-            camp.start_datetime = datetime.now().replace(tzinfo=utc)
-        if str(camp.start_datetime.tzinfo) == str(Pacific):
-            camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo = None)
+            camp.start_datetime = datetime.utcnow()
+        elif str(camp.start_datetime.tzinfo) == str(Pacific):
+            camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo=None)
         if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
-            camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo = None)
+            camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo=None)
 
         if camp.start_datetime:
             remote_start = camp.start_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
@@ -98,11 +98,11 @@ class BudgetQueryManager(QueryManager):
             # if Campaigns are aware of their tz, set them to UTC and make them unaware of it
             # doesn't matter if we put budgets at this point because when it gets put it'll fix itself
             if camp.start_datetime is None:
-                camp.start_datetime = datetime.now().replace(tzinfo=utc)
-            if str(camp.start_datetime.tzinfo) == str(Pacific):
-                camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo = None)
+                camp.start_datetime = datetime.utcnow()
+            elif str(camp.start_datetime.tzinfo) == str(Pacific):
+                camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo=None)
             if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
-                camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo = None)
+                camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo=None)
 
             #Do the same thing above, but for budgets
             budget_start = camp.budget_obj.start_datetime

@@ -84,7 +84,7 @@ class NetworksHandler(RequestHandler):
         additional_networks = set(OTHER_NETWORKS.keys())
         networks = []
         campaigns_data = []
-        reporting_networks = False
+        reporting = False
 
         for campaign in CampaignQueryManager.get_network_campaigns(
                 self.account, is_new=True):
@@ -101,7 +101,7 @@ class NetworksHandler(RequestHandler):
                             network).get()
 
                     if login:
-                        reporting_networks = True
+                        reporting = True
                         campaign_data['reporting'] = True
                         network_data['reporting'] = True
 
@@ -147,10 +147,11 @@ class NetworksHandler(RequestHandler):
                   'start_date': days[0],
                   'end_date': days[-1],
                   'date_range': self.date_range,
+                  'graph': True if networks else False,
                   'networks': networks,
                   'networks_to_setup': networks_to_setup_,
                   'additional_networks': additional_networks_,
-                  'reporting_networks': reporting_networks,
+                  'reporting': reporting,
                   'campaigns_data': simplejson.dumps(campaigns_data),
                   'MOBFOX': MOBFOX,
               })
@@ -490,7 +491,6 @@ class NetworkDetailsHandler(RequestHandler):
         if not campaign:
             raise Http404
 
-        network_data['reporting'] = False
 
         # TODO: look for ways to make simpeler by getting stats keyed on
         # campaign
@@ -498,13 +498,13 @@ class NetworkDetailsHandler(RequestHandler):
         network_data['campaign_key'] = str(campaign.key())
 
         campaign_data = {'id': str(campaign.key()),
-                         'network': network}
+                         'network': network,
+                         'reporting': False}
 
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
             if AdNetworkLoginManager.get_login(self.account,
                     network).get():
-                network_data['reporting'] = True
                 campaign_data['reporting'] = True
 
         stats_manager = StatsModelQueryManager(account=self.account)
@@ -530,7 +530,8 @@ class NetworkDetailsHandler(RequestHandler):
                   'start_date' : self.days[0],
                   'end_date' : self.days[-1],
                   'date_range' : self.date_range,
-                  'show_graph' : True,
+                  'graph' : True,
+                  'reporting' : campaign_data['reporting'],
                   'network': network_data,
                   'campaign_data': simplejson.dumps(campaign_data),
                   'ADMOB': ADMOB,

@@ -322,15 +322,26 @@ var mopub = window.mopub || {};
                         }));
 
                 // Chart
-                mopub.dashboardStatsChartData = {
-                    pointStart: this_view.options.start_date,
-                    pointInterval: 86400000,
-                    impression_count: [{'From MoPub': mopub_campaigns.get_total_daily_stats('impression_count')}, {'From Networks': network_campaigns.get_total_daily_stats('impression_count')}],
-                    revenue: [{'From MoPub': mopub_campaigns.get_total_daily_stats('revenue')}, {'From Networks': network_campaigns.get_total_daily_stats('revenue')}],
-                    click_count: [{'From MoPub': mopub_campaigns.get_total_daily_stats('click_count')}, {'From Networks': network_campaigns.get_total_daily_stats('click_count')}],
-                    ctr: [{'From MoPub': mopub_campaigns.get_total_daily_stats('ctr')}, {'From Networks': network_campaigns.get_total_daily_stats('ctr')}],
-                    total: false
-                };
+                if (_.isEmpty(network_campaigns.models)) {
+                    mopub.dashboardStatsChartData = {
+                        pointStart: this_view.options.start_date,
+                        pointInterval: 86400000,
+                        impression_count: [{'Total': mopub_campaigns.get_total_daily_stats('impression_count')}],
+                        click_count: [{'Total': mopub_campaigns.get_total_daily_stats('click_count')}],
+                        ctr: [{'Total': mopub_campaigns.get_total_daily_stats('ctr')}],
+                        total: false
+                    };
+                } else {
+                    mopub.dashboardStatsChartData = {
+                        pointStart: this_view.options.start_date,
+                        pointInterval: 86400000,
+                        impression_count: [{'From MoPub': mopub_campaigns.get_total_daily_stats('impression_count')}, {'From Networks': network_campaigns.get_total_daily_stats('impression_count')}],
+                        revenue: [{'From Networks': network_campaigns.get_total_daily_stats('revenue')}],
+                        click_count: [{'From MoPub': mopub_campaigns.get_total_daily_stats('click_count')}, {'From Networks': network_campaigns.get_total_daily_stats('click_count')}],
+                        ctr: [{'From MoPub': mopub_campaigns.get_total_daily_stats('ctr')}, {'From Networks': network_campaigns.get_total_daily_stats('ctr')}],
+                        total: false
+                    };
+                }
                 $('#stats-breakdown-impression_count').click()
             }
         }

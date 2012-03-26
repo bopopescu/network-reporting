@@ -83,7 +83,6 @@ $(function() {
     var NetworkDetailsController = { 
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
-                network = bootstrapping_data.network,
                 graph_start_date = bootstrapping_data.graph_start_date,
                 today = bootstrapping_data.today,
                 yesterday = bootstrapping_data.yesterday,
@@ -129,7 +128,6 @@ $(function() {
                 line_graph: true,
                 mopub_optimized: false,
             });
-            graph_view.render();
 
             // Load NetworkApps Collections
             var network_apps = new NetworkApps();

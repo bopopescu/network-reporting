@@ -13,47 +13,6 @@
 </span>
 {% endblock titleBarRight %}
 
-{% block graph %}
-<section class="offset nomargin" id="dashboard-stats">
-<h3 class="stats-chart-title">
-    Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
-</h3>
-{# Controls and stats breakdown for the top realtime stats #}
-<div class="stats">
-    {% comment %}
-    {% stats_breakdown stats %}
-    {% endcomment %}
-    <div class="stats">
-        <div id="stats-breakdown" class="stats-breakdown">
-            <table>
-                <tbody>
-                    <tr class="active" id="stats-breakdown-impression_count">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-click_count">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-ctr">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
-    </div>
-</div>
-</section>
-{% endblock graph %}
-
 {% block innerContent %}
 <section id="network-status">
 <table class="status-table">
@@ -278,7 +237,6 @@
 
         NetworkDetailsController.initialize({
             campaign_data: {{ campaign_data|safe }},
-            network: '{{ network.name }}',
             graph_start_date: graph_start_date,
             today: today,
             yesterday: yesterday,

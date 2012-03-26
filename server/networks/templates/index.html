@@ -40,59 +40,10 @@
 </section>
 {% endblock preContent %}
 
-{% block graph %}
-{% if networks %}
-<section class="offset nomargin" id="dashboard-stats">
-<h3 class="stats-chart-title">
-    Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
-</h3>
-{# Controls and stats breakdown for the top realtime stats #}
-<div class="stats">
-    {% comment %}
-    {% stats_breakdown stats %}
-    {% endcomment %}
-    <div class="stats">
-        <div id="stats-breakdown" class="stats-breakdown">
-            <table>
-                <tbody>
-                    <tr class="active" id="stats-breakdown-impression_count">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-click_count">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                    </tr>
-                    <tr id="stats-breakdown-ctr">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
-    </div>
-</div>
-</section>
-{% else %}
-<section id="graph">
-<div class="alert-message block-message">
-    MoPub can can mediate the ad networks where you have an account. ...more help text
-</div>
-</section>
-{% endif %}
-{% endblock graph %}
-
 {% block innerContent %}
 {% if networks %}
 <section id="dashboard-apps">
-{% if reporting_networks %}
+{% if reporting %}
 <div style="float:right">
     <input type="checkbox" name="show-data" id="show-network" /> Show data reported by networks in <span style="color:orange;">orange</span>
 </div>

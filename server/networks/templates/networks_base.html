@@ -131,33 +131,60 @@
 {% endblock preContent %}
 
 {% block graph %}
-<section id="graph">
+{% if graph %}
 <section class="offset nomargin" id="dashboard-stats">
-<h3 class="stats-chart-title">Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}</h3>
-<div class="stats clearfix">
-    <div class="stats-breakdown">
-        <table class="sortable">
-            <tbody>
-                <tr class="active" id="stats-breakdown-revenue">
-                    <td class="stats-breakdown-value today"><span class="inner">{% if aggregates %}{{aggregates.revenue|currency}}{% else %}--{% endif %}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
-                </tr>
-                <tr id="stats-breakdown-impressions">
-                    <td class="stats-breakdown-value today"><span class="inner">{% if aggregates %}{{aggregates.impressions|withsep}}{% else %}--{% endif %}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
-                </tr>
-                <tr id="stats-breakdown-clicks">
-                    <td class="stats-breakdown-value today"><span class="inner"><span class="muted unbold">({% if aggregates %}{{aggregates.ctr|percentage}}{% else %}--{% endif %})</span> {% if aggregates %}{{aggregates.clicks|withsep}}{% else %}--{% endif %}</span></td>
-                    <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
-                </tr>
-            </tbody>
-        </table>
+<h3 class="stats-chart-title">
+    Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+</h3>
+{# Controls and stats breakdown for the top realtime stats #}
+<div class="stats">
+    {% comment %}
+    {% stats_breakdown stats %}
+    {% endcomment %}
+    <div class="stats">
+        <div id="stats-breakdown" class="stats-breakdown">
+            <table>
+                <tbody>
+                    {% if reporting %}
+                    <tr id="stats-breakdown-revenue">
+                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+                    </tr>
+                    {% endif %}
+                    <tr class="active" id="stats-breakdown-impression_count">
+                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-click_count">
+                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                    </tr>
+                    <tr id="stats-breakdown-ctr">
+                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
+                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
+                        <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="chart stats-chart" id="dashboard-stats-chart"></div>
     </div>
-    <div class="chart stats-chart" id="dashboard-stats-chart"></div>
 </div>
 </section>
-<div style="float:right">Data shown is from the ad networks and may change. <a target="_blank" href="http://help.mopub.com/customer/portal/articles/273229-ad-network-revenue-reporting">Learn more</a></div>
+{% else %}
+<section id="graph">
+<div class="alert-message block-message">
+    MoPub can can mediate the ad networks where you have an account. ...more help text
+</div>
 </section>
+{% endif %}
 {% endblock graph %}
 
 {% block innerContent %}

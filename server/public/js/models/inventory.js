@@ -487,6 +487,7 @@ var mopub = mopub || {};
      * EXPOSE HIS JUNK
      * (We should find a better way to do this.)
      */
+    window.StatsModel = StatsModel;
     window.NetworkApp = NetworkApp;
     window.NetworkApps = NetworkApps;
     window.AdUnit = AdUnit;

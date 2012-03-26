@@ -11,20 +11,22 @@ $(function() {
     var NetworksController = { 
         initialize: function(bootstrapping_data) {
             var campaigns_data = bootstrapping_data.campaigns_data,
+                date_range = bootstrapping_data.date_range,
                 graph_start_date = bootstrapping_data.graph_start_date,
                 today = bootstrapping_data.today,
                 yesterday = bootstrapping_data.yesterday,
                 networks = bootstrapping_data.networks,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
-            mopub_campaigns = []
-            network_campaigns = []
+            var mopub_campaigns = []
+            var network_campaigns = []
             _.each(campaigns_data, function(campaign_data) {
                 // create mopub campaign
                 // endpoint=all
                 campaign_data.name = 'From MoPub';
                 var mopub_campaign = new Campaign(campaign_data);
 
+                mopub_campaigns.push(mopub_campaign)
                 var campaigns_list = []
 
                 // create network campaign
@@ -34,6 +36,8 @@ $(function() {
                     network_campaign_data.stats_endpoint = 'networks';
                     network_campaign_data.name = 'From Networks';
                     var network_campaign = new Campaign(network_campaign_data);
+
+                    network_campaigns.push(network_campaign)
 
                     campaigns_list = [mopub_campaign, network_campaign];
                 } else {
@@ -60,20 +64,19 @@ $(function() {
                 network_apps.fetch({ data: ajax_query_string, });
             });
 
-            //var campaigns = new Campaigns(campaign_data);
+            var summed_campaigns = network_campaigns.concat(mopub_campaigns);
+            var campaigns = new Campaigns(summed_campaigns);
 
             // Load chart
-//            var graph_view = new CollectionGraphView({
-//                collection: campaigns,
-//                network_stats: network_stats,
-//                start_date: graph_start_date,
-//                today: today,
-//                yesterday: yesterday,
-//                line_graph: false,
-//                mopub_optimized: false,
-//            });
-//            graph_view.render();
-
+            var graph_view = new NetworkGraphView({
+                collection: campaigns,
+                date_range: date_range,
+                start_date: graph_start_date,
+                today: today,
+                yesterday: yesterday,
+                line_graph: false,
+                mopub_optimized: false,
+            });
         }
     }
 

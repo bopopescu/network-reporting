@@ -1,11 +1,21 @@
+# Deployed Monday, March 26, 2012 at 02:15PM PST
+### Deployed by John Pena
+### Tagged deploy-45
+### Bugs Fixed: ['1073', '1070']
+### Included Commits: 
+ * 67e8dd2 Merge branch '1073-adgroup_edit_bug' of github.com:mopub/mopub
+ * a9c8d46 [#1073 state:fixed] fixed adgroup edit bug
+ * ca2c57d [#1070 state:fixed] fixed budget bug
+ * f2edcb7 Deployed without finding any bug fixes.
+ 
 # Deployed Friday, March 23, 2012 at 08:47PM PST
 ### Deployed by John Pena
 ### Tagged deploy-44
 ### Bugs Fixed: []
-### Included Commits: 
- * ed28aaa tracking how often marketplace creative review fails to load
- * a0ab442 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* ed28aaa tracking how often marketplace creative review fails to load
+* a0ab442 Deployed without finding any bug fixes.
+
 # Deployed Friday, March 23, 2012 at 07:40PM PST
 ### Deployed by John Pena
 ### Tagged deploy-43

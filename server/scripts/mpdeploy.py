@@ -394,12 +394,6 @@ def main():
                 git_commit(commit_message)
                 git_push()
 
-                # notify people of a successful deploy on hipichat
-                puts("Notifying hipchat")
-                post_to_hipchat("Branch %s just deployed to %s by %s" % (active_branch_name,
-                                                                         deploy_server,
-                                                                         deployer))
-
             else:
                 puts("Skipping ticket update process because you're not deploying to production")
 
@@ -410,6 +404,12 @@ def main():
 
             puts("Deploying " + colored.green(active_branch_name) + " to " + colored.green(deploy_server))
             launch_deploy_process(server=deploy_server)
+
+                            # notify people of a successful deploy on hipichat
+            puts("Notifying hipchat")
+            post_to_hipchat("Branch %s just deployed to %s by %s" % (active_branch_name,
+                                                                     deploy_server,
+                                                                     deployer))
 
         except Exception, error:
             puts(colored.red("Deploy failed."))

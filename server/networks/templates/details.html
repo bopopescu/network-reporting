@@ -219,36 +219,17 @@
 <script type="text/html" id="network-app-template">
     {% include "partials/network_app.html" %}
 </script>
-<script type="text/javascript" src="/js/models/ad_network_reports.js?v=3"></script>
-<script type="text/javascript" src="/js/views/ad_network_reports.js?v=3"></script>
-
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
 {% include_script "controllers/networks" %}
 <script>
     $(function () {
-        var account_key = '{{ account_key }}';
-
         var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
-
-        var today = {% if today != None %}{{ today }}{% else %}null{% endif %};
-
-        var yesterday = {% if yesterday != None %}{{ yesterday }}{% else %}null{% endif %};
 
         NetworkDetailsController.initialize({
             campaign_data: {{ campaign_data|safe }},
             graph_start_date: graph_start_date,
-            today: today,
-            yesterday: yesterday,
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
-
-
-        $('#show-network').change(function() {
-            $('.network-data').toggle();
-        }).change();
-
-        $('#network-settingsButton')
-            .button({ icons: { primary: "ui-icon-wrench" } })
     });
 </script>
 {% endblock extraScripts %}

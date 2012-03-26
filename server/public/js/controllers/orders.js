@@ -414,10 +414,19 @@
             initializeDateButtons();
 
             /* CREATIVE FORM */
-            $('#creativeCreateForm input[name="ad_type"]')
+            $('#new_creative_form input[name="ad_type"]')
                 .click(function(e){
-                    $('.adTypeDependent',"#creativeCreateForm").hide();
-                    $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
+                    $('.adTypeDependent', "#new_creative_form").hide();
+                    $('.adTypeDependent.' + $(this).val(), "#new_creative_form").show();
+                })
+                .filter(':checked')
+                .click();
+
+            /*
+            $('#new_creative_form input[name="ad_type"]')
+                .click(function(e){
+                    $('.adTypeDependent',"#new_creative_form").hide();
+                    $('.adTypeDependent.'+$(this).val(),"#new_creative_form").show();
                 })
                 .filter(':checked')
                 .click();
@@ -445,7 +454,7 @@
                 .click(function(e) {
                     e.preventDefault();
                     $('#creativeCreateForm-loading').show();
-                    $('#creativeCreateForm').submit();
+                    $('#new_creative_form').submit();
                 });
 
             $('#creativeCreateForm-cancel')
@@ -509,7 +518,7 @@
                 });
 
             // Creative form ajax options
-            $('#creativeCreateForm').ajaxForm({
+            $('#new_creative_form').ajaxForm({
                 data: { ajax: true },
                 dataType : 'json',
                 success: function(jsonData) {
@@ -597,6 +606,7 @@
                     $(this).parents('.advertiser-creativeEditForm')
                         .dialog('close');
                 });
+            */
             /* END CREATIVE FORM */
         },
 

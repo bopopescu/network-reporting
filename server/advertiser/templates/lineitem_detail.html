@@ -46,14 +46,14 @@
       Edit Line Item
     </a>
 
-    
+
     {% line_item_table line_item %}
-        
+
     {% if user.is_admin %}
       <a class='btn' href="/budget/view/{{line_item.key}}"> Admin Budget View </a>
     {% endif %}
   </section>
-  
+
 
   {# Table that shows all of the adunits being targeted #}
   <section>
@@ -69,7 +69,7 @@
 
     <h2>Creatives</h2>
 
-    <form action="{% url advertiser_creative_create %}" enctype="multipart/form-data" method="post">
+    <form action="{% url advertiser_creative_form_new line_item.key %}" enctype="multipart/form-data" id="new_creative_form" method="post">
         <fieldset id="creativeAddForm-details" class="alt">
             {% include 'advertiser/forms/creative_form.html' %}
             </div>

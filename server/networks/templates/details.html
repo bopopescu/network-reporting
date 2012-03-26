@@ -50,7 +50,7 @@
 </section>
 
 <section id="show-network-data">
-{% if network.reporting %}
+{% if reporting %}
 <div style="float:right">
     <input type="checkbox" name="show-data" id="show-network" /> Show data reported by network in <span style="color:orange;">orange</span>
 </div>
@@ -63,7 +63,7 @@
     <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
         <thead>
             <tr>
-                {% if network.reporting %}
+                {% if reporting %}
                 <th class="dataTable-data numeric"> Revenue </th>
                 {% endif %}
                 <th class="dataTable-data numeric"> CPM </th>
@@ -76,43 +76,43 @@
         </thead>
         <tbody>
             <tr id="{{network.campaign_key}}-row">
-                {% if network.reporting %}
+                {% if reporting %}
                 <td class="dataTable-data numeric">
                     <div class="networks-revenue" style="color:orange;">--</div>
                 </td>
                 {% endif %}
                 <td class="dataTable-data numeric">
-                    {% if network.reporting %}
+                    {% if reporting %}
                     <div class="networks-cpm network-data">--</div>
                     {% endif %}
                     <div class="all-cpm mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
-                    {% if network.reporting and network.name != MOBFOX %}
+                    {% if reporting and network.name != MOBFOX %}
                     <div class="networks-attempt_count network-data">--</div>
                     {% endif %}
                     <div class="all-attempt_count mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
-                    {% if network.reporting %}
+                    {% if reporting %}
                     <div class="networks-impression_count network-data">--</div>
                     {% endif %}
                     <div class="all-impression_count mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
-                    {% if network.reporting %}
+                    {% if reporting %}
                     <div class="networks-fill_rate network-data">--</div>
                     {% endif %}
                     <div class="all-fill_rate mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
-                    {% if network.reporting %}
+                    {% if reporting %}
                     <div class="networks-click_count network-data">--</div>
                     {% endif %}
                     <div class="all-click_count mopub-data">--</div>
                 </td>
                 <td class="dataTable-data numeric">
-                    {% if network.reporting %}
+                    {% if reporting %}
                     <div class="networks-ctr network-data">--</div>
                     {% endif %}
                     <div class="all-ctr mopub-data">--</div>
@@ -131,7 +131,7 @@
             <thead>
                 <th class="networkData-icon" style="width:75px"></th>
                 <th class="dataTable-name"></th>
-                {% if network.reporting %}
+                {% if reporting %}
                 <th class="dataTable-data numeric"> Revenue </th>
                 {% endif %}
                 <th class="dataTable-data numeric"> CPM </th>
@@ -157,43 +157,43 @@
                         <a href="/inventory/app/{{app.key_}}">{{app.name}}</a>
                         <span class="muted unbold">({{app.app_type_text}})</span>
                     </td>
-                    {% if network.reporting %}
+                    {% if reporting %}
                     <td class="dataTable-data numeric">
                         <div class="network-revenue" style="color:orange;"></div>
                     </td>
                     {% endif %}
                     <td class="dataTable-data numeric">
-                        {% if network.reporting %}
+                        {% if reporting %}
                         <div class="network-cpm network-data"></div>
                         {% endif %}
                         <div class="mopub-cpm mopub-data"></div>
                     </td>
                     <td class="dataTable-data numeric">
-                        {% if network.reporting and network.name != MOBFOX %}
+                        {% if reporting and network.name != MOBFOX %}
                         <div class="network-attempt_count network-data"></div>
                         {% endif %}
                         <div class="mopub-attempt_count mopub-data"></div>
                     </td>
                     <td class="dataTable-data numeric">
-                        {% if network.reporting %}
+                        {% if reporting %}
                         <div class="network-data network-impression_count"></div>
                         {% endif %}
                         <div class="mopub-impression_count mopub-data"></div>
                     </td>
                     <td class="dataTable-data numeric">
-                        {% if network.reporting and network.name != MOBFOX %}
+                        {% if reporting and network.name != MOBFOX %}
                         <div class="network-data network-fill_rate"></div>
                         {% endif %}
                         <div class="mopub-fill_rate mopub-data"></div>
                     </td>
                     <td class="dataTable-data numeric">
-                        {% if network.reporting %}
+                        {% if reporting %}
                         <div class="network-data network-click_count"></div>
                         {% endif %}
                         <div class="mopub-click_count mopub-data"></div>
                     </td>
                     <td class="dataTable-data numeric">
-                        {% if network.reporting %}
+                        {% if reporting %}
                         <div class="network-data network-ctr"></div>
                         {% endif %}
                         <div class="mopub-ctr mopub-data"></div>

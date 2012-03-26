@@ -58,8 +58,6 @@ $(function() {
             var campaigns_data = bootstrapping_data.campaigns_data,
                 date_range = bootstrapping_data.date_range,
                 graph_start_date = bootstrapping_data.graph_start_date,
-                today = bootstrapping_data.today,
-                yesterday = bootstrapping_data.yesterday,
                 networks = bootstrapping_data.networks,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
@@ -75,8 +73,6 @@ $(function() {
                 collection: campaigns,
                 date_range: date_range,
                 start_date: graph_start_date,
-                today: today,
-                yesterday: yesterday,
                 line_graph: false,
                 mopub_optimized: false,
             });
@@ -87,8 +83,6 @@ $(function() {
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
                 graph_start_date = bootstrapping_data.graph_start_date,
-                today = bootstrapping_data.today,
-                yesterday = bootstrapping_data.yesterday,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
             var all_campaigns = initialize_campaign_data(campaign_data, true, ajax_query_string);
@@ -96,11 +90,10 @@ $(function() {
             // create campaigns collection
             campaigns = new Campaigns(all_campaigns);
 
-            var graph_view = new CollectionGraphView({
+            var graph_view = new NetworkGraphView({
                 collection: campaigns,
+                type: 'details',
                 start_date: graph_start_date,
-                today: today,
-                yesterday: yesterday,
                 line_graph: true,
                 mopub_optimized: false,
             });

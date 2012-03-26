@@ -870,10 +870,14 @@ class BaseModelForm(forms.BaseForm):
       opts.model.properties().iteritems(),
       iter([('key_name', StringProperty(name='key_name'))])
       )
+    fields = self._meta.fields
     for name, prop in propiter:
       value = cleaned_data.get(name)
-      if value is not None:
-        converted_data[name] = prop.make_value_from_form(value)
+      if not name in cleaned_data: continue
+      if fields and name not in fields: continue
+      # if value is not None:
+      converted_data[name] = prop.make_value_from_form(value)
+
     try:
       if instance is None:
         instance = opts.model(**converted_data)

@@ -90,7 +90,7 @@
         _.each(ad_sources, function(ad_source) {
             $("#" + ad_source + "-img").removeClass('hidden');
         });
-        
+
         var promise = $.ajax({
             url: '/advertise/ad_source/status/',
             type: 'POST',
@@ -103,8 +103,8 @@
             success: function (data, text_status, xhr) {
                 if (data.success) {
                     _.each(ad_sources, function(ad_source) {
-                        
-                        // Hide the loading image 
+
+                        // Hide the loading image
                         $("#" + ad_source + "-img").toggleClass('hidden');
 
                         // get the stuff we're going to edit
@@ -118,21 +118,21 @@
                                 .removeClass('archived')
                                 .removeClass('paused');
                             $(status_img).attr('src', '/images/active.gif');
-                            
+
                         } else if (status == 'pause') {
                             $(ad_source_tds).fadeTo(500, 0.4);
                             $('#' + ad_source).addClass('paused')
                                 .removeClass('archived')
                                 .removeClass('running');
                             $(status_img).attr('src', '/images/paused.gif');
-                            
+
                         } else if (status == 'archive') {
                             $('#' + ad_source).addClass('archived')
                                 .removeClass('running')
                                 .removeClass('paused');
                             $(ad_source_tds).fadeTo(500, 0.4);
                             $(status_img).attr('src', '/images/archived.gif');
-                            
+
                         } else if (status == 'delete') {
                             $(ad_source_tds).fadeTo(500, 0.4);
                             $(status_img).attr('src', '/images/deleted.gif');
@@ -153,7 +153,7 @@
     }
 
     function filterLineItems(filter_by, table_id) {
-        
+
         var table = $(table_id);
         var table_rows = $('tr.lineitem-row', table);
 
@@ -163,9 +163,9 @@
         _.each(table_rows, function(table_row) {
             if ($(table_row).hasClass(filter_by)){
                 $(table_row).show(500);
-            }    
+            }
         });
-        
+
     }
 
     // Sets up the status control event handlers
@@ -222,19 +222,19 @@
                 });
 
                 var impressions = campaigns_collection.reduce(function(total, n){
-                    return total + n.get('impressions'); 
+                    return total + n.get('impressions');
                 }, 0);
-                var clicks = campaigns_collection.reduce(function(total, n){ 
-                    return total + n.get('clicks'); 
+                var clicks = campaigns_collection.reduce(function(total, n){
+                    return total + n.get('clicks');
                 }, 0);
-                var conversions = campaigns_collection.reduce(function(total, n){ 
-                    return total + n.get('conversions'); 
+                var conversions = campaigns_collection.reduce(function(total, n){
+                    return total + n.get('conversions');
                 }, 0);
                 var ctr = 0;
                 if (impressions > 0){
                     ctr = clicks / impressions;
                 }
-                
+
                 $("#rollup-impressions").text(mopub.Utils.formatNumberWithCommas(impressions));
                 $("#rollup-clicks").text(mopub.Utils.formatNumberWithCommas(clicks));
                 $("#rollup-ctr").text(mopub.Utils.formatNumberAsPercentage(ctr));
@@ -246,7 +246,7 @@
         },
 
         initializeLineItemIndex: function (bootstrapping_data) {
-            
+
             initializeStatusControls();
 
             $(".filter-toggle").click(function(e) {
@@ -266,7 +266,7 @@
                 e.preventDefault();
                 filterLineItems("lineitem-row", "#line_item_table");
             });
-            
+
             $("tr.lineitem-row .moreinfo").popover({
                 placement: 'bottom',
                 title: "About this line item",
@@ -279,7 +279,7 @@
         initializeOrderDetail: function(bootstrapping_data) {
             initializeStatusControls();
             initializeDateButtons();
-            
+
             var validator = $('form#order_form').validate({
                 errorPlacement: function(error, element) {
                     element.closest('div').append(error);
@@ -333,7 +333,7 @@
                 renderCampaign(campaign);
             });
 
-            campaign.fetch();            
+            campaign.fetch();
 
             // Fill in stats for the targeting table
             _.each(bootstrapping_data.targeted_apps, function(app_key) {
@@ -382,7 +382,7 @@
                     console.dir(current_adunit);
                     renderAdUnit(current_adunit);
                 });
-                
+
                 adunit.fetch();
             });
 
@@ -412,6 +412,192 @@
             renderChart(bootstrapping_data.daily_stats,
                         bootstrapping_data.start_date);
             initializeDateButtons();
+
+            /* CREATIVE FORM */
+            $('#creativeCreateForm input[name="ad_type"]')
+                .click(function(e){
+                    $('.adTypeDependent',"#creativeCreateForm").hide();
+                    $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
+                })
+                .filter(':checked')
+                .click();
+
+            $('.format-options').change(function(e) {
+                e.preventDefault();
+                if ($(this).val()=="custom"){
+                    $(this).parents("form").find('.customc_only').show();
+                } else {
+                    $(this).parents("form").find('.customc_only').hide();
+                }
+
+                if ($(this).val().search(/full/i) != -1){
+                    $(this).parents().find('.full_only').show();
+                } else {
+                    // $('input[name$=landscape]').removeAttr('checked');
+                    $(this).parents().find('.full_only').hide();
+                }
+            }).change();
+
+            $('#creativeCreateForm-submit')
+                .button({
+                    icons: { secondary: "ui-icon-circle-triangle-e" }
+                })
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#creativeCreateForm-loading').show();
+                    $('#creativeCreateForm').submit();
+                });
+
+            $('#creativeCreateForm-cancel')
+                .button()
+                .click(function(e) {
+                    e.preventDefault();
+                    $('#advertiser-creativeAddForm').slideUp('fast', function() {
+                        $('#advertiser-adgroups-addCreativeButton').show();
+                    });
+                });
+
+            $('.creativeEditForm input[name="ad_type"]')
+                .click(function(e){
+                    // gets the form to which this belongs
+                    var form = $(this).parents('form');
+                    $('.adTypeDependent',form).hide();
+                    $('.adTypeDependent.'+$(this).val(),form).show();
+                }).filter(':checked').click();
+
+
+            $('.creativeFormAdvancedToggleButton')
+                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
+                .click(function(e) {
+                    e.preventDefault();
+                    var $options = $(this).parents('form').find('.creativeForm-advanced-options');
+                    if ($options.is(':hidden')) {
+                        $options.slideDown('fast').removeClass('hidden');
+                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+                        $('.ui-button-text', this).text('Less Options');
+                    } else {
+                        $options.slideUp('fast').addClass('hidden');
+                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+                        $('.ui-button-text', this).text('More Options');
+                    }
+                });
+
+            $('.creativeAddForm-url-helpLink').click(function(e) {
+                e.preventDefault();
+                $('#creativeAddForm-url-helpContent').dialog({
+                    buttons: { "Close": function() { $(this).dialog("close"); } }
+                });
+            });
+
+            $('#creativeAddForm input[name="creative_type"]')
+                .click(function(e) {
+                    $('#creativeCreate-text_icon').hide();
+                    $('#creativeCreate-image').hide();
+                    $('#creativeCreate-html').hide();
+                    $('#creativeCreate-'+$(this).val()).show();
+                })
+                .filter(':checked')
+                .click(); // make sure we're in sync when the page loads
+
+            $('#creativeAddForm-cancel')
+                .button()
+                .click(function(e){
+                    e.preventDefault();
+                    $('#advertiser-creativeAddForm').slideUp('fast', function() {
+                        $('#advertiser-adgroups-addCreativeButton').show();
+                    });
+                });
+
+            // Creative form ajax options
+            $('#creativeCreateForm').ajaxForm({
+                data: { ajax: true },
+                dataType : 'json',
+                success: function(jsonData) {
+
+                    $('#creativeCreateForm-loading').hide();
+                    if (jsonData.success) {
+                        $('#creativeCreateForm-success').show();
+                        window.location.reload();
+                    } else {
+                        $.each(jsonData.errors, function (iter, item) {
+                            $('.form-error-text', "#creativeCreateForm").remove();
+                            var name = item[0];
+                            var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+
+                            $("input[name=" + name + "]", "#creativeCreateForm")
+                                .addClass('error')
+                                .parent().append(error_div);
+
+                        });
+                        // reimplement the onload event
+                        initializeCreativeForm();
+                        window.location.hash = '';
+                        window.location.hash = 'advertiser-creativeAddForm';
+                        $('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+
+                }
+            });
+
+
+            $('.creativeEditForm').each(function(i){
+                    var $this = $(this);
+                    var options = {
+                        data: { ajax : true },
+                        dataType: 'json',
+                        success: function(jsonData, statusText, xhr, $form){
+                            $form.find('.creativeEditForm-loading').hide();
+                            if (jsonData.success){
+                                $form.find('.creativeCreateForm-success').show();
+                                $form.parent();
+                                $form.find('.creativeCreateForm-success').hide();
+                                window.location.reload();
+                            } else {
+                                //$form.find('.creativeEditForm-fragment').html($.decodeHtml(jsonData.html));
+                                $('.form-error-text', $form).remove();
+                                $.each(jsonData.errors, function (iter, item) {
+
+                                    var name = item[0];
+                                    var error_div = $("<div>").append(item[1]).addClass('form-error-text');
+
+                                    $("input[name=" + name + "]", $form)
+                                        .addClass('error')
+                                        .parent().append(error_div);
+
+                                });
+                                // re-implement onload
+                                $('.creativeEditForm input[name="ad_type"]')
+                                    .click(function(e){
+                                        $(this).parents('form') // gets the form to which this belongs
+                                            .find('.adTypeDependent').hide().end()
+                                            .find('.'+$(this).val()).show().end();
+                                    }).filter(':checked').click();
+                                window.location.hash = '';
+                                window.location.hash = $form.prev("a").attr('name');
+                            }
+                        }
+                    };
+                $(this).ajaxForm(options);
+            });
+
+            $('.creativeEditForm-submit')
+                .button()
+                .click(function(e) {
+                    e.preventDefault();
+                    $(this).parents('form').find('.creativeEditForm-loading').show();
+                    $(this).parents('form').submit();
+                });
+
+            $('.creativeEditForm-cancel')
+                .button()
+                .click(function(e) {
+                    e.preventDefault();
+                    $(this).parents('.advertiser-creativeEditForm')
+                        .dialog('close');
+                });
+            /* END CREATIVE FORM */
         },
 
         initializeOrderAndLineItemForm: function(bootstrapping_data) {

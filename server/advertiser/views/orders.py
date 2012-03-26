@@ -57,7 +57,7 @@ class OrderIndexHandler(RequestHandler):
 def order_index(request, *args, **kwargs):
     t = "advertiser/order_index.html"
     return OrderIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
-        
+
 
 class LineItemIndexHandler(RequestHandler):
     """
@@ -77,7 +77,7 @@ def line_item_index(request, *args, **kwargs):
     t = "advertiser/line_item_index.html"
     return LineItemIndexHandler(template=t)(request, *args, **kwargs)
 
-    
+
 class OrderDetailHandler(RequestHandler):
     """
     Top level stats rollup for all of the line items within the order.
@@ -348,7 +348,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             return JSONResponse({
                 'success': True,
                 'redirect': reverse('advertiser_line_item_detail',
-                                    args=(order.key(), line_item.key())),
+                                    kwargs={'line_item_key': line_item.key()}),
             })
 
         else:

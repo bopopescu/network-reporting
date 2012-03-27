@@ -1,0 +1,49 @@
+<tr class="details-row">
+    <% if(buffer) { %>
+    <td class="dataTable-name"></td>
+    <% } %>
+    <td class="dataTable-name"> <a href="<%= url %>"><%= name %></a> </td>
+    <% if(buffer) { %>
+    <td class="dataTable-data numeric">
+        <% if(network_stats) { %>
+        <div style="color:orange;"><%= network_stats.get_formatted_stat('revenue') %></div>
+        <% } %>
+    </td>
+    <% } %>
+    <td class="dataTable-data numeric">
+        <% if(network_stats) { %>
+        <div class="network-data"><%= network_stats.get_formatted_stat('cpm') %></div>
+        <% } %>
+        <div class="mopub-data"><%= mopub_stats.get_formatted_stat('cpm') %></div>
+    </td>
+    <td class="dataTable-data numeric">
+        <% if(network_stats && network != 'mobfox') { %>
+        <div class="network-data"><%= network_stats.get_formatted_stat('request_count') %></div>
+        <% } %>
+        <div class="mopub-data"><%= mopub_stats.get_formatted_stat('request_count') %></div>
+    </td>
+    <td class="dataTable-data numeric">
+        <% if(network_stats) { %>
+        <div class="network-data"><%= network_stats.get_formatted_stat('impression_count') %></div>
+        <% } %>
+        <div class="mopub-data"><%= mopub_stats.get_formatted_stat('impression_count') %></div>
+    </td>
+    <td class="dataTable-data numeric">
+        <% if(network_stats && network != 'mobfox') { %>
+        <div class="network-data"><%= network_stats.get_formatted_stat('fill_rate') %></div>
+        <% } %>
+        <div class="mopub-data"><%= mopub_stats.get_formatted_stat('fill_rate') %></div>
+    </td>
+    <td class="dataTable-data numeric">
+        <% if(network_stats) { %>
+        <div class="network-data"><%= network_stats.get_formatted_stat('click_count') %></div>
+        <% } %>
+        <div class="mopub-data"><%= mopub_stats.get_formatted_stat('click_count') %></div>
+    </td>
+    <td class="dataTable-data numeric">
+        <% if(network_stats) { %>
+        <div class="network-data"><%= network_stats.get_formatted_stat('ctr') %></div>
+        <% } %>
+        <div class="mopub-data"><%= mopub_stats.get_formatted_stat('ctr') %></div>
+    </td>
+</tr>

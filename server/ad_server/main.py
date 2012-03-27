@@ -118,7 +118,7 @@ class AdClickHandler(webapp.RequestHandler):
         if not self.request.get('testing') == TEST_MODE:
             stats_accumulator.log(self.request, event=stats_accumulator.CLK_EVENT)
 
-        udid = self.request.get('udid')
+        udid = self.request.get('udid').upper()
         mobile_app_id = self.request.get('appid')
         time = datetime.datetime.now()
         adunit_id = self.request.get('id')

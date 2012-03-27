@@ -267,7 +267,6 @@ class EditNetworkHandler(RequestHandler):
         return render_to_response(self.request,
                                   'networks/edit_network_form.html',
                                   {
-                                      'account_key': str(self.account.key()),
                                       'network': network_data,
                                       'custom_campaign': custom_campaign,
                                       'campaign_form': campaign_form,

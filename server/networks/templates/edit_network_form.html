@@ -34,7 +34,7 @@
 
             // set cpms when copy all cpm button is clicked for either 14 day
             // or 7 day
-            $.each(['7-day', '14-day'], function(iter, days) {
+            _.each(['7-day', '14-day'], function(days) {
                 $('#copy-' + days).click(function() {
                     $('.' + days + '-cpm').each(function() {
                         var key = $(this).attr('id').replace('-' + days, '');
@@ -42,6 +42,12 @@
                         $('#' + key + '-field').val(cpm);
                         $('#' + key + '-field').keyup();
                         });
+                    });
+                $('.copy-' + days).click(function() {
+                    var key = $(this).attr('id').replace('copy-' + days + '-', '');
+                    var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
+                    $('#' + key + '-field').val(cpm);
+                    $('#' + key + '-field').keyup();
                     });
                 });
 
@@ -614,9 +620,15 @@
                             </td>
                             {% if reporting %}
                             <td class="dataTable-data 7-day-cpm network-data" id="{{app.key}}-7-day-app-cpm">
+                                <a id="copy-7-day-{{app.key}}-app-cpm" class="copy-7-day" style="cursor:pointer">
+                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
+                                </a>
                                 {{ app.seven_day_stats.cpm|currency }}
                             </td>
                             <td class="dataTable-data 14-day-cpm network-data" id="{{app.key}}-14-day-app-cpm">
+                                <a id="copy-14-day-{{app.key}}-app-cpm" class="copy-14-day" style="cursor:pointer">
+                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
+                                </a>
                                 {{ app.fourteen_day_stats.cpm|currency }}
                             </td>
                             {% endif %}
@@ -665,7 +677,7 @@
 
     <div class="form-submit">
         <a class="button" id="submit" href="#">Save</a>
-        <a class="button" id="cancel" href="{% url networks %}">Cancel</a>
+        <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
     </div>
 </form>
 {% endblock content %}

@@ -408,11 +408,31 @@ class EditNetworkHandler(RequestHandler):
 
                     for app in apps:
                         network_config = app.network_config or NetworkConfig()
+                        app_pub_id = self.request.POST.get("app_%s-%s" %
+                                (app.key(), network_config_field), '')
                         setattr(network_config, network_config_field,
-                                self.request.POST.get("app_%s-%s" %
-                                    (app.key(), network_config_field), ''))
+                                app_pub_id)
                         AppQueryManager.update_config_and_put(app,
                                 network_config)
+
+                        if network in REPORTING_NETWORKS:
+                            # Create an AdNetworkAppMapper if there exists a login
+                            # for the network (safe to re-create if it already
+                            # exists)
+                            login = AdNetworkLoginManager.get_login(self.account,
+                                    network).get()
+                            mappers = AdNetworkMapperManager.get_mappers_for_app(
+                                    login=login, app=app)
+                            # Delete the existing mappers if there are no scrape
+                            # stats for them.
+                            for mapper in mappers:
+                                if mapper:
+                                    stats = mapper.ad_network_stats
+                                    if not stats.count(limit=1):
+                                        mapper.delete()
+                            AdNetworkMapperManager.create(network=network,
+                                    pub_id=app_pub_id, login=login,
+                                    app=app)
 
                     # TODO: resolve admob / admob native
                     # NetworkConfig for AdUnits

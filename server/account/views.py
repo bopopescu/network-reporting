@@ -135,7 +135,7 @@ class AdNetworkSettingsHandler(RequestHandler):
                             for mapper in mappers:
                                 if mapper:
                                     stats = mapper.ad_network_stats
-                                    if not stats.count():
+                                    if not stats.count(limit=1):
                                         mapper.delete()
                             AdNetworkMapperManager.create(network=network,
                                     pub_id=value, login=logins_dict[network],

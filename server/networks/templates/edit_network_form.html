@@ -559,7 +559,9 @@
                         <th class="appData-icon"></th>
                         <th class="dataTable-name"> </th>
                         <th class="dataTable-data"> Enabled </th>
+                        {% if ad_network_ids %}
                         <th class="dataTable-data pub-id-data"> Ad Network ID </th>
+                        {% endif %}
                         <th class="dataTable-data cpm-data"> Rate (USD) </th>
                         {% if reporting %}
                         <th class="dataTable-data">
@@ -598,12 +600,14 @@
                             <td class="dataTable-data">
                                 <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> (All)
                             </td>
+                            {% if ad_network_ids %}
                             <td class="dataTable-data pub-id-data">
                                 <span class="campaign_type_dependant network">
                                     {% for field in app.network_config_form %}{{ field }}{% endfor %}
                                     <span class="pub_id muted"></span>
                                 </span>
                             </td>
+                            {% endif %}
                             <td class="dataTable-data cpm-data" style="width:150px">
                                 <input id="{{app.key}}-app-cpm-field" class="cpm-field bid" type="text" style="width:50px;" />
                                 {{ adgroup_form.bid_strategy }} 
@@ -630,12 +634,14 @@
                                 <td class="dataTable-data">
                                     {{ adunit.adgroup_form.active }}
                                 </td>
+                                {% if ad_network_ids %}
                                 <td class="dataTable-data pub-id-data">
                                     <span class="campaign_type_dependant network">
                                         {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
                                         <span class="pub_id muted"></span>
                                     </span>
                                 </td>
+                                {% endif %}
                                 <td class="dataTable-data cpm-data">
                                     <div>
                                     {{ adunit.adgroup_form.bid }}

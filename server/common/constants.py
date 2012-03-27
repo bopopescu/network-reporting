@@ -179,7 +179,9 @@ NETWORKS_WITHOUT_REPORTING = {'mobfox': 'MobFox',
                               'chartboost': 'ChartBoost',
                               'appnexus': 'AppNexus',
                               'brightroll': 'BrightRoll',
-                              'greystripe': 'Greystripe'}
+                              'greystripe': 'Greystripe',
+                              'custom': 'Custom Network',
+                              'custom_native': 'Custom Native Network'}
 
 NETWORKS = dict(NETWORKS_WITHOUT_REPORTING.items() +
         REPORTING_NETWORKS.items())

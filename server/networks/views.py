@@ -21,7 +21,8 @@ from ad_network_reports.query_managers import ADMOB, \
         AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkManagementStatsManager
-from common.constants import REPORTING_NETWORKS, \
+from common.constants import NETWORKS, \
+        REPORTING_NETWORKS, \
         NETWORKS_WITHOUT_REPORTING, \
         NETWORK_ADGROUP_TRANSLATION
 
@@ -123,14 +124,18 @@ class NetworksHandler(RequestHandler):
             networks_to_setup_.append(network_data)
 
         additional_networks_ = []
+        custom_networks = []
         # Generate list of main networks that can be setup
         for network in sorted(additional_networks):
             network_data = {}
             network_data['name'] = network
             network_data['pretty_name'] = get_pretty_name(network)
 
-            additional_networks_.append(network_data)
-
+            if 'custom' in network:
+                custom_networks.append(network_data)
+            else:
+                additional_networks_.append(network_data)
+        additional_networks_ += custom_networks
 
         # Aggregate stats (rolled up stats at the app and network level for the
         # account), daily stats needed for the graph and stats for each mapper
@@ -166,12 +171,13 @@ class EditNetworkHandler(RequestHandler):
             custom_campaign = campaign.network_state == \
                     NetworkStates.CUSTOM_NETWORK_CAMPAIGN
         else:
-            # Do no other network campaigns exist?
+            # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(limit=1)
+                    self.account, network).count(limit=1) or 'custom' in \
+                    network
             # Set the default campaign name to the network name
             campaign_name = get_pretty_name(network)
-            if custom_campaign:
+            if custom_campaign and 'custom' not in network:
                 campaign_name += ' - Custom'
             default_data = {'name': campaign_name}
             campaign_form = CampaignForm(default_data)
@@ -180,10 +186,11 @@ class EditNetworkHandler(RequestHandler):
         network_data['name'] = network
         network_data['pretty_name'] = campaign_name
         reporting = False
+        ad_network_ids = False
 
         login_form = None
         login = None
-        if not custom_campaign:
+        if not custom_campaign and network in REPORTING_NETWORKS:
             # Create the login credentials form
             login = AdNetworkLoginManager.get_login(self.account,
                     network).get()
@@ -206,10 +213,12 @@ class EditNetworkHandler(RequestHandler):
                     app.network_config, prefix="app_%s" % app.key())
             app.pub_id = app.network_config_form.fields.get(network + '_pub_id',
                     False)
-
+            if app.pub_id:
+                ad_network_ids = True
 
             seven_day_stats = AdNetworkStats()
 
+            # Populate network collected cpm for optimization
             fourteen_day_stats = AdNetworkStats()
             last_7_days = gen_last_days(omit=1)
             last_14_days = gen_last_days(date_range=14, omit=1)
@@ -248,6 +257,8 @@ class EditNetworkHandler(RequestHandler):
                 adunit.pub_id = adunit.network_config_form.fields.get(network +
                         '_pub_id', False)
                 app.adunits.append(adunit)
+                if adunit.pub_id:
+                    ad_network_ids = True
 
         # Create the default adgroup form
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
@@ -269,6 +280,7 @@ class EditNetworkHandler(RequestHandler):
                                             account_network_config_form,
                                       'apps': apps,
                                       'reporting': reporting,
+                                      'ad_network_ids': ad_network_ids,
                                   })
 
     def post(self,
@@ -295,9 +307,9 @@ class EditNetworkHandler(RequestHandler):
                     query_dict['name'] = campaign.name
                 campaign_form = CampaignForm(query_dict, instance=campaign)
         else:
-            # Do no other network campaigns exist?
+            # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(self.account,
-                    network).count(limit=1)
+                    network).count(limit=1) or 'custom' in network
             campaign_form = CampaignForm(query_dict)
 
         adunit_keys = [(unicode(adunit.key())) for adunit in adunits]
@@ -575,6 +587,5 @@ def network_details(request, *args, **kwargs):
 ## Helpers
 #
 def get_pretty_name(network):
-    return REPORTING_NETWORKS.get(network, False) or \
-            NETWORKS_WITHOUT_REPORTING.get(network, False) or 'Custom'
+    return NETWORKS.get(network, False) or 'Custom'
 

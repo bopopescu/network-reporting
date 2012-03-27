@@ -9,7 +9,7 @@
 
         var campaign_view = new CampaignView({
             model: campaign,
-            el: 'orders_table'
+            el: 'inventory_table'
         });
         campaign_view.renderInline();
 
@@ -22,7 +22,7 @@
     function renderAdGroup(adgroup)  {
         var adgroup_view = new AdGroupView({
             model: adgroup,
-            el: 'orders_table'
+            el: 'inventory_table'
         });
         adgroup_view.renderInline();
     }
@@ -30,7 +30,7 @@
     function renderApp(app) {
         var app_view = new AppView({
             model: app,
-            el: 'orders_table'
+            el: 'inventory_table'
         });
         app_view.renderInline();
 
@@ -43,7 +43,7 @@
     function renderAdUnit(adunit) {
         var adunit_view = new AdUnitView({
             model: adunit,
-            el: 'orders_table'
+            el: 'inventory_table'
         });
         adunit_view.renderInline();
     }
@@ -454,7 +454,7 @@
                     var stats_endpoint = this.get('stats_endpoint');
                     return '/api/adgroup/'
                         + bootstrapping_data.line_item_key
-                        + '/app/'
+                        + '/apps/'
                         + this.id
                         + "?"
                         + window.location.search.substring(1)
@@ -478,7 +478,7 @@
                     var stats_endpoint = this.get('stats_endpoint');
                     return '/api/adgroup/'
                         + bootstrapping_data.line_item_key
-                        + '/adunit/'
+                        + '/adunits/'
                         + this.id
                         + "?"
                         + window.location.search.substring(1)

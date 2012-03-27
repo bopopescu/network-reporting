@@ -2,17 +2,9 @@
     "use strict";
 
     /*
-     * # Utility functions
+     * # Utility functions for rendering models.
+     * REFACTOR: move to views/inventory.js
      */
-
-    function initializeDateButtons() {
-        // set up stats breakdown dateOptions
-        $('#stats-breakdown-dateOptions input').click(function() {
-            $('.stats-breakdown-value').hide();
-            $('.stats-breakdown-value.'+$(this).val()).show();
-        });
-    }
-
     function renderCampaign(campaign) {
 
         var campaign_view = new CampaignView({
@@ -56,6 +48,10 @@
         adunit_view.renderInline();
     }
 
+    /*
+     * Sets up the page chart. 
+     * REFACTOR: this should be moved somewhere common.
+     */
     function renderChart(stats, start_date) {
         mopub.dashboardStatsChartData = {
             pointStart: start_date,
@@ -85,6 +81,13 @@
         });
     }
 
+    /*
+     * Changes the status of an ad source (or list of ad sources) to
+     * `status` (which should be one of: running, paused, archived,
+     * deleted). Sets up and makes the ajax call, and then updates the
+     * table row once the ajax call has finished. See the
+     * AdSourceStatusChangeHandler class in orders.py for more info.
+     */
     function changeStatus(ad_sources, status) {
 
         _.each(ad_sources, function(ad_source) {
@@ -152,6 +155,11 @@
         });
     }
 
+    /*
+     * Hides all table rows in `table_id` that don't have the class
+     * `filter_by`. Used to filter orders/line items by their status
+     * (running/paused/scheduled/completed/archived).
+     */
     function filterLineItems(filter_by, table_id) {
         
         var table = $(table_id);
@@ -168,26 +176,51 @@
         
     }
 
-    // Sets up the status control event handlers
+    
+    /*
+     * Sets up the click handler for the status control button. This
+     * is the button that filters the table based on status
+     * (running/paused/scheduled/completed/archived).
+     */
     function initializeStatusControls() {
         $(".status_change.btn").click(function(e){
             e.preventDefault();
             var status = $(this).attr('data-toggle');
             var checked_adgroups = $(".status_change_control:checked");
-            console.log(checked_adgroups);
             var keys = _.map(checked_adgroups, function (row) {
                 return $(row).attr('id');
             });
 
-            console.log(keys);
-
             changeStatus(keys, status);
-
         });
     }
 
-    
-    
+    /*
+     * Creates the popovers on the line item table rows.
+     * Unfinished.
+     */
+    function initializePopovers() {
+
+        $("tr.lineitem-row .moreinfo").popover({
+            placement: 'bottom',
+            title: "About this line item",
+            content: 'Lorem ipsum dolor sit amet, consectetur' + 
+                ' adipisicing elit, sed do eiusmod tempor incididunt' +
+                ' <strong>motherfucker</strong>.',
+            delay: { hide: 250 }                
+        });
+    }
+
+    /*
+     * This definitely should be moved to something common.
+     */
+    function initializeDateButtons() {
+        // set up stats breakdown dateOptions
+        $('#stats-breakdown-dateOptions input').click(function() {
+            $('.stats-breakdown-value').hide();
+            $('.stats-breakdown-value.'+$(this).val()).show();
+        });
+    }    
     /*
      * # OrdersController is the controller for everything 
      *   under /advertise/orders/, including:
@@ -202,6 +235,7 @@
          */
         initializeIndex: function(bootstrapping_data) {
             initializeStatusControls();
+            initializePopovers();
 
             /*
              * Create a campaign collection, fetch all of the
@@ -270,19 +304,6 @@
             $("#filter-button").click(function(e) {
                 e.preventDefault();
                 filterLineItems("lineitem-row", "#line_item_table");
-            });
-            
-            /*
-             * Create the popovers on the line item table rows
-             */
-            $("tr.lineitem-row .moreinfo").popover({
-                placement: 'bottom',
-                title: "About this line item",
-                content: 'Lorem ipsum dolor sit amet, consectetur' + 
-                    ' adipisicing elit, sed do eiusmod tempor incididunt' +
-                    ' <strong>motherfucker</strong>.',
-                delay: { hide: 250 }
-                
             });
         },
 
@@ -356,7 +377,7 @@
                     var stats_endpoint = this.get('stats_endpoint');
                     return '/api/campaign/'
                         + bootstrapping_data.order_key
-                        + '/app/'
+                        + '/apps/'
                         + this.id
                         + "?"
                         + window.location.search.substring(1)
@@ -380,7 +401,7 @@
                     var stats_endpoint = this.get('stats_endpoint');
                     return '/api/campaign/'
                         + bootstrapping_data.order_key
-                        + '/adunit/'
+                        + '/adunits/'
                         + this.id
                         + "?"
                         + window.location.search.substring(1)
@@ -389,7 +410,6 @@
                 };
 
                 adunit.bind('change', function(current_adunit){
-                    console.dir(current_adunit);
                     renderAdUnit(current_adunit);
                 });
                 
@@ -422,6 +442,58 @@
             renderChart(bootstrapping_data.daily_stats,
                         bootstrapping_data.start_date);
             initializeDateButtons();
+
+            // Fill in stats for the targeting table
+            _.each(bootstrapping_data.targeted_apps, function(app_key) {
+                var app = new App({
+                    id: app_key,
+                    stats_endpoint: 'direct'
+                });
+
+                app.url = function () {
+                    var stats_endpoint = this.get('stats_endpoint');
+                    return '/api/adgroup/'
+                        + bootstrapping_data.line_item_key
+                        + '/app/'
+                        + this.id
+                        + "?"
+                        + window.location.search.substring(1)
+                        + '&endpoint='
+                        + stats_endpoint;
+                };
+
+                app.bind('change', function(current_app){
+                    renderApp(current_app);
+                });
+                app.fetch();
+            });
+
+            _.each(bootstrapping_data.targeted_adunits, function(adunit_key) {
+                var adunit = new AdUnit({
+                    id: adunit_key,
+                    stats_endpoint: 'direct'
+                });
+
+                adunit.url = function () {
+                    var stats_endpoint = this.get('stats_endpoint');
+                    return '/api/adgroup/'
+                        + bootstrapping_data.line_item_key
+                        + '/adunit/'
+                        + this.id
+                        + "?"
+                        + window.location.search.substring(1)
+                        + '&endpoint='
+                        + stats_endpoint;
+                };
+
+                adunit.bind('change', function(current_adunit){
+                    renderAdUnit(current_adunit);
+                });
+                
+                adunit.fetch();
+            });
+
+
         },
 
         initializeOrderAndLineItemForm: function(bootstrapping_data) {

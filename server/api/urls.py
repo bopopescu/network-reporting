@@ -4,31 +4,70 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns(
     'api.views',
 
-    # /api/app/<app_key>
-    # all adunits for an account
+    ########
+    # APPS # 
+    ########
+
+    # all apps for an account
     url(r'^app/$',
         'app_service',
         name='app_service'),
 
-    # /api/app/<app_key>
-    # specific adunits for an account
+    # specific app
     url(r'^app/(?P<app_key>[-\w\.]+)$',
         'app_service',
         name='app_service'),
 
-    # /api/app/<app_key>/adunits/
+    # a single app targeted by an adgroup
+    url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)/apps/(?P<app_key>[-\w\.]+)$',
+        'app_service',
+        name='adgroup_app_service'),
+
+    # a single app targeted by a campaign (possibly multiple adgroups)
+    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/apps/(?P<app_key>[-\w\.]+)$',
+        'app_service',
+        name='app_service'),
+    
+    ###########
+    # ADUNITS #
+    ###########
+
+    # all adunits
+    url(r'^adunits/(?P<adunit_key>[-\w\.]+)$',
+        'adunit_service',
+        name='adunit_service'),
+    
+    # specific adunit
+    url(r'^adunits/(?P<adunit_key>[-\w\.]+)$',
+        'adunit_service',
+        name='adunit_service'),
+    
     # all adunits for an app
     url(r'^app/(?P<app_key>[-\w\.]+)/adunits/$',
         'adunit_service',
         name='app_adunit_service'),
 
-    # /api/app/<app_key>/adunits/<adunit_key>
-    # specific adunits for an app
-    url(r'^app/(?P<app_key>[-\w\.]+)/adunits/(?P<adunit_key>[-\w\.]+)$',
+    # all adunits targeted by an adgroup
+    url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)/adunits/$',
+        'adunit_service',
+        name='adgroup_adunit_service'),
+    
+    # all adunits targeted by an individual campaign
+    # (possibly with multiple adgroups)
+    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/adunits/$',
         'adunit_service',
         name='adunit_service'),
+    
+    # an individual adunit targeted by an individual campaign
+    # (possibly with multiple adgroups)
+    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/adunits/(?P<adunit_key>[-\w\.]+)$',
+        'adunit_service',
+        name='adunit_service'),
+    
+    ############
+    # ADGROUPS #
+    ############
 
-    # # /api/adgroup/
     # # all adgroups for an account
     # url(r'^adgroup/$',
     #     'adgroup_service',
@@ -39,48 +78,28 @@ urlpatterns = patterns(
     url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)$',
         'adgroup_service',
         name='adgroup_service'),
+    
+    #############
+    # CAMPAIGNS #
+    #############
 
-    # /api/adgroup/<adgroup_key/adunits/
-    # all adunits from an adgroup
-    url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)/adunits/$',
-        'adunit_service',
-        name='adgroup_adunit_service'),
-
-    # /api/adgroup/<adgroup_key/apps/<app_key>
-    # individual app from an adgroup
-    url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)/apps/(?P<app_key>[-\w\.]+)$',
-        'app_service',
-        name='adgroup_app_service'),
-
-    # /api/adgroup/<adgroup_key/adunits/<adunit_key>
-    # individual adunit from an adgroup
-
-
-    # api/campaign/
-    # all campaigns and adgroups for campaign_key
+    # all campaigns and adgroups for an account
     url(r'^campaign/$',
         'campaign_service',
         name='campaign_service'),
 
-    # api/campaign/<campaign_key>
-    # all campaigns and adgroups for campaign_key
+    # a single campaign with all of its adgroups
     url(r'^campaign/(?P<campaign_key>[-\w\.]+)$',
         'campaign_service',
         name='campaign_service'),
 
-    # api/campaign/<campaign_key>/app/<app_key>
-    # all apps targeted by campaign
-    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/app/(?P<app_key>[-\w\.]+)$',
-        'app_service',
-        name='app_service'),
-
-    # api/campaign/<campaign_key>/adunit/<adunit_key>
-    # all adunits targeted by campaign
-    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/adunit/(?P<adunit_key>[-\w\.]+)$',
-        'adunit_service',
-        name='adunit_service'),
     
-    # REFACTOR: move this to ad_network_reports or networks
+
+    ############
+    # NETWORKS #
+    ############
+    #REFACTOR: move somewhere else
+    
     url(r'^ad_network/account_roll_up/$',
         'account_roll_up_service',
         name='account_roll_up_service'),

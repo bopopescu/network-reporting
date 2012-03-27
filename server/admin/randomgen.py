@@ -41,12 +41,12 @@ USERNAME = "test@mopub.com"
 PASSWORD = "test"
 
 NUM_ACCOUNTS = 1
-NUM_APPS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
+NUM_APPS = 2 #ONLY SUPPORT ONE ACCOUNT FOR NOW
 NUM_CAMPAIGNS_PER_APP = 1#3
 NUM_CREATIVES_PER_ADGROUP = 1
 NUM_ADUNITS_PER_APP = 1#3
 
-NETWORKS_TO_USE = ['admob', 'jumptap']
+NETWORKS_TO_USE = ['iad', 'millennial']
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
 ### End configuration parameters
@@ -408,8 +408,6 @@ def main():
     creatives_per_campaign = {}
     campaigns = []
     for network in NETWORKS_TO_USE:
-        if network == 'iad':
-            network = 'iAd'
         campaign = Campaign(account=account,
                 campaign_type='network',
                 network_type=network,

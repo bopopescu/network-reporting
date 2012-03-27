@@ -52,7 +52,8 @@ from google.appengine.ext import db
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager, \
         CreativeQueryManager
-from advertiser.models import NetworkStates
+from advertiser.models import NetworkStates, \
+        DEVICES
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
@@ -495,11 +496,25 @@ class NetworkDetailsHandler(RequestHandler):
         if not campaign:
             raise Http404
 
-
-        # TODO: look for ways to make simpeler by getting stats keyed on
-        # campaign
-        network_data['active'] = campaign.active
         network_data['campaign_key'] = str(campaign.key())
+        network_data['active'] = campaign.active
+        network_data['targeting'] = []
+
+        # Set targeting
+        adunit = AdUnitQueryManager.get_adunits(account=self.account,
+                limit=1)[0]
+        adgroup = AdGroupQueryManager.get_network_adgroup(campaign.key(),
+                adunit.key(), self.account.key(), network, get_from_db=True)
+        if adgroup.device_targeting:
+            for device, pretty_name in DEVICES.iteritems():
+                if getattr(adgroup, 'target_' + device):
+                    network_data['targeting'].append(pretty_name)
+
+        if network_data['targeting']:
+            network_data['targeting'] = ', '.join(network_data['targeting'])
+        else:
+            network_data['targeting'] = 'All'
+        logging.info(network_data['targeting'])
 
         campaign_data = {'id': str(campaign.key()),
                          'network': network,

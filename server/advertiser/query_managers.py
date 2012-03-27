@@ -269,7 +269,6 @@ class AdGroupQueryManager(QueryManager):
 
         return adgroups.fetch(limit)
 
-    # TODO: Make all of this DRY
     @classmethod
     def get_network_adgroup(cls, campaign_key, adunit_key, account_key, network_type,
             get_from_db=False):
@@ -300,7 +299,6 @@ class AdGroupQueryManager(QueryManager):
 
         adgroup = AdGroup(key_name=ag_key_name, name='Network')
         # set up the rest of the properties
-        adgroup.bid_strategy = 'cpm'
         adgroup.account = db.Key(account_key)
         adgroup.campaign = db.Key(campaign_key)
         adgroup.network_type = network_type

@@ -189,17 +189,11 @@
 
             // device targeting
             $('input[name="device_targeting"]').change(function() {
-                console.log('$(this).val()');
-                console.log($(this));
-                console.log($(this).val());
                 if($(this).val() == '0') {
                     $('#device_targeting').slideUp();
                 }
                 else {
                     $('#device_targeting').slideDown();
-                    console.log('setting display');
-                    $('#device_targeting').css('display', '');
-                    console.log($('#device_targeting').css('display'));
                 }
             });
 
@@ -437,7 +431,7 @@
                         <li><label for="id_device_targeting_1"><input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> Filter by device and OS</label></li>
                     </ul>
                 </span>
-                <ul id="device_targeting">
+                <ul id="device_targeting" class="{% if not adgroup_form.device_targeting|display_value %}hidden{% endif %}">
                     <li>
                     <ul class="device_type">
                         <li><label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label></li>

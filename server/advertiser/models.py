@@ -214,11 +214,6 @@ NETWORKS = ["iAd", "admob", "millennial", "ejam","chartboost", "appnexus", \
         "inmobi", "mobfox", "jumptap", "brightroll", "greystripe", \
         "admob_native"]
 
-DEVICES = {'iphone': 'iPhone',
-           'ipad': 'iPad',
-           'ipod': 'iPod',
-           'android': 'Android'}
-
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')

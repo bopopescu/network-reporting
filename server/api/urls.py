@@ -41,14 +41,26 @@ urlpatterns = patterns(
     url(r'^adunits/(?P<adunit_key>[-\w\.]+)$',
         'adunit_service',
         name='adunit_service'),
+
+    # specific adunit for an app
+    # same thing as /adunits/<adunit_key>/
+    url(r'^app/(?P<app_key>[-\w\.]+)/adunits/(?P<adunit_key>[-\w\.]+)$',
+        'adunit_service',
+        name='app_adunit_service'),
     
     # all adunits for an app
     url(r'^app/(?P<app_key>[-\w\.]+)/adunits/$',
         'adunit_service',
         name='app_adunit_service'),
+    
 
     # all adunits targeted by an adgroup
     url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)/adunits/$',
+        'adunit_service',
+        name='adgroup_adunit_service'),
+
+        # all adunits targeted by an adgroup
+    url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)/adunits/(?P<adunit_key>[-\w\.]+)$',
         'adunit_service',
         name='adgroup_adunit_service'),
     
@@ -73,7 +85,6 @@ urlpatterns = patterns(
     #     'adgroup_service',
     #     name='adgroup_service'),
 
-    # /api/adgroup/<adgroup_key>
     # specific adgroup for an account
     url(r'^adgroup/(?P<adgroup_key>[-\w\.]+)$',
         'adgroup_service',

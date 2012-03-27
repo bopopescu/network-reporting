@@ -11,22 +11,23 @@ Whenever you see "Campaign", think "Order", and wherever you see
 "AdGroup", think "LineItem".
 """
 
-from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse
 from django.http import Http404
-from django.utils import simplejson
 
+from common.ragendja.template import JSONResponse
 from common.utils.request_handler import RequestHandler
-from common.ragendja.template import JSONResponse, render_to_response
 
 from account.query_managers import AccountQueryManager
 from advertiser.forms import (OrderForm, LineItemForm, BaseCreativeForm,
                               ImageCreativeForm, TextAndTileCreativeForm,
                               HtmlCreativeForm)
-from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager
+from advertiser.query_managers import (CampaignQueryManager,
+                                       AdGroupQueryManager,
+                                       CreativeQueryManager)
 from publisher.query_managers import AppQueryManager, AdUnitQueryManager
-from reporting.query_managers import StatsModelQueryManager
 from reporting.models import StatsModel
+from reporting.query_managers import StatsModelQueryManager
 
 import logging
 
@@ -34,7 +35,7 @@ import logging
 flatten = lambda l: [item for sublist in l for item in sublist]
 
 ctr = lambda clicks, impressions: \
-      (clicks/float(impressions) if impressions else 0)
+      (clicks / float(impressions) if impressions else 0)
 
 
 class OrderIndexHandler(RequestHandler):
@@ -56,11 +57,12 @@ class OrderIndexHandler(RequestHandler):
             'line_items': line_items
         }
 
+
 @login_required
 def order_index(request, *args, **kwargs):
     t = "advertiser/order_index.html"
     return OrderIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
-        
+
     
 class OrderDetailHandler(RequestHandler):
     """
@@ -74,8 +76,7 @@ class OrderDetailHandler(RequestHandler):
 
         # Set up the stats
         stats_q = StatsModelQueryManager(self.account, self.offline)
-        all_stats = stats_q.get_stats_for_days(advertiser=order,
-                                                     days = self.days)
+        all_stats = stats_q.get_stats_for_days(advertiser=order, days=self.days)
 
         # Get the targeted adunits and group them by their app.
         targeted_adunits = flatten([AdUnitQueryManager.get(line_item.site_keys) \
@@ -135,7 +136,8 @@ class LineItemDetailHandler(RequestHandler):
             'html_creative_form': html_creative_form,
             'stats': format_stats(all_stats),
             'targeted_apps': targeted_apps.values(),
-            'targeted_app_keys': targeted_apps.keys()
+            'targeted_app_keys': targeted_apps.keys(),
+            'targeted_adunits': targeted_adunits
         }
 
 
@@ -143,6 +145,7 @@ class LineItemDetailHandler(RequestHandler):
 def line_item_detail(request, *args, **kwargs):
     t = "advertiser/lineitem_detail.html"
     return LineItemDetailHandler(template=t, id="line_item_key")(request, use_cache=False, *args, **kwargs)
+
 
 class AdSourceStatusChangeHandler(RequestHandler):
     """
@@ -202,9 +205,6 @@ class OrderFormHandler(RequestHandler):
     """
     Edit order form handler which gets submitted from the order detail page.
     """
-    def get(self, order_key):
-        raise Http404
-
     def post(self, order_key):
         if not self.request.is_ajax():
             raise Http404
@@ -245,19 +245,18 @@ class OrderAndLineItemFormHandler(RequestHandler):
     New/Edit form page for Orders and LineItems.
     """
     def get(self, order_key=None, line_item_key=None):
-        if order_key:
-            # TODO: make sure order belongs to account
+        if line_item_key:
+            line_item = AdGroupQueryManager.get(line_item_key)
+            order = line_item.campaign
+        elif order_key:
             order = CampaignQueryManager.get(order_key)
-            if line_item_key:
-                # TODO: make sure line item belongs to account
-                # TODO: make sure line item belongs to order
-                line_item = AdGroupQueryManager.get(line_item_key)
-            else:
-                line_item = None
+            line_item = None
         else:
             order = None
-            # TODO: make sure line_item_key is None
             line_item = None
+
+        if order and not order.is_order:
+            raise Http404
 
         order_form = OrderForm(instance=order, prefix='order')
         line_item_form = LineItemForm(instance=line_item)
@@ -276,26 +275,26 @@ class OrderAndLineItemFormHandler(RequestHandler):
         if not self.request.is_ajax():
             raise Http404
 
-        if order_key:
-            # TODO: make sure order belongs to account
+        if line_item_key:
+            line_item = AdGroupQueryManager.get(line_item_key)
+            order = line_item.campaign
+        elif order_key:
             order = CampaignQueryManager.get(order_key)
-            if line_item_key:
-                # TODO: make sure line item belongs to account
-                # TODO: make sure line item belongs to order
-                line_item = AdGroupQueryManager.get(line_item_key)
-            else:
-                line_item = None
+            line_item = None
         else:
             order = None
-            # TODO: make sure line_item_key is None
             line_item = None
 
-        if not order:
+        if order:
+            if not order.is_order:
+                raise Http404
+        else:
             order_form = OrderForm(self.request.POST, instance=order, prefix='order')
 
             if order_form.is_valid():
                 order = order_form.save()
                 order.account = self.account
+                order.is_order = True
                 order.save()
                 CampaignQueryManager.put(order)
 
@@ -332,7 +331,7 @@ class OrderAndLineItemFormHandler(RequestHandler):
             return JSONResponse({
                 'success': True,
                 'redirect': reverse('advertiser_line_item_detail',
-                                    args=(order.key(), line_item.key())),
+                                    kwargs={'line_item_key': line_item.key()}),
             })
 
         else:
@@ -354,47 +353,58 @@ class OrderAndLineItemFormHandler(RequestHandler):
 
 
 @login_required
-def order_and_line_item_form(request, *args, **kwargs):
-    template = "advertiser/forms/order_and_line_item_form.html",
-    return OrderAndLineItemFormHandler(template=template)(request, use_cache=False, *args, **kwargs)
+def order_and_line_item_form_new_order(request, *args, **kwargs):
+    handler = OrderAndLineItemFormHandler(template="advertiser/forms/order_and_line_item_form.html")
+    return handler(request, use_cache=False, *args, **kwargs)
+
+
+@login_required
+def order_and_line_item_form_new_line_item(request, *args, **kwargs):
+    handler = OrderAndLineItemFormHandler(id="order_key",
+                                          template="advertiser/forms/order_and_line_item_form.html")
+    return handler(request, use_cache=False, *args, **kwargs)
+
+
+@login_required
+def order_and_line_item_form_edit(request, *args, **kwargs):
+    handler = OrderAndLineItemFormHandler(id="line_item_key",
+                                          template="advertiser/forms/order_and_line_item_form.html")
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 class CreativeFormHandler(RequestHandler):
-    def get(self, order_key, line_item_key, creative_key=None):
-        raise Http404
+    """
+    New/Edit form page for Creatives.
+    """
+    def post(self, line_item_key=None, creative_key=None):
+        if not self.request.is_ajax():
+            raise Http404
 
-    def post(self, order_key, line_item_key, creative_key=None):
-        if order_key:
-            # TODO: make sure order belongs to account
-            order = CampaignQueryManager.get(order_key)
-            if line_item_key:
-                # TODO: make sure line item belongs to account
-                # TODO: make sure line item belongs to order
-                line_item = AdGroupQueryManager.get(line_item_key)
-            else:
-                line_item = None
+        if creative_key:
+            creative = CreativeQueryManager.get(creative_key)
+            line_item = creative.ad_group
         else:
-            order = None
-            # TODO: make sure line_item_key is None
-            line_item = None
+            creative = None
+            line_item = AdGroupQueryManager.get(line_item_key)
+
+        creative_form = BaseCreativeForm(self.request.POST, instance=creative)
 
         if creative_form.is_valid():
+            creative = creative_form.save()
+            creative.account = self.account
+            creative.ad_group = line_item
+            creative.save()
+            CreativeQueryManager.put(creative)
 
             return JSONResponse({
                 'success': True,
                 'redirect': reverse('advertiser_line_item_detail',
-                                    args=(order.key(), line_item.key())),
+                                    kwargs={'line_item_key': line_item.key()}),
             })
 
         else:
             errors = {}
-            for key, value in line_item_form.errors.items():
-                # TODO: find a less hacky way to get jQuery validator's
-                # showErrors function to work with the SplitDateTimeWidget
-                if key == 'start_datetime':
-                    key = 'start_datetime_1'
-                elif key == 'end_datetime':
-                    key = 'end_datetime_1'
+            for key, value in creative_form.errors.items():
                 # TODO: just join value?
                 errors[key] = ' '.join([error for error in value])
 
@@ -405,9 +415,15 @@ class CreativeFormHandler(RequestHandler):
 
 
 @login_required
-def creative_form(request, *args, **kwargs):
-    template = "advertiser/forms/order_and_line_item_form.html",
-    return OrderAndLineItemFormHandler(template=template)(request, use_cache=False, *args, **kwargs)
+def creative_form_new(request, *args, **kwargs):
+    handler = CreativeFormHandler(id="line_item_key")
+    return handler(request, use_cache=False, *args, **kwargs)
+
+
+@login_required
+def creative_form_edit(request, *args, **kwargs):
+    handler = CreativeFormHandler(id="creative_key")
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 ###########

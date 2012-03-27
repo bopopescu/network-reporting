@@ -97,6 +97,7 @@ class AdUnitService(RequestHandler):
     """
     API Service for delivering serialized AdUnit data
     """
+    
     def get(self, adunit_key=None,
             app_key=None, adgroup_key=None, campaign_key=None):
         """
@@ -108,58 +109,12 @@ class AdUnitService(RequestHandler):
         stats_endpoint = self.request.GET.get('endpoint', 'all')
         stats = get_stats_fetcher(self.account.key(), stats_endpoint)
 
-        # REFACTOR: The app key isn't necessary (we can fetch an
-        # adunit directly with it's key)
-        if app_key:
-            # Get each adunit for the app and convert it to JSON
-            app = AppQueryManager.get_app_by_key(app_key)
-
-            # REFACTOR
-            # ensure the owner of this adgroup is the request's
-            # current user
-            if app.account.key() != self.account.key():
-                raise Http404
-
-            adunits = AdUnitQueryManager.get_adunits(app=app)
-            response = [adunit.toJSON() for adunit in adunits]
-
-            # Update each app with stats from the selected endpoint
-            for adunit in response:
-                adunit_stats = stats.get_adunit_stats(adunit['id'],
-                                                      self.start_date,
-                                                      self.end_date)
-                # We update with the app id/key because our
-                # backbone models often need it for reference
-                adunit_stats.update({'app_id':app_key})
-                adunit.update(adunit_stats)
-
-                # Update the adunit with the information from the
-                # marketplace adgroup. At this time all the adunit
-                # needs to know about is the adgroup's price floor
-                # and whether the marketplace is on/off for that
-                # adunit (active=True/False)
-                adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit['id'],
-                                                                      str(self.account.key()),
-                                                                      get_from_db=True)
-                try:
-                    adunit.update(price_floor = adgroup.mktplace_price_floor)
-                except AttributeError, e:
-                    logging.warn(e)
-                    adunit.update(price_floor = "0.25")
-
-                try:
-                    adunit.update(active = adgroup.active)
-                except AttributeError, e:
-                    logging.warn(e)
-                    adunit.update(active = False)
-
-            return JSONResponse(response)
 
         # If an adgroup key was specified instead of an app key,
         # then we'll only get stats data from that adgroup. AdUnit
         # stats will only reflect how adunits performed in that
         # adgroup.
-        elif adgroup_key:
+        if adgroup_key:
             adgroup = AdGroupQueryManager.get(adgroup_key)
 
             # REFACTOR
@@ -216,8 +171,55 @@ class AdUnitService(RequestHandler):
                 
             return JSONResponse(response[0])
             
+        # REFACTOR: The app key isn't necessary (we can fetch an
+        # adunit directly with it's key)
+        elif app_key:
+            # Get each adunit for the app and convert it to JSON
+            app = AppQueryManager.get_app_by_key(app_key)
+
+            # REFACTOR
+            # ensure the owner of this adgroup is the request's
+            # current user
+            if app.account.key() != self.account.key():
+                raise Http404
+
+            adunits = AdUnitQueryManager.get_adunits(app=app)
+            response = [adunit.toJSON() for adunit in adunits]
+
+            # Update each app with stats from the selected endpoint
+            for adunit in response:
+                adunit_stats = stats.get_adunit_stats(adunit['id'],
+                                                      self.start_date,
+                                                      self.end_date)
+                # We update with the app id/key because our
+                # backbone models often need it for reference
+                adunit_stats.update({'app_id':app_key})
+                adunit.update(adunit_stats)
+
+                # Update the adunit with the information from the
+                # marketplace adgroup. At this time all the adunit
+                # needs to know about is the adgroup's price floor
+                # and whether the marketplace is on/off for that
+                # adunit (active=True/False)
+                adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit['id'],
+                                                                      str(self.account.key()),
+                                                                      get_from_db=True)
+                try:
+                    adunit.update(price_floor = adgroup.mktplace_price_floor)
+                except AttributeError, e:
+                    logging.warn(e)
+                    adunit.update(price_floor = "0.25")
+
+                try:
+                    adunit.update(active = adgroup.active)
+                except AttributeError, e:
+                    logging.warn(e)
+                    adunit.update(active = False)
+
+            return JSONResponse(response)
+            
         else:
-            return JSONResponse({'error': 'No parameters provided'})
+            return JSONResponse({'error': 'not yet implemented'})
 
 
     def post(self):

@@ -134,7 +134,7 @@ class ReportQueryManager(CachedQueryManager):
         #Not implemented
         return None
 
-    def get_scheduled(self, to_fetch=100):
+    def get_scheduled(self, to_fetch=50):
         report_q = ScheduledReport.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False).filter('default =', False)
         return report_q.fetch(to_fetch)
 

@@ -235,6 +235,7 @@ class EditNetworkHandler(RequestHandler):
             app.fourteen_day_stats = fourteen_day_stats
 
             # Create different adgroup form for each adunit
+            adunit_adgroup = None
             app.adunits = []
             for adunit in app.all_adunits:
                 adgroup = None
@@ -242,6 +243,8 @@ class EditNetworkHandler(RequestHandler):
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign.key(), adunit.key(),
                             self.account.key(), network, True)
+                    if adgroup:
+                        adunit_adgroup = adgroup
                 adunit.adgroup_form = AdGroupForm(is_staff=
                         self.request.user.is_staff, instance=adgroup,
                         prefix=str(adunit.key()))
@@ -259,6 +262,10 @@ class EditNetworkHandler(RequestHandler):
                 app.adunits.append(adunit)
                 if adunit.pub_id:
                     ad_network_ids = True
+            # For app level bid strategy
+            app.adgroup_form = AdGroupForm(is_staff=
+                    self.request.user.is_staff, instance=adunit_adgroup,
+                    prefix=str(app.key()))
 
         # Create the default adgroup form
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
@@ -325,18 +332,28 @@ class EditNetworkHandler(RequestHandler):
 
             # Get a set of the AdGroupForm field names
             fields = set(AdGroupForm.base_fields.keys())
-            # Copy default form fields to all adgroup adunit forms
+            # Copy default form fields to all adgroup adunit forms in the query
+            # dict
             for key, val in query_dict.iteritems():
                 if key in fields:
                     for adunit in adunits:
                         if str(adunit.key()) + '-' + key not in query_dict:
                             query_dict[str(adunit.key()) + '-' + key] = val
 
+            # Copy app bid_strategies to the adunit adgroup form level in the
+            # query dict
+            for app in apps:
+                bid_strategy = query_dict.get(str(app.key()) + '-bid_strategy')
+                for adunit in app.all_adunits:
+                    query_dict[str(adunit.key()) + '-bid_strategy'] = \
+                            bid_strategy
+
             adgroup_forms_are_valid = True
             adgroup_forms = []
             for adunit in adunits:
                 network_adgroup = AdGroupQueryManager.get_network_adgroup(
-                        campaign.key(), adunit.key(), self.account.key(), network)
+                        campaign.key(), adunit.key(), self.account.key(),
+                        network)
 
                 query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
 
@@ -359,10 +376,11 @@ class EditNetworkHandler(RequestHandler):
                 for adgroup_form in adgroup_forms:
                     adgroup = adgroup_form.save()
                     adgroup.campaign = campaign
-                    adgroup.network_type = network
                     if network in NETWORK_ADGROUP_TRANSLATION:
                         adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[
                                 network]
+                    else:
+                        adgroup.network_type = network
 
                     html_data = None
                     if adgroup.network_type == 'custom':

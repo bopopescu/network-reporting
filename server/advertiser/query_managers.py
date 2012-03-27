@@ -293,9 +293,10 @@ class AdGroupQueryManager(QueryManager):
         # set up the rest of the properties
         adgroup.account = db.Key(account_key)
         adgroup.campaign = db.Key(campaign_key)
-        adgroup.network_type = network_type
         if network_type in NETWORK_ADGROUP_TRANSLATION:
             adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[network_type]
+        else:
+            adgroup.network_type = network_type
         # only targetted at one adunit
         adgroup.site_keys = [db.Key(adunit_key)]
 

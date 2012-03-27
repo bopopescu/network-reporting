@@ -118,7 +118,7 @@ class AdClickHandler(webapp.RequestHandler):
         if not self.request.get('testing') == TEST_MODE:
             stats_accumulator.log(self.request, event=stats_accumulator.CLK_EVENT)
 
-        udid = self.request.get('udid').lower()
+        udid = self.request.get('udid').upper()
         mobile_app_id = self.request.get('appid')
         time = datetime.datetime.now()
         adunit_id = self.request.get('id')
@@ -164,20 +164,6 @@ class AppOpenHandler(webapp.RequestHandler):
         # bail early if udid AND mobile_appid is not provided
         if not (udid and mobile_appid):
             return
-
-        # Going from the datastore it looks like somehow the
-        # click events are having their UDID recorded as 
-        # sha:<lowercase and numbers> and the appopen events
-        # are having their UDID's recorded as 
-        # sha1:<uppercase and numbers>, the get_udid_appid
-        # is fixed for the lower/upper casing and this
-        # should fix the sha1/sha thing.
-        #####################
-        #### NAFIS PLZ CHECK OT MAKE SURE THIS IS OKAY
-        ##########
-        udid = udid.replace('sha1:', 'sha:')
-        ##################
-        ##################
 
         aoe_manager = AppOpenEventManager()
         aoe, conversion_logged = aoe_manager.log_conversion(udid, mobile_appid, time=datetime.datetime.now())

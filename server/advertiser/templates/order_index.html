@@ -5,7 +5,7 @@
 {% block dateButtons %}{% endblock dateButtons %}
 
 {% block content %}
-
+  
   <div class="rollup">
     <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
       <thead>
@@ -33,31 +33,36 @@
       </tbody>
     </table>
   </div>
-
+  
   <ul class="tabs">
-    <li class="active"> <a href="#orders"> Orders </a> </li>
-    <li> <a href="#line_items"> Line Items </a> </li>
+    <li class="active">
+      <a href="#orders"> Orders </a>
+    </li>
+    <li>
+      <a href="#line_items"> Line Items </a>
+    </li>
   </ul>
-
-
+  
+  
   {% comment %}
     Order Tab
   {% endcomment %}
   <div class="active tab-section" id="orders">
-  
-    {# Order activity controls #}
-    <div class="left btn-group">
-      <button class="btn status_change" data-toggle="pause">
-        <i class="icon-pause"></i> Pause
-      </button>
-      <button class="btn status_change" data-toggle="play">
-        <i class="icon-play"></i> Resume
-      </button>
-      <button class="btn status_change" data-toggle="archive">
-        <i class="icon-inbox"></i> Archive
-      </button>
-    </div>
     
+    {# Order activity controls #}
+    <div class="left">
+      <div class="btn-group">
+        <button class="btn status_change" data-toggle="pause">
+          <i class="icon-pause"></i> Pause
+        </button>
+        <button class="btn status_change" data-toggle="play">
+          <i class="icon-play"></i> Resume
+        </button>
+        <button class="btn status_change" data-toggle="archive">
+          <i class="icon-inbox"></i> Archive
+        </button>
+      </div>
+    </div>
     <div class="right">
       <div class="btn-group">
         <a class="btn" href='{% url advertiser_order_and_line_item_form_new %}'>
@@ -65,10 +70,10 @@
         </a>
       </div>
     </div>
-
-  
+    
+    
     {% order_table orders %}
-
+    
     <div class="right">
       <div class="btn-group">
         <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
@@ -82,24 +87,25 @@
       </div>
     </div>
   </div>
-
+  
   
   {% comment %}
     Line Items Tab
   {% endcomment %}
   <div class="tab-section" id="line_items">
-
+    
     {# Order activity controls #}
     <div class="left btn-group">
-      <button class="btn status_change" data-toggle="pause">
+      <a class="btn status_change" data-toggle="pause">
         <i class="icon-pause"></i> Pause
-      </button>
-      <button class="btn status_change" data-toggle="play">
+      </a>
+      <a class="btn status_change" data-toggle="play">
         <i class="icon-play"></i> Resume
-      </button>
-      <button class="btn status_change" data-toggle="archive">
+      </a>
+      
+      <a class="btn status_change" data-toggle="archive">
         <i class="icon-inbox"></i> Archive
-      </button>
+      </a>
     </div>
     
     <div class="right">

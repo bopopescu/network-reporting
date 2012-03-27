@@ -79,8 +79,8 @@ class OrderDetailHandler(RequestHandler):
         all_stats = stats_q.get_stats_for_days(advertiser=order, days=self.days)
 
         # Get the targeted adunits and group them by their app.
-        targeted_adunits = flatten([AdUnitQueryManager.get(line_item.site_keys) \
-                                    for line_item in order.adgroups])
+        targeted_adunits = set(flatten([AdUnitQueryManager.get(line_item.site_keys) \
+                                    for line_item in order.adgroups]))
         targeted_apps = get_targeted_apps(targeted_adunits)
 
         # Set up the form

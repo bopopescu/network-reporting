@@ -32,7 +32,7 @@
     {{ line_item.adgroup_type_display }}
   </td>
   <td class="goal stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
-    100000 Impressions
+    {{ line_item.budget_goal }}
   </td>
   <td class="revenue stat" {% if not line_item.active %}{% opacity "0.4" %}{% endif %}>
     {{ line_item.stats.revenue|default_if_none:"--"|currency }}

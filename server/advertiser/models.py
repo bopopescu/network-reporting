@@ -309,14 +309,33 @@ class AdGroup(db.Model):
             if (self.start_datetime <= now if self.start_datetime else True) and \
                (now <= self.end_datetime if self.end_datetime else True):
                 return "running"
-            elif self.start_datetime <= now:
-                return "scheduled"
-            else:
+            elif self.end_datetime <= now:
                 return "completed"
+            else:
+                return "scheduled"
         else:
             return "paused"
         return "running"
 
+    @property
+    def pace(self):
+        budget = self.budget_obj
+        if not budget.is_active_for_date(datetime.date.today()):
+            return None
+
+        last_slice = budget.most_recent_slice_log
+        percent_days = budget.elapsed_slices / float(budget.total_slices)
+        if budget.delivery_type == "allatonce":
+            if budget.static_slice_budget and not budget.end_datetime:
+                return ["Delivery", min(1, last_slice.actual_spending / last_slice.desired_spending)]
+            else:
+                return ["Delivery", min(1, (budget.total_spent / budget.total_budget))]
+        else:
+            if budget.end_datetime:
+                return ["Pacing", min(1, ((budget.total_spent / budget.total_budget) / percent_days))]
+            else:
+                return ["Pacing", min(1, last_slice.actual_spending / last_slice.desired_spending)]
+        return None        
 
     def adgroup_type_display(self):
         kinds = {
@@ -524,24 +543,20 @@ class AdGroup(db.Model):
     def cpm(self):
         if self.bid_strategy == 'cpm':
             return self.bid
-        return None
-
+        return None            
+        
     @property
-    def budget_goal(self):
-        campaign = self.campaign
-        try:
-            if self.bid_strategy == 'cpm':
-                if campaign.budget_type == 'daily':
-                    return int((campaign.budget / self.bid) * 1000)
-                else:
-                    return int((campaign.full_budget / self.bid) * 1000)
+    def budget_goal(self):        
+        if self.bid_strategy == 'cpm':
+            if self.budget_type == 'daily':
+                return int((self.budget / self.bid) * 1000)
             else:
-                if campaign.budget_type == 'daily':
-                    return int(campaign.budget)
-                else:
-                    return int(campaign.full_budget)
-        except:
-            return None
+                return int((self.full_budget / self.bid) * 1000)
+        else:
+            if self.budget_type == 'daily':
+                return int(self.budget)
+            else:
+                return int(self.full_budget)
 
     @property
     def individual_cost(self):

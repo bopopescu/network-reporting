@@ -48,7 +48,7 @@ class AdNetworkSettingsHandler(RequestHandler):
         if self.params.get("skip"):
             self.account.status = "step4"
             AccountQueryManager.put_accounts(self.account)
-            return HttpResponseRedirect(reverse('advertiser_campaign'))
+            return HttpResponseRedirect(reverse('advertiser_order_index'))
 
         account_form = account_form or AccountForm(instance=self.account)
         apps_for_account = AppQueryManager.get_apps(account=self.account)
@@ -160,7 +160,7 @@ class AdNetworkSettingsHandler(RequestHandler):
             if self.account.status == "step3":
                 self.account.status = "step4"
                 AccountQueryManager.put_accounts(self.account)
-                return HttpResponseRedirect(reverse('advertiser_campaign'))
+                return HttpResponseRedirect(reverse('advertiser_order_index'))
 
         return self.get(account_form=account_form)
 

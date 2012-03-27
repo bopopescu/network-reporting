@@ -284,10 +284,6 @@
                     $(this).attr('checked', false);
                 });
             });
-        },
-
-        initializeLineItemIndex: function (bootstrapping_data) {
-            initializeStatusControls();
 
             /*
              * Set up the filters and the filter button
@@ -479,6 +475,7 @@
                 };
 
                 app.bind('change', function(current_app){
+                    console.log(current_app)
                     renderApp(current_app);
                 });
                 app.fetch();

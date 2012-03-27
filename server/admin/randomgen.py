@@ -27,10 +27,10 @@ PASSWORD = "test"
 
 NUM_ACCOUNTS = 1
 NUM_APPS = 2
-NUM_CAMPAIGNS_PER_APP = 3
+NUM_CAMPAIGNS_PER_APP = 2
 NUM_CREATIVES_PER_ADGROUP = 2
-NUM_ADUNITS_PER_APP = 5
-NUM_ADGROUPS_PER_CAMPAIGN = 3
+NUM_ADUNITS_PER_APP = 3
+NUM_ADGROUPS_PER_CAMPAIGN = 2
 
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
@@ -373,7 +373,7 @@ def main():
                                              account,
                                              cur_date)
                             for creative in creatives_per_adgroup[str(adgroup)]
-                            for adunit in adunits_per_app[app]]
+                            for adunit in adunits_per_app[app] if adunit.key() in adgroup.site_keys]
 
                     req_stats = [generate_stats_model(adunit, None, account, cur_date) \
                                  for adunit in adunits_per_app[app]]

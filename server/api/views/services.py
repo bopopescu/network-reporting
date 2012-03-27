@@ -123,7 +123,11 @@ class AdUnitService(RequestHandler):
             if adgroup.account.key() != self.account.key():
                 raise Http404
 
-            adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
+            if adunit_key:
+                adunits = [AdUnitQueryManager.get(adunit_key)]
+            else:
+                adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
+            
             response = [adunit.toJSON() for adunit in adunits]
 
             # Update each app with stats from the selected endpoint
@@ -132,13 +136,17 @@ class AdUnitService(RequestHandler):
                                                                        adgroup_key,
                                                                        self.start_date,
                                                                        self.end_date)
-
+                if str(adunit['id']) == "ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGEUM":
+                    logging.warn(adunit_stats)
                 # We update with the app and adgroup id/key because our
                 # backbone models often need it for reference
                 adunit_stats.update({'app_id': str(adunit['app_key'])})
                 adunit.update(adunit_stats)
 
-            return JSONResponse(response)
+            if adunit_key:
+                return JSONResponse(response[0])
+            else:
+                return JSONResponse(response)
             
         elif campaign_key:
             campaign = CampaignQueryManager.get(campaign_key)
@@ -167,7 +175,6 @@ class AdUnitService(RequestHandler):
                     'campaign_id': str(campaign_key)
                 })
                 adunit.update(adunit_stats)
-                logging.warn(adunit)
                 
             return JSONResponse(response[0])
             
@@ -307,7 +314,6 @@ class AdGroupServiceHandler(RequestHandler):
                                                     self.start_date,
                                                     self.end_date,
                                                     daily=True)
-            logging.warn(stats)
             adgroup_jsonified.update(stats)
         
             return JSONResponse(adgroup_jsonified)
@@ -345,7 +351,6 @@ class CampaignServiceHandler(RequestHandler):
 
         else:
             campaigns = CampaignQueryManager.get_campaigns(self.account)
-            logging.warn([campaign for campaign in campaigns])
             
         # Get stats and serialize all of the data
         stats_endpoint = self.request.GET.get('endpoint', 'all')

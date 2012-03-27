@@ -43,15 +43,6 @@ class CampaignQueryManager(QueryManager):
                                    .filter('deleted =', False)
         return campaigns
 
-    # TODO: Remove
-    @classmethod
-    def get_network_campaign(cls, account, network_type):
-        campaign = cls.Model.all().filter('campaign_type =', 'network') \
-                      .filter('deleted =',False) \
-                      .filter('account =',account) \
-                      .filter('network_type =', network_type).get()
-        return campaign
-
     @classmethod
     def get_network_campaigns(cls, account, network_type='', is_new=False):
         campaaigns = cls.Model.all().filter('campaign_type =', 'network')\

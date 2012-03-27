@@ -6,7 +6,11 @@ from google.appengine.ext.db import polymodel
 from google.appengine.api import images
 from account.models import Account
 
-from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSION, MAX_ANDROID_VERSION
+from common.constants import MIN_IOS_VERSION, \
+        MAX_IOS_VERSION, \
+        MIN_ANDROID_VERSION, \
+        MAX_ANDROID_VERSION, \
+        NETWORKS
 import datetime
 
 #from ad_server.renderers.creative_renderer import BaseCreativeRenderer
@@ -71,6 +75,7 @@ class NetworkStates:
     DEFAULT_NETWORK_CAMPAIGN = 1
     CUSTOM_NETWORK_CAMPAIGN = 2
 
+
 class Campaign(db.Model):
     """ A campaign.    Campaigns have budgetary and time based restrictions. """
     name = db.StringProperty(required=True)
@@ -109,25 +114,16 @@ class Campaign(db.Model):
 
     blind = db.BooleanProperty(default=False)
 
-    # If the campaign is a network level campaign then this is set to the network
-    # otherwise it's not defined
-    network_type = db.StringProperty(choices=["dummy",  # ?
-                                              "adsense",
-                                              "iAd",
-                                              "admob",  # deprecated, but may still be used by some accounts
-                                              "millennial",  # deprecated, but may still be used by some accounts
-                                              "ejam",
-                                              "chartboost",  # deprecated
-                                              "appnexus",  # deprecated
-                                              "inmobi",
-                                              "mobfox",
-                                              "jumptap",
-                                              "brightroll",
-                                              "greystripe",  # deprecated, but may still be used by some accounts
-                                              "custom",
-                                              "custom_native",
-                                              "admob_native",
-                                              "millennial_native"])
+    # If the campaign is a new network campaign then the network field is
+    # set otherwise it's left blank
+    #
+    # NETWORKS are used to instantiate the network field in campaigns
+    #
+    # Compared to an AdGroup (network_type):
+    #       admob = admob_native
+    #       millenial = millenial_native
+    #       iad = iAd
+    network_type = db.StringProperty(choices=NETWORKS.keys())
     network_state = db.IntegerProperty(default=NetworkStates. \
             STANDARD_CAMPAIGN)
 
@@ -209,10 +205,6 @@ class Campaign(db.Model):
     def is_finished(self):
         return self.end_datetime < datetime.datetime.now()
 
-
-NETWORKS = ["iAd", "admob", "millennial", "ejam","chartboost", "appnexus", \
-        "inmobi", "mobfox", "jumptap", "brightroll", "greystripe", \
-        "admob_native"]
 
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")

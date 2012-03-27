@@ -18,8 +18,8 @@ import common.utils.test.setup
 from common.utils.connect_to_appengine import setup_remote_api
 from common.utils import sswriter
 from common.utils.date_magic import gen_days_for_range
-from ad_network_reports.query_managers import AdNetworkLoginManager, \
-        AD_NETWORK_NAMES
+from common.constants import REPORTING_NETWORKS
+from ad_network_reports.query_managers import AdNetworkLoginManager
 from ad_network_reports.models import AdNetworkNetworkStats, \
         AdNetworkStats
 from publisher.models import App
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     account_stats = []
     accounts = list(get_all_accounts_with_logins())
     for account in accounts:
-        for network in AD_NETWORK_NAMES.keys():
+        for network in REPORTING_NETWORKS.keys():
             network_stats = AdNetworkStats()
             for day in days:
                 stats = AdNetworkNetworkStats.get_by_network_and_day(account,
@@ -61,6 +61,6 @@ if __name__ == "__main__":
                 apps = ', '.join([app.full_name.encode('utf8') for app in apps])
 
                 writer.writerow([account.emails[0], str(account.key()),
-                    apps, AD_NETWORK_NAMES[network]] +
+                    apps, REPORTING_NETWORKS[network]] +
                     [network_stats.dict_[stat_name] for stat_name in STAT_NAMES])
 

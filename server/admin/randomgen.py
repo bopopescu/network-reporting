@@ -17,10 +17,10 @@ from budget.models import *
 from reporting.models import *
 
 #
-## Imports for gen_networks_page_data function
-from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
-        REPORTING_NETWORKS
-
+## Imports to generate networks page data
+from common.constants import REPORTING_NETWORKS, \
+        NETWORKS_WITHOUT_REPORTING, \
+        NETWORKS
 
 from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppMapper, \
@@ -31,14 +31,6 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
 
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager
-
-OTHER_NETWORKS = {'millennial': 'Millennial',
-                  'ejam': 'eJam',
-                  'chartboost': 'ChartBoost',
-                  'appnexus': 'AppNexus',
-                  'brightroll': 'BrightRoll',
-                  'greystripe': 'Greystripe'}
-NETWORKS = dict(OTHER_NETWORKS.items() + REPORTING_NETWORKS.items())
 
 ####
 #Configuration Parameters for data generation
@@ -422,7 +414,7 @@ def main():
                 network_type=network,
                 network_state=NetworkStates.DEFAULT_NETWORK_CAMPAIGN,
                 name=REPORTING_NETWORKS.get(network, False) or \
-                        OTHER_NETWORKS[network])
+                        NETWORKS_WITHOUT_REPORTING[network])
         campaign.put()
 
         creatives_per_campaign[campaign] = []

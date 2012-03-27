@@ -21,8 +21,7 @@ from ad_network_reports.query_managers import ADMOB, \
         AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkManagementStatsManager
-from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
-        REPORTING_NETWORKS
+from common.constants import REPORTING_NETWORKS
 
 from common.utils.date_magic import gen_days_for_range, \
         gen_last_days
@@ -96,8 +95,9 @@ class NetworksHandler(RequestHandler):
                 campaign_data = {'id': str(campaign.key()),
                                  'network': network}
 
-                if campaign.network_state == NetworkStates.DEFAULT_NETWORK_CAMPAIGN \
-                        and network in REPORTING_NETWORKS:
+                if campaign.network_state == NetworkStates. \
+                        DEFAULT_NETWORK_CAMPAIGN and network in \
+                        REPORTING_NETWORKS:
                     login = AdNetworkLoginManager.get_login(self.account,
                             network).get()
 

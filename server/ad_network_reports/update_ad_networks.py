@@ -31,7 +31,6 @@ from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkScrapeStats, \
         AdNetworkManagementStats
 from ad_network_reports.query_managers import \
-        AD_NETWORK_NAMES, \
         IAD, \
         MOBFOX, \
         AdNetworkLoginManager, \
@@ -41,6 +40,7 @@ from ad_network_reports.query_managers import \
         AdNetworkManagementStatsManager
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
+from common.constants import REPORTING_NETWORKS
 from common.utils import date_magic
 from common.utils.connect_to_appengine import setup_remote_api
 from publisher.query_managers import AppQueryManager
@@ -267,7 +267,7 @@ def update_login_stats_for_check(login,
         msg = MIMEText("Your ad network revenue report for %s is now ready. " \
                 "Access it here: https://app.mopub.com/ad_network_reports.\n" \
                 "\nIf you have any questions, please reach out to us at " \
-                "support@mopub.com" % AD_NETWORK_NAMES[login.ad_network_name])
+                "support@mopub.com" % REPORTING_NETWORKS[login.ad_network_name])
         from_ = SUPPORT_EMAIL
         to = [] if TESTING else login.account.emails
 
@@ -537,7 +537,7 @@ def send_stats_mail(account, day, stats_list):
                     mapper.application.app_type_text())
 
             stats_dict = {'app': app_name,
-                   'network_name': AD_NETWORK_NAMES[mapper.ad_network_name],
+                   'network_name': REPORTING_NETWORKS[mapper.ad_network_name],
                    'revenue': stats.revenue,
                    'attempts': stats.attempts,
                    'impressions': stats.impressions,

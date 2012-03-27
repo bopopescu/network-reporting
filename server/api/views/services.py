@@ -6,12 +6,8 @@ from advertiser.models import NetworkStates
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager, \
         CreativeQueryManager
-from ad_network_reports.query_managers import AD_NETWORK_NAMES as \
-        REPORTING_NETWORKS, \
-        AdNetworkLoginManager, \
+from ad_network_reports.query_managers import AdNetworkLoginManager, \
         AdNetworkMapperManager
-# TODO: move this
-from networks.views import OTHER_NETWORKS
 
 from publisher.query_managers import AdUnitQueryManager, \
      AppQueryManager
@@ -30,6 +26,7 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      NetworkStatsFetcher, \
      AdNetworkStatsFetcher, \
      MPStatsAPIException
+from common.constants import REPORTING_NETWORKS
 
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson

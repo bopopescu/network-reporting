@@ -166,3 +166,21 @@ MPX_DSP_IDS = [
     #'4e69334aa8fd3a790d000000', # TapSense
     # '4e45baaddadbc70de9000001', # TapAd
 ]
+
+REPORTING_NETWORKS = {'admob': 'AdMob',
+                    'jumptap': 'JumpTap',
+                    'iad': 'iAd',
+                    'inmobi': 'InMobi',
+                    'mobfox': 'MobFox'}
+
+NETWORKS_WITHOUT_REPORTING = {'mobfox': 'MobFox',
+                              'millennial': 'Millennial',
+                              'ejam': 'eJam',
+                              'chartboost': 'ChartBoost',
+                              'appnexus': 'AppNexus',
+                              'brightroll': 'BrightRoll',
+                              'greystripe': 'Greystripe'}
+
+NETWORKS = dict(NETWORKS_WITHOUT_REPORTING.items() +
+        REPORTING_NETWORKS.items())
+

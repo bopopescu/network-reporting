@@ -10,8 +10,8 @@ from advertiser.query_managers import AdGroupQueryManager, \
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkAggregateManager, \
-        NetworkStatsQueryManager, \
-        AD_NETWORK_NAMES
+        NetworkStatsQueryManager
+from common.constants import REPORTING_NETWORKS
 
 from publisher.query_managers import AppQueryManager,\
      AdUnitQueryManager, \
@@ -374,7 +374,7 @@ class AdNetworkStatsFetcher(object):
     def get_account_roll_up_stats(cls, account, days):
         stats_list = [AdNetworkAggregateManager.find_or_create(account, day,
                 network=network, create=False) for day in days for network in
-                AD_NETWORK_NAMES.keys()]
+                REPORTING_NETWORKS.keys()]
         stats = AdNetworkStatsManager.roll_up_stats([stats for stats in
                 stats_list if stats != None])
         return stats.dict_
@@ -399,7 +399,7 @@ class AdNetworkStatsFetcher(object):
         stats_dict = stats.dict_
         app = mapper.application
         stats_dict['app_name'] = app.full_name
-        stats_dict['network_name'] = AD_NETWORK_NAMES[mapper.ad_network_name]
+        stats_dict['network_name'] = REPORTING_NETWORKS[mapper.ad_network_name]
         stats_dict['mapper_key'] = str(mapper.key())
         stats_dict['app_key'] = app.key_
         return stats_dict

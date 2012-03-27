@@ -384,6 +384,7 @@ def include_raw(path):
 
 @register.simple_tag
 def include_script(script_name,
+                   async=False,
                    load_minified=(not settings.DEBUG),
                    overload=settings.DEBUG):
 
@@ -403,10 +404,20 @@ def include_script(script_name,
     script_path = path_prefix + script_name + path_suffix + version_number
 
     if not script_name == 'app':
-        return """<script type="text/javascript" src="%s"></script>""" % script_path
+        if async:
+            return """<script type="text/javascript" src="%s" async></script>""" % script_path
+        else:
+            return """<script type="text/javascript" src="%s"></script>""" % script_path
     else:
         return ""
 
+@register.simple_tag
+def include_async_script(script_name,
+                         load_minified=(not settings.DEBUG),
+                         overload=settings.DEBUG):
+    return include_script(script_name, async=True,
+                          load_minified=load_minified,
+                          overload=overload)
 
 @register.simple_tag
 def include_style(style_name):

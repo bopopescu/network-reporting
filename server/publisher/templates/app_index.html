@@ -57,7 +57,8 @@
 
   <section id="dashboard-apps">
     <div class="buttonBank buttonBank-right">
-      <a class="button" id="dashboard-apps-addAppButton" href='{% url publisher_create_app %}'>
+      <a class="btn" id="dashboard-apps-addAppButton" href='{% url publisher_create_app %}'>
+        <i class="icon-plus"></i>
         Add an app
       </a>
     </div>
@@ -67,19 +68,20 @@
 
 
     <br />
-    <form id='dashboardExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url dashboard_export %}'>
-      <input name='file_type' id='appExportType' type='text' value='' />
-      <input name='start' value={{start_date|date:"mdy"}} />
-      <input name='end' value={{end_date|date:"mdy"}} />
-    </form>
-    <div class="buttonBank buttonBank-right">
-      <select name='exportSelect' id='publisher-dashboard-exportSelect' class='selectmenu'>
-        <option value='exp'>Export</option>
-        <option value='xls'>XLS</option>
-        <option value='csv'>CSV</option>
-      </select>
+    
+    <div class="right">
+      <div class="btn-group">
+        <a class="btn" href="#"> <i class="icon-download-alt"></i> Export</a>
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="#" data-toggle="running"> XLS </a> </li>
+          <li> <a href="#" data-toggle="running"> CSV </a> </li>
+        </ul>
+      </div>
     </div>
-
+    
   </section>
 
 {% endblock content %}

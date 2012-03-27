@@ -15,6 +15,11 @@
 // @import "common.scss";
 
 /*
+ * Grid system
+ */
+@import "grid.scss";
+
+/*
  * Basic layout and site structure.
  * Right now all of the module-specific styles are in here,
  * but they should be refactored out.

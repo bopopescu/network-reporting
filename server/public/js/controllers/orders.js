@@ -205,8 +205,7 @@
             placement: 'bottom',
             title: "About this line item",
             content: 'Lorem ipsum dolor sit amet, consectetur' + 
-                ' adipisicing elit, sed do eiusmod tempor incididunt' +
-                ' <strong>motherfucker</strong>.',
+                ' adipisicing elit, sed do eiusmod tempor incididunt',
             delay: { hide: 250 }                
         });
     }

@@ -417,9 +417,16 @@ def sum_campaign_stats(campaign):
         'requests': sum([ag['requests'] for ag in campaign['adgroups']]),
         'fill_rate': 0.0,
         'conversions': sum([ag['conversions'] for ag in campaign['adgroups']]),
-        'conversion_rate': sum([ag['conversion_rate'] for ag in campaign['adgroups']])/len(campaign['adgroups']),
+        
     }
 
+    num_adgroups = len(campaign['adgroups'])
+    if num_adgroups > 0:
+        stats['conversion_rate'] =  sum([ag['conversion_rate'] \
+                                         for ag in campaign['adgroups']]) \
+                                    / len(campaign['adgroups'])
+    else:
+        stats['conversion_rate'] = 0
     stats['ctr'] = ctr(stats['clicks'], stats['impressions'])
     stats['ecpm'] = ecpm(stats['revenue'], stats['impressions'])
     stats['fill_rate'] = fill_rate(stats['requests'], stats['impressions'])

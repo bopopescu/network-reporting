@@ -317,6 +317,7 @@ class AdGroup(db.Model):
             return "paused"
         return "running"
 
+
     @property
     def pace(self):
         budget = self.budget_obj
@@ -546,18 +547,36 @@ class AdGroup(db.Model):
         return None            
         
     @property
-    def budget_goal(self):        
+    def budget_goal(self):
         if self.bid_strategy == 'cpm':
             if self.budget_type == 'daily':
-                return int((self.budget / self.bid) * 1000)
+                return int((self.daily_budget / self.bid) * 1000)
             else:
                 return int((self.full_budget / self.bid) * 1000)
         else:
             if self.budget_type == 'daily':
-                return int(self.budget)
+                return int(self.daily_budget)
             else:
                 return int(self.full_budget)
 
+    @property
+    def budget_goal_display(self):
+        goal = self.budget_goal
+
+        if goal :
+            if self.bid_strategy == 'cpm':
+                if self.budget_type == 'daily':
+                    return goal + ' Impressions Total'
+                else:
+                    return goal + ' Impressions Total'
+            else:
+                if self.budget_type == 'daily':
+                    return goal + ' USD Daily'
+                else:
+                    return goal + ' USD Daily'
+        else:
+            return None        
+                
     @property
     def individual_cost(self):
         """ The smallest atomic bid. """
@@ -582,6 +601,23 @@ class AdGroup(db.Model):
     def created_date(self):
         return self.created.date()
 
+        
+    def toJSON(self):
+        d = {
+            'key': str(self.key()),
+            'campaign_key': str(self.campaign.key()),
+            'name': self.name,
+            'created': self.created,
+            'network_type': self.network_type,
+            'bid': self.bid,
+            'bid_strategy': self.bid_strategy,
+            'budget_type': self.budget_type,
+            'budget_strategy': self.budget_strategy,
+            'adgroup_type': self.adgroup_type,
+            'start_datetime': self.start_datetime,
+            'end_datetime': self.end_datetime,
+        }
+        return d
 
     #############################
     # moved from campaign class #
@@ -624,22 +660,6 @@ class AdGroup(db.Model):
     # /end moved from campaign class #
     ##################################
 
-    def toJSON(self):
-        d = {
-            'key': str(self.key()),
-            'campaign_key': str(self.campaign.key()),
-            'name': self.name,
-            'created': self.created,
-            'network_type': self.network_type,
-            'bid': self.bid,
-            'bid_strategy': self.bid_strategy,
-            'budget_type': self.budget_type,
-            'budget_strategy': self.budget_strategy,
-            'adgroup_type': self.adgroup_type,
-            'start_datetime': self.start_datetime,
-            'end_datetime': self.end_datetime,
-        }
-        return d
 
 LineItem = AdGroup
 

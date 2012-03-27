@@ -6,7 +6,8 @@ from google.appengine.ext import db
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
 
-from common.constants import CAMPAIGN_LEVELS
+from common.constants import CAMPAIGN_LEVELS, \
+        NETWORK_ADGROUP_TRANSLATION
 
 from advertiser.models import Campaign
 from advertiser.models import AdGroup
@@ -293,6 +294,8 @@ class AdGroupQueryManager(QueryManager):
         adgroup.account = db.Key(account_key)
         adgroup.campaign = db.Key(campaign_key)
         adgroup.network_type = network_type
+        if network_type in NETWORK_ADGROUP_TRANSLATION:
+            adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[network_type]
         # only targetted at one adunit
         adgroup.site_keys = [db.Key(adunit_key)]
 

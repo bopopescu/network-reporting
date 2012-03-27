@@ -21,7 +21,9 @@ from ad_network_reports.query_managers import ADMOB, \
         AdNetworkMapperManager, \
         AdNetworkStatsManager, \
         AdNetworkManagementStatsManager
-from common.constants import REPORTING_NETWORKS
+from common.constants import REPORTING_NETWORKS, \
+        NETWORKS_WITHOUT_REPORTING, \
+        NETWORK_ADGROUP_TRANSLATION
 
 from common.utils.date_magic import gen_days_for_range, \
         gen_last_days
@@ -34,8 +36,7 @@ from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
 
 from publisher.query_managers import AppQueryManager, \
-        AdUnitContextQueryManager, \
-        ALL_NETWORKS
+        AdUnitContextQueryManager
 
 from datetime import datetime, date, timedelta, time
 from django.contrib.auth.decorators import login_required
@@ -61,14 +62,6 @@ from publisher.query_managers import AdUnitQueryManager
 
 import copy
 
-OTHER_NETWORKS = {'mobfox': 'MobFox',
-                  'millennial': 'Millennial',
-                  'ejam': 'eJam',
-                  'chartboost': 'ChartBoost',
-                  'appnexus': 'AppNexus',
-                  'brightroll': 'BrightRoll',
-                  'greystripe': 'Greystripe'}
-
 DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
 
 class NetworksHandler(RequestHandler):
@@ -81,7 +74,7 @@ class NetworksHandler(RequestHandler):
         days = gen_days_for_range(self.start_date, self.date_range)
 
         networks_to_setup = copy.copy(DEFAULT_NETWORKS)
-        additional_networks = set(OTHER_NETWORKS.keys())
+        additional_networks = set(NETWORKS_WITHOUT_REPORTING.keys())
         networks = []
         campaigns_data = []
         reporting = False
@@ -204,8 +197,7 @@ class EditNetworkHandler(RequestHandler):
         account_network_config_form = AccountNetworkConfigForm(instance=
                 self.account.network_config)
 
-        reporting_networks = ' '.join(REPORTING_NETWORKS.keys()) + \
-                ' admob_native'
+        reporting_networks = ' '.join(REPORTING_NETWORKS.keys())
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         adgroup = None
@@ -318,7 +310,6 @@ class EditNetworkHandler(RequestHandler):
             else:
                 campaign.network_state = NetworkStates.DEFAULT_NETWORK_CAMPAIGN
             campaign.account = self.account
-            #TODO: convert to valid network type
             campaign.network_type = network
 
             # Get a set of the AdGroupForm field names
@@ -358,6 +349,9 @@ class EditNetworkHandler(RequestHandler):
                     adgroup = adgroup_form.save()
                     adgroup.campaign = campaign
                     adgroup.network_type = network
+                    if network in NETWORK_ADGROUP_TRANSLATION:
+                        adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[
+                                network]
 
                     html_data = None
                     if adgroup.network_type == 'custom':
@@ -390,21 +384,16 @@ class EditNetworkHandler(RequestHandler):
                     # the creative should always have the same account as the adgroup
                     creative.account = adgroup.account
                     #put the creative so we can reference it
-                    # TODO: must there be a seperate creative for each adunit /
-                    # adgroup?
-                    # CreativeQueryManager.put(creative)
+                    CreativeQueryManager.put(creative)
                     # set adgroup to reference the correct creative
-                    # adgroup.net_creative = creative.key()
+                    adgroup.net_creative = creative.key()
 
                     AdGroupQueryManager.put(adgroup)
 
-                # TODO: resolve admob / admob native
                 # NetworkConfig for Apps
                 if network in ('admob', 'brightroll', 'ejam', 'inmobi',
-                        'jumptap', 'millennial_native', 'mobfox'):
-                    # get rid of _native in admob_native, millennial_native
-                    network_config_field = "%s_pub_id" % network. \
-                            replace('_native', '')
+                        'jumptap', 'millennial', 'mobfox'):
+                    network_config_field = "%s_pub_id" % network
 
                     for app in apps:
                         network_config = app.network_config or NetworkConfig()
@@ -416,13 +405,13 @@ class EditNetworkHandler(RequestHandler):
                                 network_config)
 
                         if network in REPORTING_NETWORKS:
-                            # Create an AdNetworkAppMapper if there exists a login
-                            # for the network (safe to re-create if it already
-                            # exists)
-                            login = AdNetworkLoginManager.get_login(self.account,
-                                    network).get()
-                            mappers = AdNetworkMapperManager.get_mappers_for_app(
-                                    login=login, app=app)
+                            # Create an AdNetworkAppMapper if there exists a
+                            # login for the network (safe to re-create if it
+                            # already exists)
+                            login = AdNetworkLoginManager.get_login(
+                                    self.account, network).get()
+                            mappers = AdNetworkMapperManager. \
+                                    get_mappers_for_app(login=login, app=app)
                             # Delete the existing mappers if there are no scrape
                             # stats for them.
                             for mapper in mappers:
@@ -434,16 +423,15 @@ class EditNetworkHandler(RequestHandler):
                                     pub_id=app_pub_id, login=login,
                                     app=app)
 
-                    # TODO: resolve admob / admob native
                     # NetworkConfig for AdUnits
-                    if network in ('admob', 'admob_native', 'jumptap',
-                            'millennial_native'):
+                    if network in ('admob', 'jumptap', 'millennial'):
                         for adunit in adunits:
                             network_config = adunit.network_config or \
                                     NetworkConfig()
                             setattr(network_config, network_config_field,
                                     self.request.POST.get("adunit_%s-%s" %
-                                        (adunit.key(), network_config_field), ''))
+                                        (adunit.key(), network_config_field),
+                                        ''))
                             AdUnitQueryManager.update_config_and_put(adunit,
                                     network_config)
 
@@ -588,5 +576,5 @@ def network_details(request, *args, **kwargs):
 #
 def get_pretty_name(network):
     return REPORTING_NETWORKS.get(network, False) or \
-            OTHER_NETWORKS.get(network, False) or 'Custom'
+            NETWORKS_WITHOUT_REPORTING.get(network, False) or 'Custom'
 

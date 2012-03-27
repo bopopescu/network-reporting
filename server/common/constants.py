@@ -184,3 +184,7 @@ NETWORKS_WITHOUT_REPORTING = {'mobfox': 'MobFox',
 NETWORKS = dict(NETWORKS_WITHOUT_REPORTING.items() +
         REPORTING_NETWORKS.items())
 
+NETWORK_ADGROUP_TRANSLATION = {'iad': 'iAd',
+                               'admob': 'admob_native',
+                               'millenial': 'millenial_native'}
+

@@ -20,7 +20,8 @@ from reporting.models import *
 ## Imports to generate networks page data
 from common.constants import REPORTING_NETWORKS, \
         NETWORKS_WITHOUT_REPORTING, \
-        NETWORKS
+        NETWORKS, \
+        NETWORK_ADGROUP_TRANSLATION
 
 from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppMapper, \
@@ -427,16 +428,15 @@ def main():
             adunit = generate_adunit(app,account)
             adunits_per_app[app].append(adunit)
             for network in NETWORKS_TO_USE:
-                # iAd network_type is stupid
-                if network == 'iad':
-                    network = 'iAd'
-
                 campaign = campaigns_by_network[network]
 
+                adgroup_network_type = network
+                if network in NETWORK_ADGROUP_TRANSLATION:
+                    adgroup_network_type = NETWORK_ADGROUP_TRANSLATION[network]
                 adgroup = generate_adgroup([adunit.key()],
                                            account,
                                            campaign=campaign,
-                                           network=network)
+                                           network=adgroup_network_type)
 
                 for i in range(NUM_CREATIVES_PER_ADGROUP):
                     creative = generate_creative(account,adgroup)

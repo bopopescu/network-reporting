@@ -31,11 +31,24 @@
   </dd>
   <dt>Creative Type:</dt>
   <dd>
-    <span class="radios">
-      <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="image" id="creativeType-image" {% if form.ad_type|field_value == "image" or not form.ad_type|field_value %}checked="checked"{% endif %}/> <label for="creativeType-image">Image</label>
-      <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="text_icon" id="creativeType-text_icon" {% ifequal form.ad_type|field_value "text_icon" %}checked="checked"{% endifequal %}/> <label for="creativeType-text_icon">Text and Tile</label>
-      <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="html" id="creativeType-html" {% ifequal form.ad_type|field_value "html" %}checked="checked"{% endifequal %}/> <label for="creativeType-html">HTML</label>
-    </span>
+    {% if form.instance %}
+        {% if form.instance.ad_type == 'image' %}
+            Image
+        {% else %}
+            {% if form.instance.ad_type == 'text_icon' %}
+                Text and Tile
+            {% else %}
+                HTML
+            {% endif %}
+        {% endif %}
+        <input name="ad_type" type="hidden" value="{{ form.instance.ad_type }}" />
+    {% else %}
+        <span class="radios">
+            <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="image" id="creativeType-image" {% if form.ad_type|field_value == "image" or not form.ad_type|field_value %}checked="checked"{% endif %}/> <label for="creativeType-image">Image</label>
+            <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="text_icon" id="creativeType-text_icon" {% ifequal form.ad_type|field_value "text_icon" %}checked="checked"{% endifequal %}/> <label for="creativeType-text_icon">Text and Tile</label>
+            <input type="radio" class="input-radio" name="{{form.ad_type.name}}" value="html" id="creativeType-html" {% ifequal form.ad_type|field_value "html" %}checked="checked"{% endifequal %}/> <label for="creativeType-html">HTML</label>
+        </span>
+    {% endif %}
   </dd>
   <dt>Creative Name:</dt>
   <dd>

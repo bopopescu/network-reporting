@@ -8,6 +8,7 @@ from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
 from ad_server.optimizer.optimizer import DEFAULT_CTR
+from adserver_constants import ADSERVER_HOSTNAME
 
 from budget import budget_service
 
@@ -24,6 +25,11 @@ from django.utils import simplejson
 from django.http import Http404
 
 import logging
+import urllib
+import urllib2
+
+REMOTE_PACING_URL = '/admin/budget/api/pacing'
+REMOTE_DELIVERED_URL = '/admin/budget/api/delivered'
 
 
 class AppService(RequestHandler):
@@ -280,7 +286,16 @@ class AdGroupService(RequestHandler):
             else:
                 summed_stats.cpm = adgroup.cpm
 
-            adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+            api_dict = dict(key = str(adgroup.campaign.key()),
+                            key_type = 'campaign',
+                            )
+            qs = urllib.urlencode(api_dict)
+
+            to_adserver = 'http://' + ADSERVER_HOSTNAME
+            pacing_url = to_adserver + REMOTE_PACING_URL + '?' + qs
+            pacing_data = simplejson.loads(urllib2.urlopen(pacing_url).read())
+            #adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+            adgroup.pace = pacing_data['pacing']
             if adgroup.pace:
                 summed_stats.pace = adgroup.pace[1]
                 if adgroup.pace[0] == "Pacing":
@@ -293,7 +308,10 @@ class AdGroupService(RequestHandler):
                 else:
                     summed_stats.pace_type = "delivery"
 
-            percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
+            delivered_url = to_adserver + REMOTE_DELIVERED_URL + '?' + qs
+            delivered_data = simplejson.loads(urllib2.urlopen(delivered_url).read())
+            #percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
+            percent_delivered = delivered_data['percent_delivered']
             summed_stats.percent_delivered = percent_delivered
             adgroup.percent_delivered = percent_delivered
 

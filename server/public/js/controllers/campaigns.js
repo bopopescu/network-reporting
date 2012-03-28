@@ -217,7 +217,7 @@
             }
         });
         // update on document ready
-        if($('input[name="device_targeting"]').val() == '0') {
+        if($('input[name="device_targeting"]:checked').val() == '0') {
             $('#device_targeting').hide();
         }
 
@@ -306,7 +306,7 @@
         });
 
         // make necessary changes based on campaign_type
-        $('select[name="campaign_type"]').change(function() {
+        $('[name="campaign_type"]').change(function() {
             campaign_type = $(this).val();
             $('.campaign_type_dependant').each(function() {
                 $(this).toggle($(this).hasClass(campaign_type));
@@ -592,13 +592,14 @@
     }
 
     function initializeCreativeForm() {
-        $('#creativeCreateForm input[name="ad_type"]')
-            .click(function(e){
+        $('#creativeCreateForm [name="ad_type"]')
+            .change(function(e){
                 $('.adTypeDependent',"#creativeCreateForm").hide();
                 $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
             })
+            .change()
             .filter(':checked')
-            .click();
+            .change();
 
         $('.format-options').change(function(e) {
             e.preventDefault();
@@ -635,13 +636,16 @@
                 });
             });
 
-        $('.creativeEditForm input[name="ad_type"]')
-            .click(function(e){
+        $('.creativeEditForm [name="ad_type"]')
+            .change(function(e){
                 // gets the form to which this belongs
                 var form = $(this).parents('form');
                 $('.adTypeDependent',form).hide();
                 $('.adTypeDependent.'+$(this).val(),form).show();
-            }).filter(':checked').click();
+            })
+            .change()
+            .filter(':checked')
+            .change();
 
 
         $('.creativeFormAdvancedToggleButton')
@@ -1142,7 +1146,7 @@
         initializeCreateCampaign: function (bootstrapping_data) {
             setupAdGroupForm();
         },
-        
+
         initializeCampaignArchive: function (bootstrapping_data) {
             $.each(['activate', 'delete'], function(iter, action) {
                 $('#campaignForm-' + action).click(function(e) {

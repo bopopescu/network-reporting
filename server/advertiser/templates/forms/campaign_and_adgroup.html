@@ -16,17 +16,22 @@
         <li>
             {{ campaign_form.campaign_type.label_tag }}
             <div>
-                {{ campaign_form.campaign_type }}
-                <a href="#" id="campaignForm-type-helpLink">What's this?</a>
-                <div id="campaignForm-type-helpContent" class="hidden">
-                    <h3>Campaign Type</h3>
-                    <h4>Guaranteed</h4>
-                    <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
-                    <h4>Promotional</h4>
-                    <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
-                    <h4>Network</h4>
-                    <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
-                </div>
+                {% if campaign_form.instance %}
+                    {% if campaign_form.instance.gtee %}Guaranteed{% else %}{% if campaign_form.instance.promo %}Promotional{% else %}Network{% endif %}{% endif %}
+                    <input name="campaign_type" type="hidden" value="{% if campaign_form.instance.gtee %}gtee{% else %}{% if campaign_form.instance.promo %}promo{% else %}network{% endif %}{% endif %}" />
+                {% else %}
+                    {{ campaign_form.campaign_type }}
+                    <a href="#" id="campaignForm-type-helpLink">What's this?</a>
+                    <div id="campaignForm-type-helpContent" class="hidden">
+                        <h3>Campaign Type</h3>
+                        <h4>Guaranteed</h4>
+                        <p>A <strong>Guaranteed</strong> ad campaign is typically a direct sold campaign with a set CPM for a certain number of impressions and a start and end date.</p>
+                        <h4>Promotional</h4>
+                        <p>A <strong>Promotional</strong> campaign is for house ads like advertising another of your applications, ads for the paid version of your app or other functions like a "rate this app" campaign.</p>
+                        <h4>Network</h4>
+                        <p>A <strong>Network</strong> campaign is used for showing ads from an ad network like AdMob or iAd.</p>
+                    </div>
+                {% endif %}
             </div>
         </li>
 

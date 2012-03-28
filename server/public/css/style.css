@@ -3604,9 +3604,9 @@ button.btn, input[type="submit"].btn {
   .new-rollup:after {
     clear: both; }
   .new-rollup .rollup-box {
-    margin: 5px;
+    margin: 4px;
     padding: 10px;
-    width: 204px;
+    width: 208px;
     display: inline-block;
     overflow: hidden;
     background: #B4CEE1;
@@ -3616,9 +3616,13 @@ button.btn, input[type="submit"].btn {
     -webkit-box-shadow: 0 3px 1px rgba(0, 0, 0, 0.1);
     -moz-box-shadow: 0 3px 1px rgba(0, 0, 0, 0.1);
     box-shadow: 0 3px 1px rgba(0, 0, 0, 0.1);
-    -webkit-transition: background 0.3s linear;
-    -moz-transition: background 0.3s linear;
-    transition: background 0.3s linear; }
+    -webkit-transition: background 0.2s ease-in;
+    -moz-transition: background 0.2s ease-in;
+    transition: background 0.2s ease-in; }
+    .new-rollup .rollup-box:first-child {
+      margin-left: 0; }
+    .new-rollup .rollup-box:last-child {
+      margin-right: 0; }
     .new-rollup .rollup-box.active {
       background: #7daacb; }
     .new-rollup .rollup-box:hover {

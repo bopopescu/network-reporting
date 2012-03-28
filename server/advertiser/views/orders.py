@@ -428,6 +428,39 @@ def creative_form_edit(request, *args, **kwargs):
     return handler(request, use_cache=False, *args, **kwargs)
 
 
+class DisplayCreativeHandler(RequestHandler):
+    def get(self, creative_key):
+        if creative_key == 'mraid.js':
+            return HttpResponse("")
+        c = CreativeQueryManager.get(creative_key)
+        if c and c.ad_type == "image":
+
+            return HttpResponse('<html><head><style type="text/css">body{margin:0;padding:0;}</style></head><body><img src="%s"/></body></html>' % helpers.get_url_for_blob(c.image_blob))
+            # return HttpResponse(c.image,content_type='image/png')
+        if c and c.ad_type == "text_icon":
+            c.icon_url = helpers.get_url_for_blob(c.image_blob)
+
+            return render_to_response(self.request, 'advertiser/text_tile.html', {'c': c})
+            #return HttpResponse(c.image,content_type='image/png')
+        if c and c.ad_type == "html":
+            return HttpResponse("<html><body style='margin:0px;'>" + c.html_data + "</body></html")
+
+
+class CreativeImageHandler(RequestHandler):
+    def get(self, creative_key):
+        c = CreativeQueryManager.get(creative_key)
+        if c and c.image:
+            return HttpResponse(c.image, content_type='image/png')
+        raise Http404
+
+
+def creative_image(request, *args, **kwargs):
+    return DisplayCreativeHandler()(request, *args, **kwargs)
+
+
+def creative_html(request, *args, **kwargs):
+    return DisplayCreativeHandler()(request, *args, **kwargs)
+
 ###########
 # Helpers #
 ###########
@@ -484,3 +517,4 @@ def get_targeted_apps(adunits):
             targeted_apps[app_key] = app
         targeted_apps[app_key].adunits += [adunit]
     return targeted_apps
+

@@ -319,6 +319,13 @@ var mopub = window.mopub || {};
             _.each(display_fields, function(field){
                 $("." + field, row).text(current_model.get_formatted_stat(field));
             });
+
+            $("tr.lineitem-row .moreinfo").popover({
+                placement: 'bottom',
+                title: "About this line item",
+                content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt <strong>motherfucker</strong>.',
+                delay: { hide: 250 }            
+            });
         }
     });
 

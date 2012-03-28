@@ -9,21 +9,6 @@ urlpatterns = patterns(
     # Deprecated #
     ##############
 
-    #REFACTOR: is this needed? remove if not
-    url(r'^bid/pause/$',
-        'bid_pause',
-        name='advertiser_bid_pause'),
-
-    #REFACTOR: is this needed? remove if not
-    url(r'^adserver_test/$',
-        'adserver_test',
-        name='advertiser_adserver_test'),
-
-    #REFACTOR: replace this if possible
-    url(r'^export/$',
-        'campaign_export',
-        name='campaign_export'),
-
     #REFACTOR: remove this if possible
     url(r'^mpx/$',
         'mpx_info',

@@ -51,6 +51,18 @@ $(function() {
         return all_campaigns;
     }
 
+    var initialize_show_network = function() {
+        $('#show-network').change(function() {
+            if ($(this).is(':checked')) {
+                $('.network-data').show();
+                mopub.Chart.trafficChart.series[1].show();
+            } else {
+                $('.network-data').hide();
+                mopub.Chart.trafficChart.series[1].hide();
+            }
+        });
+    }
+
     var NetworksController = { 
         initialize: function(bootstrapping_data) {
             var campaigns_data = bootstrapping_data.campaigns_data,
@@ -75,13 +87,7 @@ $(function() {
                 mopub_optimized: false,
             });
 
-            $('#show-network').change(function() {
-                if ($(this).is(':checked')) {
-                    $('.network-data').show();
-                } else {
-                    $('.network-data').hide();
-                }
-            }).change();
+            initialize_show_network();
 
             $('.show-apps').click(function() {
                 var key = $(this).attr('id');
@@ -186,9 +192,7 @@ $(function() {
                 mopub_optimized: false,
             });
 
-            $('#show-network').change(function() {
-                $('.network-data').toggle();
-            }).change();
+            initialize_show_network();
 
             $('#network-settingsButton')
                 .button({ icons: { primary: "ui-icon-wrench" } })

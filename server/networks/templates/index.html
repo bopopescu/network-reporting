@@ -8,9 +8,11 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
+{% if reporting %}
 <span class="titlebar-right">
-    <a class="button" id="network-settingsButton" href="#">Edit ad network settings</a>
+    <a class="button" id="network-settingsButton" href="#">Daily report settings</a>
 </span>
+{% endif %}
 {% endblock titleBarRight %}
 
 {% block preContent %}
@@ -45,7 +47,7 @@
 <section id="dashboard-apps">
 {% if reporting %}
 <div style="float:right">
-    <input type="checkbox" name="show-data" id="show-network" /> Show data reported by networks in <span style="color:orange;">orange</span>
+    <input type="checkbox" checked="yes" name="show-data" id="show-network" /> Show data reported by networks in <span style="color:orange;">orange</span>
 </div>
 {% endif %}
 

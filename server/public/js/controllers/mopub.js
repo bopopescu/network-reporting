@@ -911,7 +911,7 @@ if (typeof window.console == "undefined") {
                 }
 
                 if (seriesType == 'line') {
-                    seriesLineWidth = (seriesName == 'MoPub Optimized') ? 3 : 2;
+                    seriesLineWidth = 3;
                 } else seriesLineWidth = 4;
             });
 

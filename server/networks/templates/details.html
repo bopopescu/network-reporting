@@ -2,9 +2,9 @@
 {% load filters %}
 
 {% block pageTitle %}
-<div class="breadcrumb">
-    <h1>Networks > {{network.pretty_name}}</h1>
-</div>
+<h1>
+    <a href="{% url networks %}">Networks</a> / {{network.pretty_name}}
+</h1>
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
@@ -14,49 +14,6 @@
 {% endblock titleBarRight %}
 
 {% block innerContent %}
-<section id="network-status">
-<table class="status-table">
-    <tr>
-        <td>
-            <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="150" height="50" />
-        </td>
-        <td class="network-name">
-            {{network.pretty_name}}
-        </td>
-    </tr>
-
-    <tr>
-        <td class="status-field">
-            Status:
-        </td>
-        <td>
-            <img id="network-activeImage" src="/images/active.gif" height="9" width="9" {% if not network.active %}class="hidden"{% endif %}/>
-            <img id="network-pausedImage" src="/images/paused.gif" height="9" width="9" {% if network.active %}class="hidden"{% endif %}/>
-            {% if network.active %}
-            <select id='network-editActive' class='selectmenu'>
-                <option value="active">Running</option>
-                <option value="">Paused</option>
-            </select>
-            {% else %}
-            <select id='network-editActive' class='selectmenu'>
-                <option value="">Paused</option>
-                <option value="active">Running</option>
-            </select>
-            {% endif %}
-        </td>
-    </tr>
-
-    <tr>
-        <td class="status-field">
-            Targeting:
-        </td>
-        <td>
-            {{ network.targeting }}
-        </td>
-    </tr>
-</table>
-</section>
-
 <section id="show-network-data">
 {% if reporting %}
 <div style="float:right">
@@ -67,81 +24,12 @@
 </section>
 
 <section id="aggregate-stats">
-<div id='promo-rollups' class="campaignData-rollup">
-    <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-        <thead>
-            <tr>
-                {% if reporting %}
-                <th class="dataTable-data numeric"> Revenue </th>
-                {% endif %}
-                <th class="dataTable-data numeric"> CPM </th>
-                <th class="dataTable-data numeric"> Attempts </th>
-                <th class="dataTable-data numeric"> Impressions </th>
-                <th class="dataTable-data numeric"> Fill Rate </th>
-                <th class="dataTable-data numeric"> Clicks </th>
-                <th class="dataTable-data numeric"> CTR </th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr id="{{network.campaign_key}}-row">
-                {% if reporting %}
-                <td class="dataTable-data numeric">
-                    <div class="networks-revenue" style="color:orange;">--</div>
-                </td>
-                {% endif %}
-                <td class="dataTable-data numeric">
-                    {% if reporting %}
-                    <div class="networks-cpm network-data">--</div>
-                    {% endif %}
-                    <div class="all-cpm mopub-data">--</div>
-                </td>
-                <td class="dataTable-data numeric">
-                    {% if reporting and network.name != MOBFOX %}
-                    <div class="networks-attempt_count network-data">--</div>
-                    {% endif %}
-                    <div class="all-attempt_count mopub-data">--</div>
-                </td>
-                <td class="dataTable-data numeric">
-                    {% if reporting %}
-                    <div class="networks-impression_count network-data">--</div>
-                    {% endif %}
-                    <div class="all-impression_count mopub-data">--</div>
-                </td>
-                <td class="dataTable-data numeric">
-                    {% if reporting %}
-                    <div class="networks-fill_rate network-data">--</div>
-                    {% endif %}
-                    <div class="all-fill_rate mopub-data">--</div>
-                </td>
-                <td class="dataTable-data numeric">
-                    {% if reporting %}
-                    <div class="networks-click_count network-data">--</div>
-                    {% endif %}
-                    <div class="all-click_count mopub-data">--</div>
-                </td>
-                <td class="dataTable-data numeric">
-                    {% if reporting %}
-                    <div class="networks-ctr network-data">--</div>
-                    {% endif %}
-                    <div class="all-ctr mopub-data">--</div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-</section>
-
-<section id="dashboard-apps">
-<h2>App Breakdown</h2>
-<div class="tab-section networks active">
     <div class="appData-columnHeaders">
         <table class="dataTable" width=100%>
             <thead>
                 <th class="networkData-icon" style="width:75px"></th>
-                <th class="dataTable-name"></th>
-                {% if reporting %}
+                <th class="dataTable-name"> </th>
                 <th class="dataTable-data numeric"> Revenue </th>
-                {% endif %}
                 <th class="dataTable-data numeric"> CPM </th>
                 <th class="dataTable-data numeric"> Attempts </th>
                 <th class="dataTable-data numeric"> Impressions </th>
@@ -151,73 +39,164 @@
             </thead>
         </table>
     </div>
-    {% for app in network.mopub_app_stats %}
-    <div class="{% cycle 'appData' 'appData appData-alt' %}">
+    <div class="appData">
         <table class="dataTable appData-main">
-            <tbody id="{{app.key}}-stats">
-                <tr id="{{app.key}}-row">
-                    <td class="appData-icon">
-                        <a href="/inventory/app/{{app.key_}}">
-                            <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
-                        </a>
+            <tbody>
+                <tr id="{{network.campaign_key}}-row">
+                    <td class="networkData-icon">
+                        <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
+                        <div>
+                            {% if network.active %}
+                            <select id='network-editActive' class='selectmenu'>
+                                <option value="active"> Running </option>
+                                <option value="">Paused</option>
+                            </select>
+                            {% else %}
+                            <select id='network-editActive' class='selectmenu'>
+                                <option value="">Paused</option>
+                                <option value="active">Running</option>
+                            </select>
+                            {% endif %}
+                        </div>
                     </td>
                     <td class="dataTable-name">
-                        <a href="/inventory/app/{{app.key_}}">{{app.name}}</a>
-                        <span class="muted unbold">({{app.app_type_text}})</span>
+                        {{network.pretty_name}}
+                        <div style="margin-top:10px;">
+                            Targeting: {{ network.targeting }}
+                        </div>
                     </td>
                     {% if reporting %}
                     <td class="dataTable-data numeric">
-                        <div class="network-revenue" style="color:orange;"></div>
+                        <div class="networks-revenue" style="color:orange;">--</div>
                     </td>
                     {% endif %}
                     <td class="dataTable-data numeric">
                         {% if reporting %}
-                        <div class="network-cpm network-data"></div>
+                        <div class="networks-cpm network-data">--</div>
                         {% endif %}
-                        <div class="mopub-cpm mopub-data"></div>
+                        <div class="all-cpm mopub-data">--</div>
                     </td>
                     <td class="dataTable-data numeric">
                         {% if reporting and network.name != MOBFOX %}
-                        <div class="network-attempt_count network-data"></div>
+                        <div class="networks-attempt_count network-data">--</div>
                         {% endif %}
-                        <div class="mopub-attempt_count mopub-data"></div>
+                        <div class="all-attempt_count mopub-data">--</div>
                     </td>
                     <td class="dataTable-data numeric">
                         {% if reporting %}
-                        <div class="network-data network-impression_count"></div>
+                        <div class="networks-impression_count network-data">--</div>
                         {% endif %}
-                        <div class="mopub-impression_count mopub-data"></div>
-                    </td>
-                    <td class="dataTable-data numeric">
-                        {% if reporting and network.name != MOBFOX %}
-                        <div class="network-data network-fill_rate"></div>
-                        {% endif %}
-                        <div class="mopub-fill_rate mopub-data"></div>
+                        <div class="all-impression_count mopub-data">--</div>
                     </td>
                     <td class="dataTable-data numeric">
                         {% if reporting %}
-                        <div class="network-data network-click_count"></div>
+                        <div class="networks-fill_rate network-data">--</div>
                         {% endif %}
-                        <div class="mopub-click_count mopub-data"></div>
+                        <div class="all-fill_rate mopub-data">--</div>
                     </td>
                     <td class="dataTable-data numeric">
                         {% if reporting %}
-                        <div class="network-data network-ctr"></div>
+                        <div class="networks-click_count network-data">--</div>
                         {% endif %}
-                        <div class="mopub-ctr mopub-data"></div>
+                        <div class="all-click_count mopub-data">--</div>
+                    </td>
+                    <td class="dataTable-data numeric">
+                        {% if reporting %}
+                        <div class="networks-ctr network-data">--</div>
+                        {% endif %}
+                        <div class="all-ctr mopub-data">--</div>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <div class="appData-details" style="margin: -10px 0 0 86px">
-            <table class="dataTable">
-                <tbody id="{{app.key}}-adunits">
-                </tbody>
-            </table>
-        </div>
     </div>
-    {% endfor %}
+</section>
+
+<section>
+<h2>App Targeting</h2>
+<div class="appData-columnHeaders">
+    <table class="dataTable" width=100%>
+        <thead>
+            <th class="networkData-icon" style="width:75px"></th>
+            <th class="dataTable-name"></th>
+            {% if reporting %}
+            <th class="dataTable-data numeric"> Revenue </th>
+            {% endif %}
+            <th class="dataTable-data numeric"> CPM </th>
+            <th class="dataTable-data numeric"> Attempts </th>
+            <th class="dataTable-data numeric"> Impressions </th>
+            <th class="dataTable-data numeric"> Fill Rate </th>
+            <th class="dataTable-data numeric"> Clicks </th>
+            <th class="dataTable-data numeric"> CTR </th>
+        </thead>
+    </table>
 </div>
+{% for app in network.mopub_app_stats %}
+<div class="{% cycle 'appData' 'appData appData-alt' %}">
+    <table class="dataTable appData-main">
+        <tbody id="{{app.key}}-stats">
+            <tr id="{{app.key}}-row">
+                <td class="appData-icon">
+                    <a href="/inventory/app/{{app.key_}}">
+                        <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
+                    </a>
+                </td>
+                <td class="dataTable-name">
+                    <a href="/inventory/app/{{app.key_}}">{{app.name}}</a>
+                    <span class="muted unbold">({{app.app_type_text}})</span>
+                </td>
+                {% if reporting %}
+                <td class="dataTable-data numeric">
+                    <div class="network-revenue" style="color:orange;"></div>
+                </td>
+                {% endif %}
+                <td class="dataTable-data numeric">
+                    {% if reporting %}
+                    <div class="network-cpm network-data"></div>
+                    {% endif %}
+                    <div class="mopub-cpm mopub-data"></div>
+                </td>
+                <td class="dataTable-data numeric">
+                    {% if reporting and network.name != MOBFOX %}
+                    <div class="network-attempt_count network-data"></div>
+                    {% endif %}
+                    <div class="mopub-attempt_count mopub-data"></div>
+                </td>
+                <td class="dataTable-data numeric">
+                    {% if reporting %}
+                    <div class="network-data network-impression_count"></div>
+                    {% endif %}
+                    <div class="mopub-impression_count mopub-data"></div>
+                </td>
+                <td class="dataTable-data numeric">
+                    {% if reporting and network.name != MOBFOX %}
+                    <div class="network-data network-fill_rate"></div>
+                    {% endif %}
+                    <div class="mopub-fill_rate mopub-data"></div>
+                </td>
+                <td class="dataTable-data numeric">
+                    {% if reporting %}
+                    <div class="network-data network-click_count"></div>
+                    {% endif %}
+                    <div class="mopub-click_count mopub-data"></div>
+                </td>
+                <td class="dataTable-data numeric">
+                    {% if reporting %}
+                    <div class="network-data network-ctr"></div>
+                    {% endif %}
+                    <div class="mopub-ctr mopub-data"></div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="appData-details" style="margin: -10px 0 0 86px">
+        <table class="dataTable">
+            <tbody id="{{app.key}}-adunits">
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endfor %}
 
 </section>
 

@@ -379,6 +379,7 @@ class EditNetworkHandler(RequestHandler):
                 for adgroup_form in adgroup_forms:
                     adgroup = adgroup_form.save()
                     adgroup.campaign = campaign
+                    adgroup.name = campaign.name
                     if network in NETWORK_ADGROUP_TRANSLATION:
                         adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[
                                 network]
@@ -618,16 +619,6 @@ class PauseNetworkHandler(RequestHandler):
         campaign = CampaignQueryManager.get(campaign_key)
         campaign.active = True if self.request.POST.get('active') else False
         CampaignQueryManager.put(campaign)
-
-        # Pause all adunit adgroups for the campaign
-        if campaign.active:
-            for adunit in AdUnitQueryManager.get_adunits(account=self.account):
-                adgroup = AdGroupQueryManager.get_network_adgroup(campaign.key(),
-                        adunit.key(), self.account.key(), campaign.network_type,
-                        get_from_db=True)
-                if adgroup:
-                    adgroup.active = False
-                    AdGroupQueryManager.put(adgroup)
 
         return TextResponse()
 

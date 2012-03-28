@@ -214,16 +214,8 @@ $(function() {
                 var shown_li = $('#network-editActive-menu').find('li:not(:hidden)');
                 hidden_li.show();
                 shown_li.hide();
-                var val = $(this).val(); 
-                if (val == 'active') {
-                    $('#network-activeImage').show();
-                    $('#network-pausedImage').hide();
-                } else {
-                    $('#network-pausedImage').show();
-                    $('#network-activeImage').hide();
-                }
 
-                $.post('/networks/pause/' + campaign_data.id, { active: val } );
+                $.post('/networks/pause/' + campaign_data.id, { active: $(this).val() } );
             });
 
             $('#network-editActive-menu').find('li').first().hide();

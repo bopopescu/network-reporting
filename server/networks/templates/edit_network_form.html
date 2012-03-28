@@ -312,7 +312,9 @@
 
 
 {% block pageTitle %}
-<h1>Networks > {{ network.pretty_name }}</h1>
+<h1>
+    <a href="{% url networks %}">Networks</a> / {{network.pretty_name}}
+</h1>
 {% endblock pageTitle %}
 
 {% block content %}

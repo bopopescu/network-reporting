@@ -306,6 +306,17 @@
                     });
                 }
             }).filter(':checked').click();
+
+            $('#networkSettingsForm-cancel').click(function () {
+                $('#networkSettingsForm').slideUp(400, function () {
+                    $('.networkSettingsForm-show').show();
+                });
+            });
+
+            $('#networkSettingsForm-show').click(function () {
+                $('.networkSettingsForm-show').hide();
+                $('#networkSettingsForm').slideDown();
+            });
     });
 </script>
 {% endblock extraScripts %}
@@ -511,10 +522,15 @@
     {% if login_form %}
     <fieldset class="login-credentials-fields network_type_dependant {{reporting_networks}} login-credentials">
         <legend>
-            <h2>Revenue Reporting</h2>
+            <h2>
+                Revenue Reporting
+                <span class="networkSettingsForm-show hidden" style="margin-left: 50px;">
+                    <a class="button" id="networkSettingsForm-show">Show Revenue Reporting Settings</a>
+                </span>
+            </h2>
         </legend>
 
-        <div class=" alert-message block-message">
+        <div id="networkSettingsForm" class="alert-message block-message">
             <div class="login-credentials-message">
                 MoPub can report your revenue and other data directly from the ad networks. MoPub uses your login creedentials to retrieve the revenue data from the ad networks.
             </div>
@@ -544,7 +560,7 @@
             </ul>
 
             <div class="form-submit login-credentials-submit">
-                <a class="button" id="networkSettingsForm-submit">Retrieve Revenue</a>
+                <a class="button" id="networkSettingsForm-submit">Check and Save Credentials</a>
                 <a class="button" id="networkSettingsForm-cancel">No Thanks</a>
             </div>
             <div class="form-submit login-credentials-settings hidden">

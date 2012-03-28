@@ -316,6 +316,8 @@ class EditNetworkHandler(RequestHandler):
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(self.account,
                     network).count(limit=1) or 'custom' in network
+            if not custom_campaign:
+                query_dict['name'] = NETWORKS[network]
             campaign_form = CampaignForm(query_dict)
 
         adunit_keys = [(unicode(adunit.key())) for adunit in adunits]
@@ -448,9 +450,10 @@ class EditNetworkHandler(RequestHandler):
                                     stats = mapper.ad_network_stats
                                     if not stats.count(limit=1):
                                         mapper.delete()
-                            AdNetworkMapperManager.create(network=network,
-                                    pub_id=app_pub_id, login=login,
-                                    app=app)
+                            if app_pub_id:
+                                AdNetworkMapperManager.create(network=network,
+                                        pub_id=app_pub_id, login=login,
+                                        app=app)
 
                     # NetworkConfig for AdUnits
                     if network in ('admob', 'jumptap', 'millennial'):
@@ -601,8 +604,40 @@ class NetworkDetailsHandler(RequestHandler):
 def network_details(request, *args, **kwargs):
     return NetworkDetailsHandler()(request, *args, **kwargs)
 
+class DeleteNetworkHandler(RequestHandler):
+    def get(self,
+            campaign_key):
+        """
+        Change campaign and login credentials deleted field to True and
+        redirect to the networks index page
+        """
+        campaign = CampaignQueryManager.get(campaign_key)
+        campaign.deleted = True
+        CampaignQueryManager.put(campaign)
+
+        if campaign.network_state == NetworkStates. \
+                DEFAULT_NETWORK_CAMPAIGN:
+            # If other campaigns exist, a new default campaign must be chosen
+            default_campaign = CampaignQueryManager.get_network_campaigns(
+                    self.account, is_new=True).get()
+
+            if default_campaign:
+                campaign.network_state = NetworkStates.DEFAULT_NETWORK_CAMPAIGN
+                CampaignQueryManager.put(campaign)
+            elif network in REPORTING_NETWORKS:
+                login = AdNetworkLoginManager.get_login(self.account,
+                        campaign.network_type).get()
+                login.deleted = True
+                login.put()
+
+        return HttpResponseRedirect(reverse('networks'))
+
+@login_required
+def delete_network(request, *args, **kwargs):
+    return DeleteNetworkHandler()(request, *args, **kwargs)
+
 ## Helpers
 #
 def get_pretty_name(network):
-    return NETWORKS.get(network, False) or 'Custom'
+    return NETWORKS.get(network)
 

@@ -46,7 +46,7 @@
 {% if networks %}
 <section id="dashboard-apps">
 {% if reporting %}
-<div style="float:right">
+<div style="float:right; margin:10px;">
     <input type="checkbox" checked="yes" name="show-data" id="show-network" /> Show data reported by networks in <span style="color:orange;">orange</span>
 </div>
 {% endif %}
@@ -84,9 +84,6 @@ Make a table for ad networks that are active
                         <a href="{% url network_details campaign_key=network.campaign_key %}">
                             {{network.pretty_name}}
                         </a>
-                        <div>
-                            <a class="show-apps button button-small" id="{{network.campaign_key}}" style="width:75px;">Show Apps</a>
-                        </div>
                     </td>
                     {% if network.reporting %}
                     <td class="dataTable-data numeric">
@@ -138,6 +135,9 @@ Make a table for ad networks that are active
                 </tbody>
             </table>
         </div>
+        <div style="margin-left:100px;">
+            <a class="show-apps button button-small" id="{{network.campaign_key}}" style="width:75px;">Show Apps</a>
+        </div>
     </div>
     {% endfor %}
 </div>
@@ -150,7 +150,7 @@ Make a table for the main ad networks that are not setup
 <section>
 <h2 style="padding-top:25px;">Set Up Ad Networks</h2>
 {% for network in networks_to_setup %}
-<div class="{% cycle 'appData' 'appData appData-alt' %}">
+<div class="appData appData-alt">
     <table class="dataTable appData-main">
         <tbody>
             <tr id="{{network.name}}-row">

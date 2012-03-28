@@ -55,6 +55,8 @@ class AdNetworkLoginCredentials(db.Model):
 
     state = db.IntegerProperty(default=LoginStates.WORKING)
 
+    deleted = db.BooleanProperty(default=False)
+
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
             kwargs['key_name'] = ('k:%s:%s' % (kwargs['account'].key(),

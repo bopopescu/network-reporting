@@ -275,6 +275,7 @@ class EditNetworkHandler(RequestHandler):
                                   'networks/edit_network_form.html',
                                   {
                                       'network': network_data,
+                                      'account_key': str(self.account.key()),
                                       'custom_campaign': custom_campaign,
                                       'campaign_form': campaign_form,
                                       'campaign_key': campaign_key,
@@ -603,6 +604,36 @@ class NetworkDetailsHandler(RequestHandler):
 @login_required
 def network_details(request, *args, **kwargs):
     return NetworkDetailsHandler()(request, *args, **kwargs)
+
+class PauseNetworkHandler(RequestHandler):
+    def post(self,
+             campaign_key):
+        """
+        Pause / un-pause campaign
+        """
+        if not self.request.is_ajax():
+            raise Http404
+
+        # Pause campaign
+        campaign = CampaignQueryManager.get(campaign_key)
+        campaign.active = True if self.request.POST.get('active') else False
+        CampaignQueryManager.put(campaign)
+
+        # Pause all adunit adgroups for the campaign
+        if campaign.active:
+            for adunit in AdUnitQueryManager.get_adunits(account=self.account):
+                adgroup = AdGroupQueryManager.get_network_adgroup(campaign.key(),
+                        adunit.key(), self.account.key(), campaign.network_type,
+                        get_from_db=True)
+                if adgroup:
+                    adgroup.active = False
+                    AdGroupQueryManager.put(adgroup)
+
+        return TextResponse()
+
+@login_required
+def pause_network(request, *args, **kwargs):
+    return PauseNetworkHandler()(request, *args, **kwargs)
 
 class DeleteNetworkHandler(RequestHandler):
     def get(self,

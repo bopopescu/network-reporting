@@ -30,10 +30,18 @@
             Status:
         </td>
         <td>
+            <img id="network-activeImage" src="/images/active.gif" height="9" width="9" {% if not network.active %}class="hidden"{% endif %}/>
+            <img id="network-pausedImage" src="/images/paused.gif" height="9" width="9" {% if network.active %}class="hidden"{% endif %}/>
             {% if network.active %}
-            <img src="/images/active.gif" height="9" width="9" /> Running
+            <select id='network-editActive' class='selectmenu'>
+                <option value="active">Running</option>
+                <option value="">Paused</option>
+            </select>
             {% else %}
-            <img src="/images/paused.gif" height="9" width="9" /> Paused
+            <select id='network-editActive' class='selectmenu'>
+                <option value="">Paused</option>
+                <option value="active">Running</option>
+            </select>
             {% endif %}
         </td>
     </tr>

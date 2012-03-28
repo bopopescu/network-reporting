@@ -47,7 +47,7 @@ def budget_filter():
 
         # Turning off all budgeted campaigns because budgets are now going 
         # to be running live on the new adserver
-        if a.campaign.budget_obj:
+        if a.campaign.budget_obj and (a.campaign.budget or a.campaign.full_budget):
             return False
             #return (budget_service.has_budget(a.campaign.budget_obj, a.bid/1000))
         else:

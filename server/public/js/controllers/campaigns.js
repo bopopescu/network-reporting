@@ -306,7 +306,7 @@
         });
 
         // make necessary changes based on campaign_type
-        $('select[name="campaign_type"]').change(function() {
+        $('[name="campaign_type"]').change(function() {
             campaign_type = $(this).val();
             $('.campaign_type_dependant').each(function() {
                 $(this).toggle($(this).hasClass(campaign_type));
@@ -1142,7 +1142,7 @@
         initializeCreateCampaign: function (bootstrapping_data) {
             setupAdGroupForm();
         },
-        
+
         initializeCampaignArchive: function (bootstrapping_data) {
             $.each(['activate', 'delete'], function(iter, action) {
                 $('#campaignForm-' + action).click(function(e) {

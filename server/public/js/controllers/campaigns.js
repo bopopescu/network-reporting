@@ -592,13 +592,14 @@
     }
 
     function initializeCreativeForm() {
-        $('#creativeCreateForm input[name="ad_type"]')
-            .click(function(e){
+        $('#creativeCreateForm [name="ad_type"]')
+            .change(function(e){
                 $('.adTypeDependent',"#creativeCreateForm").hide();
                 $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
             })
+            .change()
             .filter(':checked')
-            .click();
+            .change();
 
         $('.format-options').change(function(e) {
             e.preventDefault();
@@ -635,13 +636,16 @@
                 });
             });
 
-        $('.creativeEditForm input[name="ad_type"]')
-            .click(function(e){
+        $('.creativeEditForm [name="ad_type"]')
+            .change(function(e){
                 // gets the form to which this belongs
                 var form = $(this).parents('form');
                 $('.adTypeDependent',form).hide();
                 $('.adTypeDependent.'+$(this).val(),form).show();
-            }).filter(':checked').click();
+            })
+            .change()
+            .filter(':checked')
+            .change();
 
 
         $('.creativeFormAdvancedToggleButton')
@@ -1142,7 +1146,7 @@
         initializeCreateCampaign: function (bootstrapping_data) {
             setupAdGroupForm();
         },
-        
+
         initializeCampaignArchive: function (bootstrapping_data) {
             $.each(['activate', 'delete'], function(iter, action) {
                 $('#campaignForm-' + action).click(function(e) {

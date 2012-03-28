@@ -217,7 +217,7 @@
             }
         });
         // update on document ready
-        if($('input[name="device_targeting"]').val() == '0') {
+        if($('input[name="device_targeting"]:checked').val() == '0') {
             $('#device_targeting').hide();
         }
 

@@ -22,7 +22,7 @@ ONE_DAY = timedelta(days=1)
 BUDGET_UPDATE_DATE_FMT = '%Y/%m/%d %H:%M'
 
 #TODO(tornado): This needs to be a url that we'll actually use
-ADSERVER = 'ec2-50-17-0-25.compute-1.amazonaws.com'
+ADSERVER = 'adserver.mopub.com'
 TEST_ADSERVER = 'localhost:8000'
 
 class BudgetQueryManager(QueryManager):
@@ -69,13 +69,13 @@ class BudgetQueryManager(QueryManager):
             pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
-            #try:
-            #    full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + update_uri
-            #    urllib2.urlopen(full_url)
-            #except:
-            #    # This isn't implemented yet
-            #    #TODO(tornado): need to implement this and things
-            #    pass
+            try:
+                full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + update_uri
+                urllib2.urlopen(full_url)
+            except:
+                # This isn't implemented yet
+                #TODO(tornado): need to implement this and things
+                pass
 
         if camp.budget_obj:
             budget = camp.budget_obj

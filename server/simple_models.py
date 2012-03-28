@@ -22,7 +22,7 @@ def from_basic_type(basic_obj, already_translated = None):
     #    logging.warning("Using already-translated (cached) object at address %s: %s" % (id(basic_obj), repr(basic_obj)))
     #    return already_translated[id(basic_obj)]
     #logging.info("Interpreting basic-type %s: %s" % (type(basic_obj), repr(basic_obj)))
-    assert basic_obj is None or isinstance(basic_obj, (int, long, float, str, unicode, datetime, dict, list, tuple))
+    assert basic_obj is None or isinstance(basic_obj, (int, long, float, str, unicode, datetime, dict, list, tuple, bool))
     if isinstance(basic_obj, (list, tuple)):
         # Apply this function recursively on the subobjects.
         to_return = [from_basic_type(x, already_translated) for x in basic_obj]
@@ -67,7 +67,7 @@ def to_basic_type(obj, already_translated = None):
     #if id(obj) in already_translated:
     #    return already_translated[id(obj)]
     #logging.info("Converting to basic-types: %s %s" % (type(obj), repr(obj)))
-    assert obj is None or isinstance(obj, (int, long, float, str, unicode, datetime, dict, list, tuple, SimpleModel))
+    assert obj is None or isinstance(obj, (int, long, float, str, unicode, datetime, dict, list, tuple, SimpleModel, bool))
     if isinstance(obj, (list, tuple)):
         # Apply this function recursively on the subobjects.
         to_return = [to_basic_type(x, already_translated) for x in obj]
@@ -186,7 +186,7 @@ class SimpleAdUnit(SimpleModel):
         self.account = account.simplify()
         self.name = name
         self._key = key
-        self.keywords = keywords
+        self.keywords = str(keywords)
         self.app_key = app_key.simplify()
         self.format = format
         self.landscape = landscape
@@ -259,7 +259,7 @@ class SimpleAdUnit(SimpleModel):
     app = property(_get_app, _set_app)
 
 class SimpleCampaign(SimpleModel):
-    def __init__(self, key=None, name=None, campaign_type=None, start_datetime=None, end_datetime=None, active=None, deleted=None, account=None):
+    def __init__(self, key=None, name=None, campaign_type=None, start_datetime=None, end_datetime=None, active=None, deleted=None, account=None, budget_type=None, full_budget=None, daily_budget=None):
         self._key = key
         self.name = name
         self.campaign_type = campaign_type
@@ -268,6 +268,9 @@ class SimpleCampaign(SimpleModel):
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
         self.account = account.simplify()
+        self.budget_type = budget_type
+        self.full_budget = full_budget
+        self.daily_budget = daily_budget
 
     def __str__(self):
         return self.__repr__()
@@ -477,11 +480,9 @@ class SimpleTextAndTileCreative(SimpleCreative):
         super(SimpleTextAndTileCreative, self).__init__(**kwargs)
 
 class SimpleHtmlCreative(SimpleCreative):
-    def __init__(self, html_data=None, ormma_html=None, **kwargs):
+    def __init__(self, html_data=None, ormma_html=False, **kwargs):
         if html_data is not None:
             html_data = str(html_data)
-        if ormma_html is not None:
-            ormma_html = str(ormma_html)
         self.html_data = html_data
         self.ormma_html = ormma_html
         super(SimpleHtmlCreative, self).__init__(**kwargs)

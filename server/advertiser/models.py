@@ -119,13 +119,16 @@ class Campaign(db.Model):
             end_datetime = datetime.datetime(end.year, end.month, end.day)
         else:
             end_datetime = self.end_datetime
-        return SimpleCampaign(key = str(self.key()),
-                              name = self.name,
-                              campaign_type = self.campaign_type,
-                              active = self.active,
-                              start_datetime = start_datetime,
-                              end_datetime = end_datetime,
-                              account = self.account,
+        return SimpleCampaign(key=str(self.key()),
+                              name=self.name,
+                              campaign_type=self.campaign_type,
+                              active=self.active,
+                              start_datetime=start_datetime,
+                              end_datetime=end_datetime,
+                              account=self.account,
+                              full_budget=self.full_budget,
+                              daily_budget=self.budget,
+                              budget_type=self.budget_type,
                               )
 
     def __repr__(self):

@@ -9,7 +9,7 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-  <span class="titlebar-right">
+e  <span class="titlebar-right">
     <a class="button" id="dashboard-apps-editAppButton" href="#">
       Edit app settings
     </a>
@@ -470,6 +470,8 @@
                       </td>
                     </tr>
                   {% endfor %}
+
+                  {% comment %}
                   <tr>
                     <td>
                       <span class="big">Totals</span> <br />
@@ -496,6 +498,7 @@
                       <strong>{{app.stats.conv_rate|percentage}}</strong>
                     </td>
                   </tr>
+                  {% endcomment %}
                 </tbody>
               </table>
             </div>

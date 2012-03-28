@@ -250,6 +250,8 @@
                     renderCampaign(campaign);
                 });
                 
+                $("#line_item_table").tablesorter();
+                
                 // sum up the impressions/clicks/conversions/ctr from
                 // all of the campaigns
                 var impressions = campaigns_collection.reduce(function(total, n){

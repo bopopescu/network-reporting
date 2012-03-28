@@ -548,34 +548,38 @@ class AdGroup(db.Model):
         
     @property
     def budget_goal(self):
-        if self.bid_strategy == 'cpm':
-            if self.budget_type == 'daily':
-                return int((self.daily_budget / self.bid) * 1000)
+        try:
+            if self.bid_strategy == 'cpm':
+                if self.budget_type == 'daily':
+                    return int((self.daily_budget / self.bid) * 1000)
+                else:
+                    return int((self.full_budget / self.bid) * 1000)
             else:
-                return int((self.full_budget / self.bid) * 1000)
-        else:
-            if self.budget_type == 'daily':
-                return int(self.daily_budget)
-            else:
-                return int(self.full_budget)
+                if self.budget_type == 'daily':
+                    return int(self.daily_budget)
+                else:
+                    return int(self.full_budget)
+        except TypeError:
+            # We'll get a NoneType exception if no budget is set
+            return None
 
     @property
     def budget_goal_display(self):
         goal = self.budget_goal
 
-        if goal :
+        if goal:
             if self.bid_strategy == 'cpm':
                 if self.budget_type == 'daily':
-                    return goal + ' Impressions Total'
+                    return str(goal) + ' Impressions Daily'
                 else:
-                    return goal + ' Impressions Total'
+                    return str(goal) + ' Impressions Total'
             else:
                 if self.budget_type == 'daily':
-                    return goal + ' USD Daily'
+                    return str(goal) + ' USD Daily'
                 else:
-                    return goal + ' USD Daily'
+                    return str(goal) + ' USD Total'
         else:
-            return None        
+            return "Unlimited budget"
                 
     @property
     def individual_cost(self):

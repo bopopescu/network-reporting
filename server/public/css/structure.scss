@@ -199,8 +199,8 @@ span.dropdown-icon {
  */
 
 #titlebar {
-    padding: 25px 0 0 0;
-    height: 36px;
+    padding: 20px 0 0 0;
+    height: 30px;
     border-bottom: 3px solid #ebf2f7;
     background: #f5f9fc;
     .pageWidth {
@@ -208,10 +208,10 @@ span.dropdown-icon {
     }
     h1 {
         margin: -6px 0 0 0;
-        font-size: 24px;
+        font-size: 20px;
         font-weight: 300;
         color: $dark_gray;
-        width: 340px;
+        //width: 340px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -278,7 +278,7 @@ span.dropdown-icon {
  */
 
 #content {
-  padding: 30px 0 235px 0;
+  padding: 10px 0 235px 0;
   float: left;
   width: 100%;
 }

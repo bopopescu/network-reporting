@@ -14,6 +14,8 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      AdNetworkStatsFetcher, \
      MPStatsAPIException
 
+from budget import budget_service
+
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.http import Http404
@@ -287,38 +289,43 @@ class AdGroupServiceHandler(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, adgroup_key):
-#        try:
 
-            if not adgroup_key:
-                raise Http404
 
-            # Get the adgroup
-            adgroup = AdGroupQueryManager.get(adgroup_key)
+        if not adgroup_key:
+            raise Http404
 
-            # REFACTOR
-            # ensure the owner of this adgroup is the request's
-            # current user
-            if adgroup.account.key() != self.account.key():
-                raise Http404
+        # Get the adgroup
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+            
+        # REFACTOR
+        # ensure the owner of this adgroup is the request's
+        # current user
+        if adgroup.account.key() != self.account.key():
+            raise Http404
 
-            # Where are we getting stats from?
-            # Choices are 'mpx', 'direct', 'networks', or 'all'
-            stats_endpoint = self.request.GET.get('endpoint', 'all')
+        # Where are we getting stats from?
+        # Choices are 'mpx', 'direct', 'networks', or 'all'
+        stats_endpoint = self.request.GET.get('endpoint', 'all')
 
-            # Get the stats fetcher
-            stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)
+        # Get the stats fetcher
+        stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)                        
+        # JSONify and update with stats
+        adgroup_jsonified = adgroup.toJSON()
+        stats = stats_fetcher.get_adgroup_stats(adgroup,
+                                                self.start_date,
+                                                self.end_date,
+                                                daily=True)
+        adgroup_jsonified.update(stats)
 
-            # JSONify and update with stats
-            adgroup_jsonified = adgroup.toJSON()
-            stats = stats_fetcher.get_adgroup_stats(adgroup,
-                                                    self.start_date,
-                                                    self.end_date,
-                                                    daily=True)
-            adgroup_jsonified.update(stats)
+        # pacing
+        pace, pace_status = get_pace(adgroup)
+        adgroup_jsonified.update({
+            'percent_delivered': budget_service.percent_delivered(adgroup.budget_obj),
+            'pace': pace,
+            'pace_status': pace_status
+        })
         
-            return JSONResponse(adgroup_jsonified)
-#        except Exception, exception:
- #           return JSONResponse({'error': str(exception)})
+        return JSONResponse(adgroup_jsonified)
 
 
     def post(self, *args, **kwargs):
@@ -366,6 +373,14 @@ class CampaignServiceHandler(RequestHandler):
                                                         daily=True)
                 adgroup_jsonified = adgroup.toJSON()
                 adgroup_jsonified.update(stats)
+                # pacing
+                pace, pace_status = get_pace(adgroup)
+                adgroup_jsonified.update({
+                    'percent_delivered': budget_service.percent_delivered(adgroup.budget_obj),
+                    'pace': pace,
+                    'pace_status': pace_status
+                })
+
                 campaign_jsonified['adgroups'].append(adgroup_jsonified)
 
             # Get the top level stats for the campaign by summing whats
@@ -452,3 +467,19 @@ def get_stats_fetcher(account_key, stats_endpoint):
                         parameters are 'mpx', 'direct', 'networks', and
                         'all'.""")
     return stats
+
+
+def get_pace(adgroup):
+    pace = budget_service.get_pace(adgroup.budget_obj)
+    if pace:
+        if pace[1] < .5 :
+            pace_status = 'pace-failure'
+        elif pace[1] < .85:
+            pace_status = 'pace-warning'
+        else:
+            pace_status = 'pace-succes'
+            
+        return (pace[1], pace_status)
+        
+    else:
+        return (0, None)

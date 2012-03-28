@@ -51,6 +51,8 @@ class OrderIndexHandler(RequestHandler):
         orders = CampaignQueryManager.get_order_campaigns(account=self.account)
         line_items = AdGroupQueryManager.get_adgroups(account=self.account)
         line_items = [l for l in line_items if not (l.campaign.advertiser == "marketplace")]
+        for line_item in line_items:
+            logging.warn(line_item.budget_goal_display)
 
         return {
             'orders': orders,

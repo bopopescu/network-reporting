@@ -937,7 +937,7 @@ button.btn, input[type="submit"].btn {
   @include gradient-vertical(#ee5f5b, #c43c35);
 }
 .progress-danger.progress-striped .bar {
-  @include gradient-striped(#ee5f5b);
+    @include gradient-striped(#ee5f5b);
 }
 
 // Success (green)
@@ -1042,21 +1042,21 @@ button.btn, input[type="submit"].btn {
         width: 204px;
         display: inline-block;
         overflow: hidden;
-        background: #EBF2F7;
+        background: #B4CEE1;
         @include border-radius(6px);
         @include box-shadow(0 3px 1px rgba(0,0,0,0.1));
         
         @include transition(background .3s linear);
 
         &.active {
-            background: darken(#EBF2F7, 15%);
+            background: darken(#B4CEE1, 15%);
         }
 
         &:hover {
             cursor: pointer;
             background: lighten($link_color_hover, 20%);
             &.active {
-                background: darken(#EBF2F7, 15%);
+                background: darken(#B4CEE1, 15%);
             }
         }
         
@@ -1072,7 +1072,7 @@ button.btn, input[type="submit"].btn {
         }
 
         .rollup-stat {
-            padding: 14px;
+            padding: 10px;
             background-color: $white;
             @include border-radius(0 0 3px 3px);
             @include background-clip(padding-box);
@@ -1083,6 +1083,22 @@ button.btn, input[type="submit"].btn {
             p {
                 margin-bottom: 0;
                 text-align: center;
+            }
+
+            .stat-value {
+                text-align: center;
+                font-size: 34px;
+            }
+
+            .delta-value {
+                text-align: center;
+                font-size: 18px;
+                &.positive {
+                    color: #62c462;
+                }
+                &.negative {
+                    color: #ee5f5b;
+                }
             }
         }
     }

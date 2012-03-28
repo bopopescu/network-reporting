@@ -661,18 +661,17 @@ span.dropdown-icon {
  * ### Titlebar
  */
 #titlebar {
-  padding: 25px 0 0 0;
-  height: 36px;
+  padding: 20px 0 0 0;
+  height: 30px;
   border-bottom: 3px solid #ebf2f7;
   background: #f5f9fc; }
   #titlebar .pageWidth {
     position: relative; }
   #titlebar h1 {
     margin: -6px 0 0 0;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 300;
     color: #444444;
-    width: 340px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis; }
@@ -724,7 +723,7 @@ span.dropdown-icon {
  * ## Main Content
  */
 #content {
-  padding: 30px 0 235px 0;
+  padding: 10px 0 235px 0;
   float: left;
   width: 100%; }
 
@@ -3610,7 +3609,7 @@ button.btn, input[type="submit"].btn {
     width: 204px;
     display: inline-block;
     overflow: hidden;
-    background: #EBF2F7;
+    background: #B4CEE1;
     -webkit-border-radius: 6px;
     -moz-border-radius: 6px;
     border-radius: 6px;
@@ -3621,12 +3620,12 @@ button.btn, input[type="submit"].btn {
     -moz-transition: background 0.3s linear;
     transition: background 0.3s linear; }
     .new-rollup .rollup-box.active {
-      background: #b4cee1; }
+      background: #7daacb; }
     .new-rollup .rollup-box:hover {
       cursor: pointer;
       background: #ffa64c; }
       .new-rollup .rollup-box:hover.active {
-        background: #b4cee1; }
+        background: #7daacb; }
     .new-rollup .rollup-box .rollup-title {
       margin: 0 auto 5px auto;
       text-align: center;
@@ -3638,7 +3637,7 @@ button.btn, input[type="submit"].btn {
       -moz-border-radius: 3px 3px 0 0;
       border-radius: 3px 3px 0 0; }
     .new-rollup .rollup-box .rollup-stat {
-      padding: 14px;
+      padding: 10px;
       background-color: white;
       -webkit-border-radius: 0 0 3px 3px;
       -moz-border-radius: 0 0 3px 3px;
@@ -3651,6 +3650,16 @@ button.btn, input[type="submit"].btn {
       .new-rollup .rollup-box .rollup-stat p {
         margin-bottom: 0;
         text-align: center; }
+      .new-rollup .rollup-box .rollup-stat .stat-value {
+        text-align: center;
+        font-size: 34px; }
+      .new-rollup .rollup-box .rollup-stat .delta-value {
+        text-align: center;
+        font-size: 18px; }
+        .new-rollup .rollup-box .rollup-stat .delta-value.positive {
+          color: #62c462; }
+        .new-rollup .rollup-box .rollup-stat .delta-value.negative {
+          color: #ee5f5b; }
 
 /*
  * Plugins

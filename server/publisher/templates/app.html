@@ -9,11 +9,6 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-  <span class="titlebar-right">
-    <a class="button" id="dashboard-apps-editAppButton" href="#">
-      Edit app settings
-    </a>
-  </span>
 {% endblock titleBarRight %}
 
 {% block content %}
@@ -175,9 +170,15 @@
   <div class="clear"></div>
 
   <section id="dashboard-apps">
-    <div class="buttonBank buttonBank-right">
+    
+    <div class="right">
+      <a class="btn" id="dashboard-apps-editAppButton" href="#">
+        <i class="icon-pencil"></i>
+        Edit app settings
+      </a>      
       <a class="btn" id="dashboard-apps-addAdUnitButton" href="#">
-        Add an ad unit
+        <i class="icon-plus"></i>
+        Add an Ad Unit
       </a>
     </div>
 
@@ -250,7 +251,7 @@
                       <th>
                         {% status_icon adgroup %}
 
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key%}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key%}">
                           {{ adgroup.name }}
                         </a>
                         <br />
@@ -309,7 +310,7 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                           {{adgroup.name}}
                         </a><br/>
                         <span class="muted">
@@ -383,7 +384,7 @@
                     <tr>
                       <td>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                           {{adgroup.name}}
                         </a>
                         <br/>
@@ -409,7 +410,7 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                           {{adgroup.name}}
                         </a><br/>
 
@@ -491,29 +492,31 @@
         </div>
       {% endif %}
     </div>
-  </section>
 
+    <div class="right">
+      <div class="btn-group">
+        <button class="btn" href="#">
+          <i class="icon-download-alt"></i>
+          Export Ad Sources
+        </button>
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="#" data-toggle="running"> XLS </a> </li>
+          <li> <a href="#" data-toggle="running"> CSV </a> </li>
+        </ul>
+        </div>
+    </div>
+  </section>
+  
 
   {% comment %}
     Controls for exporting app information
   {% endcomment %}
 
-  <form id='appExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url publisher_app_export %}'>
-    <input name='app_key' type='text' value='{{app.key}}' />
-    <input name='file_type' id='appExportType' type='text' value='' />
-    <input name='start' value={{start_date|date:"mdy"}} />
-    <input name='end' value={{end_date|date:"mdy"}} />
-  </form>
-
+  
   <section id="dashboard-apps">
-    <div class="buttonBank buttonBank-right">
-      <select name='exportSelect' id='publisher-app-exportSelect' class='selectmenu export-selectMenu'>
-        <option value='exp'>Export</option>
-        <option value='xls'>XLS</option>
-        <option value='csv'>CSV</option>
-      </select>
-    </div>
-
 
     <h2>Daily Counts</h2>
     <div class="appData-details noneg">
@@ -552,7 +555,27 @@
         </tbody>
       </table>
 
-      <a class="appData-details-toggleButton" href="#">Show details</a>
+      <a class="btn appData-details-toggleButton" href="#">
+        <i class="icon-eye-open"></i>
+        Show details
+      </a>
+
+      <div class="right">
+        <div class="btn-group">
+          <button class="btn" href="#">
+            <i class="icon-download-alt"></i>
+            Export Daily Counts
+          </button>
+          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+            <li> <a href="#" data-toggle="running"> XLS </a> </li>
+            <li> <a href="#" data-toggle="running"> CSV </a> </li>
+          </ul>
+        </div>
+      </div>
+      
 
     </div>
   </section>

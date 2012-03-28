@@ -11,18 +11,15 @@
   </h1>
 {% endblock pageTitle %}
 
-{% block titleBarRight %}
-  <span class="titlebar-right">
-    <a class="button" id="dashboard-apps-editAdUnitButton" href="#">
-      Edit ad unit settings
-    </a>
-    <a class="linkIcon" href="{% url publisher_integration_help adunit_key=adunit.key %}">
-      Get code snippet
-      <span class="ui-icon ui-icon-triangle-1-e"></span>
-    </a>
-  </span>
-{% endblock titleBarRight %}
 
+{% block dateButtons %}{% endblock dateButtons %}
+
+{% block titleBarRight %}
+
+  {% include "partials/datecontrols.html" %}
+  
+{% endblock titleBarRight %}
+  
 {% block content %}
 
   {% if not adunit.adgroups %}
@@ -127,9 +124,15 @@
 
   <div class="clear"></div>
 
+  
   <section id="dashboard-apps">
-    <div class="buttonBank buttonBank-right">
-      <a class="button" id="advertisers-testAdServer" href="#">Test Ad</a>
+    <div class="right">
+      <a class="btn" id="advertisers-testAdServer" href="#">
+        Test Ad
+      </a>
+      <a class="btn" id="dashboard-apps-editAdUnitButton" href="#">
+        Edit ad unit settings
+      </a>      
     </div>
 
     <div id="adserverTest" style="display:none;">
@@ -163,7 +166,7 @@
                   <tr>
                     <th>
                       {% status_icon adgroup %}
-                      <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                      <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                         {{ adgroup.name }}
                       </a>
                       <br />
@@ -220,7 +223,7 @@
                   <tr>
                     <th>
                       {% status_icon adgroup %}
-                      <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                      <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                         {{ adgroup.name }}
                       </a>
                       <br/>
@@ -293,7 +296,7 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                           {{ adgroup.name }}
                         </a>
                         <br/>
@@ -317,7 +320,7 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                           {{ adgroup.name }}
                         </a>
                         <br/>

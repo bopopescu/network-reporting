@@ -1,46 +1,53 @@
+# Deployed Wednesday, March 28, 2012 at 04:14PM PST
+### Deployed by John Pena
+### Tagged deploy-48
+### Bugs Fixed: []
+### Included Commits: 
+ * f31608e [#996 state:resolved] [#914 state:resolved] [#1039 state:resolved]
+ 
 # Deployed Wednesday, March 28, 2012 at 04:13PM PST
 ### Deployed by John Pena
 ### Tagged deploy-47
 ### Bugs Fixed: ['996', '914', '1039']
-### Included Commits: 
- * b3ae3aa Merge branch 'master' of github.com:mopub/mopub
- * ce4fe8c If you have a budget, you don't work
- * b5edcee Merge branch 'master' of github.com:mopub/mopub
- * 30f7b77 Merge branch 'master' of github.com:mopub/mopub
- * 313c205 [#996 state:fixed]
- * 1ee5a9b [#996 stat:fixed]
- * 79b3175 Merge branch '1039-lock_campaign_type' of github.com:mopub/mopub
- * b958f37 Merge branch '914-creative_type_immutable' of github.com:mopub/mopub
- * bc53ec8 [#914 state:fixed] creative type is now immutable
- * 1169d9c All budgeted campaigns will now fail because they should be running on the new ad server
- * 26fb1ef [#1056 state:resolved] [#1081 state:resolved]
- * 1fb8fc8 fixed version #
- * 548c20e added budget info to campaign
- * c20214c added millennial id to network config serialization
- * e2eab23 More derps
- * ac28cb1 none should be fine now
- * b6d7ce5 more logging
- * bfb168c less logging
- * b7ef0e1 Derp
- * b0023a4 More logging...
- * fed31d3 More logging, import logging
- * 54d341d GAE async rpc shit is so stupid
- * 3097bdc None checking, don't sync 0 spending
- * 0f8484f Doh
- * 36cc1f2 This was supposed to be code reviewed
- * 570169e Whoops forgot this...kind of important
- * 258aa2b Added default now
- * db3279d Targeting the boom
- * 01d2d7e DUH
- * 6596fc2 did it in the other place
- * 920285f Kind of a big deal here....super sneaky bug
- * 7a1ab3a fixed ormma html property
- * c6bc3ae Added handlers
- * 24ca262 Queue, cron, handlers for all things needed for budget sync. Entirely async.  Mostly a copy of the code on EC2
- * fbe6b5e did it in the other place
- * e89e3fa Kind of a big deal here....super sneaky bug
- * cc2a2cc [#1039 state:fixed] campaign type cannot be changed
- 
+### Included Commits:
+* b3ae3aa Merge branch 'master' of github.com:mopub/mopub
+* ce4fe8c If you have a budget, you don't work
+* b5edcee Merge branch 'master' of github.com:mopub/mopub
+* 30f7b77 Merge branch 'master' of github.com:mopub/mopub
+* 313c205 [#996 state:fixed]
+* 1ee5a9b [#996 stat:fixed]
+* 79b3175 Merge branch '1039-lock_campaign_type' of github.com:mopub/mopub
+* b958f37 Merge branch '914-creative_type_immutable' of github.com:mopub/mopub
+* bc53ec8 [#914 state:fixed] creative type is now immutable
+* 1169d9c All budgeted campaigns will now fail because they should be running on the new ad server
+* 26fb1ef [#1056 state:resolved] [#1081 state:resolved]
+* 1fb8fc8 fixed version #
+* 548c20e added budget info to campaign
+* c20214c added millennial id to network config serialization
+* e2eab23 More derps
+* ac28cb1 none should be fine now
+* b6d7ce5 more logging
+* bfb168c less logging
+* b7ef0e1 Derp
+* b0023a4 More logging...
+* fed31d3 More logging, import logging
+* 54d341d GAE async rpc shit is so stupid
+* 3097bdc None checking, don't sync 0 spending
+* 0f8484f Doh
+* 36cc1f2 This was supposed to be code reviewed
+* 570169e Whoops forgot this...kind of important
+* 258aa2b Added default now
+* db3279d Targeting the boom
+* 01d2d7e DUH
+* 6596fc2 did it in the other place
+* 920285f Kind of a big deal here....super sneaky bug
+* 7a1ab3a fixed ormma html property
+* c6bc3ae Added handlers
+* 24ca262 Queue, cron, handlers for all things needed for budget sync. Entirely async.  Mostly a copy of the code on EC2
+* fbe6b5e did it in the other place
+* e89e3fa Kind of a big deal here....super sneaky bug
+* cc2a2cc [#1039 state:fixed] campaign type cannot be changed
+
 # Deployed Wednesday, March 28, 2012 at 11:59AM PST
 ### Deployed by John Pena
 ### Tagged deploy-46

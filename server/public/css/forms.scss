@@ -349,6 +349,11 @@ form#campaign_and_adgroup {
         list-style-type: none;
         margin: 0;
         padding: 0;
+        li.network-type {
+            label, div {
+                vertical-align: middle;
+            }
+        }
         > li {
             margin: 12px 0 0 0;
             padding: 0;

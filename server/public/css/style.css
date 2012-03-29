@@ -1464,6 +1464,8 @@ form#campaign_and_adgroup ul.form_fields {
   list-style-type: none;
   margin: 0;
   padding: 0; }
+  form#campaign_and_adgroup ul.form_fields li.network-type label, form#campaign_and_adgroup ul.form_fields li.network-type div {
+    vertical-align: middle; }
   form#campaign_and_adgroup ul.form_fields > li {
     margin: 12px 0 0 0;
     padding: 0; }

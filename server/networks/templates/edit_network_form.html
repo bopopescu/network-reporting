@@ -345,12 +345,12 @@
         </legend>
 
         <ul class="form_fields">
-            <li class="campaign_type_dependant network">
-            {{ adgroup_form.network_type.label_tag }}
-            <div>
-                <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                <span class="error network_type_dependant admob_native millennial_native">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
-            </div>
+            <li class="network-type campaign_type_dependant network">
+                {{ adgroup_form.network_type.label_tag }}
+                <div>
+                    <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
+                    <span class="error network_type_dependant admob_native millennial_native">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
+                </div>
             </li>
 
 

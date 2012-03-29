@@ -52,7 +52,7 @@
                 do stuff for editing report on the fly
                 {% endcomment %}
                 <th class='dataTable-name'>
-                  {% if report.data %}
+                  {% if report.status == 'Completed' %}
                     <a href='{% url view_report report_key=report.key %}'>{{report.name}}</a>
                   {% else %}
                     {{report.name}}
@@ -60,7 +60,7 @@
                 </th>
                 <td class='dataTable-name'>{{report.details|safe}}</td>
                 <td id='{{report.key}}-status' class='dataTable-date'>
-                  {% if report.data %}
+                  {% if report.status == 'Completed' %}
                     {{report.last_run|date:'N j, Y \<\b\r /\> f a'|safe}}
                   {% else %}
                     {% if report.status %}

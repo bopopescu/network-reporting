@@ -144,8 +144,7 @@ class ScheduledReport(db.Model):
         data_key = Report.get_key_name(key, count)
         return Report.get(data_key)
         #get the most recent report created by this scheduler
-#        return self.reports.order('-created_at').get()
-
+        
     @property
     def details(self):
         return self.most_recent.details(self.interval)

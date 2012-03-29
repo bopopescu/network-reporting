@@ -353,7 +353,6 @@
                 </div>
             </li>
 
-
             {% if custom_campaign %}
             <li>
             {{ campaign_form.name.label_tag }}
@@ -363,6 +362,12 @@
             </li>
             {% endif %}
 
+            <li class="campaign_type_dependant network network_type_dependant jumptap">
+            {{ account_network_config_form.jumptap_pub_id.label_tag }}
+            <div>
+                {{ account_network_config_form.jumptap_pub_id }}
+            </div>
+            </li>
         </ul>
 
         {% if login_form %}
@@ -380,13 +385,6 @@
             {{ campaign_form.description.label_tag }}
             <div>
                 {{ campaign_form.description }}
-            </div>
-            </li>
-
-            <li class="campaign_type_dependant network network_type_dependant jumptap">
-            {{ account_network_config_form.jumptap_pub_id.label_tag }}
-            <div>
-                {{ account_network_config_form.jumptap_pub_id }}
             </div>
             </li>
 

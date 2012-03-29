@@ -72,6 +72,43 @@ class ReportQueryManager(CachedQueryManager):
 
         self.obj_cache = {}
 
+    def migrate_relevant_reports(self):
+        scheduled = self.get_scheduled()
+        defaults, adding = self.get_default_reports()
+        all_reps = scheduled + defaults
+        for rep in all_reps:
+            self.migrate_scheduled_data(rep)
+
+
+    def migrate_scheduled_data(self, scheduled):
+        # I don't think anybody has more than 100 of these guys...
+        rep_data = scheduled.reports.order('-created_at').fetch(100)
+        # Sorted with most recent first, switch it so most recent is last
+        rep_data.reverse()
+        new_reps = []
+        old_reps = []
+        for datum in rep_data:
+            status = datum.status
+            if datum.data:
+                status = 'Completed'
+            new_rep = Report(account=datum.account,
+                             created_at=datum.created_at,
+                             schedule=scheduled,
+                             start=datum.start,
+                             end=datum.end,
+                             report_blob=datum.report_blob,
+                             html_data_blob=datum.html_data_blob,
+                             test_report_blob=datum.test_report_blob,
+                             data=datum.data,
+                             completed_at=datum.completed_at,
+                             status=status)
+            new_reps.append(new_rep)
+            datum.schedule=None
+            old_reps.append(datum)
+
+        Report.put(new_reps)
+        Report.put(old_reps)
+
     def get_report_by_key(self, report_key, view=False):
         return ScheduledReport.get(report_key)
 

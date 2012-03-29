@@ -67,7 +67,6 @@ LOG_FORMAT = "%s:\t%s\n"
 FAILURE = 'REPFAIL%s'
 NODAT = FAILURE % 0
 MRFAILURE = FAILURE % 1
-# I'll do it later
 OTHER = FAILURE % 2
 
 def log(mesg):
@@ -142,8 +141,6 @@ class ScheduledReport(db.Model):
     recipients = db.StringListProperty(default=[])
 
     _most_recent = db.ReferenceProperty(Report, collection_name='parent_report')
-
-    data_count = db.IntegerProperty(default=0)
 
     @property
     def data(self):

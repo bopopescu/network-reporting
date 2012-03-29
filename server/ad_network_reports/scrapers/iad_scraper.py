@@ -245,9 +245,9 @@ if __name__ == '__main__':
     #NC.password = 'Faisal1Chess'
     #NC.username = '2_acrossair@acrossair.com'
     #NC.password = 'imano@314'
-    NC.username = 'salesreports@optimesoftware.com'
-    NC.password = 'Sales2012'
+    NC.username = 'mopub@ticbits.com'
+    NC.password = 'mopub666import'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
-    print SCRAPER.get_site_stats(date(2012,1,31))
+    print SCRAPER.get_site_stats(date(2012,3,23))
 

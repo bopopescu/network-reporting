@@ -361,14 +361,13 @@ class EditNetworkHandler(RequestHandler):
                 query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
 
                 adgroup_form = AdGroupForm(query_dict,
-                        site_keys=[(unicode(adunit.key()))],
                         is_staff=self.request.user.is_staff,
                         prefix=str(adunit.key()),
                         instance=network_adgroup)
                 if not adgroup_form.is_valid():
                     adgroup_forms_are_valid = False
                     break
-                adgroup_forms.append(adgroup_form)
+                adgroup_forms.append((adgroup_form, adunit.key()))
 
             if adgroup_forms_are_valid:
                 logging.info('adgroup forms are valid')
@@ -376,10 +375,12 @@ class EditNetworkHandler(RequestHandler):
                 # And then put in datastore again.
                 CampaignQueryManager.put(campaign)
 
-                for adgroup_form in adgroup_forms:
+                for adgroup_form, adunit_key in adgroup_forms:
                     adgroup = adgroup_form.save()
+                    adgroup.account = self.account
                     adgroup.campaign = campaign
                     adgroup.name = campaign.name
+                    adgroup.site_keys = [adunit_key]
                     if network in NETWORK_ADGROUP_TRANSLATION:
                         adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[
                                 network]

@@ -32,12 +32,12 @@ def stats_breakdown(stats):
 
 
 @register.inclusion_tag("partials/status_icon.html")
-def status_icon(adgroup):
+def status_icon(advertiser_model):
     """
     Returns an image tag based on the adgroup's status
     (deleted/active/inactive/paused).
     """
-    return {'adgroup': adgroup }
+    return {'adgroup': advertiser_model }
 
 
 def isiterable(item):

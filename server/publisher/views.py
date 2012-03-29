@@ -447,20 +447,26 @@ class AppDetailHandler(RequestHandler):
         app.stats.user_count = max([sm.user_count for sm in app.all_stats])
 
         # get adgroups targeting this app
-        app.adgroups = AdGroupQueryManager.get_adgroups(app=app)
+        adgroups = AdGroupQueryManager.get_adgroups(app=app)
+        app.campaigns = dict([(adgroup.campaign.key(), adgroup.campaign) for
+            adgroup in adgroups]).values()
 
+        for campaign in app.campaigns:
+            # Used for non new network campaigns
+            if not campaign.network_type:
+                campaign.adgroup = adgroups[0]
 
-        for ag in app.adgroups:
-            ag.all_stats = stats_q.get_stats_for_days(publisher = app,
-                                                            advertiser = ag,
+            campaign.all_stats = stats_q.get_stats_for_days(publisher = app,
+                                                            advertiser =
+                                                            campaign,
                                                             days = self.days)
-            ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            budget_object = ag.campaign.budget_obj
-            ag.percent_delivered = budget_service.percent_delivered(budget_object)
+            campaign.stats = reduce(lambda x, y: x+y, campaign.all_stats, StatsModel())
+            budget_object = campaign.budget_obj
+            #ag.percent_delivered = budget_service.percent_delivered(budget_object)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
-            if ag.campaign.campaign_type in ['marketplace']:
+            if campaign.campaign_type in ['marketplace']:
                 try:
                     mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
                                                             self.start_date,
@@ -469,20 +475,20 @@ class AppDetailHandler(RequestHandler):
                     logging.warn(str(e))
                     mpx_stats = {}
 
-                ag.stats.revenue = float(mpx_stats.get('revenue', 0.0))
-                ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
+                campaign.stats.revenue = float(mpx_stats.get('revenue', 0.0))
+                campaign.stats.impression_count = int(mpx_stats.get('impressions', 0))
 
-            if ag.campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo'] \
-               and ag.cpc:
-                ag.calculated_ecpm = calculate_ecpm(ag)
+            if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
+                    'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
+                campaign.calculated_ecpm = calculate_ecpm(campaign)
 
 
         # Sort out all of the campaigns that are targeting this app
-        promo_campaigns = filter_adgroups(app.adgroups, ['promo'])
-        guarantee_campaigns = filter_adgroups(app.adgroups, ['gtee_high', 'gtee_low', 'gtee'])
-        marketplace_campaigns = filter_adgroups(app.adgroups, ['marketplace'])
-        network_campaigns = filter_adgroups(app.adgroups, ['network'])
-        backfill_promo_campaigns = filter_adgroups(app.adgroups, ['backfill_promo'])
+        promo_campaigns = filter_campaigns(app.campaigns, ['promo'])
+        guarantee_campaigns = filter_campaigns(app.campaigns, ['gtee_high', 'gtee_low', 'gtee'])
+        marketplace_campaigns = filter_campaigns(app.campaigns, ['marketplace'])
+        network_campaigns = filter_campaigns(app.campaigns, ['network'])
+        backfill_promo_campaigns = filter_campaigns(app.campaigns, ['backfill_promo'])
 
         levels = ('high', '', 'low')
         gtee_str = "gtee_%s"
@@ -490,18 +496,19 @@ class AppDetailHandler(RequestHandler):
         for level in levels:
             this_level = gtee_str % level if level else "gtee"
             name = level if level else 'normal'
-            level_camps = filter(lambda x:x.campaign.campaign_type == this_level,
+            level_camps = filter(lambda x:x.campaign_type == this_level,
                                  guarantee_campaigns)
-            gtee_levels.append(dict(name = name, adgroups = level_camps))
+            gtee_levels.append(dict(name = name, campaigns = level_camps))
 
 
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
-        active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
-                                        for adgroup in marketplace_campaigns])
+        active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted)
+                                        for adgroup in filter_campaigns(
+                                            adgroups, ['marketplace'])])
 
         try:
-            marketplace_activated = marketplace_campaigns[0].campaign.active
+            marketplace_activated = marketplace_campaigns[0].active
         except IndexError:
             marketplace_activated = False
 
@@ -1215,6 +1222,15 @@ def calculate_ecpm(adgroup):
 
 
 def filter_adgroups(adgroups, cfilter):
-    filtered_adgroups = filter(lambda x: x.campaign.campaign_type in cfilter, adgroups)
+    filtered_adgroups = filter(lambda x: x.campaign.campaign_type in
+            cfilter, adgroups)
     filtered_adgroups = sorted(filtered_adgroups, lambda x,y: cmp(y.bid, x.bid))
     return filtered_adgroups
+
+def filter_campaigns(campaigns, cfilter):
+    filtered_campaigns = filter(lambda x: x.campaign_type in
+            cfilter, campaigns)
+    filtered_campaigns = sorted(filtered_campaigns, lambda x,y: cmp(y.name,
+        x.name))
+    return filtered_campaigns
+

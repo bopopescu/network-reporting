@@ -123,7 +123,7 @@ class Campaign(db.Model):
     #       admob = admob_native
     #       millenial = millenial_native
     #       iad = iAd
-    network_type = db.StringProperty(choices=NETWORKS.keys())
+    network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
     network_state = db.IntegerProperty(default=NetworkStates. \
             STANDARD_CAMPAIGN)
 

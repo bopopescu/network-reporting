@@ -302,7 +302,7 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
+                        <a href="{% if adgroup.campaign.network_type %}{% url network_details campaign_key=adgroup.campaign.key %}{% else %}{% url advertiser_adgroup_show adgroup_key=adgroup.key %}{% endif %}">
                           {{adgroup.name}}
                         </a><br/>
                         <span class="muted">{{adgroup.network_type}}</span>

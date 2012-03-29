@@ -444,8 +444,8 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
                 # Delete Cache. We leave this in views.py because we
                 # must delete the adunits that the adgroup used to have as well
                 if adgroup.site_keys:
-                    adunits = AdUnitQueryManager.get(adgroup.site_keys)
-                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+                    current_adunits = AdUnitQueryManager.get(adgroup.site_keys)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(current_adunits)
 
                 # TODO: need to make sure a network type is selected if the campaign is a network campaign
                 adgroup = adgroup_form.save()
@@ -522,8 +522,8 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
                 # Delete Cache. We leave this in views.py because we
                 # must delete the adunits that the adgroup used to have as well
                 if adgroup.site_keys:
-                    adunits = AdUnitQueryManager.get(adgroup.site_keys)
-                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+                    new_adunits = AdUnitQueryManager.get(adgroup.site_keys)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(new_adunits)
 
                 CampaignQueryManager.put(campaign)
                 AdGroupQueryManager.put(adgroup)

@@ -244,7 +244,7 @@ class EditNetworkHandler(RequestHandler):
                 adgroup = None
                 if campaign_key:
                     adgroup = AdGroupQueryManager.get_network_adgroup(
-                            campaign.key(), adunit.key(),
+                            campaign, adunit.key(),
                             self.account.key(), network, True)
                     if adgroup:
                         adunit_adgroup = adgroup
@@ -362,8 +362,7 @@ class EditNetworkHandler(RequestHandler):
             adgroup_forms = []
             for adunit in adunits:
                 network_adgroup = AdGroupQueryManager.get_network_adgroup(
-                        campaign.key(), adunit.key(), self.account.key(),
-                        network)
+                        campaign, adunit.key(), self.account.key(), network)
 
                 query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
 
@@ -553,7 +552,7 @@ class NetworkDetailsHandler(RequestHandler):
         # Set targeting
         adunit = AdUnitQueryManager.get_adunits(account=self.account,
                 limit=1)[0]
-        adgroup = AdGroupQueryManager.get_network_adgroup(campaign.key(),
+        adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                 adunit.key(), self.account.key(), network, get_from_db=True)
         if adgroup.device_targeting:
             for device, pretty_name in adgroup.DEVICE_CHOICES:

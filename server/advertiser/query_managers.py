@@ -262,7 +262,7 @@ class AdGroupQueryManager(QueryManager):
         return adgroups.fetch(limit)
 
     @classmethod
-    def get_network_adgroup(cls, campaign_key, adunit_key, account_key, network_type,
+    def get_network_adgroup(cls, campaign, adunit_key, account_key, network_type,
             get_from_db=False):
         """
         Returns the only adgroup that can belong to this adunit
@@ -275,9 +275,9 @@ class AdGroupQueryManager(QueryManager):
         """
 
         # Force to string
+        campaign_key = str(campaign.key())
         adunit_key = str(adunit_key)
         account_key = str(account_key)
-        campaign_key = str(campaign_key)
 
         # By using a key_name that is one-to-one mapped with the
         # adunit, we can assure that there is only ever one
@@ -289,7 +289,7 @@ class AdGroupQueryManager(QueryManager):
             adgroup = AdGroup.get_by_key_name(ag_key_name)
             return adgroup
 
-        adgroup = AdGroup(key_name=ag_key_name, name='Network')
+        adgroup = AdGroup(key_name=ag_key_name, name=campaign.name)
         # set up the rest of the properties
         adgroup.account = db.Key(account_key)
         adgroup.campaign = db.Key(campaign_key)

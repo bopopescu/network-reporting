@@ -184,7 +184,7 @@ def generate_adgroup(site_keys,account,campaign=None,network=None):
     if campaign:
         if campaign.campaign_type=="network":
             if network:
-                adgroup = AdGroupQueryManager.get_network_adgroup(campaign.key(), site_keys[0],
+                adgroup = AdGroupQueryManager.get_network_adgroup(campaign, site_keys[0],
                          account.key(), network)
                 adgroup.put()
                 return adgroup

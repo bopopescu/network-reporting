@@ -69,14 +69,12 @@
           <div id="titlebar">
             <div class="pageWidth">
               {% block pageTitle %}
-            {% endblock pageTitle %}
-            
-            {% block dateButtons %}
-              {% include "common/partials/datecontrols.html" %}
-            {% endblock dateButtons %}
+            {% endblock pageTitle %}            
             
             <div id="titlebar-right">
-              {% block titleBarRight %}{% endblock titleBarRight %}
+              {% block titleBarRight %}
+                {% include "partials/datecontrols.html" %}
+              {% endblock titleBarRight %}
             </div>
 
             </div>

@@ -52,8 +52,12 @@
                 });
 
             // make necessary changes based on wether optimize is checked
-            $('#targeting').click(function() {
-                $('.advanced_targeting').toggle();
+            $('#advanced').click(function() {
+                    if ($('.advanced').is(':hidden')) {
+                        $('.advanced').slideDown();
+                    } else {
+                        $('.advanced').slideUp();
+                    }
                 })
 
             // TODO: merge this with controllers/campaigns.js form
@@ -360,13 +364,13 @@
             {% endif %}
 
         </ul>
+
+        {% if login_form %}
+        <a class="button" id="advanced">Advanced</a>
+        {% endif %}
     </fieldset>
 
-    {% if login_form %}
-    <a class="button" id="targeting">Advanced</a>
-    {% endif %}
-
-    <fieldset class="advanced_targeting {% if login_form %}hidden{% endif %}">
+    <fieldset class="advanced {% if login_form %}hidden{% endif %}">
         <legend>
             <h2>Advanced Settings</h2>
         </legend>
@@ -527,7 +531,7 @@
             </h2>
         </legend>
 
-        <div id="networkSettingsForm" class="alert-message block-message" style="clear: both;">
+        <div id="networkSettingsForm" class="alt" style="clear: both; padding: 10px;">
             <div class="login-credentials-message">
                 MoPub can report your revenue and other data directly from the ad networks. MoPub uses your login creedentials to retrieve the revenue data from the ad networks.
             </div>
@@ -568,7 +572,7 @@
 
     <fieldset>
         <legend>
-            <h2>App Breakdown</h2>
+            <h2>App Targeting</h2>
         </legend>
 
         <div>

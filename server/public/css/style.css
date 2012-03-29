@@ -1254,7 +1254,7 @@ fieldset {
   border-radius: 5px;
   font-size: 13px; }
 
-fieldset.alt {
+fieldset.alt, div.alt {
   background: #f7f7f7; }
 
 fieldset h2 {

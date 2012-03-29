@@ -131,14 +131,21 @@ class ScheduledReport(db.Model):
     email = db.BooleanProperty(default=True)
     recipients = db.StringListProperty(default=[])
 
+    data_count = db.IntegerProperty(default=0)
+
     @property
     def data(self):
         return self.most_recent.data
 
     @property
     def most_recent(self):
-        return self.reports.order('-created_at').get()
+        key = str(self.key())
+        count = self.data_count
+        data_key = Report.get_key_name(key, count)
+        return Report.get(data_key)
         #get the most recent report created by this scheduler
+#        return self.reports.order('-created_at').get()
+
     @property
     def details(self):
         return self.most_recent.details(self.interval)
@@ -198,6 +205,19 @@ class Report(db.Model):
     completed_at = db.DateTimeProperty()
     status = db.StringProperty(default='Pending')
 
+    def __init__(parent=None, key_name=None, **kwargs):
+        if not key_name and kwargs.get('key', None):
+            sched = kwargs.get('schedule', None)
+            if sched is not None:
+                count = sched.data_count
+                key_name = self.get_key_name(str(sched.key()), count)
+                sched.data_count += 1
+                sched.put()
+        return super(Report, self).__init__(parent=parent, key_name=key_name, **kwargs)
+
+    @classmethod
+    def get_key_name(self, sched_key, sched_count):
+        return "repdata:%s:%s" % (sched_key, sched_count)
 
     @property
     def message(self):

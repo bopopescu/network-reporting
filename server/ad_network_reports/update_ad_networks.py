@@ -300,8 +300,8 @@ def retry_logins(day,
         logging.info("Assigning process in pool to login %s" % login_key)
         # Assign process in pool calling retry_login and giving it
         # it's appropriate login
-        results.append(pool.apply_async(retry_login,
-                args=(login_key, day)))
+        results.append((login_key, pool.apply_async(retry_login,
+                args=(login_key, day))))
 
     logging.info("Waiting for processes to complete")
     # Wait for all processes in pool to complete
@@ -313,12 +313,15 @@ def retry_logins(day,
     all_stats = []
     total_stats = AdNetworkManagementStatsManager(day)
     for result in results:
+        login_key, result = result
         if result.successful():
             stats_list, temp_stats = result.get()
             all_stats += stats_list
             total_stats.combined(temp_stats)
         else:
-            raise RetryException(day)
+            logging.error("Login retry attempt failed for login key: %s" %
+                    login_key)
+            total_stats.append_failed_login(login_key)
 
     management_stats.clear_failed_logins()
     total_stats.combined(management_stats)

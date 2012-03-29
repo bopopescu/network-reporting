@@ -179,7 +179,7 @@ class IAdScraper(Scraper):
         while nextPage:
             # Wait for ajax
             time.sleep(1)
-            WebDriverWait(self.browser, 15).until(loaded)
+            WebDriverWait(self.browser, 20).until(loaded)
             # Read the page
             page = None
             while page is None:

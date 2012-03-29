@@ -600,8 +600,13 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
 
     def append_failed_login(self,
                             login_credentials):
+        if isinstance(login_credentials, unicode):
+            login_key = login_credentials
+            login_credentials = AdNetworkLoginManager.get(login_key)
+        else:
+            login_key = str(login_credentials.key())
         self.stats_dict[login_credentials.ad_network_name].failed_logins.append(
-                str(login_credentials.key()))
+                login_key)
 
     def get_failed_logins(self):
         for stats in self.stats_dict.values():

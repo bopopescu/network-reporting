@@ -172,14 +172,14 @@
             var name = $(this).attr('name');
             var val = $(this).val();
             if (name == 'start_datetime_1') {
-                if($('input[name="start_datetime_0"]').val() == '') {
+                if($('input[name="start_datetime_0"]').val() == '' || $('input[name="start_datetime_0"]').val() == 'MM/DD/YYYY') {
                     val = '';
                 } else {
                     val = makeValidTime(val, 12, 0, 'AM');
                 }
             }
             else if (name == 'end_datetime_1') {
-                if($('input[name="end_datetime_0"]').val() == '') {
+                if($('input[name="end_datetime_0"]').val() == '' || $('input[name="end_datetime_0"]').val() == 'MM/DD/YYYY') {
                     val = '';
                 } else {
                     val = makeValidTime(val, 11, 59, 'PM');

@@ -22,7 +22,10 @@ from common.utils import date_magic
 from common.utils.helpers import cust_sum
 from common.wurfl.query_managers import WurflQueryManager
 from publisher.models import AdUnit
-from mail.mails import REPORT_FINISHED_SIMPLE, REPORT_FAILED_SIMPLE
+from mail.mails import (REPORT_FINISHED_SIMPLE, 
+                        REPORT_FAILED_SIMPLE, 
+                        REPORT_NO_DATA,
+                        )
 
 APP = 'app'
 AU = 'adunit'
@@ -60,6 +63,13 @@ NO_REQ = CRTV_DIMS
 REPORT_MSG = '%s|%s|%s|%s|%s|%s|%s|%s'
 
 LOG_FORMAT = "%s:\t%s\n"
+
+FAILURE = 'REPFAIL%s'
+NODAT = FAILURE % 0
+MRFAILURE = FAILURE % 1
+# I'll do it later
+OTHER = FAILURE % 2
+
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')
     my_log.write(LOG_FORMAT % (time.time(), mesg))
@@ -131,6 +141,8 @@ class ScheduledReport(db.Model):
     email = db.BooleanProperty(default=True)
     recipients = db.StringListProperty(default=[])
 
+    _most_recent = db.ReferenceProperty(Report, collection_name='parent_report')
+
     data_count = db.IntegerProperty(default=0)
 
     @property
@@ -139,10 +151,10 @@ class ScheduledReport(db.Model):
 
     @property
     def most_recent(self):
-        key = str(self.key())
-        count = self.data_count
-        data_key = Report.get_key_name(key, count)
-        return Report.get(data_key)
+        if self._most_recent:
+            return self._most_recent
+        else:
+            return self.reports.order('-created_at').get()
         #get the most recent report created by this scheduler
         
     @property
@@ -204,20 +216,6 @@ class Report(db.Model):
     completed_at = db.DateTimeProperty()
     status = db.StringProperty(default='Pending')
 
-    def __init__(parent=None, key_name=None, **kwargs):
-        if not key_name and kwargs.get('key', None):
-            sched = kwargs.get('schedule', None)
-            if sched is not None:
-                count = sched.data_count
-                key_name = self.get_key_name(str(sched.key()), count)
-                sched.data_count += 1
-                sched.put()
-        return super(Report, self).__init__(parent=parent, key_name=key_name, **kwargs)
-
-    @classmethod
-    def get_key_name(self, sched_key, sched_count):
-        return "repdata:%s:%s" % (sched_key, sched_count)
-
     @property
     def message(self):
         return REPORT_MSG % (self.d1, self.d2, self.d3, self.start.strftime('%y%m%d'), self.end.strftime('%y%m%d'), self.key(), self.account.key(), time.mktime(self.created_at.utctimetuple()))
@@ -244,13 +242,20 @@ class Report(db.Model):
         except mail.InvalidEmailError, e:
             pass
 
-    def notify_failure(self):
+    def notify_failure(self, reason=OTHER):
         mesg = mail.EmailMessage(sender = 'olp@mopub.com',
                                  subject = 'Your report has failed',
                                  bcc = 'report-monitoring@mopub.com',
                                  )
-        mesg_dict = dict(dim1 = self.d1, dim2 = self.d2, dim3 = self.d3, start = self.start.strftime('%m/%d/%y'), end = self.end.strftime('%m/%d/%y'))
-        mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
+        mesg_dict = dict(dim1 = self.d1, 
+                         dim2 = self.d2, 
+                         dim3 = self.d3, 
+                         start = self.start.strftime('%m/%d/%y'), 
+                         end = self.end.strftime('%m/%d/%y'))
+        if reason == NODAT:
+            mesg.body = REPORT_NO_DATA % mesg_dict
+        else:
+            mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
         if self.email and self.recipients:
             mesg.to = self.recipients
         else:

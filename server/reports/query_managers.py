@@ -83,31 +83,21 @@ class ReportQueryManager(CachedQueryManager):
     def migrate_scheduled_data(self, scheduled):
         # I don't think anybody has more than 100 of these guys...
         rep_data = scheduled.reports.order('-created_at').fetch(100)
-        # Sorted with most recent first, switch it so most recent is last
-        rep_data.reverse()
-        new_reps = []
-        old_reps = []
+
+        #Update scheds most recent
+        if not scheduled._most_recent:
+            most_recent = scheduled.most_recent
+            scheduled._most_recent = most_recent
+        ScheduledReport.put(scheduled)
+
+        # Update all status's that are lazily set
+        to_put = []
         for datum in rep_data:
             status = datum.status
-            if datum.data:
-                status = 'Completed'
-            new_rep = Report(account=datum.account,
-                             created_at=datum.created_at,
-                             schedule=scheduled,
-                             start=datum.start,
-                             end=datum.end,
-                             report_blob=datum.report_blob,
-                             html_data_blob=datum.html_data_blob,
-                             test_report_blob=datum.test_report_blob,
-                             data=datum.data,
-                             completed_at=datum.completed_at,
-                             status=status)
-            new_reps.append(new_rep)
-            datum.schedule=None
-            old_reps.append(datum)
-
-        Report.put(new_reps)
-        Report.put(old_reps)
+            if datum.data and status != 'Completed':
+                datum.status = 'Completed'
+                to_put.append(datum)
+        Report.put(to_put)
 
     def get_report_by_key(self, report_key, view=False):
         return ScheduledReport.get(report_key)
@@ -227,6 +217,10 @@ class ReportQueryManager(CachedQueryManager):
         # Save the reports
         self.put_report(report)
         self.put_report(new_report)
+        
+        # Update most recent
+        report._most_recent = new_report
+        report.put()
         report_key = str(new_report.key())
         sched_key = str(report.key())
 
@@ -328,6 +322,9 @@ class ReportQueryManager(CachedQueryManager):
                         schedule = sched,
                         )
         report.put()
+        # Update most recent
+        sched._most_recent = report 
+        sched.put()
         report_key = str(report.key())
         sched_key = str(sched.key())
 
@@ -369,6 +366,9 @@ class ReportQueryManager(CachedQueryManager):
                                 data = report.data
                                 )
             new_report.put()
+            # Update most recent
+            schedule._most_recent = new_report
+            schedule.put()
         return new_report
 
     def put_report(self, report):

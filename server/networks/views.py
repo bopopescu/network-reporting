@@ -167,6 +167,7 @@ class EditNetworkHandler(RequestHandler):
             campaign = CampaignQueryManager.get(campaign_key)
             network = campaign.network_type
             campaign_name = campaign.name
+            show_login = campaign.show_login
             campaign_form = CampaignForm(instance=campaign)
             custom_campaign = campaign.network_state == \
                     NetworkStates.CUSTOM_NETWORK_CAMPAIGN
@@ -177,6 +178,7 @@ class EditNetworkHandler(RequestHandler):
                     network
             # Set the default campaign name to the network name
             campaign_name = get_pretty_name(network)
+            show_login = True
             if custom_campaign and 'custom' not in network:
                 campaign_name += ' - Custom'
             default_data = {'name': campaign_name}
@@ -185,6 +187,7 @@ class EditNetworkHandler(RequestHandler):
         network_data = {}
         network_data['name'] = network
         network_data['pretty_name'] = campaign_name
+        network_data['show_login'] = show_login
         reporting = False
         ad_network_ids = False
 
@@ -332,6 +335,10 @@ class EditNetworkHandler(RequestHandler):
                 campaign.network_state = NetworkStates.DEFAULT_NETWORK_CAMPAIGN
             campaign.account = self.account
             campaign.network_type = network
+            if query_dict['show_login'] == 'true':
+                campaign.show_login = True
+            else:
+                campaign.show_login = False
 
             # Get a set of the AdGroupForm field names
             fields = set(AdGroupForm.base_fields.keys())
@@ -530,6 +537,7 @@ class NetworkDetailsHandler(RequestHandler):
         Return a webpage with the network statistics.
         """
         campaign = CampaignQueryManager.get(campaign_key)
+
         network = campaign.network_type
         network_data = {}
         network_data['name'] = network

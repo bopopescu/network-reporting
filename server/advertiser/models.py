@@ -126,6 +126,7 @@ class Campaign(db.Model):
     network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
     network_state = db.IntegerProperty(default=NetworkStates. \
             STANDARD_CAMPAIGN)
+    show_login = db.BooleanProperty(default=True)
 
     def simplify(self):
         if self.start_date and not self.start_datetime:

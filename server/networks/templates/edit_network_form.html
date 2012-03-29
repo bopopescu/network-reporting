@@ -73,7 +73,7 @@
                     },
                     submitHandler: function(form) {
                         $(form).ajaxSubmit({
-                            data: {ajax: true},
+                            data: {ajax: true, show_login: !$('#networkSettingsForm').is(':hidden')},
                             dataType: 'json',
                             success: function(jsonData, statusText, xhr, $form) {
                                 if(jsonData.success) {
@@ -525,11 +525,12 @@
     <fieldset class="login-credentials-fields network_type_dependant {{reporting_networks}} login-credentials">
         <legend>
             <h2>
-                <span style="float: left;">Revenue Reporting</span> <span id="networkSettingsForm-show" class="ui-icon ui-icon-triangle-1-s hidden" style="margin-left: 10px; float: left; cursor:pointer;"></span>
+                <span style="float: left;">Revenue Reporting</span>
+                <span id="networkSettingsForm-show" class="ui-icon ui-icon-triangle-1-s {% if network.show_login %}hidden{% endif %}" style="margin-left: 10px; float: left; cursor:pointer;"></span>
             </h2>
         </legend>
 
-        <div id="networkSettingsForm" class="alt" style="clear: both; padding: 10px;">
+        <div id="networkSettingsForm" class="alt {% if not network.show_login %}hidden{% endif %}" style="clear: both; padding: 10px;">
             <div class="login-credentials-message">
                 MoPub can report your revenue and other data directly from the ad networks. MoPub uses your login creedentials to retrieve the revenue data from the ad networks.
             </div>

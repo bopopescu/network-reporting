@@ -1,10 +1,32 @@
+# Deployed Thursday, March 29, 2012 at 06:01PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-50
+### Bugs Fixed: []
+### Included Commits: 
+ * 616b09f [#1045 state:resolved] [#1089 state:resolved]
+ 
+# Deployed Thursday, March 29, 2012 at 04:41PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-49
+### Bugs Fixed: ['1045', '1089']
+### Included Commits:
+* f326469 Merge branch 'master' of github.com:mopub/mopub
+* 4619c37 fixed randomgen bug, removed 'e' from app page
+* 9231f6c update mpx payment message
+* 26372e3 Add revenue disclaimer [#1023 status:fixed] [#1080 status:fixed]
+* 1ebea78 [#1045 state:fixed]
+* 0aa8cd1 Merge branch 'adgroup_dates' of github.com:mopub/mopub
+* e6699d2 [#1089 state:fixed]
+* 7f78854 [#1012 state:review-requested responsible:john@mopub.com] [#1026 state:review-requested responsible:john@mopub.com]
+* e24196a Deployed without finding any bug fixes.
+
 # Deployed Wednesday, March 28, 2012 at 04:14PM PST
 ### Deployed by John Pena
 ### Tagged deploy-48
 ### Bugs Fixed: []
-### Included Commits: 
- * f31608e [#996 state:resolved] [#914 state:resolved] [#1039 state:resolved]
- 
+### Included Commits:
+* f31608e [#996 state:resolved] [#914 state:resolved] [#1039 state:resolved]
+
 # Deployed Wednesday, March 28, 2012 at 04:13PM PST
 ### Deployed by John Pena
 ### Tagged deploy-47

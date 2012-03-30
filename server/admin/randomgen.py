@@ -110,14 +110,14 @@ def get_random_date():
     year = 2012
     month = random.randint(1,today.month)
     day = random.randint(1,28 if today.month!= month else random.randint(1,month))
-    return dt.date(year,month,day)
+    return datetime.date(year,month,day)
 
 def get_random_datetime():
-    today = dt.datetime.now()
+    today = datetime.datetime.now()
     year = 2012
     month = random.randint(1,today.month)
     day = random.randint(1,28 if today.month!= month else random.randint(1,month))
-    return dt.datetime(year,month,day)
+    return datetime.datetime(year,month,day)
 
 
 ####
@@ -321,8 +321,8 @@ def main():
 
 
     cur_date = APP_STATS_SINCE
-    today = dt.datetime.now()
-    day = dt.timedelta(days=1)
+    today = datetime.datetime.now()
+    day = datetime.timedelta(days=1)
 
     s = StatsModelQueryManager(account=account)
 

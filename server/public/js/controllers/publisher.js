@@ -298,12 +298,6 @@ var mopub = mopub || {};
      */
     function initializeNewAdunitForm() {
 
-        function setDefaultAdUnitName() {
-            if ($(this).attr("id") == "appForm-adUnitFormat-full") {
-                $('#appForm-adUnitName').val('goat');
-            }
-        };
-
         // Set up device format selection UI
         $("#adunit-device_format_phone")
             .parent()
@@ -377,29 +371,29 @@ var mopub = mopub || {};
 
         function setDefaultAdUnitName(id) {
             var nameField = $('#appForm-adUnitName');
-            
-            if (id === 'appForm-adUnitFormat-banner' ||
-                id === 'appForm-adUnitFormat-tablet-banner') {
-                nameField.val('Banner Ad');
-            }
-            else if (id === 'appForm-adUnitFormat-medium' ||
-                id === 'appForm-adUnitFormat-tablet-medium') {
-                nameField.val('Mrect Ad');
-            }
-            else if (id === 'appForm-adUnitFormat-full' ||
-                id === 'appForm-adUnitFormat-full-tablet') { // sigh this is not a typo
-                nameField.val('Fullscreen Ad');
-            }
-            else if (id === 'appForm-adUnitFormat-custom' ||
-                id === 'appForm-adUnitFormat-tablet-custom') {
-                nameField.val('Custom Ad');
-            }
-            else if (id === 'appForm-adUnitFormat-tablet-leaderboard') {
-                nameField.val('Leaderboard Ad');
-            }
-            else if (id === 'appForm-adUnitFormat-wide-tablet-skyscraper') {
-                nameField.val('Skyscraper Ad');
-            }
+
+            // Object that maps id to default ad unit name
+            var defaultBannerNames = {
+                'appForm-adUnitFormat-banner': 'Banner Ad',
+                'appForm-adUnitFormat-tablet-banner': 'Banner Ad',
+                'appForm-adUnitFormat-medium': 'Mrect Ad',
+                'appForm-adUnitFormat-tablet-medium': 'Mrect Ad',
+                'appForm-adUnitFormat-full': 'Fullscreen Ad',
+                'appForm-adUnitFormat-full-tablet': 'Fullscreen Ad', // sigh not a typo
+                'appForm-adUnitFormat-custom': 'Custom Ad',
+                'appForm-adUnitFormat-tablet-custom': 'Custom Ad',
+                'appForm-adUnitFormat-tablet-leaderboard': 'Leaderboard Ad',
+                'appForm-adUnitFormat-wide-tablet-skyscraper': 'Skyscraper Ad',
+            };
+
+            // If the current ad name is a default, we can replace it at will
+            $.each(defaultBannerNames, function(key, value) {
+                if (nameField.val() === value) {
+                    nameField.val(defaultBannerNames[id]);
+                    // break out of the loop
+                    return false;
+                }
+            });
         };
 
         // Set up format selection UI for phone

@@ -223,6 +223,8 @@
         NetworkDetailsController.initialize({
             campaign_data: {{ campaign_data|safe }},
             graph_start_date: graph_start_date,
+            today: {{ today|safe }},
+            yesterday: {{ yesterday|safe }},
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
     });
 </script>

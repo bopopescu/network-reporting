@@ -23,16 +23,6 @@
                     });
                 });
 
-            mopub.graphStartDate = Date.UTC({{start_date.year}},
-                {{start_date.month|add:"-1"}},
-                {{start_date.day}});
-
-
-            {% if daily_stats %}
-            populateGraphWithStats({{daily_stats|safe}});
-            {% endif %}
-
-
             // TODO: put in shared js file with dashboard. Note: latest date allowed in range is yesterday.
             // set up dateOptions
             $('#dashboard-dateOptions input').click(function() {
@@ -99,23 +89,6 @@
                     other.datepicker('option', 'maxDate', date);
                 }
             });
-
-            $("#ad-network-exportSelect").change(function() {
-                if ($(this).val() != 'exp') {
-                    if ('/ad_network_reports/' == $(location).attr('pathname')) {
-                        if ($('.networks').css('display') == 'block') {
-                            window.open($(this).val() + '/network');
-                        } else {
-                            window.open($(this).val() + '/app');
-                        }
-                    } else {
-                        window.open($(this).val());
-                    }
-                }
-                $(this).selectmenu('index', 0);
-            });
-
-            $('#ad-network-exportSelect-menu').find('li').first().hide();
     });
 </script>
 {% endblock extraScripts %}
@@ -142,37 +115,99 @@
     {% stats_breakdown stats %}
     {% endcomment %}
     <div class="stats">
-        <div id="stats-breakdown" class="stats-breakdown">
+        <div class="stats-breakdown">
             <table>
                 <tbody>
-                    {% if reporting %}
                     <tr id="stats-breakdown-revenue">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Revenue</span></th>
+                        <td class="stats-breakdown-value today">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <td class="stats-breakdown-value yesterday">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <td class="stats-breakdown-value all">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <th class="stats-breakdown-name">
+                            <span class="inner">Revenue</span>
+                        </th>
                     </tr>
-                    {% endif %}
+
                     <tr class="active" id="stats-breakdown-impression_count">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
+                        <td class="stats-breakdown-value today">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <td class="stats-breakdown-value yesterday">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <td class="stats-breakdown-value all">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <th class="stats-breakdown-name">
+                            <span class="inner">Impressions</span>
+                        </th>
                     </tr>
+
                     <tr id="stats-breakdown-click_count">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
+                        <td class="stats-breakdown-value today">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <td class="stats-breakdown-value yesterday">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <td class="stats-breakdown-value all">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <th class="stats-breakdown-name">
+                            <span class="inner">Clicks</span>
+                        </th>
                     </tr>
-                    <tr id="stats-breakdown-ctr">
-                        <td class="stats-breakdown-value today"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value yesterday"><span class="inner"></span></td>
-                        <td class="stats-breakdown-value all"><span class="inner"></span></td>
-                        <th class="stats-breakdown-name"><span class="inner">CTR</span></th>
+
+                    <tr id="stats-breakdown-cpm">
+                        <td class="stats-breakdown-value today">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <td class="stats-breakdown-value yesterday">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <td class="stats-breakdown-value all">
+                            <span class="inner network-chart-data"></span>
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <th class="stats-breakdown-name">
+                            <span class="inner">CPM</span>
+                        </th>
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <div class="stats-breakdown-buttons">
+            <span class="buttonset button-small" id="stats-breakdown-dateOptions">
+                <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+                <label for="stats-breakdown-dateOptions-option-0">
+                    Today
+                </label>
+                <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
+                <label for="stats-breakdown-dateOptions-option-1">
+                    Yesterday
+                </label>
+                <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
+                <label for="stats-breakdown-dateOptions-option-2">
+                    All
+                </label>
+            </span>
         </div>
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
     </div>

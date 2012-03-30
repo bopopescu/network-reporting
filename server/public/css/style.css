@@ -733,6 +733,8 @@ a {
         display: block;
         padding: 7px 8px 1px 10px;
         height: 29px; }
+        .stats-breakdown th.stats-breakdown-value .inner.network-chart-data, .stats-breakdown td.stats-breakdown-value .inner.network-chart-data {
+          color: orange; }
     .stats-breakdown th.stats-breakdown-name, .stats-breakdown td.stats-breakdown-name {
       font-weight: 400;
       text-align: left; }

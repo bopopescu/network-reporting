@@ -26,8 +26,8 @@ from common.constants import NETWORKS, \
         NETWORKS_WITHOUT_REPORTING, \
         NETWORK_ADGROUP_TRANSLATION
 
-from common.utils.date_magic import gen_days_for_range, \
-        gen_last_days
+from common.utils.date_magic import gen_last_days, \
+        gen_days
 from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, \
         render_to_string, \
@@ -35,6 +35,7 @@ from common.ragendja.template import render_to_response, \
         JSONResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
+from common.utils.timezones import Pacific_tzinfo
 
 from publisher.query_managers import AppQueryManager, \
         AdUnitContextQueryManager
@@ -72,8 +73,6 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        days = gen_days_for_range(self.start_date, self.date_range)
-
         networks_to_setup = copy.copy(DEFAULT_NETWORKS)
         additional_networks = set(NETWORKS_WITHOUT_REPORTING.keys())
         networks = []
@@ -119,7 +118,7 @@ class NetworksHandler(RequestHandler):
         for network in sorted(networks_to_setup):
             network_data = {}
             network_data['name'] = network
-            network_data['pretty_name'] = get_pretty_name(network)
+            network_data['pretty_name'] = NETWORKS[network]
 
             networks_to_setup_.append(network_data)
 
@@ -129,7 +128,7 @@ class NetworksHandler(RequestHandler):
         for network in sorted(additional_networks):
             network_data = {}
             network_data['name'] = network
-            network_data['pretty_name'] = get_pretty_name(network)
+            network_data['pretty_name'] = NETWORKS[network]
 
             if 'custom' in network:
                 custom_networks.append(network_data)
@@ -137,15 +136,20 @@ class NetworksHandler(RequestHandler):
                 additional_networks_.append(network_data)
         additional_networks_ += custom_networks
 
-        # Aggregate stats (rolled up stats at the app and network level for the
-        # account), daily stats needed for the graph and stats for each mapper
-        # for the account all get loaded via Ajax.
+        today = None
+        yesterday = None
+        if self.days[-1] == datetime.now(Pacific_tzinfo()).date():
+            today = len(self.days) - 1
+            yesterday = len(self.days) - 2
+
         return render_to_response(self.request,
               'networks/index.html',
               {
-                  'start_date': days[0],
-                  'end_date': days[-1],
+                  'start_date': self.days[0],
+                  'end_date': self.days[-1],
                   'date_range': self.date_range,
+                  'today': today,
+                  'yesterday': yesterday,
                   'graph': True if networks else False,
                   'networks': networks,
                   'networks_to_setup': networks_to_setup_,
@@ -177,7 +181,7 @@ class EditNetworkHandler(RequestHandler):
                     self.account, network).count(limit=1) or 'custom' in \
                     network
             # Set the default campaign name to the network name
-            campaign_name = get_pretty_name(network)
+            campaign_name = NETWORKS[network]
             show_login = True
             if custom_campaign and 'custom' not in network:
                 campaign_name += ' - Custom'
@@ -589,16 +593,20 @@ class NetworkDetailsHandler(RequestHandler):
                 'mopub_app_stats'].values(), key=lambda
                     app_data: app_data.identifier)
 
+        today = None
+        yesterday = None
+        if self.days[-1] == datetime.now(Pacific_tzinfo()).date():
+            today = len(self.days) - 1
+            yesterday = len(self.days) - 2
 
-        # Aggregate stats (rolled up stats at the app and network level for the
-        # account), daily stats needed for the graph and stats for each mapper
-        # for the account all get loaded via Ajax.
         return render_to_response(self.request,
               'networks/details.html',
               {
                   'start_date' : self.days[0],
                   'end_date' : self.days[-1],
                   'date_range' : self.date_range,
+                  'today': today,
+                  'yesterday': yesterday,
                   'graph' : True,
                   'reporting' : campaign_data['reporting'],
                   'network': network_data,
@@ -668,6 +676,14 @@ def delete_network(request, *args, **kwargs):
 
 ## Helpers
 #
-def get_pretty_name(network):
-    return NETWORKS.get(network)
+def get_day_stats(account_key, campaign):
+    today = datetime.now(Pacific_tzinfo()).date()
+    yesterday = today - timedelta(days=1)
+
+    days = gen_days(yesterday, today)
+
+    query_manager = StatsModelQueryManager(AccountQueryManager.get(
+        account_key))
+    return query_manager.get_stats_for_days(advertiser=campaign,
+                                             days=days)
 

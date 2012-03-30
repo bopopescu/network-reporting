@@ -39,6 +39,13 @@ var mopub = mopub || {};
         return (request_count === 0) ? 0 : impression_count / request_count;
     }
 
+    function calculate_cpm(impression_count, revenue) {
+        if (impression_count === null || revenue === null) {
+            return null;
+        }
+        return (impression_count === 0) ? 0 : revenue / impression_count * 1000;
+    }
+
     function format_stat(stat, value) {
         if (value === null) {
             return '--';
@@ -173,6 +180,9 @@ var mopub = mopub || {};
                 case 'fill_rate':
                     return calculate_fill_rate(this.get_stat('request_count'),
                                                this.get_stat('impression_count'));
+                case 'cpm':
+                    return calculate_cpm(this.get_stat('impression_count'),
+                                         this.get_stat('revenue'));
                 case 'click_count':
                 case 'conversion_count':
                 case 'impression_count':
@@ -209,6 +219,9 @@ var mopub = mopub || {};
                 case 'fill_rate':
                     return calculate_fill_rate(this.get_stat_for_day('request_count', day),
                                                this.get_stat_for_day('impression_count', day));
+                case 'cpm':
+                    return calculate_cpm(this.get_stat_for_day('impression_count', day),
+                                               this.get_stat_for_day('revenue', day));
                 case 'click_count':
                 case 'conversion_count':
                 case 'impression_count':

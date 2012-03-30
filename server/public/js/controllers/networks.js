@@ -55,12 +55,16 @@ $(function() {
         $('#show-network').change(function() {
             if ($(this).is(':checked')) {
                 $('.network-data').show();
+                $('.network-chart-data').show();
+                $('.mopub-chart-data').hide();
                 mopub.Chart.trafficChart.series[1].show();
             } else {
                 $('.network-data').hide();
+                $('.network-chart-data').hide();
+                $('.mopub-chart-data').show();
                 mopub.Chart.trafficChart.series[1].hide();
             }
-        });
+        }).change();
     }
 
     var NetworksController = { 
@@ -68,6 +72,8 @@ $(function() {
             var campaigns_data = bootstrapping_data.campaigns_data,
                 date_range = bootstrapping_data.date_range,
                 graph_start_date = bootstrapping_data.graph_start_date,
+                today = bootstrapping_data.today,
+                yesterday = bootstrapping_data.yesterday,
                 networks = bootstrapping_data.networks,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
@@ -81,6 +87,8 @@ $(function() {
             // Load chart
             var graph_view = new NetworkGraphView({
                 collection: campaigns,
+                today: today,
+                yesterday: yesterday,
                 date_range: date_range,
                 start_date: graph_start_date,
                 line_graph: false,
@@ -177,6 +185,8 @@ $(function() {
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
                 graph_start_date = bootstrapping_data.graph_start_date,
+                today = bootstrapping_data.today,
+                yesterday = bootstrapping_data.yesterday,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
             var all_campaigns = initialize_campaign_data(campaign_data, true, ajax_query_string);
@@ -186,7 +196,8 @@ $(function() {
 
             var graph_view = new NetworkGraphView({
                 collection: campaigns,
-                type: 'details',
+                today: today,
+                yesterday: yesterday,
                 start_date: graph_start_date,
                 line_graph: true,
                 mopub_optimized: false,

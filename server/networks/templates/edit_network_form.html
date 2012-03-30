@@ -632,7 +632,6 @@
                             {% endif %}
                             <td class="dataTable-data cpm-data" style="width:150px">
                                 <input id="{{app.key}}-app-cpm-field" class="cpm-field bid" type="text" style="width:50px;" />
-                                {{ app.adgroup_form.bid_strategy }} 
                             </td>
                             {% if reporting %}
                             <td class="dataTable-data 7-day-cpm network-data" id="{{app.key}}-7-day-app-cpm">
@@ -672,6 +671,7 @@
                                 {% endif %}
                                 <td class="dataTable-data cpm-data">
                                     {{ adunit.adgroup_form.bid }}
+                                    {{ adunit.adgroup_form.bid_strategy }} 
                                 </td>
                                 {% if reporting %}
                                 <td class="dataTable-data">

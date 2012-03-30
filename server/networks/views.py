@@ -242,7 +242,6 @@ class EditNetworkHandler(RequestHandler):
             app.fourteen_day_stats = fourteen_day_stats
 
             # Create different adgroup form for each adunit
-            adunit_adgroup = None
             app.adunits = []
             for adunit in app.all_adunits:
                 adgroup = None
@@ -250,8 +249,6 @@ class EditNetworkHandler(RequestHandler):
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(),
                             self.account.key(), network, True)
-                    if adgroup:
-                        adunit_adgroup = adgroup
                 adunit.adgroup_form = AdGroupForm(is_staff=
                         self.request.user.is_staff, instance=adgroup,
                         prefix=str(adunit.key()))
@@ -269,10 +266,6 @@ class EditNetworkHandler(RequestHandler):
                 app.adunits.append(adunit)
                 if adunit.pub_id:
                     ad_network_ids = True
-            # For app level bid strategy
-            app.adgroup_form = AdGroupForm(is_staff=
-                    self.request.user.is_staff, instance=adunit_adgroup,
-                    prefix=str(app.key()))
 
         # Create the default adgroup form
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
@@ -353,14 +346,6 @@ class EditNetworkHandler(RequestHandler):
                     for adunit in adunits:
                         if str(adunit.key()) + '-' + key not in query_dict:
                             query_dict[str(adunit.key()) + '-' + key] = val
-
-            # Copy app bid_strategies to the adunit adgroup form level in the
-            # query dict
-            for app in apps:
-                bid_strategy = query_dict.get(str(app.key()) + '-bid_strategy')
-                for adunit in app.all_adunits:
-                    query_dict[str(adunit.key()) + '-bid_strategy'] = \
-                            bid_strategy
 
             adgroup_forms_are_valid = True
             adgroup_forms = []

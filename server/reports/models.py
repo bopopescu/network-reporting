@@ -140,7 +140,7 @@ class ScheduledReport(db.Model):
     email = db.BooleanProperty(default=True)
     recipients = db.StringListProperty(default=[])
 
-    _most_recent = db.ReferenceProperty(Report, collection_name='parent_report')
+    _most_recent = db.ReferenceProperty(collection_name='parent_report')
 
     @property
     def data(self):

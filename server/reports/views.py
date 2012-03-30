@@ -29,13 +29,17 @@ from reports.forms import ReportForm
 
 class ReportIndexHandler(RequestHandler):
     def get(self):
+        logging.warning("Handling index request")
         manager = ReportQueryManager(self.account)
         scheduled = manager.get_scheduled()
+        logging.warning("Got scheduled")
         defaults, adding_reps = manager.get_default_reports()
+        logging.warning("Got defaults")
         scheduled = defaults + scheduled
         if adding_reps:
             self.request.flash['generating_defaults'] = "Default reports are currently being generated, you will be notified when they are completed."
         report_form = ReportForm(initial={'recipients':self.request.user.email})
+        logging.warning("Attempting to render")
         return render_to_response(self.request, 'reports/report_index.html',
                 dict(scheduled  = scheduled,
                      report_fragment = report_form,

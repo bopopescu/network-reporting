@@ -77,12 +77,13 @@ class ReportQueryManager(CachedQueryManager):
         defaults, adding = self.get_default_reports()
         all_reps = scheduled + defaults
         for rep in all_reps:
+            print "Working on %s" % rep
             self.migrate_scheduled_data(rep)
 
 
     def migrate_scheduled_data(self, scheduled):
         # I don't think anybody has more than 100 of these guys...
-        rep_data = scheduled.reports.order('-created_at').fetch(100)
+        datum = scheduled.reports.order('-created_at').get()
 
         #Update scheds most recent
         if not scheduled._most_recent:
@@ -91,13 +92,11 @@ class ReportQueryManager(CachedQueryManager):
         ScheduledReport.put(scheduled)
 
         # Update all status's that are lazily set
-        to_put = []
-        for datum in rep_data:
-            status = datum.status
-            if datum.data and status != 'Completed':
-                datum.status = 'Completed'
-                to_put.append(datum)
-        Report.put(to_put)
+        status = datum.status
+        if datum.data and status != 'Completed':
+            datum.status = 'Completed'
+            Report.put(datum)
+
 
     def get_report_by_key(self, report_key, view=False):
         return ScheduledReport.get(report_key)
@@ -217,7 +216,7 @@ class ReportQueryManager(CachedQueryManager):
         # Save the reports
         self.put_report(report)
         self.put_report(new_report)
-        
+
         # Update most recent
         report._most_recent = new_report
         report.put()

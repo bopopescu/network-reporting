@@ -405,11 +405,13 @@ def main():
             puts("Deploying " + colored.green(active_branch_name) + " to " + colored.green(deploy_server))
             launch_deploy_process(server=deploy_server)
 
-                            # notify people of a successful deploy on hipichat
+            # notify people of a successful deploy on hipichat
             puts("Notifying hipchat")
-            post_to_hipchat("Branch %s just deployed to %s by %s" % (active_branch_name,
+            message = "Branch %s just deployed to %s by %s" % (active_branch_name,
                                                                      deploy_server,
-                                                                     deployer))
+                                                                     deployer)
+            post_to_hipchat(message, room_id="21565") #mopub chat room
+            post_to_hipchat(message, room_id="47652") #frontend chat room
 
         except Exception, error:
             puts(colored.red("Deploy failed."))

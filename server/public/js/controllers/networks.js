@@ -51,7 +51,25 @@ $(function() {
         return all_campaigns;
     }
 
+    var show_network_chart_data = true;
     var initialize_show_network = function() {
+        // Use breakdown to switch charts
+        $('.stats-breakdown tr').click(function(e) {
+            $('#dashboard-stats .stats-breakdown .active').removeClass('active');
+            $(this).addClass('active');
+            $('#dashboard-stats-chart').fadeOut(100, function() {
+                mopub.Chart.setupDashboardStatsChart('line');
+                if (!show_network_chart_data) {
+                    if (mopub.Chart.trafficChart.series.length == 1) {
+                        mopub.Chart.trafficChart.series[0].hide();
+                    } else {
+                        mopub.Chart.trafficChart.series[1].hide();
+                    }
+                }
+                $(this).show();
+                });
+            });
+
         $('#show-network').change(function() {
             if ($(this).is(':checked')) {
                 $('.network-data').show();
@@ -63,6 +81,7 @@ $(function() {
                     } else {
                         mopub.Chart.trafficChart.series[1].show();
                     }
+                    show_network_chart_data = true;
                 }
             } else {
                 $('.network-data').hide();
@@ -74,6 +93,7 @@ $(function() {
                     } else {
                         mopub.Chart.trafficChart.series[1].hide();
                     }
+                    show_network_chart_data = false;
                 }
             }
         }).change();

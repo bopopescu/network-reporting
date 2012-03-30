@@ -1,10 +1,34 @@
+# Deployed Friday, March 30, 2012 at 12:30PM PST
+### Deployed by John Pena
+### Tagged deploy-51
+### Bugs Fixed: ['1082']
+### Included Commits: 
+ * d5f694c Merge branch '1082-ad-unit-set-to-default'
+ * 3ddec4d Merge branch 'tunewiki-wtf'
+ * 306ea16 Removed teh app.yaml shit, removed unneeded logging
+ * a0f11f7 More logging, changed things up
+ * d3a7bfe always redirecting
+ * a67f0ca More logging
+ * bf0b306 mpdeploy now posts to the frontend production room
+ * 8cf54ea Merge branch 'remote-pacing-delivery'
+ * 268cf26 Merge branch 'master' of github.com:mopub/mopub
+ * 99cb508 Deployed without finding any bug fixes.
+ * 86b7cc0 [#1082 state:fixed]
+ * 04da1c4 Removed unneeded things
+ * 07b2b67 Updated no data mail, fixed migration stuff
+ * 13d234a Fixed the index page to not use the \data\ field to check for completion
+ * 7bd0327 Migration ready to rock and roll
+ * 6a0cc03 New reports will properly be keyed, most recent will no longer be a retarded db query that takes for fucking ever
+ * bec3300 removed phantom "e" next to the edit app button
+ * d4cb3c2 Now pinging ec2 for budgetary pacing and the like
+ 
 # Deployed Thursday, March 29, 2012 at 06:01PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-50
 ### Bugs Fixed: []
-### Included Commits: 
- * 616b09f [#1045 state:resolved] [#1089 state:resolved]
- 
+### Included Commits:
+* 616b09f [#1045 state:resolved] [#1089 state:resolved]
+
 # Deployed Thursday, March 29, 2012 at 04:41PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-49

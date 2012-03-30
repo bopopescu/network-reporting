@@ -34,9 +34,3 @@ cron:
   schedule: every 60 minutes
   timezone: America/Los_Angeles
   target: frontend-0
-
-- description: Attempt to sync budgets with EC2
-  url: /fetch_api/budget/sync/cron
-  schedule: every 5 minutes
-  timezone: America/Los_Angeles
-  target: frontend-boom

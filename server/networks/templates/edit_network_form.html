@@ -20,6 +20,8 @@
         var keys = key.split("-app-");
         var app_key = keys[0];
         var adunit_key = keys[1];
+        console.log($('#id_' + adunit_key + '-bid'));
+        console.log($('#id_' + adunit_key + '-bid').val());
         $('.' + app_key + '-cpm-field').val($('#id_' + adunit_key + '-bid').val());
     }
 
@@ -41,11 +43,6 @@
                         trigger: 'focus'});
                     });
 
-            $('.cpm-field').keyup(function() {
-                var key = $(this).attr('id').replace('-app', '');
-                $('.' + key).val($(this).val());
-                });
-
             $('.all-adunits').click(function() {
                 var key = $(this).attr('id').replace('-all-adunits', '');
                 if ($(this).is(':checked')) {
@@ -62,16 +59,20 @@
                 $('#copy-' + days).click(function() {
                     $('.' + days + '-cpm').each(function() {
                         var key = $(this).attr('id').replace('-' + days, '');
+                        console.log($(this));
+                        console.log('.' + key + '-field');
+                        console.log($('.' + key + '-field'));
                         var cpm = parseFloat($(this).text().replace('$', '')).toString();
-                        $('#' + key + '-field').val(cpm);
-                        $('#' + key + '-field').keyup();
+                        $('.' + key + '-field').val(cpm);
                         });
                     });
                 $('.copy-' + days).click(function() {
                     var key = $(this).attr('id').replace('copy-' + days + '-', '');
+                    console.log($(this));
+                    console.log('.' + key + '-field');
+                    console.log($('.' + key + '-field'));
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
-                    $('#' + key + '-field').val(cpm);
-                    $('#' + key + '-field').keyup();
+                    $('.' + key + '-field').val(cpm);
                     });
                 });
 
@@ -655,17 +656,16 @@
                             </td>
                             {% endif %}
                             <td class="dataTable-data cpm-data" style="width:150px">
-                                <input id="{{app.key}}-app-cpm-field" class="cpm-field bid" type="text" style="width:50px;" />
                             </td>
                             {% if reporting %}
-                            <td class="dataTable-data 7-day-cpm network-data" id="{{app.key}}-7-day-app-cpm">
-                                <a id="copy-7-day-{{app.key}}-app-cpm" class="copy-7-day" style="cursor:pointer">
+                            <td class="dataTable-data 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
+                                <a id="copy-7-day-{{app.key}}-cpm" class="copy-7-day" style="cursor:pointer">
                                     <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
                                 </a>
                                 {{ app.seven_day_stats.cpm|currency }}
                             </td>
-                            <td class="dataTable-data 14-day-cpm network-data" id="{{app.key}}-14-day-app-cpm">
-                                <a id="copy-14-day-{{app.key}}-app-cpm" class="copy-14-day" style="cursor:pointer">
+                            <td class="dataTable-data 14-day-cpm network-data" id="{{app.key}}-14-day-cpm">
+                                <a id="copy-14-day-{{app.key}}-cpm" class="copy-14-day" style="cursor:pointer">
                                     <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
                                 </a>
                                 {{ app.fourteen_day_stats.cpm|currency }}

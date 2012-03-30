@@ -583,3 +583,9 @@
     color:orange;
 }
 
+.popover-inner {
+    &.copy-bid {
+        float: left;
+    }
+}
+

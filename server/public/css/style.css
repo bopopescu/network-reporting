@@ -2516,6 +2516,10 @@ a.disabled {
 .network-data {
   color: orange; }
 
+.popover-inner.copy-bid {
+  width: 100px;
+  float: left; }
+
 /*
  * Plugins
  */

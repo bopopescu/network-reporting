@@ -34,7 +34,7 @@
                 var app_key = key[0];
                 var adunit_key = key[1];
                 // TODO: use _ template
-                $('.' + app_key + '-cpm-field')
+                $('#id_' + adunit_key + '-bid')
                     .popover({html: true,
                         content: function() {
                             return '<a class="button ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" id="' + app_key + '-app-' + adunit_key + '-adunit-copy-bid" onmousedown="copy_bid(event, $(this));" role="button" style="visibility: visible; "><span class="ui-button-text">Copy all</span></a>';
@@ -59,18 +59,12 @@
                 $('#copy-' + days).click(function() {
                     $('.' + days + '-cpm').each(function() {
                         var key = $(this).attr('id').replace('-' + days, '');
-                        console.log($(this));
-                        console.log('.' + key + '-field');
-                        console.log($('.' + key + '-field'));
                         var cpm = parseFloat($(this).text().replace('$', '')).toString();
                         $('.' + key + '-field').val(cpm);
                         });
                     });
                 $('.copy-' + days).click(function() {
                     var key = $(this).attr('id').replace('copy-' + days + '-', '');
-                    console.log($(this));
-                    console.log('.' + key + '-field');
-                    console.log($('.' + key + '-field'));
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
                     $('.' + key + '-field').val(cpm);
                     });

@@ -57,12 +57,24 @@ $(function() {
                 $('.network-data').show();
                 $('.network-chart-data').show();
                 $('.mopub-chart-data').hide();
-                mopub.Chart.trafficChart.series[1].show();
+                if (mopub.Chart.trafficChart) {
+                    if (mopub.Chart.trafficChart.series.length == 1) {
+                        mopub.Chart.trafficChart.series[0].show();
+                    } else {
+                        mopub.Chart.trafficChart.series[1].show();
+                    }
+                }
             } else {
                 $('.network-data').hide();
                 $('.network-chart-data').hide();
                 $('.mopub-chart-data').show();
-                mopub.Chart.trafficChart.series[1].hide();
+                if (mopub.Chart.trafficChart) {
+                    if (mopub.Chart.trafficChart.series.length == 1) {
+                        mopub.Chart.trafficChart.series[0].hide();
+                    } else {
+                        mopub.Chart.trafficChart.series[1].hide();
+                    }
+                }
             }
         }).change();
     }

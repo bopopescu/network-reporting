@@ -31,85 +31,20 @@ if (typeof window.console == "undefined") {
      * enough.
      */
     function initializeDateButtons () {
-        $('#dashboard-dateOptions input').click(function() {
-            var option = $(this).val();
-            if (option == 'custom') {
-                $('#dashboard-dateOptions-custom-modal').dialog({
-                    width: 570,
-                    buttons: [
-                        {
-                            text: 'Set dates',
-                            css: { fontWeight: '600' },
-                            click: function() {
-                                var from_date = $('#dashboard-dateOptions-custom-from').datepicker("getDate");
-                                var to_date = $('#dashboard-dateOptions-custom-to').datepicker("getDate");
-                                var num_days = Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+        $("input[name='start-date']").datepicker();
+        $("input[name='end-date']").datepicker();
 
-                                var from_day = from_date.getDate();
-                                // FYI, months are indexed from 0
-                                var from_month = from_date.getMonth() + 1;
-                                var from_year = from_date.getFullYear();
+        var currently_active = $("#date-range-controls .btn.active");
+        var custom_controls = $("#datepicker-custom");
 
-                                $(this).dialog("close");
-                                var location = document.location.href.replace(/\?.*/,'');
-                                document.location.href = location
-                                    + '?r=' + num_days
-                                    + '&s=' + from_year + "-" + from_month + "-" + from_day;
-                            }
-                        },
-                        {
-                            text: 'Cancel',
-                            click: function() {
-                                $(this).dialog("close");
-                            }
-                        }
-                    ]
-                });
-            } else {
-                // Tell server about selected option to get new data
-                var location = document.location.href.replace(/\?.*/,'');
-                document.location.href = location + '?r=' + option;
-            }
-        });
-
-
-        // set up stats breakdown dateOptions
-        $('#stats-breakdown-dateOptions input').click(function() {
-            $('.stats-breakdown-value').hide();
-            $('.stats-breakdown-value.'+$(this).val()).show();
-        });
-
-        // set up custom dateOptions modal dialog
-        $('#dashboard-dateOptions-custom-from').datepicker({
-            defaultDate: '-15d',
-            maxDate: '0d',
-            onSelect: function(selectedDate) {
-                var other = $('#dashboard-dateOptions-custom-to');
-                var instance = $(this).data("datepicker");
-                var date = $.datepicker.parseDate(instance.settings.dateFormat
-                                                  || $.datepicker._defaults.dateFormat,
-                                                  selectedDate,
-                                                  instance.settings);
-                other.datepicker('option', 'minDate', date);
-            }
-        });
-
-        $('#dashboard-dateOptions-custom-to').datepicker({
-            defaultDate: '-1d',
-            maxDate: '0d',
-            onSelect: function(selectedDate) {
-                var other = $('#dashboard-dateOptions-custom-from');
-                var instance = $(this).data("datepicker");
-                var date = $.datepicker.parseDate(instance.settings.dateFormat ||
-                                                  $.datepicker._defaults.dateFormat,
-                                                  selectedDate,
-                                                  instance.settings);
-                other.datepicker('option', 'maxDate', date);
-            }
+        $("#datepicker-custom").click(function(event) {
+            currently_active.toggleClass("active");
+            custom_controls.toggleClass("active");
+            
+            $("#datepicker-custom-range").toggleClass('hidden');
+            $("#datepicker-custom .caret").toggleClass('flip-vertical');
         });
     }
-
-    
 
     $(document).ready(function() {
 
@@ -164,18 +99,7 @@ if (typeof window.console == "undefined") {
             legend.replaceWith(h2);
         });
 
-        // set up buttons
-        $('.button').button().css({ visibility: 'visible' });
 
-        // set up buttonsets
-        $('.buttonset').buttonset().css({ visibility: 'visible' });
-
-        // gray out any buttonsets that ought to be disabled
-        $('.buttonset-start-disabled').buttonset();
-        $('.buttonset-start-disabled').buttonset({ disabled: true });
-
-        // set up selectmenus
-        $('.selectmenu').selectmenu().css({ visibility: 'visible' });
 
         // set up validation to be run on form submit
         $('.validate').validate();
@@ -190,18 +114,6 @@ if (typeof window.console == "undefined") {
         // Where is this used?
         // $(".tree").treeview();
 
-        // Override default jQuery UI dialog options
-        $.extend($.ui.dialog.prototype.options, {
-            modal: true,
-            resizable: false,
-            draggable: false,
-            width: 400
-        });
-
-        // Override default jQuery UI datepicker options
-        $.datepicker.setDefaults({
-            dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        });
 
         // Set up form placeholders
         $('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });

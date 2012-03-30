@@ -29,7 +29,7 @@ from reports.forms import ReportForm
 
 class ReportIndexHandler(RequestHandler):
     def get(self):
-        logging.warning("Handling index request")
+        logging.warning("Handling index requested")
         manager = ReportQueryManager(self.account)
         scheduled = manager.get_scheduled()
         logging.warning("Got scheduled")

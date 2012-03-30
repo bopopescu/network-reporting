@@ -141,6 +141,11 @@ class ScheduledReport(db.Model):
     recipients = db.StringListProperty(default=[])
 
     _most_recent = db.ReferenceProperty(collection_name='parent_report')
+    _details = db.StringProperty()
+    _date_details = db.StringProperty()
+    _dim_details = db.StringProperty()
+    _status = db.StringProperty()
+
 
     @property
     def data(self):
@@ -156,15 +161,24 @@ class ScheduledReport(db.Model):
         
     @property
     def details(self):
-        return self.most_recent.details(self.interval)
+        if self._details:
+            return self._details
+        else:
+            return self.most_recent.details(self.interval)
 
     @property
     def date_details(self):
-        return self.most_recent.date_details(self.interval)
+        if self._date_details:
+            return self._date_details
+        else:
+            return self.most_recent.date_details(self.interval)
 
     @property
     def dim_details(self):
-        return self.most_recent.dim_details
+        if self._dim_details:
+            return self._dim_details
+        else:
+            return self.most_recent.dim_details
 
     @property
     def schedule_details(self):
@@ -185,7 +199,10 @@ class ScheduledReport(db.Model):
 
     @property
     def status(self):
-        return self.most_recent.status
+        if self._status:
+            return self._status
+        else:
+            return self.most_recent.status
 
 class Report(db.Model):
     #standard

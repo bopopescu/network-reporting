@@ -145,7 +145,7 @@ if (typeof window.console == "undefined") {
         $('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
 
         // Set up dropdowns
-        $(".dropdown-head").dropdown('.dropdown');
+        $(".dropdown-head").mopub_dropdown('.dropdown');
 
         // Set up alert-message closing
         $(".alert-message .close").click(function() {
@@ -397,7 +397,7 @@ if (typeof window.console == "undefined") {
              *
              * `$(dropdown-trigger).dropdown(things-that-dropdown);`
              */
-    $.fn.dropdown = function(selector) {
+    $.fn.mopub_dropdown = function(selector) {
         var self = this;
         var over_trigger, over_body = false;
 

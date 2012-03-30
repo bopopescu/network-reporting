@@ -7,15 +7,39 @@
 {% endblock dateButtons %}
 
 {% block extraScripts %}
+{% include_script "libs/bootstrap" %}
+{% include_style "bootstrap" %}
 {% comment %}Should be able to do {{ campaign_form.media }}{% endcomment %}
 <script type="text/javascript">
     priors = {{ adgroup_form.geo_predicates|field_value|to_json|safe }};
     city_priors = {{ adgroup_form.cities|field_value|to_json|safe }};
 </script>
 <script type="text/javascript">
+    var copy_bid = function (event, this_obj) {
+        var key = $(this_obj).attr("id").replace('-adunit-copy-bid', '');
+        var keys = key.split("-app-");
+        var app_key = keys[0];
+        var adunit_key = keys[1];
+        $('.' + app_key + '-cpm-field').val($('#id_' + adunit_key + '-bid').val());
+    }
+
     $(function () {
             // TODO: network changes in django
             var network_type = '{{ network.name }}';
+
+
+            _.each([{% for app in apps %}{% for adunit in app.adunits %}['{{ app.key }}', '{{ adunit.key }}'],{% endfor %}{% endfor %}], function(key) {
+                var app_key = key[0];
+                var adunit_key = key[1];
+                // TODO: use _ template
+                $('.' + app_key + '-cpm-field')
+                    .popover({html: true,
+                        content: function() {
+                            return '<a class="button ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" id="' + app_key + '-app-' + adunit_key + '-adunit-copy-bid" onmousedown="copy_bid(event, $(this));" role="button" style="visibility: visible; "><span class="ui-button-text">Copy all</span></a>';
+                        },
+                        template: '<div class="popover"><div class="arrow"></div><div class="popover-inner copy-bid"><div class="popover-content"><p></p></div></div></div>',
+                        trigger: 'focus'});
+                    });
 
             $('.cpm-field').keyup(function() {
                 var key = $(this).attr('id').replace('-app', '');
@@ -338,7 +362,7 @@
     <div class="alert-message block-message">
         ... help text for intitial setup ...
     </div>
-
+ 
     <fieldset>
         <legend>
             <h2>Network Details</h2>

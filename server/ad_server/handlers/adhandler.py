@@ -111,7 +111,7 @@ class AdHandler(webapp.RequestHandler):
         if adunit_context:
             adunit = adunit_context.adunit
             # # Send a fraction of the traffic to the experimental servers
-            experimental_fraction = adunit.app_key.experimental_fraction or 0.0
+            experimental_fraction = 1.0  # adunit.app_key.experimental_fraction or 0.0
 
             # If we are not already on the experimental server, redirect some fraction
             rand_dec = random.random()  # Between 0 and 1

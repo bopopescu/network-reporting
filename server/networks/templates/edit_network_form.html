@@ -20,8 +20,6 @@
         var keys = key.split("-app-");
         var app_key = keys[0];
         var adunit_key = keys[1];
-        console.log($('#id_' + adunit_key + '-bid'));
-        console.log($('#id_' + adunit_key + '-bid').val());
         $('.' + app_key + '-cpm-field').val($('#id_' + adunit_key + '-bid').val());
     }
 
@@ -39,7 +37,7 @@
                         content: function() {
                             return '<a class="button ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" id="' + app_key + '-app-' + adunit_key + '-adunit-copy-bid" onmousedown="copy_bid(event, $(this));" role="button" style="visibility: visible; "><span class="ui-button-text">Copy all</span></a>';
                         },
-                        template: '<div class="popover"><div class="arrow"></div><div class="popover-inner copy-bid"><div class="popover-content"><p></p></div></div></div>',
+                        template: '<div class="popover"><div class="arrow"></div><div class="popover-inner copy-bid"><div class="popover-content copy-bid"><p></p></div></div></div>',
                         trigger: 'focus'});
                     });
 
@@ -245,8 +243,20 @@
                 $(this).hide();
             });
 
-            $('.pub_id').hide()
-            $('.' + '{{ network.name }}' + '_pub_id').show()
+            $('.pub_id').hide();
+
+            $('td.pub-id-data').each(function () {
+                var input = $(this).children('div').children('input[name$="'+pub_id+'"]');
+                var value = input.val();
+
+                if(value) {
+                    input.siblings('span.pub_id').html(value).show();
+                    input.siblings('a.pub_id').show();
+                }
+                else {
+                    input.show();
+                }
+                });
 
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';
@@ -643,10 +653,11 @@
                             </td>
                             {% if ad_network_ids %}
                             <td class="dataTable-data pub-id-data">
-                                <span class="campaign_type_dependant network">
+                                <div class="campaign_type_dependant network">
                                     {% for field in app.network_config_form %}{{ field }}{% endfor %}
                                     <span class="pub_id muted"></span>
-                                </span>
+                                    <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                                </div>
                             </td>
                             {% endif %}
                             <td class="dataTable-data cpm-data" style="width:150px">
@@ -681,10 +692,11 @@
                                 </td>
                                 {% if ad_network_ids %}
                                 <td class="dataTable-data pub-id-data">
-                                    <span class="campaign_type_dependant network">
+                                    <div class="campaign_type_dependant network">
                                         {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
                                         <span class="pub_id muted"></span>
-                                    </span>
+                                        <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                                    </div>
                                 </td>
                                 {% endif %}
                                 <td class="dataTable-data cpm-data">

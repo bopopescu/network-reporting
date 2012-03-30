@@ -583,9 +583,18 @@
     color:orange;
 }
 
-.popover-inner {
-    &.copy-bid {
-        float: left;
+.popover {
+    .popover-inner {
+        &.copy-bid {
+            float: left;
+            width: 80px;
+        }
+        .popover-content {
+            &.copy-bid {
+                float: left;
+                padding: 5px;
+            }
+        }
     }
 }
 

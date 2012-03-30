@@ -13,16 +13,6 @@
 {% block extraScripts %}
 <script type="text/javascript">
     $(function() {
-            // Use breakdown to switch charts
-            $('.stats-breakdown tr').click(function(e) {
-                $('#dashboard-stats .stats-breakdown .active').removeClass('active');
-                $(this).addClass('active');
-                $('#dashboard-stats-chart').fadeOut(100, function() {
-                    mopub.Chart.setupDashboardStatsChart('line');
-                    $(this).show();
-                    });
-                });
-
             // TODO: put in shared js file with dashboard. Note: latest date allowed in range is yesterday.
             // set up dateOptions
             $('#dashboard-dateOptions input').click(function() {

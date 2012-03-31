@@ -27,6 +27,15 @@
             // TODO: network changes in django
             var network_type = '{{ network.name }}';
 
+            $('.app-pub-id').keyup(function () {
+                var value = $(this).val();
+                var div = $(this).parents('div.appData');
+                $(div).find('input[name$="'+pub_id+'"]').each(function () {
+                    if (!$(this).hasClass('initialized')) {
+                        $(this).val(value);
+                    }
+                    });
+                });
 
             _.each([{% for app in apps %}{% for adunit in app.adunits %}['{{ app.key }}', '{{ adunit.key }}'],{% endfor %}{% endfor %}], function(key) {
                 var app_key = key[0];
@@ -364,10 +373,6 @@
 {% block content %}
 <form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
 
-    <div class="alert-message block-message">
-        ... help text for intitial setup ...
-    </div>
- 
     <fieldset>
         <legend>
             <h2>Network Details</h2>

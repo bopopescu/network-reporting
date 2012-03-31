@@ -220,6 +220,8 @@ class EditNetworkHandler(RequestHandler):
                     app.network_config, prefix="app_%s" % app.key())
             app.pub_id = app.network_config_form.fields.get(network + '_pub_id',
                     False)
+            app.network_config_form.fields[network + '_pub_id'].widget.attrs['class'] += \
+                    ' app-pub-id'
             if app.pub_id:
                 ad_network_ids = True
 
@@ -261,6 +263,10 @@ class EditNetworkHandler(RequestHandler):
                 adunit.network_config_form = AdUnitNetworkConfigForm(
                         instance=adunit.network_config, prefix="adunit_%s" %
                         adunit.key())
+                if getattr(adunit.network_config, network + '_pub_id', False):
+                    adunit.network_config_form.fields[network + '_pub_id'].widget.attrs['class'] += \
+                            ' initialized'
+
                 adunit.pub_id = adunit.network_config_form.fields.get(network +
                         '_pub_id', False)
                 app.adunits.append(adunit)

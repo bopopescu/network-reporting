@@ -24,25 +24,118 @@ if (typeof window.console == "undefined") {
     var Stats = mopub.Stats || {};
     var Utils = mopub.Utils || {};
 
-        /*
-     * ## initializeDateButtons
-     * Loads all click handlers/visual stuff for the date buttons. Used
-     * on a ton of pages, probably could be refactored by someone brave
-     * enough.
-     */
+
+
     function initializeDateButtons () {
+
+        /*
+         * Utils for making the date range url params
+         */
+        var parse_date = function (date) {
+            var d = new Date(date);
+            var non_retarded_month = d.getMonth() + 1;
+            return d.getFullYear() + 
+                "-" + non_retarded_month + 
+                "-" + d.getDate();
+        };
+
+        var days_between = function (start, end) {
+            
+            // cast, in case they passed in strings
+            var start_date = new Date(start);
+            var end_date = new Date(end);            
+
+            var daylight_savings_adjust = 0;
+
+            // constants used for our calculations below
+            var one_minute = 1000 * 60;
+            var one_day = one_minute * 60 * 24;
+
+            // equalize times in case date objects have them
+            start_date.setHours(0);
+            start_date.setMinutes(0);
+            start_date.setSeconds(0);
+            end_date.setHours(0);
+            end_date.setMinutes(0);
+            end_date.setSeconds(0);
+
+            // take care of spans across Daylight Saving Time changes
+            if (end_date > start_date) {
+                daylight_savings_adjust = (end_date.getTimezoneOffset() - 
+                             start_date.getTimezoneOffset()) * one_minute;
+            } else {
+                daylight_savings_adjust = (start_date.getTimezoneOffset() -
+                             end_date.getTimezoneOffset()) * one_minute;    
+            }
+            var diff = Math.abs(end_date.getTime() - start_date.getTime()) 
+                - daylight_savings_adjust;
+            return Math.ceil(diff/one_day);
+        };
+        
+
+        /*
+         * Custom date range stuff
+         */
+
+        // Set up the two date fields with datepickers
         $("input[name='start-date']").datepicker();
         $("input[name='end-date']").datepicker();
 
+        // Set up the click event that opens the date range picker
         var currently_active = $("#date-range-controls .btn.active");
         var custom_controls = $("#datepicker-custom");
-
         $("#datepicker-custom").click(function(event) {
             currently_active.toggleClass("active");
-            custom_controls.toggleClass("active");
-            
+            custom_controls.toggleClass("active");            
             $("#datepicker-custom-range").toggleClass('hidden');
             $("#datepicker-custom .caret").toggleClass('flip-vertical');
+        });
+
+        // On submit, get the date range from the two inputs and
+        // form the url, and reload the page.
+        $("#custom-date-submit").click(function() {
+            var start_date = $("#datepicker-start-input").val();
+            var end_date = $("#datepicker-end-input").val();
+
+            // days_between is not inclusive, we add +1 to the range
+            // because the server expects inclusive.
+            var date_range = days_between(start_date, end_date) + 1;
+            var formatted_start_date = parse_date(start_date);
+
+            if (date_range > 0) {
+                var url_params = "?r="
+                                 + date_range
+                                 + "&s="
+                                 + formatted_start_date;
+
+                window.location = window.location.protocol + "//"
+                    + window.location.host + window.location.pathname 
+                    + url_params;
+            } else {
+                // handle error
+            }
+        });
+
+        /*
+         * The other date buttons
+         */
+        _.each(['today', 'yesterday', '7', '14'], function(value) {
+
+            if (value === 'today' || value === 'yesterday'){
+                $("#datepicker-" + value).click(function(event){
+                    alert('not yet implemented');
+                });
+            } else {
+                $("#datepicker-" + value).click(function(event){
+                    event.preventDefault();
+                    var url_params = "?r="
+                        + value;
+                    
+                    window.location = window.location.protocol + "//"
+                        + window.location.host + window.location.pathname 
+                        + url_params;
+                });
+            }
         });
     }
 
@@ -111,10 +204,6 @@ if (typeof window.console == "undefined") {
         $('.tabs').tabs();
         $('.pills').tabs();
 
-        // Where is this used?
-        // $(".tree").treeview();
-
-
         // Set up form placeholders
         $('input[placeholder], textarea[placeholder]').placeholder({ preventRefreshIssues: true });
 
@@ -122,6 +211,7 @@ if (typeof window.console == "undefined") {
         $('#titlebar .breadcrumb h1, .dataTable-name .inner').textOverflow(' &hellip;');
 
         // Set up dropdowns
+        //REFACTOR: replace this with something from bootstrap
         $(".dropdown-head").dropdown('.dropdown');
 
         // Set up alert-message closing

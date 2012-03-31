@@ -407,13 +407,16 @@ def main():
     campaigns_by_network = {}
     creatives_per_campaign = {}
     campaigns = []
-    for network in NETWORKS_TO_USE:
-        campaign = Campaign(account=account,
-                campaign_type='network',
-                network_type=network,
-                network_state=NetworkStates.DEFAULT_NETWORK_CAMPAIGN,
-                name=REPORTING_NETWORKS.get(network, False) or \
-                        NETWORKS_WITHOUT_REPORTING[network])
+    for index, network in enumerate(NETWORKS_TO_USE):
+        if network in NETWORKS_TO_USE[index + 1:]:
+            campaign = Campaign(account=account,
+                    campaign_type='network',
+                    network_type=network,
+                    network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN,
+                    name=NETWORKS[network])
+        else:
+            campaign = CampaignQueryManager.get_default_network_campaign(
+                    account, network)
         campaign.put()
 
         creatives_per_campaign[campaign] = []

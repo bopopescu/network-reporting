@@ -318,14 +318,16 @@ class EditNetworkHandler(RequestHandler):
             if campaign:
                 if not custom_campaign:
                     query_dict['name'] = campaign.name
-                campaign_form = CampaignForm(query_dict, instance=campaign)
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(self.account,
                     network).count(limit=1) or 'custom' in network
             if not custom_campaign:
                 query_dict['name'] = NETWORKS[network]
-            campaign_form = CampaignForm(query_dict)
+                campaign = CampaignQueryManager. \
+                        get_default_network_campaign(self.account, network)
+
+        campaign_form = CampaignForm(query_dict, instance=campaign)
 
         adunit_keys = [(unicode(adunit.key())) for adunit in adunits]
 
@@ -338,6 +340,7 @@ class EditNetworkHandler(RequestHandler):
                 campaign.network_state = NetworkStates.DEFAULT_NETWORK_CAMPAIGN
             campaign.account = self.account
             campaign.network_type = network
+            campaign.campaign_type = 'network'
             if query_dict['show_login'] == 'true':
                 campaign.show_login = True
             else:

@@ -7,6 +7,7 @@ from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
 
 from common.constants import CAMPAIGN_LEVELS, \
+        NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION
 
 from advertiser.models import Campaign
@@ -14,7 +15,8 @@ from advertiser.models import AdGroup
 from advertiser.models import Creative, TextCreative, \
                               TextAndTileCreative, \
                               HtmlCreative,\
-                              ImageCreative
+                              ImageCreative, \
+                              NetworkStates
 
 from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
@@ -54,6 +56,35 @@ class CampaignQueryManager(QueryManager):
         if network_type:
             campaaigns.filter('network_type =', network_type)
         return campaaigns
+
+    @classmethod
+    def get_default_network_campaign(cls, account, network, get_from_db=False):
+        # Force to string
+        account_key = str(account.key())
+
+        cp_key_name = cls._get_network_key_name(account, network)
+
+        if get_from_db:
+            campaign = Campaign.get_by_key_name(cp_key_name)
+            return campaign
+
+        campaign = Campaign(key_name=cp_key_name, name=NETWORKS[network])
+
+        # set the properties
+        campaign.account = account
+        campaign.campaign_type = 'network'
+        campaign.network_type = network
+        campaign.network_state = NetworkStates.DEFAULT_NETWORK_CAMPAIGN
+
+        return campaign
+
+    @classmethod
+    def _get_network_key_name(cls, account_key, network):
+        """
+        Returns the key_name based on the account key and network
+        """
+        return 'ntwk:%s:%s' % (account_key, network)
+
 
     @classmethod
     def get_marketplace(cls, account, from_db=False):

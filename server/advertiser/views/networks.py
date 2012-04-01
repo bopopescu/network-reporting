@@ -3,6 +3,8 @@ import datetime
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
+from django.core.urlresolvers import reverse
 from common.utils.timezones import Pacific_tzinfo
 
 from advertiser.query_managers import CampaignQueryManager
@@ -10,6 +12,9 @@ from advertiser.query_managers import CampaignQueryManager
 
 class NetworkIndexHandler(RequestHandler):
     def get(self):
+        if self.account.display_new_networks:
+            return HttpResponseRedirect(reverse('networks'))
+
         today = datetime.datetime.now(Pacific_tzinfo()).date()
         yesterday = today - datetime.timedelta(days=1)
 

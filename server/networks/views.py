@@ -250,7 +250,7 @@ class EditNetworkHandler(RequestHandler):
                 if campaign_key:
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(),
-                            self.account.key(), network, True)
+                            self.account.key(), True)
                 adunit.adgroup_form = AdGroupForm(is_staff=
                         self.request.user.is_staff, instance=adgroup,
                         prefix=str(adunit.key()))
@@ -320,8 +320,8 @@ class EditNetworkHandler(RequestHandler):
                     query_dict['name'] = campaign.name
         else:
             # Do no other network campaigns exist or is this custom?
-            custom_campaign = CampaignQueryManager.get_network_campaigns(self.account,
-                    network).count(limit=1) or 'custom' in network
+            custom_campaign = CampaignQueryManager.get_network_campaigns(
+                    self.account, network).count(limit=1) or 'custom' in network
             if not custom_campaign:
                 query_dict['name'] = NETWORKS[network]
                 campaign = CampaignQueryManager. \
@@ -360,7 +360,7 @@ class EditNetworkHandler(RequestHandler):
             adgroup_forms = []
             for adunit in adunits:
                 network_adgroup = AdGroupQueryManager.get_network_adgroup(
-                        campaign, adunit.key(), self.account.key(), network)
+                        campaign, adunit.key(), self.account.key())
 
                 query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
 
@@ -551,7 +551,7 @@ class NetworkDetailsHandler(RequestHandler):
         adunit = AdUnitQueryManager.get_adunits(account=self.account,
                 limit=1)[0]
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
-                adunit.key(), self.account.key(), network, get_from_db=True)
+                adunit.key(), self.account.key(), get_from_db=True)
         if adgroup.device_targeting:
             for device, pretty_name in adgroup.DEVICE_CHOICES:
                 if getattr(adgroup, 'target_' + device, False):

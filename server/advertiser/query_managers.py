@@ -293,7 +293,7 @@ class AdGroupQueryManager(QueryManager):
         return adgroups.fetch(limit)
 
     @classmethod
-    def get_network_adgroup(cls, campaign, adunit_key, account_key, network_type,
+    def get_network_adgroup(cls, campaign, adunit_key, account_key,
             get_from_db=False):
         """
         Returns the only adgroup that can belong to this adunit
@@ -304,6 +304,7 @@ class AdGroupQueryManager(QueryManager):
         Note: it is the API consumer's responsiblity to actually
         save this object with the put method of this class
         """
+        network_type = campaign.network_type
 
         # Force to string
         campaign_key = str(campaign.key())

@@ -22,6 +22,7 @@ from common.constants import REPORTING_NETWORKS, \
         NETWORKS_WITHOUT_REPORTING, \
         NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION
+from advertiser.query_managers import CampaignQueryManager
 
 from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkAppMapper, \
@@ -41,12 +42,12 @@ USERNAME = "test@mopub.com"
 PASSWORD = "test"
 
 NUM_ACCOUNTS = 1
-NUM_APPS = 2 #ONLY SUPPORT ONE ACCOUNT FOR NOW
-NUM_CAMPAIGNS_PER_APP = 1#3
+NUM_APPS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
+NUM_CAMPAIGNS_PER_APP = 1
 NUM_CREATIVES_PER_ADGROUP = 1
-NUM_ADUNITS_PER_APP = 2#3
+NUM_ADUNITS_PER_APP = 1
 
-NETWORKS_TO_USE = ['admob', 'iad']
+NETWORKS_TO_USE = ['admob', 'iad', 'admob', 'millennial']
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
 ### End configuration parameters
@@ -184,14 +185,15 @@ def generate_adgroup(site_keys,account,campaign=None,network=None):
     if campaign:
         if campaign.campaign_type=="network":
             if network:
-                adgroup = AdGroupQueryManager.get_network_adgroup(campaign, site_keys[0],
-                         account.key(), network)
+                adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
+                        site_keys[0], account.key())
                 adgroup.put()
                 return adgroup
             else:
                 network = select_rand(NETWORK_TYPES)
 
-            #Need to update account's network configuration if we add a network adgroup
+            # Need to update account's network configuration if we add
+            # a network adgroup
             if network in NETWORK_TYPE_TO_PUB_ID_ATTR.keys():
                 network_config = account.network_config
                 setattr(network_config,NETWORK_TYPE_TO_PUB_ID_ATTR[network],"fillerid")
@@ -235,7 +237,8 @@ def generate_campaign(account,budget,campaign_type=None):
 
 
 
-def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,marketplace_config=None,network_config=None):
+def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,
+        marketplace_config=None,network_config=None,display_new_networks=False):
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()
         marketplace_config.put()
@@ -251,6 +254,7 @@ def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,marketpl
     account.active = True
     account.marketplace_config = marketplace_config
     account.network_config = network_config
+    account.display_new_networks = display_new_networks
 
     account.put()
     return account
@@ -381,7 +385,8 @@ def main_():
 
 
 def main():
-    account = generate_account(USERNAME,PASSWORD,USERNAME)
+    account = generate_account(USERNAME,PASSWORD,USERNAME,
+            display_new_networks=True)
 
     apps = []
     for i in range(NUM_APPS):
@@ -404,7 +409,6 @@ def main():
         login.put()
 
     # Generate campaigns and the data structures required to quickly access them
-    campaigns_by_network = {}
     creatives_per_campaign = {}
     campaigns = []
     for index, network in enumerate(NETWORKS_TO_USE):
@@ -413,14 +417,13 @@ def main():
                     campaign_type='network',
                     network_type=network,
                     network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN,
-                    name=NETWORKS[network])
+                    name=NETWORKS[network] + ' Custom')
         else:
             campaign = CampaignQueryManager.get_default_network_campaign(
                     account, network)
         campaign.put()
 
         creatives_per_campaign[campaign] = []
-        campaigns_by_network[network] = campaign
         campaigns.append(campaign)
 
     # Generate adunits, adgroups, network_configs and mappers
@@ -428,8 +431,8 @@ def main():
         for i in range(NUM_ADUNITS_PER_APP):
             adunit = generate_adunit(app,account)
             adunits_per_app[app].append(adunit)
-            for network in NETWORKS_TO_USE:
-                campaign = campaigns_by_network[network]
+            for campaign in campaigns:
+                network = campaign.network_type
 
                 adgroup_network_type = network
                 if network in NETWORK_ADGROUP_TRANSLATION:
@@ -452,7 +455,8 @@ def main():
 
         # Create mappers and set network config pub_ids
         for network in reporting_networks:
-            pub_id = str(random.random()*100)
+            pub_id = ''.join(random.choice(string.letters) for i in
+                    xrange(15))
 
             setattr(network_config, network + '_pub_id', pub_id)
 

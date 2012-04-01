@@ -285,7 +285,7 @@ class CreateAppHandler(RequestHandler):
             adunit.app_key = app
             AdUnitQueryManager.put(adunit)
 
-            # see if we need to enable the marketplace
+            # see if we need to enable the marketplace or network campaigns
             enable_marketplace(adunit, self.account)
             enable_networks(adunit, self.account)
 
@@ -1087,9 +1087,10 @@ def enable_networks(adunit, account):
     Create network adgroups for this adunit for all ad networks.
     """
     ntwk_adgroups = []
-    for network in NETWORKS:
-        ntwk_adgroups.append(AdGroupQueryManager.get_network_adgroup(
-            adunit.key(), account.key(), network))
+    for campaign in CampaignQueryManager.get_network_campaigns(account,
+            is_new=True):
+        ntwk_adgroups.append(AdGroupQueryManager.get_network_adgroup(campaign,
+            adunit.key(), account.key()))
     # TODO: check to make sure clearing cache on put won't mess up anything
     AdGroupQueryManager.put(ntwk_adgroups)
 

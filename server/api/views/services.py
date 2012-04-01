@@ -451,7 +451,7 @@ class NetworkAppsService(RequestHandler):
                 # One adunit per adgroup for network adunits
                 adgroup = AdGroupQueryManager.get_network_adgroup(
                         campaign, adunit.key(),
-                        self.account.key(), network)
+                        self.account.key())
 
                 all_stats = stats_manager.get_stats_for_days(publisher=app,
                                                              advertiser=

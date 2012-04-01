@@ -108,6 +108,7 @@
         <div class="stats-breakdown">
             <table>
                 <tbody>
+                    {% if reporting %}
                     <tr id="stats-breakdown-revenue">
                         <td class="stats-breakdown-value today">
                             <span class="inner network-chart-data"></span>
@@ -125,18 +126,25 @@
                             <span class="inner">Revenue</span>
                         </th>
                     </tr>
+                    {% endif %}
 
                     <tr class="active" id="stats-breakdown-impression_count">
                         <td class="stats-breakdown-value today">
+                            {% if reporting %}
                             <span class="inner network-chart-data"></span>
+                            {% endif %}
                             <span class="inner mopub-chart-data"></span>
                         </td>
                         <td class="stats-breakdown-value yesterday">
+                            {% if reporting %}
                             <span class="inner network-chart-data"></span>
+                            {% endif %}
                             <span class="inner mopub-chart-data"></span>
                         </td>
                         <td class="stats-breakdown-value all">
+                            {% if reporting %}
                             <span class="inner network-chart-data"></span>
+                            {% endif %}
                             <span class="inner mopub-chart-data"></span>
                         </td>
                         <th class="stats-breakdown-name">
@@ -146,15 +154,21 @@
 
                     <tr id="stats-breakdown-click_count">
                         <td class="stats-breakdown-value today">
+                            {% if reporting %}
                             <span class="inner network-chart-data"></span>
+                            {% endif %}
                             <span class="inner mopub-chart-data"></span>
                         </td>
                         <td class="stats-breakdown-value yesterday">
+                            {% if reporting %}
                             <span class="inner network-chart-data"></span>
+                            {% endif %}
                             <span class="inner mopub-chart-data"></span>
                         </td>
                         <td class="stats-breakdown-value all">
+                            {% if reporting %}
                             <span class="inner network-chart-data"></span>
+                            {% endif %}
                             <span class="inner mopub-chart-data"></span>
                         </td>
                         <th class="stats-breakdown-name">
@@ -164,15 +178,21 @@
 
                     <tr id="stats-breakdown-cpm">
                         <td class="stats-breakdown-value today">
+                            {% if reporting %}
                             <span class="inner network-chart-data"></span>
+                            {% endif %}
                             <span class="inner mopub-chart-data"></span>
                         </td>
                         <td class="stats-breakdown-value yesterday">
+                            {% if reporting %}
                             <span class="inner network-chart-data"></span>
+                            {% endif %}
                             <span class="inner mopub-chart-data"></span>
                         </td>
                         <td class="stats-breakdown-value all">
+                            {% if reporting %}
                             <span class="inner network-chart-data"></span>
+                            {% endif %}
                             <span class="inner mopub-chart-data"></span>
                         </td>
                         <th class="stats-breakdown-name">

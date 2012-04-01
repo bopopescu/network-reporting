@@ -1,15 +1,23 @@
+# Deployed Saturday, March 31, 2012 at 10:52PM PST
+### Deployed by John Pena
+### Tagged deploy-53
+### Bugs Fixed: []
+### Included Commits: 
+ * 032dd6d catching pacing url errors
+ * f559897 Deployed without finding any bug fixes.
+ 
 # Deployed Friday, March 30, 2012 at 01:02PM PST
 ### Deployed by John Pena
 ### Tagged deploy-52
 ### Bugs Fixed: []
-### Included Commits: 
- * 0eac7c9 Fuck, sorry, gotta get rid of this
- * fcb6ce5 Merge branch '1087-later-sched'
- * 16f0eb3 Merge branch 'master' of github.com:mopub/mopub
- * dd6d41d Dont need that anymore
- * 0d808b0 [#1082 state:resolved]
- * 46573bf DERRRRRRRRRRP [#1087 state:review-requested assigned:nafis]
- 
+### Included Commits:
+* 0eac7c9 Fuck, sorry, gotta get rid of this
+* fcb6ce5 Merge branch '1087-later-sched'
+* 16f0eb3 Merge branch 'master' of github.com:mopub/mopub
+* dd6d41d Dont need that anymore
+* 0d808b0 [#1082 state:resolved]
+* 46573bf DERRRRRRRRRRP [#1087 state:review-requested assigned:nafis]
+
 # Deployed Friday, March 30, 2012 at 12:30PM PST
 ### Deployed by John Pena
 ### Tagged deploy-51

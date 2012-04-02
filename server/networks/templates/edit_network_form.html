@@ -27,15 +27,25 @@
             // TODO: network changes in django
             var network_type = '{{ network.name }}';
 
-            $('.app-pub-id').keyup(function () {
-                var value = $(this).val();
-                var div = $(this).parents('tbody');
-                $(div).find('input[name$="'+pub_id+'"]').each(function () {
-                    if (!$(this).hasClass('initialized')) {
-                        $(this).val(value);
+            $('.app-pub-id')
+                .keyup(function () {
+                    var value = $(this).val();
+                    var div = $(this).parents('tbody');
+                    $(div).find('input[name$="'+pub_id+'"]').each(function () {
+                        if (!$(this).hasClass('initialized')) {
+                            $(this).val(value);
+                        }
+                        });
+                    })
+                .focusout(function () {
+                    if ($(this).val()) {
+                        var div = $(this).parents('tbody');
+                        $(div).find('input[name$="'+pub_id+'"]').each(function () {
+                            $(this).addClass('initialized');
+                        });
                     }
                     });
-                });
+
 
             _.each([{% for app in apps %}{% for adunit in app.adunits %}['{{ app.key }}', '{{ adunit.key }}'],{% endfor %}{% endfor %}], function(key) {
                 var app_key = key[0];

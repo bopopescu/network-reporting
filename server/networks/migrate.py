@@ -1,5 +1,7 @@
 from google.appengine.ext import db
 
+from account.query_managers import AccountQueryManager
+
 from advertiser.models import NetworkStates
 from advertiser.query_managers import CampaignQueryManager, \
         AdGroupQueryManager, \
@@ -51,6 +53,8 @@ for account in accounts:
             CampaignQueryManager.put(new_campaign)
 
             networks.add(campaign.network_type)
+    account.display_new_networks = True
+    AccountQueryManager.put_accounts(account)
 
 def create_creative(new_adgroup, adgroup):
     html_data = None

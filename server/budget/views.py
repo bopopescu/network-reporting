@@ -127,6 +127,7 @@ def budget_view(request, adgroup_key):
 
     data_qs = urlencode(default_query_dict)
     data_full_url = DEF_BUDGET_DATA_URL + '?' + data_qs
+    logging.warning("Trying for data: %s" % data_full_url)
     remote_data_dict = simplejson.loads(urllib2.urlopen(data_full_url).read())
 
     if remote_data_dict:
@@ -152,7 +153,7 @@ def budget_view(request, adgroup_key):
     day_start_slice = get_slice_from_datetime(today)
 
     # Needed for getting TS logs
-    now_slice = get_slice_from_datetime(datetime.now())
+    now_slice = get_slice_from_datetime(datetime.utcnow())
     count = now_slice - day_start_slice
 
     ts_query_dict = dict(slice_num=now_slice,
@@ -161,6 +162,7 @@ def budget_view(request, adgroup_key):
     ts_data_qs = urlencode(ts_query_dict)
 
     ts_full_url = DEF_BUDGET_TS_DATA_URL + '?' + ts_data_qs
+    logging.warning("Trying for TS logs: %s" % ts_full_url)
     ts_remote_dict = simplejson.loads(urllib2.urlopen(ts_full_url).read())
 
 
@@ -175,6 +177,7 @@ def budget_view(request, adgroup_key):
     daily_log_qs = urlencode(daily_log_query_dict)
 
     daily_log_full_url = DEF_BUDGET_DAILY_DATA_URL + '?' + daily_log_qs
+    logging.warning("Trying for daily logs: %s" % daily_log_full_url)
 
     daily_log_remote_dict = simplejson.loads(urllib2.urlopen(daily_log_full_url).read())
 

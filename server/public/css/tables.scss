@@ -46,7 +46,7 @@
         }
         tr.sub td {
             padding: 4px 10px 4px 0;
-            &.name, &.stat {
+            &.name, &.stat, &.text {
                 border-top: 1px solid #EEE;
             }
         }

@@ -1676,7 +1676,7 @@ a.disabled {
       font-size: 14px; }
   .inventory_table tbody tr.sub td {
     padding: 4px 10px 4px 0; }
-    .inventory_table tbody tr.sub td.name, .inventory_table tbody tr.sub td.stat {
+    .inventory_table tbody tr.sub td.name, .inventory_table tbody tr.sub td.stat, .inventory_table tbody tr.sub td.text {
       border-top: 1px solid #EEE; }
   .inventory_table tbody tr.thick td {
     padding: 8px 10px 7px 0; }

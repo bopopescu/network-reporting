@@ -622,6 +622,26 @@
                         <td class="text">Enabled</td>
                         <td class="text">Ad Network ID</td>
                         <td class="text">Rate (USD)</td>
+                        <th class="stat">
+                            {% if reporting %}
+                            <div>
+                                <a id="copy-7-day" style="cursor:pointer">
+                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
+                                </a>
+                            </div>
+                            {% endif %}
+                            <div>7-Day CPM</div>
+                        </th>
+                        <th class="stat">
+                            {% if reporting %}
+                            <div>
+                                <a id="copy-14-day" style="cursor:pointer">
+                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
+                                </a>
+                            </div>
+                            {% endif %}
+                            <div>14-DayCPM</div>
+                        </th>
                     </tr>
                 </thead>
                 {% for app in apps %}
@@ -651,20 +671,22 @@
                         {% endif %}
                         <td class="text cpm-data" style="width:150px">
                         </td>
-                        {% if reporting %}
                         <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
+                        {% if reporting %}
                             <a id="copy-7-day-{{app.key}}-cpm" class="copy-7-day" style="cursor:pointer">
                                 <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
                             </a>
                             {{ app.seven_day_stats.cpm|currency }}
+                        {% endif %}
                         </td>
-                        <td class="dataTable-data 14-day-cpm network-data" id="{{app.key}}-14-day-cpm">
+                        <td class="stat 14-day-cpm network-data" id="{{app.key}}-14-day-cpm">
+                        {% if reporting %}
                             <a id="copy-14-day-{{app.key}}-cpm" class="copy-14-day" style="cursor:pointer">
                                 <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
                             </a>
                             {{ app.fourteen_day_stats.cpm|currency }}
-                        </td>
                         {% endif %}
+                        </td>
                     </tr>
                     {% for adunit in app.adunits %}
                     <tr class="sub">
@@ -688,12 +710,10 @@
                             {{ adunit.adgroup_form.bid }}
                             {{ adunit.adgroup_form.bid_strategy }} 
                         </td>
-                        {% if reporting %}
                         <td class="stat">
                         </td>
                         <td class="stat">
                         </td>
-                        {% endif %}
                     </tr>
                     {% endfor %}                
                 </tbody>

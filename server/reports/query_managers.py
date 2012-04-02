@@ -74,7 +74,7 @@ class ReportQueryManager(CachedQueryManager):
 
     def migrate_relevant_reports(self):
         scheduled = self.get_scheduled()
-        defaults, adding = self.get_default_reports()
+        defaults, adding = self.get_default_reports(dont_add=True)
         all_reps = scheduled + defaults
         for rep in all_reps:
             print "Working on %s" % rep
@@ -85,14 +85,12 @@ class ReportQueryManager(CachedQueryManager):
         # I don't think anybody has more than 100 of these guys...
 
         #Update scheds most recent
+        most_recent = scheduled.most_recent
+        if most_recent is None:
+            return
         if not scheduled._most_recent:
             print "Updating most recent"
-            most_recent = scheduled.most_recent
-            scheduled._most_recent = most_recent
-
-        if not scheduled._status:
-            print "Updating status"
-            self.update_most_recent(scheduled, scheduled.most_recent)
+            self.update_most_recent(scheduled, most_recent)
 
         # Update all status's that are lazily set
         datum = scheduled.most_recent
@@ -179,7 +177,7 @@ class ReportQueryManager(CachedQueryManager):
         report_q = ScheduledReport.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False).filter('default =', False)
         return report_q.fetch(to_fetch)
 
-    def get_default_reports(self):
+    def get_default_reports(self, dont_add=False):
         # There are three by default, so fetching three should yield three
         reports = ScheduledReport.all().filter('account =', self.account).filter('deleted =', False).filter('default =', True).fetch(3)
         adding_reps = False
@@ -187,7 +185,7 @@ class ReportQueryManager(CachedQueryManager):
             # Well shit
             report_dim_names = [(str(report.d1), str(report.name)) for report in reports]
             for (dim, name) in DEFAULT_REPORT_DIM_LIST:
-                if (dim, name) not in report_dim_names:
+                if (dim, name) not in report_dim_names and not dont_add:
                     adding_reps = True
                     reports.append(self.add_report(dim, None, None, None, 7, name=name, saved=True, interval='7days', default=True))
         return reports, adding_reps

@@ -1,6 +1,7 @@
 (function($, Backbone, _) {
 
     var StatsRouter = Backbone.Router.extend({
+        // could include a 'vs' parameter for showing deltas
         routes : {
             "/daily/start/:start_date/end/:end_date": "fetchStatsForDays",
             "/hourly/start/:start_date/end/:end_date": "fetchStatsForHours",

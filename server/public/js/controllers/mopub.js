@@ -23,11 +23,10 @@ if (typeof window.console == "undefined") {
     var Chart = mopub.Chart || {};
     var Stats = mopub.Stats || {};
     var Utils = mopub.Utils || {};
-
-
+        
 
     function initializeDateButtons () {
-
+        
         /*
          * Utils for making the date range url params
          */
@@ -39,6 +38,10 @@ if (typeof window.console == "undefined") {
                 "-" + d.getDate();
         };
 
+        /*
+         * Get the number of days between start and end.
+         * Not inclusive of the start date. 
+         */
         var days_between = function (start, end) {
             
             // cast, in case they passed in strings
@@ -71,7 +74,6 @@ if (typeof window.console == "undefined") {
                 - daylight_savings_adjust;
             return Math.ceil(diff/one_day);
         };
-        
 
         /*
          * Custom date range stuff
@@ -121,9 +123,36 @@ if (typeof window.console == "undefined") {
          */
         _.each(['today', 'yesterday', '7', '14'], function(value) {
 
-            if (value === 'today' || value === 'yesterday'){
+            // button click handler for today
+            if (value === 'today') {
                 $("#datepicker-" + value).click(function(event){
-                    alert('not yet implemented');
+                    event.preventDefault();
+                    var today = new Date();
+                    var today_string = parse_date(today);
+
+                    var url_params = "?r=1"
+                        + "&s="
+                        + today_string;
+                    
+                    window.location = window.location.protocol + "//"
+                        + window.location.host + window.location.pathname 
+                        + url_params;
+
+                });
+            } else if (value === 'yesterday'){
+                $("#datepicker-" + value).click(function(event){
+                    event.preventDefault();
+                    var today = new Date();
+                    today.setDate(today.getDate() - 1);
+                    var yesterday_string = parse_date(today);
+
+                    var url_params = "?r=1"
+                        + "&s="
+                        + yesterday_string;
+                    
+                    window.location = window.location.protocol + "//"
+                        + window.location.host + window.location.pathname 
+                        + url_params;
                 });
             } else {
                 $("#datepicker-" + value).click(function(event){
@@ -182,23 +211,13 @@ if (typeof window.console == "undefined") {
             $('.marketplace').hide();
         }
 
-
-        // replace <legend> with <h2>
-        $('legend').each(function() {
-            var legend = $(this);
-            var h2 = $('<h2>'+legend.html()+'</h2>');
-            h2.attr('class', legend.attr('class'));
-            h2.attr('id', legend.attr('id'));
-            legend.replaceWith(h2);
-        });
-
-
-
         // set up validation to be run on form submit
         $('.validate').validate();
 
         // Tables with the 'sortable' class will be made sortable by default
         $(".sortable").tablesorter();
+
+        $('.dropdown-toggle').dropdown();
 
         // Tabify tabs
         $('.tabs').tabs();
@@ -212,8 +231,8 @@ if (typeof window.console == "undefined") {
 
         // Set up dropdowns
         //REFACTOR: replace this with something from bootstrap
-        $(".dropdown-head").dropdown('.dropdown');
-
+        $("#account-dropdown").dropdown();
+        
         // Set up alert-message closing
         $(".alert-message .close").click(function() {
             $(this).parent().fadeOut();
@@ -390,59 +409,6 @@ if (typeof window.console == "undefined") {
             cache.push(cacheImage);
         }
     };
-
-    /*
-     * ## Dropdown Menus
-         *
-             * Usage:
-             *
-             * `$(dropdown-trigger).dropdown(things-that-dropdown);`
-             */
-    $.fn.dropdown = function(selector) {
-        var self = this;
-        var over_trigger, over_body = false;
-
-        // Make sure the dropdown starts closed (in case class="invisible" wasnt set)
-        dropdownClose();
-
-        function dropdownOpen() {
-            if ($(selector).hasClass('invisible')); {
-                $(selector).removeClass('invisible');
-            }
-            $(self).addClass('hovered');
-        }
-
-        function dropdownClose() {
-            if (!$(selector).hasClass('invisible')) {
-                $(selector).addClass('invisible');
-            }
-            $(self).removeClass('hovered');
-        }
-
-            // Set the hover states
-        $(this).hover(function() {
-            over_trigger = true;
-        }, function () {
-            over_trigger = false;
-        });
-
-        $(selector).hover(function() {
-            over_body = true;
-        }, function () {
-            over_body = false;
-        });
-
-        // Open/close the dropdown if the state has changed
-        // Breaks in firefox if setInterval isn't given a number for the time.
-        setInterval(function() {
-            if (over_trigger || over_body) {
-                dropdownOpen();
-            } else {
-                dropdownClose();
-            }
-        }, 1);
-    };
-
 
     $.fn.fadeThenSlideToggle = function(speed, easing, callback) {
         if (this.is(":hidden")) {

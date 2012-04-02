@@ -20,100 +20,111 @@
   </head>
 
 
-  {% block body_content %}
-    <body id="mopub-dashboard">
-
-      <input type='hidden' value='{{user.is_staff}}' id='is_admin_input' />
+{% block body_content %}
+  <body id="mopub-dashboard">
+    <input type='hidden' value='{{user.is_staff}}' id='is_admin_input' />
       
-      <div id="container">
+    <div id="container">
+      <header>
+        <div class="pageWidth">
 
-        <header>
-          <div class="pageWidth">
-            <div id="logo"><a class="ir" href="/">MoPub</a></div>
-
-            <nav id="nav1">
-              <ul>
-                {% block navLinks %}
-                  <li><a href="{% url app_index %}">Dashboard</a></li>
-                  <li><a href="{% url advertiser_order_index %}">Orders</a></li>
-                  <li><a href="{% url marketplace_index %}">Marketplace</a></li>
-                  <li><a href="{% url network_index %}">Networks</a></li>
-                {% endblock navLinks %}
-              </ul>
-            </nav>
-
-            <nav id="nav2">
-              <ul>
-                <li>
-                  <a href="#" class="dropdown-head"> Your Account <span class="dropdown-icon"> </span></a>
-                  <div class="dropdown invisible">
-                    <ul>
-                      <li> <a href="/account/">General Settings</a> </li>
-                      <li> <a href="/account/networks/">Ad Network Settings </a> </li>
-                      <li> <a href="/reports/">Reports</a></li>
-                      <li> <a href="/account/payments/history">Payment History </a> </li>
-                    </ul>
-                  </div>
-                </li>
-
-                <li><a href="http://help.mopub.com/" target="_blank">Help</a></li>
-                {% if user.is_authenticated %}
-                  <li><a id="logout-link" href="{% url django.contrib.auth.views.logout %}">Log out</a></li>
-                {% endif %}
-              </ul>
-            </nav>
-          </div>
-        </header>
-
-        <div id="main">
-          <div id="titlebar">
-            <div class="pageWidth">
-              {% block pageTitle %}
-              {% endblock pageTitle %}            
-
-            
-              <div id="titlebar-right">
-                {% block titleBarRight %}
-                  {% include "partials/datecontrols.html" %}
-                {% endblock titleBarRight %}
-              </div>
-
-            </div>
-          </div>
+          <div id="logo"><a class="ir" href="/">MoPub</a></div>
           
-          <div id="content">
-            <div class="pageWidth">
-              
-              
-              {% block flash %}
-                {% if flash %}
-                  {# There's one or more flash-scoped objects #}
-                  {% for key, value in flash.items %}
-                    <div class="{{ key }} alert-message block-message">
-                      {% autoescape off %}
-                      {{ value }}
-                      {% endautoescape %}
-                    </div>
-                  {% endfor %}
+          <nav id="nav1">
+            <ul>
+              {% block navLinks %}
+                <li><a href="{% url app_index %}">Dashboard</a></li>
+                <li><a href="{% url advertiser_order_index %}">Orders</a></li>
+                <li><a href="{% url marketplace_index %}">Marketplace</a></li>
+                <li><a href="{% url network_index %}">Networks</a></li>
+              {% endblock navLinks %}
+            </ul>
+          </nav>
+          
+          <nav id="nav2">
+            <ul>
+              <li class="dropdown" id="account-menu">                
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#account-menu">
+                  Your Account <span class="dropdown-caret"> </span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li>                    
+                    <a href="/account/">General Settings</a>
+                  </li>
+                  <li>
+                    <a href="/account/networks/">Ad Network Settings </a>
+                  </li>
+                  <li>
+                    <a href="/reports/">Reports</a>
+                  </li>
+                  <li>
+                    <a href="/account/payments/history">Payment History </a>
+                  </li>
+                  {% if user.is_authenticated %}
+                    <hr />
+                    <li>
+                      <a id="logout-link" href="{% url django.contrib.auth.views.logout %}">
+                        Log out
+                      </a>
+                    </li>
                 {% endif %}
-              {% endblock flash %}
+                </ul>
+              </li>
               
-              {% block content %}{% endblock content %}
+              <li>
+                <a href="http://help.mopub.com/" target="_blank">Help</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+      
+      <div id="main">
+        <div id="titlebar">
+          <div class="pageWidth">
+            {% block pageTitle %}{% endblock pageTitle %}            
+          
+          
+            <div id="titlebar-right">
+              {% block titleBarRight %}
+                {% include "partials/datecontrols.html" %}
+              {% endblock titleBarRight %}
             </div>
+
           </div>
         </div>
-        <div class="clear"></div>
         
-        <footer>
-          <div id="footer-inner">
-            <div class="pageWidth">
-              <div id="footer-links">
-                <ul id="menu-footer">
-                  <li class="menu-item menu-item-type-post_type menu-item-58">&copy; 2012 MoPub Inc.</li>
-                  <li id="menu-item-58" class="menu-item menu-item-type-post_type menu-item-58"><a href="http://www.mopub.com/privacy/">Privacy</a></li>
-                  <li id="menu-item-57" class="menu-item menu-item-type-post_type menu-item-57"><a href="http://www.mopub.com/mopub-ads-privacy-policy/">Privacy &#8211; Ad Serving</a></li>
-                  <li id="menu-item-59" class="menu-item menu-item-type-post_type menu-item-59"><a href="http://www.mopub.com/terms/">Terms of Service</a></li>
-                  <li id="menu-item-279" class="menu-item menu-item-type-custom menu-item-279"><a href="http://www.mopub.com/resources">Resources</a></li>
+        <div id="content">
+          <div class="pageWidth">            
+            {% block flash %}
+              {% if flash %}
+                {# There's one or more flash-scoped objects #}
+                {% for key, value in flash.items %}
+                  <div class="{{ key }} alert-message block-message">
+                    {% autoescape off %}
+                    {{ value }}
+                    {% endautoescape %}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endblock flash %}
+            
+            {% block content %}{% endblock content %}
+          </div>
+        </div>
+      </div>
+      <div class="clear"></div>
+      
+      <footer>
+        <div id="footer-inner">
+          <div class="pageWidth">
+            <div id="footer-links">
+              <ul id="menu-footer">
+                <li class="menu-item menu-item-type-post_type menu-item-58">&copy; 2012 MoPub Inc.</li>
+                <li id="menu-item-58" class="menu-item menu-item-type-post_type menu-item-58"><a href="http://www.mopub.com/privacy/">Privacy</a></li>
+                <li id="menu-item-57" class="menu-item menu-item-type-post_type menu-item-57"><a href="http://www.mopub.com/mopub-ads-privacy-policy/">Privacy &#8211; Ad Serving</a></li>
+                <li id="menu-item-59" class="menu-item menu-item-type-post_type menu-item-59"><a href="http://www.mopub.com/terms/">Terms of Service</a></li>
+                <li id="menu-item-279" class="menu-item menu-item-type-custom menu-item-279"><a href="http://www.mopub.com/resources">Resources</a></li>
                 </ul>
                 <ul id="menu-social">
                   <li class="menu-item menu-item-type-post_type menu-item-58">&nbsp;</li>
@@ -122,18 +133,18 @@
                   <li id="menu-item-61" class="menu-item menu-item-type-post_type menu-item-61"><a href="http://www.mopub.com/contact/">Contact Us</a></li>
                   <li id="menu-item-270" class="menu-item menu-item-type-post_type menu-item-270"><a href="http://www.mopub.com/jobs/">Jobs</a></li>
                 </ul>
-              </div>
-              <div id="footer-account">
-                {% if user.is_authenticated %}
-                  Logged in as <a href="/account/">{{user.email}}</a>
-                {% endif %}
+            </div>
+            <div id="footer-account">
+              {% if user.is_authenticated %}
+                Logged in as <a href="/account/">{{user.email}}</a>
+              {% endif %}
                 
-                {% block adminSelect %}
-                  {% if user.is_staff %}
-                    <div style="float:right;padding-left:10px">
-                      <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
-                        Sudo: <input id="user_switcher" type="text" name="user_email" placeholder="user@email.com"/>
-                      </form>
+              {% block adminSelect %}
+                {% if user.is_staff %}
+                  <div style="float:right;padding-left:10px">
+                    <form id="admin_user_switch" action="{% url admin_switch_user %}" method="POST">
+                      Sudo: <input id="user_switcher" type="text" name="user_email" placeholder="user@email.com"/>
+                    </form>
                     </div>
                     
                     <script type="text/javascript">

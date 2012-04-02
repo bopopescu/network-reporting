@@ -1,31 +1,25 @@
 <div id="date-range-controls">
   <div class="btn-group">
     <a id="datepicker-today"
-       class='btn{% ifequal date_range 1 %}active{% endifequal %}'>
+       class='btn{% ifequal date_range 1 %} active{% endifequal %}'>
       Today
     </a>
     <a id="datepicker-yesterday"
-       class='btn{% ifequal date_range 2 %}active{% endifequal %}'>
+       class='btn{% ifequal date_range 2 %} active{% endifequal %}'>
       {# date_range == 2 is a placeholder and is not correct #}
       Yesterday
     </a>
     <a id="datepicker-7"
-       class='btn {% ifequal date_range 7 %}active{% endifequal %}'>
+       class='btn{% ifequal date_range 7 %} active{% endifequal %}'>
       7 Days
     </a>
     <a id="datepicker-14"
-       class='btn {% ifequal date_range 14 %}active{% endifequal %}'>
+       class='btn{% ifequal date_range 14 %} active{% endifequal %}'>
       14 Days
       
     </a>
-    {% comment %}
-      <a id="datepicker-30day"
-           class='bt  n {% ifequal date_range 30 %}active{% endifequal %}'>
-         30 Days     
-      </a> 
-    {% endcomment %}
     <a id="datepicker-custom"
-       class='btn {% if date_range != 7 and date_range != 14 and date_range != 30 %}active{% endif %}'>
+       class='btn{% if date_range != 1 and date_range != 7 and date_range != 14 and date_range != 30 %} active{% endif %}'>
       Custom
       <span class="caret"></span>
     </a>
@@ -58,7 +52,7 @@
     </div>
 
     <div class="left hidden errors">
-      <span class="badge-warning"> you done fucked up </span>
+      <span class="badge-warning"> Error </span>
     </div>
     
   </div>

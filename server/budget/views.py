@@ -127,7 +127,6 @@ def budget_view(request, adgroup_key):
 
     data_qs = urlencode(default_query_dict)
     data_full_url = DEF_BUDGET_DATA_URL + '?' + data_qs
-    logging.warning("Trying for data: %s" % data_full_url)
     remote_data_dict = simplejson.loads(urllib2.urlopen(data_full_url).read())
 
     if remote_data_dict:
@@ -162,26 +161,25 @@ def budget_view(request, adgroup_key):
     ts_data_qs = urlencode(ts_query_dict)
 
     ts_full_url = DEF_BUDGET_TS_DATA_URL + '?' + ts_data_qs
-    logging.warning("Trying for TS logs: %s" % ts_full_url)
     ts_remote_dict = simplejson.loads(urllib2.urlopen(ts_full_url).read())
 
 
 
     ######### Construct daily log request URL #############
     one_month_ago = today - timedelta(days=30)
-    start_date = today.strftime(BUDGET_DAILY_LOG_DATE_FMT)
-    end_date = one_month_ago.strftime(BUDGET_DAILY_LOG_DATE_FMT)
+    start_date = one_month_ago.strftime(BUDGET_DAILY_LOG_DATE_FMT)
+    end_date = today.strftime(BUDGET_DAILY_LOG_DATE_FMT)
     daily_log_query_dict = dict(start_date=start_date,
                                 end_date=end_date)
     daily_log_query_dict.update(default_query_dict)
     daily_log_qs = urlencode(daily_log_query_dict)
 
     daily_log_full_url = DEF_BUDGET_DAILY_DATA_URL + '?' + daily_log_qs
-    logging.warning("Trying for daily logs: %s" % daily_log_full_url)
 
-    daily_log_remote_dict = simplejson.loads(urllib2.urlopen(daily_log_full_url).read())
+    #daily_log_remote_dict = simplejson.loads(urllib2.urlopen(daily_log_full_url).read())
 
-    daily_logs = daily_log_remote_dict['daily_logs']
+    #daily_logs = daily_log_remote_dict['daily_logs']
+    daily_logs = []
     ts_logs = ts_remote_dict['ts_logs']
 
     #daily_logs = budget_service._get_daily_logs_for_date_range(budget,

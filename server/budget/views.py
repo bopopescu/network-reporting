@@ -172,7 +172,7 @@ def budget_view(request, adgroup_key):
     start_date = today.strftime(BUDGET_DAILY_LOG_DATE_FMT)
     end_date = one_month_ago.strftime(BUDGET_DAILY_LOG_DATE_FMT)
     daily_log_query_dict = dict(start_date=start_date,
-                                end_date=end)
+                                end_date=end_date)
     daily_log_query_dict.update(default_query_dict)
     daily_log_qs = urlencode(daily_log_query_dict)
 

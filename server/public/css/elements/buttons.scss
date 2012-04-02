@@ -11,7 +11,7 @@
   @include reset-filter();
 
   // in these cases the gradient wont cover the background, so we override
-  &:hover, &:active, &.active, &.disabled, &[disabled] {
+  &:hover, &:active, &.active  {
     background-color: $endColor;
   }
 
@@ -90,11 +90,11 @@
 
 // Disabled state
 .btn.disabled, .btn[disabled] {
-  cursor: default;
-  background-image: none;
-  background-color: darken($white, 10%);
-  @include opacity(0.65);
-  @include box-shadow(none);
+    cursor: default;
+    background-image: none;
+    background-color: darken($white, 10%);
+    opacity: 0.65;
+    @include box-shadow(none);
 }
 
 

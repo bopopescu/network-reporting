@@ -24,7 +24,12 @@ if (typeof window.console == "undefined") {
     var Stats = mopub.Stats || {};
     var Utils = mopub.Utils || {};
         
-
+    
+    /*
+     * Sets up the date range buttons at the top of each page.
+     * In the future, this should be refactored to use a backbone
+     * router.
+     */
     function initializeDateButtons () {
         
         /*
@@ -76,21 +81,28 @@ if (typeof window.console == "undefined") {
         };
 
         /*
-         * Custom date range stuff
+         * Set up the custom date range button. Dates one day later
+         * than today and two months before today can't be picked.
+         * When the custom button is clicked, it opens up the date
+         * range picker right underneath it. 
          */
 
         // Set up the two date fields with datepickers
-        $("input[name='start-date']").datepicker();
-        $("input[name='end-date']").datepicker();
+        var valid_date_range = {
+            startDate: "-2m",
+            endDate: "+1d"
+        };
+        $("input[name='start-date']").datepicker(valid_date_range);
+        $("input[name='end-date']").datepicker(valid_date_range);
 
         // Set up the click event that opens the date range picker
         var currently_active = $("#date-range-controls .btn.active");
         var custom_controls = $("#datepicker-custom");
-        $("#datepicker-custom").click(function(event) {
+        custom_controls.click(function(event) {
             currently_active.toggleClass("active");
             custom_controls.toggleClass("active");            
             $("#datepicker-custom-range").toggleClass('hidden');
-            $("#datepicker-custom .caret").toggleClass('flip-vertical');
+            $(".caret", custom_controls).toggleClass('flip-vertical');
         });
 
         // On submit, get the date range from the two inputs and
@@ -119,52 +131,45 @@ if (typeof window.console == "undefined") {
         });
 
         /*
-         * The other date buttons
+         * The other date buttons.
+         * Figure out the appropriate url parameters for the date range
+         * and set up the url. On click, load that url if the button isnt
+         * disabled.
          */
         _.each(['today', 'yesterday', '7', '14'], function(value) {
 
+            var anchor = $(this);
+            var url_params = "";
+
             // button click handler for today
             if (value === 'today') {
-                $("#datepicker-" + value).click(function(event){
-                    event.preventDefault();
-                    var today = new Date();
-                    var today_string = parse_date(today);
-
-                    var url_params = "?r=1"
-                        + "&s="
-                        + today_string;
-                    
-                    window.location = window.location.protocol + "//"
-                        + window.location.host + window.location.pathname 
-                        + url_params;
-
-                });
+                var today = new Date();
+                var today_string = parse_date(today);
+                
+                url_params = "?r=1"
+                    + "&s="
+                    + today_string;
             } else if (value === 'yesterday'){
-                $("#datepicker-" + value).click(function(event){
-                    event.preventDefault();
-                    var today = new Date();
-                    today.setDate(today.getDate() - 1);
-                    var yesterday_string = parse_date(today);
-
-                    var url_params = "?r=1"
-                        + "&s="
-                        + yesterday_string;
-                    
-                    window.location = window.location.protocol + "//"
-                        + window.location.host + window.location.pathname 
-                        + url_params;
-                });
+                var today = new Date();
+                today.setDate(today.getDate() - 1);
+                var yesterday_string = parse_date(today);
+                
+                url_params = "?r=1"
+                    + "&s="
+                    + yesterday_string;
             } else {
-                $("#datepicker-" + value).click(function(event){
-                    event.preventDefault();
-                    var url_params = "?r="
-                        + value;
-                    
+                url_params = "?r="
+                    + value;
+            }
+
+            $("#datepicker-" + value).click(function(event){
+                event.preventDefault();
+                if (!anchor.hasClass('disabled')){
                     window.location = window.location.protocol + "//"
                         + window.location.host + window.location.pathname 
                         + url_params;
-                });
-            }
+                }
+            });
         });
     }
 

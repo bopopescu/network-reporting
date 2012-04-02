@@ -263,11 +263,6 @@ button {
 .invisible {
   visibility: hidden; }
 
-a.disabled {
-  color: black;
-  text-decoration: none;
-  cursor: default; }
-
 /*
  * Push floating elements into their containing box
  */
@@ -501,11 +496,6 @@ a.disabled {
 
 .invisible {
   visibility: hidden; }
-
-a.disabled {
-  color: black;
-  text-decoration: none;
-  cursor: default; }
 
 /*
  * Push floating elements into their containing box
@@ -1889,11 +1879,6 @@ ul#content_filter_levels {
 .invisible {
   visibility: hidden; }
 
-a.disabled {
-  color: black;
-  text-decoration: none;
-  cursor: default; }
-
 /*
  * Push floating elements into their containing box
  */
@@ -2442,11 +2427,6 @@ form#order_and_line_item_form input.token-input-field.focused, form#order_form i
 .invisible {
   visibility: hidden; }
 
-a.disabled {
-  color: black;
-  text-decoration: none;
-  cursor: default; }
-
 /*
  * Push floating elements into their containing box
  */
@@ -2797,7 +2777,7 @@ img.app-icon {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false); }
-  .btn:hover, .btn:active, .btn.active, .btn.disabled, .btn[disabled] {
+  .btn:hover, .btn:active, .btn.active {
     background-color: #e6e6e6; }
   .btn:active, .btn.active {
     background-color: #cccccc \9; }
@@ -2831,10 +2811,7 @@ img.app-icon {
   cursor: default;
   background-image: none;
   background-color: #e6e6e6;
-  filter: alpha(opacity=0.65);
-  -khtml-opacity: 0.007;
-  -moz-opacity: 0.007;
-  opacity: 0.007;
+  opacity: 0.65;
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none; }
@@ -2886,7 +2863,7 @@ img.app-icon {
   border-color: #0044cc #0044cc #002a80;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false); }
-  .btn-primary:hover, .btn-primary:active, .btn-primary.active, .btn-primary.disabled, .btn-primary[disabled] {
+  .btn-primary:hover, .btn-primary:active, .btn-primary.active {
     background-color: #0044cc; }
   .btn-primary:active, .btn-primary.active {
     background-color: #003399 \9; }
@@ -2904,7 +2881,7 @@ img.app-icon {
   border-color: #ffb266 #ffb266 #ff8c1a;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false); }
-  .btn-warning:hover, .btn-warning:active, .btn-warning.active, .btn-warning.disabled, .btn-warning[disabled] {
+  .btn-warning:hover, .btn-warning:active, .btn-warning.active {
     background-color: #ffb266; }
   .btn-warning:active, .btn-warning.active {
     background-color: #ff9833 \9; }
@@ -2922,7 +2899,7 @@ img.app-icon {
   border-color: #bd362f #bd362f #802420;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false); }
-  .btn-danger:hover, .btn-danger:active, .btn-danger.active, .btn-danger.disabled, .btn-danger[disabled] {
+  .btn-danger:hover, .btn-danger:active, .btn-danger.active {
     background-color: #bd362f; }
   .btn-danger:active, .btn-danger.active {
     background-color: #942a25 \9; }
@@ -2940,7 +2917,7 @@ img.app-icon {
   border-color: #51a351 #51a351 #387038;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false); }
-  .btn-success:hover, .btn-success:active, .btn-success.active, .btn-success.disabled, .btn-success[disabled] {
+  .btn-success:hover, .btn-success:active, .btn-success.active {
     background-color: #51a351; }
   .btn-success:active, .btn-success.active {
     background-color: #408140 \9; }
@@ -2958,7 +2935,7 @@ img.app-icon {
   border-color: #2f96b4 #2f96b4 #1f6377;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false); }
-  .btn-info:hover, .btn-info:active, .btn-info.active, .btn-info.disabled, .btn-info[disabled] {
+  .btn-info:hover, .btn-info:active, .btn-info.active {
     background-color: #2f96b4; }
   .btn-info:active, .btn-info.active {
     background-color: #24748c \9; }
@@ -2976,7 +2953,7 @@ img.app-icon {
   border-color: #262626 #262626 black;
   border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) fadein(rgba(0, 0, 0, 0.1), 15%);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled = false); }
-  .btn-inverse:hover, .btn-inverse:active, .btn-inverse.active, .btn-inverse.disabled, .btn-inverse[disabled] {
+  .btn-inverse:hover, .btn-inverse:active, .btn-inverse.active {
     background-color: #262626; }
   .btn-inverse:active, .btn-inverse.active {
     background-color: #0d0d0d \9; }
@@ -3190,7 +3167,7 @@ button.btn, input[type="submit"].btn {
     filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
     color: #fff;
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25); }
-    .datepicker td.active:hover, .datepicker td.active:active, .datepicker td.active.active, .datepicker td.active.disabled, .datepicker td.active[disabled], .datepicker td.active:hover:hover, .datepicker td.active:hover:active, .datepicker td.active:hover.active, .datepicker td.active:hover.disabled, .datepicker td.active:hover[disabled] {
+    .datepicker td.active:hover, .datepicker td.active:active, .datepicker td.active.active, .datepicker td.active:hover:hover, .datepicker td.active:hover:active, .datepicker td.active:hover.active {
       background-color: #0044cc; }
     .datepicker td.active:active, .datepicker td.active.active, .datepicker td.active:hover:active, .datepicker td.active:hover.active {
       background-color: #003399 \9; }
@@ -3222,7 +3199,7 @@ button.btn, input[type="submit"].btn {
       filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
       color: #fff;
       text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25); }
-      .datepicker td span.active:hover, .datepicker td span.active:active, .datepicker td span.active.active, .datepicker td span.active.disabled, .datepicker td span.active[disabled] {
+      .datepicker td span.active:hover, .datepicker td span.active:active, .datepicker td span.active.active {
         background-color: #0044cc; }
       .datepicker td span.active:active, .datepicker td span.active.active {
         background-color: #003399 \9; }
@@ -3435,11 +3412,6 @@ button.btn, input[type="submit"].btn {
 
 .invisible {
   visibility: hidden; }
-
-a.disabled {
-  color: black;
-  text-decoration: none;
-  cursor: default; }
 
 /*
  * Push floating elements into their containing box
@@ -4869,11 +4841,6 @@ form#order_and_line_item_form input.token-input-field.focused, form#order_form i
 
 .invisible {
   visibility: hidden; }
-
-a.disabled {
-  color: black;
-  text-decoration: none;
-  cursor: default; }
 
 /*
  * Push floating elements into their containing box

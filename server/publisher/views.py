@@ -131,22 +131,19 @@ class AppIndexHandler(RequestHandler):
             },
         }
 
-        return render_to_response(self.request,
-                                  'publisher/app_index.html',
-                                  {
-                                      'apps': app_values,
-                                      'app_keys': app_keys,
-                                      'account_stats': simplejson.dumps(response_dict),
-                                      'start_date': self.days[0],
-                                      'end_date': self.days[-1],
-                                      'date_range': self.date_range,
-                                      'stats': stats,
-                                      'account': self.account
-                                  })
+        
+        return {
+            'apps': app_values,
+            'app_keys': app_keys,
+            'account_stats': simplejson.dumps(response_dict),
+            'stats': stats,
+            'account': self.account
+        }
 
 @login_required
 def app_index(request,*args,**kwargs):
-    return AppIndexHandler()(request, use_cache=False, *args, **kwargs)
+    t='publisher/app_index.html'
+    return AppIndexHandler(template=t)(request, use_cache=False, *args, **kwargs)
 
 
 class GeoPerformanceHandler(RequestHandler):
@@ -473,7 +470,6 @@ class AppDetailHandler(RequestHandler):
                 ag.calculated_ecpm = calculate_ecpm(ag)
 
         guaranteed_adgroups = filter_by_type(app.adgroups, ['gtee_high', 'gtee_low', 'gtee'])
-        logging.warn(guaranteed_adgroups)
         promo_adgroups = filter_by_type(app.adgroups, ['promo'])
         mpx_adgroups = filter_by_type(app.adgroups, ['marketplace'])
         network_adgroups = filter_by_type(app.adgroups, ['network'])
@@ -489,32 +485,31 @@ class AppDetailHandler(RequestHandler):
             marketplace_activated = False
 
 
-        return render_to_response(self.request,
-                                  'publisher/app.html',
-                                  {
-                                      'app': app,
-                                      'app_form_fragment':app_form_fragment,
-                                      'adunit_form_fragment':adunit_form_fragment,
-                                      'start_date': self.days[0],
-                                      'end_date': self.days[-1],
-                                      'date_range': self.date_range,
-                                      'today': today,
-                                      'yesterday': yesterday,
-                                      'account': self.account,
-                                      'helptext': help_text,
-                                      'gtee': guaranteed_adgroups,
-                                      'promo': promo_adgroups,
-                                      'marketplace': mpx_adgroups,
-                                      'marketplace_activated': marketplace_activated,
-                                      'active_mpx_adunit_exists': active_mpx_adunit_exists,
-                                      'network': network_adgroups,
-                                      'backfill_promo': backfill_promo_adgroups,
-                                  })
+        return {
+            'app': app,
+            'app_form_fragment':app_form_fragment,
+            'adunit_form_fragment':adunit_form_fragment,
+            'start_date': self.days[0],
+            'end_date': self.days[-1],
+            'date_range': self.date_range,
+            'today': today,
+            'yester': yesterday,
+            'account': self.account,
+            'helptext': help_text,
+            'gtee': guaranteed_adgroups,
+            'promo': promo_adgroups,
+            'marketplace': mpx_adgroups,
+            'marketplace_activated': marketplace_activated,
+            'active_mpx_adunit_exists': active_mpx_adunit_exists,
+            'network': network_adgroups,
+            'backfill_promo': backfill_promo_adgroups,
+        }
 
 
 @login_required
 def app_detail(request,*args,**kwargs):
-    return AppDetailHandler(id="app_key")(request, use_cache=False, *args,**kwargs)
+    t='publisher/app.html'
+    return AppDetailHandler(template=t,id="app_key")(request, use_cache=False, *args,**kwargs)
 
 
 class ExportFileHandler(RequestHandler):

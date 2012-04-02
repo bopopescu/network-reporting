@@ -57,7 +57,7 @@
                 <span class="inner">{{today.request_count|withsep}}</span>
               </td>
               <td class="stats-breakdown-value yesterday">
-                <span class="inner">{{yesterday.request_count|withsep}}</span>
+                <span class="inner">{{yester.request_count|withsep}}</span>
               </td>
               <td class="stats-breakdown-value all">
                 <span class="inner">{{app.stats.request_count|withsep}}</span>
@@ -72,7 +72,7 @@
                 <span class="inner">{{today.impression_count|withsep}}</span>
               </td>
               <td class="stats-breakdown-value yesterday">
-                <span class="inner">{{yesterday.impression_count|withsep}}</span>
+                <span class="inner">{{yester.impression_count|withsep}}</span>
               </td>
               <td class="stats-breakdown-value all">
                 <span class="inner">{{app.stats.impression_count|withsep}}</span>
@@ -139,26 +139,6 @@
         <div class="chart-loading-text">Loading ...</div>
         <div class="chart-error-text">Could not load chart</div>
         {# WHY #}
-        <script type="text/javascript">
-          // chart data
-          mopub.dashboardStatsChartData = {
-              //pointStart: 1294963200000,
-              pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-              pointInterval: 86400000,
-              'requests': [{% for au in app.graph_adunits %}
-                           { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                          ],
-              'impressions': [{% for au in app.graph_adunits %}
-                              { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                             ],
-              'clicks': [{% for au in app.graph_adunits %}
-                         { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                        ],
-              'users': [{% for au in app.graph_adunits %}
-                        { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                       ]
-          };
-        </script>
       </div>
     </div>
     <div class="clear"></div>
@@ -607,4 +587,24 @@
       });
     });
   </script>
+          <script type="text/javascript">
+          // chart data
+          mopub.dashboardStatsChartData = {
+              //pointStart: 1294963200000,
+              pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+              pointInterval: 86400000,
+              'requests': [{% for au in app.graph_adunits %}
+                           { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                          ],
+              'impressions': [{% for au in app.graph_adunits %}
+                              { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                             ],
+              'clicks': [{% for au in app.graph_adunits %}
+                         { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+              'users': [{% for au in app.graph_adunits %}
+                        { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                       ]
+          };
+        </script>
 {% endblock extraScripts %}

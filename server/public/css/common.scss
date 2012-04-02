@@ -103,11 +103,6 @@ $zindexModal:           1050;
     @include invisible;
 }
 
-a.disabled {
-    color: $black;
-    text-decoration: none;
-    cursor: default;
-}
 
 /*
  * Push floating elements into their containing box

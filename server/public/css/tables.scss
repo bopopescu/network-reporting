@@ -58,6 +58,9 @@
         text-align: right;
         width: 65px;
     }
+    td.text {
+        width: 65px;
+    }
     td.icon, th.icon {
         padding: 0 11px 0 10px;
         width: 45px;
@@ -84,7 +87,7 @@
 
     // Padding between sections if there are sub rows
     tbody tr.sub:last-child td {
-        padding-bottom: 24px;
+        padding-bottom: 11px;
     }
 
     // Padding between sections if there arent any sub rows

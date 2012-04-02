@@ -29,7 +29,7 @@
 
             $('.app-pub-id').keyup(function () {
                 var value = $(this).val();
-                var div = $(this).parents('div.appData');
+                var div = $(this).parents('tbody');
                 $(div).find('input[name$="'+pub_id+'"]').each(function () {
                     if (!$(this).hasClass('initialized')) {
                         $(this).val(value);
@@ -78,11 +78,17 @@
                 });
 
             // make necessary changes based on wether optimize is checked
-            $('#advanced').click(function() {
+            $('#advanced')
+                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
+                .click(function() {
                     if ($('.advanced').is(':hidden')) {
                         $('.advanced').slideDown();
+                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+                        $('.ui-button-text', this).text('Hide Advanced Settings');
                     } else {
                         $('.advanced').slideUp();
+                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+                        $('.ui-button-text', this).text('Show Advanced Settings');
                     }
                 })
 
@@ -372,6 +378,7 @@
 
 {% block content %}
 <form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
+    <div class="content-main">
 
     <fieldset>
         <legend>
@@ -405,7 +412,7 @@
         </ul>
 
         {% if login_form %}
-        <a class="button" id="advanced">Advanced</a>
+        <a class="button" id="advanced">Show Advanced Settings</a>
         {% endif %}
     </fieldset>
 
@@ -556,7 +563,7 @@
     </fieldset>
 
     {% if login_form %}
-    <fieldset class="login-credentials-fields network_type_dependant {{reporting_networks}} login-credentials">
+    <fieldset class="alt login-credentials-fields network_type_dependant {{reporting_networks}} login-credentials" style="padding-top:20px">
         <legend>
             <h2>
                 <span style="float: left;">Revenue Reporting</span>
@@ -564,7 +571,7 @@
             </h2>
         </legend>
 
-        <div id="networkSettingsForm" class="alt {% if not network.show_login %}hidden{% endif %}" style="clear: both; padding: 10px;">
+        <div id="networkSettingsForm" class="{% if not network.show_login %}hidden{% endif %}" style="clear: both;padding-top:10px">
             <div class="login-credentials-message">
                 MoPub can report your revenue and other data directly from the ad networks. MoPub uses your login creedentials to retrieve the revenue data from the ad networks.
             </div>
@@ -602,132 +609,102 @@
         </div>
     </fieldset>
     {% endif %}
-
-    <fieldset>
-        <legend>
-            <h2>App Targeting</h2>
-        </legend>
-
+    </div> <!-- <div class="content-main"> -->
+    <div class="clear"></div><!-- Previous <div> is float:left -->
+    <section id="dashboard-apps">
+        <h2>App Targeting</h2>
         <div>
-            <div class="appData-columnHeaders">
-                <table class="dataTable" width=100%>
-                    <thead>
-                        <th class="appData-icon"></th>
-                        <th class="dataTable-name"> </th>
-                        <th class="dataTable-data"> Enabled </th>
+            <table class="inventory_table">
+                <thead>
+                    <tr>
+                        <td class="icon"></td>
+                        <td class="name"></td>
+                        <td class="text">Enabled</td>
+                        <td class="text">Ad Network ID</td>
+                        <td class="text">Rate (USD)</td>
+                    </tr>
+                </thead>
+                {% for app in apps %}
+                <tbody class="{% cycle 'alt' '' %}">
+                    <tr class="main">
+                        <td class="icon">
+                            <div>
+                            <a href="/inventory/app/{{app.key_}}">
+                                <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
+                            </a>
+                            </div>
+                        </td>
+                        <td class="name">
+                            {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
+                        </td>
+                        <td class="text">
+                            <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> ( All )
+                        </td>
                         {% if ad_network_ids %}
-                        <th class="dataTable-data pub-id-data"> Ad Network ID </th>
+                        <td class="text pub-id-data">
+                            <div class="campaign_type_dependant network">
+                                {% for field in app.network_config_form %}{{ field }}{% endfor %}
+                                <span class="pub_id muted"></span>
+                                <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                            </div>
+                        </td>
                         {% endif %}
-                        <th class="dataTable-data cpm-data"> Rate (USD) </th>
+                        <td class="text cpm-data" style="width:150px">
+                        </td>
                         {% if reporting %}
-                        <th class="dataTable-data">
-                            <div>
-                                <a id="copy-7-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
-                                </a>
-                            </div>
-                            <div> 7-Day CPM </div>
-                        </th>
-                        <th class="dataTable-data"> 
-                            <div>
-                                <a id="copy-14-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
-                                </a>
-                            </div>
-                            <div> 14-Day CPM </div>
-                        </th>
+                        <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
+                            <a id="copy-7-day-{{app.key}}-cpm" class="copy-7-day" style="cursor:pointer">
+                                <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
+                            </a>
+                            {{ app.seven_day_stats.cpm|currency }}
+                        </td>
+                        <td class="dataTable-data 14-day-cpm network-data" id="{{app.key}}-14-day-cpm">
+                            <a id="copy-14-day-{{app.key}}-cpm" class="copy-14-day" style="cursor:pointer">
+                                <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
+                            </a>
+                            {{ app.fourteen_day_stats.cpm|currency }}
+                        </td>
                         {% endif %}
-                    </thead>
-                </table>
-            </div>
-            {% for app in apps %}
-            <div class="{% cycle 'appData' 'appData appData-alt' %}">
-                <table class="dataTable appData-main">
-                    <tbody>
-                        <tr>
-                            <td class="appData-icon">
-                                <a href="/inventory/app/{{app.key_}}">
-                                    <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
-                                </a>
-                            </td>
-                            <td class="dataTable-name">
-                                {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
-                            </td>
-                            <td class="dataTable-data">
-                                <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> (All)
-                            </td>
-                            {% if ad_network_ids %}
-                            <td class="dataTable-data pub-id-data">
-                                <div class="campaign_type_dependant network">
-                                    {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                                    <span class="pub_id muted"></span>
-                                    <a class="pub_id" href="javascript:void(0);" type="button">change</a>
-                                </div>
-                            </td>
-                            {% endif %}
-                            <td class="dataTable-data cpm-data" style="width:150px">
-                            </td>
-                            {% if reporting %}
-                            <td class="dataTable-data 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
-                                <a id="copy-7-day-{{app.key}}-cpm" class="copy-7-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
-                                </a>
-                                {{ app.seven_day_stats.cpm|currency }}
-                            </td>
-                            <td class="dataTable-data 14-day-cpm network-data" id="{{app.key}}-14-day-cpm">
-                                <a id="copy-14-day-{{app.key}}-cpm" class="copy-14-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
-                                </a>
-                                {{ app.fourteen_day_stats.cpm|currency }}
-                            </td>
-                            {% endif %}
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="appData-details" style="margin: -10px 0 0 86px">
-                    <table class="dataTable">
-                        <tbody>
-                            {% for adunit in app.adunits %}
-                            <tr>
-                                <td class="dataTable-name">
-                                    {{ adunit.name }}
-                                </td>
-                                <td class="dataTable-data">
-                                    {{ adunit.adgroup_form.active }}
-                                </td>
-                                {% if ad_network_ids %}
-                                <td class="dataTable-data pub-id-data">
-                                    <div class="campaign_type_dependant network">
-                                        {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
-                                        <span class="pub_id muted"></span>
-                                        <a class="pub_id" href="javascript:void(0);" type="button">change</a>
-                                    </div>
-                                </td>
-                                {% endif %}
-                                <td class="dataTable-data cpm-data">
-                                    {{ adunit.adgroup_form.bid }}
-                                    {{ adunit.adgroup_form.bid_strategy }} 
-                                </td>
-                                {% if reporting %}
-                                <td class="dataTable-data">
-                                </td>
-                                <td class="dataTable-data">
-                                </td>
-                                {% endif %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                    </tr>
+                    {% for adunit in app.adunits %}
+                    <tr class="sub">
+                        <td class="icon"></td>
+                        <td class="name">
+                            {{ adunit.name }}
+                        </td>
+                        <td class="text">
+                            {{ adunit.adgroup_form.active }}
+                        </td>
+                        {% if ad_network_ids %}
+                        <td class="text pub-id-data">
+                            <div class="campaign_type_dependant network">
+                                {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
+                                <span class="pub_id muted"></span>
+                                <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                            </div>
+                        </td>
+                        {% endif %}
+                        <td class="text cpm-data">
+                            {{ adunit.adgroup_form.bid }}
+                            {{ adunit.adgroup_form.bid_strategy }} 
+                        </td>
+                        {% if reporting %}
+                        <td class="stat">
+                        </td>
+                        <td class="stat">
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}                
+                </tbody>
             {% endfor %}
+            </table>
         </div>
-    </fieldset>
-
     <div class="form-submit">
         <a class="button" id="submit" href="#">Save</a>
         <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
     </div>
+    </section>
 </form>
 {% endblock content %}
 

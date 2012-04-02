@@ -1683,6 +1683,8 @@ a.disabled {
   .inventory_table td.stat, .inventory_table th.stat {
     text-align: right;
     width: 65px; }
+  .inventory_table td.text {
+    width: 65px; }
   .inventory_table td.icon, .inventory_table th.icon {
     padding: 0 11px 0 10px;
     width: 45px; }
@@ -1704,7 +1706,7 @@ a.disabled {
     padding-right: 0 !important;
     width: 10px !important; }
   .inventory_table tbody tr.sub:last-child td {
-    padding-bottom: 24px; }
+    padding-bottom: 11px; }
   .inventory_table tbody tr:only-child td {
     padding-bottom: 37px; }
 

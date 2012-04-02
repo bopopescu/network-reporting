@@ -8,7 +8,7 @@ $(function() {
         Toast.error(message, "Error fetching app data.");
     };
 
-    var initialize_campaign_data = function(campaign_data, include_adunits, ajax_query_string) {
+    function initialize_campaign_data(campaign_data, include_adunits, ajax_query_string) {
         // create mopub campaign
         // endpoint=all
         var mopub_campaign = new Campaign(campaign_data);
@@ -49,6 +49,92 @@ $(function() {
         network_apps.fetch({ data: ajax_query_string, });
 
         return all_campaigns;
+    }
+
+
+    /*
+     * ## initializeDateButtons
+     * Loads all click handlers/visual stuff for the date buttons. Used
+     * on a ton of pages, probably could be refactored by someone brave
+     * enough.
+     */
+    function initializeDateButtons () {
+        $('#dashboard-dateOptions input').click(function() {
+            var option = $(this).val();
+            if (option == 'custom') {
+                $('#dashboard-dateOptions-custom-modal').dialog({
+                    width: 570,
+                    buttons: [
+                        {
+                            text: 'Set dates',
+                            css: { fontWeight: '600' },
+                            click: function() {
+                                var from_date = $('#dashboard-dateOptions-custom-from').datepicker("getDate");
+                                var to_date = $('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                                var num_days = Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
+
+                                var from_day = from_date.getDate();
+                                // FYI, months are indexed from 0
+                                var from_month = from_date.getMonth() + 1;
+                                var from_year = from_date.getFullYear();
+
+                                $(this).dialog("close");
+                                var location = document.location.href.replace(/\?.*/,'');
+                                document.location.href = location
+                                    + '?r=' + num_days
+                                    + '&s=' + from_year + "-" + from_month + "-" + from_day;
+                            }
+                        },
+                        {
+                            text: 'Cancel',
+                            click: function() {
+                                $(this).dialog("close");
+                            }
+                        }
+                    ]
+                });
+            } else {
+                // Tell server about selected option to get new data
+                var location = document.location.href.replace(/\?.*/,'');
+                document.location.href = location + '?r=' + option;
+            }
+        });
+
+
+        // set up stats breakdown dateOptions
+        $('#stats-breakdown-dateOptions input').click(function() {
+            $('.stats-breakdown-value').hide();
+            $('.stats-breakdown-value.'+$(this).val()).show();
+        });
+
+        // set up custom dateOptions modal dialog
+        $('#dashboard-dateOptions-custom-from').datepicker({
+            defaultDate: '-15d',
+            maxDate: '0d',
+            onSelect: function(selectedDate) {
+                var other = $('#dashboard-dateOptions-custom-to');
+                var instance = $(this).data("datepicker");
+                var date = $.datepicker.parseDate(instance.settings.dateFormat
+                                                  || $.datepicker._defaults.dateFormat,
+                                                  selectedDate,
+                                                  instance.settings);
+                other.datepicker('option', 'minDate', date);
+            }
+        });
+
+        $('#dashboard-dateOptions-custom-to').datepicker({
+            defaultDate: '-1d',
+            maxDate: '0d',
+            onSelect: function(selectedDate) {
+                var other = $('#dashboard-dateOptions-custom-from');
+                var instance = $(this).data("datepicker");
+                var date = $.datepicker.parseDate(instance.settings.dateFormat ||
+                                                  $.datepicker._defaults.dateFormat,
+                                                  selectedDate,
+                                                  instance.settings);
+                other.datepicker('option', 'maxDate', date);
+            }
+        });
     }
 
     var show_network_chart_data = true;
@@ -108,6 +194,8 @@ $(function() {
                 yesterday = bootstrapping_data.yesterday,
                 networks = bootstrapping_data.networks,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
+
+            initializeDateButtons();
 
             var all_campaigns = []
             _.each(campaigns_data, function(campaign_data) {
@@ -220,6 +308,8 @@ $(function() {
                 today = bootstrapping_data.today,
                 yesterday = bootstrapping_data.yesterday,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
+
+            initializeDateButtons();
 
             var all_campaigns = initialize_campaign_data(campaign_data, true, ajax_query_string);
 

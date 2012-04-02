@@ -1089,9 +1089,10 @@ def enable_networks(adunit, account):
     ntwk_adgroups = []
     for campaign in CampaignQueryManager.get_network_campaigns(account,
             is_new=True):
-        ntwk_adgroups.append(AdGroupQueryManager.get_network_adgroup(campaign,
-            adunit.key(), account.key()))
-    # TODO: check to make sure clearing cache on put won't mess up anything
+        adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
+                adunit.key(), account.key())
+        adgroup.active = False
+        ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)
 
 def enable_marketplace(adunit, account):

@@ -6,6 +6,7 @@
 
 {% block content %}
 
+  {% comment %}
   <div class="new-rollup">
     <div class="active rollup-box">
       <h3 class="rollup-title">Impressions</h3>
@@ -54,36 +55,7 @@
   </div>
   
   <br />
-
-  {% comment %}
-  <div class="rollup">
-    <table width=100% style='text-align:center; font-size:18px; font-weight:400;'>
-      <thead>
-        <tr style="border:none;">
-          <th width=25%>Impressions</th>
-          <th width=25%>Clicks</th>
-          <th width=25%>CTR</th>
-          <th width=25%>Conversions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="border:none;">
-          {% if totals %}
-            <td id="rollup-impressions"> {{ totals.impressions|withsep|default_if_none:"0"|withsep }} </td>
-            <td id="rollup-clicks"> {{ totals.clicks|withsep|default_if_none:"0" }} </td>
-            <td id="rollup-ctr"> {{ totals.ctr|percentage|default_if_none:"0.0%" }} </td>
-            <td id="rollup-conversions"> {{ totals.conversions|withsep|default_if_none:"0" }} </td>
-          {% else %}
-            <td id="rollup-impressions"> -- </td>
-            <td id="rollup-clicks"> -- </td>
-            <td id="rollup-ctr"> -- </td>
-            <td id="rollup-conversions"> -- </td>
-          {% endif %}
-        </tr>
-      </tbody>
-    </table>
-  </div>
-{% endcomment %}  
+  {% endcomment %}
   <ul class="tabs">
     <li class="active">
       <a href="#orders"> Orders </a>

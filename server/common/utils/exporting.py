@@ -20,18 +20,40 @@ def create_xls(*args, **kwargs):
     AdUnit1  App1
     AdUnit2  App1
     """
+
+    # Create a workbook and a sheet which we'll write data to
     wb = Workbook()
-    sheet = wb.add_sheet('MoPub -- %s' % str(datetime.date.today()))
+    if kwargs.has_key('title'):
+        sheet = wb.add_sheet(str(title))
+    else:
+        sheet = wb.add_sheet('MoPub -- %s' % str(datetime.date.today()))
 
-    headers = [header for header in kwargs.keys() if header.find('_fields')]
-    if len(headers) == 0:
-        raise ValueError('No fields were passed to create_xls among %s' % str(kwargs.keys()))
+    # Find all of the headers. We'll use these to write column names
+    # and to get data out of the objects that were passed in. If no
+    # headers were passed in, then yer doin it wrong
+    headers = {}
+    for k in kwargs.keys():
+        if k.find('_fields') > -1:
+            headers.update({
+                k: kwargs[k]
+            })
+    
+    if len(headers.keys()) == 0:
+        raise ValueError('No fields were passed to create_xls among %s' \
+                         % str(kwargs.keys()))
 
-    for header in headers:
-        fields = kwargs[header]
-        for field in fields:
-            pass
-            # (finishing later)
+    # make a list of all the rows we're going to write
+    rows = []
+    for header in headers.keys():
+        # append the header row first
+        rows.append(headers[header])
+        # then append each object
+        objs = kwargs.get(header.replace("_fields",""))
+        for obj in objs:
+            row = [getattr(obj, key) for key in headers[header]]
+            rows.append(row)
+        
+            
 
 def create_csv(*args, **kwargs):
     pass

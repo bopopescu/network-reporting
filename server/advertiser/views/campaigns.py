@@ -593,7 +593,7 @@ class AdGroupDetailHandler(RequestHandler):
     def get(self, adgroup_key):
 
         stats_q = StatsModelQueryManager(self.account, self.offline)
-        
+
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
@@ -658,7 +658,7 @@ class AdGroupDetailHandler(RequestHandler):
         fill_rate = lambda requests, impressions: \
                     (impressions/float(requests) if requests else 0)
 
-            
+
         adgroup.all_stats = stats_q.get_stats_for_days(advertiser=adgroup,days=days)
         adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
@@ -679,8 +679,8 @@ class AdGroupDetailHandler(RequestHandler):
                                                 adgroup.stats.impression_count)
         except Exception:
             pass
-            
-        
+
+
 
         # Load creatives and populate
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
@@ -881,7 +881,7 @@ class AdGroupDetailHandler(RequestHandler):
 
 
 @login_required
-def campaign_adgroup_show(request, *args, **kwargs):
+def advertiser_adgroup_show(request, *args, **kwargs):
     return AdGroupDetailHandler(id='adgroup_key')(request, use_cache=False, *args, **kwargs)
 
 

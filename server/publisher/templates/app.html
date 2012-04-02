@@ -252,7 +252,7 @@
 
                           {% status_icon campaign %}
 
-                          <a href="{% url advertiser_campaign_show adgroup_key=campaign.adgroup.key %}">
+                          <a href="{% url advertiser_adgroup_show adgroup_key=campaign.adgroup.key %}">
                             {{ campaign.name }}</a><br />
                           <span class="muted">
                             {% if campaign.start_datetime and campaign.end_datetime %}
@@ -311,7 +311,7 @@
                     <tr>
                       <th>
                         {% status_icon campaign %}
-                        <a href="{% url advertiser_campaign_show adgroup_key=campaign.adgroup.key %}">
+                        <a href="{% url advertiser_adgroup_show adgroup_key=campaign.adgroup.key %}">
                           {{campaign.name}}
                         </a><br/>
                         <span class="muted">
@@ -391,7 +391,7 @@
                     <tr>
                       <td>
                         {% status_icon campaign %}
-                        <a href="{% if campaign.network_type %}{% url network_details campaign_key=campaign.key %}{% else %}{% url advertiser_campaign_show adgroup_key=campaign.adgroup.key %}{% endif %}">
+                        <a href="{% if campaign.network_type %}{% url network_details campaign_key=campaign.key %}{% else %}{% url advertiser_adgroup_show adgroup_key=campaign.adgroup.key %}{% endif %}">
                           {{campaign.name}}
                         </a>
                         <br/>
@@ -431,7 +431,7 @@
                     <tr>
                       <th>
                         {% status_icon campaign %}
-                        <a href="{% url advertiser_campaign_show adgroup_key=campaign.adgroup.key %}">
+                        <a href="{% url advertiser_adgroup_show adgroup_key=campaign.adgroup.key %}">
                           {{campaign.name}}
                         </a><br/>
 

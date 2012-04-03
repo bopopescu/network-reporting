@@ -210,12 +210,6 @@
 
 {% block extraScripts %}
 {{ block.super }}
-<script type="text/html" id="network-app-template">
-    {% include "partials/network_app.html" %}
-</script>
-{% include_script "models/inventory" %}
-{% include_script "views/inventory" %}
-{% include_script "controllers/networks" %}
 <script>
     $(function () {
         var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});

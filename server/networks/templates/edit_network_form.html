@@ -365,10 +365,24 @@
 {% endblock content %}
 
 {% block extraScripts %}
+<script type="text/html" id="popover-content">
+    {% include "networks/partials/popover_copy_all_content.html" %}
+</script>
+<script type="text/html" id="popover-template">
+    {% include "networks/partials/popover_copy_all_template.html" %}
+</script>
 {% include_script "libs/bootstrap" %}
 {% include_style "bootstrap" %}
 {% include_script "controllers/networks" %}
 <script type="text/javascript">
+    function copy_bid(event, this_obj) {
+        var key = $(this_obj).attr("id").replace('-adunit-copy-bid', '');
+        var keys = key.split("-app-");
+        var app_key = keys[0];
+        var adunit_key = keys[1];
+        $('.' + app_key + '-cpm-field').val($('#id_' + adunit_key + '-bid').val());
+    }
+
     $(function () {
             EditNetworkController.initialize({
                 network_type: '{{ network.name }}',

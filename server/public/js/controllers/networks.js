@@ -237,14 +237,6 @@ $(function() {
 
             var pub_id = pub_ids[network_type];
 
-            function copy_bid(event, this_obj) {
-                var key = $(this_obj).attr("id").replace('-adunit-copy-bid', '');
-                var keys = key.split("-app-");
-                var app_key = keys[0];
-                var adunit_key = keys[1];
-                $('.' + app_key + '-cpm-field').val($('#id_' + adunit_key + '-bid').val());
-            }
-
             $('.app-pub-id')
                 .keyup(function () {
                     var value = $(this).val();
@@ -281,13 +273,15 @@ $(function() {
             _.each(adunits, function(key) {
                 var app_key = key[0];
                 var adunit_key = key[1];
-                // TODO: use _ template
                 $('#id_' + adunit_key + '-bid')
                     .popover({html: true,
                         content: function() {
-                            return '<a class="button ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" id="' + app_key + '-app-' + adunit_key + '-adunit-copy-bid" onmousedown="copy_bid(event, $(this));" role="button" style="visibility: visible; "><span class="ui-button-text">Copy all</span></a>';
+                            return _.template($('#popover-content').html(), {
+                                adunit_key: adunit_key,
+                                app_key: app_key,
+                            });
                         },
-                        template: '<div class="popover"><div class="arrow"></div><div class="popover-inner copy-bid"><div class="popover-content copy-bid"><p></p></div></div></div>',
+                        template: _.template($('#popover-template').html(), {}),
                         trigger: 'focus'});
                     });
 

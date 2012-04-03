@@ -448,8 +448,10 @@ class AppDetailHandler(RequestHandler):
 
         # get adgroups targeting this app
         adgroups = AdGroupQueryManager.get_adgroups(app=app)
-        app.campaigns = dict([(adgroup.campaign.key(), adgroup.campaign) for
-            adgroup in adgroups]).values()
+        # skip deleted campaigns
+        app.campaigns = [campaign for campaign in
+                dict([(adgroup.campaign.key(), adgroup.campaign) for
+            adgroup in adgroups]).values() if not campaign.deleted]
 
         for campaign in app.campaigns:
             # Used for non new network campaigns

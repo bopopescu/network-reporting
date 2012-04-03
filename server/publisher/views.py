@@ -448,10 +448,8 @@ class AppDetailHandler(RequestHandler):
 
         # get adgroups targeting this app
         adgroups = AdGroupQueryManager.get_adgroups(app=app)
-        # skip deleted campaigns
-        app.campaigns = [campaign for campaign in
-                dict([(adgroup.campaign.key(), adgroup.campaign) for
-            adgroup in adgroups]).values() if not campaign.deleted]
+        app.campaigns = dict([(adgroup.campaign.key(), adgroup.campaign) for
+            adgroup in adgroups]).values()
 
         for campaign in app.campaigns:
             # Used for non new network campaigns
@@ -703,6 +701,10 @@ class AdUnitShowHandler(RequestHandler):
         marketplace_campaigns = filter_adgroups(adunit.adgroups, ['marketplace'])
         network_campaigns = filter_adgroups(adunit.adgroups, ['network'])
         backfill_promo_campaigns = filter_adgroups(adunit.adgroups, ['backfill_promo'])
+
+        # Modify active field
+        for adgroup in network_campaigns:
+            adgroup.active = adgroup.campaign.active and adgroup.active
 
         levels = ('high', '', 'low')
         gtee_str = "gtee_%s"

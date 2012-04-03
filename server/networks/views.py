@@ -662,6 +662,15 @@ class DeleteNetworkHandler(RequestHandler):
                 login.deleted = True
                 login.put()
 
+        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        # Mark all adgroups as deleted
+        for adunit in adunits:
+            adgroup = AdGroupQueryManager.get_network_adgroup(
+                    campaign, adunit.key(),
+                    self.account.key(), True)
+            adgroup.deleted = True
+            AdGroupQueryManager.put(adgroup)
+
         return HttpResponseRedirect(reverse('networks'))
 
 @login_required

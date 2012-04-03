@@ -18,7 +18,7 @@ backends:
 - name: frontend-staging
   instances: 2
   options: public
-  class: B2
+  class: B8
 
 - name: gae-context-fetch
   options: public

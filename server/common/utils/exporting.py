@@ -37,12 +37,13 @@ def create_xls(*args, **kwargs):
             headers.update({
                 k: kwargs[k]
             })
-    
+
+    # We need at least one fields parameter
     if len(headers.keys()) == 0:
         raise ValueError('No fields were passed to create_xls among %s' \
                          % str(kwargs.keys()))
 
-    # make a list of all the rows we're going to write
+    # Make a list of all the rows we're going to write
     rows = []
     for header in headers.keys():
         # append the header row first
@@ -50,8 +51,15 @@ def create_xls(*args, **kwargs):
         # then append each object
         objs = kwargs.get(header.replace("_fields",""))
         for obj in objs:
-            row = [getattr(obj, key) for key in headers[header]]
+            row = []
+            for key in headers[header]:
+                try:
+                    row.append(getattr(obj, key))
+                except AttributeError:
+                    row.append(None)
             rows.append(row)
+
+    print rows
         
             
 

@@ -702,10 +702,6 @@ class AdUnitShowHandler(RequestHandler):
         network_campaigns = filter_adgroups(adunit.adgroups, ['network'])
         backfill_promo_campaigns = filter_adgroups(adunit.adgroups, ['backfill_promo'])
 
-        # Modify active field
-        for adgroup in network_campaigns:
-            adgroup.active = adgroup.campaign.active and adgroup.active
-
         levels = ('high', '', 'low')
         gtee_str = "gtee_%s"
         gtee_levels = []

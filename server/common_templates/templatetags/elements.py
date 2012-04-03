@@ -7,6 +7,7 @@ from django.template import NodeList, \
      loader, \
      TemplateSyntaxError, \
      VariableDoesNotExist
+from advertiser.models import AdGroup
 
 register = Library()
 
@@ -32,12 +33,15 @@ def stats_breakdown(stats):
 
 
 @register.inclusion_tag("partials/status_icon.html")
-def status_icon(advertiser_model):
+def status_icon(advertiser):
     """
-    Returns an image tag based on the adgroup's status
+    Returns an image tag based on the advertiser's status
     (deleted/active/inactive/paused).
     """
-    return {'adgroup': advertiser_model }
+    if isinstance(advertiser, AdGroup):
+        advertiser.active = advertiser.campaign.active and advertiser.active
+
+    return {'advertiser': advertiser}
 
 
 def isiterable(item):

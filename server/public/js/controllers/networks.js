@@ -136,10 +136,10 @@ $(function() {
                 var div = $('.' + key + '-apps-div');
                 if (div.is(':hidden')) {
                     div.show();
-                    $(this).text("Hide Apps");
+                    $(this).children('span').text("Hide Apps");
                 } else {
                     div.hide()
-                    $(this).text("Show Apps");
+                    $(this).children('span').text("Show Apps");
                 }
             });
 

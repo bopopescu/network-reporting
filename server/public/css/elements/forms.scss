@@ -2,6 +2,11 @@
 
 @import "common.scss";
 
+$baseFontSize: 13px;
+$baseLineHeight: 16px;
+$grayDark: #333;
+$primaryButtonBackground: #08c;
+
 .radios input {
     margin: 0 2px 0 0;
     vertical-align: baseline;
@@ -478,4 +483,72 @@ form#order_and_line_item_form, form#order_form, form#new_creative_form, form.edi
     input.token-input-field.focused {
         background-color: white;
     }
+}
+
+
+
+// Allow us to put symbols and text within the input field for a cleaner look
+.input-prepend, .input-append {
+  margin-bottom: 5px;
+  @include clearfix(); // Clear the float to prevent wrapping
+  input, .uneditable-input {
+    @include border-radius(0 3px 3px 0);
+    &:focus {
+      position: relative;
+      z-index: 2;
+    }
+  }
+  .uneditable-input {
+    border-left-color: #eee;
+    border-right-color: #ccc;
+  }
+  .add-on {
+    float: left;
+    display: block;
+    width: auto;
+    min-width: 16px;
+    height: $baseLineHeight;
+    margin-right: -1px;
+    padding: 4px 5px;
+    font-weight: normal;
+    line-height: $baseLineHeight;
+    color: $light_gray;
+    text-align: center;
+    text-shadow: 0 1px 0 $white;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    @include border-radius(3px 0 0 3px);
+  }
+  .active {
+    background-color: lighten($green, 30);
+    border-color: $green;
+  }
+}
+.input-prepend {
+  .add-on {
+    *margin-top: 1px; /* IE6-7 */
+  }
+}
+.input-append {
+  input, .uneditable-input {
+    float: left;
+    @include border-radius(3px 0 0 3px);
+  }
+  .uneditable-input {
+    border-right-color: #ccc;
+  }
+  .add-on {
+    margin-right: 0;
+    margin-left: -1px;
+    @include border-radius(0 3px 3px 0);
+  }
+  input:first-child {
+    // In IE7, having a hasLayout container (from clearfix's zoom:1) can make the first input
+    // inherit the sum of its ancestors' margins.
+    *margin-left: -160px;
+
+    &+.add-on {
+      *margin-left: -21px;
+    }
+  }
 }

@@ -14,6 +14,8 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      AdNetworkStatsFetcher, \
      MPStatsAPIException
 
+from budget import budget_service
+
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.http import Http404
@@ -97,6 +99,7 @@ class AdUnitService(RequestHandler):
     """
     API Service for delivering serialized AdUnit data
     """
+    
     def get(self, adunit_key=None,
             app_key=None, adgroup_key=None, campaign_key=None):
         """
@@ -108,9 +111,78 @@ class AdUnitService(RequestHandler):
         stats_endpoint = self.request.GET.get('endpoint', 'all')
         stats = get_stats_fetcher(self.account.key(), stats_endpoint)
 
+
+        # If an adgroup key was specified instead of an app key,
+        # then we'll only get stats data from that adgroup. AdUnit
+        # stats will only reflect how adunits performed in that
+        # adgroup.
+        if adgroup_key:
+            adgroup = AdGroupQueryManager.get(adgroup_key)
+
+            # REFACTOR
+            # ensure the owner of this adgroup is the request's
+            # current user
+            if adgroup.account.key() != self.account.key():
+                raise Http404
+
+            if adunit_key:
+                adunits = [AdUnitQueryManager.get(adunit_key)]
+            else:
+                adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
+            
+            response = [adunit.toJSON() for adunit in adunits]
+
+            # Update each app with stats from the selected endpoint
+            for adunit in response:
+                adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
+                                                                       adgroup_key,
+                                                                       self.start_date,
+                                                                       self.end_date)
+                if str(adunit['id']) == "ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGEUM":
+                    logging.warn(adunit_stats)
+                # We update with the app and adgroup id/key because our
+                # backbone models often need it for reference
+                adunit_stats.update({'app_id': str(adunit['app_key'])})
+                adunit.update(adunit_stats)
+
+            if adunit_key:
+                return JSONResponse(response[0])
+            else:
+                return JSONResponse(response)
+            
+        elif campaign_key:
+            campaign = CampaignQueryManager.get(campaign_key)
+
+            # REFACTOR
+            # ensure the owner of this adgroup is the request's
+            # current user
+            if campaign.account.key() != self.account.key():
+                raise Http404
+
+            adunits = [AdUnitQueryManager.get(adunit_key)]
+            response = [adunit.toJSON() for adunit in adunits]
+
+            # Update each app with stats from the selected endpoint
+            for adunit in response:
+                adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
+                                                                       campaign_key,
+                                                                       self.start_date,
+                                                                       self.end_date)
+
+                
+                # We update with the app and adgroup id/key because our
+                # backbone models often need it for reference
+                adunit_stats.update({
+                    'app_id': str(adunit['app_key']),
+                    'campaign_id': str(campaign_key)
+                })
+                adunit.update(adunit_stats)
+                
+            return JSONResponse(response[0])
+            
         # REFACTOR: The app key isn't necessary (we can fetch an
         # adunit directly with it's key)
-        if app_key:
+        elif app_key:
             # Get each adunit for the app and convert it to JSON
             app = AppQueryManager.get_app_by_key(app_key)
 
@@ -154,70 +226,9 @@ class AdUnitService(RequestHandler):
                     adunit.update(active = False)
 
             return JSONResponse(response)
-
-        # If an adgroup key was specified instead of an app key,
-        # then we'll only get stats data from that adgroup. AdUnit
-        # stats will only reflect how adunits performed in that
-        # adgroup.
-        elif adgroup_key:
-            adgroup = AdGroupQueryManager.get(adgroup_key)
-
-            # REFACTOR
-            # ensure the owner of this adgroup is the request's
-            # current user
-            if adgroup.account.key() != self.account.key():
-                raise Http404
-
-            adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
-            response = [adunit.toJSON() for adunit in adunits]
-
-            # Update each app with stats from the selected endpoint
-            for adunit in response:
-                adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
-                                                                       adgroup_key,
-                                                                       self.start_date,
-                                                                       self.end_date)
-
-                # We update with the app and adgroup id/key because our
-                # backbone models often need it for reference
-                adunit_stats.update({'app_id': str(adunit['app_key'])})
-                adunit.update(adunit_stats)
-
-            return JSONResponse(response)
-            
-        elif campaign_key:
-            campaign = CampaignQueryManager.get(campaign_key)
-
-            # REFACTOR
-            # ensure the owner of this adgroup is the request's
-            # current user
-            if campaign.account.key() != self.account.key():
-                raise Http404
-
-            adunits = [AdUnitQueryManager.get(adunit_key)]
-            response = [adunit.toJSON() for adunit in adunits]
-
-            # Update each app with stats from the selected endpoint
-            for adunit in response:
-                adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
-                                                                       campaign_key,
-                                                                       self.start_date,
-                                                                       self.end_date)
-
-                
-                # We update with the app and adgroup id/key because our
-                # backbone models often need it for reference
-                adunit_stats.update({
-                    'app_id': str(adunit['app_key']),
-                    'campaign_id': str(campaign_key)
-                })
-                adunit.update(adunit_stats)
-                logging.warn(adunit)
-                
-            return JSONResponse(response[0])
             
         else:
-            return JSONResponse({'error': 'No parameters provided'})
+            return JSONResponse({'error': 'not yet implemented'})
 
 
     def post(self):
@@ -278,39 +289,43 @@ class AdGroupServiceHandler(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, adgroup_key):
-#        try:
 
-            if not adgroup_key:
-                raise Http404
 
-            # Get the adgroup
-            adgroup = AdGroupQueryManager.get(adgroup_key)
+        if not adgroup_key:
+            raise Http404
 
-            # REFACTOR
-            # ensure the owner of this adgroup is the request's
-            # current user
-            if adgroup.account.key() != self.account.key():
-                raise Http404
+        # Get the adgroup
+        adgroup = AdGroupQueryManager.get(adgroup_key)
+            
+        # REFACTOR
+        # ensure the owner of this adgroup is the request's
+        # current user
+        if adgroup.account.key() != self.account.key():
+            raise Http404
 
-            # Where are we getting stats from?
-            # Choices are 'mpx', 'direct', 'networks', or 'all'
-            stats_endpoint = self.request.GET.get('endpoint', 'all')
+        # Where are we getting stats from?
+        # Choices are 'mpx', 'direct', 'networks', or 'all'
+        stats_endpoint = self.request.GET.get('endpoint', 'all')
 
-            # Get the stats fetcher
-            stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)
+        # Get the stats fetcher
+        stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)                        
+        # JSONify and update with stats
+        adgroup_jsonified = adgroup.toJSON()
+        stats = stats_fetcher.get_adgroup_stats(adgroup,
+                                                self.start_date,
+                                                self.end_date,
+                                                daily=True)
+        adgroup_jsonified.update(stats)
 
-            # JSONify and update with stats
-            adgroup_jsonified = adgroup.toJSON()
-            stats = stats_fetcher.get_adgroup_stats(adgroup,
-                                                    self.start_date,
-                                                    self.end_date,
-                                                    daily=True)
-            logging.warn(stats)
-            adgroup_jsonified.update(stats)
+        # pacing
+        pace, pace_status = get_pace(adgroup)
+        adgroup_jsonified.update({
+            'percent_delivered': budget_service.percent_delivered(adgroup.budget_obj),
+            'pace': pace,
+            'pace_status': pace_status
+        })
         
-            return JSONResponse(adgroup_jsonified)
-#        except Exception, exception:
- #           return JSONResponse({'error': str(exception)})
+        return JSONResponse(adgroup_jsonified)
 
 
     def post(self, *args, **kwargs):
@@ -343,7 +358,6 @@ class CampaignServiceHandler(RequestHandler):
 
         else:
             campaigns = CampaignQueryManager.get_campaigns(self.account)
-            logging.warn([campaign for campaign in campaigns])
             
         # Get stats and serialize all of the data
         stats_endpoint = self.request.GET.get('endpoint', 'all')
@@ -359,6 +373,14 @@ class CampaignServiceHandler(RequestHandler):
                                                         daily=True)
                 adgroup_jsonified = adgroup.toJSON()
                 adgroup_jsonified.update(stats)
+                # pacing
+                pace, pace_status = get_pace(adgroup)
+                adgroup_jsonified.update({
+                    'percent_delivered': budget_service.percent_delivered(adgroup.budget_obj),
+                    'pace': pace,
+                    'pace_status': pace_status
+                })
+
                 campaign_jsonified['adgroups'].append(adgroup_jsonified)
 
             # Get the top level stats for the campaign by summing whats
@@ -410,9 +432,16 @@ def sum_campaign_stats(campaign):
         'requests': sum([ag['requests'] for ag in campaign['adgroups']]),
         'fill_rate': 0.0,
         'conversions': sum([ag['conversions'] for ag in campaign['adgroups']]),
-        'conversion_rate': sum([ag['conversion_rate'] for ag in campaign['adgroups']])/len(campaign['adgroups']),
+        
     }
 
+    num_adgroups = len(campaign['adgroups'])
+    if num_adgroups > 0:
+        stats['conversion_rate'] =  sum([ag['conversion_rate'] \
+                                         for ag in campaign['adgroups']]) \
+                                    / len(campaign['adgroups'])
+    else:
+        stats['conversion_rate'] = 0
     stats['ctr'] = ctr(stats['clicks'], stats['impressions'])
     stats['ecpm'] = ecpm(stats['revenue'], stats['impressions'])
     stats['fill_rate'] = fill_rate(stats['requests'], stats['impressions'])
@@ -438,3 +467,19 @@ def get_stats_fetcher(account_key, stats_endpoint):
                         parameters are 'mpx', 'direct', 'networks', and
                         'all'.""")
     return stats
+
+
+def get_pace(adgroup):
+    pace = budget_service.get_pace(adgroup.budget_obj)
+    if pace:
+        if pace[1] < .5 :
+            pace_status = 'pace-failure'
+        elif pace[1] < .85:
+            pace_status = 'pace-warning'
+        else:
+            pace_status = 'pace-succes'
+            
+        return (pace[1], pace_status)
+        
+    else:
+        return (0, None)

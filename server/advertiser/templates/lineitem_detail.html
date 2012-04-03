@@ -220,7 +220,7 @@
         var OrdersController = mopub.Controllers.OrdersController;
         OrdersController.initializeLineItemDetail({
             order_key: "{{ order.key }}",
-            lineitem_key: "{{ lineitem.key }}",
+            line_item_key: "{{ line_item.key }}",
             daily_stats: {
                 requests: {{ stats.requests.series }},
                 impressions: {{ stats.impressions.series }},
@@ -229,7 +229,9 @@
             },
             start_date:  Date.UTC({{ start_date.year }},
                                   {{ start_date.month|add:"-1" }},
-                                  {{ start_date.day }})
+                                  {{ start_date.day }}),
+            targeted_apps: [ {% for t_app in targeted_apps %} "{{ t_app.key }}", {% endfor %}],
+            targeted_adunits: [ {% for t_adunit in targeted_adunits %} "{{ t_adunit.key }}", {% endfor %}],
         });
     });
 </script>

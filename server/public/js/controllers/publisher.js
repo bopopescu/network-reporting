@@ -123,9 +123,6 @@ var mopub = mopub || {};
         initializeiOSAppSearch();
 
         $('#appForm-submit')
-            .button({
-                icons: { secondary: "ui-icon-circle-triangle-e" }
-            })
             .click(function(e) {
                 e.preventDefault();
                 $('#appForm').submit();
@@ -154,17 +151,17 @@ var mopub = mopub || {};
 
                 $('#searchAppStore-loading').show();
 
-                $('#dashboard-searchAppStore-custom-modal').dialog({
-                    buttons: [
-                        {
-                            text: 'Cancel',
-                            click: function() {
-                                $('#searchAppStore-results').html('');
-                                $(this).dialog("close");
-                            }
-                        }
-                    ]
-                });
+                // $('#dashboard-searchAppStore-custom-modal').dialog({
+                //     buttons: [
+                //         {
+                //             text: 'Cancel',
+                //             click: function() {
+                //                 $('#searchAppStore-results').html('');
+                //                 $(this).dialog("close");
+                //             }
+                //         }
+                //     ]
+                // });
                 var name = $('#appForm input[name="name"]').val();
                 var script = document.createElement("script");
                 script.src = 'http://ax.itunes.apple.com'
@@ -303,10 +300,6 @@ var mopub = mopub || {};
      */
     function initializeNewAdunitForm() {
 
-        // Set up device format selection UI
-        $("#adunit-device_format_phone")
-            .parent()
-            .buttonset();
 
         $("#adunit-device_format_phone")
             .click(function(e){

@@ -8,14 +8,6 @@
   </h1>
 {% endblock pageTitle %}
 
-{% block titleBarRight %}
-  <span class="titlebar-right">
-    <a class="button" id="dashboard-apps-editAppButton" href="#">
-      Edit app settings
-    </a>
-  </span>
-{% endblock titleBarRight %}
-
 {% block content %}
   <section id="dashboard-appEditForm" class="hidden">
     <div>
@@ -65,7 +57,7 @@
                 <span class="inner">{{today.request_count|withsep}}</span>
               </td>
               <td class="stats-breakdown-value yesterday">
-                <span class="inner">{{yesterday.request_count|withsep}}</span>
+                <span class="inner">{{yester.request_count|withsep}}</span>
               </td>
               <td class="stats-breakdown-value all">
                 <span class="inner">{{app.stats.request_count|withsep}}</span>
@@ -80,7 +72,7 @@
                 <span class="inner">{{today.impression_count|withsep}}</span>
               </td>
               <td class="stats-breakdown-value yesterday">
-                <span class="inner">{{yesterday.impression_count|withsep}}</span>
+                <span class="inner">{{yester.impression_count|withsep}}</span>
               </td>
               <td class="stats-breakdown-value all">
                 <span class="inner">{{app.stats.impression_count|withsep}}</span>
@@ -147,26 +139,6 @@
         <div class="chart-loading-text">Loading ...</div>
         <div class="chart-error-text">Could not load chart</div>
         {# WHY #}
-        <script type="text/javascript">
-          // chart data
-          mopub.dashboardStatsChartData = {
-              //pointStart: 1294963200000,
-              pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
-              pointInterval: 86400000,
-              'requests': [{% for au in app.graph_adunits %}
-                           { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                          ],
-              'impressions': [{% for au in app.graph_adunits %}
-                              { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                             ],
-              'clicks': [{% for au in app.graph_adunits %}
-                         { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                        ],
-              'users': [{% for au in app.graph_adunits %}
-                        { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
-                       ]
-          };
-        </script>
       </div>
     </div>
     <div class="clear"></div>
@@ -175,9 +147,15 @@
   <div class="clear"></div>
 
   <section id="dashboard-apps">
-    <div class="buttonBank buttonBank-right">
+    
+    <div class="right">
+      <a class="btn" id="dashboard-apps-editAppButton" href="#">
+        <i class="icon-pencil"></i>
+        Edit app settings
+      </a>      
       <a class="btn" id="dashboard-apps-addAdUnitButton" href="#">
-        Add an ad unit
+        <i class="icon-plus"></i>
+        Add an Ad Unit
       </a>
     </div>
 
@@ -250,7 +228,7 @@
                       <th>
                         {% status_icon adgroup %}
 
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key%}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key%}">
                           {{ adgroup.name }}
                         </a>
                         <br />
@@ -309,7 +287,7 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                           {{adgroup.name}}
                         </a><br/>
                         <span class="muted">
@@ -383,7 +361,7 @@
                     <tr>
                       <td>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                           {{adgroup.name}}
                         </a>
                         <br/>
@@ -409,7 +387,7 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_line_item_detail order_key=adgroup.campaign.key line_item_key=adgroup.key %}">
+                        <a href="{% url advertiser_line_item_detail line_item_key=adgroup.key %}">
                           {{adgroup.name}}
                         </a><br/>
 
@@ -491,29 +469,31 @@
         </div>
       {% endif %}
     </div>
-  </section>
 
+    <div class="right">
+      <div class="btn-group">
+        <button class="btn" href="#">
+          <i class="icon-download-alt"></i>
+          Export Ad Sources
+        </button>
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li> <a href="#" data-toggle="running"> XLS </a> </li>
+          <li> <a href="#" data-toggle="running"> CSV </a> </li>
+        </ul>
+        </div>
+    </div>
+  </section>
+  
 
   {% comment %}
     Controls for exporting app information
   {% endcomment %}
 
-  <form id='appExportForm' style='display:none;' method='POST' accept-charset='utf-8' action='{% url publisher_app_export %}'>
-    <input name='app_key' type='text' value='{{app.key}}' />
-    <input name='file_type' id='appExportType' type='text' value='' />
-    <input name='start' value={{start_date|date:"mdy"}} />
-    <input name='end' value={{end_date|date:"mdy"}} />
-  </form>
-
+  
   <section id="dashboard-apps">
-    <div class="buttonBank buttonBank-right">
-      <select name='exportSelect' id='publisher-app-exportSelect' class='selectmenu export-selectMenu'>
-        <option value='exp'>Export</option>
-        <option value='xls'>XLS</option>
-        <option value='csv'>CSV</option>
-      </select>
-    </div>
-
 
     <h2>Daily Counts</h2>
     <div class="appData-details noneg">
@@ -552,7 +532,27 @@
         </tbody>
       </table>
 
-      <a class="appData-details-toggleButton" href="#">Show details</a>
+      <a class="btn appData-details-toggleButton" href="#">
+        <i class="icon-eye-open"></i>
+        Show details
+      </a>
+
+      <div class="right">
+        <div class="btn-group">
+          <button class="btn" href="#">
+            <i class="icon-download-alt"></i>
+            Export Daily Counts
+          </button>
+          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+            <li> <a href="#" data-toggle="running"> XLS </a> </li>
+            <li> <a href="#" data-toggle="running"> CSV </a> </li>
+          </ul>
+        </div>
+      </div>
+      
 
     </div>
   </section>
@@ -587,4 +587,24 @@
       });
     });
   </script>
+          <script type="text/javascript">
+          // chart data
+          mopub.dashboardStatsChartData = {
+              //pointStart: 1294963200000,
+              pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
+              pointInterval: 86400000,
+              'requests': [{% for au in app.graph_adunits %}
+                           { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.request_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                          ],
+              'impressions': [{% for au in app.graph_adunits %}
+                              { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.impression_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                             ],
+              'clicks': [{% for au in app.graph_adunits %}
+                         { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{y: {{t.click_count}}, name: '{{t.ctr|percentage}}'}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                        ],
+              'users': [{% for au in app.graph_adunits %}
+                        { '{{au.name|safe|addslashes}}': [{% for t in au.all_stats %}{{t.user_count}}{% if not forloop.last %},{% endif %} {% endfor %}] }{% if not forloop.last %},{% endif %}{% endfor %}
+                       ]
+          };
+        </script>
 {% endblock extraScripts %}

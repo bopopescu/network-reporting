@@ -61,6 +61,12 @@
     td.stat, th.stat {
         text-align: right;
         width: 65px;
+        &.advertiser {
+            width: 130px;
+            height: 40px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
     }
     td.icon, th.icon {
         padding: 0 11px 0 10px;

@@ -16,6 +16,7 @@
 
 {% block content %}
 
+  
   {# The stats breakdown and graph #}
   <section class="offset" id="dashboard-stats">
     <h3 class="stats-chart-title">
@@ -31,6 +32,56 @@
     </div>
   </section>
 
+  <div class="new-rollup">
+    <div class="active rollup-box">
+      <h3 class="rollup-title">Impressions</h3>
+      <div class="rollup-stat">
+        <div class="stat-value" id="rollup-impressions">
+          --
+        </div>
+        <div class="positive delta-value">
+          + 2.05%
+        </div>
+      </div>
+    </div>
+    <div class="rollup-box">
+      <h3 class="rollup-title">Clicks</h3>
+      <div class="rollup-stat">
+        <div class="stat-value" id="rollup-clicks">
+          --
+        </div>
+        <div class="negative delta-value">
+          - 9.25%
+        </div>
+      </div>
+    </div>
+    <div class="rollup-box">
+      <h3 class="rollup-title">CTR</h3>
+      <div class="rollup-stat">
+        <div class="stat-value" id="rollup-ctr">
+          --
+        </div>
+        <div class="negative delta-value">
+          - 4.41%
+        </div>
+      </div>
+    </div>
+    <div class="rollup-box">
+      <h3 class="rollup-title">Conversions</h3>
+      <div class="rollup-stat">
+        <div class="stat-value" id="rollup-conversions">
+          --
+        </div>
+        <div class="positive delta-value">
+          + 0.41%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <br />
+  
+  
 
   {# The order edit form, hidden by default #}
   <section class="offset hidden" id="order_form_container">
@@ -65,7 +116,10 @@
     </div>
     
     <div class="btn-group">
-      <a class="btn" href="#"> Showing <span id="filter-toggled">All</span> </a>
+      <a class="btn" href="#">
+        <i class="icon-eye-open"></i>
+        Show All 
+      </a>
       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
         <span class="caret"></span>
       </a>
@@ -101,7 +155,7 @@
     <div class="right">
     <a class="btn" href='#'>
       <i class="icon-random"></i>
-      Change targeting
+      Change 
     </a>
   </div>
     

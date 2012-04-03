@@ -27,9 +27,10 @@ PASSWORD = "test"
 
 NUM_ACCOUNTS = 1
 NUM_APPS = 2
-NUM_CAMPAIGNS_PER_APP = 3
-NUM_CREATIVES_PER_ADGROUP = 1
-NUM_ADUNITS_PER_APP = 5
+NUM_CAMPAIGNS_PER_APP = 2
+NUM_CREATIVES_PER_ADGROUP = 2
+NUM_ADUNITS_PER_APP = 3
+NUM_ADGROUPS_PER_CAMPAIGN = 2
 
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
@@ -329,7 +330,7 @@ def main():
 
     adunits_per_app = dict([(app,[]) for app in apps])
     campaigns_per_app = dict([(app,[]) for app in apps])
-    creatives_per_campaign = {}
+    creatives_per_adgroup = {}
 
     for app in apps:
         for i in xrange(NUM_ADUNITS_PER_APP):
@@ -339,30 +340,23 @@ def main():
 
         for i in xrange(NUM_CAMPAIGNS_PER_APP):
             budget = generate_budget()
-            adgroup_type = 'gtee_high'
+            
+            campaign = generate_campaign(account, budget)
 
-            if i == 1:
-                adgroup_type = 'network'
-            elif i == 2:
-                adgroup_type = 'marketplace'
-            elif i == 3:
-                adgroup_type = 'promo'
-
-            if adgroup_type == 'marketplace':
-                campaign = generate_marketplace_campaign(account, budget)
-            else:
-                campaign = generate_campaign(account, budget)
-
-            creatives_per_campaign[campaign] = []
             campaigns_per_app[app].append(campaign)
-            adgroup = generate_adgroup(campaign,
-                                       select_rand_subset(all_site_keys),
-                                       account,
-                                       adgroup_type)
-            for i in xrange(NUM_CREATIVES_PER_ADGROUP):
-                creatives_per_campaign[campaign].append(generate_creative(account,adgroup))
+            
+            for i in xrange(NUM_ADGROUPS_PER_CAMPAIGN):
+                adgroup_type = 'gtee' if i%2==0 else 'promo'
+                adgroup = generate_adgroup(campaign,
+                                           select_rand_subset(all_site_keys),
+                                           account,
+                                           adgroup_type)
+                creatives_per_adgroup[str(adgroup)] = []
+                for i in xrange(NUM_CREATIVES_PER_ADGROUP):
+                    creatives_per_adgroup[str(adgroup)].append(generate_creative(account, adgroup))
 
-
+                    
+    print creatives_per_adgroup
     cur_date = APP_STATS_SINCE
     today = datetime.datetime.now()
     day = datetime.timedelta(days=1)
@@ -373,21 +367,22 @@ def main():
         cur_date = APP_STATS_SINCE
         while cur_date <= today:
             for campaign in campaigns_per_app[app]:
-                stats= [generate_stats_model(adunit,
+                for adgroup in campaign.adgroups:
+                    stats= [generate_stats_model(adunit,
                                              creative,
                                              account,
                                              cur_date)
-                        for creative in creatives_per_campaign[campaign]
-                        for adunit in adunits_per_app[app]]
+                            for creative in creatives_per_adgroup[str(adgroup)]
+                            for adunit in adunits_per_app[app] if adunit.key() in adgroup.site_keys]
 
-                req_stats = [generate_stats_model(adunit, None, account, cur_date) \
-                             for adunit in adunits_per_app[app]]
-                for stat in req_stats:
-                    stat.impression_count = 0
-                    stat.click_count = 0
-                    stat.conversion_count = 0
+                    req_stats = [generate_stats_model(adunit, None, account, cur_date) \
+                                 for adunit in adunits_per_app[app]]
+                    for stat in req_stats:
+                        stat.impression_count = 0
+                        stat.click_count = 0
+                        stat.conversion_count = 0
 
-                s.put_stats(stats=stats+req_stats)
+                    s.put_stats(stats=stats+req_stats)
 
             cur_date+=day
 

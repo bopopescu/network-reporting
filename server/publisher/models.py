@@ -238,6 +238,13 @@ class Site(db.Model):
 
     network_config = db.ReferenceProperty(NetworkConfig, collection_name="adunits")
 
+    def __hash__(self):
+        return hash(str(self.key()))
+
+    def __eq__(self, other):
+        return self.key() == other.key()
+        
+    
     def simplify(self):
         return SimpleAdUnit(key = str(self.key()),
                             name = self.name,

@@ -10,7 +10,7 @@
 
 {% block navLinks %}
   <li><a href="{% url app_index %}">Dashboard</a></li>
-  <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+  <li><a href="{% url advertiser_order_index %}">Orders</a></li>
   <li><a href="{% url marketplace_index %}">Marketplace</a></li>
   <li class="active"><a href="{% url network_index %}">Networks</a></li>
 {% endblock navLinks %}
@@ -76,20 +76,7 @@
   </div>
 
   <br />
-  <a id="add_campaign_button" class="right button add icon"  href="{% url advertiser_campaign_create %}#network">Add a network</a>
-
-  <form method="post" action="{% url advertiser_bid_pause %}" id="campaignForm">
-    <input type="hidden" name="action" id="action"/>
-    <div id="adgroups">
-    </div>
-    <div class="form-submit-left">
-      <span class="buttonWrap">
-        <a class="button pause icon" id="campaignForm-pause">Pause</a>
-        <a class="button play icon" id="campaignForm-resume">Resume</a>
-        <a class="button stop icon" id="campaignForm-delete">Delete</a>
-      </span>
-    </div>
-  </form>
+  <a id="add_campaign_button" class="right button add icon"  href="#">Add a network</a>
 
   {# Help Content #}
   <div id="campaign-ecpm-helpContent" class="hidden">

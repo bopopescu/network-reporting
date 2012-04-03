@@ -319,6 +319,23 @@ var mopub = window.mopub || {};
             _.each(display_fields, function(field){
                 $("." + field, row).text(current_model.get_formatted_stat(field));
             });
+
+//            var renderedContent = $(this.template(this.model.toJSON()));
+
+            var popover_template = _.template(""
+                                              + "<p>Ran from <%= start_datetime %> to <%= end_datetime %>. <br /> <br />"
+                                              + "It <strong>did/did not</strong> meet it's goal of [goal]. <br /> <br />"
+                                              + "Targeting 3 Ad Units"
+                                              + "</p>");
+
+            var popover_content = popover_template(current_model.toJSON());
+
+            $(".moreinfo", row).popover({
+                placement: 'bottom',
+                title: "About this line item",
+                content: popover_content,
+                delay: { hide: 250 }            
+            });
         }
     });
 

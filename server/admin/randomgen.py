@@ -358,7 +358,6 @@ def main_():
             for i in range(NUM_CREATIVES_PER_ADGROUP):
                 creatives_per_campaign[campaign].append(generate_creative(account,adgroup))
 
-
     today = datetime.datetime.now()
     day = datetime.timedelta(days=1)
 

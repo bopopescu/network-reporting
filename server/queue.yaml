@@ -156,6 +156,10 @@ queue:
   rate: 100/s
   bucket_size: 100
 
+- name: budget-api
+  rate: 100/s
+  bucket_size: 100 
+
 - name: budget-advance
   rate: 100/s
   bucket_size: 100

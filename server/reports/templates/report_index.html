@@ -3,9 +3,6 @@
 {% block pageTitle %}<h1>Reports</h1>{% endblock pageTitle %}
 {% block dateButtons %}{% endblock dateButtons %}
 {% block content %}
-<div class="alert-message block-message">
-    Reporting data is currently unavailable from 3/8/2012 to the present.  Our engineering team is actively working to populate this data and it should be restored soon.
-</div>
 <div class="buttonBank buttonBank-right">
     <a class="button" id="reports-addReportButton" href="#">New Report</a>
 </div>
@@ -52,15 +49,11 @@
                 do stuff for editing report on the fly
                 {% endcomment %}
                 <th class='dataTable-name'>
-                  {% if report.data %}
                     <a href='{% url view_report report_key=report.key %}'>{{report.name}}</a>
-                  {% else %}
-                    {{report.name}}
-                  {% endif %}
                 </th>
                 <td class='dataTable-name'>{{report.details|safe}}</td>
                 <td id='{{report.key}}-status' class='dataTable-date'>
-                  {% if report.data %}
+                  {% if report.status == 'Completed' %}
                     {{report.last_run|date:'N j, Y \<\b\r /\> f a'|safe}}
                   {% else %}
                     {% if report.status %}

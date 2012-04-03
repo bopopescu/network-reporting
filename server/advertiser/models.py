@@ -128,6 +128,14 @@ class Campaign(db.Model):
             STANDARD_CAMPAIGN)
     show_login = db.BooleanProperty(default=True)
 
+    @property
+    def has_daily_budget(self):
+        return self.budget and self.budget_type == 'daily'
+
+    @property
+    def has_full_budget(self):
+        return self.full_budget and self.budget_type == 'full_campaign'
+
     def simplify(self):
         if self.start_date and not self.start_datetime:
             strt = self.start_date
@@ -139,13 +147,16 @@ class Campaign(db.Model):
             end_datetime = datetime.datetime(end.year, end.month, end.day)
         else:
             end_datetime = self.end_datetime
-        return SimpleCampaign(key = str(self.key()),
-                              name = self.name,
-                              campaign_type = self.campaign_type,
-                              active = self.active,
-                              start_datetime = start_datetime,
-                              end_datetime = end_datetime,
-                              account = self.account,
+        return SimpleCampaign(key=str(self.key()),
+                              name=self.name,
+                              campaign_type=self.campaign_type,
+                              active=self.active,
+                              start_datetime=start_datetime,
+                              end_datetime=end_datetime,
+                              account=self.account,
+                              full_budget=self.full_budget,
+                              daily_budget=self.budget,
+                              budget_type=self.budget_type,
                               )
 
     def __repr__(self):

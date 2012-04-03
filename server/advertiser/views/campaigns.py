@@ -435,6 +435,8 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
 
         if campaign_form.is_valid():
             campaign = campaign_form.save()
+            campaign.account = self.account
+            campaign.save()
 
             adgroup_form = AdGroupForm(self.request.POST, instance=adgroup, site_keys=[(unicode(adunit.key()), '') for adunit in adunits], is_staff=self.request.user.is_staff)
             if adgroup_form.is_valid():
@@ -442,11 +444,13 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
                 # Delete Cache. We leave this in views.py because we
                 # must delete the adunits that the adgroup used to have as well
                 if adgroup.site_keys:
-                    adunits = AdUnitQueryManager.get(adgroup.site_keys)
-                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+                    current_adunits = AdUnitQueryManager.get(adgroup.site_keys)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(current_adunits)
 
+                # TODO: need to make sure a network type is selected if the campaign is a network campaign
                 adgroup = adgroup_form.save()
-
+                adgroup.account = campaign.account
+                adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':
                     adgroup.network_type = None
@@ -518,8 +522,8 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
                 # Delete Cache. We leave this in views.py because we
                 # must delete the adunits that the adgroup used to have as well
                 if adgroup.site_keys:
-                    adunits = AdUnitQueryManager.get(adgroup.site_keys)
-                    AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+                    new_adunits = AdUnitQueryManager.get(adgroup.site_keys)
+                    AdUnitContextQueryManager.cache_delete_from_adunits(new_adunits)
 
                 CampaignQueryManager.put(campaign)
                 AdGroupQueryManager.put(adgroup)
@@ -597,49 +601,47 @@ class AdGroupDetailHandler(RequestHandler):
         # Load the ad group
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
-        # Network campaigns have their date range set by the date picker
-        # in the page
-        if adgroup.campaign.network():
-            if self.start_date and self.date_range:
-                end_date = self.start_date + datetime.timedelta(int(self.date_range) - 1)
-                days = date_magic.gen_days(self.start_date, end_date)
-            else:
-                days = date_magic.gen_date_range(self.date_range)
+        show_graph = True
 
         # Direct sold campaigns have a start date, and sometimes an end date.
         # Use those values if they both exist, otherwise set the range from
         # start to start + 90 days
-        else:
+        if adgroup.campaign.gtee() or adgroup.campaign.promo():
             today = datetime.datetime.now(Pacific_tzinfo())
 
             if adgroup.campaign.end_datetime \
                and adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific) < today:
-                end_date = adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific)
+                self.end_date = adgroup.campaign.end_datetime.replace(tzinfo=utc).astimezone(Pacific)
             else:
-                end_date = today
+                self.end_date = today
 
             if adgroup.campaign.start_datetime:
                 if adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific) > today:
-                    start_date = today
+                    self.start_date = today
+                    show_graph = False
                 else:
-                    start_date = adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific)
+                    self.start_date = adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific)
             else:
-                start_date = end_date - datetime.timedelta(90)
+                self.start_date = self.end_date - datetime.timedelta(90)
 
-            days = date_magic.gen_days(start_date, end_date)
+            self.days = date_magic.gen_days(self.start_date, self.end_date)
 
-        # We want to limit the number of stats we have to fetch.
-        # We've determined 90 is a good max.
-        if len(days) > 90:
-            days = days[len(days) - 90:]
+            # We want to limit the number of stats we have to fetch.
+            # We've determined 90 is a good max.
+            if len(self.days) > 90:
+                self.days = self.days[len(self.days) - 90:]
 
-        # We want to display at least 7 days of data
-        if len(days) < 7:
-            better_end_date = days[-1] + datetime.timedelta(7 - len(days))
-            days = date_magic.gen_days(days[0], better_end_date)
+            # We want to display at least 7 days of data
+            if len(self.days) < 7:
+                better_end_date = self.days[-1] + datetime.timedelta(7 - len(self.days))
+                # unless that makes us show future days
+                if better_end_date > today:
+                    better_end_date = today
+                self.days = date_magic.gen_days(self.days[0], better_end_date)
 
-        start_date = days[0]
-        end_date = days[-1]
+            self.start_date = self.days[0]
+            self.end_date = self.days[-1]
+            self.date_range = (self.end_date - self.start_date).days + 1
 
         # Show a flash message recommending using reports if selecting more than 30 days
         if self.date_range > 30:
@@ -658,8 +660,8 @@ class AdGroupDetailHandler(RequestHandler):
         fill_rate = lambda requests, impressions: \
                     (impressions/float(requests) if requests else 0)
 
-
-        adgroup.all_stats = stats_q.get_stats_for_days(advertiser=adgroup,days=days)
+        adgroup.all_stats = stats_q.get_stats_for_days(advertiser=adgroup,
+                days=self.days)
         adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
         try:
@@ -688,7 +690,7 @@ class AdGroupDetailHandler(RequestHandler):
         for c in creatives:
             c.all_stats = StatsModelQueryManager(self.account,
                                                  offline=self.offline).get_stats_for_days(advertiser=c,
-                                                                                          days=days)
+                                                                                          days=self.days)
             c.stats = reduce(lambda x, y: x + y, c.all_stats, StatsModel())
             # TODO: Should fix DB so that format is always there
             if not c.format:
@@ -706,7 +708,7 @@ class AdGroupDetailHandler(RequestHandler):
                 app.all_stats = StatsModelQueryManager(self.account, offline=self.offline).\
                                         get_stats_for_days(publisher=app,
                                                            advertiser=adgroup,
-                                                           days=days)
+                                                           days=self.days)
                 app.stats = reduce(lambda x, y: x + y, app.all_stats, StatsModel())
                 apps[au.app_key.key()] = app
             else:
@@ -715,7 +717,7 @@ class AdGroupDetailHandler(RequestHandler):
             stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
             au.all_stats = stats_manager.get_stats_for_days(publisher=au,
                                                             advertiser=adgroup,
-                                                            days=days)
+                                                            days=self.days)
             au.stats = reduce(lambda x, y: x + y, au.all_stats, StatsModel())
 
         # Figure out the top 4 ad units for the graph
@@ -724,6 +726,8 @@ class AdGroupDetailHandler(RequestHandler):
         if len(adunits) > 4:
             graph_adunits[3] = Site(name='Others')
             graph_adunits[3].all_stats = [reduce(lambda x, y: x + y, stats, StatsModel()) for stats in zip(*[au.all_stats for au in adunits[3:]])]
+        elif len(adunits) == 0:
+            show_graph = False
 
         # Load creatives if we are supposed to
         if not (adgroup.campaign.campaign_type in ['network', 'marketplace', 'backfill_marketplace']):
@@ -741,7 +745,7 @@ class AdGroupDetailHandler(RequestHandler):
         yesterday = None
 
         # Only pass back today/yesterday if the last 2 days in the date range are actually today/yesterday
-        if end_date == datetime.datetime.now(Pacific_tzinfo()).date():
+        if self.end_date == datetime.datetime.now(Pacific_tzinfo()).date():
             today = reduce(lambda x, y: x + y, [a.all_stats[-1] for a in graph_adunits], StatsModel())
             try:
                 yesterday = reduce(lambda x, y: x + y, [a.all_stats[-2] for a in graph_adunits], StatsModel())
@@ -828,9 +832,10 @@ class AdGroupDetailHandler(RequestHandler):
                                       'yesterday': yesterday,
                                       'totals': totals,
                                       'graph_adunits': graph_adunits,
-                                      'start_date': days[0],
-                                      'end_date': days[-1],
-                                      'date_range': len(days),
+                                      'start_date': self.start_date,
+                                      'end_date': self.end_date,
+                                      'date_range': self.date_range,
+                                      'show_graph': show_graph,
                                       'creative_fragment': creative_fragment,
                                       'message': message
                                   })
@@ -967,7 +972,6 @@ class PauseAdGroupHandler(RequestHandler):
 
         #TODO: we need a cross-platform default redirect in case
         # HTTP_REFERER doesn't exist
-        logging.warn(type(self.request.META))
         return HttpResponseRedirect(self.request.environ.get('HTTP_REFERER'))
 
 
@@ -1012,9 +1016,9 @@ class AddCreativeHandler(RequestHandler):
 
         # text_creative_form is unused in the template, why?
         return self.render(base_creative_form=base_creative_form,
-                                    text_creative_form=text_creative_form,
-                                    image_creative_form=image_creative_form,
-                                    text_tile_creative_form=text_tile_creative_form,
+                           text_creative_form=text_creative_form,
+                           image_creative_form=image_creative_form,
+                           text_tile_creative_form=text_tile_creative_form,
                                     html_creative_form=html_creative_form)
 
     def render(self, template=None, **kwargs):
@@ -1022,6 +1026,15 @@ class AddCreativeHandler(RequestHandler):
         return render_to_string(self.request, template_name=template_name, data=kwargs)
 
     def json_response(self, json_dict):
+        # Some browsers won't accept the application/json mimetype.
+        # Transfer as text/plain if that's the case.
+        # HACK
+        # broken_browsers = ['Firefox', 'MSIE']
+        # for browser in broken_browsers:
+        #     if self.request.META['HTTP_USER_AGENT'].find(browser) > 0:
+        #         json_str = simplejson.dumps(json_dict)
+        #         return HttpResponse(json_str)
+
         return JSONResponse(json_dict)
 
     def post(self):
@@ -1114,6 +1127,8 @@ def creative_create(request, *args, **kwargs):
 
 class DisplayCreativeHandler(RequestHandler):
     def get(self, creative_key):
+        if creative_key == 'mraid.js':
+            return HttpResponse("")
         c = CreativeQueryManager.get(creative_key)
         if c and c.ad_type == "image":
 

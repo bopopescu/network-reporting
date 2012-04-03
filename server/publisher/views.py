@@ -39,6 +39,7 @@ from reporting.query_managers import StatsModelQueryManager
 from common.utils import sswriter, date_magic
 from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
+#REFACTOR: only import what we need here
 from common.constants import *
 from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
 
@@ -183,7 +184,6 @@ class GeoPerformanceHandler(RequestHandler):
             for c in countries:
                 country_info = geo_dict.get(c, StatsModel(country=c, date=now))
                 geo_counts_0 = stats.get_geo(c, GEO_COUNTS[0])
-                geo_counts_1 = stats.get_geo(c, GEO_COUNTS[1])
                 geo_counts_2 = stats.get_geo(c, GEO_COUNTS[2])
                 country_stats = StatsModel(country=c,
                                            request_count = geo_counts_0,
@@ -501,6 +501,10 @@ class AppDetailHandler(RequestHandler):
             gtee_levels.append(dict(name = name, campaigns = level_camps))
 
 
+        # we don't include network or promo campaigns in the revenue totals
+        logging.warn(guarantee_campaigns)
+        logging.warn(marketplace_campaigns)
+            
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted)

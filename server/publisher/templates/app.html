@@ -404,7 +404,7 @@
                         Network
                       </td>
                       <td class="dataTable-data numeric">
-                        - 
+                        -
                       </td>
                       <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
                           {% if campaign.network_type %}
@@ -474,6 +474,8 @@
                       </td>
                     </tr>
                   {% endfor %}
+
+                  {% comment %}
                   <tr>
                     <td>
                       <span class="big">Totals</span> <br />
@@ -482,18 +484,25 @@
                       </span>
                     </td>
                     <td></td>
-                    <td class="dataTable-name numeric"><b>{{app.stats.revenue|currency}}</b></td>
+                    <td class="dataTable-name numeric">
+                      <strong> {{ app.stats.revenue|currency }} </strong>
+                    </td>
                     <td></td>
-                    <td class="dataTable-name numeric"><b>{{app.stats.impression_count|withsep}}</b></td>
-                    <td class="dataTable-data numeric">
-                        <b>{{app.stats.click_count|withsep}}<br/>
-                        {{app.stats.ctr|percentage}}</b>
+                    <td class="dataTable-name numeric">
+                      <strong> {{ app.stats.impression_count|withsep }} </strong>
                     </td>
                     <td class="dataTable-data numeric">
-                        <b>{{app.stats.conversion_count|withsep}}<br/>
-                        {{app.stats.conv_rate|percentage}}</b>
+                        <strong>{{app.stats.click_count|withsep}}</strong>
+                        <br/>
+                        <strong>{{app.stats.ctr|percentage}}</strong>
+                    </td>
+                    <td class="dataTable-data numeric">
+                      <strong>{{app.stats.conversion_count|withsep}}</strong>
+                      <br/>
+                      <strong>{{app.stats.conv_rate|percentage}}</strong>
                     </td>
                   </tr>
+                  {% endcomment %}
                 </tbody>
               </table>
             </div>

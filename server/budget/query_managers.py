@@ -22,7 +22,7 @@ ONE_DAY = timedelta(days=1)
 BUDGET_UPDATE_DATE_FMT = '%Y/%m/%d %H:%M'
 
 #TODO(tornado): This needs to be a url that we'll actually use
-ADSERVER = 'ec2-50-17-0-25.compute-1.amazonaws.com'
+ADSERVER = 'adserver.mopub.com'
 TEST_ADSERVER = 'localhost:8000'
 
 class BudgetQueryManager(QueryManager):
@@ -32,11 +32,11 @@ class BudgetQueryManager(QueryManager):
     def update_or_create_budget_for_campaign(cls, camp, total_spent=0.0, testing=False, fetcher=None, migrate_total=False):
         # Update budget
         if camp.start_datetime is None:
-            camp.start_datetime = datetime.now().replace(tzinfo=utc)
-        if str(camp.start_datetime.tzinfo) == str(Pacific):
-            camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo = None)
+            camp.start_datetime = datetime.utcnow()
+        elif str(camp.start_datetime.tzinfo) == str(Pacific):
+            camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo=None)
         if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
-            camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo = None)
+            camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo=None)
 
         if camp.start_datetime:
             remote_start = camp.start_datetime.strftime(BUDGET_UPDATE_DATE_FMT)
@@ -54,6 +54,10 @@ class BudgetQueryManager(QueryManager):
                                   active = camp.active,
                                   delivery_type = camp.budget_strategy,
                                   )
+        if camp.has_daily_budget:
+            remote_update_dict['static_total_budget'] = None
+        elif camp.has_full_budget:
+            remote_update_dict['static_daily_budget'] = None
         if migrate_total:
             remote_update_dict['total_spent'] = camp.budget_obj.total_spent
         qs = urllib.urlencode(remote_update_dict)
@@ -65,13 +69,13 @@ class BudgetQueryManager(QueryManager):
             pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
-            #try:
-            #    full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + update_uri
-            #    urllib2.urlopen(full_url)
-            #except:
-            #    # This isn't implemented yet
-            #    #TODO(tornado): need to implement this and things
-            #    pass
+            try:
+                full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + update_uri
+                urllib2.urlopen(full_url)
+            except:
+                # This isn't implemented yet
+                #TODO(tornado): need to implement this and things
+                pass
 
         if camp.budget_obj:
             budget = camp.budget_obj
@@ -94,11 +98,11 @@ class BudgetQueryManager(QueryManager):
             # if Campaigns are aware of their tz, set them to UTC and make them unaware of it
             # doesn't matter if we put budgets at this point because when it gets put it'll fix itself
             if camp.start_datetime is None:
-                camp.start_datetime = datetime.now().replace(tzinfo=utc)
-            if str(camp.start_datetime.tzinfo) == str(Pacific):
-                camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo = None)
+                camp.start_datetime = datetime.utcnow()
+            elif str(camp.start_datetime.tzinfo) == str(Pacific):
+                camp.start_datetime = camp.start_datetime.astimezone(utc).replace(tzinfo=None)
             if camp.end_datetime and str(camp.end_datetime.tzinfo) == str(Pacific):
-                camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo = None)
+                camp.end_datetime = camp.end_datetime.astimezone(utc).replace(tzinfo=None)
 
             #Do the same thing above, but for budgets
             budget_start = camp.budget_obj.start_datetime
@@ -117,13 +121,13 @@ class BudgetQueryManager(QueryManager):
             if not camp.budget_strategy == camp.budget_obj.delivery_type:
                 update_dict['delivery_type'] = camp.budget_strategy
 
-            if camp.budget:
+            if camp.has_daily_budget:
                 slice_budget = get_slice_budget_from_daily(camp.budget)
                 # Only update the update dict if new values
                 if not slice_budget == camp.budget_obj.static_slice_budget:
                     update_dict['static_total_budget'] = None
                     update_dict['static_slice_budget'] = slice_budget
-            elif camp.full_budget:
+            elif camp.has_full_budget:
                 if not camp.full_budget == camp.budget_obj.static_total_budget:
                     update_dict['static_total_budget'] = camp.full_budget
                     update_dict['static_slice_budget'] = None
@@ -134,7 +138,7 @@ class BudgetQueryManager(QueryManager):
                 cls.prep_update_budget(camp.budget_obj, **update_dict)
             return camp.budget_obj
         # Create budget
-        elif camp.full_budget:
+        elif camp.has_full_budget:
             budget = Budget(start_datetime = camp.start_datetime,
                             end_datetime = camp.end_datetime,
                             active = camp.active,
@@ -146,7 +150,7 @@ class BudgetQueryManager(QueryManager):
             budget.put()
             return budget
 
-        elif camp.budget:
+        elif camp.has_daily_budget:
             budget = Budget(start_datetime = camp.start_datetime,
                             end_datetime = camp.end_datetime,
                             active = camp.active,

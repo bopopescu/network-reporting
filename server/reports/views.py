@@ -30,7 +30,6 @@ from reports.forms import ReportForm
 class ReportIndexHandler(RequestHandler):
     def get(self):
         manager = ReportQueryManager(self.account)
-        saved = manager.get_saved()
         scheduled = manager.get_scheduled()
         defaults, adding_reps = manager.get_default_reports()
         scheduled = defaults + scheduled

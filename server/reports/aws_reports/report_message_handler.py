@@ -465,7 +465,7 @@ class ReportMessageHandler(MessageHandler):
             rep = self.get_message_report(message)
             rep.status = fail_text 
             rep.put()
-            rep.notify_failure()
+            rep.notify_failure(reason)
         except Exception:
             log("Report notify failed", level = 'exception')
             return

@@ -128,6 +128,7 @@ class NetworkConfig(db.Model):
                                    greystripe_pub_id = self.greystripe_pub_id,
                                    inmobi_pub_id = self.inmobi_pub_id,
                                    jumptap_pub_id = self.jumptap_pub_id,
+                                   millennial_pub_id = self.millennial_pub_id,
                                    mobfox_pub_id = self.mobfox_pub_id,
                                    rev_share = self.rev_share,
                                    price_floor = self.price_floor,

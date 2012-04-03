@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 import time
 
+import urllib2
+from urllib import urlencode
+
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
@@ -15,6 +18,11 @@ from budget.helpers import get_slice_from_datetime, get_slice_from_ts
 from budget.memcache_budget import set_slice
 from budget.models import Budget, BudgetSliceCounter
 
+from adserver_constants import (ADSERVER_HOSTNAME,
+                                BUDGET_DATA_URL,
+                                BUDGET_TS_DATA_URL,
+                                BUDGET_DAILY_DATA_URL,)
+
 import logging
 
 # For taskqueue
@@ -26,6 +34,13 @@ from google.appengine.ext import webapp
 # The maximum bucket size is 100
 # Each worker must complete in less than a timeslice to avoid contention
 CAMPAIGNS_PER_WORKER = 30
+
+DEF_URL = 'http://' + ADSERVER_HOSTNAME
+DEF_BUDGET_DATA_URL = DEF_URL + BUDGET_DATA_URL
+DEF_BUDGET_TS_DATA_URL = DEF_URL + BUDGET_TS_DATA_URL
+DEF_BUDGET_DAILY_DATA_URL = DEF_URL + BUDGET_DAILY_DATA_URL
+
+BUDGET_DAILY_LOG_DATE_FMT = '%Y%m%d'
 
 def budget_advance(request):
     slice_counter = BudgetSliceCounter.all().get()
@@ -92,7 +107,6 @@ def advance_worker(request, key_shard=None):
 
     return HttpResponse('Worker Succeeded')
 
-
 def chart(request, campaign_key):
     camp = Campaign.get(campaign_key)
 
@@ -105,62 +119,86 @@ def chart(request, campaign_key):
 
 def budget_view(request, adgroup_key):
     adgroup = AdGroup.get(adgroup_key)
-
     camp = adgroup.campaign
-    budget = camp.budget_obj
 
-    if budget:
-        remaining_daily_budget = budget_service.remaining_daily_budget(budget)
-        remaining_ts_budget = budget_service.remaining_ts_budget(budget)
-        braking_fraction = budget_service.braking_fraction(budget)
-        expected = budget.expected_spent
-        if budget.static_slice_budget and not budget.finite:
-            total = budget.spent_today
-        else:
-            total = budget.total_spent
+    default_query_dict = dict(key_type='campaign',
+                              key=str(camp.key()))
+
+
+    data_qs = urlencode(default_query_dict)
+    data_full_url = DEF_BUDGET_DATA_URL + '?' + data_qs
+    remote_data_dict = simplejson.loads(urllib2.urlopen(data_full_url).read())
+
+    if remote_data_dict:
+        remaining = remote_data_dict['remaining']
+        remaining_daily_budget = remaining['daily_rem']
+        remaining_ts_budget = remaining['expected_rem']
+        braking_fraction = remote_data_dict['braking_fraction']
+        expected = remote_data_dict['expected_spent']
+        daily_total = remote_data_dict['spending']['daily_spend']
+        total = remote_data_dict['spending']['total_spend']
+        slice_budget = remote_data_dict['slice_budget']
     else:
         remaining_ts_budget = None
         remaining_daily_budget = None
         braking_fraction = None
         expected = None
+        daily_total = None
         total = None
+        slice_budget = None
 
+    ######### Construct TS Log request URL for today's logs ########
     today = datetime.now().date()
+    day_start_slice = get_slice_from_datetime(today)
+
+    # Needed for getting TS logs
+    now_slice = get_slice_from_datetime(datetime.utcnow())
+    count = now_slice - day_start_slice
+
+    ts_query_dict = dict(slice_num=now_slice,
+                         count=count)
+    ts_query_dict.update(default_query_dict)
+    ts_data_qs = urlencode(ts_query_dict)
+
+    ts_full_url = DEF_BUDGET_TS_DATA_URL + '?' + ts_data_qs
+    ts_remote_dict = simplejson.loads(urllib2.urlopen(ts_full_url).read())
+
+
+
+    ######### Construct daily log request URL #############
     one_month_ago = today - timedelta(days=30)
+    start_date = one_month_ago.strftime(BUDGET_DAILY_LOG_DATE_FMT)
+    end_date = today.strftime(BUDGET_DAILY_LOG_DATE_FMT)
+    daily_log_query_dict = dict(start_date=start_date,
+                                end_date=end_date)
+    daily_log_query_dict.update(default_query_dict)
+    daily_log_qs = urlencode(daily_log_query_dict)
 
-    daily_logs = budget_service._get_daily_logs_for_date_range(budget,
-                                                               one_month_ago,
-                                                               today)
+    daily_log_full_url = DEF_BUDGET_DAILY_DATA_URL + '?' + daily_log_qs
 
+    #daily_log_remote_dict = simplejson.loads(urllib2.urlopen(daily_log_full_url).read())
 
-    ts_logs = budget_service._get_ts_logs_for_date_range(budget, today, today)
+    #daily_logs = daily_log_remote_dict['daily_logs']
+    daily_logs = []
+    ts_logs = ts_remote_dict['ts_logs']
 
-    #### Build budgetslicer address ####
-    # prefix = "http://localhost:8080/_ah/admin/datastore/edit?key="
-    prefix = "https://appengine.google.com/datastore/edit?app_id=mopub-inc&namespace=&key="
+    #daily_logs = budget_service._get_daily_logs_for_date_range(budget,
+    #                                                           one_month_ago,
+    #                                                           today)
+#
+#
+#    ts_logs = budget_service._get_ts_logs_for_date_range(budget, today, today)
 
-    budget_obj_url = prefix + str(budget.key())
-
-
-    #### Build memcache clearing urls ####
-    # clear_prefix = "http://localhost:8080"
-    clear_prefix = "http://app.mopub.com"
-
-    ts_key = budget_service._make_budget_ts_key(budget)
-
-    clear_memcache_ts_url = clear_prefix + "/m/clear?key=" + ts_key + "&namespace=budget"
-
-    logging.warning("Ts logs: %s" % ts_logs)
+    clear_memcache_ts_url = 'http://www.DONOTFUCKINGCLICKTHIS.com'
 
     context =  {'campaign': camp,
-                'budget': budget,
                 'remaining_daily_budget': remaining_daily_budget,
                 'remaining_ts_budget': remaining_ts_budget,
                 'daily_logs': daily_logs,
                 'ts_logs': ts_logs,
                 'today': today,
                 'one_month_ago': one_month_ago,
-                'budget_obj_url': budget_obj_url,
+                'budget_obj_url': data_full_url,
                 'clear_memcache_ts_url': clear_memcache_ts_url,
                 'braking_fraction': braking_fraction,
                 'expected': expected,

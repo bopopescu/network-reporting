@@ -57,6 +57,12 @@
     td.stat, th.stat {
         text-align: right;
         width: 65px;
+        &.pub-id-data { 
+            width: 140px
+        }
+        &.cpm-data { 
+            width: 150px
+        }
     }
     td.text {
         width: 65px;
@@ -135,12 +141,6 @@ table.dataTable {
 
 .dataTable-data {
   width: 75px;
-  &.pub-id-data { 
-      width: 200px
-  }
-  &.cpm-data { 
-      width: 150px
-  }
 }
 
 .dataTable-date {

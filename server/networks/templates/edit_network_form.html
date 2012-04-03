@@ -255,13 +255,13 @@
                     <tr>
                         <td class="icon"></td>
                         <td class="name"></td>
-                        <td class="text">Enabled</td>
+                        <td class="name pub-id-data">Enabled</td>
                         {% if ad_network_ids %}
-                        <td class="text">Ad Network ID</td>
+                        <td class="name">Ad Network ID</td>
                         {% endif %}
-                        <td class="text">Rate (USD)</td>
+                        <td class="name">Rate (USD)</td>
                         {% if reporting %}
-                        <th class="stat">
+                        <th class="name">
                             <div>
                                 <a id="copy-7-day" style="cursor:pointer">
                                     <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
@@ -297,7 +297,7 @@
                             <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> ( All )
                         </td>
                         {% if ad_network_ids %}
-                        <td class="text pub-id-data">
+                        <td class="stat pub-id-data">
                             <div class="campaign_type_dependant network">
                                 {% for field in app.network_config_form %}{{ field }}{% endfor %}
                                 <span class="pub_id muted" style="float: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 120px;"></span>
@@ -305,7 +305,7 @@
                             </div>
                         </td>
                         {% endif %}
-                        <td class="text cpm-data" style="width:150px">
+                        <td class="stat cpm-data" style="width:150px">
                         </td>
                         {% if reporting %}
                         <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
@@ -332,7 +332,7 @@
                             {{ adunit.adgroup_form.active }}
                         </td>
                         {% if ad_network_ids %}
-                        <td class="text pub-id-data adunit">
+                        <td class="stat pub-id-data adunit">
                             <div class="campaign_type_dependant network">
                                 {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
                                 <span class="pub_id muted adunit" style="float: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 120px;"></span>
@@ -340,7 +340,7 @@
                             </div>
                         </td>
                         {% endif %}
-                        <td class="text cpm-data">
+                        <td class="stat cpm-data">
                             {{ adunit.adgroup_form.bid }}
                             {{ adunit.adgroup_form.bid_strategy }} 
                         </td>

@@ -1683,6 +1683,10 @@ a.disabled {
   .inventory_table td.stat, .inventory_table th.stat {
     text-align: right;
     width: 65px; }
+    .inventory_table td.stat.pub-id-data, .inventory_table th.stat.pub-id-data {
+      width: 140px; }
+    .inventory_table td.stat.cpm-data, .inventory_table th.stat.cpm-data {
+      width: 150px; }
   .inventory_table td.text {
     width: 65px; }
   .inventory_table td.icon, .inventory_table th.icon {
@@ -1738,10 +1742,6 @@ table.dataTable {
 
 .dataTable-data {
   width: 75px; }
-  .dataTable-data.pub-id-data {
-    width: 200px; }
-  .dataTable-data.cpm-data {
-    width: 150px; }
 
 .dataTable-date {
   width: 175px; }

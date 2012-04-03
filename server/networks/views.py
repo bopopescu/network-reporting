@@ -202,8 +202,8 @@ class EditNetworkHandler(RequestHandler):
             login = AdNetworkLoginManager.get_login(self.account,
                     network).get()
             if login:
-                # Can't initialize username or password because it's encrypted and
-                # can only be decrypted on EC2
+                # Can't initialize username or password because it's encrypted
+                # and can only be decrypted on EC2
                 login_form = LoginCredentialsForm(instance=login)
             else:
                 login_form = LoginCredentialsForm()
@@ -220,8 +220,9 @@ class EditNetworkHandler(RequestHandler):
                     app.network_config, prefix="app_%s" % app.key())
             app.pub_id = app.network_config_form.fields.get(network + '_pub_id',
                     False)
-            app.network_config_form.fields[network + '_pub_id'].widget.attrs['class'] += \
-                    ' app-pub-id'
+            if network + '_pub_id' in app.network_config_form.fields:
+                app.network_config_form.fields[network + '_pub_id'].widget. \
+                        attrs['class'] += ' app-pub-id'
             if app.pub_id:
                 ad_network_ids = True
 
@@ -236,9 +237,11 @@ class EditNetworkHandler(RequestHandler):
                 for mapper in AdNetworkMapperManager.get_mappers_for_app(
                         login, app):
                     seven_day_stats += AdNetworkStatsManager. \
-                            get_stats_for_mapper_and_days(mapper, last_7_days)[0]
+                            get_stats_for_mapper_and_days(mapper,
+                                    last_7_days)[0]
                     fourteen_day_stats += AdNetworkStatsManager. \
-                            get_stats_for_mapper_and_days(mapper, last_14_days)[0]
+                            get_stats_for_mapper_and_days(mapper,
+                                    last_14_days)[0]
 
             app.seven_day_stats = seven_day_stats
             app.fourteen_day_stats = fourteen_day_stats
@@ -264,8 +267,8 @@ class EditNetworkHandler(RequestHandler):
                         instance=adunit.network_config, prefix="adunit_%s" %
                         adunit.key())
                 if getattr(adunit.network_config, network + '_pub_id', False):
-                    adunit.network_config_form.fields[network + '_pub_id'].widget.attrs['class'] += \
-                            ' initialized'
+                    adunit.network_config_form.fields[network + '_pub_id']. \
+                            widget.attrs['class'] += ' initialized'
 
                 adunit.pub_id = adunit.network_config_form.fields.get(network +
                         '_pub_id', False)

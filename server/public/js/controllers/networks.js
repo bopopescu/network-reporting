@@ -231,7 +231,7 @@ $(function() {
                 'ejam': 'ejam_pub_id',
                 'inmobi': 'inmobi_pub_id',
                 'jumptap': 'jumptap_pub_id',
-                'millennial_native': 'millennial_pub_id',
+                'millennial': 'millennial_pub_id',
                 'mobfox': 'mobfox_pub_id'
             };
 

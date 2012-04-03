@@ -35,8 +35,20 @@
                         if (!$(this).hasClass('initialized')) {
                             $(this).val(value);
                         }
-                        });
-                    })
+                        if ($(this).is(':hidden')) {
+                            $(this).siblings('span.pub_id.muted.adunit').each(function () {
+                                $(this).text(value);
+                                if (value) {
+                                    $(this).show();
+                                    $(this).siblings('span.pub_id').show();
+                                } else {
+                                    $(this).hide();
+                                    $(this).siblings('span.pub_id').hide();
+                                }
+                            });
+                        }
+                    });
+                })
                 .focusout(function () {
                     if ($(this).val()) {
                         var div = $(this).parents('tbody');
@@ -261,12 +273,13 @@
                 }
             }).filter(':checked').click();
 
-            $('a.pub_id').click(function() {
+            $('span.pub_id').click(function() {
                 var pub_id = pub_ids[network_type];
                 $(this).siblings('input[name$="'+pub_id+'"]').show();
                 $(this).prev('span').hide();
                 $(this).hide();
             });
+
 
             $('.pub_id').hide();
 
@@ -275,11 +288,13 @@
                 var value = input.val();
 
                 if(value) {
-                    input.siblings('span.pub_id').html(value).show();
-                    input.siblings('a.pub_id').show();
+                    input.siblings('span.pub_id.muted').text(value);
+                    input.siblings('span.pub_id').show();
                 }
                 else {
-                    input.show();
+                    if (!$(this).hasClass('adunit')) {
+                        input.show();
+                    }
                 }
                 });
 
@@ -674,8 +689,8 @@
                         <td class="text pub-id-data">
                             <div class="campaign_type_dependant network">
                                 {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted"></span>
-                                <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                                <span class="pub_id muted" style="float: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 120px;"></span>
+                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
                             </div>
                         </td>
                         {% endif %}
@@ -708,11 +723,11 @@
                             {{ adunit.adgroup_form.active }}
                         </td>
                         {% if ad_network_ids %}
-                        <td class="text pub-id-data">
+                        <td class="text pub-id-data adunit">
                             <div class="campaign_type_dependant network">
                                 {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted"></span>
-                                <a class="pub_id" href="javascript:void(0);" type="button">change</a>
+                                <span class="pub_id muted adunit" style="float: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 120px;"></span>
+                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
                             </div>
                         </td>
                         {% endif %}

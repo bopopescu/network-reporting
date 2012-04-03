@@ -10,9 +10,8 @@ import common.utils.test.setup
 from google.appengine.ext import testbed
 
 from advertiser.models import Order, LineItem
-from advertiser.forms import (OrderForm, LineItemForm, BaseCreativeForm,
-                              TextAndTileCreativeForm, HtmlCreativeForm,
-                              ImageCreativeForm)
+from advertiser.forms import (OrderForm, LineItemForm, ImageCreativeForm,
+                              TextAndTileCreativeForm, HtmlCreativeForm)
 from common.utils.timezones import Pacific_tzinfo
 from common.utils.tzinfo import UTC
 

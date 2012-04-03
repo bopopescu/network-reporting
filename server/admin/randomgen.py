@@ -309,10 +309,10 @@ def generate_creative(account,adgroup):
     creative_name = get_creative_name()
 
     #For now, test data generation will only create basic text creatives
-    creative = TextCreative(active=True,
+    creative = HtmlCreative(active=True,
                             account = account,
                             ad_group = adgroup,
-                            ad_type = "text",
+                            ad_type = "html",
                             headline = "%s %s" % (creative_name,"headline"),
                             line1 = "%s %s" % (creative_name,"line1"),
                             line2 = "%s %s" % (creative_name,"line2"),

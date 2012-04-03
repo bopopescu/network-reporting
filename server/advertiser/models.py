@@ -56,7 +56,6 @@ from simple_models import (SimpleAdGroup,
                            SimpleHtmlCreative,
                            SimpleImageCreative,
                            SimpleTextAndTileCreative,
-                           SimpleTextCreative,
                            SimpleNullCreative,
                            SimpleDummyFailureCreative,
                            SimpleDummySuccessCreative,
@@ -642,9 +641,10 @@ class Creative(polymodel.PolyModel):
     deleted = db.BooleanProperty(default=False)
 
     # the creative type helps the ad server render the right thing if the creative wins the auction
-    ad_type = db.StringProperty(choices=["text", "text_icon", "image", "iAd", "adsense",
-                                         "admob", "greystripe", "html", "html_full",
-                                         "clear", "custom_native","admob_native",
+    ad_type = db.StringProperty(choices=["text_icon", "image", "html",
+                                         "iAd", "adsense", "admob",
+                                         "greystripe", "html_full", "clear",
+                                         "custom_native", "admob_native",
                                          "millennial_native"],
                                 default="image")
 
@@ -791,29 +791,6 @@ class Creative(polymodel.PolyModel):
     def simplify(self):
         simplify_dict = self.build_simplify_dict()
         return self.SIMPLE(**simplify_dict)
-
-
-
-class TextCreative(Creative):
-    SIMPLE = SimpleTextCreative
-    # text ad properties
-    headline = db.StringProperty()
-    line1 = db.StringProperty()
-    line2 = db.StringProperty()
-
-    #@property
-    #def Renderer(self):
-    #    return None
-
-    def __repr__(self):
-        return "'%s'" % (self.headline,)
-
-    def build_simplify_dict(self):
-        spec_dict = dict(headline = self.headline,
-                         line1 = self.line1,
-                         line2 = self.line2)
-        spec_dict.update(super(TextCreative, self).build_simplify_dict())
-        return spec_dict
 
 
 class TextAndTileCreative(Creative):

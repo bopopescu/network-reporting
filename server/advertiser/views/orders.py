@@ -19,7 +19,7 @@ from common.ragendja.template import JSONResponse
 from common.utils.request_handler import RequestHandler
 
 from account.query_managers import AccountQueryManager
-from advertiser.forms import (OrderForm, LineItemForm, BaseCreativeForm,
+from advertiser.forms import (OrderForm, LineItemForm, NewCreativeForm,
                               ImageCreativeForm, TextAndTileCreativeForm,
                               HtmlCreativeForm)
 from advertiser.query_managers import (CampaignQueryManager,
@@ -128,10 +128,7 @@ class LineItemDetailHandler(RequestHandler):
         line_item = AdGroupQueryManager.get(line_item_key)
 
         # Create creative forms
-        base_creative_form = BaseCreativeForm()
-        image_creative_form = ImageCreativeForm()
-        text_tile_creative_form = TextAndTileCreativeForm()
-        html_creative_form = HtmlCreativeForm()
+        creative_form = NewCreativeForm()
 
         # Get the stats for the date range
         stats_q = StatsModelQueryManager(self.account, self.offline)
@@ -146,10 +143,7 @@ class LineItemDetailHandler(RequestHandler):
         return {
             'order': line_item.campaign,
             'line_item': line_item,
-            'base_creative_form': base_creative_form,
-            'text_tile_creative_form': text_tile_creative_form,
-            'image_creative_form': image_creative_form,
-            'html_creative_form': html_creative_form,
+            'creative_form': creative_form,
             'stats': format_stats(all_stats),
             'targeted_apps': targeted_apps.values(),
             'targeted_app_keys': targeted_apps.keys()
@@ -174,24 +168,31 @@ class AdSourceStatusChangeHandler(RequestHandler):
         if ad_sources and status:
             for ad_source_key in ad_sources:
                 try:
-                    ad_source = AdGroupQueryManager.get(ad_source_key)
-                    manager_used = AdGroupQueryManager
+                    ad_source = CreativeQueryManager.get(ad_source_key)
+                    manager_used = CreativeQueryManager
                 except:
-                    ad_source = CampaignQueryManager.get(ad_source_key)
-                    manager_used = CampaignQueryManager
+                    try:
+                        ad_source = AdGroupQueryManager.get(ad_source_key)
+                        manager_used = AdGroupQueryManager
+                    except:
+                        ad_source = CampaignQueryManager.get(ad_source_key)
+                        manager_used = CampaignQueryManager
                 updated = False
                 if ad_source.account.key() == self.account.key():
                     if status == 'run' or status == 'play':
                         ad_source.active = True
-                        ad_source.archived = False
+                        if manager_used != CreativeQueryManager:
+                            ad_source.archived = False
                         updated = True
                     elif status == 'pause':
                         ad_source.active = False
-                        ad_source.archived = False
+                        if manager_used != CreativeQueryManager:
+                            ad_source.archived = False
                         updated = True
                     elif status == 'archive':
                         ad_source.active = False
-                        ad_source.archived = True
+                        if manager_used != CreativeQueryManager:
+                            ad_source.archived = True
                         updated = True
                     elif status == 'delete':
                         ad_source.deleted = True
@@ -392,9 +393,6 @@ class CreativeFormHandler(RequestHandler):
     New/Edit form page for Creatives.
     """
     def post(self, line_item_key=None, creative_key=None):
-        if not self.request.is_ajax():
-            raise Http404
-
         if creative_key:
             creative = CreativeQueryManager.get(creative_key)
             line_item = creative.ad_group
@@ -402,7 +400,21 @@ class CreativeFormHandler(RequestHandler):
             creative = None
             line_item = AdGroupQueryManager.get(line_item_key)
 
-        creative_form = BaseCreativeForm(self.request.POST, instance=creative)
+        ad_type = creative.ad_type if creative else self.request.POST['ad_type']
+        logging.error(ad_type)
+        if ad_type == 'image':
+            creative_form = ImageCreativeForm(self.request.POST,
+                                              files=self.request.FILES,
+                                              instance=creative)
+        elif ad_type == 'text_icon':
+            creative_form = TextAndTileCreativeForm(self.request.POST,
+                                                    files=self.request.FILES,
+                                                    instance=creative)
+        elif ad_type == 'html':
+            creative_form = HtmlCreativeForm(self.request.POST,
+                                             instance=creative)
+        else:
+            raise Exception("Unsupported creative type %s." % ad_type)  # TODO: real exception type
 
         if creative_form.is_valid():
             creative = creative_form.save()

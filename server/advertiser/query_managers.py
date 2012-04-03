@@ -6,10 +6,8 @@ from common.constants import CAMPAIGN_LEVELS
 
 from advertiser.models import Campaign
 from advertiser.models import AdGroup
-from advertiser.models import Creative, TextCreative, \
-                              TextAndTileCreative, \
-                              HtmlCreative,\
-                              ImageCreative
+from advertiser.models import (Creative, TextAndTileCreative, ImageCreative,
+                               HtmlCreative)
 
 
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager

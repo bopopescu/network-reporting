@@ -1,22 +1,204 @@
-<dl class="formFields">
-    <div>
-        {% with base_creative_form as form %}
-            {% include 'advertiser/forms/base_creative_form.html' %}
-        {% endwith %}
+{% load filters %}
+{% load forms %}
+
+<ul class="form_fields">
+    <li>
+        {{ creative_form.format.label_tag }}
+        <div>
+            {{ creative_form.format }}
+        </div>
+    </li>
+
+    <li class="format_dependent custom">
+        {{ creative_form.custom_width.label_tag }}
+        <div>
+            {{ creative_form.custom_width }} <span class="muted">px</span>
+            &times;
+            {{ creative_form.custom_height }} <span class="muted">px</span>
+        </div>
+    </li>
+
+    <li class="format_dependent full full_tablet">
+        {{ creative_form.landscape.label_tag }}
+        <div>
+            {{ creative_form.landscape }}
+        </div>
+    </li>
+
+    <li>
+        {{ creative_form.ad_type.label_tag }}
+        <div>
+            {# TODO: something that sucks less #}
+            {% if creative_form.instance %}
+                {% if creative_form.instance.ad_type == 'image' %}
+                    Image
+                {% else %}
+                    {% if creative_form.instance.ad_type == 'text_icon' %}
+                        Text and Tile
+                    {% else %}
+                        HTML
+                    {% endif %}
+                {% endif %}
+                <input name="{{ creative_form.ad_type.name }}" type="hidden" value="{{ creative_form.instance.ad_type }}" />
+            {% else %}
+                <span class="radios">{{ creative_form.ad_type }}</span>
+            {% endif %}
+        </div>
+    </li>
+
+    <li>
+        {{ creative_form.name.label_tag }}
+        <div>
+            {{ creative_form.name }}
+        </div>
+    </li>
+
+    {% if not creative_form.instance or creative_form.instance.ad_type == 'image' or creative_form.instance.ad_type == 'text_icon' %}
+        <li class="ad_type_dependent image text_icon">
+            {{ creative_form.url.label_tag }}
+            <div>
+                {{ creative_form.url }}
+                <a class="help_link" href="#">What's this?</a>
+                <div class="help_content hidden">
+                    <h3>Click URL</h3>
+                    <p>This is the link that will open when a user clicks on this ad.  Some examples are:
+                    <h4>Web Page</h4>
+                    <p>http://www.example.com/</p>
+                    <h4>iTunes App Store</h4>
+                    <p>http://itunes.apple.com/us/app/headingout/id399903812?mt=8</p>
+                    <h4>Android Market</h4>
+                    <p>market://details?id=com.pauloslf.cloudprint</p>
+                    <h3>Conversion Tracking</h3>
+                    <p>If you enter an iTunes or Android store URL, MoPub will automatically track conversions for the app when it is opened.</p>
+                </div>
+            </div>
+        </li>
+    {% endif %}
+
+    {# TODO: admin only #}
+    <li>
+        {{ creative_form.launchpage.label_tag }}
+        <div>
+            {{ creative_form.launchpage }}
+            <a class="help_link">What's this?</a>
+            <div class="help_content hidden">
+                <h3>Intercept URL (admin only)</h3>
+                <p>Use if the ad network is using window.location or window.open to open links. Don't forget the HTTP!</p>
+            </div>
+        </div>
+    </li>
+
+    <li>
+        {{ creative_form.conv_appid.label_tag }}
+        <div>
+            {{ creative_form.conv_appid }}
+            <a class="help_link">What's this?</a>
+            <div class="help_content hidden">
+                <h3>Application ID for Conversion Tracking</h3>
+                <p>If you enter an iTunes or Android store URL, MoPub will automatically track conversions for the app when it is opened.</p>
+                <h4>iTunes App Store ID</h4>
+                <p>e.g. 399903812 (for <a href="http://itunes.apple.com/us/app/headingout/id399903812?mt=8">Heading Out</a>)</p>
+                <h4>Android Market package name</h4>
+                <p>e.g. com.pauloslf.cloudprint (for <a href="https://market.android.com/details?id=com.pauloslf.cloudprint&amp;feature=search_result">Cloud Print</a>)</<p>
+            </div>
+        </div>
+    </li>
+
+    <li>
+        {{ creative_form.tracking_url.label_tag }}
+        <div>
+            {{ creative_form.tracking_url }}
+        </div>
+    </li>
+</ul>
+
+{% if not creative_form.instance or creative_form.instance.ad_type == 'text_icon' %}
+    <ul class="form_fields ad_type_dependent text_icon">
+        <li>
+            {{ creative_form.line1.label_tag }}
+            <div>
+                {{ creative_form.line1 }}
+            </div>
+        </li>
+
+        <li>
+            {{ creative_form.line2.label_tag }}
+            <div>
+                {{ creative_form.line2 }}
+            </div>
+        </li>
+    </ul>
+{% endif %}
+
+{% if not creative_form.instance or creative_form.instance.ad_type == 'image' or creative_form.instance.ad_type == 'text_icon' %}
+    <ul class="form_fields ad_type_dependent text_icon image">
+        <li>
+            {{ creative_form.image_file.label_tag }}
+            <div>
+                {{ creative_form.image_file }}
+                <br />
+                <span class="ad_type_dependent text_icon muted">(40 x 40)</span>
+                Available formats: PNG, JPEG, GIF
+            </div>
+        </li>
+    </ul>
+
+    {% if creative_form.instance %}
+    <img src="{{ creative_form.instance.image_serve_url }}"/>
+    {% endif %}
+{% endif %}
+
+{% if not creative_form.instance or creative_form.instance.ad_type == 'text_icon' %}
+    <div class="ad_type_dependent text_icon">
+        <ul class="form_fields hidden" id="advanced_fields_list">
+            <li>
+                {{ creative_form.action_icon.label_tag }}
+                <div>
+                    {# TODO: something that sucks less #}
+                    <span class="radios">{{ creative_form.action_icon|safe }}</span>
+                </div>
+            </li>
+
+            <li>
+                {{ creative_form.color.label_tag }}
+                <div>
+                    {{ creative_form.color }}
+                </div>
+            </li>
+
+            <li>
+                {{ creative_form.font_color.label_tag }}
+                <div>
+                    {{ creative_form.font_color }}
+                </div>
+            </li>
+
+            <li>
+                {{ creative_form.gradient.label_tag }}
+                <div>
+                    {{ creative_form.gradient }}
+                </div>
+            </li>
+        </ul>
+
+        <button class="btn ad_type_dependent text_icon" id="advanced_fields_button" type="button">More Options</button>
     </div>
-    <div class="adTypeDependent text_icon">
-        {% with text_tile_creative_form as form %}
-            {% include 'advertiser/forms/text_tile_creative_form.html' %}
-        {% endwith %}
-    </div>
-    <div class="adTypeDependent image">
-        {% with image_creative_form as form %}
-            {% include 'advertiser/forms/image_creative_form.html' %}
-        {% endwith %}
-    </div>
-    <div class="adTypeDependent html">
-        {% with html_creative_form as form %}
-            {% include 'advertiser/forms/html_creative_form.html' %}
-        {% endwith %}
-    </div>
-</dl>
+{% endif %}
+
+{% if not creative_form.instance or creative_form.instance.ad_type == 'html' %}
+    <ul class="form_fields ad_type_dependent html">
+        <li>
+            {{ creative_form.html_data.label_tag }}
+            <div>
+                {{ creative_form.html_data }}
+            </div>
+        </li>
+
+        <li>
+            {{ creative_form.ormma_html.label_tag }}
+            <div>
+                {{ creative_form.ormma_html }}
+            </div>
+        </li>
+    </ul>
+{% endif %}

@@ -303,7 +303,7 @@ $primaryButtonBackground: #08c;
   cursor: default;
   background-image: none;
   background-color: darken($white, 10%);
-  @include opacity(0.65);
+  @include opacity(65);
   @include box-shadow(none);
 }
 

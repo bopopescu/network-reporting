@@ -412,202 +412,194 @@
             renderChart(bootstrapping_data.daily_stats,
                         bootstrapping_data.start_date);
             initializeDateButtons();
+            initializeStatusControls();
 
-            /* CREATIVE FORM */
-            $('#new_creative_form input[name="ad_type"]')
-                .click(function(e){
-                    $('.adTypeDependent', "#new_creative_form").hide();
-                    $('.adTypeDependent.' + $(this).val(), "#new_creative_form").show();
-                })
-                .filter(':checked')
-                .click();
-
-            /*
-            $('#new_creative_form input[name="ad_type"]')
-                .click(function(e){
-                    $('.adTypeDependent',"#new_creative_form").hide();
-                    $('.adTypeDependent.'+$(this).val(),"#new_creative_form").show();
-                })
-                .filter(':checked')
-                .click();
-
-            $('.format-options').change(function(e) {
-                e.preventDefault();
-                if ($(this).val()=="custom"){
-                    $(this).parents("form").find('.customc_only').show();
-                } else {
-                    $(this).parents("form").find('.customc_only').hide();
-                }
-
-                if ($(this).val().search(/full/i) != -1){
-                    $(this).parents().find('.full_only').show();
-                } else {
-                    // $('input[name$=landscape]').removeAttr('checked');
-                    $(this).parents().find('.full_only').hide();
-                }
+            /* CREATIVE FORMS */
+            // format
+            $('[name="format"]').change(function() {
+                var format = $(this).val();
+                $('.format_dependent', $(this).closest('form')).each(function() {
+                    $(this).toggle($(this).hasClass(format));
+                });
             }).change();
 
-            $('#creativeCreateForm-submit')
-                .button({
-                    icons: { secondary: "ui-icon-circle-triangle-e" }
-                })
-                .click(function(e) {
-                    e.preventDefault();
-                    $('#creativeCreateForm-loading').show();
-                    $('#new_creative_form').submit();
+            // ad_type
+            $('[name="ad_type"]').change(function() {
+                var ad_type = $(this).val();
+                $('.ad_type_dependent', $(this).closest('form')).each(function() {
+                    $(this).toggle($(this).hasClass(ad_type));
                 });
+            }).filter(':checked').change();
 
-            $('#creativeCreateForm-cancel')
-                .button()
-                .click(function(e) {
-                    e.preventDefault();
-                    $('#advertiser-creativeAddForm').slideUp('fast', function() {
-                        $('#advertiser-adgroups-addCreativeButton').show();
-                    });
-                });
-
-            $('.creativeEditForm input[name="ad_type"]')
-                .click(function(e){
-                    // gets the form to which this belongs
-                    var form = $(this).parents('form');
-                    $('.adTypeDependent',form).hide();
-                    $('.adTypeDependent.'+$(this).val(),form).show();
-                }).filter(':checked').click();
-
-
-            $('.creativeFormAdvancedToggleButton')
-                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
-                .click(function(e) {
-                    e.preventDefault();
-                    var $options = $(this).parents('form').find('.creativeForm-advanced-options');
-                    if ($options.is(':hidden')) {
-                        $options.slideDown('fast').removeClass('hidden');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
-                        $('.ui-button-text', this).text('Less Options');
-                    } else {
-                        $options.slideUp('fast').addClass('hidden');
-                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
-                        $('.ui-button-text', this).text('More Options');
-                    }
-                });
-
-            $('.creativeAddForm-url-helpLink').click(function(e) {
-                e.preventDefault();
-                $('#creativeAddForm-url-helpContent').dialog({
-                    buttons: { "Close": function() { $(this).dialog("close"); } }
-                });
-            });
-
-            $('#creativeAddForm input[name="creative_type"]')
-                .click(function(e) {
-                    $('#creativeCreate-text_icon').hide();
-                    $('#creativeCreate-image').hide();
-                    $('#creativeCreate-html').hide();
-                    $('#creativeCreate-'+$(this).val()).show();
-                })
-                .filter(':checked')
-                .click(); // make sure we're in sync when the page loads
-
-            $('#creativeAddForm-cancel')
-                .button()
-                .click(function(e){
-                    e.preventDefault();
-                    $('#advertiser-creativeAddForm').slideUp('fast', function() {
-                        $('#advertiser-adgroups-addCreativeButton').show();
-                    });
-                });
-
-            // Creative form ajax options
-            $('#new_creative_form').ajaxForm({
-                data: { ajax: true },
-                dataType : 'json',
-                success: function(jsonData) {
-
-                    $('#creativeCreateForm-loading').hide();
-                    if (jsonData.success) {
-                        $('#creativeCreateForm-success').show();
-                        window.location.reload();
-                    } else {
-                        $.each(jsonData.errors, function (iter, item) {
-                            $('.form-error-text', "#creativeCreateForm").remove();
-                            var name = item[0];
-                            var error_div = $("<div>").append(item[1]).addClass('form-error-text');
-
-                            $("input[name=" + name + "]", "#creativeCreateForm")
-                                .addClass('error')
-                                .parent().append(error_div);
-
-                        });
-                        // reimplement the onload event
-                        initializeCreativeForm();
-                        window.location.hash = '';
-                        window.location.hash = 'advertiser-creativeAddForm';
-                        $('#campaignAdgroupForm-submit').button({'label':'Continue','disabled':false});
-                    }
-                },
-                error: function(jqXHR, textStatus, errorThrown){
-
+            // text_icon advanced
+            $('button#advanced_fields_button').click(function() {
+                var list = $('ul#advanced_fields_list', $(this).closest('form'));
+                if(list.is(":visible")) {
+                    list.slideUp();
+                    $(this).html('More Options');
+                }
+                else {
+                    list.slideDown();
+                    $(this).html('Less Options');
                 }
             });
 
-
-            $('.creativeEditForm').each(function(i){
-                    var $this = $(this);
-                    var options = {
-                        data: { ajax : true },
-                        dataType: 'json',
-                        success: function(jsonData, statusText, xhr, $form){
-                            $form.find('.creativeEditForm-loading').hide();
-                            if (jsonData.success){
-                                $form.find('.creativeCreateForm-success').show();
-                                $form.parent();
-                                $form.find('.creativeCreateForm-success').hide();
-                                window.location.reload();
-                            } else {
-                                //$form.find('.creativeEditForm-fragment').html($.decodeHtml(jsonData.html));
-                                $('.form-error-text', $form).remove();
-                                $.each(jsonData.errors, function (iter, item) {
-
-                                    var name = item[0];
-                                    var error_div = $("<div>").append(item[1]).addClass('form-error-text');
-
-                                    $("input[name=" + name + "]", $form)
-                                        .addClass('error')
-                                        .parent().append(error_div);
-
-                                });
-                                // re-implement onload
-                                $('.creativeEditForm input[name="ad_type"]')
-                                    .click(function(e){
-                                        $(this).parents('form') // gets the form to which this belongs
-                                            .find('.adTypeDependent').hide().end()
-                                            .find('.'+$(this).val()).show().end();
-                                    }).filter(':checked').click();
-                                window.location.hash = '';
-                                window.location.hash = $form.prev("a").attr('name');
-                            }
-                        }
-                    };
-                $(this).ajaxForm(options);
+            // help links
+            $('a.help_link').click(function(evt) {
+                evt.preventDefault();
+                $(this).next('div.help_content').dialog({
+                    buttons: { 'Close': function() { $(this).dialog('close'); } }
+                });
             });
 
-            $('.creativeEditForm-submit')
-                .button()
-                .click(function(e) {
+            /* NEW CREATIVE FORM */
+            // new creative button
+            $('button#new_creative_button').click(function() {
+                $(this).hide();
+                $('form#new_creative_form').slideDown();
+            });
+
+            var validator = $('form#new_creative_form').validate({
+                errorPlacement: function(error, element) {
+                    // when submitted through an iFrame to allow file upload,
+                    // the wrong element is selected, so get the correct one
+                    element = $('form#new_creative_form *[name="' + element.attr('name') + '"]"');
+                    element.closest('div').append(error);
+                },
+                submitHandler: function(form) {
+                    $(form).ajaxSubmit({
+                        dataType: 'json',
+                        beforeSubmit: function(data, $form, options) {
+                            var button = $('.submit', $form);
+                            button.html('Submitting...');
+                            button.attr('disabled', 'disabled');
+                        },
+                        success: function(data, textStatus, jqXHR, $form) {
+                            var button = $('.submit', $form);
+                            if(data.success) {
+                                window.location = data.redirect;
+                                button.html('Success...');
+                            } else {
+                                validator.showErrors(data.errors);
+                                button.html('Try Again');
+                                button.removeAttr('disabled');
+                            }
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            $('form#new_creative_form .submit').button({
+                                label: 'Try Again',
+                                disabled: false
+                            });
+                        }
+                    });
+                }
+            });
+
+            // cancel button
+            $('form#new_creative_form button.cancel').click(function(evt) {
+                evt.preventDefault();
+                $('button#new_creative_button').show();
+                $('form#new_creative_form').slideUp();
+            });
+
+            // submit button
+            $('form#new_creative_form .submit').click(function(evt) {
+                evt.preventDefault();
+                $('form#new_creative_form').submit();
+            });
+
+            /* EDIT CREATIVE FORMS */
+            // creative preview button
+            $('button.creative_preivew_button').click(function() {
+                var preview = $(this).siblings('div.creative_preview');
+                var src = preview.children('input[name="src"]').val();
+                var iframe = preview.children('iframe');
+                iframe.attr('src', src);
+                var width = parseInt(iframe.attr("width"));
+                var height = parseInt(iframe.attr("height"));
+                preview.dialog({
+                    buttons: { 'Close': function() { $(this).dialog('close'); } },
+                    width: width+100,
+                    height: height+130
+                });
+            });
+
+            $('.advertiser-inLineCreativePreview')
+                .button({ icons : { primary : 'ui-icon-search' }})
+                .click(function(e){
                     e.preventDefault();
-                    $(this).parents('form').find('.creativeEditForm-loading').show();
-                    $(this).parents('form').submit();
+                    var creative_key = $(this).attr("id");
+                    var creative_src = $('#'+creative_key+'-preview-src').val();
+                    var width = parseInt($("#"+creative_key+"-preview iframe").attr("width"));
+                    var height = parseInt($("#"+creative_key+"-preview iframe").attr("height"));
+                    $("#"+creative_key+"-preview iframe").attr('src', creative_src);
+                    $("#"+creative_key+"-preview").dialog({
+                        buttons: [{
+                            text: 'Close',
+                            click: function() { $(this).dialog("close"); }
+                        }],
+                        width: width+100,
+                        height: height+130
+                    });
                 });
 
-            $('.creativeEditForm-cancel')
-                .button()
-                .click(function(e) {
-                    e.preventDefault();
-                    $(this).parents('.advertiser-creativeEditForm')
-                        .dialog('close');
+            // edit creative button
+            $('button.edit_creative_button').click(function() {
+                $(this).hide();
+                $(this).siblings('form.edit_creative_form').slideDown();
+            });
+
+            // TODO: a lot of this is duplicated from above
+            _.each($('form.edit_creative_form'), function(form) {
+                var validator = $(form).validate({
+                    errorPlacement: function(error, element) {
+                        // when submitted through an iFrame to allow file upload,
+                        // the wrong element is selected, so get the correct one
+                        element = $('*[name="' + element.attr('name') + '"]"', $(form));
+                        element.closest('div').append(error);
+                    },
+                    submitHandler: function(form) {
+                        $(form).ajaxSubmit({
+                            dataType: 'json',
+                            beforeSubmit: function(data, $form, options) {
+                                var button = $('button.submit', $form);
+                                button.html('Submitting...');
+                                button.attr('disabled', 'disabled');
+                            },
+                            success: function(data, textStatus, jqXHR, $form) {
+                                var button = $('button.submit', $form);
+                                if(data.success) {
+                                    window.location = data.redirect;
+                                    button.html('Success...');
+                                } else {
+                                    validator.showErrors(data.errors);
+                                    button.html('Try Again');
+                                    button.removeAttr('disabled');
+                                }
+                            },
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                $('button.submit', $(form)).button({
+                                    label: 'Try Again',
+                                    disabled: false
+                                });
+                            }
+                        });
+                    }
                 });
-            */
-            /* END CREATIVE FORM */
+            });
+
+            // cancel button
+            $('form.edit_creative_form button.cancel').click(function(evt) {
+                evt.preventDefault();
+                $(this).closest('form.edit_creative_form').siblings('button.edit_creative_button').show();
+                $(this).closest('form.edit_creative_form').slideUp();
+            });
+
+            // submit button
+            $('form.edit_creative_form .submit').click(function(evt) {
+                evt.preventDefault();
+                $(this).closest('form.edit_creative_form').submit();
+            });
         },
 
         initializeOrderAndLineItemForm: function(bootstrapping_data) {

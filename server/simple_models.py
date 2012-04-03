@@ -457,13 +457,6 @@ class SimpleCreative(SimpleModel):
     #whoever did this you rule
     adgroup = property(_get_adgroup,_set_adgroup)
 
-class SimpleTextCreative(SimpleCreative):
-    def __init__(self, headline=None, line1=None, line2=None, **kwargs):
-        self.headline = headline
-        self.line1 = line1
-        self.line2 = line2
-        super(SimpleTextCreative, self).__init__(**kwargs)
-
 class SimpleTextAndTileCreative(SimpleCreative):
     def __init__(self, line1=None, line2=None, image_url=None, action_icon=None,
                  color=None, font_color=None, gradient=None, **kwargs):
@@ -587,7 +580,6 @@ TestAdUnit                         = SimpleAdUnit
 TestCampaign                       = SimpleCampaign
 TestAdGroup                        = SimpleAdGroup
 TestCreative                       = SimpleCreative
-TestTextCreative                   = SimpleTextCreative
 TestTextAndTileCreative            = SimpleTextAndTileCreative
 TestHtmlCreative                   = SimpleHtmlCreative
 TestImageCreative                  = SimpleImageCreative

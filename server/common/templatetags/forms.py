@@ -3,6 +3,7 @@ from django.forms import ChoiceField, FileField
 from django import template
 register = template.Library()
 
+
 @register.filter(name='field_value')
 def field_value(field):
     """
@@ -20,6 +21,7 @@ def field_value(field):
     if val is None:
         val = ''
     return val
+
 
 @register.filter(name='display_value')
 def display_value(field):

@@ -4,11 +4,12 @@ import re
 
 from django import forms
 from django.forms.util import ErrorList
+from django.utils.safestring import SafeString
 from google.appengine.api import images, files
 from google.appengine.ext.db import Key
 
-from advertiser.models import (Order, LineItem, Creative, TextCreative,
-                               TextAndTileCreative, HtmlCreative, ImageCreative)
+from advertiser.models import (Order, LineItem, Creative, TextAndTileCreative,
+                               ImageCreative, HtmlCreative)
 from common.constants import (IOS_VERSION_CHOICES, ANDROID_VERSION_CHOICES,
                               CITY_GEO, REGION_GEO, COUNTRY_GEO)
 from common.utils import helpers
@@ -402,15 +403,32 @@ class LineItemForm(forms.ModelForm):
 
 
 class AbstractCreativeForm(forms.ModelForm):
-
-    def save(self, commit=True):
-        obj = super(AbstractCreativeForm, self).save(commit=False)
-        if not obj.conv_appid and obj.url:
-            obj.conv_appid = self._get_appid(obj.url)
-
-        if commit:
-            obj.put()
-        return obj
+    format = forms.ChoiceField(choices=(('320x50', '320 x 50 (Banner)'),
+                                        ('300x250', '300 x 250 (MRect)'),
+                                        ('full', 'Phone Full Screen'),
+                                        ('728x90', '728 x 90 (Tablet Leaderboard)'),
+                                        ('160x600', '160 x 600 (Tablet Skyscraper)'),
+                                        ('full_tablet', 'Tablet Full Screen'),
+                                        ('custom', 'Custom')),
+                               initial='320x50', label='Format:')
+    custom_width = forms.IntegerField(label='Custom Size:', required=False,
+                                      widget=forms.TextInput(attrs={'class': 'number'}))
+    custom_height = forms.IntegerField(required=False,
+                                       widget=forms.TextInput(attrs={'class': 'number'}))
+    landscape = forms.BooleanField(label='Landscape:', required=False)
+    ad_type = forms.ChoiceField(choices=(('image', 'Image'),
+                                       ('text_icon', 'Text and Tile'),
+                                       ('html', 'HTML')),
+                                initial='image', label='Creative Type:',
+                                widget=forms.RadioSelect)
+    name = forms.CharField(initial='Creative', label='Creative Name:',
+                           widget=forms.TextInput(attrs={'class': 'required'}))
+    url = forms.URLField(label='Click URL:', required=False)
+    launchpage = forms.URLField(label='Intercept URL:', required=False)
+    conv_appid = forms.CharField(label='Conversion Tracking ID:',
+                                 required=False)
+    tracking_url = forms.URLField(label='Impression Tracking URL:',
+                                  required=False)
 
     def _get_appid(self, url):
         # extracts the itunes appid from the url
@@ -444,26 +462,8 @@ class AbstractCreativeForm(forms.ModelForm):
         # return None if nothing was found
         return None
 
-
-class BaseCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/base_creative_form.html'
-
-    name = forms.CharField(initial="Creative",
-                           widget=forms.TextInput(attrs={
-                               'class': 'input-text required'
-                           }))
-
-    class Meta:
-        model = Creative
-        fields = ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
-
     def clean_name(self):
-        data = self.cleaned_data.get('name', None).strip()
-        if not data:
-            raise forms.ValidationError('You must give your creative a name.')
-        return data
+        return self.cleaned_data.get('name', '').strip()
 
     def clean_url(self):
         url = self.cleaned_data.get('url', None)
@@ -472,119 +472,10 @@ class BaseCreativeForm(AbstractCreativeForm):
                 raise forms.ValidationError("You need to specify a protocol (like http://) at the beginning of your url")
         return url
 
-
-class TextAndTileCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/text_tile_creative_form.html'
-
-    image_url = forms.URLField(verify_exists=False, required=False)
-    image_file = forms.FileField(required=False)
-
-    class Meta:
-        model = TextAndTileCreative
-        fields = ('action_icon', 'color', 'font_color', 'gradient') + \
-                 ('line1', 'line2', 'ad_type', 'name', 'tracking_url', 'url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
-
-    def __init__(self, *args, **kwargs):
-        instance = kwargs.get('instance', None)
-        initial = kwargs.get('initial', None)
-
-        if instance:
-            if instance.image_blob:
-                image_url = helpers.get_url_for_blob(instance.image_blob)  # reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
-            else:
-                image_url = ''
-            if not initial:
-                initial = {}
-            initial.update(image_url=image_url)
-            kwargs.update(initial=initial)
-        super(TextAndTileCreativeForm, self).__init__(*args, **kwargs)
-
     def clean_image_file(self):
         data = self.cleaned_data.get('image_file', None)
-
-        # Check the image file type. We only support png, jpg, jpeg, and gif.
-        if data:
-            img = self.files.get('image_file', None)
-            is_valid_image_type = any([str(img).lower().endswith(ftype) for ftype in ['.png', '.jpeg', '.jpg', '.gif']])
-            if not (img and is_valid_image_type):
-                extension = get_filetype_extension(img)
-                if extension:
-                    raise forms.ValidationError('Filetype (.%s) not supported.' % extension)
-                else:
-                    raise forms.ValidationError('Filetype not supported.')
-
-        # Check to make sure an image file or url was provided.
-        # We only need to check this if it's a new form being submitted
-
-        if not self.instance:
-            if not (self.cleaned_data.get('image_file', None) or self.cleaned_data.get('image_url', None)):
-                raise forms.ValidationError('You must upload an image file for a creative of this type.')
-
-        return data
-
-    def save(self, commit=True):
-        obj = super(TextAndTileCreativeForm, self).save(commit=False)
-        if self.files.get('image_file', None):
-            image_data = self.files.get('image_file').read()
-            img = images.Image(image_data)
-            fname = files.blobstore.create(mime_type='image/png')
-            with files.open(fname, 'a') as f:
-                f.write(image_data)
-            files.finalize(fname)
-            blob_key = files.blobstore.get_blob_key(fname)
-            obj.image_blob = blob_key
-            obj.image_serve_url = helpers.get_url_for_blob(obj.image_blob)
-
-        if commit:
-            obj.put()
-        return obj
-
-
-class HtmlCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/html_creative_form.html'
-
-    class Meta:
-        model = HtmlCreative
-        fields = ('html_data', 'ormma_html') + \
-                 ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
-
-
-class ImageCreativeForm(AbstractCreativeForm):
-    TEMPLATE = 'advertiser/forms/image_creative_form.html'
-
-    image_url = forms.URLField(verify_exists=False, required=False)
-    image_file = forms.FileField(required=False)
-
-    class Meta:
-        model = ImageCreative
-        fields = ('ad_type', 'name', 'tracking_url', 'url', 'display_url',
-                  'format', 'custom_height', 'custom_width', 'landscape',
-                  'conv_appid', 'launchpage')
-
-    def __init__(self, *args, **kwargs):
-        instance = kwargs.get('instance', None)
-        initial = kwargs.get('initial', None)
-
-        if instance:
-            if instance.image_blob:
-                try:
-                    image_url = instance.image_serve_url
-                except:
-                    image_url = None
-            else:
-                image_url = None
-            if not initial:
-                initial = {}
-            initial.update(image_url=image_url)
-            kwargs.update(initial=initial)
-        super(ImageCreativeForm, self).__init__(*args, **kwargs)
-
-    def clean_image_file(self):
-        data = self.cleaned_data.get('image_file', None)
+        import logging
+        logging.error(data)
 
         # Check the image file type. We only support png, jpg, jpeg, and gif.
         if data:
@@ -606,8 +497,65 @@ class ImageCreativeForm(AbstractCreativeForm):
 
         return data
 
+
+# TODO: fix so there are no repeated definition of form fields.  Is something
+#       weird with ModelForm inheritance?
+class NewCreativeForm(AbstractCreativeForm):
+    # text_icon
+    line1 = forms.CharField(label='Line 1:', required=False)
+    line2 = forms.CharField(label='Line 2:', required=False)
+    # image text_icon
+    image_file = forms.FileField(label='Image File:', required=False)
+    # text_icon
+    action_icon = forms.ChoiceField(choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
+                                             ('access_arrow', SafeString('<img src="/images/access_arrow.png" width="40" height="40"/>')),
+                                             ('none', 'None')),
+                                    initial='download_arrow4',
+                                    label='Action Icon:',
+                                    widget=forms.RadioSelect)
+    color = forms.Field(initial='000000', label='Background Color:')
+    font_color = forms.Field(initial='FFFFFF', label='Font Color:')
+    gradient = forms.BooleanField(initial=True, label='Gradient:')
+    # html
+    html_data = forms.CharField(label='HTML Body:', required=False,
+                                widget=forms.Textarea(attrs={'placeholder': 'HTML Body Content',
+                                                             'rows': 10}))
+    ormma_html = forms.BooleanField(label='MRAID Ad:', required=False)
+
+    class Meta:
+        model = Creative
+        fields = ('format', 'custom_width', 'custom_height', 'landscape',
+                  'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
+                  'tracking_url', 'line1', 'line2', 'image_file', 'action_icon',
+                  'color', 'font_color', 'gradient', 'html_data', 'ormma_html')
+
+
+class ImageCreativeForm(AbstractCreativeForm):
+    image_file = forms.FileField(label='Image File:', required=False)
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        initial = kwargs.get('initial', None)
+
+        if instance:
+            if instance.image_blob:
+                try:
+                    image_url = instance.image_serve_url
+                except:
+                    image_url = None
+            else:
+                image_url = None
+            if not initial:
+                initial = {}
+            initial.update(image_url=image_url)
+            kwargs.update(initial=initial)
+
+        super(ImageCreativeForm, self).__init__(*args, **kwargs)
+
     def save(self, commit=True):
+        # TODO: repeated code
         obj = super(ImageCreativeForm, self).save(commit=False)
+
         if self.files.get('image_file', None):
             image_data = self.files.get('image_file').read()
             img = images.Image(image_data)
@@ -624,9 +572,105 @@ class ImageCreativeForm(AbstractCreativeForm):
         else:
             commit = False
 
+        if not obj.conv_appid and obj.url:
+            obj.conv_appid = self._get_appid(obj.url)
+
         if commit:
             obj.put()
+
         return obj
+
+    class Meta():
+        model = ImageCreative
+        fields = ('format', 'custom_width', 'custom_height', 'landscape',
+                  'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
+                  'tracking_url', 'image_file')
+
+
+class TextAndTileCreativeForm(AbstractCreativeForm):
+    line1 = forms.CharField(label='Line 1:', required=False)
+    line2 = forms.CharField(label='Line 2:', required=False)
+    image_file = forms.FileField(label='Image File:', required=False)
+    action_icon = forms.ChoiceField(choices=(('download_arrow4', SafeString('<img src="/images/download_arrow4.png" width="40" height="40"/>')),
+                                             ('access_arrow', SafeString('<img src="/images/access_arrow.png" width="40" height="40"/>')),
+                                             ('none', 'None')),
+                                    initial='download_arrow4',
+                                    label='Action Icon:',
+                                    widget=forms.RadioSelect)
+    color = forms.Field(initial='000000', label='Background Color:')
+    font_color = forms.Field(initial='FFFFFF', label='Font Color:')
+    gradient = forms.BooleanField(initial=True, label='Gradient:')
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        initial = kwargs.get('initial', None)
+
+        if instance:
+            if instance.image_blob:
+                image_url = helpers.get_url_for_blob(instance.image_blob)  # reverse('advertiser_creative_image',kwargs={'creative_key':str(instance.key())})
+            else:
+                image_url = ''
+            if not initial:
+                initial = {}
+            initial.update(image_url=image_url)
+            kwargs.update(initial=initial)
+
+        super(TextAndTileCreativeForm, self).__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        # TODO: repeated code
+        obj = super(TextAndTileCreativeForm, self).save(commit=False)
+
+        if self.files.get('image_file', None):
+            image_data = self.files.get('image_file').read()
+            img = images.Image(image_data)
+            fname = files.blobstore.create(mime_type='image/png')
+            with files.open(fname, 'a') as f:
+                f.write(image_data)
+            files.finalize(fname)
+            blob_key = files.blobstore.get_blob_key(fname)
+            obj.image_blob = blob_key
+            obj.image_serve_url = helpers.get_url_for_blob(obj.image_blob)
+
+        if not obj.conv_appid and obj.url:
+            obj.conv_appid = self._get_appid(obj.url)
+
+        if commit:
+            obj.put()
+
+        return obj
+
+    class Meta:
+        model = TextAndTileCreative
+        fields = ('format', 'custom_width', 'custom_height', 'landscape',
+                  'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
+                  'tracking_url', 'line1', 'line2', 'image_file', 'action_icon',
+                  'color', 'font_color', 'gradient')
+
+
+class HtmlCreativeForm(AbstractCreativeForm):
+    html_data = forms.CharField(label='HTML Body:', required=False,
+                                widget=forms.Textarea(attrs={'placeholder': 'HTML Body Content',
+                                                             'rows': 10}))
+    ormma_html = forms.BooleanField(label='MRAID Ad:', required=False)
+
+    def save(self, commit=True):
+        # TODO: repeated code
+        obj = super(HtmlCreativeForm, self).save(commit=False)
+
+        if not obj.conv_appid and obj.url:
+            obj.conv_appid = self._get_appid(obj.url)
+
+        if commit:
+            obj.put()
+
+        return obj
+
+    class Meta:
+        model = HtmlCreative
+        fields = ('format', 'custom_width', 'custom_height', 'landscape',
+                  'ad_type', 'name', 'url', 'launchpage', 'conv_appid',
+                  'tracking_url', 'html_data', 'ormma_html')
 
 
 # Marketplace

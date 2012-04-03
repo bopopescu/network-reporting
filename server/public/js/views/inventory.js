@@ -63,12 +63,16 @@ var mopub = window.mopub || {};
                     // Set adunit level mopub and network stats
                     var renderedContent = '';
                     $.each(network_app.get('adunits'), function (iter, adunit) {
+                        console.log(adunit.name);
+                        console.log(adunit.active);
                         renderedContent += _.template($('#network-app-template').html(), {
                             name: adunit.name,
                             url: adunit.url,
                             mopub_stats: adunit.stats,
                             network_stats: false,
                             buffer: true,
+                            icon: true,
+                            active: adunit.active,
                         });
                     });
 
@@ -87,6 +91,7 @@ var mopub = window.mopub || {};
                         mopub_stats: network_app.get('mopub_stats'),
                         network_stats: network_app.get('network_stats'),
                         buffer: false,
+                        icon: false,
                     });
                 });
 

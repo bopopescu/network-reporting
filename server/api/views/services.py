@@ -451,7 +451,8 @@ class NetworkAppsService(RequestHandler):
                 # One adunit per adgroup for network adunits
                 adgroup = AdGroupQueryManager.get_network_adgroup(
                         campaign, adunit.key(),
-                        self.account.key())
+                        self.account.key(), get_from_db=True)
+                adunit.active = adgroup.active
 
                 all_stats = stats_manager.get_stats_for_days(publisher=app,
                                                              advertiser=
@@ -468,7 +469,12 @@ class NetworkAppsService(RequestHandler):
 
                 if adunits:
                     adunit_data = adunit.toJSON()
-                    adunit_data['url'] = '/inventory/adunit/' + str(adunit.key())
+                    logging.info('ADUNIT.NAME')
+                    logging.info(adunit.name)
+                    logging.info(adunit.active)
+                    adunit_data['active'] = adunit.active
+                    adunit_data['url'] = '/inventory/adunit/' + \
+                            str(adunit.key())
                     adunit_data['stats'] = stats.to_dict()
                     if hasattr(network_apps_[app.key()], 'adunits'):
                         network_apps_[app.key()].adunits.append(adunit_data)

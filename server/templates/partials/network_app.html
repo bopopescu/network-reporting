@@ -1,8 +1,10 @@
 <tr class="details-row">
-    <% if(buffer) { %>
-    <td class="dataTable-name"></td>
-    <% } %>
-    <td class="dataTable-name"> <a href="<%= url %>"><%= name %></a> </td>
+    <td class="dataTable-name">
+        <% if(icon) { %>
+        <img src="/images/<% if(!active) { %>in<% } %>active.gif" height=9 width=9 style="margin-right:5px;" />
+        <% } %>
+        <a href="<%= url %>"><%= name %></a>
+    </td>
     <% if(buffer) { %>
     <td class="dataTable-data numeric">
         <% if(network_stats) { %>

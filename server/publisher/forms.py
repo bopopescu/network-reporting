@@ -119,6 +119,7 @@ class AppForm(mpforms.MPModelForm):
         files.finalize(fname)
         return files.blobstore.get_blob_key(fname)
 
+        
 ANIMATION_CHOICES = (
         (u'0', 'No Animation'),
         (u'1', 'Random'),
@@ -129,10 +130,12 @@ ANIMATION_CHOICES = (
         (u'6', 'Fade'),
 )
 
+
 DEVICE_FORMAT_CHOICES = (
         (u'phone', 'Phone'),
         (u'tablet', 'Tablet'),
 )
+
 
 class AdUnitForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/adunit_form.html'

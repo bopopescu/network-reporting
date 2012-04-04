@@ -29,7 +29,8 @@ from datetime import date, datetime, timedelta
 from ad_network_reports.ad_networks import AdNetwork
 from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkScrapeStats, \
-        AdNetworkManagementStats
+        AdNetworkManagementStats, \
+        LoginStates
 from ad_network_reports.query_managers import \
         IAD, \
         MOBFOX, \
@@ -255,6 +256,7 @@ def update_login_stats_for_check(login,
     for day in date_magic.gen_days(start_day, end_day):
         stats_list += update_login_stats(login, day, update_aggregates=True,
                 testing=testing)
+    login.state = LoginStates.WORKING
     login.put()
 
 
@@ -388,6 +390,8 @@ def update_login_stats(login,
             logger.info("Unauthorized login attempted by account:%s on %s."
                     % (login.account,
                         login.ad_network_name))
+        login.state = LoginStates.ERROR
+        login.put()
         return []
     except Exception as e:
         # This should catch ANY exception because we don't want to stop
@@ -420,6 +424,8 @@ def update_login_stats(login,
             s.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, msg.as_string())
             s.quit()
 
+        login.state = LoginStates.ERROR
+        login.put()
         return []
 
     # Get all mappers for login and put them in a dict for quick access
@@ -482,6 +488,8 @@ def update_login_stats(login,
             AdNetworkAggregateManager.update_stats(login.account, mapper, day,
                     scrape_stats, app=mapper.application)
 
+    login.state = LoginStates.WORKING
+    login.put()
     return valid_stats_list
 
 

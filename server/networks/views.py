@@ -207,10 +207,9 @@ class EditNetworkHandler(RequestHandler):
             # set up the campaign with the default data
             campaign_form = CampaignForm({'name': campaign_name})
 
-        network_data = {}
-        network_data['name'] = network
-        network_data['pretty_name'] = campaign_name
-        network_data['show_login'] = show_login
+        network_data = {'name': network,
+                        'pretty_name': campaign_name,
+                        'show_login': show_login}
         reporting = False
         ad_network_ids = False
 
@@ -568,12 +567,12 @@ class NetworkDetailsHandler(RequestHandler):
             raise Http404
 
         network = campaign.network_type
-        network_data = {}
-        network_data['name'] = network
-        network_data['pretty_name'] = campaign.name
-        network_data['campaign_key'] = str(campaign.key())
-        network_data['active'] = campaign.active
-        network_data['targeting'] = []
+        network_data = {'name': network,
+                        'pretty_name': campaign.name,
+                        'campaign_key': str(campaign.key()),
+                        'active': campaign.active,
+                        'login_state': LoginStates.NOT_SETUP,
+                        'targeting': []}
 
         # Get the campaign targeting information.  We need an adunit
         # and an adgroup to determine targeting.  Any adunit will do
@@ -604,8 +603,9 @@ class NetworkDetailsHandler(RequestHandler):
         #REFACTOR: handle the case when this isnt true.
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
-            if AdNetworkLoginManager.get_login(self.account,
-                    network).get():
+            login = AdNetworkLoginManager.get_login(self.account, network).get()
+            if login:
+                network_data['login_state'] = login.state
                 campaign_data['reporting'] = True
 
         # Iterate through all the apps and populate the stats for network_data
@@ -639,6 +639,7 @@ class NetworkDetailsHandler(RequestHandler):
                   'network': network_data,
                   'campaign_data': simplejson.dumps(campaign_data),
                   'MOBFOX': MOBFOX,
+                  'LoginStates': LoginStates,
               })
 
 @login_required

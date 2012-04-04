@@ -21,8 +21,9 @@ class LoginStates:
     Login credential states
     """
     NOT_SETUP = 0
-    WORKING = 1
-    ERROR = 2
+    PULLING_DATA = 1
+    WORKING = 2
+    ERROR = 3
 
 
 class AdNetworkLoginCredentials(db.Model):
@@ -53,7 +54,7 @@ class AdNetworkLoginCredentials(db.Model):
     # List of application publisher ids that aren't tracked in MoPub.
     app_pub_ids = db.StringListProperty(default=[])
 
-    state = db.IntegerProperty(default=LoginStates.WORKING)
+    state = db.IntegerProperty(default=LoginStates.NOT_SETUP)
 
     deleted = db.BooleanProperty(default=False)
 

@@ -20,8 +20,19 @@
     <input type="checkbox" checked="yes" name="show-data" id="show-network" /> Show data reported by network in <span style="color:orange;">orange</span>
 </div>
 {% endif %}
-
 </section>
+
+{% if login.state == LoginStates.PULLING_DATA or login.state == LoginStates.ERROR %}
+<section id="login-state-message">
+    <div class="alert-message block-message warning">
+        {% if login.state == LoginStates.PULLING_DATA %}
+        MoPub is currently collecting data from {{ network.pretty_name }}. You will receive an email when we finish.
+        {% else %}
+        MoPub received an error last time we tried to collect data from {{ network.pretty_name }}. Please verify that your login credentials are correct and haven't changed. If the problem persists please reach out to us at support@mopub.com.
+        {% endif %}
+    </div>
+</section>
+{% endif %}
 
 <section id="aggregate-stats">
     <div class="appData-columnHeaders">

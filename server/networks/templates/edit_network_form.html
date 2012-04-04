@@ -201,37 +201,52 @@
         <legend>
             <h2>
                 <span style="float: left;">Revenue Reporting</span>
-                <span id="networkSettingsForm-show" class="ui-icon ui-icon-triangle-1-s {% if network.show_login %}hidden{% endif %}" style="margin-left: 10px; float: left; cursor:pointer;"></span>
+                <span id="networkLoginForm-show" class="ui-icon ui-icon-triangle-1-s {% if network.show_login %}hidden{% endif %}" style="margin-left: 10px; float: left; cursor:pointer;"></span>
             </h2>
         </legend>
 
-        <div id="networkSettingsForm" class="{% if not network.show_login %}hidden{% endif %}" style="clear: both;padding-top:10px">
+        <div id="networkLoginForm" {% if not network.show_login %}class="hidden"{% endif %} style="clear: both;padding-top:10px">
             <div class="login-credentials-message">
-                MoPub can report your revenue and other data directly from the ad networks. MoPub uses your login creedentials to retrieve the revenue data from the ad networks.
+                {% if reporting %}
+                Revenue reporting for {{ network.pretty_name }} is turned on.
+                {% else %}
+                MoPub can report your revenue and other data directly from {{ network.pretty_name }}. {% if network.name != "mobfox" %}MoPub uses your login credentials to retrieve the revenue data from {{ network.pretty_name }}.{% endif %}
+                {% endif %}    
             </div>
 
-            <ul class="form_fields">
-                <li>
-                {{ login_form.username_str.label_tag }}
-                {{ login_form.username_str }}
-                </li>
+            {% if network.name != "mobfox" %}
+                <ul class="form_fields">
+                    <li>
+                    {{ login_form.username_str.label_tag }}
+                    {{ login_form.username_str }}
+                    <span id="username"></span>
+                    </li>
 
-                <li>
-                {{ login_form.password_str.label_tag }}
-                {{ login_form.password_str }}
-                </li>
+                    <li>
+                    {{ login_form.password_str.label_tag }}
+                    {{ login_form.password_str }}
+                    <span id="password"></span>
+                    </li>
 
-                {% if network.name == "admob" %}
-                <li>
-                {{ login_form.client_key.label_tag }}
-                {{ login_form.client_key }}
-                </li>
-                {% endif %}
-            </ul>
+                    {% if network.name == "admob" %}
+                    <li>
+                    {{ login_form.client_key.label_tag }}
+                    {{ login_form.client_key }}
+                    <span id="client_key"></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            {% endif %}
 
             <div class="form-submit login-credentials-submit">
-                <a class="button" id="networkSettingsForm-submit">Check and Save Credentials</a>
-                <a class="button" id="networkSettingsForm-cancel">No Thanks</a>
+                {% if network.name == "mobfox" and not reporting %}
+                <a class="button" id="networkLoginForm-submit">Turn on Reporting</a>
+                {% else %}
+                {% if network.name != "mobfox" %} 
+                <a class="button" id="networkLoginForm-submit">Check and Save Credentials</a>
+                {% endif %}
+                {% endif %}
+                <a class="button" id="networkLoginForm-cancel">No Thanks</a>
             </div>
             <div class="form-submit login-credentials-settings hidden">
                 <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>

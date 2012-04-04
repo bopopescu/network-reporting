@@ -244,7 +244,7 @@ $(function() {
                 // information for the ad network
                 var data = $(this).serialize();
                 var key = $(this).attr('id');
-                data += ("&account_key=" + account_key + "&ad_network_name=" + key.substr("form-".length));
+                data += ("&account_key=" + account_key + "&network=" + key.substr("form-".length));
                 var message = $('.' + key + '-message');
                 $(message).removeClass('hidden');
                 $(message).html("Verifying login credentials...");

@@ -187,7 +187,6 @@ $(function() {
                                 $('#networkSettingsForm-loading').hide();
                             }
                         });
-                        //$('#networkForm').submit();
                     } else {
                         $('#settings-form-message')
                             .html("Please enter a valid email address or a list of valid email addresses.");
@@ -341,10 +340,17 @@ $(function() {
                     },
                     submitHandler: function(form) {
                         $(form).ajaxSubmit({
-                            data: {ajax: true, show_login: !$('#networkSettingsForm').is(':hidden')},
+                            data: {ajax: true, show_login: !$('#networkLoginForm').is(':hidden')},
                             dataType: 'json',
                             success: function(jsonData, statusText, xhr, $form) {
                                 if(jsonData.success) {
+                                    data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
+
+                                    $.ajax({url: 'https://checklogincredentials.mopub.com',
+                                        data: data,
+                                        crossDomain: true,
+                                        dataType: "jsonp",
+                                    });
                                     window.location = jsonData.redirect;
                                     $('form#campaign_and_adgroup #submit').button({
                                         label: 'Success...',
@@ -384,7 +390,7 @@ $(function() {
                 });
 
 
-            $("#networkSettingsForm-submit").click(function() {
+            $("#networkLoginForm-submit").click(function() {
                     // Hack to serialize sub-section of forms data.
                     // Add a new form and hide it.
                     $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
@@ -394,7 +400,7 @@ $(function() {
                     var data = $('#form-to-submit').serialize();
                     // Remove the form.
                     $('#form-to-submit').remove();
-                    data += ("&account_key=" + account_key + "&ad_network_name=" + network_type);
+                    data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
 
                     // Check if data submitted in the form is valid login
                     // information for the ad network
@@ -569,15 +575,15 @@ $(function() {
                 }
             }).filter(':checked').click();
 
-            $('#networkSettingsForm-cancel').click(function () {
-                $('#networkSettingsForm').slideUp(400, function () {
-                    $('#networkSettingsForm-show').show();
+            $('#networkLoginForm-cancel').click(function () {
+                $('#networkLoginForm').slideUp(400, function () {
+                    $('#networkLoginForm-show').show();
                 });
             });
 
-            $('#networkSettingsForm-show').click(function () {
-                $('#networkSettingsForm-show').hide();
-                $('#networkSettingsForm').slideDown();
+            $('#networkLoginForm-show').click(function () {
+                $('#networkLoginForm-show').hide();
+                $('#networkLoginForm').slideDown();
             });
         }
     }

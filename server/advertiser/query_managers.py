@@ -48,14 +48,19 @@ class CampaignQueryManager(QueryManager):
 
     @classmethod
     def get_network_campaigns(cls, account, network_type='', is_new=False):
-        campaaigns = cls.Model.all().filter('campaign_type =', 'network')\
+        """
+        is_new refers to models with the network_type attribute set,
+        which means it's a new type of campaign (used by the networks django
+        app).
+        """
+        campaigns = cls.Model.all().filter('campaign_type =', 'network')\
                       .filter('deleted =',False)\
-                      .filter('account =',account)
+                      .filter('account =',account)        
         if is_new:
-            campaaigns.filter('network_type !=', '')
+            campaigns.filter('network_type !=', '')
         if network_type:
-            campaaigns.filter('network_type =', network_type)
-        return campaaigns
+            campaigns.filter('network_type =', network_type)
+        return campaigns
 
     @classmethod
     def get_default_network_campaign(cls, account, network, get_from_db=False):

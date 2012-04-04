@@ -17,19 +17,26 @@ var mopub = mopub || {};
 		$(".button.continue")
     		.button({ 
     			icons: { secondary: "ui-icon-circle-triangle-e" } 
-    		})
-
+    		});
 		
-		// Submit button
+    	$('#paymentchange-submit')
+    		.button({ 
+                icons: { secondary: "ui-icon-circle-triangle-e" }
+            })
+            .click(function(e) {
+				e.preventDefault();
+				$('#paymentchange').submit();
+			});
+
 		$('#accountForm-submit')
-			.button({ 
-				icons: { secondary: "ui-icon-circle-triangle-e" } 
-			})
-			.click(function(e) {
+        	.button({ 
+                icons: { secondary: "ui-icon-circle-triangle-e" }
+            })
+            .click(function(e) {
 				e.preventDefault();
 				$('#accountForm').submit();
-		});
-		
+			});
+
 		// set up showing/hiding of app details
 		$('.adForm').each(function() {
 			var details = $(this);

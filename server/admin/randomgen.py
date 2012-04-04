@@ -13,6 +13,8 @@ from account.models import *
 from budget.models import *
 from reporting.models import *
 
+from advertiser.query_managers import CampaignQueryManager
+
 
 ####
 #Configuration Parameters for data generation

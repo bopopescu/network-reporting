@@ -91,10 +91,10 @@ def migrate():
                     AdGroupQueryManager.put(new_adgroup)
                 CampaignQueryManager.put(new_campaign)
 
-                # mark old campaign and adgroup as deleted
+                # mark old campaign as deleted and pause adgroup
                 campaign.deleted = True
                 for adgroup in campaign.adgroups:
-                    adgroup.deleted = True
+                    adgroup.active = False
                     AdGroupQueryManager.put(adgroup)
                 CampaignQueryManager.put(campaign)
 

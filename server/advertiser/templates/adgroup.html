@@ -674,7 +674,7 @@
               <h2>Daily Counts</h2>
               <div class="appData-details noneg">
                 <table class="dataTable appData-main">
-                  {% if campaign.gtee or campaign.marketplace %}
+                  {% if campaign.gtee %}
                     <thead>
                       <tr>
                         <th class="dataTable-name big">&nbsp;</th>
@@ -682,6 +682,7 @@
                         <th class="dataTable-data numeric special">Clicks</th>
                         <th class="dataTable-data numeric special">CTR</th>
                         <th class="dataTable-data numeric special">Revenue</th>
+                        <th class="dataTable-data numeric special">Conversions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -691,6 +692,7 @@
                         <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
                         <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
                         <td class="dataTable-data numeric"><b>{{adgroup.stats.revenue|currency}}</b></td>
+                        <td class="dataTable-data numeric"><b>{{adgroup.stats.conversion_count|withsep}}</b></td>
                       </tr>
                       {% for s in adgroup.all_stats reversed %}
                         <tr class="appData-details-inner show">
@@ -699,6 +701,7 @@
                           <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
                           <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
                           <td class="dataTable-data numeric">{{s.revenue|currency}}</td>
+                          <td class="dataTable-data numeric">{{s.conversion_count|withsep}}</td>
                         </tr>
                       {% endfor %}
                     </tbody>
@@ -709,7 +712,7 @@
                         <th class="dataTable-data numeric special">Impressions</th>
                         <th class="dataTable-data numeric special">Clicks</th>
                         <th class="dataTable-data numeric special">CTR</th>
-                        <th class="dataTable-data numeric special">Conv</th>
+                        <th class="dataTable-data numeric special">Conversions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -718,7 +721,7 @@
                         <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
                         <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
                         <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
-                        <td class="dataTable-data numeric"><b>{{adgroup.stats.conversion_count|withsep}} ({{adgroup.stats.conv_rate|percentage}})</b></td>
+                        <td class="dataTable-data numeric"><b>{{adgroup.stats.conversion_count|withsep}}</b></td>
                       </tr>
                       {% for s in adgroup.all_stats reversed %}
                         <tr class="appData-details-inner show">
@@ -726,10 +729,38 @@
                           <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
                           <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
                           <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
-                          <td class="dataTable-data numeric">{{s.conversion_count|withsep}} ({{s.conv_rate|percentage}})</td>
+                          <td class="dataTable-data numeric">{{s.conversion_count|withsep}}</td>
                         </tr>
                       {% endfor %}
                     </tbody>
+                    {% endif %} {% if campaign.marketplace %}
+                      <thead>
+                        <tr>
+                          <th class="dataTable-name big">&nbsp;</th>
+                          <th class="dataTable-data numeric special">Impressions</th>
+                          <th class="dataTable-data numeric special">Clicks</th>
+                          <th class="dataTable-data numeric special">CTR</th>
+                          <th class="dataTable-data numeric special">Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th class="dataTable-name big">Totals</th>
+                          <td class="dataTable-data numeric"><b>{{adgroup.stats.impression_count|withsep}}</b></td>
+                          <td class="dataTable-data numeric"><b>{{adgroup.stats.click_count|withsep}}</b></td>
+                          <td class="dataTable-data numeric"><b>{{adgroup.stats.ctr|percentage}}</b></td>
+                          <td class="dataTable-data numeric"><b>{{adgroup.stats.revenue|currency}}</b></td>
+                        </tr>
+                        {% for s in adgroup.all_stats reversed %}
+                          <tr class="appData-details-inner show">
+                            <th class="dataTable-name">{{s.date|format_date}}</th>
+                            <td class="dataTable-data numeric">{{s.impression_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
+                            <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
+                            <td class="dataTable-data numeric">{{s.revenue|currency}}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
                     {% endif %} {% if campaign.network %}
                     <thead>
                       <tr>

@@ -14,14 +14,6 @@
 {% endblock titleBarRight %}
 
 {% block innerContent %}
-<section id="show-network-data">
-{% if reporting %}
-<div style="float:right">
-    <input type="checkbox" checked="yes" name="show-data" id="show-network" /> Show data reported by network in <span style="color:orange;">orange</span>
-</div>
-{% endif %}
-</section>
-
 {% if login.state == LoginStates.PULLING_DATA or login.state == LoginStates.ERROR %}
 <section id="login-state-message">
     <div class="alert-message block-message warning">

@@ -150,6 +150,15 @@
     </div>
 </div>
 </section>
+
+<section id="show-network-data">
+{% if reporting %}
+<div style="float:right">
+    <input type="checkbox" checked="yes" name="show-data" id="show-network" /> Show data reported by network in <span style="color:orange;">orange</span>
+</div>
+{% endif %}
+</section>
+
 {% else %}
 <section>
 <div class="alert-message block-message">
@@ -222,6 +231,7 @@
 {% include_script "models/inventory" %}
 {% include_script "views/inventory" %}
 {% include_script "controllers/dashboard_dates" %}
+{% include_script "libs/jquery.cookie" %}
 {% include_script "controllers/networks" %}
 {% endblock extraScripts %}
 

@@ -72,6 +72,7 @@ $(function() {
 
         $('#show-network').change(function() {
             if ($(this).is(':checked')) {
+                $.cookie("show-network-data", "true");
                 $('.network-data').show();
                 $('.network-chart-data').show();
                 $('.mopub-chart-data').hide();
@@ -84,19 +85,31 @@ $(function() {
                     show_network_chart_data = true;
                 }
             } else {
+                $.cookie("show-network-data", null);
                 $('.network-data').hide();
                 $('.network-chart-data').hide();
                 $('.mopub-chart-data').show();
-                if (mopub.Chart.trafficChart) {
-                    if (mopub.Chart.trafficChart.series.length == 1) {
-                        mopub.Chart.trafficChart.series[0].hide();
+                function hide_network_trafficChart_series() {
+                    if (mopub.Chart.trafficChart) {
+                        if (mopub.Chart.trafficChart.series.length == 1) {
+                            mopub.Chart.trafficChart.series[0].hide();
+                        } else {
+                            mopub.Chart.trafficChart.series[1].hide();
+                        }
+                        show_network_chart_data = false;
                     } else {
-                        mopub.Chart.trafficChart.series[1].hide();
+                        setTimeout(hide_network_trafficChart_series, 50);//wait 50 millisecnds then recheck
                     }
-                    show_network_chart_data = false;
                 }
+                hide_network_trafficChart_series()
             }
-        }).change();
+        });
+
+        if (!$.cookie("show-network-data")) {
+            $('#show-network').click();
+        } else {
+            $('#show-network').change();
+        }
     }
 
     var NetworksController = { 

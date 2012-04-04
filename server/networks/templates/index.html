@@ -190,8 +190,8 @@ Make a table for the main ad networks that are not setup
             campaigns_data: {{ campaigns_data|safe }},
             date_range: {{ date_range }},
             graph_start_date: graph_start_date,
-            today: {{ today|safe }},
-            yesterday: {{ yesterday|safe }},
+            today: {{ today|default_if_none:"null" }},
+            yesterday: {{ yesterday|default_if_none:"null" }},
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
 
     });

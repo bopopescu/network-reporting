@@ -43,7 +43,7 @@ from publisher.query_managers import AppQueryManager, \
 from datetime import datetime, date, timedelta, time
 from django.contrib.auth.decorators import login_required
 from django.forms import ModelForm
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
 from django.utils import simplejson
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
@@ -85,9 +85,16 @@ class NetworksHandler(RequestHandler):
 
             network_data = {}
             if campaign:
+
+                # start building the campaign data that we'll show in
+                # the page
                 campaign_data = {'id': str(campaign.key()),
                                  'network': network}
 
+                # If this campaign is the first campaign of this
+                # network type and they have valid network
+                # credentials, then we can mark this as a campaign
+                # for which we have scraped network stats. 
                 if campaign.network_state == NetworkStates. \
                         DEFAULT_NETWORK_CAMPAIGN and network in \
                         REPORTING_NETWORKS:
@@ -99,13 +106,20 @@ class NetworksHandler(RequestHandler):
                         campaign_data['reporting'] = True
                         network_data['reporting'] = True
 
+                # Set up the rest of the attributes 
                 network_data['name'] = network
                 network_data['pretty_name'] = campaign.name
                 network_data['campaign_key'] = campaign.key()
 
+                # Remove this network from the list of networks that
+                # still need to be set up
                 networks_to_setup -= set([network])
+
+                # Add this to the list of networks that we can set up
+                # additional campaigns for
                 additional_networks.add(network)
 
+                # Add this network to the list that goes in the page
                 networks.append(network_data)
                 campaigns_data.append(campaign_data)
 
@@ -114,7 +128,7 @@ class NetworksHandler(RequestHandler):
                 network_data['name'])
 
         networks_to_setup_ = []
-        # Generate list of main networks that can be setup
+        # Generate list of primary networks that can be setup
         for network in sorted(networks_to_setup):
             network_data = {}
             network_data['name'] = network
@@ -124,7 +138,7 @@ class NetworksHandler(RequestHandler):
 
         additional_networks_ = []
         custom_networks = []
-        # Generate list of main networks that can be setup
+        # Generate list of additional networks that can be setup
         for network in sorted(additional_networks):
             network_data = {}
             network_data['name'] = network
@@ -148,8 +162,8 @@ class NetworksHandler(RequestHandler):
                   'start_date': self.days[0],
                   'end_date': self.days[-1],
                   'date_range': self.date_range,
-                  'today': simplejson.dumps(today),
-                  'yesterday': simplejson.dumps(yesterday),
+                  'today': today,
+                  'yesterday': yesterday,
                   'graph': True if networks else False,
                   'networks': networks,
                   'networks_to_setup': networks_to_setup_,
@@ -164,9 +178,14 @@ def networks(request, *args, **kwargs):
     return NetworksHandler()(request, *args, **kwargs)
 
 class EditNetworkHandler(RequestHandler):
-    def get(self,
-            network='',
-            campaign_key=''):
+    def get(self, network='', campaign_key=''):
+        """
+        `network` - a network type
+        `campaign_key` - the key for the campaign to be edited
+
+        Pass in `network` if this campaign is being created for the first time,
+        otherwise pass in `campaign_key` for the campaign that's being edited.  
+        """
         if campaign_key:
             campaign = CampaignQueryManager.get(campaign_key)
             network = campaign.network_type
@@ -178,15 +197,15 @@ class EditNetworkHandler(RequestHandler):
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(limit=1) or 'custom' in \
-                    network
+                    self.account, network).count(limit=1) or 'custom' in network
             # Set the default campaign name to the network name
             campaign_name = NETWORKS[network]
             show_login = True
             if custom_campaign and 'custom' not in network:
                 campaign_name += ' - Custom'
-            default_data = {'name': campaign_name}
-            campaign_form = CampaignForm(default_data)
+
+            # set up the campaign with the default data
+            campaign_form = CampaignForm({'name': campaign_name})
 
         network_data = {}
         network_data['name'] = network
@@ -195,7 +214,13 @@ class EditNetworkHandler(RequestHandler):
         reporting = False
         ad_network_ids = False
 
+        # We don't make login forms for certain networks that we're unable
+        # to scrape stats from. 
         login_form = None
+
+        # We try to find the login information if they have it. If login
+        # is none by the time of the page rendering, it meas we don't have
+        # login info for this account+network
         login = None
         if not custom_campaign and network in REPORTING_NETWORKS:
             # Create the login credentials form
@@ -211,6 +236,7 @@ class EditNetworkHandler(RequestHandler):
         account_network_config_form = AccountNetworkConfigForm(instance=
                 self.account.network_config)
 
+        # Used to make css classes
         reporting_networks = ' '.join(REPORTING_NETWORKS.keys())
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
@@ -531,26 +557,26 @@ def edit_network(request, *args, **kwargs):
     return EditNetworkHandler()(request, *args, **kwargs)
 
 class NetworkDetailsHandler(RequestHandler):
-    def get(self,
-            campaign_key):
+    def get(self, campaign_key):
         """
         Return a webpage with the network statistics.
         """
         campaign = CampaignQueryManager.get(campaign_key)
 
+        if not campaign:
+            raise Http404
+        
         network = campaign.network_type
         network_data = {}
         network_data['name'] = network
         network_data['pretty_name'] = campaign.name
-
-        if not campaign:
-            raise Http404
-
         network_data['campaign_key'] = str(campaign.key())
         network_data['active'] = campaign.active
         network_data['targeting'] = []
 
-        # Set targeting
+        # Get the campaign targeting information.  We need an adunit
+        # and an adgroup to determine targeting.  Any adunit will do
+        # because every adunit is targeted by a network adgroup.
         adunit = AdUnitQueryManager.get_adunits(account=self.account,
                 limit=1)[0]
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
@@ -571,13 +597,16 @@ class NetworkDetailsHandler(RequestHandler):
                          'network': network,
                          'reporting': False}
 
+        # This campaign is a default network campaign if its the
+        # only one of this type. If this is the default, and if we have
+        # login info, then we have reporting stats.
+        #REFACTOR: handle the case when this isnt true. 
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
             if AdNetworkLoginManager.get_login(self.account,
                     network).get():
                 campaign_data['reporting'] = True
 
-        stats_manager = StatsModelQueryManager(account=self.account)
         # Iterate through all the apps and populate the stats for network_data
         for app in AppQueryManager.get_apps(self.account):
             if 'mopub_app_stats' not in network_data:
@@ -602,17 +631,13 @@ class NetworkDetailsHandler(RequestHandler):
                   'start_date' : self.days[0],
                   'end_date' : self.days[-1],
                   'date_range' : self.date_range,
-                  'today': simplejson.dumps(today),
-                  'yesterday': simplejson.dumps(yesterday),
+                  'today': today,
+                  'yesterday': yesterday,
                   'graph' : True,
                   'reporting' : campaign_data['reporting'],
                   'network': network_data,
                   'campaign_data': simplejson.dumps(campaign_data),
-                  'ADMOB': ADMOB,
-                  'IAD': IAD,
-                  'INMOBI': INMOBI,
                   'MOBFOX': MOBFOX,
-                  'REPORTING_NETWORKS': REPORTING_NETWORKS,
               })
 
 @login_required
@@ -620,8 +645,7 @@ def network_details(request, *args, **kwargs):
     return NetworkDetailsHandler()(request, *args, **kwargs)
 
 class PauseNetworkHandler(RequestHandler):
-    def post(self,
-             campaign_key):
+    def post(self, campaign_key):
         """
         Pause / un-pause campaign
         """
@@ -640,8 +664,7 @@ def pause_network(request, *args, **kwargs):
     return PauseNetworkHandler()(request, *args, **kwargs)
 
 class DeleteNetworkHandler(RequestHandler):
-    def get(self,
-            campaign_key):
+    def get(self, campaign_key):
         """
         Change campaign and login credentials deleted field to True and
         redirect to the networks index page

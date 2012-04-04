@@ -111,10 +111,18 @@ $(function() {
 
             initializeDateButtons();
 
-            var all_campaigns = []
+            var all_campaigns = [];
             _.each(campaigns_data, function(campaign_data) {
                 all_campaigns = all_campaigns.concat(initialize_campaign_data(campaign_data, false, ajax_query_string));
             });
+
+            console.log(all_campaigns);
+
+            var all_campaigns = _.map(campaigns_data, function(campaign_data){
+                return initialize_campaign_data(campaign_data, false, ajax_query_string)[0];
+            });
+
+            console.log(all_campaigns);
 
             var campaigns = new Campaigns(all_campaigns);
 
@@ -408,7 +416,10 @@ $(function() {
                         success: function(valid) {
                             // Upon success notify the user
                             if (valid) {
-                                $(message).html("MoPub is currently optimizing " + pretty_name + " by pulling data from " + pretty_name + " using the following credentials.");
+                                $(message).html("MoPub is currently optimizing "
+                                                + pretty_name
+                                                + " by pulling data from "
+                                                + pretty_name + " using the following credentials.");
                                 var username = $('#id_username_str').val();
                                 var password = $('#id_password_str').val();
                                 var client_key = $('#id_client_key').val();

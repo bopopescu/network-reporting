@@ -1,15 +1,12 @@
 from __future__ import with_statement
 import urllib2 as urllib
-
-from google.appengine.ext import db
 from google.appengine.api import images, files
-
 from django import forms
-from django.core.urlresolvers import reverse
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
 from publisher.models import Site, App
+
 
 CATEGORY_CHOICES = (
         (u'', '-----------------'),
@@ -34,6 +31,7 @@ CATEGORY_CHOICES = (
         (u'utilities', 'Utilities'),
         (u'weather', 'Weather'),
 )
+
 
 class AppForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/app_form.html'

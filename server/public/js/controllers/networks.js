@@ -116,14 +116,6 @@ $(function() {
                 all_campaigns = all_campaigns.concat(initialize_campaign_data(campaign_data, false, ajax_query_string));
             });
 
-            console.log(all_campaigns);
-
-            var all_campaigns = _.map(campaigns_data, function(campaign_data){
-                return initialize_campaign_data(campaign_data, false, ajax_query_string)[0];
-            });
-
-            console.log(all_campaigns);
-
             var campaigns = new Campaigns(all_campaigns);
 
             // Load chart
@@ -626,7 +618,13 @@ $(function() {
                     var div = $('.' + key);
                     div.dialog({
                         buttons: {
-                            "Delete": function() { window.location = '/networks/delete/' + campaign_data.id; },
+                            "Delete": function() {
+                                $.post('/networks/delete',
+                                    {campaign_key: campaign_data.id},
+                                    function() {
+                                      window.location = '/networks';
+                                });
+                                },
                             "Cancel": function() { $(this).dialog('close');} }
                     });
                 });
@@ -637,7 +635,8 @@ $(function() {
                 hidden_li.show();
                 shown_li.hide();
 
-                $.post('/networks/pause/' + campaign_data.id, { active: $(this).val() } );
+                $.post('/networks/pause', { campaign_key: campaign_data.id,
+                                             active: $(this).val() } );
             });
 
             $('#network-editActive-menu').find('li').first().hide();

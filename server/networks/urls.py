@@ -18,11 +18,11 @@ urlpatterns = patterns('networks.views',
             'network_details',
             name='network_details'),
 
-        url(r'^pause/(?P<campaign_key>[-\w\.]+)$',
+        url(r'^pause$',
             'pause_network',
             name='pause_network'),
 
-        url(r'^delete/(?P<campaign_key>[-\w\.]+)$',
+        url(r'^delete$',
             'delete_network',
             name='delete_network'),
         )

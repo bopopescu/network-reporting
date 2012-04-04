@@ -94,7 +94,7 @@ class NetworksHandler(RequestHandler):
                 # If this campaign is the first campaign of this
                 # network type and they have valid network
                 # credentials, then we can mark this as a campaign
-                # for which we have scraped network stats. 
+                # for which we have scraped network stats.
                 if campaign.network_state == NetworkStates. \
                         DEFAULT_NETWORK_CAMPAIGN and network in \
                         REPORTING_NETWORKS:
@@ -106,7 +106,7 @@ class NetworksHandler(RequestHandler):
                         campaign_data['reporting'] = True
                         network_data['reporting'] = True
 
-                # Set up the rest of the attributes 
+                # Set up the rest of the attributes
                 network_data['name'] = network
                 network_data['pretty_name'] = campaign.name
                 network_data['campaign_key'] = campaign.key()
@@ -184,7 +184,7 @@ class EditNetworkHandler(RequestHandler):
         `campaign_key` - the key for the campaign to be edited
 
         Pass in `network` if this campaign is being created for the first time,
-        otherwise pass in `campaign_key` for the campaign that's being edited.  
+        otherwise pass in `campaign_key` for the campaign that's being edited.
         """
         if campaign_key:
             campaign = CampaignQueryManager.get(campaign_key)
@@ -215,7 +215,7 @@ class EditNetworkHandler(RequestHandler):
         ad_network_ids = False
 
         # We don't make login forms for certain networks that we're unable
-        # to scrape stats from. 
+        # to scrape stats from.
         login_form = None
 
         # We try to find the login information if they have it. If login
@@ -565,7 +565,7 @@ class NetworkDetailsHandler(RequestHandler):
 
         if not campaign:
             raise Http404
-        
+
         network = campaign.network_type
         network_data = {}
         network_data['name'] = network
@@ -600,7 +600,7 @@ class NetworkDetailsHandler(RequestHandler):
         # This campaign is a default network campaign if its the
         # only one of this type. If this is the default, and if we have
         # login info, then we have reporting stats.
-        #REFACTOR: handle the case when this isnt true. 
+        #REFACTOR: handle the case when this isnt true.
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
             if AdNetworkLoginManager.get_login(self.account,
@@ -645,12 +645,14 @@ def network_details(request, *args, **kwargs):
     return NetworkDetailsHandler()(request, *args, **kwargs)
 
 class PauseNetworkHandler(RequestHandler):
-    def post(self, campaign_key):
+    def post(self):
         """
         Pause / un-pause campaign
         """
         if not self.request.is_ajax():
             raise Http404
+
+        campaign_key = self.request.POST.get('campaign_key')
 
         # Pause campaign
         campaign = CampaignQueryManager.get(campaign_key)
@@ -664,11 +666,16 @@ def pause_network(request, *args, **kwargs):
     return PauseNetworkHandler()(request, *args, **kwargs)
 
 class DeleteNetworkHandler(RequestHandler):
-    def get(self, campaign_key):
+    def post(self):
         """
         Change campaign and login credentials deleted field to True and
         redirect to the networks index page
         """
+        if not self.request.is_ajax():
+            raise Http404
+
+        campaign_key = self.request.POST.get('campaign_key')
+
         campaign = CampaignQueryManager.get(campaign_key)
         campaign.deleted = True
         CampaignQueryManager.put(campaign)
@@ -697,7 +704,7 @@ class DeleteNetworkHandler(RequestHandler):
             adgroup.deleted = True
             AdGroupQueryManager.put(adgroup)
 
-        return HttpResponseRedirect(reverse('networks'))
+        return TextResponse()
 
 @login_required
 def delete_network(request, *args, **kwargs):

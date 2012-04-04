@@ -219,19 +219,22 @@ def generate_adgroup(site_keys,account,campaign=None,network=None):
 
 
 
-def generate_campaign(account,budget,campaign_type=None):
-    start_date = get_random_date()
-    end_date = get_random_date()
-    if start_date> end_date:
-        temp = start_date
-        start_date = end_date
-        end_date = temp
-    campaign = Campaign(name=get_campaign_name(),
-                        budget_obj = budget,
-                        campaign_type = campaign_type if campaign_type else select_rand(CAMPAIGN_TYPES),
-                        account = account,
-                        start_date = start_date,
-                        end_date = end_date)
+def generate_campaign(account,budget=None,campaign_type=None):
+    if campaign_type == 'marketplace':
+        campaign = CampaignQueryManager.get_marketplace(account)
+    else:
+        start_date = get_random_date()
+        end_date = get_random_date()
+        if start_date> end_date:
+            temp = start_date
+            start_date = end_date
+            end_date = temp
+        campaign = Campaign(name=get_campaign_name(),
+                            budget_obj = budget,
+                            campaign_type = campaign_type if campaign_type else select_rand(CAMPAIGN_TYPES),
+                            account = account,
+                            start_date = start_date,
+                            end_date = end_date)
     campaign.put()
     return campaign
 
@@ -386,6 +389,9 @@ def main_():
 def main():
     account = generate_account(USERNAME,PASSWORD,USERNAME,
             display_new_networks=True)
+
+    # Create marketplace campaign
+    generate_campaign(account,campaign_type="marketplace")
 
     apps = []
     for i in range(NUM_APPS):

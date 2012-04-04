@@ -47,12 +47,10 @@
             </li>
         </ul>
 
-        {% if login_form %}
         <a class="button" id="advanced">Show Advanced Settings</a>
-        {% endif %}
     </fieldset>
 
-    <fieldset class="advanced {% if login_form %}hidden{% endif %}">
+    <fieldset class="advanced hidden">
         <legend>
             <h2>Advanced Settings</h2>
         </legend>
@@ -216,20 +214,17 @@
                 <li>
                 {{ login_form.username_str.label_tag }}
                 {{ login_form.username_str }}
-                <span id='username'> </span>
                 </li>
 
                 <li>
                 {{ login_form.password_str.label_tag }}
                 {{ login_form.password_str }}
-                <span id='password'> </span>
                 </li>
 
                 {% if network.name == "admob" %}
-                <li class="network_type_dependant admob admob_native">
+                <li>
                 {{ login_form.client_key.label_tag }}
                 {{ login_form.client_key }}
-                <span id='client_key'> </span>
                 </li>
                 {% endif %}
             </ul>

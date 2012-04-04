@@ -229,9 +229,10 @@ class EditNetworkHandler(RequestHandler):
             if login:
                 # Can't initialize username or password because it's encrypted
                 # and can only be decrypted on EC2
-                login_form = LoginCredentialsForm(instance=login)
+                login_form = LoginCredentialsForm(instance=login,
+                        network=network)
             else:
-                login_form = LoginCredentialsForm()
+                login_form = LoginCredentialsForm(network=network)
 
         account_network_config_form = AccountNetworkConfigForm(instance=
                 self.account.network_config)

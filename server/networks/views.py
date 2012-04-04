@@ -654,12 +654,12 @@ class DeleteNetworkHandler(RequestHandler):
                 DEFAULT_NETWORK_CAMPAIGN:
             # If other campaigns exist, a new default campaign must be chosen
             default_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, is_new=True).get()
+                    self.account, network_type=campaign.network_type).get()
 
             if default_campaign:
                 campaign.network_state = NetworkStates.DEFAULT_NETWORK_CAMPAIGN
                 CampaignQueryManager.put(campaign)
-            elif network in REPORTING_NETWORKS:
+            elif campaign.network_type in REPORTING_NETWORKS:
                 login = AdNetworkLoginManager.get_login(self.account,
                         campaign.network_type).get()
                 login.deleted = True

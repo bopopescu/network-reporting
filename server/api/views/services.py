@@ -14,6 +14,9 @@ from publisher.query_managers import AdUnitQueryManager, \
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
+from ad_network_reports.models import AdNetworkAppMapper, AdNetworkStats
+from ad_network_reports.query_managers import AdNetworkStatsManager
+
 from ad_server.optimizer.optimizer import DEFAULT_CTR
 from adserver_constants import ADSERVER_HOSTNAME
 
@@ -357,30 +360,30 @@ class CampaignService(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, campaign_key):
-        #try:
-        campaign = CampaignQueryManager.get(campaign_key)
+        try:
+            campaign = CampaignQueryManager.get(campaign_key)
 
-        # REFACTOR
-        # ensure the owner of this campaign is the request's
-        # current user
-        if campaign.account.key() != self.account.key():
-            raise Http404
+            # REFACTOR
+            # ensure the owner of this campaign is the request's
+            # current user
+            if campaign.account.key() != self.account.key():
+                raise Http404
 
-        # Get the stats for the campaign
-        stats_endpoint = self.request.GET.get('endpoint', 'all')
-        stats = get_stats_fetcher(self.account.key(), stats_endpoint)
-        campaign_stats = stats.get_campaign_stats(campaign_key,
-                self.start_date, self.end_date)
+            # Get the stats for the campaign
+            stats_endpoint = self.request.GET.get('endpoint', 'all')
+            stats = get_stats_fetcher(self.account.key(), stats_endpoint)
+            campaign_stats = stats.get_campaign_stats(campaign_key,
+                    self.start_date, self.end_date)
 
-        summed_stats = sum(campaign_stats, StatsModel())
+            summed_stats = sum(campaign_stats, StatsModel())
 
-        stats_dict = summed_stats.to_dict()
+            stats_dict = summed_stats.to_dict()
 
-        stats_dict['daily_stats'] = [s.to_dict() for s in campaign_stats]
+            stats_dict['daily_stats'] = [s.to_dict() for s in campaign_stats]
 
-        return JSONResponse(stats_dict)
-        #except Exception, exception:
-            #return JSONResponse({'error': str(exception)})
+            return JSONResponse(stats_dict)
+        except Exception, exception:
+            return JSONResponse({'error': str(exception)})
 
 
     def post(self, *args, **kwagrs):
@@ -405,121 +408,113 @@ class NetworkAppsService(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, campaign_key, adunits=False):
-        from ad_network_reports.models import AdNetworkAppMapper, AdNetworkStats
-        from ad_network_reports.query_managers import AdNetworkStatsManager
+        try:
+            campaign = CampaignQueryManager.get(campaign_key)
 
-        #try:
-        campaign = CampaignQueryManager.get(campaign_key)
-        logging.info(campaign.name)
-        logging.info(campaign.network_state)
-        logging.info(campaign.network_state ==
-                NetworkStates.DEFAULT_NETWORK_CAMPAIGN)
+            # REFACTOR
+            # ensure the owner of this campaign is the request's
+            # current user
+            if campaign.account.key() != self.account.key():
+                raise Http404
 
-        # REFACTOR
-        # ensure the owner of this campaign is the request's
-        # current user
-        if campaign.account.key() != self.account.key():
-            raise Http404
+            network = campaign.network_type
 
-        network = campaign.network_type
+            network_apps_ = {}
+            stats_manager = StatsModelQueryManager(account=self.account)
+            # Iterate through all the apps and populate the stats for
+            # network_apps_
+            for app in AppQueryManager.get_apps(self.account):
+                # Get stats collected by networks if this is the first network
+                # campaign
+                if campaign.network_state == \
+                        NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
+                    login = AdNetworkLoginManager.get_login(self.account,
+                            network).get()
+                    all_stats = False
+                    if login:
+                        mappers = AdNetworkMapperManager.get_mappers_for_app(
+                                login, app)
+                        if mappers.count(limit=1):
+                            stats_by_day = {}
+                            for day in self.days:
+                                stats_by_day[day] = AdNetworkStats(date=
+                                        date.today())
 
-        network_apps_ = {}
-        stats_manager = StatsModelQueryManager(account=self.account)
-        # Iterate through all the apps and populate the stats for network_apps_
-        for app in AppQueryManager.get_apps(self.account):
-            # Get stats collected by networks if this is the first network
-            # campaign
-            if campaign.network_state == \
-                    NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
-                login = AdNetworkLoginManager.get_login(self.account,
-                        network).get()
-                all_stats = False
-                if login:
-                    mappers = AdNetworkMapperManager.get_mappers_for_app(login,
-                            app)
-                    if mappers.count(limit=1):
-                        stats_by_day = {}
-                        for day in self.days:
-                            stats_by_day[day] = AdNetworkStats(date=date.today())
+                            for mapper in mappers:
+                                all_stats = AdNetworkStatsManager. \
+                                        get_stats_list_for_mapper_and_days(
+                                                mapper.key(), self.days)
+                                for stats in all_stats:
+                                    if stats.date in stats_by_day:
+                                        stats_by_day[stats.date] += stats
 
-                        for mapper in mappers:
-                            all_stats = AdNetworkStatsManager. \
-                                    get_stats_list_for_mapper_and_days(mapper.key(),
-                                            self.days)
-                            for stats in all_stats:
-                                if stats.date in stats_by_day:
-                                    stats_by_day[stats.date] += stats
+                            all_stats = sorted(stats_by_day.values(), key= \
+                                    lambda stats: stats.date)
 
-                        all_stats = sorted(stats_by_day.values(), key=lambda stats:
-                                stats.date)
+                    if all_stats:
+                        stats = reduce(lambda x, y: x+y, all_stats,
+                                AdNetworkStats())
+                        if app.key() not in network_apps_:
+                            network_apps_[app.key()] = app
+                        if hasattr(network_apps_[app.key()], 'network_stats'):
+                            network_apps_[app.key()].network_stats += stats
+                        else:
+                            network_apps_[app.key()].network_stats = stats
 
-                if all_stats:
-                    stats = reduce(lambda x, y: x+y, all_stats,
-                            AdNetworkStats())
+                # Get stats collected by MoPub
+                for adunit in AdUnitQueryManager.get_adunits(account=self.
+                        account, app=app):
+                    # One adunit per adgroup for network adunits
+                    adgroup = AdGroupQueryManager.get_network_adgroup(
+                            campaign, adunit.key(),
+                            self.account.key(), get_from_db=True)
+                    adunit.active = adgroup.active
+
+                    all_stats = stats_manager.get_stats_for_days(publisher=app,
+                                                                 advertiser=
+                                                                    adgroup,
+                                                                 days=self.days)
+                    stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
+
                     if app.key() not in network_apps_:
                         network_apps_[app.key()] = app
-                    if hasattr(network_apps_[app.key()], 'network_stats'):
-                        network_apps_[app.key()].network_stats += stats
+                    if hasattr(network_apps_[app.key()], 'mopub_stats'):
+                        network_apps_[app.key()].mopub_stats += stats
                     else:
-                        network_apps_[app.key()].network_stats = stats
+                        network_apps_[app.key()].mopub_stats = stats
 
-            # Get stats collected by MoPub
-            for adunit in AdUnitQueryManager.get_adunits(account=self.
-                    account, app=app):
-                # One adunit per adgroup for network adunits
-                adgroup = AdGroupQueryManager.get_network_adgroup(
-                        campaign, adunit.key(),
-                        self.account.key(), get_from_db=True)
-                adunit.active = adgroup.active
+                    if adunits:
+                        adunit_data = adunit.toJSON()
+                        adunit_data['active'] = adunit.active
+                        adunit_data['url'] = '/inventory/adunit/' + \
+                                str(adunit.key())
+                        adunit_data['stats'] = stats.to_dict()
+                        if hasattr(network_apps_[app.key()], 'adunits'):
+                            network_apps_[app.key()].adunits.append(adunit_data)
+                        else:
+                            network_apps_[app.key()].adunits = [adunit_data]
 
-                all_stats = stats_manager.get_stats_for_days(publisher=app,
-                                                             advertiser=
-                                                                adgroup,
-                                                             days=self.days)
-                stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
+            network_apps_ = sorted(network_apps_.values(), key=lambda app_data:
+                    app_data.identifier)
 
-                if app.key() not in network_apps_:
-                    network_apps_[app.key()] = app
-                if hasattr(network_apps_[app.key()], 'mopub_stats'):
-                    network_apps_[app.key()].mopub_stats += stats
-                else:
-                    network_apps_[app.key()].mopub_stats = stats
-
+            network_apps = []
+            for app in network_apps_:
+                app_data = app.toJSON()
+                app_data['url'] = '/inventory/app/' + str(app.key())
                 if adunits:
-                    adunit_data = adunit.toJSON()
-                    logging.info('ADUNIT.NAME')
-                    logging.info(adunit.name)
-                    logging.info(adunit.active)
-                    adunit_data['active'] = adunit.active
-                    adunit_data['url'] = '/inventory/adunit/' + \
-                            str(adunit.key())
-                    adunit_data['stats'] = stats.to_dict()
-                    if hasattr(network_apps_[app.key()], 'adunits'):
-                        network_apps_[app.key()].adunits.append(adunit_data)
-                    else:
-                        network_apps_[app.key()].adunits = [adunit_data]
-
-        network_apps_ = sorted(network_apps_.values(), key=lambda app_data:
-                app_data.identifier)
-
-        network_apps = []
-        for app in network_apps_:
-            app_data = app.toJSON()
-            app_data['url'] = '/inventory/app/' + str(app.key())
-            if adunits:
-                app_data['adunits'] = app.adunits
-            app_data['mopub_stats'] = app.mopub_stats.to_dict()
-            if hasattr(app, 'network_stats'):
-                app_data['network_stats'] = \
-                    StatsModel(ad_network_stats=app.network_stats).to_dict()
-            app_data['network'] = network
-            network_apps.append(app_data)
+                    app_data['adunits'] = app.adunits
+                app_data['mopub_stats'] = app.mopub_stats.to_dict()
+                if hasattr(app, 'network_stats'):
+                    app_data['network_stats'] = \
+                        StatsModel(ad_network_stats=app.network_stats).to_dict()
+                app_data['network'] = network
+                network_apps.append(app_data)
 
 
-        return JSONResponse(network_apps)
+            return JSONResponse(network_apps)
 
-    #except Exception, exception:
-            #return JSONResponse({'error': str(exception)})
+        except Exception, exception:
+            return JSONResponse({'error': str(exception)})
 
 
     def post(self, *args, **kwagrs):

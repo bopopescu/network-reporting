@@ -35,8 +35,7 @@ def get_filetype_extension(filename):
 
 class CampaignForm(forms.ModelForm):
     campaign_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
-                                               ('promo', 'Promotional'),
-                                               ('network', 'Network')),
+                                               ('promo', 'Promotional')),
                                       label='Campaign Type:')
     gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
                                                ('normal', 'Normal'),
@@ -127,7 +126,13 @@ class CampaignForm(forms.ModelForm):
             if instance.end_datetime:
                 initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
+        is_staff = kwargs.pop('is_staff', False)
+
         super(forms.ModelForm, self).__init__(*args, **kwargs)
+
+        # show deprecated networks if user is staff
+        if is_staff:
+            self.fields['campaign_type'].choices.append(('network', 'Network'))
 
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to

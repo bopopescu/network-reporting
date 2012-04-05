@@ -222,7 +222,7 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
     """ Replaces CreateCampaignAJAXHandler and CreateCampaignHandler """
 
     def get(self):
-        campaign_form = CampaignForm()
+        campaign_form = CampaignForm(is_staff=self.request.user.is_staff)
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 

@@ -16,7 +16,8 @@ from common.constants import NETWORKS, \
 
 CAMPAIGN_FIELD_EXCLUSION_LIST = ['account', 'network_type', 'network_state', \
         'show_login', 'name']
-ADGROUP_FIELD_EXCLUSION_LIST = ['account', 'campaign', 'net_creative']
+ADGROUP_FIELD_EXCLUSION_LIST = ['account', 'campaign', 'net_creative',
+        'site_keys']
 CREATIVE_FIELD_EXCLUSION_LIST = ['ad_group', 'account']
 
 accounts = [Account.get('agltb3B1Yi1pbmNyEAsSB0FjY291bnQYscSjDww')]

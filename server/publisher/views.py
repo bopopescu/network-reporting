@@ -504,7 +504,7 @@ class AppDetailHandler(RequestHandler):
         # we don't include network or promo campaigns in the revenue totals
         logging.warn(guarantee_campaigns)
         logging.warn(marketplace_campaigns)
-            
+
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted)
@@ -1095,7 +1095,14 @@ def enable_networks(adunit, account):
             is_new=True):
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                 adunit.key(), account.key())
-        adgroup.active = False
+        preexisting_adgroup = AdGroupQueryManager.get_adgroups(campaign=
+                campaign).get()
+        adgroup.active = preexisting_adgroup.active
+        adgroup.device_targeting = preexisting_adgroup.device_targeting
+        for device, pretty_name in adgroup.DEVICE_CHOICES:
+            setattr(adgroup, 'target_' + device, getattr(preexisting_adgroup,
+                'target_' + device, False))
+        adgroup.target_other = preexisting_adgroup.target_other
         ntwk_adgroups.append(adgroup)
     AdGroupQueryManager.put(ntwk_adgroups)
 

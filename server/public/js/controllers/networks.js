@@ -165,6 +165,13 @@ $(function() {
 
             $('#network-editSelect-menu').find('li').first().hide();
 
+            //move to a utils package
+            // checks if email is valid
+            function isValidEmailAddress(emailAddress) {
+                var pattern = new RegExp(/^(\s*)(("[\w-+\s]+")|([\w-+]+(?:\.[\w-+]+)*)|("[\w-+\s]+")([\w-+]+(?:\.[\w-+]+)*))(@((?:[\w-+]+\.)*\w[\w-+]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][\d]\.|1[\d]{2}\.|[\d]{1,2}\.))((25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\.){2}(25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\]?$)/i);
+                return pattern.test(emailAddress);
+            };
+
             // taken from mopub-dashboard.js #appEditForm (could be combined)
             $('#networkSettingsForm-submit')
                 .button({
@@ -231,6 +238,7 @@ $(function() {
         initialize: function(bootstrapping_data) {
             var network_type = bootstrapping_data.network_type,
                 pretty_name = bootstrapping_data.pretty_name,
+                account_key = bootstrapping_data.account_key,
                 adunits = bootstrapping_data.adunits,
                 priors = bootstrapping_data.priors,
                 city_priors = bootstrapping_data.city_priors;

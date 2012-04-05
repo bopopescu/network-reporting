@@ -3,7 +3,8 @@ from google.appengine.ext import db
 from account.models import Account
 from account.query_managers import AccountQueryManager
 
-from advertiser.models import NetworkStates
+from advertiser.models import NetworkStates, \
+        Campaign
 from advertiser.query_managers import CampaignQueryManager, \
         AdGroupQueryManager, \
         CreativeQueryManager
@@ -60,6 +61,7 @@ def migrate():
             # TODO: hash on shared settings (advanced settings)
             network = campaign.adgroups[0].network_type.replace('_native',
                     '').lower()
+            print "migrating old campaign for " + network
             if network in NETWORKS:
                 if network in networks:
                     print "creating a custom network campaign"
@@ -68,6 +70,8 @@ def migrate():
                             network_type=network,
                             network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN,
                             name=campaign.name)
+                    # Must save so key exists
+                    CampaignQueryManager.put(new_campaign)
                 else:
                     print "creating a default network campaign"
                     # create defualt network campaign
@@ -92,15 +96,15 @@ def migrate():
                 CampaignQueryManager.put(new_campaign)
 
                 # mark old campaign as deleted and pause adgroup
-                campaign.deleted = True
+                campaign.active = False
                 for adgroup in campaign.adgroups:
                     adgroup.active = False
                     AdGroupQueryManager.put(adgroup)
                 CampaignQueryManager.put(campaign)
 
-                networks.add(campaign.network_type)
-        account.display_new_networks = True
-        AccountQueryManager.put_accounts(account)
+                networks.add(network)
+        #account.display_new_networks = True
+        #AccountQueryManager.put_accounts(account)
 
 def undo():
     for account in accounts:

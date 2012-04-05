@@ -3,9 +3,14 @@ Call this script when you want to deploy frontend code.
 """
 # TODO: Figure out why envoy fucks up commands that have messages
 # like git tag and git commit
-
 import sys
 import os
+
+#sys.path.append(os.environ['PWD'])
+PWD = os.path.dirname(__file__)
+sys.path.append(os.path.join(PWD, '..'))
+import common.utils.test.setup
+
 import datetime
 import re
 import yaml
@@ -14,8 +19,6 @@ import clint
 from clint.textui import puts, indent, colored
 import envoy
 
-PWD = os.path.dirname(__file__)
-sys.path.append(os.path.join(PWD, '..'))
 
 
 def prompt_before_executing(original, override=None):

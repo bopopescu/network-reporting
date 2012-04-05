@@ -197,7 +197,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(limit=1) or 'custom' in network
+                    self.account, network).count(1) or 'custom' in network
             # Set the default campaign name to the network name
             campaign_name = NETWORKS[network]
             show_login = True
@@ -350,7 +350,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(limit=1) or 'custom' in network
+                    self.account, network).count(1) or 'custom' in network
             if not custom_campaign:
                 query_dict['name'] = NETWORKS[network]
                 campaign = CampaignQueryManager. \
@@ -484,7 +484,7 @@ class EditNetworkHandler(RequestHandler):
                             for mapper in mappers:
                                 if mapper:
                                     stats = mapper.ad_network_stats
-                                    if not stats.count(limit=1):
+                                    if not stats.count(1):
                                         mapper.delete()
                             if app_pub_id:
                                 AdNetworkMapperManager.create(network=network,

@@ -14,7 +14,7 @@ from common.constants import NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION
 
 CAMPAIGN_FIELD_EXCLUSION_LIST = ['account', 'network_type', 'network_state', \
-        'show_login']
+        'show_login', 'name']
 ADGROUP_FIELD_EXCLUSION_LIST = ['account', 'campaign', 'net_creative']
 CREATIVE_FIELD_EXCLUSION_LIST = ['ad_group', 'account']
 

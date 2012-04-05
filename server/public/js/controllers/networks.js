@@ -241,7 +241,11 @@ $(function() {
                 account_key = bootstrapping_data.account_key,
                 adunits = bootstrapping_data.adunits,
                 priors = bootstrapping_data.priors,
-                city_priors = bootstrapping_data.city_priors;
+                city_priors = bootstrapping_data.city_priors,
+                login_state = bootstrapping_data.login_state,
+                LoginStates = bootstrapping_data.LoginStates;
+            
+            var saved_new_login = false;
 
             // make necessary changes based on network type
             var pub_ids = {
@@ -365,13 +369,15 @@ $(function() {
                             dataType: 'json',
                             success: function(jsonData, statusText, xhr, $form) {
                                 if(jsonData.success) {
-                                    data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
+                                    if (saved_new_login && login_state == LoginStates.NOT_SETUP) {
+                                        data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
 
-                                    $.ajax({url: 'https://checklogincredentials.mopub.com',
-                                        data: data,
-                                        crossDomain: true,
-                                        dataType: "jsonp",
-                                    });
+                                        $.ajax({url: 'https://checklogincredentials.mopub.com',
+                                            data: data,
+                                            crossDomain: true,
+                                            dataType: "jsonp",
+                                        });
+                                    }
                                     window.location = jsonData.redirect;
                                     $('form#campaign_and_adgroup #submit').button({
                                         label: 'Success...',
@@ -456,6 +462,7 @@ $(function() {
                                 $('#client_key').text(client_key);
                                 $('.login-credentials-submit').hide();
                                 $('.login-credentials-settings').show();
+                                saved_new_login = true;
                             } else {
                                 $(message).html("Invalid login information.");
                             }

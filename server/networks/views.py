@@ -209,7 +209,8 @@ class EditNetworkHandler(RequestHandler):
 
         network_data = {'name': network,
                         'pretty_name': campaign_name,
-                        'show_login': show_login}
+                        'show_login': show_login,
+                        'login_state': LoginStates.NOT_SETUP}
         reporting = False
         ad_network_ids = False
 
@@ -230,6 +231,7 @@ class EditNetworkHandler(RequestHandler):
                 # and can only be decrypted on EC2
                 login_form = LoginCredentialsForm(instance=login,
                         network=network)
+                network_data['login_state'] = login.state
             else:
                 login_form = LoginCredentialsForm(network=network)
 
@@ -323,6 +325,8 @@ class EditNetworkHandler(RequestHandler):
                                       'apps': apps,
                                       'reporting': reporting,
                                       'ad_network_ids': ad_network_ids,
+                                      'LoginStates': simplejson.dumps(
+                                          LoginStates.__dict__),
                                   })
 
     def post(self,

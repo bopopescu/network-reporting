@@ -136,33 +136,34 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
 
         if not error and req_type in ('pull', 'both'):
             login = AdNetworkLoginManager.get_login(account, network).get()
-            login.state = LoginStates.PULLING_DATA
-            login.put()
-            # Collect the last two weeks of data for these credentials and
-            # add it to the database if the login credentials for the
-            # network are new.
-            if login.ad_network_name not in \
-                    accounts_login:
-                pacific = timezone('US/Pacific')
-                two_weeks_ago = (datetime.now(pacific) -
-                        timedelta(days=14)).date()
+            if login.state == LoginStates.NOT_SETUP:
+                login.state = LoginStates.PULLING_DATA
+                login.put()
+                # Collect the last two weeks of data for these credentials and
+                # add it to the database if the login credentials for the
+                # network are new.
+                if login.ad_network_name not in \
+                        accounts_login:
+                    pacific = timezone('US/Pacific')
+                    two_weeks_ago = (datetime.now(pacific) -
+                            timedelta(days=14)).date()
 
-                # Set testing
-                testing = self.get_argument('testing', False)
+                    # Set testing
+                    testing = self.get_argument('testing', False)
 
-                process = multiprocessing.Process(target=
-                        update_login_stats_for_check,
-                        args=(login,
-                              two_weeks_ago,
-                              None,
-                              testing,
-                              ))
-                #process.daemon = True
-                process.start()
+                    process = multiprocessing.Process(target=
+                            update_login_stats_for_check,
+                            args=(login,
+                                  two_weeks_ago,
+                                  None,
+                                  testing,
+                                  ))
+                    #process.daemon = True
+                    process.start()
 
-                #children = multiprocessing.active_children()
-                #logging.info(children)
-                #logging.info(children[0].pid)
+                    #children = multiprocessing.active_children()
+                    #logging.info(children)
+                    #logging.info(children[0].pid)
 
         if error:
             logging.info("Returning false.")

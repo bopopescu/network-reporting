@@ -26,7 +26,7 @@
                 {{ adgroup_form.network_type.label_tag }}
                 <div>
                     <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                    <span class="error network_type_dependant admob_native millennial_native">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
+                    <span class="error network_type_dependant admob millennial">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
                 </div>
             </li>
 
@@ -402,6 +402,8 @@
                 {% endfor %}],
                 priors: {{ adgroup_form.geo_predicates|field_value|to_json|safe }},
                 city_priors: {{ adgroup_form.cities|field_value|to_json|safe }},
+                login_state: {{ network.login_state }},
+                LoginStates: {{ LoginStates|safe }},
             });
     });
 </script>

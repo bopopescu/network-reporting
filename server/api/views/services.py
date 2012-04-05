@@ -319,10 +319,9 @@ class AdGroupService(RequestHandler):
                 percent_delivered = delivered_data['percent_delivered']
                 summed_stats.percent_delivered = percent_delivered
                 adgroup.percent_delivered = percent_delivered
+                summed_stats.status = adgroup.status
             except:
                 pass
-
-            summed_stats.status = adgroup.status
 
             stats_dict = summed_stats.to_dict()
 

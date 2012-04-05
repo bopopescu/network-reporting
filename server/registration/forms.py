@@ -33,6 +33,11 @@ class BaseRegistrationForm(mpforms.MPForm):
     title = mpfields.MPTextField(required=False)
     company = mpfields.MPTextField()
     phone = mpfields.MPTextField(required=False) # TODO: make phone number property
+    address1 = mpfields.MPTextField(required=False)
+    address2 = mpfields.MPTextField(required=False)
+    city = mpfields.MPTextField(required=False)
+    state = mpfields.MPTextField(required=False)
+    zipcode = mpfields.MPTextField(required=False)
     country = mpfields.MPChoiceField(choices=ISO_COUNTRIES,widget=mpwidgets.MPSelectWidget)
     traffic = forms.TypedChoiceField(choices=[("0","Haven't launched yet"),
                                               ("1","1-10MM"),
@@ -125,6 +130,11 @@ class ChangeSettingsForm(BaseRegistrationForm):
         initial['company'] = user.company
         initial['title']=user.title
         initial['phone']=user.phone
+        initial['address1']=user.address1
+        initial['address2']=user.address2
+        initial['city']=user.city
+        initial['state']=user.state
+        initial['zipcode']=user.zipcode
         initial['country']=user.country
         if self.account.traffic:
             initial['traffic']=str(int(self.account.traffic))
@@ -144,6 +154,24 @@ class ChangeSettingsForm(BaseRegistrationForm):
         if not(self.account.mpuser.email == email) and UserQueryManager.get_by_email(email):
             raise forms.ValidationError('This email address is already registered to another.')
         return email
+
+    def clean_first_name(self):
+        first_name = self.cleaned_data['first_name']
+        if (first_name == ''):
+            raise forms.ValidationError('First name is a required field.')
+        return first_name
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data['last_name']
+        if (last_name == ''):
+            raise forms.ValidationError('Last name is a required field.')
+        return last_name
+
+    def clean_company(self):
+        company = self.cleaned_data['company']
+        if (company == ''):
+            raise forms.ValidationError('Company is a required field.')
+        return company
 
     def save(self, domain_override=""):
         self.cleaned_data.update(username=self.cleaned_data['email'])

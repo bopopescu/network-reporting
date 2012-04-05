@@ -214,9 +214,10 @@ def logout(request, *args, **kwargs):
 class PaymentInfoChangeHandler(RequestHandler):
     def get(self, payment_form=None, *args, **kwargs):
         form = payment_form or PaymentInfoForm(instance=self.account.payment_infos.get())
+        success_banner = kwargs['success_banner'] if 'success_banner' in kwargs else False
         return render_to_response(self.request,
                                   'account/paymentinfo_change.html',
-                                  {'form': form})
+                                  {'form': form, 'success_banner':success_banner})
 
     def post(self, *args, **kwargs):
         form = PaymentInfoForm(self.request.POST, instance=self.account.payment_infos.get())
@@ -228,12 +229,17 @@ class PaymentInfoChangeHandler(RequestHandler):
             payment_info = form.save(commit=False)
             payment_info.account = account
             payment_info.put()
-            return redirect('account_index')
+            return redirect('payment_info_change_success')
         return self.get(payment_form=form)
 
 
 @login_required
 def payment_info_change(request, *args, **kwargs):
+    return PaymentInfoChangeHandler()(request, *args, **kwargs)
+
+@login_required
+def payment_info_change_success(request, *args, **kwargs):
+    kwargs['success_banner'] = True
     return PaymentInfoChangeHandler()(request, *args, **kwargs)
 
 

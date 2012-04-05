@@ -1,15 +1,12 @@
 from __future__ import with_statement
 import urllib2 as urllib
-
-from google.appengine.ext import db
 from google.appengine.api import images, files
-
 from django import forms
-from django.core.urlresolvers import reverse
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
 from publisher.models import Site, App
+
 
 CATEGORY_CHOICES = (
         (u'', '-----------------'),
@@ -34,6 +31,7 @@ CATEGORY_CHOICES = (
         (u'utilities', 'Utilities'),
         (u'weather', 'Weather'),
 )
+
 
 class AppForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/app_form.html'
@@ -121,6 +119,7 @@ class AppForm(mpforms.MPModelForm):
         files.finalize(fname)
         return files.blobstore.get_blob_key(fname)
 
+        
 ANIMATION_CHOICES = (
         (u'0', 'No Animation'),
         (u'1', 'Random'),
@@ -131,10 +130,12 @@ ANIMATION_CHOICES = (
         (u'6', 'Fade'),
 )
 
+
 DEVICE_FORMAT_CHOICES = (
         (u'phone', 'Phone'),
         (u'tablet', 'Tablet'),
 )
+
 
 class AdUnitForm(mpforms.MPModelForm):
     TEMPLATE = 'publisher/forms/adunit_form.html'

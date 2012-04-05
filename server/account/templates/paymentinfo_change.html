@@ -93,6 +93,12 @@
   </script>
 {% endblock %}
 {% block content %}
+  {% if success_banner %}
+    <div class="alert-message block-message">
+      Success!
+    </div>
+  {% endif %}
+
   <form action="{% url payment_info_change %}" method="POST" id="paymentchange" class="validate">
     {% csrf_token %}
 

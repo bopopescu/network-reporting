@@ -1,11 +1,35 @@
+# Deployed Wednesday, April 04, 2012 at 12:44PM PST
+### Deployed by John Pena
+### Tagged deploy-54
+### Bugs Fixed: []
+### Included Commits: 
+ * 158a162 Merge branch '992-account-and-payment-settings-redesign'
+ * 4f28bcb testing tagging myself in lighthouse again [#992 state:review-requested assigned:johnpena]
+ * 2b83994 testing tagging myself in lighthouse [#992 state:review-requested assigned:john@mopub.com]
+ * a781420 Added missing import for admin randomgen
+ * c6307b1 Fixed fake data generation bug where marketplace campaign creation didn't have a unique key
+ * ce00193 Add physical address to sign-up and account settings [#922 state:review-requested assigned:John Pena]
+ * fd620d9 fixed an error where the adgroup service was failing when percent_delivered wasnt set
+ * 1ef85c6 Merge branch 'master' of github.com:mopub/mopub
+ * 9e48e50 Reverting to 38
+ * 35820e3 Merge branch 'master' of github.com:mopub/mopub
+ * 6183974 changed frontend-staging to a B8 instance, made the deploy script only alert the product room if its not deploying to production.
+ * e9df789 Less logging
+ * 17d58d1 Derp
+ * 2d03c79 More logging, also use utcnow
+ * df0df0c Fixed a few things, changed version
+ * 7d2a08f Merge branch 'master' of github.com:mopub/mopub
+ * 8afa903 Deployed without finding any bug fixes.
+ * efb1939 removed old budget stuff
+ 
 # Deployed Saturday, March 31, 2012 at 10:52PM PST
 ### Deployed by John Pena
 ### Tagged deploy-53
 ### Bugs Fixed: []
-### Included Commits: 
- * 032dd6d catching pacing url errors
- * f559897 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 032dd6d catching pacing url errors
+* f559897 Deployed without finding any bug fixes.
+
 # Deployed Friday, March 30, 2012 at 01:02PM PST
 ### Deployed by John Pena
 ### Tagged deploy-52

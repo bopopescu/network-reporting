@@ -7,7 +7,7 @@ import datetime
 import urllib2
 
 from google.appengine.ext import db
-from google.appengine.api import memcache
+from google.appengine.api import memcache, taskqueue
 
 from ad_server.debug_console import trace_logging
 import os
@@ -24,11 +24,12 @@ from publisher.models import App
 from publisher.models import Site as AdUnit
 from reporting.query_managers import StatsModelQueryManager
 
+from adserver_constants import USER_PUSH_URL, ADSERVER_ADMIN_HOSTNAME
+
 
 CACHE_TIME = 0 # turned off cache expiration
 
 #TODO(tornado): This needs to be a url that we'll actually use
-ADSERVER = 'someurlgoeshere'
 TEST_ADSERVER = 'localhost:8000'
 AUC_CLEAR_URI = '/gae/adunit_context_clear'
 
@@ -41,6 +42,12 @@ class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
     Deleted from memcache whenever its components are updated."""
     Model = AdUnitContext
+
+    @classmethod
+    def get_context(cls, adunit_key):
+        adunit = AdUnit.get(adunit_key)
+        adunit_context = AdUnitContext.wrap(adunit)
+        return adunit_context
 
     @classmethod
     def cache_get_or_insert(cls, adunit_key):
@@ -70,11 +77,8 @@ class AdUnitContextQueryManager(CachedQueryManager):
 
         if adunit_context is None:
             trace_logging.warning("memcache miss: fetching adunit_context from db")
-            # get adunit from db
-            adunit = AdUnit.get(adunit_key)
-            # wrap context
             try:
-                adunit_context = AdUnitContext.wrap(adunit)
+                adunit_context = cls.get_context(adunit_key)
                 memcache.set(adunit_context_key,
                              adunit_context,
                              time=CACHE_TIME)
@@ -119,13 +123,13 @@ class AdUnitContextQueryManager(CachedQueryManager):
             pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
-            #try:
-            #    full_url = 'http://' + ADSERVER + clear_uri
-            #    urllib2.urlopen(full_url)
-            #except:
-            #    # This isn't implemented, don't do it
-            #    #TODO(tornado): need to implement this and things
-            #    pass
+            for key in adunit_keys:
+                # For each adunit, spin up a TQ to ping the adserver
+                # admins with new data
+                taskqueue.add(url='/fetch_api/adunit_update_push',
+                              method='GET',
+                              queue_name='push-context-update',
+                              params={'adunit_key':key})
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)

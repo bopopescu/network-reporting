@@ -22,7 +22,10 @@ from common.utils import date_magic
 from common.utils.helpers import cust_sum
 from common.wurfl.query_managers import WurflQueryManager
 from publisher.models import AdUnit
-from mail.mails import REPORT_FINISHED_SIMPLE, REPORT_FAILED_SIMPLE
+from mail.mails import (REPORT_FINISHED_SIMPLE, 
+                        REPORT_FAILED_SIMPLE, 
+                        REPORT_NO_DATA,
+                        )
 
 APP = 'app'
 AU = 'adunit'
@@ -60,6 +63,12 @@ NO_REQ = CRTV_DIMS
 REPORT_MSG = '%s|%s|%s|%s|%s|%s|%s|%s'
 
 LOG_FORMAT = "%s:\t%s\n"
+
+FAILURE = 'REPFAIL%s'
+NODAT = FAILURE % 0
+MRFAILURE = FAILURE % 1
+OTHER = FAILURE % 2
+
 def log(mesg):
     my_log = open('/home/ubuntu/poller.log', 'a')
     my_log.write(LOG_FORMAT % (time.time(), mesg))
@@ -131,25 +140,45 @@ class ScheduledReport(db.Model):
     email = db.BooleanProperty(default=True)
     recipients = db.StringListProperty(default=[])
 
+    _most_recent = db.ReferenceProperty(collection_name='parent_report')
+    _details = db.StringProperty()
+    _date_details = db.StringProperty()
+    _dim_details = db.StringProperty()
+    _status = db.StringProperty()
+
+
     @property
     def data(self):
         return self.most_recent.data
 
     @property
     def most_recent(self):
-        return self.reports.order('-created_at').get()
+        if self._most_recent:
+            return self._most_recent
+        else:
+            return self.reports.order('-created_at').get()
         #get the most recent report created by this scheduler
+        
     @property
     def details(self):
-        return self.most_recent.details(self.interval)
+        if self._details:
+            return self._details
+        else:
+            return self.most_recent.details(self.interval)
 
     @property
     def date_details(self):
-        return self.most_recent.date_details(self.interval)
+        if self._date_details:
+            return self._date_details
+        else:
+            return self.most_recent.date_details(self.interval)
 
     @property
     def dim_details(self):
-        return self.most_recent.dim_details
+        if self._dim_details:
+            return self._dim_details
+        else:
+            return self.most_recent.dim_details
 
     @property
     def schedule_details(self):
@@ -170,7 +199,10 @@ class ScheduledReport(db.Model):
 
     @property
     def status(self):
-        return self.most_recent.status
+        if self._status:
+            return self._status
+        else:
+            return self.most_recent.status
 
 class Report(db.Model):
     #standard
@@ -198,7 +230,6 @@ class Report(db.Model):
     completed_at = db.DateTimeProperty()
     status = db.StringProperty(default='Pending')
 
-
     @property
     def message(self):
         return REPORT_MSG % (self.d1, self.d2, self.d3, self.start.strftime('%y%m%d'), self.end.strftime('%y%m%d'), self.key(), self.account.key(), time.mktime(self.created_at.utctimetuple()))
@@ -225,13 +256,20 @@ class Report(db.Model):
         except mail.InvalidEmailError, e:
             pass
 
-    def notify_failure(self):
+    def notify_failure(self, reason=OTHER):
         mesg = mail.EmailMessage(sender = 'olp@mopub.com',
                                  subject = 'Your report has failed',
                                  bcc = 'report-monitoring@mopub.com',
                                  )
-        mesg_dict = dict(dim1 = self.d1, dim2 = self.d2, dim3 = self.d3, start = self.start.strftime('%m/%d/%y'), end = self.end.strftime('%m/%d/%y'))
-        mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
+        mesg_dict = dict(dim1 = self.d1, 
+                         dim2 = self.d2, 
+                         dim3 = self.d3, 
+                         start = self.start.strftime('%m/%d/%y'), 
+                         end = self.end.strftime('%m/%d/%y'))
+        if reason == NODAT:
+            mesg.body = REPORT_NO_DATA % mesg_dict
+        else:
+            mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
         if self.email and self.recipients:
             mesg.to = self.recipients
         else:

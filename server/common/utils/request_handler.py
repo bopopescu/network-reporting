@@ -15,7 +15,7 @@ from common.utils import date_magic
 
 from django.conf import settings
 from django.http import Http404
-from django.template import RequestContext
+from common.ragendja.template import render_to_response
 
 from stats.log_service import LogService
 
@@ -25,10 +25,11 @@ audit_logger = LogService(blob_file_name='audit', flush_lines=1)
 class RequestHandler(object):
     """ Does some basic work and redirects a view to get and post
     appropriately """
-    def __init__(self, request=None, login=True, id=None):
+    def __init__(self, request=None, login=True, template=None, id=None):
         self._id = id
         self.obj = None
         self.login = login
+        self.template = template
         if request:
             self.request = request
             if self.login:
@@ -72,7 +73,6 @@ class RequestHandler(object):
                 self.date_range = 14
             self.days = date_magic.gen_days(self.start_date, self.end_date)
 
-
             # Set self.account
             if self.login:
                 if 'account' in self.params:
@@ -109,7 +109,23 @@ class RequestHandler(object):
                 for arg in f_args:
                     if not arg in kwargs and arg in self.params:
                         kwargs[arg] = self.params.get(arg)
-                return self.get(*args, **kwargs)
+
+                response = self.get(*args, **kwargs)
+                if not isinstance(response, dict):
+                    return response
+                response.update({
+                    "start_date": self.start_date,
+                    "end_date": self.end_date,
+                    "date_range": self.date_range,
+                    "days":self.days,
+                    "offline": self.offline,
+                    "account": self.account
+                })
+                return render_to_response(self.request,
+                                          self.template,
+                                          response)
+
+
 
             elif request.method == "POST":
                 if self.login and self.request.user.is_authenticated():

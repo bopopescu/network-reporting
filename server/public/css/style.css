@@ -3058,6 +3058,12 @@ th.numeric, td.numeric {
   .appData-details.noneg {
     margin: 0; }
 
+span.big {
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: none;
+  background: none; }
+
 1
 .campaignData .reportData {
   padding: 10px 5px 6px 5px;

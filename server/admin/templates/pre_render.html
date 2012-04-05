@@ -5,25 +5,21 @@
         <table>
           <tbody>
             <tr class="active" id="stats-breakdown-requests">
-              <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
               <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
               <td class="stats-breakdown-value all"><span class="inner">{{all.request_count|withsep}}</span></td>
               <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
             </tr>
             <tr id="stats-breakdown-impressions">
-              <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
               <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
               <td class="stats-breakdown-value all"><span class="inner">{{all.impression_count|withsep}}</span></td>
               <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
             </tr>
             <tr id="stats-breakdown-clicks">
-              <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
               <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
               <td class="stats-breakdown-value all"><span class="inner">{{all.click_count|withsep}}</span></td>
               <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
             </tr>
             <tr id="stats-breakdown-users">
-              <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
               <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
               <td class="stats-breakdown-value all"><span class="inner">{{all.user_count|withsep}}</span></td>
               <th class="stats-breakdown-name"><span class="inner">Pubs</span></th>
@@ -44,6 +40,7 @@
       <div class="chart-error-text">Could not load chart</div> 
       <script type="text/javascript"> 
           $(function() {
+          $('.stats-breakdown-value.yesterday').show();
 
           mopub.dashboardStatsChartData = {
             pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),

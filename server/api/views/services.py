@@ -8,6 +8,7 @@ from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
 from ad_server.optimizer.optimizer import DEFAULT_CTR
+from adserver_constants import ADSERVER_HOSTNAME
 
 from budget import budget_service
 
@@ -19,13 +20,16 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      AdNetworkStatsFetcher, \
      MPStatsAPIException
 
-from common_templates.templatetags.filters import campaign_status
-
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from django.http import Http404
 
 import logging
+import urllib
+import urllib2
+
+REMOTE_PACING_URL = '/admin/budget/api/pacing'
+REMOTE_DELIVERED_URL = '/admin/budget/api/delivered'
 
 
 class AppService(RequestHandler):
@@ -66,6 +70,7 @@ class AppService(RequestHandler):
             # if the adgroup key was specified, then we only want the app's
             # stats to reflect how it performed within that adgroup.
             if adgroup_key:
+
                 app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
                                                                 adgroup_key,
                                                                 self.start_date,
@@ -244,7 +249,7 @@ class AdGroupService(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, adgroup_key):
-        try:
+
 
             # Get the adgroup
             adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -281,7 +286,20 @@ class AdGroupService(RequestHandler):
             else:
                 summed_stats.cpm = adgroup.cpm
 
-            adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+            api_dict = dict(key = str(adgroup.campaign.key()),
+                            key_type = 'campaign',
+                            )
+            qs = urllib.urlencode(api_dict)
+
+            to_adserver = 'http://' + ADSERVER_HOSTNAME
+            pacing_url = to_adserver + REMOTE_PACING_URL + '?' + qs
+            try:
+                pacing_data = simplejson.loads(urllib2.urlopen(pacing_url).read())
+                #adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+                adgroup.pace = pacing_data['pacing']
+            except:
+                adgroup.pace = None
+                
             if adgroup.pace:
                 summed_stats.pace = adgroup.pace[1]
                 if adgroup.pace[0] == "Pacing":
@@ -294,19 +312,22 @@ class AdGroupService(RequestHandler):
                 else:
                     summed_stats.pace_type = "delivery"
 
-            percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
-            summed_stats.percent_delivered = percent_delivered
-            adgroup.percent_delivered = percent_delivered
+            delivered_url = to_adserver + REMOTE_DELIVERED_URL + '?' + qs
 
-            summed_stats.status = campaign_status(adgroup)
+            try:
+                delivered_data = simplejson.loads(urllib2.urlopen(delivered_url).read())
+                percent_delivered = delivered_data['percent_delivered']
+                summed_stats.percent_delivered = percent_delivered
+                adgroup.percent_delivered = percent_delivered
+                summed_stats.status = adgroup.status
+            except:
+                pass
 
             stats_dict = summed_stats.to_dict()
 
             stats_dict['daily_stats'] = [s.to_dict() for s in stats]
 
             return JSONResponse(stats_dict)
-        except Exception, exception:
-            return JSONResponse({'error': str(exception)})
 
 
     def post(self, *args, **kwagrs):

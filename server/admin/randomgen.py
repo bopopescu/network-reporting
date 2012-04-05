@@ -1,7 +1,7 @@
 import copy
 import string
 import random
-import datetime as dt
+import datetime
 
 from account.query_managers import AccountQueryManager
 from reporting.query_managers import StatsModelQueryManager
@@ -12,6 +12,8 @@ from publisher.models import *
 from account.models import *
 from budget.models import *
 from reporting.models import *
+
+from advertiser.query_managers import CampaignQueryManager
 
 
 ####
@@ -27,7 +29,7 @@ NUM_CAMPAIGNS_PER_APP = 3
 NUM_CREATIVES_PER_ADGROUP = 1
 NUM_ADUNITS_PER_APP = 3
 
-APP_STATS_SINCE = dt.datetime.now() - dt.timedelta(days=14)
+APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
 
 ### End configuration parameters
@@ -106,18 +108,18 @@ def select_rand_subset(array):
 
 
 def get_random_date():
-    today = dt.date.today()
+    today = datetime.date.today()
     year = 2012
     month = random.randint(1,today.month)
     day = random.randint(1,28 if today.month!= month else random.randint(1,month))
-    return dt.date(year,month,day)
+    return datetime.date(year,month,day)
 
 def get_random_datetime():
-    today = dt.datetime.now()
+    today = datetime.datetime.now()
     year = 2012
     month = random.randint(1,today.month)
     day = random.randint(1,28 if today.month!= month else random.randint(1,month))
-    return dt.datetime(year,month,day)
+    return datetime.datetime(year,month,day)
 
 
 ####
@@ -182,19 +184,22 @@ def generate_adgroup(campaign,site_keys,account):
 
 
 
-def generate_campaign(account,budget,campaign_type=None):
-    start_date = get_random_date()
-    end_date = get_random_date()
-    if start_date> end_date:
-        temp = start_date
-        start_date = end_date
-        end_date = temp
-    campaign = Campaign(name=get_campaign_name(),
-                        budget_obj = budget,
-                        campaign_type = campaign_type if campaign_type else select_rand(CAMPAIGN_TYPES),
-                        account = account,
-                        start_date = start_date,
-                        end_date = end_date)
+def generate_campaign(account,budget=None,campaign_type=None):
+    if campaign_type == 'marketplace':
+        campaign = CampaignQueryManager.get_marketplace(account)
+    else:
+        start_date = get_random_date()
+        end_date = get_random_date()
+        if start_date> end_date:
+            temp = start_date
+            start_date = end_date
+            end_date = temp
+        campaign = Campaign(name=get_campaign_name(),
+                            budget_obj = budget,
+                            campaign_type = campaign_type if campaign_type else select_rand(CAMPAIGN_TYPES),
+                            account = account,
+                            start_date = start_date,
+                            end_date = end_date)
     campaign.put()
     return campaign
 
@@ -283,6 +288,9 @@ def generate_creative(account,adgroup):
 def main():
     account = generate_account(USERNAME,PASSWORD,USERNAME)
 
+    # Create marketplace campaign
+    generate_campaign(account,campaign_type="marketplace")
+
     apps = []
     for i in range(NUM_APPS):
         apps.append(generate_app(account))
@@ -304,10 +312,6 @@ def main():
                 #create at least 1 network campaign
                 campaign = generate_campaign(account,budget,"network")
 
-            elif i==1:
-                #create at least 1 marketplace campaign
-                campaign = generate_campaign(account,budget,"marketplace")
-
             else:
                 campaign = generate_campaign(account,budget)
 
@@ -321,8 +325,8 @@ def main():
 
 
     cur_date = APP_STATS_SINCE
-    today = dt.datetime.now()
-    day = dt.timedelta(days=1)
+    today = datetime.datetime.now()
+    day = datetime.timedelta(days=1)
 
     s = StatsModelQueryManager(account=account)
 

@@ -9,6 +9,14 @@
         Toast.error(message, "Error fetching app data.");
     };
 
+    function dateToString(date) {
+        var day = date.getDate();
+        // FYI, months are indexed from 0
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+
+        return year + "-" + month + "-" + day;
+    }
 
     function setupAdGroupForm() {
         // select the appropriate campaign_type from the hash
@@ -23,16 +31,17 @@
             submitHandler: function(form) {
                 $(form).ajaxSubmit({
                     data: {ajax: true},
-                    dataType: 'json',
+                    dataType: 'text',
                     success: function(jsonData, statusText, xhr, $form) {
-                        if(jsonData.success) {
-                            window.location = jsonData.redirect;
+                        var data = $.parseJSON(jsonData);
+                        if(data.success) {
+                            window.location = data.redirect;
                             $('form#campaign_and_adgroup #submit').button({
                                 label: 'Success...',
                                 disabled: true
                             });
                         } else {
-                            validator.showErrors(jsonData.errors);
+                            validator.showErrors(data.errors);
                             $('form#campaign_and_adgroup #submit').button({
                                 label: 'Try Again',
                                 disabled: false
@@ -46,8 +55,10 @@
                         });
                     },
                     beforeSubmit: function(arr, $form, options) {
-                        $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
-                                                                       disabled: true});
+                        $('form#campaign_and_adgroup #submit').button({
+                            label: 'Submitting...',
+                            disabled: true
+                        });
                     }
                 });
             }
@@ -161,14 +172,14 @@
             var name = $(this).attr('name');
             var val = $(this).val();
             if (name == 'start_datetime_1') {
-                if($('input[name="start_datetime_0"]').val() == '') {
+                if($('input[name="start_datetime_0"]').val() == '' || $('input[name="start_datetime_0"]').val() == 'MM/DD/YYYY') {
                     val = '';
                 } else {
                     val = makeValidTime(val, 12, 0, 'AM');
                 }
             }
             else if (name == 'end_datetime_1') {
-                if($('input[name="end_datetime_0"]').val() == '') {
+                if($('input[name="end_datetime_0"]').val() == '' || $('input[name="end_datetime_0"]').val() == 'MM/DD/YYYY') {
                     val = '';
                 } else {
                     val = makeValidTime(val, 11, 59, 'PM');
@@ -206,7 +217,7 @@
             }
         });
         // update on document ready
-        if($('input[name="device_targeting"]').val() == '0') {
+        if($('input[name="device_targeting"]:checked').val() == '0') {
             $('#device_targeting').hide();
         }
 
@@ -295,7 +306,7 @@
         });
 
         // make necessary changes based on campaign_type
-        $('select[name="campaign_type"]').change(function() {
+        $('[name="campaign_type"]').change(function() {
             campaign_type = $(this).val();
             $('.campaign_type_dependant').each(function() {
                 $(this).toggle($(this).hasClass(campaign_type));
@@ -581,13 +592,14 @@
     }
 
     function initializeCreativeForm() {
-        $('#creativeCreateForm input[name="ad_type"]')
-            .click(function(e){
+        $('#creativeCreateForm [name="ad_type"]')
+            .change(function(e){
                 $('.adTypeDependent',"#creativeCreateForm").hide();
                 $('.adTypeDependent.'+$(this).val(),"#creativeCreateForm").show();
             })
+            .change()
             .filter(':checked')
-            .click();
+            .change();
 
         $('.format-options').change(function(e) {
             e.preventDefault();
@@ -624,13 +636,16 @@
                 });
             });
 
-        $('.creativeEditForm input[name="ad_type"]')
-            .click(function(e){
+        $('.creativeEditForm [name="ad_type"]')
+            .change(function(e){
                 // gets the form to which this belongs
                 var form = $(this).parents('form');
                 $('.adTypeDependent',form).hide();
                 $('.adTypeDependent.'+$(this).val(),form).show();
-            }).filter(':checked').click();
+            })
+            .change()
+            .filter(':checked')
+            .change();
 
 
         $('.creativeFormAdvancedToggleButton')
@@ -791,7 +806,8 @@
     }
 
 
-    function fetchInventoryForAdGroup(adgroup_key) {
+    function fetchInventoryForAdGroup(adgroup_key, start_date, date_range) {
+        window.start_date = dateToString(start_date);
 
         // Set up an adunit collection, but remap the url to the
         // adgroup endpoint. this way, we'll only get adunits that
@@ -801,8 +817,12 @@
         adgroup_inventory.url = function() {
             return '/api/adgroup/'
                 + this.adgroup_key
-                + '/adunits/';
+                + '/adunits/'
+                + '?r=' + date_range
+                + '&s=' + dateToString(start_date);
         };
+
+        console.log(adgroup_inventory.url());
 
         // Once the adgroup's adunit inventory has been fetched from
         // the server, render each of the adunits in the appropriate
@@ -816,7 +836,9 @@
                     return '/api/adgroup/'
                         + adgroup_key
                         + '/apps/'
-                        + app_key;
+                        + app_key
+                        + '?r=' + date_range
+                        + '&s=' + dateToString(start_date);
                 };
 
                 app.bind('change', function(current_app) {
@@ -971,7 +993,9 @@
             initializeChart();
             initializeDailyCounts();
             initializeDateButtons();
-            fetchInventoryForAdGroup(adgroup_key);
+            fetchInventoryForAdGroup(adgroup_key,
+                                     bootstrapping_data.start_date,
+                                     bootstrapping_data.date_range);
 
             // Set up the click handler for the campaign status menu
             // in the top left of the page.
@@ -1118,8 +1142,18 @@
             }
 
         },
+
         initializeCreateCampaign: function (bootstrapping_data) {
             setupAdGroupForm();
+        },
+
+        initializeCampaignArchive: function (bootstrapping_data) {
+            $.each(['activate', 'delete'], function(iter, action) {
+                $('#campaignForm-' + action).click(function(e) {
+                    e.preventDefault();
+                    $('#campaignForm').find("#action").attr("value", action).end().submit();
+                });
+            });
         }
     };
 

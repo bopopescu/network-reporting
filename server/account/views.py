@@ -17,12 +17,14 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager, AppQueryManager
 import logging
 from common.utils.request_handler import RequestHandler
+from common.utils.decorators import staff_login_required
 
 import urllib2
 import string
 from common.utils import simplejson
 import datetime
 from itertools import groupby
+
 
 class GeneralSettingsHandler(RequestHandler):
     def get(self, *args, **kwargs):
@@ -32,7 +34,7 @@ class GeneralSettingsHandler(RequestHandler):
                                   "account/general_settings.html",
                                   {
                                       "account": self.account,
-                                      "user":user
+                                      "user": user
                                   })
 
 @login_required
@@ -169,10 +171,11 @@ def ad_network_settings(request, *args, **kwargs):
 
 
 class CreateAccountHandler(RequestHandler):
-    def get(self,account_form=None):
+    def get(self, account_form=None):
         account_form = account_form or AccountForm(instance=self.account)
-        return render_to_response(self.request,'account/new_account.html',{'account': self.account,
-                                                                           'account_form' : account_form })
+        return render_to_response(self.request, 'account/new_account.html', {'account': self.account,
+                                                                           'account_form': account_form})
+
     def post(self):
         account_form = AccountForm(data=self.request.POST, instance=self.account)
         # Make sure terms and conditions are agreed to
@@ -192,26 +195,29 @@ class CreateAccountHandler(RequestHandler):
 
         return self.get(account_form=account_form)
 
+
 # We use login_required here since we want to let users activate themselves on this page
 @login_required
-def create_account(request,*args,**kwargs):
-    return CreateAccountHandler()(request,*args,**kwargs)
+def create_account(request, *args, **kwargs):
+    return CreateAccountHandler()(request, *args, **kwargs)
+
 
 class LogoutHandler(RequestHandler):
     def get(self):
         return HttpResponseRedirect(users.create_logout_url('/main/'))
 
-def logout(request,*args,**kwargs):
-    return LogoutHandler()(request,*args,**kwargs)
+
+def logout(request, *args, **kwargs):
+    return LogoutHandler()(request, *args, **kwargs)
 
 
 class PaymentInfoChangeHandler(RequestHandler):
     def get(self, payment_form=None, *args, **kwargs):
         form = payment_form or PaymentInfoForm(instance=self.account.payment_infos.get())
+        success_banner = kwargs['success_banner'] if 'success_banner' in kwargs else False
         return render_to_response(self.request,
                                   'account/paymentinfo_change.html',
-                                  {'form': form})
-
+                                  {'form': form, 'success_banner':success_banner})
 
     def post(self, *args, **kwargs):
         form = PaymentInfoForm(self.request.POST, instance=self.account.payment_infos.get())
@@ -223,12 +229,19 @@ class PaymentInfoChangeHandler(RequestHandler):
             payment_info = form.save(commit=False)
             payment_info.account = account
             payment_info.put()
-            return redirect('account_index')
+            return redirect('payment_info_change_success')
         return self.get(payment_form=form)
+
 
 @login_required
 def payment_info_change(request, *args, **kwargs):
     return PaymentInfoChangeHandler()(request, *args, **kwargs)
+
+@login_required
+def payment_info_change_success(request, *args, **kwargs):
+    kwargs['success_banner'] = True
+    return PaymentInfoChangeHandler()(request, *args, **kwargs)
+
 
 class PaymentHistoryHandler(RequestHandler):
     def get(self, *args, **kwargs):
@@ -268,30 +281,32 @@ class PaymentHistoryHandler(RequestHandler):
                                    'total_paid': total_paid,
                                    'unscheduled_balance': unscheduled_balance,
                                    'start_date': start_date,
-                                   'end_date': end_date })
+                                   'end_date': end_date})
+
     def post(self, *args, **kwargs):
         payment = PaymentRecord()
-        period_start = datetime.datetime.strptime(self.request.POST.get("period_start"),"%m/%d/%Y").date()
-        period_end = datetime.datetime.strptime(self.request.POST.get("period_end"),"%m/%d/%Y").date()
+        period_start = datetime.datetime.strptime(self.request.POST.get("period_start"), "%m/%d/%Y").date()
+        period_end = datetime.datetime.strptime(self.request.POST.get("period_end"), "%m/%d/%Y").date()
 
         if period_start and period_end:
             payment.account = self.account
             payment.period_start = period_start
             payment.period_end = period_end
             # Convert dollars to float. eg. '$2,313.20' becomes '2313.20'
-            amount = ''.join([c for c in self.request.POST.get("amount") if c in string.digits+'.'])
+            amount = ''.join([c for c in self.request.POST.get("amount") if c in string.digits + '.'])
             payment.amount = float(amount)
             payment.status = self.request.POST.get("status")
             if self.request.POST.get("date_executed"):
-                payment.date_executed = datetime.datetime.strptime(self.request.POST.get("date_executed"),"%m/%d/%Y")
+                payment.date_executed = datetime.datetime.strptime(self.request.POST.get("date_executed"),
+                                                                    "%m/%d/%Y")
             if self.request.POST.get("form_type") == "scheduled_payment":
                 payment.scheduled_payment = True
             payment.put()
 
         return self.get()
 
-def get_balance(pub_id, start_date, end_date):
 
+def get_balance(pub_id, start_date, end_date):
     url = "http://mpx.mopub.com/stats/pub" + \
           "?pub=" + str(pub_id) + \
           "&start=" + start_date.strftime("%m-%d-%Y") + \
@@ -308,3 +323,16 @@ def get_balance(pub_id, start_date, end_date):
 @login_required
 def payment_history(request, *args, **kwargs):
     return PaymentHistoryHandler()(request, *args, **kwargs)
+
+
+class PaymentRecordDelete(RequestHandler):
+    def get(self, payment_record_key):
+        payment_record = PaymentRecordQueryManager.get(payment_record_key)
+        PaymentRecord.delete(payment_record)
+        next = self.request.GET.get('next') or reverse('payment_history')
+        return HttpResponseRedirect(next)
+
+
+@staff_login_required
+def payment_delete(request, *args, **kwargs):
+    return PaymentRecordDelete()(request, *args, **kwargs)

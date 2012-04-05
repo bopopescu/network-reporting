@@ -1,4 +1,4 @@
-total_storage_limit: 500G
+total_storage_limit: 5T
 
 queue:
 
@@ -152,6 +152,14 @@ queue:
   rate: 100/s
   bucket_size: 100
 
+- name: push-context-update
+  rate: 100/s
+  bucket_size: 100
+
+- name: budget-api
+  rate: 100/s
+  bucket_size: 100 
+
 - name: budget-advance
   rate: 100/s
   bucket_size: 100
@@ -170,62 +178,61 @@ queue:
   retry_parameters:
     task_retry_limit: 1
 
-
-- name: file-finalizer-00
+- name: file-finalizer-40
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 2
 
-- name: file-finalizer-01
+- name: file-finalizer-41
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 2
 
-- name: file-finalizer-02
+- name: file-finalizer-42
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 2
 
-- name: file-finalizer-03
+- name: file-finalizer-43
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 2
 
-- name: file-finalizer-04
+- name: file-finalizer-44
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 2
 
-- name: file-finalizer-05
+- name: file-finalizer-45
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 2
 
-- name: file-finalizer-06
+- name: file-finalizer-46
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 2
 
-- name: file-finalizer-07
+- name: file-finalizer-47
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 2
 
-- name: file-finalizer-08
+- name: file-finalizer-48
   rate: 100/s
   bucket_size: 100
   retry_parameters:
     task_retry_limit: 2
 
-- name: file-finalizer-09
+- name: file-finalizer-49
   rate: 100/s
   bucket_size: 100
   retry_parameters:
@@ -233,65 +240,8 @@ queue:
 
 
 
-- name: gae-log-fetcher-00
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
 
-- name: gae-log-fetcher-01
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
 
-- name: gae-log-fetcher-02
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
-
-- name: gae-log-fetcher-03
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
-
-- name: gae-log-fetcher-04
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
-
-- name: gae-log-fetcher-05
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
-
-- name: gae-log-fetcher-06
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
-
-- name: gae-log-fetcher-07
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
-
-- name: gae-log-fetcher-08
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
-
-- name: gae-log-fetcher-09
-  rate: 100/s
-  bucket_size: 100
-  retry_parameters:
-    task_retry_limit: 2
 
 
 - name: default

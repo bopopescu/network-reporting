@@ -11,9 +11,12 @@ class User(hybrid_models.User):
     title = db.StringProperty()
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
-    country = db.StringProperty()
-    state = db.StringProperty()
+    address1 = db.StringProperty()
+    address2 = db.StringProperty()
     city = db.StringProperty()
+    state = db.StringProperty()
+    zipcode = db.StringProperty()
+    country = db.StringProperty()
 
     mailing_list = db.BooleanProperty(default=False)
 
@@ -128,6 +131,7 @@ class NetworkConfig(db.Model):
                                    greystripe_pub_id = self.greystripe_pub_id,
                                    inmobi_pub_id = self.inmobi_pub_id,
                                    jumptap_pub_id = self.jumptap_pub_id,
+                                   millennial_pub_id = self.millennial_pub_id,
                                    mobfox_pub_id = self.mobfox_pub_id,
                                    rev_share = self.rev_share,
                                    price_floor = self.price_floor,
@@ -308,3 +312,5 @@ class PaymentRecord(db.Model):
     scheduled_payment = db.BooleanProperty(default=False)  # Whether this is a scheduled payment of actual payment
     resolved = db.BooleanProperty(default=False)  # For scheduled payment, resolved means it has been paid
     created = db.DateTimeProperty(auto_now_add=True)
+
+    deleted = db.BooleanProperty(default=False)

@@ -5,14 +5,9 @@ cron:
   timezone: America/Los_Angeles
   target: admin-prep
 
-- description: Advance the budget timeslices
-  url: /m/budget/advance/
-  schedule: every 5 minutes synchronized
-  timezone: America/Los_Angeles
-  
 - description: Run all reports scheduled for today
   url: /reports/daily_sched_runner/
-  schedule: every day 0:01
+  schedule: every day 21:00
   timezone: America/Los_Angeles
   target: frontend-0
   

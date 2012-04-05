@@ -17,8 +17,7 @@ if os.path.exists('/home/ubuntu/'):
     sys.path.append('/home/ubuntu/google_appengine/lib/yaml/lib')
 else:
     # Assumes it is being called from ./run_tests.sh from server dir
-    sys.path.append('/Users/tiagobandeira/Documents/mopub/server')
-    #sys.path.append(os.environ['PWD'])
+    sys.path.append(os.environ['PWD'])
 
 import common.utils.test.setup
 
@@ -293,44 +292,77 @@ def retry_logins(day,
 
     management_stats = AdNetworkManagementStatsManager(day, assemble=True)
     failed_logins = management_stats.failed_logins
-    management_stats.clear_failed_logins()
 
     logging.info("Assigning processes in pool to retry collecting stats for "
             "%s..." % day)
     results = []
     for login_key in failed_logins:
-        login = db.get(login_key)
-        logging.info("Assigning process in pool to login %s and day %s" %
-                login.key())
-        # Using a different management stats for each process and combinding
-        # them later keeps increments atomic
-        temp_stats = AdNetworkManagementStatsManager(day)
-        # Assign process in pool calling update_login_stats and giving it
+        logging.info("Assigning process in pool to login %s" % login_key)
+        # Assign process in pool calling retry_login and giving it
         # it's appropriate login
-        results.append((temp_stats,
-            pool.apply_async(update_login_stats,
-                args=(account, day),
-                kwds={'management_stats': temp_stats,
-                      'update_aggregates': True})))
+        results.append((login_key, pool.apply_async(retry_login,
+                args=(login_key, day))))
 
+    logging.info("Waiting for processes to complete")
     # Wait for all processes in pool to complete
     pool.close()
     pool.join()
 
-    # Save management stats
+    # Save management stats and scrape stats in batch puts
     logging.info("Saving scrape stats...")
-    stats_list = []
-    final_stats = management_stats
-    for temp_stats, result in results:
+    all_stats = []
+    total_stats = AdNetworkManagementStatsManager(day)
+    for result in results:
+        login_key, result = result
         if result.successful():
-            stats_list += result.get()
-            final_stats.combined(temp_stats)
+            stats_list, temp_stats = result.get()
+            all_stats += stats_list
+            total_stats.combined(temp_stats)
+        else:
+            logging.error("Login retry attempt failed for login key: %s" %
+                    login_key)
+            total_stats.append_failed_login(login_key)
+
+    management_stats.clear_failed_logins()
+    total_stats.combined(management_stats)
 
     # Flush stats to db
-    db.put([stats for mapper, stats in stats_list])
-    final_stats.put_stats()
+    db.put(all_stats)
+    total_stats.put_stats()
 
     logging.info("Finished.")
+
+
+def retry_login(login_key,
+                day):
+    # Creating logger for process
+    logger_name = 'retry_%s_on_%s' % (login_key, day)
+    logger = create_logger(logger_name, '/var/tmp/%s.log' % logger_name)
+    try:
+        login = db.get(login_key)
+        # Using a different management stats for each process and combinding
+        # them later keeps increments atomic
+        temp_stats = AdNetworkManagementStatsManager(day)
+
+        logger.info("Created logger and temp management stats, Calling update" \
+                " login stats")
+        # Return a tuple of (list of scrape stats, management stats)
+        valid_stats_list = update_login_stats(login, day,
+                management_stats=temp_stats, update_aggregates=True,
+                logger=logger)
+        result = ([stats for stats, mapper in valid_stats_list], temp_stats)
+        return result
+    except Exception as exception:
+        exc_traceback = sys.exc_info()[2]
+
+        error_msg = "Couldn't get get stats for \"%s\" account on day %s.\n\n" \
+                     "Error:\n%s\n\nTraceback:\n%s" % \
+                     (login_key, day, exception, repr(traceback.extract_tb(
+                         exc_traceback)))
+
+        # Record error in logfile
+        logger.error(error_msg)
+        raise
 
 
 def update_login_stats(login,
@@ -643,6 +675,14 @@ class UpdateException(Exception):
     def __str__(self):
         return "Unsuccessful update attempt for account %s on day %s" % \
                 (self.account.key(), self.day)
+
+
+class RetryException(Exception):
+    def __init__(self, day):
+        self.day = day
+
+    def __str__(self):
+        return "Unsuccessful retry attempt on %s" % self.day
 
 
 def main(args):

@@ -15,10 +15,12 @@
     $(function() {
         // Use breakdown to switch charts
         $('.stats-breakdown tr').click(function(e) {
-          $('#dashboard-stats-chart').fadeOut(100, function() {
-            mopub.Chart.setupDashboardStatsChart('line');
-            $(this).show();
-          });
+            $('#dashboard-stats .stats-breakdown .active').removeClass('active');
+            $(this).addClass('active');
+            $('#dashboard-stats-chart').fadeOut(100, function() {
+                mopub.Chart.setupDashboardStatsChart('area');
+                $(this).show();
+            });
         });
 
         mopub.graphStartDate = Date.UTC({{start_date.year}},

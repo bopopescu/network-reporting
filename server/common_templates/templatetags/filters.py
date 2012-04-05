@@ -176,6 +176,11 @@ def format_time(value):
         return ""
 
 @register.filter
+def format_utc_date_compact(value):
+    value = value.replace(tzinfo=utc).astimezone(Pacific)
+    return "%d/%d" % (value.month, value.day)
+
+@register.filter
 def truncate(value, arg):
     if len(value) > arg:
         try:
@@ -371,3 +376,7 @@ def include_style(style_name):
     style_path = path_prefix + style_name + path_suffix + version_number
 
     return """<link rel="stylesheet" href="%s" />""" % style_path
+
+@register.filter
+def js_date(date):
+    return "new Date(%s,%s,%s)" % (date.year, date.month-1, date.day)

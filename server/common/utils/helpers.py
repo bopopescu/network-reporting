@@ -17,7 +17,7 @@ def get_country_code(headers, default='XX'):
     return headers.get('X-AppEngine-country', default)
 
 def get_user_agent(request):
-    return request.get('ua') or request.headers['User-Agent']
+    return request.get('ua') or request.headers.get('User-Agent', 'None')
 
 def get_client_ip(request):
     return request.get('ip') or request.remote_addr
@@ -156,7 +156,7 @@ def put_all(models, limit=300):
         db.put(sub_models)
         cnt += len(sub_models)
         print "put %d/%d" % (cnt, len(models))
-    
+
 def get_udid_appid(request):
     """
     This is necessary because of a temporary error in Android's conversion tracking URL; there was a
@@ -167,7 +167,7 @@ def get_udid_appid(request):
     ?id=123udid=456
     ?udid=456&id=123
     """
-    udid = request.get('udid')
+    udid = request.get('udid').upper()
     mobile_appid = request.get('id')
 
     # If we have we can't request udid, we have a broken URL
@@ -176,7 +176,7 @@ def get_udid_appid(request):
         result = re.search('id=(?P<id>.*?)(?P<ampersand>&?)udid=(?P<udid>.*?)$', query_string)
 
         if (result):
-            return result.group('udid'), result.group('id')
+            return result.group('udid').upper(), result.group('id')
             # note: if result.group('ampersand') is empty string, we have a broken url
             # though the return groups are the same regardless
         else:

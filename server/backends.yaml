@@ -4,7 +4,7 @@ backends:
   options: public
   class: B4
   instances: 2
-  
+
 - name: admin-prep
   options: public
   class: B8
@@ -18,7 +18,7 @@ backends:
 - name: frontend-staging
   instances: 2
   options: public
-  class: B2 
+  class: B8
 
 - name: gae-context-fetch
   options: public
@@ -34,10 +34,3 @@ backends:
   instances: 2
   options: public
   class: B2
-
-- name: file-finalizer
-  instances: 10
-  options: public
-  class: B2
-
-  

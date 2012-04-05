@@ -43,8 +43,13 @@ def budget_filter():
         # The amount of budget doesn't really matter. As long as a budget
         # has.  This is technically incorrect for CPC/CPA ads, but because
         # of what was mentioned before, it doesn't really matter.
-        if a.campaign.budget_obj:
-            return (budget_service.has_budget(a.campaign.budget_obj, a.bid/1000))
+
+
+        # Turning off all budgeted campaigns because budgets are now going 
+        # to be running live on the new adserver
+        if a.campaign.budget_obj and (a.campaign.budget or a.campaign.full_budget):
+            return False
+            #return (budget_service.has_budget(a.campaign.budget_obj, a.bid/1000))
         else:
             return True
     return (real_filter, log_mesg, [])

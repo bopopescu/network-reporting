@@ -111,7 +111,7 @@ class AdHandler(webapp.RequestHandler):
         if adunit_context:
             adunit = adunit_context.adunit
             # # Send a fraction of the traffic to the experimental servers
-            experimental_fraction = adunit.app_key.experimental_fraction or 0.0
+            experimental_fraction = 1.0  # adunit.app_key.experimental_fraction or 0.0
 
             # If we are not already on the experimental server, redirect some fraction
             rand_dec = random.random()  # Between 0 and 1
@@ -246,7 +246,8 @@ class AdHandler(webapp.RequestHandler):
         new_id = str(old_key)
 
         query_string = self.request.url.split("/m/ad?")[1] + "&exp=1"
-        exp_url = "http://" + experimental_app_name + ".appspot.com/m/ad?" + query_string
+        # exp_url = "http://" + experimental_app_name + ".appspot.com/m/ad?" + query_string
+        exp_url = "http://adserver.mopub.com/m/ad?" + query_string
         # exp_url = "http://localhost:8081/m/ad?" + query_string
 
         exp_url = exp_url.replace(adunit_id, new_id)  # Splice in proper id

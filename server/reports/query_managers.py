@@ -72,6 +72,45 @@ class ReportQueryManager(CachedQueryManager):
 
         self.obj_cache = {}
 
+    def migrate_relevant_reports(self):
+        scheduled = self.get_scheduled()
+        defaults, adding = self.get_default_reports(dont_add=True)
+        all_reps = scheduled + defaults
+        for rep in all_reps:
+            print "Working on %s" % rep
+            self.migrate_scheduled_data(rep)
+
+
+    def migrate_scheduled_data(self, scheduled):
+        # I don't think anybody has more than 100 of these guys...
+
+        #Update scheds most recent
+        most_recent = scheduled.most_recent
+        if most_recent is None:
+            return
+        if not scheduled._most_recent:
+            print "Updating most recent"
+            self.update_most_recent(scheduled, most_recent)
+
+        # Update all status's that are lazily set
+        datum = scheduled.most_recent
+        status = datum.status
+        if datum.status == 'Completed' or datum.status == 'No Data':
+            print "Already has status stuff set"
+            return
+        if datum.data and status != 'Completed':
+            datum.status = 'Completed'
+            Report.put(datum)
+
+    def update_most_recent(self, sched, most_recent):
+        sched._most_recent = most_recent
+        sched._details = most_recent.details(sched.interval)
+        sched._date_details = most_recent.date_details(sched.interval)
+        sched._dim_details = most_recent.dim_details
+        sched._status = most_recent.status
+        sched.put()
+
+
     def get_report_by_key(self, report_key, view=False):
         return ScheduledReport.get(report_key)
 
@@ -134,11 +173,11 @@ class ReportQueryManager(CachedQueryManager):
         #Not implemented
         return None
 
-    def get_scheduled(self, to_fetch=100):
+    def get_scheduled(self, to_fetch=50):
         report_q = ScheduledReport.all().filter('account =', self.account).filter('saved =', True).filter('deleted =', False).filter('default =', False)
         return report_q.fetch(to_fetch)
 
-    def get_default_reports(self):
+    def get_default_reports(self, dont_add=False):
         # There are three by default, so fetching three should yield three
         reports = ScheduledReport.all().filter('account =', self.account).filter('deleted =', False).filter('default =', True).fetch(3)
         adding_reps = False
@@ -146,7 +185,7 @@ class ReportQueryManager(CachedQueryManager):
             # Well shit
             report_dim_names = [(str(report.d1), str(report.name)) for report in reports]
             for (dim, name) in DEFAULT_REPORT_DIM_LIST:
-                if (dim, name) not in report_dim_names:
+                if (dim, name) not in report_dim_names and not dont_add:
                     adding_reps = True
                     reports.append(self.add_report(dim, None, None, None, 7, name=name, saved=True, interval='7days', default=True))
         return reports, adding_reps
@@ -190,6 +229,9 @@ class ReportQueryManager(CachedQueryManager):
         # Save the reports
         self.put_report(report)
         self.put_report(new_report)
+
+        # Update most recent
+        self.update_most_recent(report, new_report)
         report_key = str(new_report.key())
         sched_key = str(report.key())
 
@@ -291,6 +333,8 @@ class ReportQueryManager(CachedQueryManager):
                         schedule = sched,
                         )
         report.put()
+        # Update most recent
+        self.update_most_recent(sched, report)
         report_key = str(report.key())
         sched_key = str(sched.key())
 
@@ -332,6 +376,9 @@ class ReportQueryManager(CachedQueryManager):
                                 data = report.data
                                 )
             new_report.put()
+            # Update most recent
+            self.update_most_recent(schedule, new_report)
+
         return new_report
 
     def put_report(self, report):

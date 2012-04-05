@@ -1,10 +1,404 @@
+# Deployed Wednesday, April 04, 2012 at 12:44PM PST
+### Deployed by John Pena
+### Tagged deploy-54
+### Bugs Fixed: []
+### Included Commits: 
+ * 158a162 Merge branch '992-account-and-payment-settings-redesign'
+ * 4f28bcb testing tagging myself in lighthouse again [#992 state:review-requested assigned:johnpena]
+ * 2b83994 testing tagging myself in lighthouse [#992 state:review-requested assigned:john@mopub.com]
+ * a781420 Added missing import for admin randomgen
+ * c6307b1 Fixed fake data generation bug where marketplace campaign creation didn't have a unique key
+ * ce00193 Add physical address to sign-up and account settings [#922 state:review-requested assigned:John Pena]
+ * fd620d9 fixed an error where the adgroup service was failing when percent_delivered wasnt set
+ * 1ef85c6 Merge branch 'master' of github.com:mopub/mopub
+ * 9e48e50 Reverting to 38
+ * 35820e3 Merge branch 'master' of github.com:mopub/mopub
+ * 6183974 changed frontend-staging to a B8 instance, made the deploy script only alert the product room if its not deploying to production.
+ * e9df789 Less logging
+ * 17d58d1 Derp
+ * 2d03c79 More logging, also use utcnow
+ * df0df0c Fixed a few things, changed version
+ * 7d2a08f Merge branch 'master' of github.com:mopub/mopub
+ * 8afa903 Deployed without finding any bug fixes.
+ * efb1939 removed old budget stuff
+ 
+# Deployed Saturday, March 31, 2012 at 10:52PM PST
+### Deployed by John Pena
+### Tagged deploy-53
+### Bugs Fixed: []
+### Included Commits:
+* 032dd6d catching pacing url errors
+* f559897 Deployed without finding any bug fixes.
+
+# Deployed Friday, March 30, 2012 at 01:02PM PST
+### Deployed by John Pena
+### Tagged deploy-52
+### Bugs Fixed: []
+### Included Commits:
+* 0eac7c9 Fuck, sorry, gotta get rid of this
+* fcb6ce5 Merge branch '1087-later-sched'
+* 16f0eb3 Merge branch 'master' of github.com:mopub/mopub
+* dd6d41d Dont need that anymore
+* 0d808b0 [#1082 state:resolved]
+* 46573bf DERRRRRRRRRRP [#1087 state:review-requested assigned:nafis]
+
+# Deployed Friday, March 30, 2012 at 12:30PM PST
+### Deployed by John Pena
+### Tagged deploy-51
+### Bugs Fixed: ['1082']
+### Included Commits:
+* d5f694c Merge branch '1082-ad-unit-set-to-default'
+* 3ddec4d Merge branch 'tunewiki-wtf'
+* 306ea16 Removed teh app.yaml shit, removed unneeded logging
+* a0f11f7 More logging, changed things up
+* d3a7bfe always redirecting
+* a67f0ca More logging
+* bf0b306 mpdeploy now posts to the frontend production room
+* 8cf54ea Merge branch 'remote-pacing-delivery'
+* 268cf26 Merge branch 'master' of github.com:mopub/mopub
+* 99cb508 Deployed without finding any bug fixes.
+* 86b7cc0 [#1082 state:fixed]
+* 04da1c4 Removed unneeded things
+* 07b2b67 Updated no data mail, fixed migration stuff
+* 13d234a Fixed the index page to not use the \data\ field to check for completion
+* 7bd0327 Migration ready to rock and roll
+* 6a0cc03 New reports will properly be keyed, most recent will no longer be a retarded db query that takes for fucking ever
+* bec3300 removed phantom "e" next to the edit app button
+* d4cb3c2 Now pinging ec2 for budgetary pacing and the like
+
+# Deployed Thursday, March 29, 2012 at 06:01PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-50
+### Bugs Fixed: []
+### Included Commits:
+* 616b09f [#1045 state:resolved] [#1089 state:resolved]
+
+# Deployed Thursday, March 29, 2012 at 04:41PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-49
+### Bugs Fixed: ['1045', '1089']
+### Included Commits:
+* f326469 Merge branch 'master' of github.com:mopub/mopub
+* 4619c37 fixed randomgen bug, removed 'e' from app page
+* 9231f6c update mpx payment message
+* 26372e3 Add revenue disclaimer [#1023 status:fixed] [#1080 status:fixed]
+* 1ebea78 [#1045 state:fixed]
+* 0aa8cd1 Merge branch 'adgroup_dates' of github.com:mopub/mopub
+* e6699d2 [#1089 state:fixed]
+* 7f78854 [#1012 state:review-requested responsible:john@mopub.com] [#1026 state:review-requested responsible:john@mopub.com]
+* e24196a Deployed without finding any bug fixes.
+
+# Deployed Wednesday, March 28, 2012 at 04:14PM PST
+### Deployed by John Pena
+### Tagged deploy-48
+### Bugs Fixed: []
+### Included Commits:
+* f31608e [#996 state:resolved] [#914 state:resolved] [#1039 state:resolved]
+
+# Deployed Wednesday, March 28, 2012 at 04:13PM PST
+### Deployed by John Pena
+### Tagged deploy-47
+### Bugs Fixed: ['996', '914', '1039']
+### Included Commits:
+* b3ae3aa Merge branch 'master' of github.com:mopub/mopub
+* ce4fe8c If you have a budget, you don't work
+* b5edcee Merge branch 'master' of github.com:mopub/mopub
+* 30f7b77 Merge branch 'master' of github.com:mopub/mopub
+* 313c205 [#996 state:fixed]
+* 1ee5a9b [#996 stat:fixed]
+* 79b3175 Merge branch '1039-lock_campaign_type' of github.com:mopub/mopub
+* b958f37 Merge branch '914-creative_type_immutable' of github.com:mopub/mopub
+* bc53ec8 [#914 state:fixed] creative type is now immutable
+* 1169d9c All budgeted campaigns will now fail because they should be running on the new ad server
+* 26fb1ef [#1056 state:resolved] [#1081 state:resolved]
+* 1fb8fc8 fixed version #
+* 548c20e added budget info to campaign
+* c20214c added millennial id to network config serialization
+* e2eab23 More derps
+* ac28cb1 none should be fine now
+* b6d7ce5 more logging
+* bfb168c less logging
+* b7ef0e1 Derp
+* b0023a4 More logging...
+* fed31d3 More logging, import logging
+* 54d341d GAE async rpc shit is so stupid
+* 3097bdc None checking, don't sync 0 spending
+* 0f8484f Doh
+* 36cc1f2 This was supposed to be code reviewed
+* 570169e Whoops forgot this...kind of important
+* 258aa2b Added default now
+* db3279d Targeting the boom
+* 01d2d7e DUH
+* 6596fc2 did it in the other place
+* 920285f Kind of a big deal here....super sneaky bug
+* 7a1ab3a fixed ormma html property
+* c6bc3ae Added handlers
+* 24ca262 Queue, cron, handlers for all things needed for budget sync. Entirely async.  Mostly a copy of the code on EC2
+* fbe6b5e did it in the other place
+* e89e3fa Kind of a big deal here....super sneaky bug
+* cc2a2cc [#1039 state:fixed] campaign type cannot be changed
+
+# Deployed Wednesday, March 28, 2012 at 11:59AM PST
+### Deployed by John Pena
+### Tagged deploy-46
+### Bugs Fixed: ['1056', '1081']
+### Included Commits:
+* 69eeb21 [#1056 state:fixed]
+* d7cf124 Merge branch '1056-bad-revenue-total'
+* a978eb1 removed reports message [#1081 state:fixed]
+* 19e54bf Merge branch 'android-udid-fix'
+* 5f4aec9 Upper instead of lower
+* bd557c3 Removed useless saved thing (maybe eating memory?) and lessened the number of scheduled reports that get fetched [#1069 state:review-requested assigned:nafis]
+* fafd33e [#1073 state:resolved] [#1070 state:resolved]
+* a7dfc90 small amount of work on this
+* 488e33e Udid is now lowercased ALWAYS for clicks and app opens due to a bug on the android client sending up uppercase SHAs.  Also Sha1 is being prefixed instead of sha?  Please review somewhat carefully [#1044 state:review-requested assigned:nafis]
+
+# Deployed Monday, March 26, 2012 at 02:15PM PST
+### Deployed by John Pena
+### Tagged deploy-45
+### Bugs Fixed: ['1073', '1070']
+### Included Commits:
+* 67e8dd2 Merge branch '1073-adgroup_edit_bug' of github.com:mopub/mopub
+* a9c8d46 [#1073 state:fixed] fixed adgroup edit bug
+* ca2c57d [#1070 state:fixed] fixed budget bug
+* f2edcb7 Deployed without finding any bug fixes.
+
+# Deployed Friday, March 23, 2012 at 08:47PM PST
+### Deployed by John Pena
+### Tagged deploy-44
+### Bugs Fixed: []
+### Included Commits:
+* ed28aaa tracking how often marketplace creative review fails to load
+* a0ab442 Deployed without finding any bug fixes.
+
+# Deployed Friday, March 23, 2012 at 07:40PM PST
+### Deployed by John Pena
+### Tagged deploy-43
+### Bugs Fixed: []
+### Included Commits:
+* 8c6d943 Deployed without finding any bug fixes.
+
+# Deployed Friday, March 23, 2012 at 07:36PM PST
+### Deployed by John Pena
+### Tagged deploy-42
+### Bugs Fixed: []
+### Included Commits:
+* 58e5000 Deployed without finding any bug fixes.
+
+# Deployed Friday, March 23, 2012 at 12:42PM PST
+### Deployed by John Pena
+### Tagged deploy-41
+### Bugs Fixed: []
+### Included Commits:
+* f4c9e1b Deployed without finding any bug fixes.
+
+# Deployed Friday, March 23, 2012 at 12:34PM PST
+### Deployed by John Pena
+### Tagged deploy-40
+### Bugs Fixed: []
+### Included Commits:
+* aec6ebe Merge branch '958-end-datetime' of github.com:mopub/mopub
+* 830cbc2 [#1059 state:resolved]
+* df73e00 fixed the problem but we should test to ensure we didnt fuck other things up
+
+# Deployed Wednesday, March 21, 2012 at 07:32PM PST
+### Deployed by John Pena
+### Tagged deploy-39
+### Bugs Fixed: ['1059']
+### Included Commits:
+* 4d2f126 [#1059 state:fixed]
+* ddba42a [#865 state:resolved] [#1041 state:resolved] [#966 state:resolved] [#1036 state:resolved]
+
+# Deployed Wednesday, March 21, 2012 at 04:59PM PST
+### Deployed by John Pena
+### Tagged deploy-38
+### Bugs Fixed: ['865', '1041', '966', '1036']
+### Included Commits:
+* cf0b27b Merge branch 'master' of github.com:mopub/mopub
+* f6c9ef8 Merge branch 'master' of github.com:mopub/mopub
+* 6114f55 I maintain that having TWO fields and a flag is fucking stupid
+* 9e10390 Merge branch '966-bad-redirect'
+* 7120725 more for this bug
+* 59ebddc Merge branch '1041-mraid-creative'
+* 2984526 Merge branch '1036-firefox-sucks'
+* 5622b90 Merge branch 'master' of github.com:mopub/mopub
+* 6f11e2a Merge branch 'nat-remove-network-rollup'
+* ff1575a Merge branch 'nat-change-default-banner-name'
+* d7e88d6 Merge branch '1058-frontend-budget'
+* 8864a38 Merge branch 'master' of github.com:mopub/mopub
+* b5ecb33 using the flag that was never used [#1058 state:review-requested assigned:nafis]
+* ff7d9b5 Update reporting message
+* 6bee708 less verbose logging [#865 state:fixed]
+* ca6111d I have no idea how any of this happened, but these two little fixes should make this issue never happen again.  Also they should never have happend in the first place.....? [#1053 state:review-requested]
+* 131cada catching the situation where mraid.js is passed in as a key [#1041 state:fixed]
+* e1766ea [#966 state:fixed]
+* 10fb5ce Merge branch 'master' of github.com:mopub/mopub
+* baedcba Initial pass at Completed icons
+* 83f4d81 Default banner name now depends on banner type
+* d56c734 redirecting to new adserver
+* 0ecf0cc Deployed without finding any bug fixes.
+* aad685a Merge branch 'master' of github.com:mopub/mopub
+* 0153bf4 Merge branch 'master' of github.com:mopub/mopub
+* bd43659 asfd
+* 3123d73 changed endpoint
+* 2ce2387 changed host to real thing
+* 007e911 responding with text/html for ie and firefox on forms that return json [#1036 state:fixed]
+* d3791f0 Dumb dumb dumb dumb
+* 12ea8fa Now with gets (instead of posts)
+* 959545b Merge branch 'new-adserver-ends' of github.com:mopub/mopub into new-adserver-ends
+* 0483028 Wow fuck you appengine
+* ba6f678 derp imports
+* bdf8419 Pushign to EC2 is live
+* 45a768e Migrate total as well
+* 49860da Moved things around so no code duplication
+* f919049 Added a Q for handling user pushes, moved things into a constants file, redid how adunit 'deleting' is handled
+* ca0acaf Wow fuck you appengine
+* fa0b968 Wow fuck you appengine
+* 2cf11c7 derp imports
+* 8d2d50f Pushign to EC2 is live
+* 0ffb35b Migrate total as well
+* 9b99a03 Moved things around so no code duplication
+* a1f9813 Remove network rollup box
+* 666b039 Added a Q for handling user pushes, moved things into a constants file, redid how adunit 'deleting' is handled
+
+# Deployed Friday, March 16, 2012 at 02:29PM PST
+### Deployed by John Pena
+### Tagged deploy-37
+### Bugs Fixed: []
+### Included Commits:
+* 00566fd fixed a stupid merge conflict
+* 1a31df4 reports will be restored "soon" instead of yesterday
+* 07b83e0 Added check in admob scraper to prevent it from breaking when the admob response is messed up
+* c576f9f sending traffic to new ad server!
+* 4e963ca sending traffic to new ad server!
+* ea2054a Merge branch 'master' of github.com:mopub/mopub
+* 720ccc1 Remove warning message
+* c268258 Merge branch 'master' of github.com:mopub/mopub
+* 0485a2a fixed version
+* f0f07d0 fixed adgroup details datetime formatting
+* fe3a073 Merge branch 'master' of github.com:mopub/mopub
+* 9bb240f Merge branch '1032-campaign_datetime_validation' of github.com:mopub/mopub
+* 84f3e74 Merge branch 'master' into update-network-stats
+* 8b79d22 Merge branch 'update-network-stats' of github.com:mopub/mopub into update-network-stats
+* 3dd453a Retry failed login for update ad networks script fixed
+* 6924fec Fix for ad network reports day range since refactor change to the RequestHandler, fix for Ad Network Reporting Management Stats graph since refactor
+* 20bd928 Fix for ad network reports day range since refactor change to the RequestHandler
+* e76f9b5 fixed campaign datetime validation bug, added disturbingly comprehensive campaign datetime tests
+* 0cfa03e Merge branch 'master' of github.com:mopub/mopub
+* 76776b0 AdMob pagination fix, using relative paths for testing, stats get put to local GAE datastore for testing client side
+* 5252103 Deployed without finding any bug fixes.
+* be4ac46 Merge branch 'master' of github.com:mopub/mopub
+* 0863bdb Merge branch 'master' of github.com:mopub/mopub
+* 3a2fe9f Merge branch 'master' of github.com:mopub/mopub
+* 5728e30 Merge branch 'master' of github.com:mopub/mopub
+* 4688485 Merge branch 'frontend-refactor' of github.com:mopub/mopub
+
+# Deployed Wednesday, March 14, 2012 at 12:18PM PST
+### Deployed by John Pena
+### Tagged deploy-36
+### Bugs Fixed: []
+### Included Commits:
+* 404e2f5 Warn users that reports are not working now
+* a4b366f [#1008 state:resolved] [#1017 state:resolved]
+
+# Deployed Wednesday, March 14, 2012 at 11:51AM PST
+### Deployed by Nafis Jamal
+### Tagged deploy-35
+### Bugs Fixed: ['1008', '1017']
+### Included Commits:
+* 8085a31 added attributes to simple model
+* 8e749ce app and adunit tables now calculate ecpms correctly. totals warning included in both tables. [#1008 state:fixed] [#944 state:fixed]
+* 8b32446 made local tax ids optional for non-US accounts [#1017 state:fixed]
+* cec3c69 [#980 state:resolved]
+
+# Deployed Monday, March 12, 2012 at 03:30PM PST
+### Deployed by John Pena
+### Tagged deploy-34
+### Bugs Fixed: ['980']
+### Included Commits:
+* a7ce749 [#980 state:fixed]
+* 7311bc8 removed some dumb logging
+* 8f340be [#1014 state:resolved] [#1011 state:resolved] [#966 state:resolved] [#1010 state:resolved] [#1009 state:resolved]
+* 44bc5f1 added delete support for payment history [#980 state:review-requested assigned:pena]
+
+# Deployed Monday, March 12, 2012 at 03:01PM PST
+### Deployed by John Pena
+### Tagged deploy-33
+### Bugs Fixed: ['1014', '1011', '966', '1010', '1009']
+### Included Commits:
+* 85c248f Merge branch '1011-delivery-zeroed'
+* 9f107ee Merge branch '1014-stats-ascii-fail'
+* b39a189 Merge branch '966-965-campaign-archive-issues'
+* b9852b7 removed logging statements that were throwing unicode errors [#1014 state:fixed]
+* a49a8d3 squashed a name bug
+* cc318a4 fixed up a bug on the network detail page
+* d83ea1b changed the adgroup detail "campaign details" section to look like an individual table row in the campaigns page [#1011 state:fixed]
+* c5885ff maybe this fixed it?
+* 8cd9380 fixed button issues on the campaign archive page. [#966 state:fixed] [#965 state:fixed]
+* 65c6510 got rid of old queues and backends
+* 44c2e63 reduce rate for file-finalizer 31-39 to 10/s
+* 72ef73e Merge branch 'master' of github.com:mopub/mopub
+* bac3713 Fix admin/d stats-breakdown loading
+* 13d0188 removed percent delivered from ad sources table [#1010 state:fixed]
+* 20a1c2c Merge branch 'master' of github.com:mopub/mopub
+* e183962 Fixed admin/d MPX%
+* e491e20 Merge branch 'master' of github.com:mopub/mopub
+* 59fcbb5 More admin/d fixes
+* cdc1e0c Merge branch 'master' of github.com:mopub/mopub
+* da803c4 change rate to 10/s for file finalizer queues
+* 1c85d2d catching user agent error
+* b59809a using different version to handle the file finalize
+* 86b9557 fixed a date range issue on the adgroup index [#1009 state:fixed]
+* b41c5d0 Merge branch 'master' of github.com:mopub/mopub
+* b49e851 adding file-finalizer backend 3
+* 86114cb Removed google login from the UI
+* a0a487e Deployed without finding any bug fixes.
+
+# Deployed Friday, March 09, 2012 at 03:25PM PST
+### Deployed by John Pena
+### Tagged deploy-32
+### Bugs Fixed: []
+### Included Commits:
+* 8d78290 Merge branch 'master' of github.com:mopub/mopub
+* 586df3c only 10 qs for file finalize
+* 7d9944f fix merge conflict
+* ea85016 increasing to 60 queues; only last 20 take in new tasks
+* cc1047f added more backends and sharding final finalizer work amoung them
+* 7208191 using backends again
+* 05f6d7a Admin/d loads data properly
+* 192dad9 removed green highlighting for "javascript minified" statement in deploy script
+* 6e09286 increase file finalize queue count to 40; evenly distribute load onto last 30 qs
+* d8637bd Merge branch 'master' of github.com:mopub/mopub
+* a7fe992 increase file-finalizer queue count to 20; go back to writing to blobstore
+* c364950 [#1001 state:resolved] [#985 state:resolved] [#977 state:resolved]
+
+# Deployed Thursday, March 08, 2012 at 09:33PM PST
+### Deployed by John Pena
+### Tagged deploy-31
+### Bugs Fixed: ['1001', '985', '977']
+### Included Commits:
+* 9bf352a Merge branch 'master' of github.com:mopub/mopub
+* c63c545 [#1001 state:fixed] campaigns.py app/adunit model fetching now has date parameters in the url
+* b361537 not using backend as worker anymore
+* d64cd00 Merge branch 'master' of github.com:mopub/mopub
+* f9f5b93 latest changes
+* b383611 +1 on copyright year [#985 state:fixed]]
+* 0e31e05 Merge branch 'master' of github.com:mopub/mopub
+* 0baab80 Fixed and updated admin/d page
+* 77b8f88 fixed password reset [#977 state:fixed]
+* 6618722 decrease to 10 backend machines for file-finalizer
+* 5c57916 Merge branch 'master' of github.com:mopub/mopub
+* d44cc74 create new backend file-finalizer; point finalize task target to this backend
+* d656dec fixed image serve url
+* 2c991fc Deployed without finding any bug fixes.
+
 # Deployed Thursday, March 08, 2012 at 01:29PM PST
 ### Deployed by John Pena
 ### Tagged deploy-30
 ### Bugs Fixed: []
-### Included Commits: 
- * 03b713a Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 03b713a Deployed without finding any bug fixes.
+
 # Deployed Thursday, March 08, 2012 at 01:25PM PST
 ### Deployed by John Pena
 ### Tagged deploy-29

@@ -283,7 +283,7 @@ def minify_javascript():
 
     puts("Minifying Javascript files in " + JS_DIR)
 
-    puts(colored.green('Javascript Minified'))
+    puts('Javascript Minified')
 
 
 def update_static_version_numbers():
@@ -394,11 +394,6 @@ def main():
                 git_commit(commit_message)
                 git_push()
 
-                # notify people of a successful deploy on hipichat
-                post_to_hipchat("Branch %s just deployed to %s by %s" % (active_branch_name,
-                                                                         deploy_server,
-                                                                         deployer))
-
             else:
                 puts("Skipping ticket update process because you're not deploying to production")
 
@@ -409,6 +404,16 @@ def main():
 
             puts("Deploying " + colored.green(active_branch_name) + " to " + colored.green(deploy_server))
             launch_deploy_process(server=deploy_server)
+
+            # notify people of a successful deploy on hipichat
+            puts("Notifying hipchat")
+            message = "Branch %s just deployed to %s by %s" % (active_branch_name,
+                                                                     deploy_server,
+                                                                     deployer)
+            # only post a message in hipchat if its in production
+            if deploy_server == 'frontend-0':
+                post_to_hipchat(message, room_id="21565") #mopub chat room
+            post_to_hipchat(message, room_id="47652") #frontend chat room
 
         except Exception, error:
             puts(colored.red("Deploy failed."))

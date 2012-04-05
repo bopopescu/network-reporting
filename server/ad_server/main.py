@@ -82,7 +82,7 @@ class AdImpressionHandler(webapp.RequestHandler):
         creative_id = self.request.get('cid')
         if adunit_context:
             creative = adunit_context.get_creative_by_key(creative_id)
-            if creative.ad_group.bid_strategy == 'cpm' and creative.ad_group.bid:
+            if creative and creative.ad_group.bid_strategy == 'cpm' and creative.ad_group.bid:
                 budget_service.apply_expense(creative.ad_group.campaign.budget_obj, creative.ad_group.bid/1000)
 
             raw_udid = self.request.get("udid")
@@ -118,7 +118,7 @@ class AdClickHandler(webapp.RequestHandler):
         if not self.request.get('testing') == TEST_MODE:
             stats_accumulator.log(self.request, event=stats_accumulator.CLK_EVENT)
 
-        udid = self.request.get('udid')
+        udid = self.request.get('udid').upper()
         mobile_app_id = self.request.get('appid')
         time = datetime.datetime.now()
         adunit_id = self.request.get('id')

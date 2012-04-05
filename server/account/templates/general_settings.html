@@ -31,25 +31,49 @@
                       Title:
                   </dt>
                   <dd>
-                      {% ifequal user.title None %}<i>Not specified</i>{% else %}
-                        {{user.title}}
-                        {% endifequal %}
+                      {{user.title|default_if_none:"<em>Not specified</em>"}}
                   </dd>
                   <dt>
                       Phone Number:
                   </dt>
                   <dd>
-                      {% ifequal user.phone None %}<i>Not specified</i>{% else %}
-                        {{user.phone}}
-                        {% endifequal %}
+                      {{user.phone|default_if_none:"<em>Not specified</em>"}}
                   </dd>
                   <dt>
                       Country:
                   </dt>
                   <dd>
-                      {% ifequal user.country None %}<i>Not specified</i>{% else %}
-                      {{user.country|country_code_to_name}}
-                      {% endifequal %}
+                      {{user.country|default_if_none:"<em>Not specified</em>"|country_code_to_name}}
+                  </dd>
+                  <dt>
+                      Address 1:
+                  </dt>
+                  <dd>
+                      {{user.address1|default_if_none:"<em>Not specified</em>"}}
+                  </dd>
+                  <dt>
+                      Address 2:
+                  </dt>
+                  <dd>
+                      {{user.address2|default_if_none:"<em>Not specified</em>"}}
+                  </dd>
+                  <dt>
+                      City:
+                  </dt>
+                  <dd>
+                      {{user.city|default_if_none:"<em>Not specified</em>"}}
+                  </dd>
+                  <dt>
+                      State/Province:
+                  </dt>
+                  <dd>
+                      {{user.state|default_if_none:"<em>Not specified</em>"}}
+                  </dd>
+                  <dt>
+                      Zip/Postal Code:
+                  </dt>
+                  <dd>
+                      {{user.zipcode|default_if_none:"<em>Not specified</em>"}}
                   </dd>
                   <dt>
                       Traffic:
@@ -87,7 +111,7 @@
                 {% if account.paymentinfo.country == 'US' %}
                   <dt> US Tax ID: </dt> <dd>{{account.paymentinfo.us_tax_id}} </dd>
                 {% else %}
-                  <dt> Local Tax ID: </dt> <dd>{{account.paymentinfo.local_tax_id}} </dd>
+                  <dt> Local Tax ID: </dt> <dd>{{account.paymentinfo.local_tax_id|default_if_none:"Not entered"}} </dd>
                 {% endif %}
                 <br /><br />
                 <h3> Payment Details </h3>

@@ -100,6 +100,14 @@ class Campaign(db.Model):
 
     blind = db.BooleanProperty(default=False)
 
+    @property
+    def has_daily_budget(self):
+        return self.budget and self.budget_type == 'daily'
+
+    @property
+    def has_full_budget(self):
+        return self.full_budget and self.budget_type == 'full_campaign'
+
     def simplify(self):
         if self.start_date and not self.start_datetime:
             strt = self.start_date
@@ -111,13 +119,16 @@ class Campaign(db.Model):
             end_datetime = datetime.datetime(end.year, end.month, end.day)
         else:
             end_datetime = self.end_datetime
-        return SimpleCampaign(key = str(self.key()),
-                              name = self.name,
-                              campaign_type = self.campaign_type,
-                              active = self.active,
-                              start_datetime = start_datetime,
-                              end_datetime = end_datetime,
-                              account = self.account,
+        return SimpleCampaign(key=str(self.key()),
+                              name=self.name,
+                              campaign_type=self.campaign_type,
+                              active=self.active,
+                              start_datetime=start_datetime,
+                              end_datetime=end_datetime,
+                              account=self.account,
+                              full_budget=self.full_budget,
+                              daily_budget=self.budget,
+                              budget_type=self.budget_type,
                               )
 
     def __repr__(self):
@@ -171,6 +182,12 @@ class Campaign(db.Model):
             return True
         else:
             return False
+
+    def has_started(self):
+        return self.start_datetime < datetime.datetime.now()
+
+    def is_finished(self):
+        return self.end_datetime < datetime.datetime.now()
 
 
 class AdGroup(db.Model):
@@ -463,6 +480,32 @@ class AdGroup(db.Model):
         return False
 
     @property
+    def status(self):
+        """ Returns a string: Paused, Running, Eligible, Scheduled """
+        campaign = self.campaign
+        now = datetime.datetime.now()
+        if campaign.start_datetime and now < campaign.start_datetime:
+            return "Scheduled"
+        if campaign.end_datetime and now > campaign.end_datetime:
+            return "Completed"
+        if not self.active:
+            return "Paused"
+
+        # At this point, all campaigns are within active date range and not paused
+        if campaign.budget:
+            if self.percent_delivered and self.percent_delivered < 100.0:
+                return "Running"
+            elif self.percent_delivered and self.percent_delivered >= 100.0:
+                return "Completed"
+            else:
+                # Eligible campaigns have 0% delivery.
+                # In production, they should only last a couple seconds
+                # before becoming running campaigns
+                return "Eligible"
+        else:
+            return "Running"
+
+    @property
     def created_date(self):
         return self.created.date()
 
@@ -734,11 +777,7 @@ class ImageCreative(Creative):
         return [fp] if fp else None
 
     def build_simplify_dict(self):
-        try:
-            img_url = images.get_serving_url(self.image_blob)
-        except:
-            img_url = "http://cache.ohinternet.com/images/1/13/Awesome.png"
-        spec_dict = dict(image_url = img_url,
+        spec_dict = dict(image_url = self.image_serve_url,
                          image_width = self.image_width,
                          image_height = self.image_height,
                          )

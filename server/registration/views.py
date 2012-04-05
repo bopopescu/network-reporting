@@ -243,15 +243,25 @@ def verify_captcha(request):
 def settings_change(request,
                     success_url=None,
                     form_class=ChangeSettingsForm,
-                    template_name='registration/settings_change_form.html',):
+                    template_name='registration/settings_change_form.html',
+                    success_banner=False):
 
-        return register(request,
-                        success_url=reverse('account_index'),
-                        form_class=form_class,
-                        template_name=template_name,
-                        extra_context=None,
-                        auto_login=False,
-                        account_already_exists=True)
+    return register(request,
+                    success_url=reverse('settings_change_success'),
+                    form_class=form_class,
+                    template_name=template_name,
+                    extra_context={'success_banner':success_banner},
+                    auto_login=False,
+                    account_already_exists=True)
+
+@login_required
+def settings_change_success(request):
+
+    return settings_change( request,
+                            success_url=None,
+                            form_class=ChangeSettingsForm,
+                            template_name='registration/settings_change_form.html',
+                            success_banner=True)
 
 @google_login_required
 def register_google(request,

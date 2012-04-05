@@ -245,8 +245,11 @@ def timeslice_advance(budget, testing=False, advance_to_datetime = None):
                 _update_budgets(budget, slice_num, last_log, spent_this_timeslice = spent_this_ts, testing=testing)
 ######################### DONE WITH ONLY TESTING ########################
         else:
-            curr_total_spent = total_spent(budget)
+            # Due to situations beyond our control we're doing this
+            curr_total_spent = max(total_spent(budget), budget.total_spent)
             spent_this_ts = curr_total_spent - budget.total_spent
+            # And this.
+            spent_this_ts = max(spent_this_ts, 0)
 
             budget.total_spent = curr_total_spent
             budget.put()

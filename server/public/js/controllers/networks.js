@@ -497,7 +497,7 @@ $(function() {
             $('span.pub_id').click(function() {
                 var pub_id = pub_ids[network_type];
                 $(this).siblings('input[name$="'+pub_id+'"]').show();
-                $(this).prev('span').hide();
+                $(this).siblings('span').hide();
                 $(this).hide();
             });
 

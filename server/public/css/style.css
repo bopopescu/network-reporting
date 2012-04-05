@@ -1669,6 +1669,8 @@ a.disabled {
       text-transform: none; }
   .inventory_table tbody.alt, .inventory_table tbody tr.alt {
     background: #F7F7F7; }
+  .inventory_table tbody tr.main.app-targeting {
+    height: 40px; }
   .inventory_table tbody tr.main td {
     font-weight: 600;
     padding: 10px 10px 4px 0; }
@@ -1683,12 +1685,12 @@ a.disabled {
   .inventory_table td.stat, .inventory_table th.stat {
     text-align: right;
     width: 65px; }
-    .inventory_table td.stat.pub-id-data, .inventory_table th.stat.pub-id-data {
-      width: 140px; }
     .inventory_table td.stat.cpm-data, .inventory_table th.stat.cpm-data {
       width: 150px; }
   .inventory_table td.text {
     width: 65px; }
+    .inventory_table td.text.pub-id-data {
+      width: 170px; }
   .inventory_table td.icon, .inventory_table th.icon {
     padding: 0 11px 0 10px;
     width: 45px; }
@@ -2524,6 +2526,14 @@ a.disabled {
 .popover .popover-inner .popover-content.copy-bid {
   float: left;
   padding: 5px; }
+
+span.pub_id.muted {
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 140px;
+  cursor: pointer; }
 
 /*
  * Plugins

@@ -37,11 +37,16 @@
         &.alt, tr.alt {
             background: #F7F7F7;
         }
-        tr.main td {
-            font-weight: 600;
-            padding: 10px 10px 4px 0;
-            &.name {
-                font-size: 14px;
+        tr.main {
+            &.app-targeting {
+                height: 40px;
+            }
+            td {
+                font-weight: 600;
+                padding: 10px 10px 4px 0;
+                &.name {
+                    font-size: 14px;
+                }
             }
         }
         tr.sub td {
@@ -57,15 +62,15 @@
     td.stat, th.stat {
         text-align: right;
         width: 65px;
-        &.pub-id-data { 
-            width: 140px
-        }
         &.cpm-data { 
             width: 150px
         }
     }
     td.text {
         width: 65px;
+        &.pub-id-data { 
+            width: 170px
+        }
     }
     td.icon, th.icon {
         padding: 0 11px 0 10px;

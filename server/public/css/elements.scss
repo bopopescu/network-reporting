@@ -598,3 +598,11 @@
     }
 }
 
+span.pub_id.muted {
+    float: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 140px;
+    cursor:pointer;
+}

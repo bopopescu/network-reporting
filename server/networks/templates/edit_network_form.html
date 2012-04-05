@@ -291,7 +291,7 @@
                 </thead>
                 {% for app in apps %}
                 <tbody class="{% cycle 'alt' '' %}">
-                    <tr class="main">
+                    <tr class="main app-targeting">
                         <td class="icon">
                             <div>
                             <a href="/inventory/app/{{app.key_}}">
@@ -306,10 +306,10 @@
                             <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> ( All )
                         </td>
                         {% if ad_network_ids %}
-                        <td class="stat pub-id-data">
+                        <td class="text pub-id-data">
                             <div class="campaign_type_dependant network">
                                 {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted" style="float: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 120px;"></span>
+                                <span class="pub_id muted"></span>
                                 <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
                             </div>
                         </td>
@@ -341,10 +341,10 @@
                             {{ adunit.adgroup_form.active }}
                         </td>
                         {% if ad_network_ids %}
-                        <td class="stat pub-id-data adunit">
+                        <td class="text pub-id-data adunit">
                             <div class="campaign_type_dependant network">
                                 {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted adunit" style="float: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 120px;"></span>
+                                <span class="pub_id muted adunit"></span>
                                 <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
                             </div>
                         </td>

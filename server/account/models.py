@@ -11,9 +11,12 @@ class User(hybrid_models.User):
     title = db.StringProperty()
     company = db.StringProperty()
     phone = db.PhoneNumberProperty()
-    country = db.StringProperty()
-    state = db.StringProperty()
+    address1 = db.StringProperty()
+    address2 = db.StringProperty()
     city = db.StringProperty()
+    state = db.StringProperty()
+    zipcode = db.StringProperty()
+    country = db.StringProperty()
 
     mailing_list = db.BooleanProperty(default=False)
 

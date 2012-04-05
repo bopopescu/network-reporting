@@ -5,6 +5,12 @@
 {% load filters %}
 
 {% block content %}
+  {% if success_banner %}
+    <div class="alert-message block-message">
+      Success!
+    </div>
+  {% endif %}
+
 <div class="content-main">
 
 <form action="{% url settings_change %}" method="POST" accept-charset="utf-8" id="accountForm">
@@ -42,6 +48,36 @@
     </dt>
     <dd>
         {{form.phone|attrs:'{"placeholder":"(555) 555-5555"}'|raw}}
+    </dd>
+    <dt>
+        Address 1:
+    </dt>
+    <dd>
+        {{form.address1|raw}}
+    </dd>
+    <dt>
+        Address 2:
+    </dt>
+    <dd>
+        {{form.address2|raw}}
+    </dd>
+    <dt>
+        City:
+    </dt>
+    <dd>
+        {{form.city|raw}}
+    </dd>
+    <dt>
+        State/Province:
+    </dt>
+    <dd>
+        {{form.state|raw}}
+    </dd>
+    <dt>
+        Zip/Postal Code:
+    </dt>
+    <dd>
+        {{form.zipcode|raw}}
     </dd>
     <dt>
         Country:

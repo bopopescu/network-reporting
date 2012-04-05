@@ -261,7 +261,7 @@ class AdGroupService(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, adgroup_key):
-        try:
+
 
             # Get the adgroup
             adgroup = AdGroupQueryManager.get(adgroup_key)
@@ -305,9 +305,13 @@ class AdGroupService(RequestHandler):
 
             to_adserver = 'http://' + ADSERVER_HOSTNAME
             pacing_url = to_adserver + REMOTE_PACING_URL + '?' + qs
-            pacing_data = simplejson.loads(urllib2.urlopen(pacing_url).read())
-            #adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
-            adgroup.pace = pacing_data['pacing']
+            try:
+                pacing_data = simplejson.loads(urllib2.urlopen(pacing_url).read())
+                #adgroup.pace = budget_service.get_pace(adgroup.campaign.budget_obj)
+                adgroup.pace = pacing_data['pacing']
+            except:
+                adgroup.pace = None
+                
             if adgroup.pace:
                 summed_stats.pace = adgroup.pace[1]
                 if adgroup.pace[0] == "Pacing":
@@ -321,21 +325,21 @@ class AdGroupService(RequestHandler):
                     summed_stats.pace_type = "delivery"
 
             delivered_url = to_adserver + REMOTE_DELIVERED_URL + '?' + qs
-            delivered_data = simplejson.loads(urllib2.urlopen(delivered_url).read())
-            #percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
-            percent_delivered = delivered_data['percent_delivered']
-            summed_stats.percent_delivered = percent_delivered
-            adgroup.percent_delivered = percent_delivered
 
-            summed_stats.status = adgroup.status
+            try:
+                delivered_data = simplejson.loads(urllib2.urlopen(delivered_url).read())
+                percent_delivered = delivered_data['percent_delivered']
+                summed_stats.percent_delivered = percent_delivered
+                adgroup.percent_delivered = percent_delivered
+                summed_stats.status = adgroup.status
+            except:
+                pass
 
             stats_dict = summed_stats.to_dict()
 
             stats_dict['daily_stats'] = [s.to_dict() for s in stats]
 
             return JSONResponse(stats_dict)
-        except Exception, exception:
-            return JSONResponse({'error': str(exception)})
 
 
     def post(self, *args, **kwagrs):

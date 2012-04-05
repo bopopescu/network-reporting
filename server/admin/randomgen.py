@@ -325,6 +325,9 @@ def generate_creative(account,adgroup):
 def main_():
     account = generate_account(USERNAME,PASSWORD,USERNAME)
 
+    # Create marketplace campaign
+    generate_campaign(account,campaign_type="marketplace")
+
     apps = []
     for i in range(NUM_APPS):
         apps.append(generate_app(account))
@@ -345,10 +348,6 @@ def main_():
             if i==0:
                 #create at least 1 network campaign
                 campaign = generate_campaign(account,budget,"network")
-
-            elif i==1:
-                #create at least 1 marketplace campaign
-                campaign = generate_campaign(account,budget,"marketplace")
 
             else:
                 campaign = generate_campaign(account,budget)

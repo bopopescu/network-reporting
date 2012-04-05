@@ -413,7 +413,9 @@ def main():
             message = "Branch %s just deployed to %s by %s" % (active_branch_name,
                                                                      deploy_server,
                                                                      deployer)
-            post_to_hipchat(message, room_id="21565") #mopub chat room
+            # only post a message in hipchat if its in production
+            if deploy_server == 'frontend-0':
+                post_to_hipchat(message, room_id="21565") #mopub chat room
             post_to_hipchat(message, room_id="47652") #frontend chat room
 
         except Exception, error:

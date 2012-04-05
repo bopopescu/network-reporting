@@ -188,6 +188,8 @@ class EditNetworkHandler(RequestHandler):
         """
         if campaign_key:
             campaign = CampaignQueryManager.get(campaign_key)
+            if not campaign or campaign.account.key() != self.account.key():
+                raise Http404
             network = campaign.network_type
             campaign_name = campaign.name
             show_login = campaign.show_login
@@ -345,6 +347,9 @@ class EditNetworkHandler(RequestHandler):
         custom_campaign = False
         if campaign_key:
             campaign = CampaignQueryManager.get(campaign_key)
+            if not campaign or campaign.account.key() != self.account.key():
+                raise Http404
+
             network = campaign.network_type
             custom_campaign = campaign.network_state == \
                     NetworkStates.CUSTOM_NETWORK_CAMPAIGN
@@ -567,7 +572,7 @@ class NetworkDetailsHandler(RequestHandler):
         """
         campaign = CampaignQueryManager.get(campaign_key)
 
-        if not campaign:
+        if not campaign or campaign.account.key() != self.account.key():
             raise Http404
 
         network = campaign.network_type
@@ -662,6 +667,10 @@ class PauseNetworkHandler(RequestHandler):
 
         # Pause campaign
         campaign = CampaignQueryManager.get(campaign_key)
+
+        if not campaign or campaign.account.key() != self.account.key():
+            raise Http404
+
         campaign.active = True if self.request.POST.get('active') else False
         CampaignQueryManager.put(campaign)
 
@@ -683,6 +692,10 @@ class DeleteNetworkHandler(RequestHandler):
         campaign_key = self.request.POST.get('campaign_key')
 
         campaign = CampaignQueryManager.get(campaign_key)
+
+        if not campaign or campaign.account.key() != self.account.key():
+            raise Http404
+
         campaign.deleted = True
         CampaignQueryManager.put(campaign)
 

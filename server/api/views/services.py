@@ -227,7 +227,8 @@ class AdUnitService(RequestHandler):
         activity = put_data['active']
 
         account_key = self.account.key()
-        adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key, account_key)
+        adgroup = AdGroupQueryManager.get_marketplace_adgroup(adunit_key,
+                account_key)
 
         # REFACTOR
         # ensure the owner of this adgroup is the request's
@@ -311,7 +312,7 @@ class AdGroupService(RequestHandler):
                 adgroup.pace = pacing_data['pacing']
             except:
                 adgroup.pace = None
-                
+
             if adgroup.pace:
                 summed_stats.pace = adgroup.pace[1]
                 if adgroup.pace[0] == "Pacing":
@@ -370,7 +371,7 @@ class CampaignService(RequestHandler):
             # REFACTOR
             # ensure the owner of this campaign is the request's
             # current user
-            if campaign.account.key() != self.account.key():
+            if not campaign or campaign.account.key() != self.account.key():
                 raise Http404
 
             # Get the stats for the campaign
@@ -418,7 +419,7 @@ class NetworkAppsService(RequestHandler):
             # REFACTOR
             # ensure the owner of this campaign is the request's
             # current user
-            if campaign.account.key() != self.account.key():
+            if not campaign or campaign.account.key() != self.account.key():
                 raise Http404
 
             network = campaign.network_type

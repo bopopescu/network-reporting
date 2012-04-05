@@ -179,7 +179,7 @@ class IAdScraper(Scraper):
         while nextPage:
             # Wait for ajax
             time.sleep(1)
-            WebDriverWait(self.browser, 15).until(loaded)
+            WebDriverWait(self.browser, 20).until(loaded)
             # Read the page
             page = None
             while page is None:
@@ -245,9 +245,9 @@ if __name__ == '__main__':
     #NC.password = 'Faisal1Chess'
     #NC.username = '2_acrossair@acrossair.com'
     #NC.password = 'imano@314'
-    NC.username = 'salesreports@optimesoftware.com'
-    NC.password = 'Sales2012'
+    NC.username = 'mopub@ticbits.com'
+    NC.password = 'mopub666import'
     NC.ad_network_name = 'iad'
     SCRAPER = IAdScraper(NC)
-    print SCRAPER.get_site_stats(date(2012,1,31))
+    print SCRAPER.get_site_stats(date(2012,3,23))
 

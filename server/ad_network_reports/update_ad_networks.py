@@ -300,8 +300,8 @@ def retry_logins(day,
         logging.info("Assigning process in pool to login %s" % login_key)
         # Assign process in pool calling retry_login and giving it
         # it's appropriate login
-        results.append(pool.apply_async(retry_login,
-                args=(login_key, day)))
+        results.append((login_key, pool.apply_async(retry_login,
+                args=(login_key, day))))
 
     logging.info("Waiting for processes to complete")
     # Wait for all processes in pool to complete
@@ -313,12 +313,15 @@ def retry_logins(day,
     all_stats = []
     total_stats = AdNetworkManagementStatsManager(day)
     for result in results:
+        login_key, result = result
         if result.successful():
             stats_list, temp_stats = result.get()
             all_stats += stats_list
             total_stats.combined(temp_stats)
         else:
-            raise RetryException(day)
+            logging.error("Login retry attempt failed for login key: %s" %
+                    login_key)
+            total_stats.append_failed_login(login_key)
 
     management_stats.clear_failed_logins()
     total_stats.combined(management_stats)
@@ -332,19 +335,34 @@ def retry_logins(day,
 
 def retry_login(login_key,
                 day):
-    login = db.get(login_key)
     # Creating logger for process
     logger_name = 'retry_%s_on_%s' % (login_key, day)
     logger = create_logger(logger_name, '/var/tmp/%s.log' % logger_name)
-    # Using a different management stats for each process and combinding
-    # them later keeps increments atomic
-    temp_stats = AdNetworkManagementStatsManager(day)
+    try:
+        login = db.get(login_key)
+        # Using a different management stats for each process and combinding
+        # them later keeps increments atomic
+        temp_stats = AdNetworkManagementStatsManager(day)
 
-    logger.info("Created logger and temp management stats, Calling update" \
-            " login stats")
-    # Return a tuple of (list of scrape stats, management stats)
-    return (zip(*update_login_stats(login, day, management_stats=temp_stats,
-            update_aggregates=True, logger=logger))[0], temp_stats)
+        logger.info("Created logger and temp management stats, Calling update" \
+                " login stats")
+        # Return a tuple of (list of scrape stats, management stats)
+        valid_stats_list = update_login_stats(login, day,
+                management_stats=temp_stats, update_aggregates=True,
+                logger=logger)
+        result = ([stats for stats, mapper in valid_stats_list], temp_stats)
+        return result
+    except Exception as exception:
+        exc_traceback = sys.exc_info()[2]
+
+        error_msg = "Couldn't get get stats for \"%s\" account on day %s.\n\n" \
+                     "Error:\n%s\n\nTraceback:\n%s" % \
+                     (login_key, day, exception, repr(traceback.extract_tb(
+                         exc_traceback)))
+
+        # Record error in logfile
+        logger.error(error_msg)
+        raise
 
 
 def update_login_stats(login,

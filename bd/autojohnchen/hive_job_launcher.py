@@ -150,7 +150,7 @@ def launch_monthly_mpx_rev_hivejob(year, month, num_machines=60):
         logging.info('submitted new jobflow: %s "%s"' %(jobid, JOBFLOW_NAME))
 
     # output dir containing hive results:
-    # s3://mopub-aws-logging/hive_outputs/autojohnchen/monthly_mpx_rev_by_app.q/v=2/y=${y}/m=${m}/
+    # hive_outputs/autojohnchen/monthly_mpx_rev_by_app.q/v=2/y=${y}/m=${m}
     output_dir = 'hive_outputs/%s/%s/v=%s/y=%s/m=%s' % (USER, QUERY_FILE, SCHEMA_VERSION, year, month)
 
     return jobid, output_dir

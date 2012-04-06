@@ -4,12 +4,16 @@
 from google.appengine.ext import webapp
 from google.appengine.ext import deferred
 from google.appengine.ext.webapp import util
-from google.appengine.ext.webapp.mail_handlers import InboundMailHandler 
+from google.appengine.ext.webapp.mail_handlers import InboundMailHandler
 from google.appengine.api import mail, urlfetch, taskqueue
+
+from hive_job_launcher import launch_monthly_mpx_rev_hivejob, get_jobflow_state, get_output_data
+
 import logging, email
-import datetime, time, calendar 
+import datetime, time, calendar
 import csv
 import StringIO
+
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
@@ -30,7 +34,7 @@ class MainHandler(webapp.RequestHandler):
                                          <option value='9'>Sep</option>
                                          <option value='10'>Oct</option>
                                          <option value='11'>Nov</option>
-                                         <option value='12'>Dec</option></select>                                         
+                                         <option value='12'>Dec</option></select>
                         <select name='y'><option>2011</option><option selected>2012</option><option>2013</option></select>
                         <input type='submit' value='Generate'></input>
                     </form>
@@ -39,21 +43,16 @@ class MainHandler(webapp.RequestHandler):
 
 
 class GenerateHandler(webapp.RequestHandler):
-    def _initiate_map_reduce(self, m, y):
-        # TODO: XS please complete this... 
-        q = 'http://www.google.com/q?start=%d%02d%02d&end=%d%02d%02d' % (y, m, 1, y, m, calendar.monthrange(y, m)[1])
-        return "ABC123"
-        
     def post(self):
         # fire off reporting API request
         m = int(self.request.get('m'))
         y = int(self.request.get('y'))
-        jobId = self._initiate_map_reduce(m, y)
-        
+        jobId, s3_dir = launch_monthly_mpx_rev_hivejob(y, m)
+
         # initiates a task queue item that checks to see if this job has completed
-        taskqueue.add(url="/check", params={"id": jobId}, queue_name='jobcheck', countdown=60)
-        
-        # play robot movie for user 
+        taskqueue.add(url="/check", params={"id": jobId, "s3_dir": s3_dir}, queue_name='jobcheck', countdown=60)
+
+        # play robot movie for user
         self.response.out.write(
             """<html><head>
                     <script type='text/javascript' src='/images/jwplayer.js'></script>
@@ -76,66 +75,54 @@ class GenerateHandler(webapp.RequestHandler):
                     </script>
                 </body>
                </html>""" % jobId)
-               
+
 class CheckHandler(webapp.RequestHandler):
     # Returns True if the job has completed, False if still running
     def _is_job_complete(self, jobId):
-        # TODO -- XS please complete this
-        return True
-        
-    # Returns S3 directory if the job has completed successfully 
-    # or None if the job failed 
-    def _get_job_output(self, jobId):
-        # TODO -- XS please complete this 
-        return "http://s3.amazonaws.com"
-        
-    # Lists all URLS in an S3 bucket, 
-    # returns an array of fully specified URLs
-    def _ls(self, s3_url):
-        # TODO -- XS please complete this 
-        return ["http://www.google.com"]
-        
-    # Downloads an S3 file
-    def _s3_download(self, url):
-        # TODO -- XS please complete this 
-        return """2-Person Studio (2personstudio@gmail.com)	Spit	6589	2475.147999999959
-        8tracks (mopub@8tracks.com)	8tracks Android	49227	50386.09100000719
-        8tracks (mopub@8tracks.com)	8tracks Radio	274	338.28749999999974
-        """
-        
+        state = get_jobflow_state(jobId)
+        logging.info('%s\tjob %s state: %s' % (time.strftime('%b %d %Y %H:%M:%S'), jobId, state))
+        if state == ['COMPLETED', 'WAITING']:
+            return True, True   # done and successful
+        if state in ['FAILED', 'TERMINATED']:
+            return True, False  # done but failed
+        return False, False   # still running
+
     # Checks the S3 job - notifies user on failure
-    # handles completed jobs by defering into a task q for later 
+    # handles completed jobs by defering into a task q for later
     def post(self):
         jobId = self.request.get('id')
-        if self._is_job_complete(jobId): 
-            s3_dir = self._get_job_output(jobId)
-            if s3_dir:
-                # OK go iterate through this directory
-                self.collect_job_output(jobId, s3_dir)
-                return
-            else:
-                # This failed so we send a note indicating failure
-                mail.send_mail(sender="Automated John Chen <johnchen@mopub.com>",
-                                  to="johnchen@mopub.com",
-                                  subject="FAILED: Your report from %s could not be completed" % message.date,
-                                  body="""Sir- Sorry, I couldn't get it done. Apologies, Automated John Chen""")
+        s3_dir = self.request.get('s3_dir')
+        done, successful = self._is_job_complete(jobId)
+
+        if done and successful:
+            # OK go iterate through this directory
+            self.collect_job_output(jobId, s3_dir)
+            return
+        elif done and not successful:
+            # This failed so we send a note indicating failure
+            mail.send_mail(sender="Automated John Chen <johnchen@mopub.com>",
+                              to="johnchen@mopub.com",
+                              subject="FAILED: Your report from %s could not be completed" % message.date,
+                              body="""Sir- Sorry, I couldn't get it done. Apologies, Automated John Chen""")
         else:
             # Not complete yet so we fail this task and retry
             logging.info("JobID %s is not ready, retrying" % jobId)
             raise Exception("job not ready - retrying")
-            
+
     def collect_job_output(self, jobId, s3_dir):
         logging.info(s3_dir)
 
         # grab the results
-        out = []
-        for f in self._ls(s3_dir):
-            sz = self._s3_download(f)
-            out.extend([[x[0].strip(), x[1].strip(), int(x[2]), "%.2f" % float(x[3])] for x in [l.split('\t') for l in sz.splitlines()] if len(x) == 4])
-            
-        # scrub list: sort tuples by account 
+        """2-Person Studio (2personstudio@gmail.com)  Spit  6589  2475.147999999959
+        8tracks (mopub@8tracks.com) 8tracks Android 49227 50386.09100000719
+        8tracks (mopub@8tracks.com) 8tracks Radio 274 338.28749999999974
+        """
+        sz = get_output_data(s3_dir)
+        out = extend([[x[0].strip(), x[1].strip(), int(x[2]), "%.2f" % float(x[3])] for x in [l.split('\t') for l in sz.splitlines()] if len(x) == 4])
+
+        # scrub list: sort tuples by account
         out.sort(lambda x,y: cmp(x[0], y[0]))
-        
+
         # generate content
         output = StringIO.StringIO()
         output.write("Account,App,Impressions,Revenue\n")
@@ -151,12 +138,14 @@ class CheckHandler(webapp.RequestHandler):
                           body="""Sir- Good times, as requested. Sincerely, Automated John Chen""",
                           attachments=[("%s.csv" % jobId, output.getvalue())])
 
+
 def main():
-    application = webapp.WSGIApplication([('/', MainHandler), 
-                                          ('/generate', GenerateHandler), 
+    application = webapp.WSGIApplication([('/', MainHandler),
+                                          ('/generate', GenerateHandler),
                                           ('/check', CheckHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
+
 
 if __name__ == '__main__':
     main()

@@ -103,7 +103,7 @@ class CheckHandler(webapp.RequestHandler):
             # This failed so we send a note indicating failure
             mail.send_mail(sender="Automated John Chen <johnchen@mopub.com>",
                               to="johnchen@mopub.com",
-                              subject="FAILED: Your report from %s could not be completed" % message.date,
+                              subject="FAILED: Your report %s could not be completed" % jobId,
                               body="""Sir- Sorry, I couldn't get it done. Apologies, Automated John Chen""")
         else:
             # Not complete yet so we fail this task and retry
@@ -113,11 +113,11 @@ class CheckHandler(webapp.RequestHandler):
     def collect_job_output(self, jobId, s3_dir):
         logging.info(s3_dir)
 
-        # grab the results
-        """2-Person Studio (2personstudio@gmail.com)  Spit  6589  2475.147999999959
-        8tracks (mopub@8tracks.com) 8tracks Android 49227 50386.09100000719
-        8tracks (mopub@8tracks.com) 8tracks Radio 274 338.28749999999974
-        """
+        # grab the results... should look like:
+        # """2-Person Studio (2personstudio@gmail.com)  Spit  6589  2475.147999999959
+        # 8tracks (mopub@8tracks.com) 8tracks Android 49227 50386.09100000719
+        # 8tracks (mopub@8tracks.com) 8tracks Radio 274 338.28749999999974
+        # """
         sz = get_output_data(s3_dir)
         out = [[x[0].strip(), x[1].strip(), int(x[2]), "%.2f" % float(x[3])] for x in [l.split('\t') for l in sz.splitlines()] if len(x) == 4]
 

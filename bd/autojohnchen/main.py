@@ -14,6 +14,8 @@ import datetime, time, calendar
 import csv
 import StringIO
 
+SENDER="jim@mopub.com"
+RCPT="revforce+reports@mopub.com"
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
@@ -50,7 +52,8 @@ class GenerateHandler(webapp.RequestHandler):
         jobId, s3_dir = launch_monthly_mpx_rev_hivejob(y, m)
 
         # initiates a task queue item that checks to see if this job has completed
-        taskqueue.add(url="/check", params={"id": jobId, "s3_dir": s3_dir}, queue_name='jobcheck', countdown=60)
+        taskqueue.add(url="/check", params={"id": jobId, "s3_dir": s3_dir, "m": m, "y": y}, queue_name='jobcheck', countdown=60)
+        self.get()
 
         # play robot movie for user
         self.response.out.write(
@@ -74,6 +77,9 @@ class GenerateHandler(webapp.RequestHandler):
                       });
                     </script>
                     <h1>Is Generating Your Report... Job ID is %s</h1>
+                    <form method='get' action='/'>
+                        <input type='submit' value='Thank You'></input>
+                    </form>
                 </body>
                </html>""" % jobId)
 
@@ -97,20 +103,20 @@ class CheckHandler(webapp.RequestHandler):
 
         if done and successful:
             # OK go iterate through this directory
-            self.collect_job_output(jobId, s3_dir)
+            self.collect_job_output(jobId, s3_dir, int(self.request.get('m')), int(self.request.get('y')))
             return
         elif done and not successful:
             # This failed so we send a note indicating failure
-            mail.send_mail(sender="Automated John Chen <johnchen@mopub.com>",
-                              to="johnchen@mopub.com",
-                              subject="FAILED: Your report %s could not be completed" % jobId,
+            mail.send_mail(sender=SENDER,
+                              to=RCPT,
+                              subject="Your report %s could not be completed" % jobId,
                               body="""Sir- Sorry, I couldn't get it done. Apologies, Automated John Chen""")
         else:
             # Not complete yet so we fail this task and retry
             logging.info("JobID %s is not ready, retrying" % jobId)
             raise Exception("job not ready - retrying")
 
-    def collect_job_output(self, jobId, s3_dir):
+    def collect_job_output(self, jobId, s3_dir, m, y):
         logging.info(s3_dir)
 
         # grab the results... should look like:
@@ -133,11 +139,11 @@ class CheckHandler(webapp.RequestHandler):
 
         # create outbound email
         logging.info("Sending the report:\n%s" % output.getvalue())
-        mail.send_mail(sender="Automated John Chen <jim@mopub.com>",
+        mail.send_mail(sender=SENDER,
                           to="revforce+reports@mopub.com",
-                          subject="SUCCESS: Your report with ID %s" % jobId,
-                          body="""Sir- Good times, as requested. Sincerely, Automated John Chen""",
-                          attachments=[("%s.csv" % jobId, output.getvalue())])
+                          subject="Your revenue report for %02d-%04d is attached (ID: %s)" % (m, y, jobId),
+                          body="""SIR-\nGood times. Attached is your report. Sincerely, Automated John Chen""",
+                          attachments=[("%s-%02d-%04d.csv" % (jobId, m, y), output.getvalue())])
 
 
 def main():

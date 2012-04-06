@@ -5,4 +5,3 @@ queue:
     task_age_limit: 1d
     min_backoff_seconds: 60
     max_backoff_seconds: 300
-    max_doublings: 2

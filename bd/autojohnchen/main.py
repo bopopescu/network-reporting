@@ -35,7 +35,7 @@ class MainHandler(webapp.RequestHandler):
                                          <option value='10'>Oct</option>
                                          <option value='11'>Nov</option>
                                          <option value='12'>Dec</option></select>
-                        <select name='y'><option>2011</option><option selected>2012</option><option>2013</option></select>
+                        <select name='y'><option>2011</option><option selected>2012</option><option>2013</option><option>2014</option></select>
                         <input type='submit' value='Generate'></input>
                     </form>
                 </body>
@@ -58,7 +58,7 @@ class GenerateHandler(webapp.RequestHandler):
                     <script type='text/javascript' src='/images/jwplayer.js'></script>
                 </head>
                 <body align='center'>
-                    <h1>Automated John Chen<br/>Is Generating Your Report... Job ID is %s</h1>
+                    <h1>Automated John Chen</h1>
                     <!--center><p id="mediaplayer"></p></center-->
                     <script type="text/javascript">
                       jwplayer('mediaplayer').setup({
@@ -73,6 +73,7 @@ class GenerateHandler(webapp.RequestHandler):
                         'file': '/images/robot.m4v'
                       });
                     </script>
+                    <h1>Is Generating Your Report... Job ID is %s</h1>
                 </body>
                </html>""" % jobId)
 
@@ -81,7 +82,7 @@ class CheckHandler(webapp.RequestHandler):
     def _is_job_complete(self, jobId):
         state = get_jobflow_state(jobId)
         logging.info('%s\tjob %s state: %s' % (time.strftime('%b %d %Y %H:%M:%S'), jobId, state))
-        if state == ['COMPLETED', 'WAITING']:
+        if state in ['COMPLETED', 'WAITING']:
             return True, True   # done and successful
         if state in ['FAILED', 'TERMINATED']:
             return True, False  # done but failed
@@ -118,7 +119,7 @@ class CheckHandler(webapp.RequestHandler):
         8tracks (mopub@8tracks.com) 8tracks Radio 274 338.28749999999974
         """
         sz = get_output_data(s3_dir)
-        out = extend([[x[0].strip(), x[1].strip(), int(x[2]), "%.2f" % float(x[3])] for x in [l.split('\t') for l in sz.splitlines()] if len(x) == 4])
+        out = [[x[0].strip(), x[1].strip(), int(x[2]), "%.2f" % float(x[3])] for x in [l.split('\t') for l in sz.splitlines()] if len(x) == 4]
 
         # scrub list: sort tuples by account
         out.sort(lambda x,y: cmp(x[0], y[0]))
@@ -132,8 +133,8 @@ class CheckHandler(webapp.RequestHandler):
 
         # create outbound email
         logging.info("Sending the report:\n%s" % output.getvalue())
-        mail.send_mail(sender="Automated John Chen <johnchen@mopub.com>",
-                          to="jim@mopub.com",
+        mail.send_mail(sender="Automated John Chen <jim@mopub.com>",
+                          to="revforce+reports@mopub.com",
                           subject="SUCCESS: Your report with ID %s" % jobId,
                           body="""Sir- Good times, as requested. Sincerely, Automated John Chen""",
                           attachments=[("%s.csv" % jobId, output.getvalue())])

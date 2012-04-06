@@ -53,7 +53,6 @@ class GenerateHandler(webapp.RequestHandler):
 
         # initiates a task queue item that checks to see if this job has completed
         taskqueue.add(url="/check", params={"id": jobId, "s3_dir": s3_dir, "m": m, "y": y}, queue_name='jobcheck', countdown=60)
-        self.get()
 
         # play robot movie for user
         self.response.out.write(

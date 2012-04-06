@@ -33,6 +33,8 @@ SCHEMA_VERSION = 2
 USER='autojohnchen'
 QUERY_FILE = 'monthly_mpx_rev_by_app.q'
 
+NUM_MACHINES = 60
+
 
 def get_jobflow_state(jobid):
     while True:
@@ -69,17 +71,21 @@ def get_waiting_jobflow():
     return None
 
 
-def launch_monthly_mpx_rev_hivejob(year, month, num_machines=60):
+def launch_monthly_mpx_rev_hivejob(year, month, num_machines=NUM_MACHINES):
     # create master and core instance groups
     instance_groups = [
         InstanceGroup(num_instances=1, role='MASTER', type='m1.large', market='ON_DEMAND', name='master-group'),
+        InstanceGroup(num_instances=num_machines, role='CORE', type='m1.large', market='ON_DEMAND', name='core-group'),
     ]
+
+    # for single digit months
+    month = str(month).rjust(2, '0')
 
     # populate hive args
     hive_args = []
     hive_args += ['v=%i' % SCHEMA_VERSION]
-    hive_args += ['y=%i' % year]  # current year
-    hive_args += ['m=%02i' % month]  # current month
+    hive_args += ['y=%s' % year]  # current year
+    hive_args += ['m=%s' % month]  # current month
 
     # add username and filename as hive args, accessible inside hive query file
     hive_args += ['user=%s' %USER, 'qf=%s' %QUERY_FILE]
@@ -159,4 +165,4 @@ def launch_monthly_mpx_rev_hivejob(year, month, num_machines=60):
 
 if __name__ == '__main__':
     # for testing out
-    launch_monthly_mpx_rev_hivejob(2012, 4, 40)
+    launch_monthly_mpx_rev_hivejob(2012, 4)

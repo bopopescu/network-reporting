@@ -4,9 +4,13 @@ runtime: python
 api_version: 1
 
 handlers:
-  
 - url: /images
   static_dir: images
+  
+- url: /check
+  script: main.py
+  login: admin
 
 - url: .*
   script: main.py
+  login: required

@@ -59,7 +59,7 @@ class GenerateHandler(webapp.RequestHandler):
                 </head>
                 <body align='center'>
                     <h1>Automated John Chen</h1>
-                    <!--center><p id="mediaplayer"></p></center-->
+                    <center><p id="mediaplayer"></p></center>
                     <script type="text/javascript">
                       jwplayer('mediaplayer').setup({
                         'flashplayer': '/images/player.swf',

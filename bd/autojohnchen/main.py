@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 #
 #
-import logging, email
-import datetime, time, calendar
-
 from google.appengine.ext import webapp
 from google.appengine.ext import deferred
 from google.appengine.ext.webapp import util
@@ -11,6 +8,11 @@ from google.appengine.ext.webapp.mail_handlers import InboundMailHandler
 from google.appengine.api import mail, urlfetch, taskqueue
 
 from hive_job_launcher import launch_monthly_mpx_rev_hivejob, get_jobflow_state, get_output_data
+
+import logging, email
+import datetime, time, calendar
+import csv
+import StringIO
 
 
 class MainHandler(webapp.RequestHandler):
@@ -80,9 +82,9 @@ class CheckHandler(webapp.RequestHandler):
         state = get_jobflow_state(jobId)
         logging.info('%s\tjob %s state: %s' % (time.strftime('%b %d %Y %H:%M:%S'), jobId, state))
         if state == ['COMPLETED', 'WAITING']:
-          return True, True   # done and successful
+            return True, True   # done and successful
         if state in ['FAILED', 'TERMINATED']:
-          return True, False  # done but failed
+            return True, False  # done but failed
         return False, False   # still running
 
     # Checks the S3 job - notifies user on failure
@@ -111,14 +113,30 @@ class CheckHandler(webapp.RequestHandler):
         logging.info(s3_dir)
 
         # grab the results
-        content = get_output_data(s3_dir)
+        """2-Person Studio (2personstudio@gmail.com)  Spit  6589  2475.147999999959
+        8tracks (mopub@8tracks.com) 8tracks Android 49227 50386.09100000719
+        8tracks (mopub@8tracks.com) 8tracks Radio 274 338.28749999999974
+        """
+        sz = get_output_data(s3_dir)
+        out = extend([[x[0].strip(), x[1].strip(), int(x[2]), "%.2f" % float(x[3])] for x in [l.split('\t') for l in sz.splitlines()] if len(x) == 4])
+
+        # scrub list: sort tuples by account
+        out.sort(lambda x,y: cmp(x[0], y[0]))
+
+        # generate content
+        output = StringIO.StringIO()
+        output.write("Account,App,Impressions,Revenue\n")
+        outputWriter = csv.writer(output, dialect='excel')
+        for o in out:
+            outputWriter.writerow(o)
 
         # create outbound email
+        logging.info("Sending the report:\n%s" % output.getvalue())
         mail.send_mail(sender="Automated John Chen <johnchen@mopub.com>",
                           to="jim@mopub.com",
                           subject="SUCCESS: Your report with ID %s" % jobId,
                           body="""Sir- Good times, as requested. Sincerely, Automated John Chen""",
-                          attachments=[("%s.tsv" % jobId, content)])
+                          attachments=[("%s.csv" % jobId, output.getvalue())])
 
 
 def main():

@@ -8,6 +8,8 @@ from google.appengine.ext.webapp.mail_handlers import InboundMailHandler
 from google.appengine.api import mail, urlfetch, taskqueue
 import logging, email
 import datetime, time, calendar 
+import csv
+import StringIO
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
@@ -79,13 +81,27 @@ class CheckHandler(webapp.RequestHandler):
     # Returns True if the job has completed, False if still running
     def _is_job_complete(self, jobId):
         # TODO -- XS please complete this
-        return False
+        return True
         
     # Returns S3 directory if the job has completed successfully 
     # or None if the job failed 
     def _get_job_output(self, jobId):
         # TODO -- XS please complete this 
-        return "http://www.google.com"
+        return "http://s3.amazonaws.com"
+        
+    # Lists all URLS in an S3 bucket, 
+    # returns an array of fully specified URLs
+    def _ls(self, s3_url):
+        # TODO -- XS please complete this 
+        return ["http://www.google.com"]
+        
+    # Downloads an S3 file
+    def _s3_download(self, url):
+        # TODO -- XS please complete this 
+        return """2-Person Studio (2personstudio@gmail.com)	Spit	6589	2475.147999999959
+        8tracks (mopub@8tracks.com)	8tracks Android	49227	50386.09100000719
+        8tracks (mopub@8tracks.com)	8tracks Radio	274	338.28749999999974
+        """
         
     # Checks the S3 job - notifies user on failure
     # handles completed jobs by defering into a task q for later 
@@ -112,15 +128,28 @@ class CheckHandler(webapp.RequestHandler):
         logging.info(s3_dir)
 
         # grab the results
-        x = urlfetch.fetch(s3_dir)
+        out = []
+        for f in self._ls(s3_dir):
+            sz = self._s3_download(f)
+            out.extend([[x[0].strip(), x[1].strip(), int(x[2]), "%.2f" % float(x[3])] for x in [l.split('\t') for l in sz.splitlines()] if len(x) == 4])
+            
+        # scrub list: sort tuples by account 
+        out.sort(lambda x,y: cmp(x[0], y[0]))
+        
+        # generate content
+        output = StringIO.StringIO()
+        output.write("Account,App,Impressions,Revenue\n")
+        outputWriter = csv.writer(output, dialect='excel')
+        for o in out:
+            outputWriter.writerow(o)
 
         # create outbound email
+        logging.info("Sending the report:\n%s" % output.getvalue())
         mail.send_mail(sender="Automated John Chen <johnchen@mopub.com>",
                           to="jim@mopub.com",
                           subject="SUCCESS: Your report with ID %s" % jobId,
                           body="""Sir- Good times, as requested. Sincerely, Automated John Chen""",
-                          attachments=[("%s.csv" % jobId, x.content)])
-        
+                          attachments=[("%s.csv" % jobId, output.getvalue())])
 
 def main():
     application = webapp.WSGIApplication([('/', MainHandler), 

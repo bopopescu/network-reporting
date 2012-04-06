@@ -33,7 +33,7 @@ SCHEMA_VERSION = 2
 USER='autojohnchen'
 QUERY_FILE = 'monthly_mpx_rev_by_app.q'
 
-NUM_MACHINES = 60
+NUM_MACHINES = 100
 
 
 def get_jobflow_state(jobid):

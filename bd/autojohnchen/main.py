@@ -53,6 +53,12 @@ class GenerateHandler(webapp.RequestHandler):
 
         # initiates a task queue item that checks to see if this job has completed
         taskqueue.add(url="/check", params={"id": jobId, "s3_dir": s3_dir, "m": m, "y": y}, queue_name='jobcheck', countdown=60)
+        
+        # send a thank you email
+        mail.send_mail(sender=SENDER,
+                          to=RCPT,
+                          subject="Your report request %s has been received" % jobId,
+                          body="""Sir- Many machines have been provisioned to process your request. To check the status of your job, visit http://mopub-billing.appspot.com/check/%s. Yours, Automated John Chen""" % jobId)
 
         # play robot movie for user
         self.response.out.write(
@@ -75,12 +81,12 @@ class GenerateHandler(webapp.RequestHandler):
                         'file': '/images/robot.m4v'
                       });
                     </script>
-                    <h1>Is Generating Your Report... Job ID is %s</h1>
+                    <h1>Is Generating Your Report... Job ID is <a href="/check/%s">%s</a></h1>
                     <form method='get' action='/'>
                         <input type='submit' value='Thank You'></input>
                     </form>
                 </body>
-               </html>""" % jobId)
+               </html>""" % (jobId, jobId))
 
 class CheckHandler(webapp.RequestHandler):
     # Returns True if the job has completed, False if still running
@@ -92,6 +98,29 @@ class CheckHandler(webapp.RequestHandler):
         if state in ['FAILED', 'TERMINATED']:
             return True, False  # done but failed
         return False, False   # still running
+
+    # User visible status for a given job
+    def get(self, jobId):
+        done, successful = self._is_job_complete(jobId)
+        if not done:
+            message = "Is Still Working on Your Report... Hold Tight!"
+        else:
+            if successful:
+                message = "Is Done!"
+            else:
+                message = "Has Failed :("
+                
+        self.response.out.write("""<html><head>
+            </head>
+            <body align='center'>
+                <h1>Automated John Chen</h1>
+                <p><img src='/images/jfc-cash.jpg'></img></p>
+                <h1>%s</h1>
+                <form method='get' action='/'>
+                    <input type='submit' value='Thank You'></input>
+                </form>
+            </body>
+           </html>""" % message)
 
     # Checks the S3 job - notifies user on failure
     # handles completed jobs by defering into a task q for later
@@ -148,6 +177,7 @@ class CheckHandler(webapp.RequestHandler):
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
                                           ('/generate', GenerateHandler),
+                                          ('/check/(.*)', CheckHandler),
                                           ('/check', CheckHandler)],
                                          debug=True)
     util.run_wsgi_app(application)

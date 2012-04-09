@@ -732,7 +732,7 @@ def main(args):
 
     start_day = None
     end_day = None
-    email = True
+    email = False
     processes = 1
 
     setup_remote_api()

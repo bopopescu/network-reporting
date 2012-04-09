@@ -726,8 +726,9 @@ class DeleteNetworkHandler(RequestHandler):
             elif campaign.network_type in REPORTING_NETWORKS:
                 login = AdNetworkLoginManager.get_login(self.account,
                         campaign.network_type).get()
-                login.deleted = True
-                login.put()
+                if login:
+                    login.deleted = True
+                    login.put()
 
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # Mark all adgroups as deleted

@@ -360,6 +360,20 @@ class AdGroup(db.Model):
     # Each incoming request will be matched against all of these combinations
     geo_predicates = db.StringListProperty(default=["country_name=*"])
 
+    @property
+    def calculated_cpm(self):
+        """
+        Calculate the ecpm for a cpc campaign.
+        """
+        if self.cpc:
+            try:
+                return float(self.stats.click_count) * \
+                       float(self.bid) * \
+                       1000.0 / float(self.stats.impression_count)
+            except Exception, error:
+                logging.error(error)
+        return self.bid
+
     def simplify(self):
         return SimpleAdGroup(key = str(self.key()),
                              campaign = self.campaign,

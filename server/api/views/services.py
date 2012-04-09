@@ -498,7 +498,8 @@ class NetworkAppsService(RequestHandler):
                         if adgroup.bid_strategy == 'cpm':
                             adunit_data['stats']['cpm'] = adgroup.bid
                         else:
-                            adunit_data['stats']['cpm'] = None
+                            adunit_data['stats']['cpm'] = adgroup. \
+                                    calculated_cpm
 
                         if hasattr(network_apps_[app.key()], 'adunits'):
                             network_apps_[app.key()].adunits.append(adunit_data)

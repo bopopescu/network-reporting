@@ -63,8 +63,6 @@ var mopub = window.mopub || {};
                     // Set adunit level mopub and network stats
                     var renderedContent = '';
                     $.each(network_app.get('adunits'), function (iter, adunit) {
-                        console.log(adunit.name);
-                        console.log(adunit.active);
                         renderedContent += _.template($('#network-app-template').html(), {
                             name: adunit.name,
                             url: adunit.url,
@@ -321,7 +319,7 @@ var mopub = window.mopub || {};
                 if (this_view.options.yesterday !== null && this_view.options.today !== null) {
                     breakdowns = breakdowns.concat(['yesterday', 'today']);
                 }
-                var metrics = ['revenue', 'impression_count', 'click_count', 'cpm'];
+                var metrics = ['revenue', 'impression_count', 'click_count', 'ctr'];
 
                 var network_campaigns = new Campaigns(_.filter(this.collection.models,
                     function(campaign){
@@ -336,8 +334,14 @@ var mopub = window.mopub || {};
                     // Render the stats breakdown for each metric
                     _.each(metrics, function (metric) {
                         var selector = '#stats-breakdown-' + metric + ' .' + breakdown;
-                        var mopub_selector =  selector + ' .mopub-chart-data';
-                        var network_selector =  selector + ' .network-chart-data';
+                        // Mopub doesn't track revenue
+                        if (metric == 'revenue') {
+                            var mopub_selector = null;
+                            var network_selector = selector + ' .network-chart-revenue';
+                        } else {
+                            var mopub_selector = selector + ' .mopub-chart-data';
+                            var network_selector = selector + ' .network-chart-data';
+                        }
                         if (breakdown == 'all') {
                             $(mopub_selector).html(mopub_campaigns.get_formatted_stat(metric));
                             $(network_selector).html(network_campaigns.get_formatted_stat(metric));
@@ -357,7 +361,7 @@ var mopub = window.mopub || {};
                         pointInterval: 86400000,
                         impression_count: [{'Total': mopub_campaigns.get_total_daily_stats('impression_count')}],
                         click_count: [{'Total': mopub_campaigns.get_total_daily_stats('click_count')}],
-                        cpm: [{'Total': mopub_campaigns.get_total_daily_stats('cpm')}],
+                        ctr: [{'Total': mopub_campaigns.get_total_daily_stats('ctr')}],
                         total: false
                     };
                 } else {
@@ -367,7 +371,7 @@ var mopub = window.mopub || {};
                         impression_count: [{'From MoPub': mopub_campaigns.get_total_daily_stats('impression_count')}, {'From Networks': network_campaigns.get_total_daily_stats('impression_count')}],
                         revenue: [{'From Networks': {'data': network_campaigns.get_total_daily_stats('revenue'), 'color': '#e57300'}}],
                         click_count: [{'From MoPub': mopub_campaigns.get_total_daily_stats('click_count')}, {'From Networks': network_campaigns.get_total_daily_stats('click_count')}],
-                        cpm: [{'From MoPub': mopub_campaigns.get_total_daily_stats('cpm')}, {'From Networks': network_campaigns.get_total_daily_stats('cpm')}],
+                        ctr: [{'From MoPub': mopub_campaigns.get_total_daily_stats('ctr')}, {'From Networks': network_campaigns.get_total_daily_stats('ctr')}],
                         total: false
                     };
                 }

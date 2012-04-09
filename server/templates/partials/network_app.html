@@ -14,9 +14,17 @@
     <% } %>
     <td class="dataTable-data numeric">
         <% if(network_stats) { %>
-        <div class="network-data"><%= network_stats.get_formatted_stat('cpm') %></div>
+        <% if(mopub_stats.get_stat('cpm')) { %>
+        <div class="network-data">
+        <% } else { %>
+        <div style="color:orange;">
         <% } %>
+            <%= network_stats.get_formatted_stat('cpm') %>
+        </div>
+        <% } %>
+        <% if(mopub_stats.get_stat('cpm')) { %>
         <div class="mopub-data"><%= mopub_stats.get_formatted_stat('cpm') %></div>
+        <% } %>
     </td>
     <td class="dataTable-data numeric">
         <% if(network_stats && network != 'mobfox') { %>

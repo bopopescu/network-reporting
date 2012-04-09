@@ -494,6 +494,13 @@ class NetworkAppsService(RequestHandler):
                         adunit_data['url'] = '/inventory/adunit/' + \
                                 str(adunit.key())
                         adunit_data['stats'] = stats.to_dict()
+
+                        if adgroup.bid_strategy == 'cpm':
+                            adunit_data['stats']['cpm'] = adgroup.bid
+                        else:
+                            adunit_data['stats']['cpm'] = adgroup. \
+                                    calculated_cpm
+
                         if hasattr(network_apps_[app.key()], 'adunits'):
                             network_apps_[app.key()].adunits.append(adunit_data)
                         else:
@@ -509,6 +516,7 @@ class NetworkAppsService(RequestHandler):
                 if adunits:
                     app_data['adunits'] = app.adunits
                 app_data['mopub_stats'] = app.mopub_stats.to_dict()
+                app_data['mopub_stats']['cpm'] = None
                 if hasattr(app, 'network_stats'):
                     app_data['network_stats'] = \
                         StatsModel(ad_network_stats=app.network_stats).to_dict()

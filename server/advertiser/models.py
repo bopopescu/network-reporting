@@ -360,6 +360,20 @@ class AdGroup(db.Model):
     # Each incoming request will be matched against all of these combinations
     geo_predicates = db.StringListProperty(default=["country_name=*"])
 
+    @property
+    def calculated_cpm(self):
+        """
+        Calculate the ecpm for a cpc campaign.
+        """
+        if self.cpc:
+            try:
+                return float(self.stats.click_count) * \
+                       float(self.bid) * \
+                       1000.0 / float(self.stats.impression_count)
+            except Exception, error:
+                logging.error(error)
+        return self.bid
+
     def simplify(self):
         return SimpleAdGroup(key = str(self.key()),
                              campaign = self.campaign,
@@ -805,11 +819,7 @@ class ImageCreative(Creative):
         return [fp] if fp else None
 
     def build_simplify_dict(self):
-        try:
-            img_url = images.get_serving_url(self.image_blob)
-        except:
-            img_url = "http://cache.ohinternet.com/images/1/13/Awesome.png"
-        spec_dict = dict(image_url = img_url,
+        spec_dict = dict(image_url = self.image_serve_url,
                          image_width = self.image_width,
                          image_height = self.image_height,
                          )

@@ -57,8 +57,8 @@ Make a table for ad networks that are active
                 <th class="dataTable-name"> </th>
                 {% if reporting %}
                 <th class="dataTable-data numeric"> Revenue </th>
-                {% endif %}
                 <th class="dataTable-data numeric"> CPM </th>
+                {% endif %}
                 <th class="dataTable-data numeric"> Attempts </th>
                 <th class="dataTable-data numeric"> Impressions </th>
                 <th class="dataTable-data numeric"> Fill Rate </th>
@@ -86,13 +86,10 @@ Make a table for ad networks that are active
                     <td class="dataTable-data numeric">
                         <div class="networks-revenue" style="color:orange;">--</div>
                     </td>
-                    {% endif %}
                     <td class="dataTable-data numeric">
-                        {% if network.reporting %}
                         <div class="networks-cpm network-data">--</div>
-                        {% endif %}
-                        <div class="all-cpm mopub-data">--</div>
                     </td>
+                    {% endif %}
                     <td class="dataTable-data numeric">
                         {% if network.reporting and network.name != MOBFOX %}
                         <div class="networks-attempt_count network-data">--</div>

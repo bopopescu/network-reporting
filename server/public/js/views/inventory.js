@@ -63,8 +63,6 @@ var mopub = window.mopub || {};
                     // Set adunit level mopub and network stats
                     var renderedContent = '';
                     $.each(network_app.get('adunits'), function (iter, adunit) {
-                        console.log(adunit.name);
-                        console.log(adunit.active);
                         renderedContent += _.template($('#network-app-template').html(), {
                             name: adunit.name,
                             url: adunit.url,

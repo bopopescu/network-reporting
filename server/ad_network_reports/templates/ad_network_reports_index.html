@@ -89,18 +89,18 @@
             {% if network.state != LoginStates.NOT_SETUP %}
             <td class="network-status dataTable-name">
 
-                {% if network.state == LoginStates.WORKING %}
+                {% if network.state != LoginStates.NOT_SETUP %}
                 <span class="muted">Last synced: </span>
                 {% endif %}
                 <a class="show-status" style="cursor:pointer;" id="{{network.name}}-status">Status</a>
-                {% if network.state == LoginStates.WORKING %}
+                {% if network.state != LoginStates.NOT_SETUP %}
                 <div>
                     <a class="show-hide button button-small" id="{{network.name}}" style="width:75px;">Show Apps</a>
                 </div>
                 {% endif %}
             </td>
             {% endif %}
-            {% if network.state == LoginStates.WORKING %}
+            {% if network.state != LoginStates.NOT_SETUP %}
               <td class="dataTable-data numeric revenue">--</td>
               {% if network.name != MOBFOX %}
                 <td class="dataTable-data numeric attempts">--</td>
@@ -223,7 +223,7 @@
           </form>
         </div>
       </div>
-      {% if network.state == LoginStates.WORKING %}
+      {% if network.state != LoginStates.NOT_SETUP %}
       <div class="appData-details hidden {{network.name}}-row" style="margin: -10px 0 0 86px">
         <div class="appData-details-inner show">
           <table class="dataTable">

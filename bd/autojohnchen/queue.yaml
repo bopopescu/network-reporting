@@ -1,0 +1,7 @@
+queue:
+- name: jobcheck
+  rate: 1/s
+  retry_parameters:
+    task_age_limit: 1d
+    min_backoff_seconds: 60
+    max_backoff_seconds: 300

@@ -21,8 +21,9 @@ class LoginStates:
     Login credential states
     """
     NOT_SETUP = 0
-    WORKING = 1
-    ERROR = 2
+    PULLING_DATA = 1
+    WORKING = 2
+    ERROR = 3
 
 
 class AdNetworkLoginCredentials(db.Model):

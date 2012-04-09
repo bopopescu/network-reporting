@@ -407,7 +407,9 @@
                         -
                       </td>
                       <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
-                          {% if not campaign.network_type %}
+                          {% if campaign.network_type %}
+                          -
+                          {% else %}
                               {% if campaign.adgroup.bid_strategy == 'cpc' %}
                                 {{ campaign.adgroup.calculated_ecpm|currency }}
                               {% else %}

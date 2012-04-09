@@ -193,7 +193,7 @@ class EditNetworkHandler(RequestHandler):
             network = campaign.network_type
             campaign_name = campaign.name
             show_login = campaign.show_login
-            campaign_form = CampaignForm(instance=campaign)
+            campaign_form = CampaignForm(instance=campaign, network=True)
             custom_campaign = campaign.network_state == \
                     NetworkStates.CUSTOM_NETWORK_CAMPAIGN
         else:
@@ -207,7 +207,7 @@ class EditNetworkHandler(RequestHandler):
                 campaign_name += ' - Custom'
 
             # set up the campaign with the default data
-            campaign_form = CampaignForm({'name': campaign_name})
+            campaign_form = CampaignForm({'name': campaign_name}, network=True)
 
         network_data = {'name': network,
                         'pretty_name': campaign_name,
@@ -365,7 +365,8 @@ class EditNetworkHandler(RequestHandler):
                 campaign = CampaignQueryManager. \
                         get_default_network_campaign(self.account, network)
 
-        campaign_form = CampaignForm(query_dict, instance=campaign)
+        campaign_form = CampaignForm(query_dict, instance=campaign,
+                network=True)
 
         adunit_keys = [(unicode(adunit.key())) for adunit in adunits]
 

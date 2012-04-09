@@ -127,11 +127,12 @@ class CampaignForm(forms.ModelForm):
                 initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
         is_staff = kwargs.pop('is_staff', False)
+        network = kwargs.pop('network', False)
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
         # show deprecated networks if user is staff
-        if is_staff:
+        if is_staff or network:
             self.fields['campaign_type'].choices.append(('network', 'Network'))
 
         # hack to make the forms ordered correctly

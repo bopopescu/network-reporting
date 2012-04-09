@@ -60,9 +60,7 @@ $(function() {
             $('#dashboard-stats-chart').fadeOut(100, function() {
                 mopub.Chart.setupDashboardStatsChart('line');
                 if (!show_network_chart_data) {
-                    if (mopub.Chart.trafficChart.series.length == 1) {
-                        mopub.Chart.trafficChart.series[0].hide();
-                    } else {
+                    if (mopub.Chart.trafficChart.series.length != 1) {
                         mopub.Chart.trafficChart.series[1].hide();
                     }
                 }
@@ -77,9 +75,7 @@ $(function() {
                 $('.network-chart-data').show();
                 $('.mopub-chart-data').hide();
                 if (mopub.Chart.trafficChart) {
-                    if (mopub.Chart.trafficChart.series.length == 1) {
-                        mopub.Chart.trafficChart.series[0].show();
-                    } else {
+                    if (mopub.Chart.trafficChart.series.length != 1) {
                         mopub.Chart.trafficChart.series[1].show();
                     }
                     show_network_chart_data = true;
@@ -91,9 +87,7 @@ $(function() {
                 $('.mopub-chart-data').show();
                 function hide_network_trafficChart_series() {
                     if (mopub.Chart.trafficChart) {
-                        if (mopub.Chart.trafficChart.series.length == 1) {
-                            mopub.Chart.trafficChart.series[0].hide();
-                        } else {
+                        if (mopub.Chart.trafficChart.series.length != 1) {
                             mopub.Chart.trafficChart.series[1].hide();
                         }
                         show_network_chart_data = false;

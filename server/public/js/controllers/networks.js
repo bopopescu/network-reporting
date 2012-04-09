@@ -646,7 +646,6 @@ $(function() {
                 .button({ icons: { primary: "ui-icon-wrench" } })
 
             $('#delete-network')
-                .button({ icons: { primary: "ui-icon-trash" } })
                 .click(function () {
                     var key = $(this).attr('id');
                     var div = $('.' + key);

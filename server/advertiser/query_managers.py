@@ -57,12 +57,9 @@ class CampaignQueryManager(QueryManager):
                       .filter('deleted =',False)\
                       .filter('account =',account)
         if is_new:
-            #campaigns.filter('network_type !=', '')
-            return [campaign for campaign in campaigns if campaign.network_type]
+            campaigns.filter('network_type !=', '')
         if network_type:
-            #campaigns.filter('network_type =', network_type)
-            return [campaign for campaign in campaigns if campaign.network_type
-                    == network_type]
+            campaigns.filter('network_type =', network_type)
         return campaigns
 
     @classmethod

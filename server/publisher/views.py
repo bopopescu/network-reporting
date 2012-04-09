@@ -33,7 +33,8 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       CreativeQueryManager
 from publisher.query_managers import AppQueryManager, \
      AdUnitQueryManager, \
-     AdUnitContextQueryManager
+     AdUnitContextQueryManager, \
+     PublisherQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 # Util
@@ -47,28 +48,15 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIExcept
 
 from budget import budget_service
 
+from google.appengine.api import memcache
+
 class AppIndexHandler(RequestHandler):
     """
     A list of apps and their real-time stats.
     """
     def get(self):
-
-        # Get all of the adunit keys for bootstrapping the apps
-        adunits = AdUnitQueryManager.get_adunits(account=self.account)
-
-        # We list the app traits in the table, and then load their
-        # stats over ajax using Backbone. Fetch the apps/adunits for the
-        # template load, and then create a list of keys for ajax bootstrapping.
-        apps = {}
-        for adunit in adunits:
-            app = apps.get(adunit.app_key.key())
-            if not app:
-                app = AppQueryManager.get(adunit.app_key.key())
-                app.adunits = [adunit]
-                apps[adunit.app_key.key()] = app
-            else:
-                app.adunits += [adunit]
-
+        # Get all of the business objects (apps and their adunits).
+        apps = PublisherQueryManager.get_objects_dict_for_account(self.account)
         app_keys = simplejson.dumps([str(k) for k in apps.keys()])
         app_values = sorted(apps.values(), lambda x, y: cmp(x.name, y.name))
 
@@ -394,15 +382,18 @@ class AppDetailHandler(RequestHandler):
     def get(self, app_key):
 
         # load the site
+        # 1 GET
         app = AppQueryManager.get(app_key)
 
         # create a stats manager
         stats_q = StatsModelQueryManager(self.account, self.offline)
         mpx_stats_q = MarketplaceStatsFetcher(self.account.key())
 
+        # 1 RunQuery
         app.adunits = AdUnitQueryManager.get_adunits(app=app)
 
         # organize impressions by days
+        # 1 GET per ad unit
         if len(app.adunits) > 0:
             for adunit in app.adunits:
                 adunit.all_stats = stats_q.get_stats_for_days(publisher=adunit,
@@ -415,6 +406,7 @@ class AppDetailHandler(RequestHandler):
                              key=lambda adunit: adunit.name,
                              reverse=True)
 
+        # 1 GET
         app.all_stats = stats_q.get_stats_for_days(publisher=app, days=self.days)
 
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
@@ -432,7 +424,9 @@ class AppDetailHandler(RequestHandler):
                                               for stats in bundled_adunits]
 
         # Create edit form and new adunit forms
+        # 1 memcache GET
         app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
+        # 1 memcache GET
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
 
         today = app.all_stats[-1]
@@ -446,16 +440,19 @@ class AppDetailHandler(RequestHandler):
         # this is the max active users over the date range
         # NOT total unique users
         app.stats.user_count = max([sm.user_count for sm in app.all_stats])
-
+        
         # get adgroups targeting this app
+        # 2 RunQuery???
         app.adgroups = AdGroupQueryManager.get_adgroups(app=app)
 
-
+        # Total: 2 GETs / 1 urlfetch per adgroup
         for ag in app.adgroups:
+            # 1 GET
             ag.all_stats = stats_q.get_stats_for_days(publisher = app,
                                                             advertiser = ag,
                                                             days = self.days)
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
+            # 1 GET for the campaign
             budget_object = ag.campaign.budget_obj
             ag.percent_delivered = budget_service.percent_delivered(budget_object)
 
@@ -463,6 +460,7 @@ class AppDetailHandler(RequestHandler):
             # TODO: overwrite clicks as well
             if ag.campaign.campaign_type in ['marketplace']:
                 try:
+                    # 1 urlfetch
                     mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
                                                             self.start_date,
                                                             self.end_date)

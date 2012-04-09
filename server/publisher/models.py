@@ -63,6 +63,7 @@ class App(db.Model):
     categories = db.StringListProperty()
 
     icon_blob = blobstore.BlobReferenceProperty()
+    image_serve_url = db.StringProperty()
 
     # Ad network overrides
     jumptap_app_id = db.StringProperty()
@@ -112,16 +113,14 @@ class App(db.Model):
     @property
     def icon_url(self):
         from common.utils import helpers
-        if not self.icon_blob:
+        if not self.image_serve_url:
             return "/placeholders/image.gif"
-        try:
-            url = helpers.get_url_for_blob(self.icon_blob)
-            # hack to get images to appear on localhost
+        else:
+            url = self.image_serve_url
             if settings.DEBUG:
-                url = url.replace('https', 'http')
-            return url
-        except Exception:
-            return "/placeholders/image.gif"
+                return url
+            else:
+                return helpers.secure_url_from_url(url)
 
     @property
     def identifier(self):

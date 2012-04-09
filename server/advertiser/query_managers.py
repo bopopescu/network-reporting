@@ -33,6 +33,24 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
+class AdvertiserQueryManager(CachedQueryManager):
+    @classmethod
+    def get_objects_dict_for_account(cls, account):
+        pass
+
+    @classmethod
+    def get_campaigns_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, Campaign, include_deleted)
+
+    @classmethod
+    def get_adgroups_dict_for_account(cls, account, include_deleted=False, include_archived=False):
+        return cls.get_entities_for_account(account, AdGroup, include_deleted, include_archived)
+    
+    @classmethod
+    def get_creatives_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, Creative, include_deleted)
+
+
 class CampaignQueryManager(QueryManager):
     Model = Campaign
 
@@ -154,12 +172,18 @@ class CampaignQueryManager(QueryManager):
 
         # Clear cache
         adunits = []
+        affected_accounts = set([])
         for campaign in campaigns:
+            affected_accounts.add(campaign.account)
             for adgroup in campaign.adgroups:
                 adunits.extend(adgroup.site_keys)
 
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Campaign)
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
 
         return put_response
 
@@ -318,6 +342,10 @@ class AdGroupQueryManager(QueryManager):
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
+        affected_accounts = set([adgroup.account for adgroup in adgroups])
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
+
         return put_response
 
 
@@ -388,6 +416,9 @@ class CreativeQueryManager(QueryManager):
             adunits = AdUnitQueryManager.get(creative.ad_group.site_keys)
             if adunits:
                 AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        affected_accounts = set([creative.account for creative in creatives])
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
 
         return put_response
 

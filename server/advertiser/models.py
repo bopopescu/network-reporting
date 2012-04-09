@@ -805,11 +805,7 @@ class ImageCreative(Creative):
         return [fp] if fp else None
 
     def build_simplify_dict(self):
-        try:
-            img_url = images.get_serving_url(self.image_blob)
-        except:
-            img_url = "http://cache.ohinternet.com/images/1/13/Awesome.png"
-        spec_dict = dict(image_url = img_url,
+        spec_dict = dict(image_url = self.image_serve_url,
                          image_width = self.image_width,
                          image_height = self.image_height,
                          )

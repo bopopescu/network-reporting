@@ -132,6 +132,7 @@ def LoadSdk():
         os.path.join(SDK_PATH, 'lib', 'django'),
         os.path.join(SDK_PATH, 'lib', 'ipaddr'),
         os.path.join(SDK_PATH, 'lib', 'webob'),
+        os.path.join(SDK_PATH, 'lib', 'webob_1_1_1'),
         os.path.join(SDK_PATH, 'lib', 'yaml', 'lib'),
         os.path.join(SDK_PATH, 'lib', 'fancy_urllib'),
     ]
@@ -429,7 +430,7 @@ def ModifyAvailableCommands():
   management.get_commands()
   # Replace startapp command which is set by previous call to get_commands().
   from appengine_django.management.commands.startapp import ProjectCommand
-  management._commands['startapp'] = ProjectCommand(project_directory) 
+  management._commands['startapp'] = ProjectCommand(project_directory)
   RemoveCommands(management._commands)
   logging.debug("Removed incompatible Django manage.py commands")
 
@@ -582,9 +583,9 @@ def InstallAuthentication(settings):
     from account import models as mp_models
     models.User = helper_models.User
     # HACK: NAFIS
-    
+
     from django.contrib.auth import views
-    
+
     models.User = mp_models.User
     models.Group = helper_models.Group
     models.Permission = helper_models.Permission
@@ -603,8 +604,8 @@ def InstallAuthentication(settings):
     django_forms.PasswordResetForm = auth_helper_forms.PasswordResetForm
     from registration import auth_views as mp_auth_views
     views.login = mp_auth_views.login
-    
-    
+
+
     django_auth.suite = unittest.TestSuite
     django_tests.suite = unittest.TestSuite
     logging.debug("Installing authentication framework")

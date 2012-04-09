@@ -412,6 +412,7 @@ class EditNetworkHandler(RequestHandler):
                     break
                 adgroup_forms.append((adgroup_form, adunit.key()))
 
+            adgroups = []
             if adgroup_forms_are_valid:
                 logging.info('adgroup forms are valid')
 
@@ -466,6 +467,7 @@ class EditNetworkHandler(RequestHandler):
                     adgroup.net_creative = creative.key()
 
                     AdGroupQueryManager.put(adgroup)
+                    adgroups.append(adgroup)
 
                 # NetworkConfig for Apps
                 if network in ('admob', 'brightroll', 'ejam', 'inmobi',
@@ -503,13 +505,25 @@ class EditNetworkHandler(RequestHandler):
 
                     # NetworkConfig for AdUnits
                     if network in ('admob', 'jumptap', 'millennial'):
-                        for adunit in adunits:
+                        for adgroup, adunit in zip(adgroups, adunits):
                             network_config = adunit.network_config or \
                                     NetworkConfig()
+                            pub_id = self.request.POST.get("adunit_%s-%s" %
+                                    (adunit.key(), network_config_field), '')
+
+                            # Return error if adgroup is set to active yet
+                            # the user didn't enter a pub id
+                            if not pub_id and adgroup.active and network in \
+                                    ('jumptap', 'millennial'):
+                                return JSONResponse({
+                                    'errors': {'adunit_' + str(adunit.key()) + \
+                                        '-admob_pub_id': "MoPub requires an" \
+                                        " ad network id for this adunit."},
+                                    'success': False,
+                                })
+
                             setattr(network_config, network_config_field,
-                                    self.request.POST.get("adunit_%s-%s" %
-                                        (adunit.key(), network_config_field),
-                                        ''))
+                                    pub_id)
                             AdUnitQueryManager.update_config_and_put(adunit,
                                     network_config)
 

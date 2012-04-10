@@ -386,6 +386,25 @@ class CampaignService(RequestHandler):
 
             stats_dict['daily_stats'] = [s.to_dict() for s in campaign_stats]
 
+            # Give back max and min cpm for campaign if endpoint is for
+            # mopub stats
+            if stats_endpoint == 'all':
+                adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
+                        else adgroup.calculated_cpm for adgroup in
+                        campaign.adgroups]
+                if adgroup_bids:
+                    min_cpm = min(adgroup_bids)
+                    max_cpm = max(adgroup_bids)
+                    if min_cpm == max_cpm:
+                        stats_dict['cpm'] = max_cpm
+                    else:
+                        stats_dict['cpm'] = None
+                        stats_dict['min_cpm'] = min_cpm
+                        stats_dict['max_cpm'] = max_cpm
+                else:
+                    stats_dict['cpm'] = 0.0
+
+
             return JSONResponse(stats_dict)
         except Exception, exception:
             return JSONResponse({'error': str(exception)})
@@ -466,6 +485,8 @@ class NetworkAppsService(RequestHandler):
                         else:
                             network_apps_[app.key()].network_stats = stats
 
+                max_cpm = 0.0
+                min_cpm = 999.0
                 # Get stats collected by MoPub
                 for adunit in AdUnitQueryManager.get_adunits(account=self.
                         account, app=app):
@@ -500,11 +521,23 @@ class NetworkAppsService(RequestHandler):
                         else:
                             adunit_data['stats']['cpm'] = adgroup. \
                                     calculated_cpm
+                        min_cpm = min(adunit_data['stats']['cpm'], min_cpm)
+                        max_cpm = max(adunit_data['stats']['cpm'], max_cpm)
 
                         if hasattr(network_apps_[app.key()], 'adunits'):
                             network_apps_[app.key()].adunits.append(adunit_data)
                         else:
                             network_apps_[app.key()].adunits = [adunit_data]
+
+                if min_cpm == max_cpm:
+                    network_apps_[app.key()].mopub_stats.cpm = min_cpm
+                    network_apps_[app.key()].mopub_stats.min_cpm = None
+                    network_apps_[app.key()].mopub_stats.max_cpm = None
+                else:
+                    network_apps_[app.key()].mopub_stats.cpm = None
+                    network_apps_[app.key()].mopub_stats.min_cpm = min_cpm
+                    network_apps_[app.key()].mopub_stats.max_cpm = max_cpm
+
 
             network_apps_ = sorted(network_apps_.values(), key=lambda app_data:
                     app_data.identifier)
@@ -516,7 +549,6 @@ class NetworkAppsService(RequestHandler):
                 if adunits:
                     app_data['adunits'] = app.adunits
                 app_data['mopub_stats'] = app.mopub_stats.to_dict()
-                app_data['mopub_stats']['cpm'] = None
                 if hasattr(app, 'network_stats'):
                     app_data['network_stats'] = \
                         StatsModel(ad_network_stats=app.network_stats).to_dict()

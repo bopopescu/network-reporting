@@ -494,7 +494,7 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
         model_props = self.properties().keys()
         pseudo_props = ['attempt_count', 'cpa', 'cpc', 'cpm', 'fill_rate', \
                 'pace', 'pace_type', 'conv_rate', 'ctr', \
-                'on_schedule', 'status']
+                'on_schedule', 'status', 'min_cpm', 'max_cpm']
         return model_props + pseudo_props
 
     def to_dict(self):

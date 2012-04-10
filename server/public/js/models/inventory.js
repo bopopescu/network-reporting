@@ -59,6 +59,8 @@ var mopub = mopub || {};
           case 'request_count':
             return mopub.Utils.formatNumberWithCommas(value);
           case 'cpm':
+          case 'min_cpm':
+          case 'max_cpm':
           case 'revenue':
             return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
           case 'conv_rate':
@@ -108,7 +110,7 @@ var mopub = mopub || {};
                 }
 
                 if (this_collection.type == 'adunits') {
-                    $.each(network_app.adunits, function (iter, adunit) {
+                    _.each(network_app.adunits, function (adunit) {
                         adunit.stats = new StatsModel(adunit.stats);
                     });
                 }

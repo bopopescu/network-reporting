@@ -37,13 +37,7 @@
                 <tbody>
                     {% if reporting %}
                     <tr id="stats-breakdown-revenue">
-                        <td class="stats-breakdown-value today">
-                            <span class="inner network-chart-revenue" style="color:orange;"></span>
-                        </td>
-                        <td class="stats-breakdown-value yesterday">
-                            <span class="inner network-chart-revenue" style="color:orange;"></span>
-                        </td>
-                        <td class="stats-breakdown-value all">
+                        <td class="stats-breakdown-value">
                             <span class="inner network-chart-revenue" style="color:orange;"></span>
                         </td>
                         <th class="stats-breakdown-name">
@@ -53,19 +47,7 @@
                     {% endif %}
 
                     <tr class="active" id="stats-breakdown-impression_count">
-                        <td class="stats-breakdown-value today">
-                            {% if reporting %}
-                            <span class="inner network-chart-data"></span>
-                            {% endif %}
-                            <span class="inner mopub-chart-data"></span>
-                        </td>
-                        <td class="stats-breakdown-value yesterday">
-                            {% if reporting %}
-                            <span class="inner network-chart-data"></span>
-                            {% endif %}
-                            <span class="inner mopub-chart-data"></span>
-                        </td>
-                        <td class="stats-breakdown-value all">
+                        <td class="stats-breakdown-value">
                             {% if reporting %}
                             <span class="inner network-chart-data"></span>
                             {% endif %}
@@ -77,19 +59,7 @@
                     </tr>
 
                     <tr id="stats-breakdown-click_count">
-                        <td class="stats-breakdown-value today">
-                            {% if reporting %}
-                            <span class="inner network-chart-data"></span>
-                            {% endif %}
-                            <span class="inner mopub-chart-data"></span>
-                        </td>
-                        <td class="stats-breakdown-value yesterday">
-                            {% if reporting %}
-                            <span class="inner network-chart-data"></span>
-                            {% endif %}
-                            <span class="inner mopub-chart-data"></span>
-                        </td>
-                        <td class="stats-breakdown-value all">
+                        <td class="stats-breakdown-value">
                             {% if reporting %}
                             <span class="inner network-chart-data"></span>
                             {% endif %}
@@ -101,19 +71,7 @@
                     </tr>
 
                     <tr id="stats-breakdown-ctr">
-                        <td class="stats-breakdown-value today">
-                            {% if reporting %}
-                            <span class="inner network-chart-data"></span>
-                            {% endif %}
-                            <span class="inner mopub-chart-data"></span>
-                        </td>
-                        <td class="stats-breakdown-value yesterday">
-                            {% if reporting %}
-                            <span class="inner network-chart-data"></span>
-                            {% endif %}
-                            <span class="inner mopub-chart-data"></span>
-                        </td>
-                        <td class="stats-breakdown-value all">
+                        <td class="stats-breakdown-value">
                             {% if reporting %}
                             <span class="inner network-chart-data"></span>
                             {% endif %}
@@ -127,22 +85,6 @@
             </table>
         </div>
 
-        <div class="stats-breakdown-buttons">
-            <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-                <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
-                <label for="stats-breakdown-dateOptions-option-0">
-                    Today
-                </label>
-                <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
-                <label for="stats-breakdown-dateOptions-option-1">
-                    Yesterday
-                </label>
-                <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
-                <label for="stats-breakdown-dateOptions-option-2">
-                    All
-                </label>
-            </span>
-        </div>
         <div class="chart stats-chart" id="dashboard-stats-chart"></div>
     </div>
 </div>

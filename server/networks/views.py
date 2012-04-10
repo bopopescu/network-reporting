@@ -63,8 +63,6 @@ from reporting.query_managers import StatsModelQueryManager
 from advertiser.forms import AdGroupForm
 from publisher.query_managers import AdUnitQueryManager
 
-import copy
-
 DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
 
 ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
@@ -77,7 +75,6 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        networks_to_setup = copy.copy(DEFAULT_NETWORKS)
         additional_networks = set(NETWORKS_WITHOUT_REPORTING.keys())
         networks = []
         campaigns_data = []
@@ -115,10 +112,6 @@ class NetworksHandler(RequestHandler):
                 network_data['pretty_name'] = campaign.name
                 network_data['campaign_key'] = campaign.key()
 
-                # Remove this network from the list of networks that
-                # still need to be set up
-                networks_to_setup -= set([network])
-
                 # Add this to the list of networks that we can set up
                 # additional campaigns for
                 additional_networks.add(network)
@@ -131,14 +124,15 @@ class NetworksHandler(RequestHandler):
         networks = sorted(networks, key=lambda network_data:
                 network_data['name'])
 
-        networks_to_setup_ = []
-        # Generate list of primary networks that can be setup
-        for network in sorted(networks_to_setup):
-            network_data = {}
-            network_data['name'] = network
-            network_data['pretty_name'] = NETWORKS[network]
+        networks_to_setup = []
+        if not networks:
+            # Generate list of primary networks that can be setup
+            for network in sorted(DEFAULT_NETWORKS):
+                network_data = {}
+                network_data['name'] = network
+                network_data['pretty_name'] = NETWORKS[network]
 
-            networks_to_setup_.append(network_data)
+                networks_to_setup.append(network_data)
 
         additional_networks_ = []
         custom_networks = []
@@ -170,7 +164,7 @@ class NetworksHandler(RequestHandler):
                   'yesterday': yesterday,
                   'graph': True if networks else False,
                   'networks': networks,
-                  'networks_to_setup': networks_to_setup_,
+                  'networks_to_setup': networks_to_setup,
                   'additional_networks': additional_networks_,
                   'reporting': reporting,
                   'campaigns_data': simplejson.dumps(campaigns_data),

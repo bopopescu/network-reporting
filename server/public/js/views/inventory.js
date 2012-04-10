@@ -39,7 +39,7 @@ var mopub = window.mopub || {};
             var this_view = this;
 
             if (this.collection.type == 'adunits') {
-                var metrics = ['cpm', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
+                var metrics = ['cpm', 'min_cpm', 'max_cpm', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
 
                 this.collection.each(function (network_app) {
 
@@ -47,10 +47,14 @@ var mopub = window.mopub || {};
 
                     // Set app level mopub and network stats
                     $.each(metrics, function (iter, metric) {
-                        var mopub_selector = '.mopub-' + metric;
-                        var network_selector = '.network-' + metric;
-                        $(mopub_selector, row).text(network_app.get('mopub_stats').get_formatted_stat(metric));
-                        if (network_app.get('network_stats')) {
+                        var stat = network_app.get('mopub_stats').get_stat(metric);
+                        if (stat || stat == 0) {
+                            var mopub_selector = '.mopub-' + metric;
+                            $(mopub_selector, row).text(network_app.get('mopub_stats').get_formatted_stat(metric));
+                        }
+                        var network_stats = network_app.get('network_stats');
+                        if (network_stats && (network_stats.get_stat(metric) || network_stats.get_stat(metric) == 0)) {
+                            var network_selector = '.network-' + metric;
                             $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat(metric));
                         }
                     });
@@ -115,13 +119,16 @@ var mopub = window.mopub || {};
             this.model.bind('change', this.render, this);
         },
         render: function () {
-            var metrics = ['revenue', 'cpm', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
+            var metrics = ['cpm', 'min_cpm', 'max_cpm', 'revenue', 'attempt_count', 'impression_count', 'fill_rate', 'click_count', 'ctr'];
             var this_view = this;
             var row = $("tr#" + this_view.model.id + "-row");
 
             _.each(metrics, function (metric) {
-                var selector = '.' + this_view.model.get('stats_endpoint') + '-' + metric;
-                $(selector, row).text(this_view.model.get_formatted_stat(metric));
+                var stat = this_view.model.get_stat(metric);
+                if (stat || stat == 0) {
+                    var selector = '.' + this_view.model.get('stats_endpoint') + '-' + metric;
+                    $(selector, row).text(this_view.model.get_formatted_stat(metric));
+                }
             });
 
             return this;
@@ -315,10 +322,6 @@ var mopub = window.mopub || {};
             var this_view = this;
 
             if (this_view.collection.isFullyLoaded()) {
-                var breakdowns = ['all']
-                if (this_view.options.yesterday !== null && this_view.options.today !== null) {
-                    breakdowns = breakdowns.concat(['yesterday', 'today']);
-                }
                 var metrics = ['revenue', 'impression_count', 'click_count', 'ctr'];
 
                 var network_campaigns = new Campaigns(_.filter(this.collection.models,
@@ -330,28 +333,19 @@ var mopub = window.mopub || {};
                         return campaign.get('stats_endpoint') == 'all';
                         }));
 
-                _.each(breakdowns, function (breakdown) {
-                    // Render the stats breakdown for each metric
-                    _.each(metrics, function (metric) {
-                        var selector = '#stats-breakdown-' + metric + ' .' + breakdown;
-                        // Mopub doesn't track revenue
-                        if (metric == 'revenue') {
-                            var mopub_selector = null;
-                            var network_selector = selector + ' .network-chart-revenue';
-                        } else {
-                            var mopub_selector = selector + ' .mopub-chart-data';
-                            var network_selector = selector + ' .network-chart-data';
-                        }
-                        if (breakdown == 'all') {
-                            $(mopub_selector).html(mopub_campaigns.get_formatted_stat(metric));
-                            $(network_selector).html(network_campaigns.get_formatted_stat(metric));
-                        } else {
-                            $(mopub_selector).html(mopub_campaigns.get_formatted_stat_for_day(metric,
-                                             this_view.options[breakdown]));
-                            $(network_selector).html(network_campaigns.get_formatted_stat_for_day(metric,
-                                             this_view.options[breakdown]));
-                        }
-                    });
+                // Render the stats breakdown for each metric
+                _.each(metrics, function (metric) {
+                    var selector = '#stats-breakdown-' + metric;
+                    // Mopub doesn't track revenue
+                    if (metric == 'revenue') {
+                        var mopub_selector = null;
+                        var network_selector = selector + ' .network-chart-revenue';
+                    } else {
+                        var mopub_selector = selector + ' .mopub-chart-data';
+                        var network_selector = selector + ' .network-chart-data';
+                    }
+                    $(mopub_selector).html(mopub_campaigns.get_formatted_stat(metric));
+                    $(network_selector).html(network_campaigns.get_formatted_stat(metric));
                 });
 
                 // Chart

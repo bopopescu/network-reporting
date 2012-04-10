@@ -39,6 +39,7 @@ from common.utils.timezones import Pacific_tzinfo
 
 from publisher.query_managers import AppQueryManager, \
         AdUnitContextQueryManager
+from networks.forms import NetworkCampaignForm
 
 from datetime import datetime, date, timedelta, time
 from django.contrib.auth.decorators import login_required
@@ -59,7 +60,7 @@ from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
 # Form imports
-from advertiser.forms import CampaignForm, AdGroupForm
+from advertiser.forms import AdGroupForm
 from publisher.query_managers import AdUnitQueryManager
 
 import copy
@@ -193,7 +194,7 @@ class EditNetworkHandler(RequestHandler):
             network = campaign.network_type
             campaign_name = campaign.name
             show_login = campaign.show_login
-            campaign_form = CampaignForm(instance=campaign, network=True)
+            campaign_form = NetworkCampaignForm(instance=campaign)
             custom_campaign = campaign.network_state == \
                     NetworkStates.CUSTOM_NETWORK_CAMPAIGN
         else:
@@ -207,7 +208,7 @@ class EditNetworkHandler(RequestHandler):
                 campaign_name += ' - Custom'
 
             # set up the campaign with the default data
-            campaign_form = CampaignForm({'name': campaign_name}, network=True)
+            campaign_form = NetworkCampaignForm({'name': campaign_name})
 
         network_data = {'name': network,
                         'pretty_name': campaign_name,
@@ -365,14 +366,13 @@ class EditNetworkHandler(RequestHandler):
                 campaign = CampaignQueryManager. \
                         get_default_network_campaign(self.account, network)
 
-        campaign_form = CampaignForm(query_dict, instance=campaign,
-                network=True)
+        campaign_form = NetworkCampaignForm(query_dict, instance=campaign)
 
         adunit_keys = [(unicode(adunit.key())) for adunit in adunits]
 
         if campaign_form.is_valid():
             logging.info('campaign form is valid')
-            campaign = campaign_form.save()
+            campaign = campaign_form.save(commit=False)
             if custom_campaign:
                 campaign.network_state = NetworkStates.CUSTOM_NETWORK_CAMPAIGN
             else:
@@ -396,6 +396,7 @@ class EditNetworkHandler(RequestHandler):
                             query_dict[str(adunit.key()) + '-' + key] = val
 
             adgroup_forms_are_valid = True
+            network_config_field = "%s_pub_id" % network
             adgroup_forms = []
             for adunit in adunits:
                 network_adgroup = AdGroupQueryManager.get_network_adgroup(
@@ -410,6 +411,20 @@ class EditNetworkHandler(RequestHandler):
                 if not adgroup_form.is_valid():
                     adgroup_forms_are_valid = False
                     break
+
+                pub_id = self.request.POST.get("adunit_%s-%s" %
+                        (adunit.key(), network_config_field), '')
+                # Return error if adgroup is set to active yet
+                # the user didn't enter a pub id
+                if not pub_id and adgroup_form.fields.get('active', False) and network in \
+                        ('jumptap', 'millennial'):
+                    return JSONResponse({
+                        'errors': {'adunit_' + str(adunit.key()) + \
+                            '-admob_pub_id': "MoPub requires an" \
+                            " ad network id for this adunit."},
+                        'success': False,
+                    })
+
                 adgroup_forms.append((adgroup_form, adunit.key()))
 
             adgroups = []
@@ -420,7 +435,7 @@ class EditNetworkHandler(RequestHandler):
                 CampaignQueryManager.put(campaign)
 
                 for adgroup_form, adunit_key in adgroup_forms:
-                    adgroup = adgroup_form.save()
+                    adgroup = adgroup_form.save(commit=False)
                     adgroup.account = self.account
                     adgroup.campaign = campaign
                     adgroup.name = campaign.name
@@ -472,8 +487,6 @@ class EditNetworkHandler(RequestHandler):
                 # NetworkConfig for Apps
                 if network in ('admob', 'brightroll', 'ejam', 'inmobi',
                         'jumptap', 'millennial', 'mobfox'):
-                    network_config_field = "%s_pub_id" % network
-
                     for app in apps:
                         network_config = app.network_config or NetworkConfig()
                         app_pub_id = self.request.POST.get("app_%s-%s" %
@@ -510,17 +523,6 @@ class EditNetworkHandler(RequestHandler):
                                     NetworkConfig()
                             pub_id = self.request.POST.get("adunit_%s-%s" %
                                     (adunit.key(), network_config_field), '')
-
-                            # Return error if adgroup is set to active yet
-                            # the user didn't enter a pub id
-                            if not pub_id and adgroup.active and network in \
-                                    ('jumptap', 'millennial'):
-                                return JSONResponse({
-                                    'errors': {'adunit_' + str(adunit.key()) + \
-                                        '-admob_pub_id': "MoPub requires an" \
-                                        " ad network id for this adunit."},
-                                    'success': False,
-                                })
 
                             setattr(network_config, network_config_field,
                                     pub_id)

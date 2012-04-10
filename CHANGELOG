@@ -1,27 +1,57 @@
+# Deployed Monday, April 09, 2012 at 07:32PM PST
+### Deployed by John Pena
+### Tagged deploy-60
+### Bugs Fixed: []
+### Included Commits: 
+ * cf2d294 Fix erroneous font sizes for AdUnit Detail's daily counts [#1098 state:review-requested assigned:johnpena]
+ * 63b8409 Merge branch 'master' of github.com:mopub/mopub
+ * 59ad43a Don't automatically email customers when update completes without arg email=y
+ * e624ab4 Deployed without finding any bug fixes.
+ * d5679c3 updated pages and reverse urls to use external ids on all customer facing stuff
+ * 01296cc changed auth
+ * 9a40eb8 Merge branch 'master' into hrd-migration-stats
+ * 6aff286 Deployed without finding any bug fixes.
+ * d1e0101 fixed syntax error
+ * be737f5 Deployed without finding any bug fixes.
+ * 746837e attempt to fix adnetwork scraper stuff
+ * 973616c Deployed without finding any bug fixes.
+ * 007e6dd Deployed without finding any bug fixes.
+ * 31d2802 added hrd support to simple models
+ * 5e0d045 blah
+ * 6a79b8e Merge branch 'master' into hrd-migration-stats
+ * 8bfc80c deleted index
+ * e776e69 Merge branch 'master' into hrd-migration-stats
+ * b049a11 continued cleaning up tests
+ * f1b02a2 started fixing tests
+ * c736517 merged
+ * 5842e1c fixed helper
+ * 46f966e changed version
+ * 49e5f8a first commit
+ 
 # Deployed Wednesday, April 04, 2012 at 12:44PM PST
 ### Deployed by John Pena
 ### Tagged deploy-54
 ### Bugs Fixed: []
-### Included Commits: 
- * 158a162 Merge branch '992-account-and-payment-settings-redesign'
- * 4f28bcb testing tagging myself in lighthouse again [#992 state:review-requested assigned:johnpena]
- * 2b83994 testing tagging myself in lighthouse [#992 state:review-requested assigned:john@mopub.com]
- * a781420 Added missing import for admin randomgen
- * c6307b1 Fixed fake data generation bug where marketplace campaign creation didn't have a unique key
- * ce00193 Add physical address to sign-up and account settings [#922 state:review-requested assigned:John Pena]
- * fd620d9 fixed an error where the adgroup service was failing when percent_delivered wasnt set
- * 1ef85c6 Merge branch 'master' of github.com:mopub/mopub
- * 9e48e50 Reverting to 38
- * 35820e3 Merge branch 'master' of github.com:mopub/mopub
- * 6183974 changed frontend-staging to a B8 instance, made the deploy script only alert the product room if its not deploying to production.
- * e9df789 Less logging
- * 17d58d1 Derp
- * 2d03c79 More logging, also use utcnow
- * df0df0c Fixed a few things, changed version
- * 7d2a08f Merge branch 'master' of github.com:mopub/mopub
- * 8afa903 Deployed without finding any bug fixes.
- * efb1939 removed old budget stuff
- 
+### Included Commits:
+* 158a162 Merge branch '992-account-and-payment-settings-redesign'
+* 4f28bcb testing tagging myself in lighthouse again [#992 state:review-requested assigned:johnpena]
+* 2b83994 testing tagging myself in lighthouse [#992 state:review-requested assigned:john@mopub.com]
+* a781420 Added missing import for admin randomgen
+* c6307b1 Fixed fake data generation bug where marketplace campaign creation didn't have a unique key
+* ce00193 Add physical address to sign-up and account settings [#922 state:review-requested assigned:John Pena]
+* fd620d9 fixed an error where the adgroup service was failing when percent_delivered wasnt set
+* 1ef85c6 Merge branch 'master' of github.com:mopub/mopub
+* 9e48e50 Reverting to 38
+* 35820e3 Merge branch 'master' of github.com:mopub/mopub
+* 6183974 changed frontend-staging to a B8 instance, made the deploy script only alert the product room if its not deploying to production.
+* e9df789 Less logging
+* 17d58d1 Derp
+* 2d03c79 More logging, also use utcnow
+* df0df0c Fixed a few things, changed version
+* 7d2a08f Merge branch 'master' of github.com:mopub/mopub
+* 8afa903 Deployed without finding any bug fixes.
+* efb1939 removed old budget stuff
+
 # Deployed Saturday, March 31, 2012 at 10:52PM PST
 ### Deployed by John Pena
 ### Tagged deploy-53

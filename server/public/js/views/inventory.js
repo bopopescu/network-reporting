@@ -260,7 +260,6 @@ var mopub = window.mopub || {};
 
     var CollectionGraphView = Backbone.View.extend({
         initialize: function () {
-            this.collection.bind('reset', this.render, this);
             this.collection.bind('change', this.render, this);
         },
 
@@ -370,6 +369,57 @@ var mopub = window.mopub || {};
                     };
                 }
                 $('#stats-breakdown-impression_count').click()
+            }
+        }
+    });
+
+
+    var NetworkDailyCountsView = Backbone.View.extend({
+        initialize: function () {
+            this.collection.bind('change', this.render, this);
+        },
+
+        render: function () {
+            var this_view = this;
+
+            if (this_view.collection.isFullyLoaded()) {
+                var metrics = ['revenue', 'cpm', 'impression_count', 'click_count', 'ctr'];
+
+                var network_campaigns = new Campaigns(_.filter(this.collection.models,
+                    function(campaign){
+                        return campaign.get('stats_endpoint') == 'networks';
+                        }));;
+                var mopub_campaigns = new Campaigns(_.filter(this.collection.models,
+                    function(campaign){
+                        return campaign.get('stats_endpoint') == 'all';
+                        }));
+
+                // Render Total daily count stats
+                _.each(metrics, function (metric) {
+                    var selector = '#dailyCounts-totals';
+                    // Mopub doesn't track revenue
+                    if (metric == 'revenue' || metric == 'cpm') {
+                        var mopub_selector = null;
+                        var network_selector = selector + ' .networks-' + metric;
+                    } else {
+                        var mopub_selector = selector + ' .all-' + metric;
+                        var network_selector = selector + ' .networks-' + metric;
+                    }
+                    $(mopub_selector).html(mopub_campaigns.get_formatted_stat(metric));
+                    $(network_selector).html(network_campaigns.get_formatted_stat(metric));
+
+                    function renderColumn(campaigns, selector) {
+                        var totals = campaigns.get_formatted_total_daily_stats(metric).reverse();
+                        // Render td in rows a column at a time
+                        $('.dailyCounts-stats').each(function (index, row) {
+                            var value = totals[index];
+                            $(row).find(selector + metric).text(value);
+                        });
+                    }
+                    renderColumn(mopub_campaigns, '.all-');
+                    renderColumn(network_campaigns, '.networks-');
+                });
+
             }
         }
     });
@@ -567,6 +617,7 @@ var mopub = window.mopub || {};
     });
 
     window.NetworkAppsView = NetworkAppsView;
+    window.NetworkDailyCountsView = NetworkDailyCountsView;
     window.AdUnitView = AdUnitView;
     window.AppView = AppView;
     window.AdGroupsView = AdGroupsView;

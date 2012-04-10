@@ -248,6 +248,15 @@ var mopub = mopub || {};
             return total_daily_stats;
         },
 
+        get_formatted_total_daily_stats: function(stat) {
+            var formatted_total_daily_stats = [];
+            var day;
+            for(day in this.at(0).get('daily_stats')) {
+                formatted_total_daily_stats.push(this.get_formatted_stat_for_day(stat, day));
+            }
+            return formatted_total_daily_stats;
+        },
+
         get_chart_data: function(stat, mopub_optimized) {
             var adgroups = this.filter(function(adgroup) {
                 return adgroup.has(stat) && adgroup.has('daily_stats');

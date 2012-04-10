@@ -111,8 +111,6 @@ $(function() {
             var campaigns_data = bootstrapping_data.campaigns_data,
                 date_range = bootstrapping_data.date_range,
                 graph_start_date = bootstrapping_data.graph_start_date,
-                today = bootstrapping_data.today,
-                yesterday = bootstrapping_data.yesterday,
                 networks = bootstrapping_data.networks,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
@@ -128,13 +126,13 @@ $(function() {
             // Load chart
             var graph_view = new NetworkGraphView({
                 collection: campaigns,
-                today: today,
-                yesterday: yesterday,
                 date_range: date_range,
                 start_date: graph_start_date,
                 line_graph: false,
                 mopub_optimized: false,
             });
+
+            new NetworkDailyCountsView({collection: campaigns});
 
             initialize_show_network();
 
@@ -225,6 +223,20 @@ $(function() {
                         $('#network-settingsForm').slideDown('fast');
                     }
                 });
+
+            $('.dailyCount-toggleButton')
+                .button('option', {icons: { primary: 'ui-icon-triangle-1-s' }})
+                .click(function(e) {
+                    e.preventDefault();
+                    if ($('#dailyCounts-individual').is(':hidden')) {
+                        $('#dailyCounts-individual').slideDown('fast');
+                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-n' }});
+                    } else {
+                        $('#dailyCounts-individual').slideUp('fast');
+                        $(this).button('option', {icons: { primary: 'ui-icon-triangle-1-s' }});
+                    }
+                });
+
         }
     }
 
@@ -614,8 +626,6 @@ $(function() {
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
                 graph_start_date = bootstrapping_data.graph_start_date,
-                today = bootstrapping_data.today,
-                yesterday = bootstrapping_data.yesterday,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
             initializeDateButtons();
@@ -627,8 +637,6 @@ $(function() {
 
             var graph_view = new NetworkGraphView({
                 collection: campaigns,
-                today: today,
-                yesterday: yesterday,
                 start_date: graph_start_date,
                 line_graph: true,
                 mopub_optimized: false,

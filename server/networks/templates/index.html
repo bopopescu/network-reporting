@@ -45,6 +45,15 @@
 {% block innerContent %}
 {% if networks %}
 
+
+{% comment %}
+Make a table for ad networks that are active
+{% endcomment %}
+<section>
+
+<div style="float: left;">
+    <h2>App Breakdown</h2>
+</div>
 <div style="float: right;">
     <select id='network-editSelect' class='selectmenu'>
         <option value="">Add a Network</option>
@@ -54,11 +63,7 @@
     </select>
 </div>
 
-{% comment %}
-Make a table for ad networks that are active
-{% endcomment %}
-<section id="dashboard-apps">
-<div>
+<div style="clear:both;">
     <div class="appData-columnHeaders">
         <table class="dataTable" width=100%>
             <thead>
@@ -149,6 +154,101 @@ Make a table for ad networks that are active
     </div>
     {% endfor %}
 </div>
+
+<h2 style="margin: 15px 0 0 0">Daily Counts</h2>
+<div class="appData-details noneg">
+    <table class="dataTable">
+        <thead>
+            <tr>
+                <th class="dataTable-name big">&nbsp;</th>
+                {% if reporting %}
+                <th class="dataTable-data numeric special">Revenue</th>
+                <th class="dataTable-data numeric special">CPM</th>
+                {% endif %}
+                <th class="dataTable-data numeric special">Impressions</th>
+                <th class="dataTable-data numeric special">Clicks</th>
+                <th class="dataTable-data numeric special">CTR</th>
+            </tr>
+        </thead>
+        <tbody id="dailyCounts-totals">
+            <tr>
+                <th class="dataTable-name big">Totals</th>
+                {% if reporting %}
+                <td class="dataTable-data numeric">
+                    <b>
+                        <div class="networks-revenue" style="color:orange;">-</div>
+                    </b>
+                </td>
+                <td class="dataTable-data numeric">
+                    <b>
+                        <div class="networks-cpm" style="color:orange;">-</div>
+                    </b>
+                </td>
+                {% endif %}
+                <td class="dataTable-data numeric">
+                    <b>
+                        {% if reporting %}
+                        <div class="networks-impression_count network-data">-</div>
+                        {% endif %}
+                        <div class="all-impression_count mopub-data">-</div>
+                    </b>
+                </td>
+                <td class="dataTable-data numeric">
+                    <b>
+                        {% if reporting %}
+                        <div class="networks-click_count network-data">-</div>
+                        {% endif %}
+                        <div class="all-click_count mopub-data">-</div>
+                    </b>
+                </td>
+                <td class="dataTable-data numeric">
+                    <b>
+                        {% if reporting %}
+                        <div class="networks-ctr network-data">-</div>
+                        {% endif %}
+                        <div class="all-ctr mopub-data">-</div>
+                    </b>
+                </td>
+            </tr>
+        </tbody>
+        <tbody id="dailyCounts-individual" class="hidden">
+            {% for day in days reversed %}
+            <tr class="dailyCounts-stats">
+                <th class="dataTable-name">{{ day }}</th>
+                {% if reporting %}
+                <td class="dataTable-data numeric">
+                    <div class="networks-revenue" style="color:orange;">-</div>
+                </td>
+                <td class="dataTable-data numeric">
+                    <div class="networks-cpm" style="color:orange;">-</div>
+                </td>
+                {% endif %}
+                <td class="dataTable-data numeric">
+                    {% if reporting %}
+                    <div class="networks-impression_count network-data">-</div>
+                    {% endif %}
+                    <div class="all-impression_count mopub-data">-</div>
+                </td>
+                <td class="dataTable-data numeric">
+                    {% if reporting %}
+                    <div class="networks-click_count network-data">-</div>
+                    {% endif %}
+                    <div class="all-click_count mopub-data">-</div>
+                </td>
+                <td class="dataTable-data numeric">
+                    {% if reporting %}
+                    <div class="networks-ctr network-data">-</div>
+                    {% endif %}
+                    <div class="all-ctr mopub-data">-</div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a class="dailyCount-toggleButton button" href="#">Show details</a>
+</div>
+
 </section>
 
 {% else %}
@@ -186,8 +286,6 @@ Make a table for the main ad networks that are not setup
 </section>
 
 {% endif %}
-
-
 {% endblock innerContent %}
 
 {% block extraScripts %}
@@ -200,8 +298,6 @@ Make a table for the main ad networks that are not setup
             campaigns_data: {{ campaigns_data|safe }},
             date_range: {{ date_range }},
             graph_start_date: graph_start_date,
-            today: {{ today|default_if_none:"null" }},
-            yesterday: {{ yesterday|default_if_none:"null" }},
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
 
     });

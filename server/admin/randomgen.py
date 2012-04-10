@@ -41,11 +41,11 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
 USERNAME = "test@mopub.com"
 PASSWORD = "test"
 
-NUM_ACCOUNTS = 1
-NUM_APPS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
+NUM_ACCOUNTS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
+NUM_APPS = 3
 NUM_CAMPAIGNS_PER_APP = 1
 NUM_CREATIVES_PER_ADGROUP = 1
-NUM_ADUNITS_PER_APP = 1
+NUM_ADUNITS_PER_APP = 3
 
 NETWORKS_TO_USE = ['admob', 'iad', 'admob', 'millennial']
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)

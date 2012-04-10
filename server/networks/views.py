@@ -730,8 +730,10 @@ class DeleteNetworkHandler(RequestHandler):
                     self.account, network_type=campaign.network_type).get()
 
             if default_campaign:
-                campaign.network_state = NetworkStates.DEFAULT_NETWORK_CAMPAIGN
-                CampaignQueryManager.put(campaign)
+                default_campaign.network_state = NetworkStates. \
+                        DEFAULT_NETWORK_CAMPAIGN
+                default_campaign.name = NETWORKS[default_campaign.network_type]
+                CampaignQueryManager.put(default_campaign)
             elif campaign.network_type in REPORTING_NETWORKS:
                 login = AdNetworkLoginManager.get_login(self.account,
                         campaign.network_type).get()

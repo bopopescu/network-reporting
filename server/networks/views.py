@@ -39,7 +39,7 @@ from common.utils.timezones import Pacific_tzinfo
 
 from publisher.query_managers import AppQueryManager, \
         AdUnitContextQueryManager
-from networks.forms import NetworkCampaignForm
+from networks.forms import NetworkCampaignForm, AdUnitAdGroupForm
 
 from datetime import datetime, date, timedelta, time
 from django.contrib.auth.decorators import login_required
@@ -66,6 +66,9 @@ from publisher.query_managers import AdUnitQueryManager
 import copy
 
 DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
+
+ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
+        'site_keys', 'name', 'bid', 'bid_strategy', 'active', 'network_type'])
 
 class NetworksHandler(RequestHandler):
     def get(self):
@@ -285,8 +288,7 @@ class EditNetworkHandler(RequestHandler):
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(),
                             self.account.key(), True)
-                adunit.adgroup_form = AdGroupForm(is_staff=
-                        self.request.user.is_staff, instance=adgroup,
+                adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
                         prefix=str(adunit.key()))
                 # Add class based on app that adunit is under
                 adunit.adgroup_form.fields['active'].widget.attrs['class'] = \
@@ -385,47 +387,47 @@ class EditNetworkHandler(RequestHandler):
             else:
                 campaign.show_login = False
 
-            # Get a set of the AdGroupForm field names
-            fields = set(AdGroupForm.base_fields.keys())
-            # Copy default form fields to all adgroup adunit forms in the query
-            # dict
-            for key, val in query_dict.iteritems():
-                if key in fields:
-                    for adunit in adunits:
-                        if str(adunit.key()) + '-' + key not in query_dict:
-                            query_dict[str(adunit.key()) + '-' + key] = val
+            # Hack to get old validation working
+            query_dict['bid'] = 0.5
+            query_dict['bid_strategy'] = 'cpm'
 
-            adgroup_forms_are_valid = True
-            network_config_field = "%s_pub_id" % network
-            adgroup_forms = []
-            for adunit in adunits:
-                network_adgroup = AdGroupQueryManager.get_network_adgroup(
-                        campaign, adunit.key(), self.account.key())
+            adgroup_form = AdGroupForm(query_dict)
 
-                query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
+            if adgroup_form.is_valid():
+                default_adgroup = adgroup_form.save(commit=False)
 
-                adgroup_form = AdGroupForm(query_dict,
-                        is_staff=self.request.user.is_staff,
-                        prefix=str(adunit.key()),
-                        instance=network_adgroup)
-                if not adgroup_form.is_valid():
-                    adgroup_forms_are_valid = False
-                    break
+                adgroup_forms_are_valid = True
+                network_config_field = "%s_pub_id" % network
+                adgroup_forms = []
+                for adunit in adunits:
+                    network_adgroup = AdGroupQueryManager.get_network_adgroup(
+                            campaign, adunit.key(), self.account.key())
 
-                pub_id = self.request.POST.get("adunit_%s-%s" %
-                        (adunit.key(), network_config_field), '')
-                # Return error if adgroup is set to active yet
-                # the user didn't enter a pub id
-                if not pub_id and adgroup_form.fields.get('active', False) and network in \
-                        ('jumptap', 'millennial'):
-                    return JSONResponse({
-                        'errors': {'adunit_' + str(adunit.key()) + \
-                            '-admob_pub_id': "MoPub requires an" \
-                            " ad network id for this adunit."},
-                        'success': False,
-                    })
+                    query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
 
-                adgroup_forms.append((adgroup_form, adunit.key()))
+                    adgroup_form = AdUnitAdGroupForm(query_dict,
+                            prefix=str(adunit.key()),
+                            instance=network_adgroup)
+                    if not adgroup_form.is_valid():
+                        adgroup_forms_are_valid = False
+                        break
+
+                    pub_id = self.request.POST.get("adunit_%s-%s" %
+                            (adunit.key(), network_config_field), '')
+                    # Return error if adgroup is set to active yet
+                    # the user didn't enter a pub id
+                    if not pub_id and adgroup_form.fields.get('active', False) and network in \
+                            ('jumptap', 'millennial'):
+                        return JSONResponse({
+                            'errors': {'adunit_' + str(adunit.key()) + \
+                                '-admob_pub_id': "MoPub requires an" \
+                                " ad network id for this adunit."},
+                            'success': False,
+                        })
+
+                    adgroup_forms.append((adgroup_form, adunit.key()))
+            else:
+                adgroup_forms_are_valid = False
 
             adgroups = []
             if adgroup_forms_are_valid:
@@ -440,6 +442,11 @@ class EditNetworkHandler(RequestHandler):
                     adgroup.campaign = campaign
                     adgroup.name = campaign.name
                     adgroup.site_keys = [adunit_key]
+                    for field in default_adgroup.properties().iterkeys():
+                        if field not in ADGROUP_FIELD_EXCLUSION_LIST:
+                            setattr(adgroup, field, getattr(default_adgroup,
+                                field))
+
                     if network in NETWORK_ADGROUP_TRANSLATION:
                         adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[
                                 network]
@@ -559,7 +566,7 @@ class EditNetworkHandler(RequestHandler):
             else:
                 errors = {}
                 for key, value in adgroup_form.errors.items():
-                    if key in set(['bid', 'active']):
+                    if adgroup_form.prefix and key in set(['bid', 'active']):
                         key = adgroup_form.prefix + '-' + key
                     errors[key] = ' '.join([error for error in value])
         else:

@@ -336,6 +336,8 @@ class AdGroupQueryManager(QueryManager):
             adgroup.network_type = network_type
         # only targetted at one adunit
         adgroup.site_keys = [db.Key(adunit_key)]
+        # all network adgroups have cpm set as the bid strategy
+        adgroup.bid_strategy = 'cpm'
 
         return adgroup
 

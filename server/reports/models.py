@@ -257,19 +257,24 @@ class Report(db.Model):
             pass
 
     def notify_failure(self, reason=OTHER):
-        mesg = mail.EmailMessage(sender = 'olp@mopub.com',
-                                 subject = 'Your report has failed',
-                                 bcc = 'report-monitoring@mopub.com',
-                                 )
         mesg_dict = dict(dim1 = self.d1, 
                          dim2 = self.d2, 
                          dim3 = self.d3, 
                          start = self.start.strftime('%m/%d/%y'), 
                          end = self.end.strftime('%m/%d/%y'))
         if reason == NODAT:
+            mesg = mail.EmailMessage(sender = 'olp@mopub.com',
+                                     subject = 'No data for your report',
+                                     bcc = 'report-monitoring@mopub.com',
+                                     )
             mesg.body = REPORT_NO_DATA % mesg_dict
         else:
+            mesg = mail.EmailMessage(sender = 'olp@mopub.com',
+                                     subject = 'Your report has failed',
+                                     bcc = 'report-monitoring@mopub.com',
+                                     )
             mesg.body = REPORT_FAILED_SIMPLE % mesg_dict
+
         if self.email and self.recipients:
             mesg.to = self.recipients
         else:

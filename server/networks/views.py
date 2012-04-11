@@ -229,9 +229,6 @@ class EditNetworkHandler(RequestHandler):
         account_network_config_form = AccountNetworkConfigForm(instance=
                 self.account.network_config)
 
-        # Used to make css classes
-        reporting_networks = ' '.join(REPORTING_NETWORKS.keys())
-
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         adgroup = None
         for app in apps:
@@ -315,7 +312,6 @@ class EditNetworkHandler(RequestHandler):
                                       'campaign_form': campaign_form,
                                       'campaign_key': campaign_key,
                                       'REPORTING_NETWORKS': REPORTING_NETWORKS,
-                                      'reporting_networks': reporting_networks,
                                       'login_form': login_form,
                                       'adgroup_form': adgroup_form,
                                       'account_network_config_form':

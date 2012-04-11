@@ -26,7 +26,9 @@
                 {{ adgroup_form.network_type.label_tag }}
                 <div>
                     <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                    <span class="error network_type_dependant admob millennial">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
+                    {% if network.name == "admob" or network.name == "millennial" %}
+                    <span class="error">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
+                    {% endif %}
                 </div>
             </li>
 
@@ -203,7 +205,7 @@
     </fieldset>
 
     {% if login_form %}
-    <fieldset class="alt login-credentials-fields network_type_dependant {{reporting_networks}} login-credentials" style="padding-top:20px">
+    <fieldset class="alt login-credentials-fields login-credentials" style="padding-top:20px">
         <legend>
             <h2>
                 <span style="float: left;">Revenue Reporting</span>

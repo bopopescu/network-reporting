@@ -266,12 +266,20 @@ class EditNetworkHandler(RequestHandler):
 
             # Create different adgroup form for each adunit
             app.adunits = []
+            # Should all adunits active checkbox be checked?
+            if campaign_key:
+                app.all_adunits_active = True
+            else:
+                app.all_adunits_active = False
             for adunit in app.all_adunits:
                 adgroup = None
                 if campaign_key:
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(),
                             self.account.key(), True)
+                    if not adgroup.active:
+                        app.all_adunits_active = False
+
                 adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
                         prefix=str(adunit.key()))
                 # Add class based on app that adunit is under

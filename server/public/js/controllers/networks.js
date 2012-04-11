@@ -267,6 +267,8 @@ $(function() {
 
             var pub_id = pub_ids[network_type];
 
+            // text entered for app level network ids should propogate to
+            // children
             $('.app-pub-id')
                 .keyup(function () {
                     var value = $(this).val();
@@ -323,7 +325,6 @@ $(function() {
                     }
                     });
                 
-
             // set cpms when copy all cpm button is clicked for either 14 day
             // or 7 day
             _.each(['7-day', '14-day'], function(days) {
@@ -475,16 +476,16 @@ $(function() {
             });
 
             $("#edit-login").click(function() {
-                    $('#id_username_str').show();
-                    $('#id_password_str').show();
-                    $('#id_client_key').show();
+                $('#id_username_str').show();
+                $('#id_password_str').show();
+                $('#id_client_key').show();
 
-                    $('#username').text('');
-                    $('#password').text('');
-                    $('#client_key').text('');
+                $('#username').text('');
+                $('#password').text('');
+                $('#client_key').text('');
 
-                    $('.login-credentials-submit').show();
-                    $('.login-credentials-settings').hide();
+                $('.login-credentials-submit').show();
+                $('.login-credentials-settings').hide();
             });
 
             $('.network_type_dependant').each(function() {

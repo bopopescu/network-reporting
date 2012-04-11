@@ -303,7 +303,7 @@
                             {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
                         </td>
                         <td class="text">
-                            <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> ( All )
+                            <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox"{% if app.all_adunits_active %} checked="checked"{% endif %} />
                         </td>
                         {% if ad_network_ids %}
                         <td class="text pub-id-data">

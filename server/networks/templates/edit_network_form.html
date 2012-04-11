@@ -273,7 +273,7 @@
                         <th class="name">
                             <div>
                                 <a id="copy-7-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
+                                    <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
                                 </a>
                             </div>
                             <div>7-Day CPM</div>
@@ -281,7 +281,7 @@
                         <th class="stat">
                             <div>
                                 <a id="copy-14-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
+                                    <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
                                 </a>
                             </div>
                             <div>14-DayCPM</div>
@@ -318,16 +318,16 @@
                         </td>
                         {% if reporting %}
                         <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
-                            <a id="copy-7-day-{{app.key}}-cpm" class="copy-7-day" style="cursor:pointer">
-                                <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
+                            <a id="copy-7-day-{{app.key}}-cpm" class="copy-7-day" style="color: orange; cursor:pointer">
+                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
+                                {{ app.seven_day_stats.cpm|currency }}
                             </a>
-                            {{ app.seven_day_stats.cpm|currency }}
                         </td>
                         <td class="stat 14-day-cpm network-data" id="{{app.key}}-14-day-cpm">
-                            <a id="copy-14-day-{{app.key}}-cpm" class="copy-14-day" style="cursor:pointer">
-                                <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
+                            <a id="copy-14-day-{{app.key}}-cpm" class="copy-14-day" style="color: orange; cursor:pointer;">
+                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
+                                {{ app.fourteen_day_stats.cpm|currency }}
                             </a>
-                            {{ app.fourteen_day_stats.cpm|currency }}
                         </td>
                         {% endif %}
                     </tr>

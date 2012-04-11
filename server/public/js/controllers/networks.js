@@ -337,16 +337,48 @@ $(function() {
                         trigger: 'focus'});
                     });
 
+            // set up active checkbox's for network
+            $('#all-adunits-network').click(function () {
+                if ($(this).is(':checked')) {
+                    $('.all-adunits').attr("checked", "checked");
+                } else {
+                    $('.all-adunits').removeAttr("checked");
+                }
+                $('.all-adunits').change();
+            });
+
             // set up active checkbox's for app level
             $('.all-adunits')
-                .click(function() {
+                .change(function() {
                     var key = $(this).attr('id').replace('-all-adunits', '');
                     if ($(this).is(':checked')) {
                         $('.' + key + '-adunit').attr("checked", "checked");
+                        console.log($('.all-adunits:checked').length);
+                        console.log($('.all-adunits').length);
+                        if($('.all-adunits:checked').length == $('.all-adunits').length) {
+                            $('#all-adunits-network').attr("checked", "checked");
+                        }
                     } else {
                         $('.' + key + '-adunit').removeAttr("checked");
+                        $('#all-adunits-network').removeAttr("checked");
                     }
                     });
+
+            // perculate checked changes up
+            $('input[name$="active"]').click(function () {
+                var key = $(this).attr('class');
+                if($('.' + key + ':checked').length == $('.' + key).length) {
+                    $('.' + key).closest('tbody').find('.all-adunits').attr("checked", "checked");
+                } else {
+                    $('.' + key).closest('tbody').find('.all-adunits').removeAttr("checked");
+                }
+
+                if($('.all-adunits:checked').length == $('.all-adunits').length) {
+                    $('#all-adunits-network').attr("checked", "checked");
+                } else {
+                    $('#all-adunits-network').removeAttr("checked");
+                }
+            });
                 
             // set cpms when copy all cpm button is clicked for either 14 day
             // or 7 day

@@ -269,14 +269,19 @@ class EditNetworkHandler(RequestHandler):
                 app.all_adunits_active = True
             else:
                 app.all_adunits_active = False
+            min_cpm = 9999.9
+            max_cpm = 0.0
             for adunit in app.all_adunits:
                 adgroup = None
                 if campaign_key:
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(),
                             self.account.key(), True)
-                    if not adgroup.active:
-                        app.all_adunits_active = False
+                    if adgroup:
+                        min_cpm = min(adgroup.bid, min_cpm)
+                        max_cpm = max(adgroup.bid, max_cpm)
+                        if not adgroup.active:
+                            app.all_adunits_active = False
 
                 adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
                         prefix=str(adunit.key()))
@@ -298,6 +303,16 @@ class EditNetworkHandler(RequestHandler):
                 app.adunits.append(adunit)
                 if adunit.pub_id:
                     ad_network_ids = True
+            # Set app level bid
+            if min_cpm == max_cpm or not app.adunits:
+                app.bid = max_cpm
+            else:
+                app.bid = None
+
+        if True in [app.all_adunits_active for app in apps]:
+            network_data['all_adunits_active'] = True
+        else:
+            network_data['all_adunits_active'] = False
 
         # Create the default adgroup form
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,

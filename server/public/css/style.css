@@ -1686,7 +1686,7 @@ a.disabled {
     text-align: right;
     width: 65px; }
     .inventory_table td.stat.cpm-data, .inventory_table th.stat.cpm-data {
-      width: 150px; }
+      width: 100px; }
   .inventory_table td.text {
     width: 65px; }
     .inventory_table td.text.pub-id-data {

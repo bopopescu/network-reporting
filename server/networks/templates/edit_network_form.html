@@ -272,7 +272,10 @@
                     <tr>
                         <td class="icon"></td>
                         <td class="name"></td>
-                        <td class="name pub-id-data">Enabled</td>
+                        <td class="name pub-id-data">
+                            <input id="all-adunits-network" type="checkbox"{% if network.all_adunits_active %} checked="checked"{% endif %} style="width: 12px; height: 12px;" />
+                            Enabled
+                        </td>
                         {% if ad_network_ids %}
                         <td class="name">Ad Network ID</td>
                         {% endif %}
@@ -323,6 +326,10 @@
                         </td>
                         {% endif %}
                         <td class="stat cpm-data" style="width:150px">
+                            {% if app.bid %}
+                            <input class="float bid app-level" type="text" value="{{ app.bid }}"/>
+                            CPM
+                            {% endif %}
                         </td>
                         {% if reporting %}
                         <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">

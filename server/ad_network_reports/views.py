@@ -188,9 +188,10 @@ class ExportFileHandler(RequestHandler):
                 get_aggregate_stats_list(self.account, days)
 
         if sort_type == SORT_BY_NETWORK:
-            all_stats = AdNetworkStatsManager.roll_up_unique_stats(aggregate_stats_list, True)
+            all_stats = AdNetworkStatsManager.roll_up_unique_stats( \
+                    aggregate_stats_list, True)
         else:
-            all_stats = AdNetworkStatsManager.roll_up_unique_stats(self.account,
+            all_stats = AdNetworkStatsManager.roll_up_unique_stats( \
                     aggregate_stats_list, False)
 
         stat_names = {}

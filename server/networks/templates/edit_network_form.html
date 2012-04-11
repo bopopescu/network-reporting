@@ -393,14 +393,6 @@
 {% block extraScripts %}
 {% include_script "controllers/networks" %}
 <script type="text/javascript">
-    function copy_bid(event, this_obj) {
-        var key = $(this_obj).attr("id").replace('-adunit-copy-bid', '');
-        var keys = key.split("-app-");
-        var app_key = keys[0];
-        var adunit_key = keys[1];
-        $('.' + app_key + '-cpm-field').val($('#id_' + adunit_key + '-bid').val());
-    }
-
     $(function () {
             EditNetworkController.initialize({
                 network_type: '{{ network.name }}',

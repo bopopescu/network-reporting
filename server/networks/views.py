@@ -298,8 +298,10 @@ class EditNetworkHandler(RequestHandler):
                 if adunit.pub_id:
                     ad_network_ids = True
             # Set app level bid
-            if min_cpm == max_cpm or not app.adunits:
+            if min_cpm == max_cpm:
                 app.bid = max_cpm
+            elif not app.adunits or not campaign_key:
+                app.bid = 0.05
             else:
                 app.bid = None
 

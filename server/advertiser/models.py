@@ -126,7 +126,6 @@ class Campaign(db.Model):
     network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
     network_state = db.IntegerProperty(default=NetworkStates. \
             STANDARD_CAMPAIGN)
-    show_login = db.BooleanProperty(default=True)
 
     @property
     def has_daily_budget(self):

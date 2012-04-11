@@ -357,11 +357,13 @@
                         </td>
                         {% if ad_network_ids %}
                         <td class="text pub-id-data adunit">
+                            {% if network.name in NETWORKS_WITH_PUB_IDS %}
                             <div>
-                                {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
+                                <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="pub_id_field {{ network.name }}_pub_id{% if adunit.pub_id %} initialized{% endif %}" name="{{ network.name }}_ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAgM-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %}/>
                                 <span class="pub_id muted adunit">&nbsp;</span>
                                 <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
                             </div>
+                            {% endif %}
                         </td>
                         {% endif %}
                         <td class="stat cpm-data">
@@ -389,14 +391,6 @@
 {% endblock content %}
 
 {% block extraScripts %}
-<script type="text/html" id="popover-content">
-    {% include "networks/partials/popover_copy_all_content.html" %}
-</script>
-<script type="text/html" id="popover-template">
-    {% include "networks/partials/popover_copy_all_template.html" %}
-</script>
-{% include_script "libs/bootstrap" %}
-{% include_style "bootstrap" %}
 {% include_script "controllers/networks" %}
 <script type="text/javascript">
     function copy_bid(event, this_obj) {

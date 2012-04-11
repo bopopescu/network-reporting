@@ -1,8 +1,7 @@
 import logging
 
 from account.forms import AccountNetworkConfigForm, \
-        AppNetworkConfigForm, \
-        AdUnitNetworkConfigForm
+        AppNetworkConfigForm
 from account.query_managers import AccountQueryManager
 from account.models import NetworkConfig
 
@@ -64,6 +63,9 @@ DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
 
 ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
         'site_keys', 'name', 'bid', 'bid_strategy', 'active', 'network_type'])
+
+NETWORKS_WITH_PUB_IDS = set(NETWORKS.keys()) - set(['custom', 'custom_native',
+    'iad'])
 
 class NetworksHandler(RequestHandler):
     def get(self):
@@ -181,7 +183,6 @@ class EditNetworkHandler(RequestHandler):
                 raise Http404
             network = campaign.network_type
             campaign_name = campaign.name
-            show_login = campaign.show_login
             campaign_form = NetworkCampaignForm(instance=campaign)
             custom_campaign = campaign.network_state == \
                     NetworkStates.CUSTOM_NETWORK_CAMPAIGN
@@ -191,7 +192,6 @@ class EditNetworkHandler(RequestHandler):
                     self.account, network).count(1) or 'custom' in network
             # Set the default campaign name to the network name
             campaign_name = NETWORKS[network]
-            show_login = True
             if custom_campaign and 'custom' not in network:
                 campaign_name += ' - Custom'
 
@@ -200,7 +200,7 @@ class EditNetworkHandler(RequestHandler):
 
         network_data = {'name': network,
                         'pretty_name': campaign_name,
-                        'show_login': show_login,
+                        'show_login': False if campaign_key else True,
                         'login_state': LoginStates.NOT_SETUP}
         reporting = False
         ad_network_ids = False
@@ -232,15 +232,16 @@ class EditNetworkHandler(RequestHandler):
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         adgroup = None
         for app in apps:
-            app.network_config_form = AppNetworkConfigForm(instance= \
-                    app.network_config, prefix="app_%s" % app.key())
-            app.pub_id = app.network_config_form.fields.get(network + '_pub_id',
-                    False)
-            if network + '_pub_id' in app.network_config_form.fields:
-                app.network_config_form.fields[network + '_pub_id'].widget. \
-                        attrs['class'] += ' app-pub-id'
-            if app.pub_id:
-                ad_network_ids = True
+            if network in NETWORKS_WITH_PUB_IDS:
+                app.network_config_form = AppNetworkConfigForm(instance= \
+                        app.network_config, prefix="app_%s" % app.key())
+                app.pub_id = app.network_config_form.fields.get(network + '_pub_id',
+                        False)
+                if network + '_pub_id' in app.network_config_form.fields:
+                    app.network_config_form.fields[network + '_pub_id'].widget. \
+                            attrs['class'] += ' app-pub-id'
+                if app.pub_id:
+                    ad_network_ids = True
 
             seven_day_stats = AdNetworkStats()
 
@@ -291,15 +292,8 @@ class EditNetworkHandler(RequestHandler):
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
                         ' ' + str(app.key()) + '-cpm-field bid'
 
-                adunit.network_config_form = AdUnitNetworkConfigForm(
-                        instance=adunit.network_config, prefix="adunit_%s" %
-                        adunit.key())
-                if getattr(adunit.network_config, network + '_pub_id', False):
-                    adunit.network_config_form.fields[network + '_pub_id']. \
-                            widget.attrs['class'] += ' initialized'
+                adunit.pub_id = getattr(adunit.network_config, network + '_pub_id', False)
 
-                adunit.pub_id = adunit.network_config_form.fields.get(network +
-                        '_pub_id', False)
                 app.adunits.append(adunit)
                 if adunit.pub_id:
                     ad_network_ids = True
@@ -336,6 +330,7 @@ class EditNetworkHandler(RequestHandler):
                                       'ad_network_ids': ad_network_ids,
                                       'LoginStates': simplejson.dumps(
                                           LoginStates.__dict__),
+                                      'NETWORKS_WITH_PUB_IDS': NETWORKS_WITH_PUB_IDS,
                                   })
 
     def post(self,
@@ -386,10 +381,6 @@ class EditNetworkHandler(RequestHandler):
             campaign.account = self.account
             campaign.network_type = network
             campaign.campaign_type = 'network'
-            if query_dict['show_login'] == 'true':
-                campaign.show_login = True
-            else:
-                campaign.show_login = False
 
             # Hack to get old validation working
             query_dict['bid'] = 0.5

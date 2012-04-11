@@ -320,23 +320,6 @@ $(function() {
                     }
                     });
 
-
-            // set up popovers to copy all cpms
-            _.each(adunits, function(key) {
-                var app_key = key[0];
-                var adunit_key = key[1];
-                $('#id_' + adunit_key + '-bid')
-                    .popover({html: true,
-                        content: function() {
-                            return _.template($('#popover-content').html(), {
-                                adunit_key: adunit_key,
-                                app_key: app_key,
-                            });
-                        },
-                        template: _.template($('#popover-template').html(), {}),
-                        trigger: 'focus'});
-                    });
-
             // set up active checkbox's for network
             $('#all-adunits-network').click(function () {
                 if ($(this).is(':checked')) {

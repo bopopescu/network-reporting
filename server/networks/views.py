@@ -107,6 +107,7 @@ class NetworksHandler(RequestHandler):
                 # Set up the rest of the attributes
                 network_data['name'] = network
                 network_data['pretty_name'] = campaign.name
+                network_data['active'] = campaign.active
                 network_data['campaign_key'] = campaign.key()
 
                 # Add this to the list of networks that we can set up
@@ -291,9 +292,6 @@ class EditNetworkHandler(RequestHandler):
                 adunit.network_config_form = AdUnitNetworkConfigForm(
                         instance=adunit.network_config, prefix="adunit_%s" %
                         adunit.key())
-                logging.info('adunit network config')
-                logging.info(adunit.network_config_form.fields[network +
-                    '_pub_id'].widget.attrs['class'])
                 if getattr(adunit.network_config, network + '_pub_id', False):
                     adunit.network_config_form.fields[network + '_pub_id']. \
                             widget.attrs['class'] += ' initialized'

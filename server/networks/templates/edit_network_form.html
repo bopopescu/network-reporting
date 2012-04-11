@@ -22,7 +22,7 @@
         </legend>
 
         <ul class="form_fields">
-            <li class="network-type campaign_type_dependant network">
+            <li>
                 {{ adgroup_form.network_type.label_tag }}
                 <div>
                     <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
@@ -39,31 +39,26 @@
             </li>
             {% endif %}
 
-            <li class="campaign_type_dependant network network_type_dependant jumptap">
+            {% if network.name == "jumptap" %}
+            <li>
             {{ account_network_config_form.jumptap_pub_id.label_tag }}
             <div>
                 {{ account_network_config_form.jumptap_pub_id }}
             </div>
             </li>
-        </ul>
+            {% endif %}
 
-        <a class="button" id="advanced">Show Advanced Settings</a>
-    </fieldset>
-
-    <fieldset class="advanced hidden">
-        <legend>
-            <h2>Advanced Settings</h2>
-        </legend>
-
-        <ul class="form_fields">
+            {% if network.name == "custom_native" %}
             <li>
-            {{ campaign_form.description.label_tag }}
+            {{ adgroup_form.custom_method.label_tag }}
             <div>
-                {{ campaign_form.description }}
+                {{ adgroup_form.custom_method }}
             </div>
             </li>
+            {% endif %}
 
-            <li class="campaign_type_dependant network network_type_dependant custom">
+            {% if network.name == "custom" %}
+            <li>
             {{ adgroup_form.custom_html.label_tag }}
             <div>
                 {{ adgroup_form.custom_html }}
@@ -89,11 +84,22 @@
                 </div>
             </div>
             </li>
+            {% endif %}
+        </ul>
 
-            <li class="campaign_type_dependant network network_type_dependant custom_native">
-            {{ adgroup_form.custom_method.label_tag }}
+        <a class="button" id="advanced">Show Advanced Settings</a>
+    </fieldset>
+
+    <fieldset class="advanced hidden">
+        <legend>
+            <h2>Advanced Settings</h2>
+        </legend>
+
+        <ul class="form_fields">
+            <li>
+            {{ campaign_form.description.label_tag }}
             <div>
-                {{ adgroup_form.custom_method }}
+                {{ campaign_form.description }}
             </div>
             </li>
 
@@ -307,7 +313,7 @@
                         </td>
                         {% if ad_network_ids %}
                         <td class="text pub-id-data">
-                            <div class="campaign_type_dependant network">
+                            <div>
                                 {% for field in app.network_config_form %}{{ field }}{% endfor %}
                                 <span class="pub_id muted"></span>
                                 <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
@@ -342,7 +348,7 @@
                         </td>
                         {% if ad_network_ids %}
                         <td class="text pub-id-data adunit">
-                            <div class="campaign_type_dependant network">
+                            <div>
                                 {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
                                 <span class="pub_id muted adunit">&nbsp;</span>
                                 <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>

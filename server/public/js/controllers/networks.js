@@ -136,6 +136,15 @@ $(function() {
 
             initialize_show_network();
 
+            $('.appData').hover(
+                function() {
+                    $(this).find('.edit-link').show()
+                },
+                function() {
+                    $(this).find('.edit-link').hide()
+                }
+            );
+
             $('.show-apps').click(function() {
                 var key = $(this).attr('id');
                 var div = $('.' + key + '-apps-div');
@@ -157,7 +166,7 @@ $(function() {
 
             $('#network-editSelect-menu').find('li').first().hide();
 
-            //move to a utils package
+            // TODO: move to a utils package
             // checks if email is valid
             function isValidEmailAddress(emailAddress) {
                 var pattern = new RegExp(/^(\s*)(("[\w-+\s]+")|([\w-+]+(?:\.[\w-+]+)*)|("[\w-+\s]+")([\w-+]+(?:\.[\w-+]+)*))(@((?:[\w-+]+\.)*\w[\w-+]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][\d]\.|1[\d]{2}\.|[\d]{1,2}\.))((25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\.){2}(25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\]?$)/i);

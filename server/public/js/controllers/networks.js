@@ -276,6 +276,20 @@ $(function() {
 
             var pub_id = pub_ids[network_type];
 
+            $('#campaignForm-keyword-helpLink').click(function(e) {
+                e.preventDefault();
+                $('#campaignForm-keyword-helpContent').dialog({
+                    buttons: { "Close": function() { $(this).dialog("close"); } }
+                });
+            });
+            $('#campaignForm-customHtml-helpLink').click(function(e) {
+                e.preventDefault();
+                $('#campaignForm-customHtml-helpContent').dialog({
+                    buttons: { "Close": function() { $(this).dialog("close"); }},
+                    width: 700
+                });
+            });
+
             // text entered for app level network ids should propogate to
             // children
             $('.app-pub-id')

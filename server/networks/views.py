@@ -283,6 +283,9 @@ class EditNetworkHandler(RequestHandler):
                 adunit.network_config_form = AdUnitNetworkConfigForm(
                         instance=adunit.network_config, prefix="adunit_%s" %
                         adunit.key())
+                logging.info('adunit network config')
+                logging.info(adunit.network_config_form.fields[network +
+                    '_pub_id'].widget.attrs['class'])
                 if getattr(adunit.network_config, network + '_pub_id', False):
                     adunit.network_config_form.fields[network + '_pub_id']. \
                             widget.attrs['class'] += ' initialized'

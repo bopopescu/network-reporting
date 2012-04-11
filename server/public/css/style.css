@@ -1442,7 +1442,7 @@ form#campaign_and_adgroup input[type="text"].time {
   width: 60px; }
 form#campaign_and_adgroup input[type="text"].number, form#campaign_and_adgroup input[type="text"].float {
   width: 70px; }
-form#campaign_and_adgroup input[type="text"].pub_id {
+form#campaign_and_adgroup input[type="text"].pub_id_field {
   width: 150px; }
 form#campaign_and_adgroup input[type="text"].bid {
   width: 50px; }

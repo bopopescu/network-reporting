@@ -17,10 +17,10 @@ from common.constants import NETWORKS, \
 CAMPAIGN_FIELD_EXCLUSION_LIST = ['account', 'network_type', 'network_state', \
         'show_login', 'name']
 ADGROUP_FIELD_EXCLUSION_LIST = ['account', 'campaign', 'net_creative',
-        'site_keys']
+        'site_keys', 'active']
 CREATIVE_FIELD_EXCLUSION_LIST = ['ad_group', 'account']
 
-accounts = [Account.get('agltb3B1Yi1pbmNyEAsSB0FjY291bnQYscSjDww')]
+accounts = [Account.get('agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExMTYwMzg4NTI0MzgzNzUzNDQxMAw')]
 
 def bulk_get(query, last_object):
     return query.filter('__key__ >', last_object).fetch(MAX)
@@ -60,50 +60,56 @@ def migrate():
         print "Migrating account: " + account.emails[0]
         for campaign in CampaignQueryManager.get_network_campaigns(account):
             # TODO: hash on shared settings (advanced settings)
-            network = campaign.adgroups[0].network_type.replace('_native',
-                    '').lower()
-            print "migrating old campaign for " + network
-            if network in NETWORKS:
-                if network in networks:
-                    print "creating a custom network campaign"
-                    # create custom campaign
-                    new_campaign = Campaign(account=account,
-                            network_type=network,
-                            network_state=NetworkStates.CUSTOM_NETWORK_CAMPAIGN,
-                            name=campaign.name)
-                    # Must save so key exists
+            adgroup = campaign.adgroups.get()
+            if adgroup:
+                network = adgroup.network_type.replace('_native',
+                        '').lower()
+                print "migrating old campaign for " + network
+                if network in NETWORKS:
+                    if network in networks:
+                        print "creating a custom network campaign"
+                        # create custom campaign
+                        new_campaign = Campaign(account=account,
+                                network_type=network,
+                                network_state=NetworkStates. \
+                                        CUSTOM_NETWORK_CAMPAIGN,
+                                name=campaign.name)
+                        # Must save so key exists
+                        CampaignQueryManager.put(new_campaign)
+                    else:
+                        print "creating a default network campaign"
+                        # create defualt network campaign
+                        new_campaign = CampaignQueryManager. \
+                                get_default_network_campaign(account, network)
+                    for field in campaign.properties().iterkeys():
+                        if field not in CAMPAIGN_FIELD_EXCLUSION_LIST:
+                            setattr(new_campaign, field, getattr(campaign,
+                                field))
+
+                    for adunit in adunits:
+                        # copy old campaign adgroup properties to new
+                        # campaign adgroup properties
+                        new_adgroup = AdGroupQueryManager.get_network_adgroup(
+                                new_campaign, adunit.key(), account.key())
+                        for field in adgroup.properties().iterkeys():
+                            if field not in ADGROUP_FIELD_EXCLUSION_LIST:
+                                setattr(new_adgroup, field, getattr(
+                                    adgroup, field))
+                        # set wether adunit is active for this network campaign
+                        new_adgroup.active = adunit.key() in adgroup.site_keys
+                        # create creative for the new adgroup
+                        create_creative(new_adgroup, adgroup)
+                        AdGroupQueryManager.put(new_adgroup)
                     CampaignQueryManager.put(new_campaign)
-                else:
-                    print "creating a default network campaign"
-                    # create defualt network campaign
-                    new_campaign = CampaignQueryManager. \
-                            get_default_network_campaign(account, network)
-                for field in campaign.properties().iterkeys():
-                    if field not in CAMPAIGN_FIELD_EXCLUSION_LIST:
-                        setattr(new_campaign, field, getattr(campaign, field))
 
-                for adunit in adunits:
-                    # copy old campaign adgroup properties to new campaign adgroup
-                    # properties
-                    new_adgroup = AdGroupQueryManager.get_network_adgroup(
-                            new_campaign, adunit.key(), account.key())
-                    for field in campaign.adgroups[0].properties().iterkeys():
-                        if field not in ADGROUP_FIELD_EXCLUSION_LIST:
-                            setattr(new_adgroup, field, getattr(
-                                campaign.adgroups[0], field))
-                    # create creative for the new adgroup
-                    create_creative(new_adgroup, campaign.adgroups[0])
-                    AdGroupQueryManager.put(new_adgroup)
-                CampaignQueryManager.put(new_campaign)
+                    # mark old campaign as deleted and pause adgroup
+                    campaign.active = False
+                    for adgroup in campaign.adgroups:
+                        adgroup.active = False
+                        AdGroupQueryManager.put(adgroup)
+                    CampaignQueryManager.put(campaign)
 
-                # mark old campaign as deleted and pause adgroup
-                campaign.active = False
-                for adgroup in campaign.adgroups:
-                    adgroup.active = False
-                    AdGroupQueryManager.put(adgroup)
-                CampaignQueryManager.put(campaign)
-
-                networks.add(network)
+                    networks.add(network)
         #account.display_new_networks = True
         #AccountQueryManager.put_accounts(account)
 

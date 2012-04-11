@@ -277,13 +277,10 @@ $(function() {
                         }
                         if ($(this).is(':hidden')) {
                             $(this).siblings('span.pub_id.muted.adunit').each(function () {
-                                $(this).text(value);
                                 if (value) {
-                                    $(this).show();
-                                    $(this).siblings('span.pub_id').show();
+                                    $(this).text(value);
                                 } else {
-                                    $(this).hide();
-                                    $(this).siblings('span.pub_id').hide();
+                                    $(this).html("&nbsp;");
                                 }
                             });
                         }
@@ -316,14 +313,15 @@ $(function() {
                     });
 
             // set up active checkbox's for app level
-            $('.all-adunits').click(function() {
-                var key = $(this).attr('id').replace('-all-adunits', '');
-                if ($(this).is(':checked')) {
-                    $('.' + key + '-adunit').attr("checked", "checked");
-                } else {
-                    $('.' + key + '-adunit').removeAttr("checked");
-                }
-                });
+            $('.all-adunits')
+                .click(function() {
+                    var key = $(this).attr('id').replace('-all-adunits', '');
+                    if ($(this).is(':checked')) {
+                        $('.' + key + '-adunit').attr("checked", "checked");
+                    } else {
+                        $('.' + key + '-adunit').removeAttr("checked");
+                    }
+                    });
                 
 
             // set cpms when copy all cpm button is clicked for either 14 day
@@ -523,7 +521,7 @@ $(function() {
             });
 
 
-            $('.pub_id').hide();
+            $('.pub_id_field').hide();
 
             $('td.pub-id-data').each(function () {
                 var input = $(this).children('div').children('input[name$="'+pub_id+'"]');
@@ -531,7 +529,6 @@ $(function() {
 
                 if(value) {
                     input.siblings('span.pub_id.muted').text(value);
-                    input.siblings('span.pub_id').show();
                 }
                 else {
                     if (!$(this).hasClass('adunit')) {

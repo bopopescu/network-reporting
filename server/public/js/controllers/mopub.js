@@ -413,7 +413,7 @@ if (typeof window.console == "undefined") {
 
         function dropdownClose() {
             if (!$(selector).hasClass('invisible')) {
-                $(selector).addClass('invisible');
+                //$(selector).addClass('invisible');
             }
             $(self).removeClass('hovered');
         }

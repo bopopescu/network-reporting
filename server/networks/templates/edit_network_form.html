@@ -309,16 +309,11 @@
                         <td class="text pub-id-data">
                             <div class="campaign_type_dependant network">
                                 {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted" style="float:none;"></span>
-                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;display:inline-block" rel="tooltip" style=""></span>
                             </div>
                         </td>
                         {% endif %}
                         <td class="text cpm-data" style="width:150px">
                             <input type="text" style="width:40px" value="0.05">
-                            <div class="cpm-override" style="width:20px;height:20px;display:inline-block;cursor:pointer;">
-                                <span class="ui-icon ui-icon-circle-triangle-s" style="display:inline-block"></span>
-                            </div>
                         </td>
                         {% if reporting %}
                         <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
@@ -336,7 +331,7 @@
                         {% endif %}
                     </tr>
                     {% for adunit in app.adunits %}
-                    <tr class="sub">
+                    <tr class="sub" style="height:33px">
                         <td class="icon"></td>
                         <td class="name">
                             {{ adunit.name }}
@@ -346,14 +341,27 @@
                         </td>
                         {% if ad_network_ids %}
                         <td class="text pub-id-data adunit">
-                            <div class="campaign_type_dependant network">
-                                {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
+                            <div>
+                                <div class="pub-id-input hidden">
+                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="pub_id_field {{ network.name }}_pub_id{% if adunit.pub_id %} initialized{% endif %}" name="{{ network.name }}_ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAgM-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_i }}"{% endif %} style="width:135px"/>
+                                    <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
+                                </div>
+                                <div class="pub-id-edit editable">
+                                    <span class="pub-id-value">Change Network ID</span>
+                                    <b class="caret"></b>                            
+                                </div>                            
                             </div>
                         </td>
                         {% endif %}
                         <td class="text cpm-data">
+                            <div class="cpm-edit editable">
+                                <span class="cpm-value"></span>
+                                <b class="caret"></b>                            
+                            </div>           
                             <div class="cpm-input hidden">
                                 <input type="text" value="0.05" style="width:40px">
+                                <span class="cpm-close ui-icon ui-icon-close" style="display:inline-block"></span>
+
                             </div>
                         </td>
                         {% if reporting %}

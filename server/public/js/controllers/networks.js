@@ -263,23 +263,12 @@ $(function() {
                         if (!$(this).hasClass('initialized')) {
                             $(this).val(value);
                         }
-                        if ($(this).is(':hidden')) {
-                            $(this).siblings('span.pub_id.muted.adunit').each(function () {
-                                $(this).text(value);
-                                if (value) {
-                                    $(this).show();
-                                    $(this).siblings('span.pub_id').show();
-                                } else {
-                                    $(this).hide();
-                                    $(this).siblings('span.pub_id').hide();
-                                }
-                            });
-                        }
                     });
-                    // Hide any tooltips
-
-                    (value) ? $(this).tooltip('hide') : $(this).tooltip('show');
-                })
+                    $(div).find('.pub-id-value').each(function() {
+                        if (!value) value = "Change Network ID";
+                        $(this).text(value);
+                    });
+                }).keyup()
                 .focusout(function () {
                     if ($(this).val()) {
                         var div = $(this).parents('tbody');
@@ -288,24 +277,13 @@ $(function() {
                         });
                     }
                     });
+            $('.cpm-data input').keyup(function() {
+                var value = $(this).val();
+                var div = $(this).parents('tbody');
 
-
-            // set up popovers to copy all cpms
-            _.each(adunits, function(key) {
-                var app_key = key[0];
-                var adunit_key = key[1];
-                $('#id_' + adunit_key + '-bid')
-                    .popover({html: true,
-                        content: function() {
-                            return _.template($('#popover-content').html(), {
-                                adunit_key: adunit_key,
-                                app_key: app_key,
-                            });
-                        },
-                        template: _.template($('#popover-template').html(), {}),
-                        placement: 'left',
-                        trigger: 'focus'});
-                    });
+                if (!value) value = 0;
+                $(div).find('.cpm-value').text(value);
+            }).keyup();
 
             // set up active checkbox's for app level
             $('.all-adunits').click(function() {
@@ -314,11 +292,6 @@ $(function() {
                     $('.' + key + '-adunit').attr("checked", "checked");
                 } else {
                     $('.' + key + '-adunit').removeAttr("checked");
-                }
-                // Close the help tooltip
-                if (starting_tooltip) {
-                    starting_tooltip.tooltip('hide');
-                    starting_tooltip = null;
                 }
                 // If no ad network ID set up, show a tooltip
                 if ($(this).is(':checked')) {
@@ -336,16 +309,7 @@ $(function() {
                 else {
                     $(this).parents('tr').find('input[name$="'+pub_id+'"]').tooltip('hide');
                 }
-            });
-
-            $('input[class$="adunit"]').click(function() {
-                // Close the help tooltip
-                if (starting_tooltip) {
-                    starting_tooltip.tooltip('hide');
-                    starting_tooltip = null;
-                }
-            });
-                
+            }); 
 
             // set cpms when copy all cpm button is clicked for either 14 day
             // or 7 day
@@ -536,82 +500,50 @@ $(function() {
                 }
             }).filter(':checked').click();
 
-            $('span.pub_id').click(function() {
-                var pub_id = pub_ids[network_type];
-                $(this).siblings('input[name$="'+pub_id+'"]').show();
-                $(this).siblings('span').hide();
-                $(this).hide();
-            });
-
-
             $('.pub_id').hide();
-            $('.cpm-span').hide();
-            $('.cpm-cancel').hide();
-
-            $('tr.sub').hover(function() {
-                    $(this).find('span.pub_id').show();
-                    $(this).find('span.cpm-span').show();
-                }, function() {
-                    $(this).find('span.pub_id').hide();
-                    $(this).find('span.cpm-span').hide();
-            });
-
-            $('div.cpm-override').click(function(event) {
-                event.preventDefault();
-                $(this).parents('tbody').find('.cpm-input').toggle();
-            });
-            $('div.cpm-override').tooltip({
-                title:'Set CPM for ad units'
-            });
-
 
             $('td.pub-id-data').each(function () {
                 var input = $(this).children('div').children('input[name$="'+pub_id+'"]');
                 var value = input.val();
 
-                if (!$(this).hasClass('adunit')) {
-                    // Always show the input at the app level
+                // Always show the app-level input
+                if (value || !$(this).hasClass('adunit')) {
                     input.show();
-
-                }
-                
-                if(value) {
-                    input.siblings('span.pub_id.muted').text(value);
-                    input.siblings('span.pub_id').show();
-                    if (!$(this).hasClass('adunit')) {
-                        // Set up tooltip for arrow widget
-                        input.siblings('span.pub_id.ui-icon').tooltip({
-                            title:'Edit Network ID',
-                            placement:'bottom'
-                        });
-                    }
-                }
-                else {
-                    if (!$(this).hasClass('adunit')) {
-                        // If this is the app level td, always show the input box if empty
-                        //input.show();
-                    }
-                    else {
-                        // If this is an ad unit level td, show the value of the app
-                        var app_body = $(this).parents('tbody');
-                        var app_input = app_body.children('tr.app-targeting').find('input[name$="'+pub_id+'"]');
-                        var app_value = app_input.val();
-                        //input.siblings('span.pub_id.muted').text(app_value);
-                        //input.siblings('span.pub_id').show();
-                    }
-                }
+                    input.parents('td').find('.pub-id-edit').hide();
+                }                
             });
 
-            // Set up tooltip to guide pubs to enable apps
-            if (!$('input[class$=adunit]').filter(':checked').length) {
-                var starting_tooltip = $('thead td.pub-id-data').tooltip({                
-                    title: 'Check where to show this network',
-                    trigger: 'manual',
-                    placement:'top'
-                });
-                starting_tooltip.tooltip('show');                
-            }
-
+            // Click the ad unit placeholder text to edit
+            $('.pub-id-edit').click(function (event) {
+                event.preventDefault();
+                $(this).hide();
+                $(this).siblings('.pub-id-input').show();
+            });
+            $('.pub-id-edit').tooltip({
+                title: "Set ID for this ad unit"
+            });
+            $('.cpm-edit').tooltip({
+                title: "Set CPM for all each units"
+            });            
+            $('.cpm-edit').click(function (event) {
+                event.preventDefault();
+                $(this).parents('tbody').find('tr.main .cpm-data input').hide();
+                $(this).parents('tbody').find('.cpm-edit').hide();
+                $(this).parents('tbody').find('.cpm-input').show();
+            });
+            $('.pub-id-close').click(function (event) {
+                event.preventDefault;
+                var input_div = $(this).parents('.pub-id-input');
+                input_div.hide();
+                input_div.children('input').val('');
+                $(this).parents('td').find('.pub-id-edit').show();
+            });
+            $('.cpm-close').click(function (event) {
+                event.preventDefault;
+                $(this).parents('tbody').find('tr.main .cpm-data input').show();
+                $(this).parents('tbody').find('.cpm-input').hide();
+                $(this).parents('tbody').find('.cpm-edit').show();
+            });
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';
             var pre = {type: 'country', data: []};

@@ -276,6 +276,9 @@ $(function() {
                             });
                         }
                     });
+                    // Hide any tooltips
+
+                    (value) ? $(this).tooltip('hide') : $(this).tooltip('show');
                 })
                 .focusout(function () {
                     if ($(this).val()) {
@@ -300,6 +303,7 @@ $(function() {
                             });
                         },
                         template: _.template($('#popover-template').html(), {}),
+                        placement: 'left',
                         trigger: 'focus'});
                     });
 
@@ -311,7 +315,36 @@ $(function() {
                 } else {
                     $('.' + key + '-adunit').removeAttr("checked");
                 }
-                });
+                // Close the help tooltip
+                if (starting_tooltip) {
+                    starting_tooltip.tooltip('hide');
+                    starting_tooltip = null;
+                }
+                // If no ad network ID set up, show a tooltip
+                if ($(this).is(':checked')) {
+                    var network_input = $(this).parents('tr').find('input[name$="'+pub_id+'"]');
+                    var value = network_input.val();
+                    if (!value) {
+                        network_input.tooltip({
+                            title: 'Enter the network ID to enable (<a href="#">help!</a>)',
+                            trigger: 'manual',
+                            placement:'top'
+                        });
+                        network_input.tooltip('show');
+                    }
+                }
+                else {
+                    $(this).parents('tr').find('input[name$="'+pub_id+'"]').tooltip('hide');
+                }
+            });
+
+            $('input[class$="adunit"]').click(function() {
+                // Close the help tooltip
+                if (starting_tooltip) {
+                    starting_tooltip.tooltip('hide');
+                    starting_tooltip = null;
+                }
+            });
                 
 
             // set cpms when copy all cpm button is clicked for either 14 day
@@ -512,21 +545,77 @@ $(function() {
 
 
             $('.pub_id').hide();
+            $('.cpm-span').hide();
+            $('.cpm-cancel').hide();
+
+            $('tr.sub').hover(function() {
+                    $(this).find('span.pub_id').show();
+                    $(this).find('span.cpm-span').show();
+                }, function() {
+                    $(this).find('span.pub_id').hide();
+                    $(this).find('span.cpm-span').hide();
+            });
+
+            $('div.cpm-add').click(function(event) {
+                event.preventDefault();
+                $('.cpm-add').hide();
+                $('.cpm-input').show();
+                $('.cpm-cancel').show();
+            });
+
+            $('.cpm-cancel').click(function(event) {
+                event.preventDefault();
+                $('.cpm-input').hide();
+                $('.cpm-cancel').hide();
+                $('.cpm-add').show();
+            });
 
             $('td.pub-id-data').each(function () {
                 var input = $(this).children('div').children('input[name$="'+pub_id+'"]');
                 var value = input.val();
 
+                if (!$(this).hasClass('adunit')) {
+                    // Always show the input at the app level
+                    input.show();
+
+                }
+                
                 if(value) {
                     input.siblings('span.pub_id.muted').text(value);
                     input.siblings('span.pub_id').show();
+                    if (!$(this).hasClass('adunit')) {
+                        // Set up tooltip for arrow widget
+                        input.siblings('span.pub_id.ui-icon').tooltip({
+                            title:'Edit Network ID',
+                            placement:'bottom'
+                        });
+                    }
                 }
                 else {
                     if (!$(this).hasClass('adunit')) {
-                        input.show();
+                        // If this is the app level td, always show the input box if empty
+                        //input.show();
+                    }
+                    else {
+                        // If this is an ad unit level td, show the value of the app
+                        var app_body = $(this).parents('tbody');
+                        var app_input = app_body.children('tr.app-targeting').find('input[name$="'+pub_id+'"]');
+                        var app_value = app_input.val();
+                        //input.siblings('span.pub_id.muted').text(app_value);
+                        //input.siblings('span.pub_id').show();
                     }
                 }
+            });
+
+            // Set up tooltip to guide pubs to enable apps
+            if (!$('input[class$=adunit]').filter(':checked').length) {
+                var starting_tooltip = $('thead td.pub-id-data').tooltip({                
+                    title: 'Check where to show this network',
+                    trigger: 'manual',
+                    placement:'top'
                 });
+                starting_tooltip.tooltip('show');                
+            }
 
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';

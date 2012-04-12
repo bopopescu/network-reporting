@@ -268,7 +268,7 @@
                         {% if ad_network_ids %}
                         <td class="name">Ad Network ID</td>
                         {% endif %}
-                        <td class="name">Rate (USD)</td>
+                        <td class="name">CPM</td>
                         {% if reporting %}
                         <th class="name">
                             <div>
@@ -303,18 +303,22 @@
                             {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
                         </td>
                         <td class="text">
-                            <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> ( All )
+                            <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> <label for="{{app.key}}-all-adunits">( All )</label>
                         </td>
                         {% if ad_network_ids %}
                         <td class="text pub-id-data">
                             <div class="campaign_type_dependant network">
                                 {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted"></span>
-                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
+                                <span class="pub_id muted" style="float:none;"></span>
+                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;display:inline-block" rel="tooltip" style=""></span>
                             </div>
                         </td>
                         {% endif %}
-                        <td class="stat cpm-data" style="width:150px">
+                        <td class="text cpm-data" style="width:150px">
+                            <input type="text" style="width:40px" value="0.05">
+                            <div class="cpm-cancel" style="width:20px;height:20px;display:inline-block;cursor:pointer;">
+                                <span class="ui-icon ui-icon-close" style="display:inline-block"></span>
+                            </div>
                         </td>
                         {% if reporting %}
                         <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
@@ -337,21 +341,26 @@
                         <td class="name">
                             {{ adunit.name }}
                         </td>
-                        <td class="text">
+                        <td class="text" style="height:20px">
                             {{ adunit.adgroup_form.active }}
                         </td>
                         {% if ad_network_ids %}
                         <td class="text pub-id-data adunit">
                             <div class="campaign_type_dependant network">
                                 {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted adunit"></span>
-                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
+                                <span class="pub_id adunit" style="float:none"><a href="#">Set another ID</a></span>
+                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;display:inline-block"></span>
                             </div>
                         </td>
                         {% endif %}
-                        <td class="stat cpm-data">
-                            {{ adunit.adgroup_form.bid }}
-                            {{ adunit.adgroup_form.bid_strategy }} 
+                        <td class="text cpm-data">
+                            <div class="cpm-add">
+                            <span class="cpm-span adunit" style="float:none"><a href="#">Set another CPM</a></span>
+                            <span class="cpm-span ui-icon ui-icon-triangle-1-s" style="cursor:pointer;display:inline-block"></span>
+                            </div>
+                            <div class="cpm-input hidden">
+                                <input type="text" value="0.05" style="width:40px">
+                            </div>
                         </td>
                         {% if reporting %}
                         <td class="stat">

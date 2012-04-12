@@ -3,6 +3,7 @@ from datetime import datetime, date
 
 from common.utils.request_handler import RequestHandler
 from common.utils.date_magic import gen_days
+from common.utils import simplejson as json
 from common.ragendja.template import JSONResponse
 from django.http import Http404
 
@@ -37,27 +38,13 @@ class NetworksApi(RequestHandler):
                              'all_stats': all_stats})
 
     def post(self):
-        # what I want to do:
-        #arg_list = self.request.POST.get('arg_list')
-        # TODO: find in api / be smarter
-        arg_list = []
-        arg_exists = True
-        counter = 0
-        while arg_exists:
-            args = {}
-            for field in ['app', 'campaign', 'account']:
-                args[field] = self.request.POST.get('arg_list[%s][%s]' %
-                        (counter, field), None)
-                if not args[field]:
-                    arg_exists = False
-                    break
-            if args['app']:
-                arg_list.append(args)
-                counter += 1
+        post_body = self.request.raw_post_data
+        post_dict = json.loads(self.request.raw_post_data)
+        arg_list = post_dict['arg_list']
 
-        start_date = datetime.strptime(self.request.POST.get('start_date'),
+        start_date = datetime.strptime(post_dict['start_date'],
                 '%Y-%m-%d').date()
-        end_date = datetime.strptime(self.request.POST.get('end_date'),
+        end_date = datetime.strptime(post_dict['end_date'],
                 '%Y-%m-%d').date()
 
         # get stats for each arg in the arg list and put them into a single

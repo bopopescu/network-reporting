@@ -316,8 +316,8 @@
                         {% endif %}
                         <td class="text cpm-data" style="width:150px">
                             <input type="text" style="width:40px" value="0.05">
-                            <div class="cpm-cancel" style="width:20px;height:20px;display:inline-block;cursor:pointer;">
-                                <span class="ui-icon ui-icon-close" style="display:inline-block"></span>
+                            <div class="cpm-override" style="width:20px;height:20px;display:inline-block;cursor:pointer;">
+                                <span class="ui-icon ui-icon-circle-triangle-s" style="display:inline-block"></span>
                             </div>
                         </td>
                         {% if reporting %}
@@ -348,16 +348,10 @@
                         <td class="text pub-id-data adunit">
                             <div class="campaign_type_dependant network">
                                 {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id adunit" style="float:none"><a href="#">Set another ID</a></span>
-                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;display:inline-block"></span>
                             </div>
                         </td>
                         {% endif %}
                         <td class="text cpm-data">
-                            <div class="cpm-add">
-                            <span class="cpm-span adunit" style="float:none"><a href="#">Set another CPM</a></span>
-                            <span class="cpm-span ui-icon ui-icon-triangle-1-s" style="cursor:pointer;display:inline-block"></span>
-                            </div>
                             <div class="cpm-input hidden">
                                 <input type="text" value="0.05" style="width:40px">
                             </div>

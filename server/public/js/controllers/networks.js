@@ -556,19 +556,14 @@ $(function() {
                     $(this).find('span.cpm-span').hide();
             });
 
-            $('div.cpm-add').click(function(event) {
+            $('div.cpm-override').click(function(event) {
                 event.preventDefault();
-                $('.cpm-add').hide();
-                $('.cpm-input').show();
-                $('.cpm-cancel').show();
+                $(this).parents('tbody').find('.cpm-input').toggle();
+            });
+            $('div.cpm-override').tooltip({
+                title:'Set CPM for ad units'
             });
 
-            $('.cpm-cancel').click(function(event) {
-                event.preventDefault();
-                $('.cpm-input').hide();
-                $('.cpm-cancel').hide();
-                $('.cpm-add').show();
-            });
 
             $('td.pub-id-data').each(function () {
                 var input = $(this).children('div').children('input[name$="'+pub_id+'"]');

@@ -380,6 +380,18 @@ class CampaignService(RequestHandler):
             campaign_stats = stats.get_campaign_stats(campaign_key,
                     self.start_date, self.end_date)
 
+            # Add old campaign stats to new ones if the query is for a legacy
+            # date, shouldn't be common so doesn't have to be super fast
+            if stats_endpoint == 'all' and campaign.transition_date and \
+                    campaign.transition_date > self.start_date and \
+                    campaign.transition_date < self.end_date and \
+                    campaign._old_campaign:
+                old_campaign_stats = stats.get_campaign_stats(campaign. \
+                        _old_campaign, self.start_date, self.end_date)
+                campaign_stats = [sum(stats_for_day, StatsModel()) for \
+                        stats_for_day in zip(campaign_stats,
+                            old_campaign_stats)]
+
             summed_stats = sum(campaign_stats, StatsModel())
 
             stats_dict = summed_stats.to_dict()
@@ -452,7 +464,7 @@ class NetworkAppsService(RequestHandler):
                 # campaign
                 if campaign.network_state == \
                         NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
-                    login = AdNetworkLoginManager.get_login(self.account,
+                    login = AdNetworkLoginManager.get_logins(self.account,
                             network).get()
                     all_stats = False
                     if login:
@@ -466,8 +478,8 @@ class NetworkAppsService(RequestHandler):
 
                             for mapper in mappers:
                                 all_stats = AdNetworkStatsManager. \
-                                        get_stats_list_for_mapper_and_days(
-                                                mapper.key(), self.days)
+                                        get_stats_for_days(mapper.key(),
+                                                self.days)
                                 for stats in all_stats:
                                     if stats.date in stats_by_day:
                                         stats_by_day[stats.date] += stats
@@ -500,6 +512,21 @@ class NetworkAppsService(RequestHandler):
                                                                  advertiser=
                                                                     campaign,
                                                                  days=self.days)
+
+                    # Add old campaign stats to new ones if the query is for a
+                    # legacy date, shouldn't be common so doesn't have to be
+                    # super fast
+                    if campaign.transition_date and campaign.transition_date > \
+                            self.start_date and campaign.transition_date < \
+                            self.end_date and campaign.old_campaign:
+                        old_campaign_stats = stats_manager.get_stats_for_days(
+                                publisher=adunit,
+                                advertiser=campaign.old_campaign,
+                                days=self.days)
+                        all_stats = [sum(stats_for_day, StatsModel()) for \
+                                stats_for_day in zip(all_stats,
+                                    old_campaign_stats)]
+
                     stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
 
                     if app.key() not in network_apps_:

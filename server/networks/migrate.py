@@ -1,3 +1,5 @@
+from datetime import date
+
 from google.appengine.ext import db
 
 from account.models import Account
@@ -85,6 +87,8 @@ def migrate():
                         if field not in CAMPAIGN_FIELD_EXCLUSION_LIST:
                             setattr(new_campaign, field, getattr(campaign,
                                 field))
+                    new_campaign.transition_date = date.today()
+                    new_campaign.old_campaign = campaign
 
                     for adunit in adunits:
                         # copy old campaign adgroup properties to new

@@ -98,7 +98,7 @@ class NetworksHandler(RequestHandler):
                 if campaign.network_state == NetworkStates. \
                         DEFAULT_NETWORK_CAMPAIGN and network in \
                         REPORTING_NETWORKS:
-                    login = AdNetworkLoginManager.get_login(self.account,
+                    login = AdNetworkLoginManager.get_logins(self.account,
                             network).get()
 
                     if login:
@@ -212,7 +212,7 @@ class EditNetworkHandler(RequestHandler):
         login = None
         if not custom_campaign and network in REPORTING_NETWORKS:
             # Create the login credentials form
-            login = AdNetworkLoginManager.get_login(self.account,
+            login = AdNetworkLoginManager.get_logins(self.account,
                     network).get()
             if login:
                 # Can't initialize username or password because it's encrypted
@@ -501,7 +501,7 @@ class EditNetworkHandler(RequestHandler):
                             # Create an AdNetworkAppMapper if there exists a
                             # login for the network (safe to re-create if it
                             # already exists)
-                            login = AdNetworkLoginManager.get_login(
+                            login = AdNetworkLoginManager.get_logins(
                                     self.account, network).get()
                             mappers = AdNetworkMapperManager. \
                                     get_mappers_for_app(login=login, app=app)
@@ -630,7 +630,7 @@ class NetworkDetailsHandler(RequestHandler):
         #REFACTOR: handle the case when this isnt true.
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
-            login = AdNetworkLoginManager.get_login(self.account, network).get()
+            login = AdNetworkLoginManager.get_logins(self.account, network).get()
             if login:
                 network_data['login_state'] = login.state
                 campaign_data['reporting'] = True
@@ -721,7 +721,7 @@ class DeleteNetworkHandler(RequestHandler):
                 default_campaign.name = NETWORKS[default_campaign.network_type]
                 CampaignQueryManager.put(default_campaign)
             elif campaign.network_type in REPORTING_NETWORKS:
-                login = AdNetworkLoginManager.get_login(self.account,
+                login = AdNetworkLoginManager.get_logins(self.account,
                         campaign.network_type).get()
                 if login:
                     login.deleted = True

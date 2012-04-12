@@ -530,7 +530,6 @@ $(function() {
                 });
 
                 $('#networkLoginForm-cancel').click(function () {
-                    console.log($(this).closest('section').attr('id'));
                     if ($(this).closest('section').attr('id') == 'network-settingsForm') {
                         $('#network-settingsForm').slideUp();
                     } else {
@@ -538,10 +537,10 @@ $(function() {
                         // Clone the fieldset into the new form.
                         $('#network-login-form').html($(fieldset).clone());
 
-                        $(fieldset).slideUp({callback: function () {
+                        $(fieldset).slideUp(400, function () {
                             $(fieldset).remove();
                             $('#title-bar-button').show();
-                        }});
+                        });
 
                         setUpLoginForm();
                     }

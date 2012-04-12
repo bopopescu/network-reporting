@@ -74,7 +74,7 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        additional_networks = set(NETWORKS_WITHOUT_REPORTING.keys())
+        additional_networks = set(NETWORKS.keys())
         networks = []
         campaigns_data = []
         reporting = False
@@ -112,10 +112,6 @@ class NetworksHandler(RequestHandler):
                 network_data['active'] = campaign.active
                 network_data['campaign_key'] = campaign.key()
 
-                # Add this to the list of networks that we can set up
-                # additional campaigns for
-                additional_networks.add(network)
-
                 # Add this network to the list that goes in the page
                 networks.append(network_data)
                 campaigns_data.append(campaign_data)
@@ -133,6 +129,7 @@ class NetworksHandler(RequestHandler):
                 network_data['pretty_name'] = NETWORKS[network]
 
                 networks_to_setup.append(network_data)
+            additional_networks = additional_networks - set(networks_to_setup)
 
         additional_networks_ = []
         custom_networks = []

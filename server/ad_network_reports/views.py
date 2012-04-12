@@ -70,7 +70,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
             network_data = {}
             network_data['name'] = network
             network_data['pretty_name'] = AD_NETWORK_NAMES[network]
-            login = AdNetworkLoginManager.get_login(self.account,
+            login = AdNetworkLoginManager.get_logins(self.account,
                     network).get()
             if login:
                 network_data['pub_ids_without_data'] = login.app_pub_ids
@@ -219,9 +219,8 @@ class AppDetailHandler(RequestHandler):
         else:
             days = self.days
 
-        ad_network_app_mapper = AdNetworkMapperManager.get_mapper(mapper_key=
-                mapper_key)
-        stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
+        ad_network_app_mapper = AdNetworkMapperManager.get(mapper_key)
+        stats_list = AdNetworkStatsManager.get_stats_for_days(
                 mapper_key, days)
         daily_stats = []
         for stats in stats_list:
@@ -273,7 +272,7 @@ class ExportAppDetailFileHandler(RequestHandler):
         else:
             days = self.days
 
-        stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
+        stats_list = AdNetworkStatsManager.get_stats_for_days(
                 mapper_key, days)
         mapper = db.get(mapper_key)
         if mapper.ad_network_name == MOBFOX:

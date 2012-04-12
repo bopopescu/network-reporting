@@ -55,6 +55,11 @@ urlpatterns = patterns(
     # /api/adgroup/<adgroup_key/adunits/<adunit_key>
     # individual adunit from an adgroup
 
+    # TODO: make subdomain networks.mopub.com
+    # networks api
+    url(r'^networks/$',
+        'networks_api',
+        name='networks_api'),
 
     # REFACTOR: move this to ad_network_reports
     url(r'^ad_network/account_roll_up/$',

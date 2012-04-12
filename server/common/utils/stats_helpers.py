@@ -356,8 +356,7 @@ class AdNetworkStatsFetcher(object):
 
     @classmethod
     def get_app_on_network_stats(cls, network, days, pub_id):
-        mapper = AdNetworkMapperManager.get_mapper(publisher_id=pub_id,
-                ad_network_name=network)
+        mapper = AdNetworkMapperManager.get_mapper(pub_id, network)
         stats = AdNetworkStatsManager.get_stats_for_mapper_and_days(mapper,
                 days)[0]
         stats_dict = stats.dict_

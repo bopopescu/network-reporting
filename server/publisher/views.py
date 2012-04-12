@@ -497,7 +497,7 @@ class AppDetailHandler(RequestHandler):
         # we don't include network or promo campaigns in the revenue totals
         logging.warn(guarantee_campaigns)
         logging.warn(marketplace_campaigns)
-            
+
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
@@ -645,7 +645,7 @@ class AdUnitShowHandler(RequestHandler):
     def get(self, adunit_key):
         # load the site
         adunit = AdUnitQueryManager.get(adunit_key)
-        
+
         if adunit.account.key() != self.account.key():
             raise Http404
 
@@ -708,7 +708,7 @@ class AdUnitShowHandler(RequestHandler):
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, adgroups = level_camps))
 
-        
+
         try:
             marketplace_activated = marketplace_campaigns[0].campaign.active
         except IndexError:
@@ -1174,7 +1174,7 @@ def create_iad_mapper(account, app):
     AdNetworkLoginCredentials exist
     """
     if app.iad_pub_id:
-        login = AdNetworkLoginManager.get_login(account, network='iad').get()
+        login = AdNetworkLoginManager.get_logins(account, network='iad').get()
         if login:
             mappers = AdNetworkMapperManager.get_mappers_for_app(login=login,
                     app=app)
@@ -1203,7 +1203,7 @@ def calculate_ecpm(adgroup):
             logging.error(error)
     return adgroup.bid
 
-    
+
 def filter_adgroups(adgroups, cfilter):
     filtered_adgroups = filter(lambda x: x.campaign.campaign_type in cfilter, adgroups)
     filtered_adgroups = sorted(filtered_adgroups, lambda x,y: cmp(y.bid, x.bid))

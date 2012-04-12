@@ -100,8 +100,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                                    "network: " + ad_network)
                 wants_email = self.get_argument('email', False) and True
                 accounts_login_credentials = set([creds.ad_network_name for
-                    creds in AdNetworkLoginManager.get_login(
-                        account)])
+                    creds in AdNetworkLoginManager.get_logins(account)])
                 login_credentials = AdNetworkReportManager. \
                         create_login_credentials_and_mappers(account=account,
                                 ad_network_name=

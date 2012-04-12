@@ -419,7 +419,7 @@ $(function() {
                     },
                     submitHandler: function(form) {
                         $(form).ajaxSubmit({
-                            data: {ajax: true, show_login: !$('#networkLoginForm').is(':hidden')},
+                            data: {ajax: true},
                             dataType: 'json',
                             success: function(jsonData, statusText, xhr, $form) {
                                 if(jsonData.success) {
@@ -471,58 +471,84 @@ $(function() {
                 });
 
 
-            $("#networkLoginForm-submit").click(function() {
-                    // Hack to serialize sub-section of forms data.
-                    // Add a new form and hide it.
-                    $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
-                    // Clone the fieldset into the new form.
-                    $('#form-to-submit').html($('.login-credentials-fields').clone());
-                    // Serialize the data.
-                    var data = $('#form-to-submit').serialize();
-                    // Remove the form.
-                    $('#form-to-submit').remove();
-                    data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
-
-                    // Check if data submitted in the form is valid login
-                    // information for the ad network
-                    var message = $('.login-credentials-message');
-                    $(message).html("Verifying login credentials...");
-
-                    $.ajax({url: 'https://checklogincredentials.mopub.com',
-                        data: data,
-                        crossDomain: true,
-                        dataType: "jsonp",
-                        success: function(valid) {
-                            // Upon success notify the user
-                            if (valid) {
-                                $(message).html("MoPub is currently optimizing "
-                                                + pretty_name
-                                                + " by pulling data from "
-                                                + pretty_name + " using the following credentials.");
-                                var username = $('#id_username_str').val();
-                                var password = $('#id_password_str').val();
-                                var client_key = $('#id_client_key').val();
-
-                                $('#id_username_str').hide();
-                                $('#id_password_str').hide();
-                                $('#id_client_key').hide();
-
-                                $('#username').text(username);
-                                var hidden_password = "";
-                                $.each( password, function(c){
-                                    hidden_password += "*";
-                                });
-                                $('#password').text(hidden_password);
-                                $('#client_key').text(client_key);
-                                $('.login-credentials-submit').hide();
-                                $('.login-credentials-settings').show();
-                                saved_new_login = true;
-                            } else {
-                                $(message).html("Invalid login information.");
-                            }
+            function setUpLoginForm() {
+                $("#networkLoginForm-submit").click(function() {
+                        if ($(this).hasClass('title-bar-level')) {
+                            var data = $(this).closest('.login-credentials-fields').serialize();
+                        } else {
+                            // Hack to serialize sub-section of forms data.
+                            // Add a new form and hide it.
+                            $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
+                            // Clone the fieldset into the new form.
+                            $('#form-to-submit').html($(this).closest('.login-credentials-fields').clone());
+                            // Serialize the data.
+                            var data = $('#form-to-submit').serialize();
+                            // Remove the form.
+                            $('#form-to-submit').remove();
                         }
-                    });
-            });
+                        data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
+
+                        // Check if data submitted in the form is valid login
+                        // information for the ad network
+                        var message = $('.login-credentials-message');
+                        $(message).html("Verifying login credentials...");
+
+                        $.ajax({url: 'https://checklogincredentials.mopub.com',
+                            data: data,
+                            crossDomain: true,
+                            dataType: "jsonp",
+                            success: function(valid) {
+                                // Upon success notify the user
+                                if (valid) {
+                                    $(message).html("MoPub is currently optimizing "
+                                                    + pretty_name
+                                                    + " by pulling data from "
+                                                    + pretty_name + " using the following credentials.");
+                                    var username = $('#id_username_str').val();
+                                    var password = $('#id_password_str').val();
+                                    var client_key = $('#id_client_key').val();
+
+                                    $('#id_username_str').hide();
+                                    $('#id_password_str').hide();
+                                    $('#id_client_key').hide();
+
+                                    $('#username').text(username);
+                                    var hidden_password = "";
+                                    $.each( password, function(c){
+                                        hidden_password += "*";
+                                    });
+                                    $('#password').text(hidden_password);
+                                    $('#client_key').text(client_key);
+                                    $('.login-credentials-submit').hide();
+                                    $('.login-credentials-settings').show();
+                                    saved_new_login = true;
+                                } else {
+                                    $(message).html("Invalid login information.");
+                                }
+                            }
+                        });
+                });
+
+                $('#networkLoginForm-cancel').click(function () {
+                    console.log($(this).closest('section').attr('id'));
+                    if ($(this).closest('section').attr('id') == 'network-settingsForm') {
+                        $('#network-settingsForm').slideUp();
+                    } else {
+                        var fieldset = $(this).closest('.login-credentials-fields');
+                        // Clone the fieldset into the new form.
+                        $('#network-login-form').html($(fieldset).clone());
+
+                        $(fieldset).slideUp({callback: function () {
+                            $(fieldset).remove();
+                            $('#title-bar-button').show();
+                        }});
+
+                        setUpLoginForm();
+                    }
+                });
+            }
+
+            setUpLoginForm();
 
             $("#edit-login").click(function() {
                 $('#id_username_str').show();
@@ -656,16 +682,6 @@ $(function() {
                 }
             }).filter(':checked').click();
 
-            $('#networkLoginForm-cancel').click(function () {
-                $('#networkLoginForm').slideUp(400, function () {
-                    $('#networkLoginForm-show').show();
-                });
-            });
-
-            $('#networkLoginForm-show').click(function () {
-                $('#networkLoginForm-show').hide();
-                $('#networkLoginForm').slideDown();
-            });
         }
     }
 

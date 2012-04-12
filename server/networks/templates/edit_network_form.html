@@ -13,16 +13,17 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-<span class="titlebar-right{% if login_form and show_login %} hidden{% endif %}">
+<span id="title-bar-button" class="titlebar-right{% if login_form and not network.show_login %} hidden{% endif %}">
     <a class="button" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
 </span>
 {% endblock titleBarRight %}
 
 {% block content %}
-{% if login_form and not show_login %}
+{% if login_form %}
 <section id="network-settingsForm" class="hidden">
-    <form accept-charset="ascii" id="network_login_form">
-        <fieldset class="alt login-credentials-fields login-credentials" style="padding-top:20px">
+    <form accept-charset="ascii" id="network-login-form">
+        {% if not network.show_login %}
+        <fieldset class="alt login-credentials-fields" style="padding-top:20px">
             <legend>
                 <h2> Revenue Reporting </h2>
             </legend>
@@ -62,7 +63,7 @@
 
                 <div class="form-submit login-credentials-submit">
                     {% if network.name == "mobfox" and not reporting %}
-                    <a class="button" id="networkLoginForm-submit">Turn on Reporting</a>
+                    <a class="button" id="networkLoginForm-submit title-bar-level">Turn on Reporting</a>
                     {% else %}
                     {% if network.name != "mobfox" %} 
                     <a class="button" id="networkLoginForm-submit">Check and Save Credentials</a>
@@ -75,6 +76,7 @@
                 </div>
             </div>
         </fieldset>
+        {% endif %}
     </form>
 </section>
 {% endif %}
@@ -270,16 +272,13 @@
         </ul>
     </fieldset>
 
-    {% if login_form and show_login %}
-    <fieldset class="alt login-credentials-fields login-credentials" style="padding-top:20px">
+    {% if login_form and network.show_login %}
+    <fieldset class="alt login-credentials-fields" style="padding-top:20px">
         <legend>
-            <h2>
-                <span style="float: left;">Revenue Reporting</span>
-                <span id="networkLoginForm-show" class="ui-icon ui-icon-triangle-1-s" style="margin-left: 10px; float: left; cursor:pointer;"></span>
-            </h2>
+            <h2> Revenue Reporting </h2>
         </legend>
 
-        <div id="networkLoginForm" style="clear: both;padding-top:10px">
+        <div>
             <div class="login-credentials-message">
                 {% if reporting %}
                 Revenue reporting for {{ network.pretty_name }} is turned on.

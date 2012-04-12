@@ -12,7 +12,7 @@ handlers:
   script: main.py
   login: admin
   
-- url: /mail/*
+- url: /mail/.*
   script: main.py
   login: admin
 

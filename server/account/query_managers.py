@@ -20,6 +20,9 @@ class AccountQueryManager(CachedQueryManager):
     @classmethod
     def get_current_account(cls,request=None,user=None,cache=False,create=True):
         user = user or request.user
+        # if a non logged in user return a None account
+        if user.is_anonymous():
+            return None
         # try to fetch the account for this user from memcache
         if cache:
             account = memcache.get(str(cls._user_key(user)), namespace=

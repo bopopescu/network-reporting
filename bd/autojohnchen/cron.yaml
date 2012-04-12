@@ -1,0 +1,10 @@
+cron:
+- description: MPX spent report
+  url: /mail/daily
+  schedule: every day 23:59
+  timezone: America/Los_Angeles
+
+- description: MPX spent report (halftime report)
+  url: /mail/daily
+  schedule: every day 11:59
+  timezone: America/Los_Angeles

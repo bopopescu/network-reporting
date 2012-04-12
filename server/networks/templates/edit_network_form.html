@@ -12,7 +12,73 @@
 </h1>
 {% endblock pageTitle %}
 
+{% block titleBarRight %}
+<span class="titlebar-right{% if login_form and show_login %} hidden{% endif %}">
+    <a class="button" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
+</span>
+{% endblock titleBarRight %}
+
 {% block content %}
+{% if login_form and not show_login %}
+<section id="network-settingsForm" class="hidden">
+    <form accept-charset="ascii" id="network_login_form">
+        <fieldset class="alt login-credentials-fields login-credentials" style="padding-top:20px">
+            <legend>
+                <h2> Revenue Reporting </h2>
+            </legend>
+
+            <div id="networkLoginForm" style="clear: both;padding-top:10px">
+                <div class="login-credentials-message">
+                    {% if reporting %}
+                    Revenue reporting for {{ network.pretty_name }} is turned on.
+                    {% else %}
+                    MoPub can report your revenue and other data directly from {{ network.pretty_name }}. {% if network.name != "mobfox" %}MoPub uses your login credentials to retrieve the revenue data from {{ network.pretty_name }}.{% endif %}
+                    {% endif %}    
+                </div>
+
+                {% if network.name != "mobfox" %}
+                <ul class="form_fields">
+                    <li>
+                    {{ login_form.username_str.label_tag }}
+                    {{ login_form.username_str }}
+                    <span id="username"></span>
+                    </li>
+
+                    <li>
+                    {{ login_form.password_str.label_tag }}
+                    {{ login_form.password_str }}
+                    <span id="password"></span>
+                    </li>
+
+                    {% if network.name == "admob" %}
+                    <li>
+                    {{ login_form.client_key.label_tag }}
+                    {{ login_form.client_key }}
+                    <span id="client_key"></span>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+
+                <div class="form-submit login-credentials-submit">
+                    {% if network.name == "mobfox" and not reporting %}
+                    <a class="button" id="networkLoginForm-submit">Turn on Reporting</a>
+                    {% else %}
+                    {% if network.name != "mobfox" %} 
+                    <a class="button" id="networkLoginForm-submit">Check and Save Credentials</a>
+                    {% endif %}
+                    {% endif %}
+                    <a class="button" id="networkLoginForm-cancel">No Thanks</a>
+                </div>
+                <div class="form-submit login-credentials-settings hidden">
+                    <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</section>
+{% endif %}
+
 <form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
     <div class="content-main">
 
@@ -204,16 +270,16 @@
         </ul>
     </fieldset>
 
-    {% if login_form %}
+    {% if login_form and show_login %}
     <fieldset class="alt login-credentials-fields login-credentials" style="padding-top:20px">
         <legend>
             <h2>
                 <span style="float: left;">Revenue Reporting</span>
-                <span id="networkLoginForm-show" class="ui-icon ui-icon-triangle-1-s {% if network.show_login %}hidden{% endif %}" style="margin-left: 10px; float: left; cursor:pointer;"></span>
+                <span id="networkLoginForm-show" class="ui-icon ui-icon-triangle-1-s" style="margin-left: 10px; float: left; cursor:pointer;"></span>
             </h2>
         </legend>
 
-        <div id="networkLoginForm" {% if not network.show_login %}class="hidden"{% endif %} style="clear: both;padding-top:10px">
+        <div id="networkLoginForm" style="clear: both;padding-top:10px">
             <div class="login-credentials-message">
                 {% if reporting %}
                 Revenue reporting for {{ network.pretty_name }} is turned on.
@@ -262,6 +328,7 @@
         </div>
     </fieldset>
     {% endif %}
+
     </div> <!-- <div class="content-main"> -->
     <div class="clear"></div><!-- Previous <div> is float:left -->
     <section id="dashboard-apps">

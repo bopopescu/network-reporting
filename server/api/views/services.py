@@ -496,9 +496,9 @@ class NetworkAppsService(RequestHandler):
                             self.account.key(), get_from_db=True)
                     adunit.active = adgroup.active
 
-                    all_stats = stats_manager.get_stats_for_days(publisher=app,
+                    all_stats = stats_manager.get_stats_for_days(publisher=adunit,
                                                                  advertiser=
-                                                                    adgroup,
+                                                                    campaign,
                                                                  days=self.days)
                     stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
 

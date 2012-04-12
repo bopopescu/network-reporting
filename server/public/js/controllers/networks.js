@@ -290,6 +290,17 @@ $(function() {
                 });
             });
 
+            $('#network-settingsButton')
+                .button({ icons: { primary: "ui-icon-wrench" } })
+                .click(function(e) {
+                    e.preventDefault();
+                    if ($('#network-settingsForm').is(':visible')) {
+                        $('#network-settingsForm').slideUp('fast');
+                    } else {
+                        $('#network-settingsForm').slideDown('fast');
+                    }
+                });
+
             // text entered for app level network ids should propogate to
             // children
             $('.app-pub-id')

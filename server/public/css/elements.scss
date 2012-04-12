@@ -608,14 +608,23 @@ span.pub_id.muted {
 }
 
 div.editable {
-    margin-left:5px;
-    display:inline-block;
+    margin-left: 5px;
+    span {
+        display: inline-block;
+    }
 }
 .editable {
     color: #CCC;
+    font-weight: 300;
 }
 .editable:hover {
     color: #0090D9;
+    .editable-hidden {
+        opacity: 1;
+    }
+}
+.editable-hidden {
+    opacity: 0;
 }
 .editable .caret {
     margin-top: 8px;

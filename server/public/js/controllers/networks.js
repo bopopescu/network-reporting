@@ -525,11 +525,16 @@ $(function() {
             $('.cpm-edit').tooltip({
                 title: "Set CPM for all each units"
             });            
+            $('.cpm-close').tooltip({
+                title: "Set CPM at the app level"
+            });                        
             $('.cpm-edit').click(function (event) {
                 event.preventDefault();
-                $(this).parents('tbody').find('tr.main .cpm-data input').hide();
-                $(this).parents('tbody').find('.cpm-edit').hide();
-                $(this).parents('tbody').find('.cpm-input').show();
+                var div = $(this).parents('tbody');
+                div.find('tr.main .cpm-data input').hide();
+                div.find('tr.main .cpm-data .editable').show();
+                div.find('.cpm-edit').hide();
+                div.find('.cpm-input').show();
             });
             $('.pub-id-close').click(function (event) {
                 event.preventDefault;
@@ -540,9 +545,11 @@ $(function() {
             });
             $('.cpm-close').click(function (event) {
                 event.preventDefault;
-                $(this).parents('tbody').find('tr.main .cpm-data input').show();
-                $(this).parents('tbody').find('.cpm-input').hide();
-                $(this).parents('tbody').find('.cpm-edit').show();
+                var div = $(this).parents('tbody');
+                div.find('tr.main .cpm-data input').show();
+                div.find('.cpm-input').hide();
+                div.find('.cpm-edit').show();
+                div.find('tr.main .cpm-data .editable').hide();
             });
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';

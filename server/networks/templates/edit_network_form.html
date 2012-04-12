@@ -314,6 +314,12 @@
                         {% endif %}
                         <td class="text cpm-data" style="width:150px">
                             <input type="text" style="width:40px" value="0.05">
+                            <div class="cpm-close editable hidden">
+                                <span>
+                                    <b class="caret"></b>                            
+                                    <span class="editable-hidden">Set app CPM</span>
+                                </span>
+                            </div>    
                         </td>
                         {% if reporting %}
                         <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
@@ -347,8 +353,8 @@
                                     <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
                                 </div>
                                 <div class="pub-id-edit editable">
-                                    <span class="pub-id-value">Change Network ID</span>
-                                    <b class="caret"></b>                            
+                                    <span class="pub-id-value"></span>
+                                    <b class="caret"></b>
                                 </div>                            
                             </div>
                         </td>
@@ -360,8 +366,6 @@
                             </div>           
                             <div class="cpm-input hidden">
                                 <input type="text" value="0.05" style="width:40px">
-                                <span class="cpm-close ui-icon ui-icon-close" style="display:inline-block"></span>
-
                             </div>
                         </td>
                         {% if reporting %}

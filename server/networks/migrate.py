@@ -22,7 +22,10 @@ ADGROUP_FIELD_EXCLUSION_LIST = ['account', 'campaign', 'net_creative',
         'site_keys', 'active']
 CREATIVE_FIELD_EXCLUSION_LIST = ['ad_group', 'account']
 
-accounts = [Account.get('agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExMTYwMzg4NTI0MzgzNzUzNDQxMAw')]
+# Jim's account
+#'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExMTYwMzg4NTI0MzgzNzUzNDQxMAw'
+#'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYscSjDww'
+accounts = [Account.get('ag1kZXZ-bW9wdWItaW5jcg0LEgdBY2NvdW50GAMM')]
 
 def bulk_get(query, last_object):
     return query.filter('__key__ >', last_object).fetch(MAX)
@@ -35,13 +38,14 @@ def create_creative(new_adgroup, adgroup):
     # none if anything else
     new_creative = new_adgroup.default_creative(html_data)
     # copy properties of old creative to new one
-    for field in adgroup.net_creative.properties().iterkeys():
-        if field not in CREATIVE_FIELD_EXCLUSION_LIST:
-            try:
-                setattr(new_creative, field, getattr(adgroup.net_creative,
-                    field))
-            except db.DerivedPropertyError:
-                pass
+    if  adgroup.net_creative:
+        for field in adgroup.net_creative.properties().iterkeys():
+            if field not in CREATIVE_FIELD_EXCLUSION_LIST:
+                try:
+                    setattr(new_creative, field, getattr(adgroup.net_creative,
+                        field))
+                except db.DerivedPropertyError:
+                    pass
 
     # new adgroup shouldn't have a creative if it does delete it
     if new_adgroup.net_creative:

@@ -406,7 +406,9 @@ var mopub = window.mopub || {};
                         var network_selector = selector + ' .networks-' + metric;
                     }
                     $(mopub_selector).html(mopub_campaigns.get_formatted_stat(metric));
-                    $(network_selector).html(network_campaigns.get_formatted_stat(metric));
+                    if (!_.isEmpty(network_campaigns.models)) {
+                        $(network_selector).html(network_campaigns.get_formatted_stat(metric));
+                    }
 
                     function renderColumn(campaigns, selector) {
                         var totals = campaigns.get_formatted_total_daily_stats(metric).reverse();
@@ -417,7 +419,9 @@ var mopub = window.mopub || {};
                         });
                     }
                     renderColumn(mopub_campaigns, '.all-');
-                    renderColumn(network_campaigns, '.networks-');
+                    if (!_.isEmpty(network_campaigns.models)) {
+                        renderColumn(network_campaigns, '.networks-');
+                    }
                 });
 
             }

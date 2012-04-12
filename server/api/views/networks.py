@@ -9,6 +9,7 @@ from django.http import Http404
 
 from account.query_managers import AccountQueryManager
 from publisher.query_managers import AppQueryManager
+# TODO: on merge of new networks uncomment NetworkStats stuff
 from advertiser.models import NetworkStates
 from advertiser.query_managers import CampaignQueryManager
 
@@ -37,7 +38,6 @@ class NetworksApi(RequestHandler):
                              'all_stats': all_stats})
 
     def post(self):
-        post_body = self.request.raw_post_data
         post_dict = json.loads(self.request.raw_post_data)
         arg_list = post_dict['arg_list']
 
@@ -51,7 +51,6 @@ class NetworksApi(RequestHandler):
         temp_stats = [get_all_stats(args['app'], args['campaign'],
             args['account'], start_date, end_date).items() for args in
             arg_list]
-        logging.info(temp_stats)
         all_stats = dict(sum(temp_stats, []))
 
         return JSONResponse({'status': 200,
@@ -83,27 +82,29 @@ def get_all_stats(app_key, campaign_key, account_key, start_date, end_date):
         campaign = None
 
     if campaign:
-        if campaign.network_state == \
-                NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
-            network = campaign.network_type
-            if app:
-                login = AdNetworkLoginManager.get_logins(account,
-                        network=network).get()
-                # multiple mappers can exist for an app if the pub id has
-                # changed
-                mappers = AdNetworkMapperManager.get_mappers_for_app(
-                        login=login, app=app)
-                # sum stats accross day for each list of mapper stats by
-                # day
-                all_stats = [sum(stats, AdNetworkStats()) for stats in zip(*[
-                    AdNetworkStatsManager.get_stats_for_days(mapper.key(),
-                        days) for mapper in mappers])]
-            else:
-                all_stats = AdNetworkNetworkStatsManager.get_stats_for_days(
-                        account, network, days)
+#            if campaign.network_state == \
+#                    NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
+#                network = campaign.network_type
+        network = campaign.adgroups.get().network_type.replace('_native',
+                '').lower()
+        if app:
+            login = AdNetworkLoginManager.get_logins(account,
+                    network=network).get()
+            # multiple mappers can exist for an app if the pub id has
+            # changed
+            mappers = AdNetworkMapperManager.get_mappers_for_app(
+                    login=login, app=app)
+            # sum stats accross day for each list of mapper stats by
+            # day
+            all_stats = [sum(stats, AdNetworkStats()) for stats in zip(*[
+                AdNetworkStatsManager.get_stats_for_days(mapper.key(),
+                    days) for mapper in mappers])]
         else:
-            # create empty models
-            all_stats = [AdNetworkStats(date=day) for day in days]
+            all_stats = AdNetworkNetworkStatsManager.get_stats_for_days(
+                    account, network, days)
+#            else:
+#                # create empty models
+#                all_stats = [AdNetworkStats(date=day) for day in days]
     else:
         if app:
             all_stats = AdNetworkAppStatsManager.get_stats_for_days(account,

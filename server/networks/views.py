@@ -129,7 +129,7 @@ class NetworksHandler(RequestHandler):
                 network_data['pretty_name'] = NETWORKS[network]
 
                 networks_to_setup.append(network_data)
-            additional_networks = additional_networks - set(networks_to_setup)
+                additional_networks.remove(network)
 
         additional_networks_ = []
         custom_networks = []

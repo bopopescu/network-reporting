@@ -70,6 +70,12 @@ urlpatterns = patterns(
         'network_apps_service',
         name='network_apps_service'),
 
+    # TODO: make subdomain networks.mopub.com
+    # networks api
+    url(r'^networks/$',
+        'networks_api',
+        name='networks_api'),
+
     # REFACTOR: move this to ad_network_reports
     url(r'^ad_network/account_roll_up/$',
         'account_roll_up_service',

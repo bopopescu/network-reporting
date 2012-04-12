@@ -154,6 +154,7 @@ class AdNetworkStats(db.Model):
     impressions = db.IntegerProperty(default=0)
     clicks = db.IntegerProperty(default=0)
 
+    # TODO: create new rather than copy
     def __add__(self,
                 stats):
         """
@@ -282,6 +283,11 @@ class AdNetworkNetworkStats(AdNetworkStats):
         return cls.get_by_key_name('k:%s:%s:%s' % (account.key(),
             network, day.strftime('%Y-%m-%d')))
 
+    @classmethod
+    def get_by_network_and_days(cls, account, network, days):
+        return cls.get_by_key_name(['k:%s:%s:%s' % (account.key(), network,
+            day.strftime('%Y-%m-%d')) for day in days])
+
 class AdNetworkAppStats(AdNetworkStats):
     """
     key:
@@ -305,6 +311,11 @@ class AdNetworkAppStats(AdNetworkStats):
     def get_by_app_and_day(cls, account, app, day):
         return cls.get_by_key_name('k:%s:%s:%s' % (account.key(),
             app.key(), day.strftime('%Y-%m-%d')))
+
+    @classmethod
+    def get_by_app_and_days(cls, account, app, days):
+        return cls.get_by_key_name(['k:%s:%s:%s' % (account.key(),
+            app.key(), day.strftime('%Y-%m-%d')) for day in days])
 
 class AdNetworkManagementStats(db.Model): #(date)
     """

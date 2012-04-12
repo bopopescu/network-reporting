@@ -195,7 +195,7 @@ class MpxReportHandler(webapp.RequestHandler):
         for x in a:
           body += "%s: $%.2f\n" % (x[0], x[1])
 
-        body += "\nData retrieved at %s. Thank you - Automated John Chen" % time.strftime('%b %d %Y %H:%M:%S')
+        body += "\nData retrieved at %s GMT. Thank you - Automated John Chen" % time.strftime('%b %d %Y %H:%M:%S')
         
         # send mail
         logging.info(body)

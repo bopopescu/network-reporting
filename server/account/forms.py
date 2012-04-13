@@ -86,11 +86,6 @@ class AppNetworkConfigForm(forms.ModelForm):
     mobfox_pub_id = forms.CharField(required=False,
                                     widget=forms.TextInput(attrs={'placeholder': 'MobFox Publisher Site ID'}))
 
-    def __init__(self, *args, **kwargs):
-        super(AppNetworkConfigForm, self).__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = "pub_id %s" % field_name
-
     def clean(self):
         cleaned_data = self.cleaned_data
         for key, value in cleaned_data.iteritems():
@@ -112,11 +107,6 @@ class AdUnitNetworkConfigForm(forms.ModelForm):
                                      widget=forms.TextInput(attrs={'placeholder': 'Jumptap Ad Spot Alias'}))
     millennial_pub_id = forms.CharField(required=False,
                                         widget=forms.TextInput(attrs={'placeholder': 'Millennial Publisher ID'}))
-
-    def __init__(self, *args, **kwargs):
-        super(AdUnitNetworkConfigForm, self).__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = "pub_id_field %s" % field_name
 
     def clean(self):
         cleaned_data = self.cleaned_data

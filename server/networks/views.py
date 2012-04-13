@@ -268,11 +268,8 @@ class EditNetworkHandler(RequestHandler):
 
                 adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
                         prefix=str(adunit.key()))
-                # Add class based on app that adunit is under
-                adunit.adgroup_form.fields['active'].widget.attrs['class'] = \
-                        str(app.key()) + '-adunit'
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
-                        ' ' + str(app.key()) + '-cpm-field bid'
+                        ' bid'
 
                 adunit.pub_id = getattr(adunit.network_config, network +
                         '_pub_id', False)

@@ -15,6 +15,7 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, \
      render_to_string, \
+     HttpResponse, \
      JSONResponse
 
 ## Models
@@ -36,7 +37,8 @@ from publisher.query_managers import AppQueryManager, \
 from reporting.query_managers import StatsModelQueryManager
 
 # Util
-from common.utils import sswriter, date_magic
+from common.utils import sswriter, date_magic, xlwt
+from common.utils.unicode_writer import UnicodeWriter
 from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 #REFACTOR: only import what we need here
@@ -1073,6 +1075,63 @@ class DashboardExportHandler(RequestHandler):
 def dashboard_export(request, *args, **kwargs):
     return DashboardExportHandler()(request, *args, **kwargs)
 
+class TableExportHandler(RequestHandler):
+    def post(self):
+        try:
+            data = urllib.unquote(self.request.POST['table'])
+            data = simplejson.loads(data)
+            format = self.request.POST['format']
+            filename = urllib.unquote(self.request.POST['filename'])
+        except Exception:
+            raise Http404
+
+        headers, body = data['headers'], data['body']
+
+        # strip both headers and body cells for leading/trailing whitespace
+        headers = [header.replace('<br>',' ').strip() for header in headers]
+        body = [[cell.replace('<br>',' ').strip() for cell in row] for row in body]
+
+        if format == 'xls':
+            # let's build this spreedsheet using xlwt
+            xls = xlwt.Workbook()
+            ws = xls.add_sheet('Worksheet')
+
+            # set up a bold style for the header
+            bold_style = xlwt.XFStyle()
+            font = xlwt.Font()
+            font.bold = True
+            bold_style.font = font
+
+            # write to spreadsheet
+            for column, header in enumerate(headers):
+                ws.write(0, column, header, bold_style)
+            for i, row in enumerate(body):
+                for j, col in enumerate(row):
+                    ws.write(i + 1, j, body[i][j])
+
+            # make column widths sane and submit
+            ws = set_column_widths(ws, headers, body)
+            response = HttpResponse(mimetype='application/ms-excel')
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            xls.save(response)
+            return response
+
+        elif format == 'csv':
+            response = HttpResponse(mimetype='text/csv')
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+
+            csv_writer = UnicodeWriter(response)
+            if headers:
+                csv_writer.writerow(headers)
+            csv_writer.writerows(body)
+
+            return response
+
+        raise Http404
+
+@login_required
+def table_export(request, *args, **kwargs):
+    return TableExportHandler()(request, *args, **kwargs)
 
 # Helper methods
 
@@ -1208,3 +1267,24 @@ def filter_adgroups(adgroups, cfilter):
     filtered_adgroups = filter(lambda x: x.campaign.campaign_type in cfilter, adgroups)
     filtered_adgroups = sorted(filtered_adgroups, lambda x,y: cmp(y.bid, x.bid))
     return filtered_adgroups
+
+def set_column_widths(ws, headers, body):
+    # xlwt defines the widtht of '0' character as 256, so let's give a bit of leeway
+    char_width = 275
+
+    body.insert(0, headers)
+
+    # maximum width of each column, in characters
+    def max_chars_in_column(column):
+        chars_in_column = [len(cell) for cell in column]
+        return max(chars_in_column)
+
+    # Andrew hated my nested list comprehension, so here's this
+    columns = zip(*body)
+    column_widths = [max_chars_in_column(col) for col in columns]
+
+    # traverse worksheet columns and set width appropriately
+    for i in range(len(body[0])):
+        ws.col(i).width = column_widths[i] * char_width
+
+    return ws

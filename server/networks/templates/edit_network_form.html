@@ -83,29 +83,26 @@
 
 <form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
     <div class="content-main">
-
+    <div>
+        <img src="/images/{{network.name}}-transparent.png"/>
+    </div>
     <fieldset>
-        <legend>
-            <h2>Network Details</h2>
-        </legend>
-
         <ul class="form_fields">
-            <li>
-                {{ adgroup_form.network_type.label_tag }}
-                <div>
-                    <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                    {% if network.name == "admob" or network.name == "millennial" %}
-                    <span class="error">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
-                    {% endif %}
-                </div>
-            </li>
-
             {% if custom_campaign %}
             <li>
             {{ campaign_form.name.label_tag }}
             <div>
                 {{ campaign_form.name }}
             </div>
+            </li>
+            {% endif %}
+
+            {% if network.name == "admob" or network.name == "millennial" %}
+            <li>
+                <label>Special Instructions:</label>
+                <div>
+                    Requires Network SDK (<a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a>)
+                </div>
             </li>
             {% endif %}
 
@@ -157,7 +154,9 @@
             {% endif %}
         </ul>
 
-        <a class="button" id="advanced">Show Advanced Settings</a>
+        <div style="margin-top:15px">
+            <a class="button" id="advanced">Show Advanced Settings</a>
+        </div>
     </fieldset>
 
     <fieldset class="advanced hidden">
@@ -339,7 +338,8 @@
                         <td class="icon"></td>
                         <td class="name"></td>
                         <td class="name pub-id-data">
-                            <input id="all-adunits-network" type="checkbox"{% if network.all_adunits_active %} checked="checked"{% endif %} style="width: 12px; height: 12px;" />
+                            {# TODO: decide if we want this checkbox and where it should go if we do#}
+                            {#<input id="all-adunits-network" type="checkbox"{% if network.all_adunits_active %} checked="checked"{% endif %} style="width: 12px; height: 12px;" />#}
                             Enabled
                         </td>
                         {% if ad_network_ids %}

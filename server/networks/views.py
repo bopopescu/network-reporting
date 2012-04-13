@@ -263,10 +263,11 @@ class EditNetworkHandler(RequestHandler):
             # Create different adgroup form for each adunit
             app.adunits = []
             # Should all adunits active checkbox be checked?
-            if campaign_key:
-                app.all_adunits_active = True
-            else:
-                app.all_adunits_active = False
+            # TODO: decide if we want this functionality
+#            if campaign_key:
+#                app.all_adunits_active = True
+#            else:
+#                app.all_adunits_active = False
             min_cpm = 9999.9
             max_cpm = 0.0
             for adunit in app.all_adunits:
@@ -278,8 +279,8 @@ class EditNetworkHandler(RequestHandler):
                     if adgroup:
                         min_cpm = min(adgroup.bid, min_cpm)
                         max_cpm = max(adgroup.bid, max_cpm)
-                        if not adgroup.active:
-                            app.all_adunits_active = False
+                        #if not adgroup.active:
+                            #app.all_adunits_active = False
 
                 adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
                         prefix=str(adunit.key()))
@@ -302,10 +303,10 @@ class EditNetworkHandler(RequestHandler):
             else:
                 app.bid = None
 
-        if True in [app.all_adunits_active for app in apps]:
-            network_data['all_adunits_active'] = True
-        else:
-            network_data['all_adunits_active'] = False
+#        if False in [app.all_adunits_active for app in apps]:
+#            network_data['all_adunits_active'] = False
+#        else:
+#            network_data['all_adunits_active'] = True
 
         # Create the default adgroup form
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,

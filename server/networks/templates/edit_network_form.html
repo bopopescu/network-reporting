@@ -401,7 +401,7 @@
                         {% endif %}
                         <td class="text cpm-data" style="width:100px">
                             {% if app.bid %}
-                            <input class="float bid app-level" type="text" style="width:40px" value="{{ app.bid }}">
+                            <input class="float bid app-level" type="text" value="{{ app.bid }}">
                             {% endif %}
                             <div class="cpm-close editable hidden">
                                 <span>
@@ -455,9 +455,8 @@
                                 <span class="cpm-value"></span>
                                 <b class="caret"></b>                            
                             </div>           
-                            <div class="cpm-input hidden">
-                                {#{ adunit.adgroup_form.bid }#}
-                                <input type="text" value="0.05" style="width:40px">
+                            <div class="cpm-input{% if app.bid %} hidden{% endif %}">
+                                {{ adunit.adgroup_form.bid }}
                             </div>
                         </td>
                         {% if reporting %}

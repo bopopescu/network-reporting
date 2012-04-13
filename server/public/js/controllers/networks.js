@@ -631,11 +631,13 @@ $(function() {
             });                        
             $('.cpm-edit').click(function (event) {
                 event.preventDefault();
-                var div = $(this).parents('tbody');
-                div.find('tr.main .cpm-data input').hide();
-                div.find('tr.main .cpm-data .editable').show();
-                div.find('.cpm-edit').hide();
-                div.find('.cpm-input').show();
+                var tbody = $(this).closest('tbody');
+                // hide app level bids
+                tbody.find('tr.main .cpm-data input').hide();
+                tbody.find('tr.main .cpm-data .editable').show();
+                // show adunit level bids
+                tbody.find('.cpm-edit').hide();
+                tbody.find('.cpm-input').show();
             });
             $('.pub-id-close').click(function (event) {
                 event.preventDefault;
@@ -653,15 +655,25 @@ $(function() {
             });
             $('.cpm-close').click(function (event) {
                 event.preventDefault;
-                var div = $(this).parents('tbody');
-                div.find('tr.main .cpm-data input').show();
-                div.find('.cpm-input').hide();
+                var tbody = $(this).closest('tbody');
 
-                // copy value of the app level edit to all
-                div.find('.cpm-input').text(div.find('.cpm-edit').val());
+                // copy value of first adunit input to all cpm inputs
+                var value = tbody.find('.cpm-input input').val();
+                tbody.find('.cpm-value').text(value);
+                tbody.find('.cpm-input input').val(value);
+                tbody.find('tr.main .cpm-data input').val(value);
 
-                div.find('.cpm-edit').show();
-                div.find('tr.main .cpm-data .editable').hide();
+                // show app level cpm
+                tbody.find('tr.main .cpm-data input').show();
+                // show app edit text
+                tbody.find('tr.main .cpm-data .editable').hide();
+
+                // hide adunit cpms for app
+                tbody.find('.cpm-input').hide();
+                // show adunit edit text
+                tbody.find('.cpm-edit').show();
+
+                console.log(tbody.find('tr.main .cpm-data input').val());
             });
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';

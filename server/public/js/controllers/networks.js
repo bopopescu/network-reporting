@@ -630,7 +630,7 @@ $(function() {
                 title: "Set ID for this ad unit"
             });
             $('.cpm-edit').tooltip({
-                title: "Set CPM for all each units"
+                title: "Set CPM for each unit"
             });            
             $('.cpm-close').tooltip({
                 title: "Set CPM at the app level"

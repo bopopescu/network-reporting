@@ -810,6 +810,738 @@ var mopub = mopub || {};
             $('#publisher-dashboard-exportSelect-menu').find('li').first().hide();
 
         },
+
+        initializeDashboard: function(bootstrapping_data) {
+            /**
+             * TODO: document
+             *
+             * bootstrapping_data: {
+             *     account: account key
+             * }
+             */
+
+             // TODO: add error handling
+            $.jsonp.setup({
+                callbackParameter: "callback",
+                dataFilter: function (json) {
+                    _.each(['sum', 'daily', 'hourly', 'vs_sum', 'vs_daily', 'vs_hourly'], function (list) {
+                        _.each(json[list], function (obj) {
+                            obj.ctr = obj.imp > 0 ? obj.clk / obj.imp : 0;
+                        });
+                    });
+                    return json;
+                },
+                url: 'http://ec2-23-22-32-218.compute-1.amazonaws.com/'
+            });
+
+            /**
+             * TODO: use routers
+            var Dashboard = Backbone.Router.extend({
+
+                routes: {
+                    ":start_date/:end_date/": "update"   // #search/kiwis/p7
+                },
+
+                update: function(start, end) {
+                     var account = bootstrapping_data['account'];
+                     var granularity = 'daily';
+
+                     var campaigns = '';
+
+                     var queries = [
+
+                     ];
+
+                     var data = {
+                        account: account,
+                        start: start,
+                        end: end,
+                        granularity: granularity,
+                        queries: [{
+                            campaign: '*', // or just dont include it
+                            adgroup: '123',
+                            app: '12345',
+                            adunit: 'aaa',
+                            source: 'direct', // or mpx or networks
+                            source_type: 'promo'
+                        },{
+                            // example: will fetch all promo stats
+                            source: 'direct',
+                            source_type: 'promo'
+                        },{
+                            // example: will get all stats for this adunit that
+                            // were delivered in this adgroup
+                            adgroup: 'asdASidnasdianlsdASD',
+                            adunit: 'aaaBBBcccDDDeeeeFFF'
+                        }]
+                     };
+
+                    $.jsonp({
+                        data: data,
+                        error: function (xOptions, textStatus) {
+                            console.log('JSONP Error: using random data instead.');
+                            start_date = string_to_date(start);
+                            end_date = string_to_date(end);
+                            var date_range = (end_date - start_date) / 86400000 + 1;
+                            var series1 = [];
+                            var series2 = [];
+                            for(var i = 0; i <= date_range; i++) {
+                                series1[i] = Math.random() * 200;
+                                series2[i] = Math.random() * 200;
+                            }
+                            var data = {
+                                'Series 1': series1,
+                                'Series 2': series2
+                            };
+                            update_chart(start_date, end_date, data);
+                        },
+                        success: function (json, textStatus) {
+                            console.log('Success : ' + json + '.');
+                        },
+                        url: 'http://statservice.mopub.com/'
+                    });
+                }
+
+            });
+
+            var dashboard = new Dashboard();
+
+            Backbone.history.start({
+                pushState: true,
+                root: '/inventory/dashboard/'
+            });
+
+            var start_date = new Date(end_date - date_range * 86400000);
+            var url = date_to_string(start_date) + '/' + date_to_string(end_date) + '/';
+            dashboard.navigate(url, {trigger: true});
+            */
+
+            /* Helpers */
+            function format_stat(stat, value) {
+                switch (stat) {
+                    case 'clk':
+                    case 'conversions':
+                    case 'goal':
+                    case 'imp':
+                    case 'requests':
+                        return number_compact(value, 10);
+                    case 'cpm':
+                    case 'rev':
+                        return '$' + number_compact(value, 10);
+                    case 'conv_rate':
+                    case 'ctr':
+                    case 'fill_rate':
+                        return mopub.Utils.formatNumberAsPercentage(value);
+                    case 'status':
+                        return value;
+                    case 'pace':
+                        return (value*100).toFixed() + '%';
+                default:
+                    throw new Error('Unsupported stat "' + stat + '".');
+                }
+            }
+
+            function number_compact(number, multiplier) {
+                if(number >= 1000000*multiplier) {
+                    return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000000)) + 'M';
+                }
+                if(number >= 1000*multiplier) {
+                    return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000)) + 'k';
+                }
+                return mopub.Utils.formatNumberWithCommas(Math.round(number));
+            }
+
+            function string_to_date(date_string) {
+                var parts = date_string.split('-');
+                return new Date(parts[0], parts[1] - 1, parts[2]);
+            }
+
+            function date_to_string(date) {
+                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate() + '-' + date.getHours();
+            }
+
+            function update_rows(type, base_data, base_query) {
+                var data = _.clone(base_data);
+                data.query = [];
+                $('tr.' + type).each(function (index, tr) {
+                    var query = _.clone(base_query);
+                    query[type] = [tr.id];
+                    data.query.push(query);
+                });
+
+                $.jsonp({
+                    data: {
+                        data: JSON.stringify(data)
+                    },
+                    success: function (json, textStatus) {
+                        _.each(data.query, function(query, index) {
+                            var tr = $('#' + query[type]);
+                            _.each(['rev', 'imp', 'clk', 'ctr'], function (stat) {
+                                var value = json.sum[index][stat];
+                                $('td.' + stat, tr).html(format_stat(stat, value));
+                                if(json.vs_sum.length) {
+                                    var td = $('td.' + stat + '_delta', tr);
+                                    var vs_value = json.vs_sum[index][stat];
+                                    if(vs_value !== 0) {
+                                        var delta = (value - vs_value) / vs_value;
+                                        delta = Math.round(delta*100);
+                                        if(delta > 0) {
+                                            delta = '+' + delta;
+                                            td.addClass('positive');
+                                            td.removeClass('negative');
+                                        }
+                                        else if(delta < 0) {
+                                            td.addClass('negative');
+                                            td.removeClass('positive');
+                                        }
+                                        else {
+                                            delta = '~' + delta;
+                                            td.removeClass('negative');
+                                            td.removeClass('positive');
+                                        }
+                                        delta = delta + '%';
+                                        td.html(delta);
+                                        return;
+                                    }
+                                }
+                                $('td.' + stat + '_delta', tr).html('');
+                            });
+                        });
+                    }
+                });
+            }
+
+            function get_keys(type) {
+                return _.map($('tr.' + type + ' input:checked'), function (input) {
+                    return $(input).closest('tr').attr('id');
+                });
+            }
+
+            function get_advertiser() {
+                if($('tr.source input:checked').length) {
+                    return 'source';
+                }
+                if($('tr.campaign input:checked').length) {
+                    return 'campaign';
+                }
+                if($('tr.adgroup input:checked').length) {
+                    return 'adgroup';
+                }
+                return null;
+            }
+
+            function get_publisher() {
+                if($('tr.app input:checked').length) {
+                    return 'app';
+                }
+                if($('tr.adunit input:checked').length) {
+                    return 'adunit';
+                }
+                return null;
+            }
+
+            function get_advertiser_query() {
+                var advertiser = get_advertiser();
+                var query = {};
+                if(advertiser) {
+                    query[advertiser] = get_keys(advertiser);
+                }
+                return query;
+            }
+
+            function get_publisher_query() {
+                var publisher = get_publisher();
+                var query = {};
+                if(publisher) {
+                    query[publisher] = get_keys(publisher);
+                }
+                return query;
+            }
+
+            /* Constants */
+            var WIDTH = 550;
+            var HEIGHT = 150;
+
+            var MARGIN_TOP = 10;
+            var MARGIN_RIGHT = 30;
+            var MARGIN_BOTTOM = 15;
+            var MARGIN_LEFT = 50;
+
+            function update_dashboard(update_rollups, update_charts, update_campaign_table, update_app_table) {
+                var start, end;
+                if($('select[name="date_range"]').val() == 'custom') {
+                    start = new Date($("#datepicker-start-input").val());
+                    end = new Date($("#datepicker-end-input").val());
+                }
+                else {
+                    end = new Date(new Date().toDateString());
+                    switch($('select[name="date_range"]').val()) {
+                        case 'day':
+                            start = end;
+                            break;
+                        case 'week':
+                            start = new Date(end - 86400000 * 6);
+                            break;
+                        case 'two_weeks':
+                            start = new Date(end - 86400000 * 13);
+                            break;
+                    }
+                }
+                end.setHours(23);
+
+                var data = {
+                    account: bootstrapping_data['account'],
+                    start: date_to_string(start),
+                    end: date_to_string(end)
+                };
+
+                if($('[name="compare"]').is(':checked')) {
+                    var diff;
+                    switch($('select[name="date_range"]').val()) {
+                        case 'day':
+                            diff = 86400000;
+                            break;
+                        case 'week':
+                            diff = 86400000 * 7;
+                            break;
+                        case 'two_weeks':
+                            diff = 86400000 * 14;
+                            break;
+                    }
+                    data['vs_start'] = date_to_string(new Date(start - diff));
+                    data['vs_end'] = date_to_string(new Date(end - diff));
+                }
+
+                var granularity = $('select[name="granularity"]').val();
+
+                var advertiser_data = get_advertiser_query();
+                var publisher_data = get_publisher_query();
+
+                if(update_rollups || update_charts) {
+                    var charts_data = _.clone(data);
+
+                    if(update_charts) {
+                        charts_data.granularity = granularity;
+                    }
+                    else {
+                        charts_data.granularity = 'sum';
+                    }
+
+                    charts_data.query = [_.extend(advertiser_data, publisher_data)];
+
+                    $.jsonp({
+                        data: {
+                            data: JSON.stringify(charts_data)
+                        },
+                        success: function (json, textStatus) {
+                            _.defer(function () {
+                                _.each(['rev', 'imp', 'clk'], function (stat) {
+                                    if(update_rollups) {
+                                        var rollup = $('#' + stat + ' > div');
+                                        rollup.children('div.value').html(format_stat(stat, json.sum[0][stat]));
+                                        if(json.vs_sum.length && json.vs_sum[0][stat]) {
+                                            var delta = rollup.children('div.delta');
+                                            var val = (json.sum[0][stat] - json.vs_sum[0][stat]) / json.vs_sum[0][stat];
+                                            var html = '';
+                                            if(val > 0) {
+                                                html += '+';
+                                                delta.removeClass('negative');
+                                                delta.addClass('positive');
+                                            }
+                                            else {
+                                                delta.removeClass('positive');
+                                                delta.addClass('negative');
+                                            }
+                                            html += mopub.Utils.formatNumberAsPercentage(val);
+                                            delta.html(html);
+                                        }
+                                        else {
+                                            rollup.children('div.delta').html('');
+                                        }
+                                    }
+
+                                    if(update_charts) {
+                                        // chart
+                                        var chart = d3.select('#' + stat + ' svg g');
+                                        chart.selectAll('*').remove();
+
+                                        var series = _.map(json[granularity][0], function (slice) {
+                                            return slice[stat];
+                                        });
+                                        var min = d3.min(series);
+                                        var max = d3.max(series);
+
+                                        if(json['vs_' + granularity].length) {
+                                            var vs_series = _.map(json['vs_' + granularity][0], function (slice) {
+                                                return slice[stat];
+                                            });
+                                            if(d3.max(vs_series) > max) {
+                                                max = d3.max(vs_series);
+                                            }
+                                            if(d3.min(vs_series) < min) {
+                                                min = d3.min(vs_series);
+                                            }
+                                        }
+
+                                        if(granularity == 'daily') {
+                                            end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+                                        }
+
+                                        var y = d3.scale.linear().domain([min, max]).range([MARGIN_BOTTOM, HEIGHT - MARGIN_TOP]);
+                                        var x = d3.scale.linear().domain([start, end]).range([MARGIN_LEFT, WIDTH - MARGIN_RIGHT]);
+
+                                        // Lines
+                                        var line = d3.svg.line()
+                                            .x(function(d, i) { return x(start.getTime()+(end-start)*i/(series.length - 1)); })
+                                            .y(function(d) { return -1 * y(d); });
+
+                                        if(vs_series) {
+                                            chart.append("svg:path").attr("d", line(vs_series)).attr('class', 'comparison');
+                                        }
+                                        chart.append("svg:path").attr("d", line(series));
+
+                                        // X Axis
+                                        var x_label = function (d) {
+                                            d = new Date(d);
+                                            return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+                                        };
+                                        var interval = 86400000;
+                                        if(granularity == 'hourly' && end - start <= 2 * 86400000) {
+                                            x_label = function (d) {
+                                                return date_to_string(new Date(d));
+                                            };
+                                            interval = 3600000;
+                                        }
+                                        else {
+                                        }
+
+                                        if(Math.round((end - start) / (interval * 5)) > 0) {
+                                            interval = interval * Math.round((end - start) / (interval * 5));
+                                        }
+
+                                        var x_ticks = [];
+                                        for(var value = start; value <= end; value = new Date(value.getTime() + interval)) {
+                                            x_ticks.push(value);
+                                        }
+
+                                        chart.append("svg:line")
+                                            .attr("x1", x(start))
+                                            .attr("y1", -1 * y(min))
+                                            .attr("x2", x(end))
+                                            .attr("y2", -1 * y(min));
+
+                                        chart.selectAll(".xLabel")
+                                            .data(x_ticks)
+                                            .enter().append("svg:text")
+                                            .attr("class", "xLabel")
+                                            .text(x_label)
+                                            .attr("x", function(d) { return x(d); })
+                                            .attr("y", 0)
+                                            .attr("text-anchor", "middle");
+
+                                        chart.selectAll(".xTicks")
+                                            .data(x_ticks)
+                                            .enter().append("svg:line")
+                                            .attr("class", "xTicks")
+                                            .attr("x1", function(d) { return x(d); })
+                                            .attr("y1", -1 * y(min))
+                                            .attr("x2", function(d) { return x(d); })
+                                            .attr("y2", -1 * (y(min) - 4));
+
+                                        // Y AXIS
+                                        chart.append("svg:line")
+                                            .attr("x1", x(start))
+                                            .attr("y1", -1 * y(min))
+                                            .attr("x2", x(start))
+                                            .attr("y2", -1 * y(max));
+
+                                        chart.selectAll(".yTicks")
+                                            .data(y.ticks(4))
+                                            .enter().append("svg:line")
+                                            .attr("class", "yTicks")
+                                            .attr("y1", function(d) { return -1 * y(d); })
+                                            .attr("x1", x(start) - 4)
+                                            .attr("y2", function(d) { return -1 * y(d); })
+                                            .attr("x2", x(start));
+
+                                        chart.selectAll(".yLabel")
+                                            .data(y.ticks(4))
+                                            .enter().append("svg:text")
+                                            .attr("class", "yLabel")
+                                            .text(function(d) { return number_compact(d, 1); })
+                                            .attr("x", MARGIN_LEFT - 5)
+                                            .attr("y", function(d) { return -1 * y(d); })
+                                            .attr("text-anchor", "end")
+                                            .attr("dy", 4);
+                                    }
+                                });
+                            });
+                        }
+                    });
+                }
+
+                if(update_campaign_table) {
+                    update_rows('source', data, publisher_data);
+                    update_rows('campaign', data, publisher_data);
+                }
+
+                if(update_app_table) {
+                    update_rows('app', data, advertiser_data);
+                }
+
+                if(update_campaign_table) {
+                    update_rows('adgroup', data, publisher_data);
+                }
+
+                if(update_app_table) {
+                    update_rows('adunit', data, advertiser_data);
+                }
+            }
+
+            /* Controls */
+            // date controls
+            // Set up the two date fields with datepickers
+            var valid_date_range = {
+                endDate: "0d"
+            };
+            $("input[name='start-date']").datepicker(valid_date_range);
+            $("input[name='end-date']").datepicker(valid_date_range);
+
+            // On submit, get the date range from the two inputs and
+            // form the url, and reload the page.
+            $("#custom-date-submit").unbind('click').click(function() {
+                $('#custom_date_range').html($("#datepicker-start-input").val() + ' to ' + $("#datepicker-end-input").val());
+                $('#custom_date_range').show();
+                $("#datepicker-custom-range").toggleClass('hidden');
+                update_dashboard(true, true, true, true);
+            });
+
+            $("#custom_date_range").click(function () {
+                $("#datepicker-custom-range").toggleClass('hidden');
+            });
+
+            $('[name="date_range"]').change(function () {
+                if($(this).val() == 'custom') {
+                    $("#datepicker-custom-range").toggleClass('hidden');
+                    $('[name="compare"]').removeProp('checked');
+                    $('[name="compare"]').closest('label').hide();
+                }
+                else {
+                    $('#custom_date_range').hide();
+                    $('[name="compare"]').closest('label').show();
+                    if($(this).val() == 'day') {
+                        // granularity can't be daily
+                        if($('[name="granularity"]').val() == 'daily') {
+                            $('[name="granularity"]').val('hourly');
+                        }
+                        $('[name="granularity"] option[value="daily"]').attr('disabled', 'disabled');
+                        $('span#comparison_range').html('yesterday');
+                    }
+                    else {
+                        // granularity can be daily
+                        $('[name="granularity"] option[value="daily"]').removeAttr('disabled');
+                        if($(this).val() == 'week') {
+                            $('span#comparison_range').html('the week before');
+                        }
+                        else if($(this).val() == 'two_weeks') {
+                            $('span#comparison_range').html('the two weeks before');
+                        }
+                    }
+                    update_dashboard(true, true, true, true);
+                }
+            });
+
+            // granularity
+            $('[name="granularity"]').change(function () {
+                update_dashboard(false, true, false, false);
+            });
+
+            // comparison
+            $('[name="compare"]').change(function () {
+                update_dashboard(true, true, true, true);
+            });
+
+            // export
+            $('button#export').click(function () {
+                var advertiser = get_advertiser();
+                $('#export_wizard select[name="advertiser_breakdown"]').children('option').each(function (index, option) {
+                    $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== advertiser));
+                });
+                var publisher = get_publisher();
+                $('#export_wizard select[name="publisher_breakdown"]').children('option').each(function (index, option) {
+                    $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== publisher));
+                });
+                $('#export_wizard').modal('show');
+            });
+
+            $('button#download').click(function () {
+                $('#export_wizard').modal('hide');
+                var start, end;
+                if($('select[name="date_range"]').val() == 'custom') {
+                    start = new Date($("#datepicker-start-input").val());
+                    end = new Date($("#datepicker-end-input").val());
+                }
+                else {
+                    end = new Date(new Date().toDateString());
+                    switch($('select[name="date_range"]').val()) {
+                        case 'day':
+                            start = end;
+                            break;
+                        case 'week':
+                            start = new Date(end - 86400000 * 6);
+                            break;
+                        case 'two_weeks':
+                            start = new Date(end - 86400000 * 13);
+                            break;
+                    }
+                }
+                end.setHours(23);
+
+                var query = {};
+                var advertiser_breakdown = $('select[name="advertiser_breakdown"]').val();
+                query[advertiser_breakdown] = get_keys(advertiser_breakdown);
+                var publisher_breakdown = $('select[name="publisher_breakdown"]').val();
+                query[publisher_breakdown] = get_keys(publisher_breakdown);
+
+                var names = {};
+                _.each(query[advertiser_breakdown], function(id) {
+                    names[id] = $.trim($('#' + id + ' td.name').html());
+                });
+                _.each(query[publisher_breakdown], function(id) {
+                    names[id] = $.trim($('#' + id + ' td.name').html());
+                });
+
+                var data = {
+                    account: bootstrapping_data['account'],
+                    start: date_to_string(start),
+                    end: date_to_string(end),
+                    granularity: $('select[name="granularity"]').val(),
+                    advertiser_breakdown: advertiser_breakdown,
+                    publisher_breakdown: publisher_breakdown,
+                    query: query,
+                    names: names
+                };
+
+                window.location = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/csv/?data=' + JSON.stringify(data);
+
+            });
+
+            /* Campaigns Table */
+            var campaigns_table = $('table#campaigns');
+
+            // check/uncheck sources
+            $('tr.source input', campaigns_table).click(function () {
+                if(this.checked) {
+                    $('tr.campaign input, tr.adgroup input')
+                        .prop('checked', false)
+                        .hide();
+                }
+                else{
+                    // if no sources are checked, show campaign and adgroup checkboxes
+                    var checked = false;
+                    $('tr.source').each(function (index, tr) {
+                        if($(tr).find('input').prop('checked')) {
+                            checked = true;
+                        }
+                    });
+                    if(!checked) {
+                        $('tr.campaign input, tr.adgroup input').show();
+                    }
+                }
+
+                update_dashboard(true, true, true, true);
+            });
+
+            // check/uncheck campaigns
+            $('tr.campaign input', campaigns_table).click(function () {
+                if(this.checked) {
+                    $('tr.adgroup input')
+                        .prop('checked', false)
+                        .hide();
+                }
+                else {
+                    // if no campaigns are checked, show adgroup checkboxes
+                    var checked = false;
+                    $('tr.campaign').each(function (index, tr) {
+                        if($(tr).find('input').prop('checked')) {
+                            checked = true;
+                        }
+                    });
+                    if(!checked) {
+                        $('tr.adgroup input').show();
+                    }
+                }
+
+                update_dashboard(true, true, true, true);
+            });
+
+            // check/uncheck adgroups
+            $('tr.adgroup input', campaigns_table).click(function () {
+                update_dashboard(true, true, true, true);
+            });
+
+            // expand adgroups
+            $('tr.campaign button.expand', campaigns_table).live('click', function () {
+                $(this).closest('tr').nextUntil('tr.campaign').show();
+                $(this).removeClass('expand');
+                $(this).addClass('collapse');
+            });
+
+            // collapse adgroups
+            $('tr.campaign button.collapse', campaigns_table).live('click', function () {
+                $(this).closest('tr').nextUntil('tr.campaign').hide();
+                $(this).removeClass('collapse');
+                $(this).addClass('expand');
+            });
+
+            /* Apps Table */
+            var apps_table = $('table#apps');
+
+            // check/uncheck apps
+            $('tr.app input', apps_table).click(function () {
+                if(this.checked) {
+                    $('tr.adunit input')
+                        .prop('checked', false)
+                        .hide();
+                }
+                else{
+                    // if no apps are checked, show adunit checkboxes
+                    var checked = false;
+                    $('tr.app').each(function (index, tr) {
+                        if($(tr).find('input').prop('checked')) {
+                            checked = true;
+                        }
+                    });
+                    if(!checked) {
+                        $('tr.adunit input').show();
+                    }
+                }
+
+                update_dashboard(true, true, true, true);
+            });
+
+            // check/uncheck adunits
+            $('tr.adunit input', apps_table).click(function () {
+                update_dashboard(true, true, true, true);
+            });
+
+            // expand adunits
+            $('tr.app button.expand', apps_table).live('click', function () {
+                $(this).closest('tr').nextUntil('tr.app').show();
+                $(this).removeClass('expand');
+                $(this).addClass('collapse');
+            });
+
+            // collapse adunits
+            $('tr.app button.collapse', apps_table).live('click', function () {
+                $(this).closest('tr').nextUntil('tr.app').hide();
+                $(this).removeClass('collapse');
+                $(this).addClass('expand');
+            });
+
+            update_dashboard(true, true, true, true);
+        },
+
         initializeGeo: function (bootstrapping_data) {
             initializeCommon();
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());

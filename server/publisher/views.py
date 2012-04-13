@@ -45,6 +45,33 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIExcept
 
 from budget import budget_service
 
+
+CAMPAIGN_LEVELS = ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo']
+
+
+class DashboardHandler(RequestHandler):
+    def get(self):
+        apps = AppQueryManager.get_apps(account=self.account)
+
+        orders = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
+        marketplace_campaign = CampaignQueryManager.get_marketplace(account=self.account)
+        network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
+
+        return {
+            'page_width': 'wide',
+            'apps': apps,
+            'orders': orders,
+            'marketplace_campaign': marketplace_campaign,
+            'network_campaigns': network_campaigns,
+        }
+
+
+@login_required
+def dashboard(request, *args, **kwargs):
+    handler = DashboardHandler(template="publisher/dashboard.html")
+    return handler(request, use_cache=False, *args, **kwargs)
+
+
 class AppIndexHandler(RequestHandler):
     """
     A list of apps and their real-time stats.
@@ -497,7 +524,7 @@ class AppDetailHandler(RequestHandler):
         # we don't include network or promo campaigns in the revenue totals
         logging.warn(guarantee_campaigns)
         logging.warn(marketplace_campaigns)
-            
+
         # Figure out if the marketplace is activated and if it has any
         # activated adgroups so we can mark it as active/inactive
         active_mpx_adunit_exists = any([adgroup.active and (not adgroup.deleted) \
@@ -645,7 +672,7 @@ class AdUnitShowHandler(RequestHandler):
     def get(self, adunit_key):
         # load the site
         adunit = AdUnitQueryManager.get(adunit_key)
-        
+
         if adunit.account.key() != self.account.key():
             raise Http404
 
@@ -708,7 +735,7 @@ class AdUnitShowHandler(RequestHandler):
                                  guarantee_campaigns)
             gtee_levels.append(dict(name = name, adgroups = level_camps))
 
-        
+
         try:
             marketplace_activated = marketplace_campaigns[0].campaign.active
         except IndexError:
@@ -1203,7 +1230,7 @@ def calculate_ecpm(adgroup):
             logging.error(error)
     return adgroup.bid
 
-    
+
 def filter_adgroups(adgroups, cfilter):
     filtered_adgroups = filter(lambda x: x.campaign.campaign_type in cfilter, adgroups)
     filtered_adgroups = sorted(filtered_adgroups, lambda x,y: cmp(y.bid, x.bid))

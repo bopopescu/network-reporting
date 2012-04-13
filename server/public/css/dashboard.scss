@@ -1,0 +1,137 @@
+
+div#controls {
+    margin-bottom: 20px;
+    position: relative;
+    div#datepicker-custom-range {
+        position: absolute;
+        top: 18px;
+        left: 0;
+        float: none;
+    }
+}
+
+div#charts, div#filters {
+    float: left;
+}
+
+div#charts {
+    border: 2px solid #bbb;
+    width: 650px;
+    > div {
+        border-bottom: 1px solid #ddd;
+        padding: 5px;
+        width: 640px;
+        height: 150px;
+        > div {
+            float: left;
+            padding: 10px;
+            width: 70px;
+            height: 120px;
+            div.title {
+                font-size: 14px;
+                color: #666;
+            }
+            div.value {
+                font-size: 20px;
+                font-weight: bold;
+            }
+            div.delta {
+                font-size: 14px;
+            }
+            div.delta.positive {
+                color: green;
+            }
+            div.delta.negative {
+                color: red;
+            }
+        }
+        > svg {
+            float: left;
+            width: 550px;
+            height: 150px;
+            path {
+                stroke: steelblue;
+                stroke-width: 2;
+                fill: none;
+            }
+
+            path.comparison {
+                stroke-opacity: 0.23;
+                stroke: grey;
+            }
+
+            line {
+                stroke: black;
+            }
+
+            text {
+                font-family: Arial;
+                font-size: 9pt;
+            }
+        }
+    }
+    > div:last-child {
+        border-bottom: 0;
+    }
+}
+
+div#filters {
+    margin-left: 10px;
+    table#campaigns, table#apps {
+        border: 2px solid #bbb;
+        font-size: 12px;
+        thead {
+            th {
+                color: #555;
+                font-weight: 300;
+                padding: 5px 5px 5px 2px;
+                text-transform: uppercase;
+                vertical-align: bottom;
+                &.title {
+                    font-size: 14px;
+                    font-weight: 600;
+                    text-transform: none;
+                }
+            }
+        }
+        tbody {
+            tr {
+                &.source {
+                    border-top: 2px solid #ccc;
+                    font-weight: bold;
+                }
+                &.campaign, &.app {
+                    border-top: 1px solid #ddd;
+                }
+                &.adgroup, &.adunit {
+                    border-top: 1px solid #eee;
+                }
+                td {
+                    padding: 2px;
+                    &.expand_control {
+                        padding: 1px 2px;
+                        button {
+                            padding: 0 0 1px 1px;
+                            &.expand i.icon-minus {
+                                display: none;
+                            }
+                            &.collapse i.icon-plus {
+                                display: none;
+                            }
+                        }
+                    }
+                    &.positive {
+                        color: green;
+                    }
+                    &.negative {
+                        color: red;
+                    }
+                }
+            }
+        }
+    }
+
+    table#campaigns {
+        margin-bottom: 20px;
+    }
+}

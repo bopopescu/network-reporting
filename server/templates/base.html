@@ -142,7 +142,7 @@
         </div>
       </div>
       <div id="content">
-        <div class="pageWidth">
+        <div {% if page_width == 'wide' %}style="padding: 20px;"{% else %}class="pageWidth"{% endif %}>
 
 
           {% block flash %}

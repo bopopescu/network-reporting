@@ -4,6 +4,7 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns(
     'publisher.views',
     url(r'^$', 'app_index', name='app_index'),
+    url(r'^dashboard/', 'dashboard', name='dashboard'),
     url(r'^geo$', 'geo_performance', name='publisher_geo_performance'),
 
     url(r'^app/create/$', 'create_app', name='publisher_create_app'),

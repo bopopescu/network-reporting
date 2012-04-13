@@ -1,0 +1,293 @@
+{% extends 'publisher/base.html' %}
+
+{% load filters %}
+
+{% block pageTitleTag %}
+{# TODO: title #}
+{% endblock %}
+
+{% block extraScripts %}
+{# TODO: {% include_script 'controllers/publisher' %} instead of #}
+<script src="/js/controllers/publisher.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+$(function () {
+    DashboardController.initializeDashboard({
+        account: '{{ account.key }}'
+    });
+});
+</script>
+{% endblock extraScripts %}
+
+{% block pageTitle %}
+ <h1> New Fucking Awesome Dashboard </h1>
+{% endblock pageTitle %}
+
+
+{% block titleBarRight %}
+{% endblock titleBarRight %}
+
+{% block content %}
+<div id="controls">
+    <div id="datepicker-custom-range" class="hidden">
+        <div class="date-field-container">
+            <span class="start-date date-label"> From: </span>
+            <input id="datepicker-start-input"
+                 name="start-date"
+                 type="text"
+                 value='{{ start_date|date:'m-d-Y' }}'
+                 data-date='{{ start_date|date:'m-d-Y' }}'
+                 data-date-format="mm-dd-yyyy" />
+        </div>
+        <div class="date-field-container">
+            <span class="end-date date-label"> To: </span>
+            <input id="datepicker-end-input"
+                 name="end-date"
+                 type="text"
+                 value='{{ end_date|date:'m-d-Y' }}'
+                 data-date='{{ end_date|date:'m-d-Y' }}'
+                 data-date-format="mm-dd-yyyy" />
+        </div>
+        <a id="custom-date-submit" class="right btn btn-primary"> Submit </a>
+    </div>
+    <select name="date_range">
+        <option value="day">Day</option>
+        <option selected="selected" value="week">Week</option>
+        <option value="two_weeks">Two Weeks</option>
+        <option value="custom">Custom</option>
+    </select>
+    <span class="hidden" id="custom_date_range"></span>
+    <select name="granularity">
+        <option value="hourly">Hourly</option>
+        <option selected="selected" value="daily">Daily</option>
+    </select>
+    <label><input name="compare" type="checkbox" /> Compare to <span id="comparison_range">the week before</span></label>
+    <button class="btn btn-small" id="export">Export</button>
+    <div class="modal hidden" id="export_wizard">
+        <div class="modal-header">
+            <a class="close" data-dismiss="modal">×</a>
+            <h3>Export</h3>
+        </div>
+        <div class="modal-body">
+            Breakdown by
+            <select name="advertiser_breakdown">
+                <option value=""></option>
+                <option value="source">Source</option>
+                <option value="campaign">Campaign</option>
+                <option value="adgroup">Ad Group</option>
+            </select>
+            and
+            <select name="publisher_breakdown">
+                <option value=""></option>
+                <option value="app">App</option>
+                <option value="adunit">Ad Unit</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" id="download">Download</button>
+        </div>
+    </div>
+</div>
+
+<div id="charts">
+    <div id="rev">
+        <div>
+            <div class="title">Revenue</div>
+            <div class="value"></div>
+            <div class="delta"></div>
+        </div>
+        <svg height="150" width="550">
+            <g transform="translate(0, 150)"></g>
+        </svg>
+    </div>
+    <div id="imp">
+        <div>
+            <div class="title">Impressions</div>
+            <div class="value"></div>
+            <div class="delta"></div>
+        </div>
+        <svg height="150" width="550">
+            <g transform="translate(0, 150)"></g>
+        </svg>
+    </div>
+    <div id="clk">
+        <div>
+            <div class="title">Clicks</div>
+            <div class="value"></div>
+            <div class="delta"></div>
+        </div>
+        <svg height="150" width="550">
+            <g transform="translate(0, 150)"></g>
+        </svg>
+    </div>
+</div>
+
+<div id="filters">
+    <table id="campaigns">
+        <thead>
+            <tr>
+                <th class="title" colspan="3">Campaigns and Adgroups</th>
+                <th class="rev" colspan="2">Revenue</th>
+                <th class="imp" colspan="2">Impressions</th>
+                <th class="clk" colspan="2">Clicks</th>
+                <th class="ctr" colspan="2">CTR</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if orders.count %}
+                <tr class="source" id="direct">
+                    <td></td>
+                    <td><input type="checkbox" /></td>
+                    <td class="name">Orders</td>
+                    <td class="rev"></td>
+                    <td class="rev_delta"></td>
+                    <td class="imp"></td>
+                    <td class="imp_delta"></td>
+                    <td class="clk"></td>
+                    <td class="clk_delta"></td>
+                    <td class="ctr"></td>
+                    <td class="ctr_delta"></td>
+                </tr>
+                {% for campaign in orders %}
+                    <tr class="campaign" id="{{ campaign.key }}">
+                        <td class="expand_control">
+                            {% if campaign.adgroups.count > 1 %}
+                                <button class="btn btn-mini expand">
+                                    <i class="icon-plus"> </i>
+                                    <i class="icon-minus"> </i>
+                                </button>
+                            {% endif %}
+                        </td>
+                        <td class="checkbox"><input type="checkbox" /></td>
+                        <td class="name">{{ campaign.name }}</td>
+                        <td class="rev"></td>
+                        <td class="rev_delta"></td>
+                        <td class="imp"></td>
+                        <td class="imp_delta"></td>
+                        <td class="clk"></td>
+                        <td class="clk_delta"></td>
+                        <td class="ctr"></td>
+                        <td class="ctr_delta"></td>
+                    </tr>
+                    {% if campaign.adgroups.count > 1 %}
+                        {% for adgroup in campaign.adgroups %}
+                            <tr class="adgroup hidden" id="{{ adgroup.key }}">
+                                <td></td>
+                                <td><input type="checkbox" /></td>
+                                <td class="name">{{ adgroup.name }}</td>
+                                <td class="rev"></td>
+                                <td class="rev_delta"></td>
+                                <td class="imp"></td>
+                                <td class="imp_delta"></td>
+                                <td class="clk"></td>
+                                <td class="clk_delta"></td>
+                                <td class="ctr"></td>
+                                <td class="ctr_delta"></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% if marketplace_campaign %}
+                <tr class="source" id="mpx">
+                    <td></td>
+                    <td><input type="checkbox" /></td>
+                    <td class="name">Marketplace</td>
+                    <td class="rev"></td>
+                    <td class="rev_delta"></td>
+                    <td class="imp"></td>
+                    <td class="imp_delta"></td>
+                    <td class="clk"></td>
+                    <td class="clk_delta"></td>
+                    <td class="ctr"></td>
+                    <td class="ctr_delta"></td>
+                </tr>
+            {% endif %}
+            {% if network_campaigns.count %}
+                <tr class="source" id="network">
+                    <td></td>
+                    <td><input type="checkbox" /></td>
+                    <td class="name">Networks</td>
+                    <td class="rev"></td>
+                    <td class="rev_delta"></td>
+                    <td class="imp"></td>
+                    <td class="imp_delta"></td>
+                    <td class="clk"></td>
+                    <td class="clk_delta"></td>
+                    <td class="ctr"></td>
+                    <td class="ctr_delta"></td>
+                </tr>
+                {% for campaign in network_campaigns %}
+                    <tr class="campaign" id="{{ campaign.key }}">
+                        <td></td>
+                        <td><input type="checkbox" /></td>
+                        <td class="name">{{ campaign.name }}</td>
+                        <td class="rev"></td>
+                        <td class="rev_delta"></td>
+                        <td class="imp"></td>
+                        <td class="imp_delta"></td>
+                        <td class="clk"></td>
+                        <td class="clk_delta"></td>
+                        <td class="ctr"></td>
+                        <td class="ctr_delta"></td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+
+    <table id="apps">
+        <thead>
+            <tr>
+                <th class="title" colspan="3">Apps and Adunits</th>
+                <th class="rev" colspan="2">Revenue</th>
+                <th class="imp" colspan="2">Impressions</th>
+                <th class="clk" colspan="2">Clicks</th>
+                <th class="ctr" colspan="2">CTR</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in apps %}
+                <tr class="app" id="{{ app.key }}">
+                    <td class="expand_control">
+                        {% if app.all_adunits.count > 1 %}
+                            <button class="btn btn-mini expand">
+                                <i class="icon-plus"> </i>
+                                <i class="icon-minus"> </i>
+                            </button>
+                        {% endif %}
+                    </td>
+                    <td><input type="checkbox" /></td>
+                    <td class="name">{{ app.name }}</td>
+                    <td class="rev"></td>
+                    <td class="rev_delta"></td>
+                    <td class="imp"></td>
+                    <td class="imp_delta"></td>
+                    <td class="clk"></td>
+                    <td class="clk_delta"></td>
+                    <td class="ctr"></td>
+                    <td class="ctr_delta"></td>
+                </tr>
+                {% if app.all_adunits.count > 1 %}
+                    {% for adunit in app.all_adunits %}
+                        <tr class="adunit hidden" id="{{ adunit.key }}">
+                            <td></td>
+                            <td><input type="checkbox" /></td>
+                            <td class="name">{{ adunit.name }}</td>
+                            <td class="rev"></td>
+                            <td class="rev_delta"></td>
+                            <td class="imp"></td>
+                            <td class="imp_delta"></td>
+                            <td class="clk"></td>
+                            <td class="clk_delta"></td>
+                            <td class="ctr"></td>
+                            <td class="ctr_delta"></td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

@@ -310,21 +310,15 @@ $(function() {
                     $(div).find('input[name$="'+pub_id+'"]').each(function () {
                         if (!$(this).hasClass('initialized')) {
                             $(this).val(value);
+                            var pub_id_value = value;
+                            if (!value) {
+                                pub_id_value = "Change Network ID";
+                            }
+                            $(this).closest('td').find('.pub-id-value').text(pub_id_value);
                         }
                     });
-                    $(div).find('.pub-id-value').each(function() {
-                        if (!value) value = "Change Network ID";
-                        $(this).text(value);
-                    });
-                }).keyup()
-                .focusout(function () {
-                    if ($(this).val()) {
-                        var div = $(this).parents('tbody');
-                        $(div).find('input[name$="'+pub_id+'"]').each(function () {
-                            $(this).addClass('initialized');
-                        });
-                    }
-                    });
+                }).keyup();
+
             $('.cpm-data input').keyup(function() {
                 var value = $(this).val();
                 var div = $(this).parents('tbody');
@@ -645,10 +639,17 @@ $(function() {
             });
             $('.pub-id-close').click(function (event) {
                 event.preventDefault;
-                var input_div = $(this).parents('.pub-id-input');
+                var input_div = $(this).closest('.pub-id-input');
                 input_div.hide();
-                input_div.children('input').val('');
-                $(this).parents('td').find('.pub-id-edit').show();
+                input_div.find('input').addClass('initialized');
+
+                var value = input_div.children('input').val()
+                if (value) {
+                    $(this).closest('td').find('.pub-id-value').text(value);
+                } else {
+                    $(this).closest('td').find('.pub-id-value').text("Change Network ID");
+                }
+                $(this).closest('td').find('.pub-id-edit').show();
             });
             $('.cpm-close').click(function (event) {
                 event.preventDefault;

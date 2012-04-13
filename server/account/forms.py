@@ -89,7 +89,7 @@ class AppNetworkConfigForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(AppNetworkConfigForm, self).__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = "pub_id_field %s" % field_name
+            field.widget.attrs['class'] = "pub_id %s" % field_name
 
     def clean(self):
         cleaned_data = self.cleaned_data

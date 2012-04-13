@@ -345,7 +345,7 @@
                         {% if ad_network_ids %}
                         <td class="name">Ad Network ID</td>
                         {% endif %}
-                        <td class="name">Rate (USD)</td>
+                        <td class="name">CPM</td>
                         {% if reporting %}
                         <th class="name">
                             <div>
@@ -386,16 +386,20 @@
                         <td class="text pub-id-data">
                             <div>
                                 {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted"></span>
-                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
                             </div>
                         </td>
                         {% endif %}
-                        <td class="stat cpm-data" style="width:150px">
-                            {% if app.bid %}
-                            <input class="float bid app-level" type="text" value="{{ app.bid }}"/>
-                            CPM
-                            {% endif %}
+                        <td class="text cpm-data" style="width:100px">
+                            {# TODO: toggle this being hidden and shown #}
+                            <div>
+                                <input class="float bid app-level" type="text" style="width:40px" value="{% if app.bid %}0.05{% else %}{{ app.bid }}{% endif %}">
+                            </div>
+                            <div class="cpm-close editable hidden">
+                                <span>
+                                    <b class="caret"></b>                            
+                                    <span class="editable-hidden">Set app CPM</span>
+                                </span>
+                            </div>    
                         </td>
                         {% if reporting %}
                         <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
@@ -413,28 +417,39 @@
                         {% endif %}
                     </tr>
                     {% for adunit in app.adunits %}
-                    <tr class="sub">
+                    <tr class="sub" style="height:33px">
                         <td class="icon"></td>
                         <td class="name">
                             {{ adunit.name }}
                         </td>
-                        <td class="text">
+                        <td class="text" style="height:20px">
                             {{ adunit.adgroup_form.active }}
                         </td>
                         {% if ad_network_ids %}
                         <td class="text pub-id-data adunit">
                             {% if network.name in NETWORKS_WITH_PUB_IDS %}
                             <div>
-                                <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="pub_id_field {{ network.name }}_pub_id{% if adunit.pub_id %} initialized{% endif %}" name="{{ network.name }}_ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAgM-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %}/>
-                                <span class="pub_id muted adunit">&nbsp;</span>
-                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
+                                <div class="pub-id-input hidden">
+                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="pub_id_field {{ network.name }}_pub_id{% if adunit.pub_id %} initialized{% endif %}" name="{{ network.name }}_ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAgM-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} style="width:135px"/>
+                                    <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
+                                </div>
+                                <div class="pub-id-edit editable">
+                                    <span class="pub-id-value"></span>
+                                    <b class="caret"></b>
+                                </div>                            
                             </div>
                             {% endif %}
                         </td>
                         {% endif %}
-                        <td class="stat cpm-data">
-                            {{ adunit.adgroup_form.bid }}
-                            CPM
+                        <td class="text cpm-data">
+                            <div class="cpm-edit editable">
+                                <span class="cpm-value"></span>
+                                <b class="caret"></b>                            
+                            </div>           
+                            <div class="cpm-input hidden">
+                                {#{ adunit.adgroup_form.bid }#}
+                                <input type="text" value="0.05" style="width:40px">
+                            </div>
                         </td>
                         {% if reporting %}
                         <td class="stat">
@@ -457,6 +472,7 @@
 {% endblock content %}
 
 {% block extraScripts %}
+{% include_script "libs/bootstrap.min.js" %}
 {% include_script "controllers/networks" %}
 <script type="text/javascript">
     $(function () {

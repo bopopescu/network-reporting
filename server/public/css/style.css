@@ -1442,7 +1442,7 @@ form#campaign_and_adgroup input[type="text"].time, form#network-login-form input
   width: 60px; }
 form#campaign_and_adgroup input[type="text"].number, form#campaign_and_adgroup input[type="text"].float, form#network-login-form input[type="text"].number, form#network-login-form input[type="text"].float {
   width: 70px; }
-form#campaign_and_adgroup input[type="text"].pub_id_field, form#network-login-form input[type="text"].pub_id_field {
+form#campaign_and_adgroup input[type="text"].pub_id, form#network-login-form input[type="text"].pub_id {
   width: 150px; }
 form#campaign_and_adgroup input[type="text"].bid, form#network-login-form input[type="text"].bid {
   width: 50px; }
@@ -2534,6 +2534,30 @@ span.pub_id.muted {
   white-space: nowrap;
   width: 140px;
   cursor: pointer; }
+
+div.editable {
+  margin-left: 5px; }
+  div.editable span {
+    display: inline-block; }
+
+.editable {
+  color: #CCC;
+  font-weight: 300; }
+
+.editable:hover {
+  color: #0090D9; }
+  .editable:hover .editable-hidden {
+    opacity: 1; }
+
+.editable-hidden {
+  opacity: 0; }
+
+.editable .caret {
+  margin-top: 8px;
+  margin-left: 2px; }
+
+.editable:hover .caret {
+  border-top: 4px solid #0090D9; }
 
 /*
  * Plugins

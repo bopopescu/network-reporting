@@ -42,7 +42,7 @@
   display: block;
   visibility: visible;
   padding: 5px;
-  font-size: 11px;
+  font-size: 14px;
   opacity: 0;
   filter: alpha(opacity=0);
 }
@@ -203,4 +203,14 @@
 .popover-content ul,
 .popover-content ol {
   margin-bottom: 0;
+}
+.caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: top;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #ccc;
+  content: "";
 }

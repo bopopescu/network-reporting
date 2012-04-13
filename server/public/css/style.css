@@ -2536,7 +2536,8 @@ span.pub_id.muted {
   cursor: pointer; }
 
 div.editable {
-  margin-left: 5px; }
+  margin-left: 5px;
+  cursor: pointer; }
   div.editable span {
     display: inline-block; }
 

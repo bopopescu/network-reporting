@@ -25,7 +25,12 @@
         {% if not network.show_login %}
         <fieldset class="alt login-credentials-fields" style="padding-top:20px">
             <legend>
-                <h2> Revenue Reporting </h2>
+                <h2>
+                    Revenue Reporting
+                    {% if network.name == "admob" or network.name == "inmobi" %}
+                    <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
+                    {% endif %}
+                </h2>
             </legend>
 
             <div id="networkLoginForm" style="clear: both;padding-top:10px">
@@ -274,7 +279,12 @@
     {% if login_form and network.show_login %}
     <fieldset class="alt login-credentials-fields" style="padding-top:20px">
         <legend>
-            <h2> Revenue Reporting </h2>
+                <h2>
+                    Revenue Reporting
+                    {% if network.name == "admob" or network.name == "inmobi" %}
+                    <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
+                    {% endif %}
+                </h2>
         </legend>
 
         <div>
@@ -390,10 +400,9 @@
                         </td>
                         {% endif %}
                         <td class="text cpm-data" style="width:100px">
-                            {# TODO: toggle this being hidden and shown #}
-                            <div>
-                                <input class="float bid app-level" type="text" style="width:40px" value="{% if app.bid %}0.05{% else %}{{ app.bid }}{% endif %}">
-                            </div>
+                            {% if app.bid %}
+                            <input class="float bid app-level" type="text" style="width:40px" value="{{ app.bid }}">
+                            {% endif %}
                             <div class="cpm-close editable hidden">
                                 <span>
                                     <b class="caret"></b>                            

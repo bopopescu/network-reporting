@@ -655,6 +655,10 @@ $(function() {
                 var div = $(this).parents('tbody');
                 div.find('tr.main .cpm-data input').show();
                 div.find('.cpm-input').hide();
+
+                // copy value of the app level edit to all
+                div.find('.cpm-input').text(div.find('.cpm-edit').val());
+
                 div.find('.cpm-edit').show();
                 div.find('tr.main .cpm-data .editable').hide();
             });

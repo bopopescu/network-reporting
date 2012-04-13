@@ -1442,8 +1442,10 @@ form#campaign_and_adgroup input[type="text"].time, form#network-login-form input
   width: 60px; }
 form#campaign_and_adgroup input[type="text"].number, form#campaign_and_adgroup input[type="text"].float, form#network-login-form input[type="text"].number, form#network-login-form input[type="text"].float {
   width: 70px; }
-form#campaign_and_adgroup input[type="text"].pub_id, form#network-login-form input[type="text"].pub_id {
-  width: 150px; }
+form#campaign_and_adgroup input[type="text"].app-pub-id, form#network-login-form input[type="text"].app-pub-id {
+  width: 160px; }
+form#campaign_and_adgroup input[type="text"].adunit-pub-id, form#network-login-form input[type="text"].adunit-pub-id {
+  width: 135px; }
 form#campaign_and_adgroup input[type="text"].bid, form#network-login-form input[type="text"].bid {
   width: 40px; }
 form#campaign_and_adgroup input.error, form#campaign_and_adgroup textarea.error, form#network-login-form input.error, form#network-login-form textarea.error {

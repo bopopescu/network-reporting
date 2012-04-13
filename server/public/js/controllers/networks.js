@@ -595,9 +595,6 @@ $(function() {
                 }
             }).filter(':checked').click();
 
-            // TODO: used to be pub_id field
-            $('.pub_id').hide();
-
             $('td.pub-id-data').each(function () {
                 var input = $(this).children('div').children('input[name$="'+pub_id+'"]');
                 var value = input.val();
@@ -614,7 +611,9 @@ $(function() {
             $('.pub-id-edit').click(function (event) {
                 event.preventDefault();
                 $(this).hide();
-                $(this).siblings('.pub-id-input').show();
+                var div = $(this).siblings('.pub-id-input')
+                div.show();
+                div.find('input').addClass('initialized');
             });
             $('.pub-id-edit').tooltip({
                 title: "Set ID for this ad unit"
@@ -639,7 +638,6 @@ $(function() {
                 event.preventDefault;
                 var input_div = $(this).closest('.pub-id-input');
                 input_div.hide();
-                input_div.find('input').addClass('initialized');
 
                 var value = input_div.children('input').val()
                 if (value) {

@@ -347,10 +347,15 @@
                     <tr>
                         <td class="icon"></td>
                         <td class="name"></td>
-                        <td class="name pub-id-data">
+                        {% if login_form %}
+                        <td class="name">
+                            Reporting
+                        </td>
+                        {% endif %}
+                        <td class="name">
                             Enabled
                         </td>
-                        {% if ad_network_ids %}
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
                         <td class="name">Ad Network ID</td>
                         {% endif %}
                         <td class="name">CPM</td>
@@ -387,13 +392,18 @@
                         <td class="name">
                             {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
                         </td>
+                        {% if login_form %}
+                        <td class="text">
+                            <input id="{{ app.key }}-reporting-active" type="checkbox" />
+                        </td>
+                        {% endif %}
                         <td class="text">
                             <input class="all-adunits" type="checkbox" />
                         </td>
-                        {% if ad_network_ids %}
-                        <td class="text pub-id-data">
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                        <td class="text">
                             <div>
-                                {% for field in app.network_config_form %}{{ field }}{% endfor %}
+                                <input name="app_{{ app.key }}-admob_pub_id" placeholder="AdMob Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-admob_pub_id" />
                             </div>
                         </td>
                         {% endif %}
@@ -429,15 +439,18 @@
                         <td class="name">
                             {{ adunit.name }}
                         </td>
+                        {% if login_form %}
+                        <td class="text"> </td>
+                        {% endif %}
                         <td class="text" style="height:20px">
                             {{ adunit.adgroup_form.active }}
                         </td>
-                        {% if ad_network_ids %}
-                        <td class="text pub-id-data adunit">
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                        <td class="text adunit">
                             {% if network.name in NETWORKS_WITH_PUB_IDS %}
                             <div>
                                 <div class="pub-id-input hidden">
-                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="pub_id_field {{ network.name }}_pub_id{% if adunit.pub_id %} initialized{% endif %}" name="{{ network.name }}_ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAgM-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} style="width:135px"/>
+                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="{{ network.name }}_ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAgM-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
                                     <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
                                 </div>
                                 <div class="pub-id-edit editable">

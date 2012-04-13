@@ -318,8 +318,11 @@ form#campaign_and_adgroup, form#network-login-form {
     input[type="text"].number, input[type="text"].float {
         width: 70px;
     }
-    input[type="text"].pub_id {
-        width: 150px;
+    input[type="text"].app-pub-id {
+        width: 160px;
+    }
+    input[type="text"].adunit-pub-id {
+        width: 135px;
     }
     input[type="text"].bid {
         width: 40px;

@@ -200,7 +200,6 @@ class EditNetworkHandler(RequestHandler):
                         'show_login': False if campaign_key else True,
                         'login_state': LoginStates.NOT_SETUP}
         reporting = False
-        ad_network_ids = False
 
         # We don't make login forms for certain networks that we're unable
         # to scrape stats from.
@@ -230,15 +229,8 @@ class EditNetworkHandler(RequestHandler):
         adgroup = None
         for app in apps:
             if network in NETWORKS_WITH_PUB_IDS:
-                app.network_config_form = AppNetworkConfigForm(instance= \
-                        app.network_config, prefix="app_%s" % app.key())
-                app.pub_id = app.network_config_form.fields.get(network + '_pub_id',
+                app.pub_id = getattr(app.network_config, network + '_pub_id',
                         False)
-                if network + '_pub_id' in app.network_config_form.fields:
-                    app.network_config_form.fields[network + '_pub_id'].widget. \
-                            attrs['class'] += ' app-pub-id'
-                if app.pub_id:
-                    ad_network_ids = True
 
             seven_day_stats = AdNetworkStats()
 
@@ -282,11 +274,10 @@ class EditNetworkHandler(RequestHandler):
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
                         ' ' + str(app.key()) + '-cpm-field bid'
 
-                adunit.pub_id = getattr(adunit.network_config, network + '_pub_id', False)
+                adunit.pub_id = getattr(adunit.network_config, network +
+                        '_pub_id', False)
 
                 app.adunits.append(adunit)
-                if adunit.pub_id:
-                    ad_network_ids = True
             # Set app level bid
             if min_cpm == max_cpm:
                 app.bid = max_cpm
@@ -314,7 +305,6 @@ class EditNetworkHandler(RequestHandler):
                                             account_network_config_form,
                                       'apps': apps,
                                       'reporting': reporting,
-                                      'ad_network_ids': ad_network_ids,
                                       'LoginStates': simplejson.dumps(
                                           LoginStates.__dict__),
                                       'NETWORKS_WITH_PUB_IDS': \

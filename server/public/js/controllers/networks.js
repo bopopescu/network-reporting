@@ -338,16 +338,18 @@ $(function() {
 
             // set up active checkbox's for app level
             $('.all-adunits')
+                .each(function() {
+                    var checkboxes = $(this).closest('tbody').find('input[name$="active"]');
+                    if (checkboxes.filter('input:checked').length == checkboxes.length) {
+                        $(this).attr('checked', 'checked');
+                    }
+                })
                 .change(function() {
-                    var key = $(this).attr('id').replace('-all-adunits', '');
+                    var checkboxes = $(this).closest('tbody').find('input[name$="active"]');
                     if ($(this).is(':checked')) {
-                        $('.' + key + '-adunit').attr("checked", "checked");
-                        if($('.all-adunits:checked').length == $('.all-adunits').length) {
-                            $('#all-adunits-network').attr("checked", "checked");
-                        }
+                        checkboxes.attr("checked", "checked");
                     } else {
-                        $('.' + key + '-adunit').removeAttr("checked");
-                        $('#all-adunits-network').removeAttr("checked");
+                        checkboxes.removeAttr("checked");
                     }
                     });
 
@@ -388,17 +390,21 @@ $(function() {
             // set cpms when copy all cpm button is clicked for either 14 day
             // or 7 day
             _.each(['7-day', '14-day'], function(days) {
+                // copy over cpms for all apps
                 $('#copy-' + days).click(function() {
-                    $('.' + days + '-cpm').each(function() {
-                        var key = $(this).attr('id').replace('-' + days, '');
-                        var cpm = parseFloat($(this).text().replace('$', '')).toString();
-                        $('.' + key + '-field').val(cpm);
+                    $('.inventory_table tbody').each(function() {
+                        var cpm = parseFloat($(this).find('.copy-' + days).text().replace('$', '')).toString();
+                        var input = $(this).find('tr.main .cpm-data input');
+                        input.val(cpm);
+                        input.keyup();
                         });
                     });
+                // copy over an individual app level cpm
                 $('.copy-' + days).click(function() {
-                    var key = $(this).attr('id').replace('copy-' + days + '-', '');
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
-                    $('.' + key + '-field').val(cpm);
+                    var input = $(this).closest('tbody').find('tr.main .cpm-data input');
+                    input.val(cpm);
+                    input.keyup();
                     });
                 });
 

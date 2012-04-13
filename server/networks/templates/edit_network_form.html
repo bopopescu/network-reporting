@@ -390,7 +390,7 @@
                             {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
                         </td>
                         <td class="text">
-                            <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox"{% if app.all_adunits_active %} checked="checked"{% endif %} />
+                            <input class="all-adunits" type="checkbox" />
                         </td>
                         {% if ad_network_ids %}
                         <td class="text pub-id-data">
@@ -411,14 +411,14 @@
                             </div>    
                         </td>
                         {% if reporting %}
-                        <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
-                            <a id="copy-7-day-{{app.key}}-cpm" class="copy-7-day" style="color: orange; cursor:pointer">
+                        <td>
+                            <a class="copy-7-day" style="color: orange; cursor:pointer">
                                 <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
                                 {{ app.seven_day_stats.cpm|currency }}
                             </a>
                         </td>
-                        <td class="stat 14-day-cpm network-data" id="{{app.key}}-14-day-cpm">
-                            <a id="copy-14-day-{{app.key}}-cpm" class="copy-14-day" style="color: orange; cursor:pointer;">
+                        <td>
+                            <a class="copy-14-day" style="color: orange; cursor:pointer;">
                                 <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
                                 {{ app.fourteen_day_stats.cpm|currency }}
                             </a>

@@ -326,16 +326,6 @@ $(function() {
                 $(div).find('.cpm-value').text(value);
             }).keyup();
 
-            // set up active checkbox's for network
-            $('#all-adunits-network').click(function () {
-                if ($(this).is(':checked')) {
-                    $('.all-adunits').attr("checked", "checked");
-                } else {
-                    $('.all-adunits').removeAttr("checked");
-                }
-                $('.all-adunits').change();
-            });
-
             // set up active checkbox's for app level
             $('.all-adunits')
                 .each(function() {
@@ -378,12 +368,6 @@ $(function() {
                 }
                 else {
                     $(this).parents('tr').find('input[name$="'+pub_id+'"]').tooltip('hide');
-                }
-
-                if($('.all-adunits:checked').length == $('.all-adunits').length) {
-                    $('#all-adunits-network').attr("checked", "checked");
-                } else {
-                    $('#all-adunits-network').removeAttr("checked");
                 }
             });
                 

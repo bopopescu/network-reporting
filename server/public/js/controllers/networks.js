@@ -395,16 +395,22 @@ $(function() {
                     $('.inventory_table tbody').each(function() {
                         var cpm = parseFloat($(this).find('.copy-' + days).text().replace('$', '')).toString();
                         var input = $(this).find('tr.main .cpm-data input');
+                        // change app level cpm
                         input.val(cpm);
-                        input.keyup();
+                        // change adunit level cpm
+                        $(this).find('.cpm-input input').val(cpm);
                         });
                     });
                 // copy over an individual app level cpm
                 $('.copy-' + days).click(function() {
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
-                    var input = $(this).closest('tbody').find('tr.main .cpm-data input');
+                    var tbody = $(this).closest('tbody')
+                    var input = tbody.find('tr.main .cpm-data input');
+                    // change app level cpm
                     input.val(cpm);
                     input.keyup();
+                    // change adunit level cpm
+                    tbody.find('.cpm-input input').val(cpm);
                     });
                 });
 
@@ -678,8 +684,6 @@ $(function() {
                 tbody.find('.cpm-input').hide();
                 // show adunit edit text
                 tbody.find('.cpm-edit').show();
-
-                console.log(tbody.find('tr.main .cpm-data input').val());
             });
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';

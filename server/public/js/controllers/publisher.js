@@ -112,7 +112,6 @@ var mopub = mopub || {};
         });
     }
 
-
     /*
      * ## initializeNewAppForm
      * Loads all click handlers/visual stuff/ajax loading for
@@ -488,7 +487,6 @@ var mopub = mopub || {};
             });
         }
 
-
     /*
      * ## initializeEditAdunitForm
      * Like the app editing form, the adunit editing form is done
@@ -569,9 +567,7 @@ var mopub = mopub || {};
                 button.button();
             }
         });
-
     }
-
 
     /*
      * ## initializeDateButtons
@@ -808,7 +804,6 @@ var mopub = mopub || {};
 
             // Hide unneeded li entry
             $('#publisher-dashboard-exportSelect-menu').find('li').first().hide();
-
         },
 
         initializeDashboard: function(bootstrapping_data) {
@@ -824,9 +819,11 @@ var mopub = mopub || {};
             $.jsonp.setup({
                 callbackParameter: "callback",
                 dataFilter: function (json) {
-                    _.each(['sum', 'daily', 'hourly', 'vs_sum', 'vs_daily', 'vs_hourly'], function (list) {
-                        _.each(json[list], function (obj) {
-                            obj.ctr = obj.imp > 0 ? obj.clk / obj.imp : 0;
+                    _.each(['sum', 'daily', 'hourly', 'vs_sum', 'vs_daily', 'vs_hourly'], function (key) {
+                        _.each(json[key], function (list) {
+                            _.each(list, function (obj) {
+                                obj.ctr = obj.imp > 0 ? obj.clk / obj.imp : 0;
+                            });
                         });
                     });
                     return json;
@@ -1017,7 +1014,7 @@ var mopub = mopub || {};
                 });
             }
 
-            function get_advertiser() {
+            function get_advertiser_type() {
                 if($('tr.source input:checked').length) {
                     return 'source';
                 }
@@ -1030,7 +1027,7 @@ var mopub = mopub || {};
                 return null;
             }
 
-            function get_publisher() {
+            function get_publisher_type() {
                 if($('tr.app input:checked').length) {
                     return 'app';
                 }
@@ -1040,8 +1037,7 @@ var mopub = mopub || {};
                 return null;
             }
 
-            function get_advertiser_query() {
-                var advertiser = get_advertiser();
+            function get_advertiser_query(advertiser) {
                 var query = {};
                 if(advertiser) {
                     query[advertiser] = get_keys(advertiser);
@@ -1049,13 +1045,168 @@ var mopub = mopub || {};
                 return query;
             }
 
-            function get_publisher_query() {
-                var publisher = get_publisher();
+            function get_publisher_query(publisher) {
                 var query = {};
                 if(publisher) {
                     query[publisher] = get_keys(publisher);
                 }
                 return query;
+            }
+
+            function update_rollups(data, vs_data) {
+                _.each(['rev', 'imp', 'clk'], function (stat) {
+                    var rollup = $('#' + stat + ' > div');
+                    rollup.children('div.value').html(format_stat(stat, data[stat]));
+                    if(vs_data && vs_data[stat] !== 0) {
+                        var delta = rollup.children('div.delta');
+                        var val = Math.round(100 * (data[stat] - vs_data[stat]) / vs_data[stat]);
+                        var html = '';
+                        if(val > 0) {
+                            html += '+';
+                            delta.removeClass('negative');
+                            delta.addClass('positive');
+                        }
+                        else if(val < 0) {
+                            delta.removeClass('positive');
+                            delta.addClass('negative');
+                        }
+                        else {
+                            html += '~';
+                            delta.removeClass('positive');
+                            delta.removeClass('negative');
+                        }
+                        html += val + '%';
+                        delta.html(html);
+                    }
+                    else {
+                        rollup.children('div.delta').html('');
+                    }
+                });
+            }
+
+            function update_charts(start, end, data) {
+                console.log(start);
+                console.log(end);
+                console.log(data);
+                _.each(['rev', 'imp', 'clk'], function (stat) {
+                    // chart
+                    var chart = d3.select('#' + stat + ' svg g');
+                    chart.selectAll('*').remove();
+
+                    var min;
+                    var max;
+                    var serieses = _.map(data, function (datum) {
+                        console.log(datum);
+                        return _.map(datum, function (slice) {
+                            var value = slice[stat];
+                            console.log(value);
+                            if(!min || value < min) min = value;
+                            if(!max || value > max) max = value;
+                            return value;
+                        });
+                    });
+
+                    console.log(serieses);
+
+                    /* TODO: reimplement this
+                    if(granularity == 'daily') {
+                        end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+                    }
+                    */
+
+                    if(max == min) {
+                        max = min + 1;
+                    }
+                    console.log(min);
+                    console.log(max);
+                    var y = d3.scale.linear().domain([min, max]).range([MARGIN_BOTTOM, HEIGHT - MARGIN_TOP]);
+                    var x = d3.scale.linear().domain([start, end]).range([MARGIN_LEFT, WIDTH - MARGIN_RIGHT]);
+
+                    // Lines
+                    var line = d3.svg.line()
+                        .x(function(d, i) { return x(start.getTime()+(end-start)*i/(serieses[0].length - 1)); })
+                        .y(function(d) { return -1 * y(d); });
+
+                    _.each(serieses, function (series) {
+                        chart.append("svg:path").attr("d", line(series));
+                    });
+
+                    // X Axis
+                    var x_label = function (d) {
+                        d = new Date(d);
+                        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+                    };
+                    var interval = 86400000;
+                    /* TODO: reimplement this
+                    if(granularity == 'hourly' && end - start <= 2 * 86400000) {
+                        x_label = function (d) {
+                            return date_to_string(new Date(d));
+                        };
+                        interval = 3600000;
+                    }
+                    else {
+                    }
+                    */
+
+                    if(Math.round((end - start) / (interval * 5)) > 0) {
+                        interval = interval * Math.round((end - start) / (interval * 5));
+                    }
+
+                    var x_ticks = [];
+                    for(var value = start; value <= end; value = new Date(value.getTime() + interval)) {
+                        x_ticks.push(value);
+                    }
+
+                    chart.append("svg:line")
+                        .attr("x1", x(start))
+                        .attr("y1", -1 * y(min))
+                        .attr("x2", x(end))
+                        .attr("y2", -1 * y(min));
+
+                    chart.selectAll(".xLabel")
+                        .data(x_ticks)
+                        .enter().append("svg:text")
+                        .attr("class", "xLabel")
+                        .text(x_label)
+                        .attr("x", function(d) { return x(d); })
+                        .attr("y", 0)
+                        .attr("text-anchor", "middle");
+
+                    chart.selectAll(".xTicks")
+                        .data(x_ticks)
+                        .enter().append("svg:line")
+                        .attr("class", "xTicks")
+                        .attr("x1", function(d) { return x(d); })
+                        .attr("y1", -1 * y(min))
+                        .attr("x2", function(d) { return x(d); })
+                        .attr("y2", -1 * (y(min) - 4));
+
+                    // Y AXIS
+                    chart.append("svg:line")
+                        .attr("x1", x(start))
+                        .attr("y1", -1 * y(min))
+                        .attr("x2", x(start))
+                        .attr("y2", -1 * y(max));
+
+                    chart.selectAll(".yTicks")
+                        .data(y.ticks(4))
+                        .enter().append("svg:line")
+                        .attr("class", "yTicks")
+                        .attr("y1", function(d) { return -1 * y(d); })
+                        .attr("x1", x(start) - 4)
+                        .attr("y2", function(d) { return -1 * y(d); })
+                        .attr("x2", x(start));
+
+                    chart.selectAll(".yLabel")
+                        .data(y.ticks(4))
+                        .enter().append("svg:text")
+                        .attr("class", "yLabel")
+                        .text(function(d) { return number_compact(d, 1); })
+                        .attr("x", MARGIN_LEFT - 5)
+                        .attr("y", function(d) { return -1 * y(d); })
+                        .attr("text-anchor", "end")
+                        .attr("dy", 4);
+                });
             }
 
             /* Constants */
@@ -1067,7 +1218,7 @@ var mopub = mopub || {};
             var MARGIN_BOTTOM = 15;
             var MARGIN_LEFT = 50;
 
-            function update_dashboard(update_rollups, update_charts, update_campaign_table, update_app_table) {
+            function update_dashboard(update_rollups_and_charts, update_advertiser_table, update_publisher_table) {
                 var start, end;
                 if($('select[name="date_range"]').val() == 'custom') {
                     start = new Date($("#datepicker-start-input").val());
@@ -1112,23 +1263,82 @@ var mopub = mopub || {};
                     data['vs_end'] = date_to_string(new Date(end - diff));
                 }
 
-                var granularity = $('select[name="granularity"]').val();
+                var advertiser_type = get_advertiser_type();
+                var advertiser_query = get_advertiser_query(advertiser_type);
+                var publisher_type = get_publisher_type();
+                var publisher_query = get_publisher_query(publisher_type);
 
-                var advertiser_data = get_advertiser_query();
-                var publisher_data = get_publisher_query();
-
-                if(update_rollups || update_charts) {
-                    var charts_data = _.clone(data);
-
-                    if(update_charts) {
-                        charts_data.granularity = granularity;
+                if(update_rollups_and_charts) {
+                    var rollups_and_charts_data = _.clone(data);
+                    var granularity = $('select[name="granularity"]').val();
+                    rollups_and_charts_data.granularity = granularity;
+                    rollups_and_charts_data.query = [_.extend(advertiser_query, publisher_query)];
+                    if($('[name="advertiser_compare"]').is(':checked')) {
+                        _.each(advertiser_query[advertiser_type], function(advertiser) {
+                            var query = _.clone(publisher_query);
+                            query[advertiser_type] = [advertiser];
+                            rollups_and_charts_data.query.push(query);
+                        });
+                        $.jsonp({
+                            data: {
+                                data: JSON.stringify(rollups_and_charts_data)
+                            },
+                            success: function (json, textStatus) {
+                                // defer so exceptions show up in the console
+                                _.defer(function() {
+                                    update_rollups(json.sum[0]);
+                                    var charts_data = json[granularity].slice(1);
+                                    update_charts(start, end, charts_data);
+                                });
+                            }
+                        });
+                    }
+                    else if($('[name="publisher_compare"]').is(':checked')) {
+                        _.each(publisher_query[publisher_type], function(publisher) {
+                            var query = _.clone(advertiser_query);
+                            query[publisher_type] = [publisher];
+                            rollups_and_charts_data.query.push(query);
+                        });
+                        $.jsonp({
+                            data: {
+                                data: JSON.stringify(rollups_and_charts_data)
+                            },
+                            success: function (json, textStatus) {
+                                // defer so exceptions show up in the console
+                                _.defer(function() {
+                                    update_rollups(json.sum[0]);
+                                    var charts_data = json[granularity].slice(1);
+                                    update_charts(start, end, charts_data);
+                                });
+                            }
+                        });
                     }
                     else {
-                        charts_data.granularity = 'sum';
+                        $.jsonp({
+                            data: {
+                                data: JSON.stringify(rollups_and_charts_data)
+                            },
+                            success: function (json, textStatus) {
+                                // defer so exceptions show up in the console
+                                _.defer(function() {
+                                    if(json.vs_sum.length) {
+                                        update_rollups(json.sum[0], json.vs_sum[0]);
+                                        update_charts(start, end, [
+                                            _.extend(json[granularity][0], { name: 'This Period' }),
+                                            _.extend(json['vs_' + granularity][0], { name: 'Comparison Period' })
+                                        ]);
+                                    }
+                                    else {
+                                        update_rollups(json.sum[0]);
+                                        update_charts(start, end, [
+                                            json[granularity][0]
+                                        ]);
+                                    }
+                                });
+                            }
+                        });
                     }
-
-                    charts_data.query = [_.extend(advertiser_data, publisher_data)];
-
+                    /*
                     $.jsonp({
                         data: {
                             data: JSON.stringify(charts_data)
@@ -1278,23 +1488,24 @@ var mopub = mopub || {};
                             });
                         }
                     });
+                    */
                 }
 
-                if(update_campaign_table) {
-                    update_rows('source', data, publisher_data);
-                    update_rows('campaign', data, publisher_data);
+                if(update_advertiser_table) {
+                    update_rows('source', data, publisher_query);
+                    update_rows('campaign', data, publisher_query);
                 }
 
-                if(update_app_table) {
-                    update_rows('app', data, advertiser_data);
+                if(update_publisher_table) {
+                    update_rows('app', data, advertiser_query);
                 }
 
-                if(update_campaign_table) {
-                    update_rows('adgroup', data, publisher_data);
+                if(update_advertiser_table) {
+                    update_rows('adgroup', data, publisher_query);
                 }
 
-                if(update_app_table) {
-                    update_rows('adunit', data, advertiser_data);
+                if(update_publisher_table) {
+                    update_rows('adunit', data, advertiser_query);
                 }
             }
 
@@ -1313,7 +1524,7 @@ var mopub = mopub || {};
                 $('#custom_date_range').html($("#datepicker-start-input").val() + ' to ' + $("#datepicker-end-input").val());
                 $('#custom_date_range').show();
                 $("#datepicker-custom-range").toggleClass('hidden');
-                update_dashboard(true, true, true, true);
+                update_dashboard(true, true, true);
             });
 
             $("#custom_date_range").click(function () {
@@ -1347,18 +1558,30 @@ var mopub = mopub || {};
                             $('span#comparison_range').html('the two weeks before');
                         }
                     }
-                    update_dashboard(true, true, true, true);
+                    update_dashboard(true, true, true);
                 }
             });
 
             // granularity
             $('[name="granularity"]').change(function () {
-                update_dashboard(false, true, false, false);
+                update_dashboard(true, false, false);
             });
 
             // comparison
             $('[name="compare"]').change(function () {
-                update_dashboard(true, true, true, true);
+                $('[name="advertiser_compare"]').prop('checked', false);
+                $('[name="publisher_compare"]').prop('checked', false);
+                update_dashboard(true, true, true);
+            });
+            $('[name="advertiser_compare"]').change(function () {
+                $('[name="compare"]').prop('checked', false);
+                $('[name="publisher_compare"]').prop('checked', false);
+                update_dashboard(true, true, true);
+            });
+            $('[name="publisher_compare"]').change(function () {
+                $('[name="compare"]').prop('checked', false);
+                $('[name="advertiser_compare"]').prop('checked', false);
+                update_dashboard(true, true, true);
             });
 
             // export
@@ -1449,7 +1672,7 @@ var mopub = mopub || {};
                     }
                 }
 
-                update_dashboard(true, true, true, true);
+                update_dashboard(true, true, true);
             });
 
             // check/uncheck campaigns
@@ -1472,12 +1695,12 @@ var mopub = mopub || {};
                     }
                 }
 
-                update_dashboard(true, true, true, true);
+                update_dashboard(true, true, true);
             });
 
             // check/uncheck adgroups
             $('tr.adgroup input', campaigns_table).click(function () {
-                update_dashboard(true, true, true, true);
+                update_dashboard(true, true, true);
             });
 
             // expand adgroups
@@ -1517,12 +1740,12 @@ var mopub = mopub || {};
                     }
                 }
 
-                update_dashboard(true, true, true, true);
+                update_dashboard(true, true, true);
             });
 
             // check/uncheck adunits
             $('tr.adunit input', apps_table).click(function () {
-                update_dashboard(true, true, true, true);
+                update_dashboard(true, true, true);
             });
 
             // expand adunits
@@ -1539,13 +1762,12 @@ var mopub = mopub || {};
                 $(this).addClass('expand');
             });
 
-            update_dashboard(true, true, true, true);
+            update_dashboard(true, true, true);
         },
 
         initializeGeo: function (bootstrapping_data) {
             initializeCommon();
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
-
         },
 
         initializeAppDetail: function (bootstrapping_data) {
@@ -1611,9 +1833,7 @@ var mopub = mopub || {};
 
     window.DashboardController = DashboardController;
 
-
 })(this.jQuery, this.Backbone, this._);
-
 
 /* REFACTOR */
 var artwork_json;

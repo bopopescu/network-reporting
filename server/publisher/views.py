@@ -53,14 +53,14 @@ class DashboardHandler(RequestHandler):
     def get(self):
         apps = AppQueryManager.get_apps(account=self.account)
 
-        orders = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
+        direct_campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
         marketplace_campaign = CampaignQueryManager.get_marketplace(account=self.account)
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
 
         return {
             'page_width': 'wide',
             'apps': apps,
-            'orders': orders,
+            'direct_campaigns': direct_campaigns,
             'marketplace_campaign': marketplace_campaign,
             'network_campaigns': network_campaigns,
         }

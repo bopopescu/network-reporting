@@ -7,8 +7,7 @@
 {% endblock %}
 
 {% block extraScripts %}
-{# TODO: {% include_script 'controllers/publisher' %} instead of #}
-<script src="/js/controllers/publisher.js" type="text/javascript"></script>
+{% include_script 'controllers/publisher' %}
 
 <script type="text/javascript">
 $(function () {
@@ -22,7 +21,6 @@ $(function () {
 {% block pageTitle %}
  <h1> New Fucking Awesome Dashboard </h1>
 {% endblock pageTitle %}
-
 
 {% block titleBarRight %}
 {% endblock titleBarRight %}
@@ -124,6 +122,7 @@ $(function () {
 </div>
 
 <div id="filters">
+    <label><input name="advertiser_compare" type="checkbox" /> Compare</label>
     <table id="campaigns">
         <thead>
             <tr>
@@ -135,11 +134,11 @@ $(function () {
             </tr>
         </thead>
         <tbody>
-            {% if orders.count %}
+            {% if direct_campaigns.count %}
                 <tr class="source" id="direct">
                     <td></td>
                     <td><input type="checkbox" /></td>
-                    <td class="name">Orders</td>
+                    <td class="name">Direct</td>
                     <td class="rev"></td>
                     <td class="rev_delta"></td>
                     <td class="imp"></td>
@@ -149,7 +148,7 @@ $(function () {
                     <td class="ctr"></td>
                     <td class="ctr_delta"></td>
                 </tr>
-                {% for campaign in orders %}
+                {% for campaign in direct_campaigns %}
                     <tr class="campaign" id="{{ campaign.key }}">
                         <td class="expand_control">
                             {% if campaign.adgroups.count > 1 %}
@@ -237,6 +236,7 @@ $(function () {
         </tbody>
     </table>
 
+    <label><input name="publisher_compare" type="checkbox" /> Compare</label>
     <table id="apps">
         <thead>
             <tr>

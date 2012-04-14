@@ -45,7 +45,10 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
     def get(self, *args, **kwargs):
         req_type = self.get_argument('req_type', 'both')
         account_key = self.get_argument('account_key')
-        network = self.get_argument('network')
+        network = self.get_argument('network', False)
+        # TODO: remove legacy shit
+        if not network:
+            network = self.get_argument('ad_network_name')
 
         # connect to app engine
         if os.path.exists('/home/ubuntu/'):

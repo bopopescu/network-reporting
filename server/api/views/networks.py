@@ -11,7 +11,6 @@ from account.query_managers import AccountQueryManager
 from publisher.query_managers import AppQueryManager
 # TODO: on merge of new networks uncomment NetworkStats stuff
 #from advertiser.models import NetworkStates
-from advertiser.query_managers import CampaignQueryManager
 
 from ad_network_reports.models import AdNetworkStats
 from ad_network_reports.query_managers import AdNetworkLoginManager, \
@@ -23,7 +22,7 @@ from ad_network_reports.query_managers import AdNetworkLoginManager, \
 class NetworksApi(RequestHandler):
     def get(self):
         app_key = self.request.GET.get('app')
-        campaign_key = self.request.GET.get('campaign')
+        network = self.request.GET.get('network')
         account_key = self.request.GET.get('account')
 
         start_date = datetime.strptime(self.request.GET.get('start_date'),
@@ -31,7 +30,7 @@ class NetworksApi(RequestHandler):
         end_date = datetime.strptime(self.request.GET.get('end_date'),
                 '%Y-%m-%d').date()
 
-        all_stats = get_all_stats(app_key, campaign_key, account_key,
+        all_stats = get_all_stats(app_key, network, account_key,
                 start_date, end_date)
 
         return JSONResponse({'status': 200,
@@ -49,7 +48,7 @@ class NetworksApi(RequestHandler):
 
         # get stats for each arg in the arg list and put them into a single
         # dict
-        temp_stats = [get_all_stats(args['app'], args['campaign'],
+        temp_stats = [get_all_stats(args['app'], args['network'],
             args['account'], start_date, end_date).items() for args in
             arg_list]
         logging.info(temp_stats)
@@ -62,7 +61,7 @@ def networks_api(request, *args, **kwargs):
     return NetworksApi()(request, *args, **kwargs)
 
 # helpers
-def get_all_stats(app_key, campaign_key, account_key, start_date, end_date):
+def get_all_stats(app_key, network, account_key, start_date, end_date):
     days = gen_days(start_date, end_date)
 
     account = AccountQueryManager.get(account_key)
@@ -75,20 +74,11 @@ def get_all_stats(app_key, campaign_key, account_key, start_date, end_date):
     else:
         app = None
 
-    if campaign_key != '*':
-        campaign = CampaignQueryManager.get(campaign_key)
-        # sanity check
-        if campaign.account.key() != account.key():
-            raise Http404
-    else:
-        campaign = None
+    if network == '*':
+        network = None
 
-    if campaign:
-#            if campaign.network_state == \
-#                    NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
-#                network = campaign.network_type
-        network = campaign.adgroups.get().network_type.replace('_native',
-                '').lower()
+    if network:
+        network = network.replace('_native', '').lower()
         if app:
             login = AdNetworkLoginManager.get_logins(account,
                     network=network).get()
@@ -104,9 +94,6 @@ def get_all_stats(app_key, campaign_key, account_key, start_date, end_date):
         else:
             all_stats = AdNetworkNetworkStatsManager.get_stats_for_days(
                     account, network, days)
-#            else:
-#                # create empty models
-#                all_stats = [AdNetworkStats(date=day) for day in days]
     else:
         if app:
             all_stats = AdNetworkAppStatsManager.get_stats_for_days(account,
@@ -124,13 +111,13 @@ def get_all_stats(app_key, campaign_key, account_key, start_date, end_date):
         # create empty models
         all_stats = [AdNetworkStats(date=day) for day in days]
 
-    return api_format(app_key, campaign_key, account_key, all_stats)
+    return api_format(app_key, network, account_key, all_stats)
 
-def api_format(app_key, campaign_key, account_key, all_stats):
+def api_format(app_key, network, account_key, all_stats):
     """
     return stats dict formatted for json response
     """
-    return {app_key + '||' + campaign_key + '||' + account_key:
+    return {app_key + '||' + network + '||' + account_key:
         {'daily_stats': [{'revenue': stats.revenue,
                          'impression_count': stats.impressions,
                          'attempt_count': stats.attempts,

@@ -12,8 +12,8 @@ from advertiser.query_managers import CampaignQueryManager
 
 class NetworkIndexHandler(RequestHandler):
     def get(self):
-        if self.account.display_new_networks:
-            return HttpResponseRedirect(reverse('networks'))
+        #if self.account.display_new_networks:
+            #return HttpResponseRedirect(reverse('networks'))
 
         today = datetime.datetime.now(Pacific_tzinfo()).date()
         yesterday = today - datetime.timedelta(days=1)

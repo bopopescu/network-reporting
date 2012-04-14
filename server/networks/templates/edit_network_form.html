@@ -347,11 +347,6 @@
                     <tr>
                         <td class="icon"></td>
                         <td class="name"></td>
-                        {% if login_form %}
-                        <td class="name">
-                            Reporting
-                        </td>
-                        {% endif %}
                         <td class="name">
                             Enabled
                         </td>
@@ -392,11 +387,6 @@
                         <td class="name">
                             {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
                         </td>
-                        {% if login_form %}
-                        <td class="text">
-                            <input id="{{ app.key }}-reporting-active" type="checkbox" />
-                        </td>
-                        {% endif %}
                         <td class="text">
                             <input class="all-adunits" type="checkbox" />
                         </td>
@@ -439,9 +429,6 @@
                         <td class="name">
                             {{ adunit.name }}
                         </td>
-                        {% if login_form %}
-                        <td class="text"> </td>
-                        {% endif %}
                         <td class="text" style="height:20px">
                             {{ adunit.adgroup_form.active }}
                         </td>

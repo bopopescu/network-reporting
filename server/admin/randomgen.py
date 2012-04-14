@@ -38,8 +38,8 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
 #Configuration Parameters for data generation
 ####
 
-USERNAME = "test@mopub.com"
-PASSWORD = "test"
+USERNAME = "test1@mopub.com"
+PASSWORD = "test1"
 
 NUM_ACCOUNTS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
 NUM_APPS = 2
@@ -322,7 +322,7 @@ def generate_creative(account,adgroup):
 
 
 #Example Method to generate data. See top configuration contants for customizing result
-def main_():
+def main():
     account = generate_account(USERNAME,PASSWORD,USERNAME)
 
     # Create marketplace campaign
@@ -385,7 +385,7 @@ def main_():
             cur_date+=day
 
 
-def main():
+def main_():
     account = generate_account(USERNAME,PASSWORD,USERNAME,
             display_new_networks=True)
 

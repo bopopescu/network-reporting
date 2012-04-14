@@ -269,6 +269,7 @@ var mopub = window.mopub || {};
                 var active_chart = $('#dashboard-stats .stats-breakdown .active');
                 var use_ctr = active_chart.attr('id') === 'stats-breakdown-ctr';
                 mopub.Chart.setupDashboardStatsChart((use_ctr || this_view.options.line_graph) ? 'line' : 'area');
+                $('#dashboard-stats-chart').show();
             }
         },
 
@@ -311,7 +312,7 @@ var mopub = window.mopub || {};
                     ctr: this_view.collection.get_chart_data('ctr', this_view.options.mopub_optimized),
                     total: false
                 };
-                $('#stats-breakdown-impression_count').click()
+                this.show_chart();
             }
         }
     });
@@ -368,7 +369,8 @@ var mopub = window.mopub || {};
                         total: false
                     };
                 }
-                $('#stats-breakdown-impression_count').click()
+                mopub.Chart.setupDashboardStatsChart('line');
+                $('#dashboard-stats-chart').show();
             }
         }
     });

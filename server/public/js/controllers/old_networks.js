@@ -34,7 +34,6 @@ $(function() {
                 today: today,
                 yesterday: yesterday
             });
-            graph_view.render();
 
             var adgroups_view = new AdGroupsView({
                 collection: adgroups,
@@ -136,7 +135,6 @@ $(function() {
                     row.addClass('active');
                     $('#dashboard-stats-chart').fadeOut(100, function() {
                         graph_view.show_chart();
-                        $(this).show();
                     });
                 }
             });

@@ -16,8 +16,6 @@ class NetworkCampaignForm(forms.ModelForm):
                   'description')
 
 class AdUnitAdGroupForm(forms.ModelForm):
-    bid_strategy = forms.ChoiceField(choices=(('cpm', 'CPM'), ('cpc', 'CPC')),
-                                     label='Rate:', initial='cpm')
     bid = forms.FloatField(initial=0.05,
                            widget=forms.TextInput(attrs={'class': 'float'}))
     active = forms.BooleanField(label='Active:', required=False)
@@ -30,6 +28,5 @@ class AdUnitAdGroupForm(forms.ModelForm):
 
     class Meta:
         model = AdGroup
-        fields = ('bid_strategy',
-                  'bid',
+        fields = ('bid',
                   'active')

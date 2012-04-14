@@ -13,9 +13,13 @@ import logging, email
 import datetime, time, calendar
 import csv
 import StringIO
+import sys
+import os
+import json
 
 SENDER="jim@mopub.com"
-RCPT="revforce+reports@mopub.com"
+RCPT="billing@mopub.com"
+MPX_URL="http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf&.."
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
@@ -168,14 +172,41 @@ class CheckHandler(webapp.RequestHandler):
         # create outbound email
         logging.info("Sending the report:\n%s" % output.getvalue())
         mail.send_mail(sender=SENDER,
-                          to="revforce+reports@mopub.com",
+                          to=RCPT,
                           subject="Your revenue report for %02d-%04d is attached (ID: %s)" % (m, y, jobId),
                           body="""SIR-\nGood times. Attached is your report. Sincerely, Automated John Chen""",
                           attachments=[("%s-%02d-%04d.csv" % (jobId, m, y), output.getvalue())])
 
 
+class MpxReportHandler(webapp.RequestHandler):
+    def get(self):
+        mpx = json.loads(urlfetch.fetch(MPX_URL).content)
+
+        # total spend
+        total = sum([x["spent"] for x in mpx.values()])
+
+        # spend by DSP
+        a=[(x["bidder_name"], x["spent"]) for x in mpx.values() if x["spent"] > 0]
+        a.sort(lambda x,y: cmp(y[1],x[1]))
+        
+        # compute body
+        body = "Total Spend: $%.2f\n\n" % total
+        body += "Top Bidders\n===========\n"
+        for x in a:
+          body += "%s: $%.2f\n" % (x[0], x[1])
+
+        body += "\nData retrieved at %s GMT. Thank you - Automated John Chen" % time.strftime('%b %d %Y %H:%M:%S')
+        
+        # send mail
+        logging.info(body)
+        mail.send_mail(sender=SENDER, to="revforce+reports@mopub.com", 
+            subject="MPX Daily Spend Report for %s" % time.strftime('%b %d %Y'),
+            body=body)
+
+
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
+                                          ('/mail/daily', MpxReportHandler),
                                           ('/generate', GenerateHandler),
                                           ('/check/(.*)', CheckHandler),
                                           ('/check', CheckHandler)],

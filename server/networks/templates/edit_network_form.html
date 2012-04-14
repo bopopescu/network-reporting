@@ -12,24 +12,87 @@
 </h1>
 {% endblock pageTitle %}
 
+{% block titleBarRight %}
+<span id="title-bar-button" class="titlebar-right{% if login_form and network.show_login %} hidden{% endif %}">
+    <a class="button" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
+</span>
+{% endblock titleBarRight %}
+
 {% block content %}
+{% if login_form %}
+<section id="network-settingsForm" class="hidden">
+    <form accept-charset="ascii" id="network-login-form">
+        {% if not network.show_login %}
+        <fieldset class="alt login-credentials-fields" style="padding-top:20px">
+            <legend>
+                <h2>
+                    Revenue Reporting
+                    {% if network.name == "admob" or network.name == "inmobi" %}
+                    <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
+                    {% endif %}
+                </h2>
+            </legend>
+
+            <div id="networkLoginForm" style="clear: both;padding-top:10px">
+                <div class="login-credentials-message">
+                    {% if reporting %}
+                    Revenue reporting for {{ network.pretty_name }} is turned on.
+                    {% else %}
+                    MoPub can report your revenue and other data directly from {{ network.pretty_name }}. {% if network.name != "mobfox" %}MoPub uses your login credentials to retrieve the revenue data from {{ network.pretty_name }}.{% endif %}
+                    {% endif %}    
+                </div>
+
+                {% if network.name != "mobfox" %}
+                <ul class="form_fields">
+                    <li>
+                    {{ login_form.username_str.label_tag }}
+                    {{ login_form.username_str }}
+                    <span id="username"></span>
+                    </li>
+
+                    <li>
+                    {{ login_form.password_str.label_tag }}
+                    {{ login_form.password_str }}
+                    <span id="password"></span>
+                    </li>
+
+                    {% if network.name == "admob" %}
+                    <li>
+                    {{ login_form.client_key.label_tag }}
+                    {{ login_form.client_key }}
+                    <span id="client_key"></span>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+
+                <div class="form-submit login-credentials-submit">
+                    {% if network.name == "mobfox" and not reporting %}
+                    <a class="button" id="networkLoginForm-submit title-bar-level">Turn on Reporting</a>
+                    {% else %}
+                    {% if network.name != "mobfox" %} 
+                    <a class="button" id="networkLoginForm-submit">Check and Save Credentials</a>
+                    {% endif %}
+                    {% endif %}
+                    <a class="button" id="networkLoginForm-cancel">No Thanks</a>
+                </div>
+                <div class="form-submit login-credentials-settings hidden">
+                    <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
+                </div>
+            </div>
+        </fieldset>
+        {% endif %}
+    </form>
+</section>
+{% endif %}
+
 <form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
     <div class="content-main">
-
+    <div>
+        <img src="/images/{{network.name}}-transparent.png"/>
+    </div>
     <fieldset>
-        <legend>
-            <h2>Network Details</h2>
-        </legend>
-
         <ul class="form_fields">
-            <li class="network-type campaign_type_dependant network">
-                {{ adgroup_form.network_type.label_tag }}
-                <div>
-                    <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
-                    <span class="error network_type_dependant admob millennial">(requires network SDK) <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">Learn more</a></span>
-                </div>
-            </li>
-
             {% if custom_campaign %}
             <li>
             {{ campaign_form.name.label_tag }}
@@ -39,31 +102,35 @@
             </li>
             {% endif %}
 
-            <li class="campaign_type_dependant network network_type_dependant jumptap">
+            {% if network.name == "admob" or network.name == "millennial" %}
+            <li>
+                <label>Special Instructions:</label>
+                <div>
+                    Requires Network SDK <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">(Learn more)</a>
+                </div>
+            </li>
+            {% endif %}
+
+            {% if network.name == "jumptap" %}
+            <li>
             {{ account_network_config_form.jumptap_pub_id.label_tag }}
             <div>
                 {{ account_network_config_form.jumptap_pub_id }}
             </div>
             </li>
-        </ul>
+            {% endif %}
 
-        <a class="button" id="advanced">Show Advanced Settings</a>
-    </fieldset>
-
-    <fieldset class="advanced hidden">
-        <legend>
-            <h2>Advanced Settings</h2>
-        </legend>
-
-        <ul class="form_fields">
+            {% if network.name == "custom_native" %}
             <li>
-            {{ campaign_form.description.label_tag }}
+            {{ adgroup_form.custom_method.label_tag }}
             <div>
-                {{ campaign_form.description }}
+                {{ adgroup_form.custom_method }}
             </div>
             </li>
+            {% endif %}
 
-            <li class="campaign_type_dependant network network_type_dependant custom">
+            {% if network.name == "custom" %}
+            <li>
             {{ adgroup_form.custom_html.label_tag }}
             <div>
                 {{ adgroup_form.custom_html }}
@@ -89,11 +156,24 @@
                 </div>
             </div>
             </li>
+            {% endif %}
+        </ul>
 
-            <li class="campaign_type_dependant network network_type_dependant custom_native">
-            {{ adgroup_form.custom_method.label_tag }}
+        <div style="margin-top:15px">
+            <a class="button" id="advanced">Show Advanced Settings</a>
+        </div>
+    </fieldset>
+
+    <fieldset class="advanced hidden">
+        <legend>
+            <h2>Advanced Settings</h2>
+        </legend>
+
+        <ul class="form_fields">
+            <li>
+            {{ campaign_form.description.label_tag }}
             <div>
-                {{ adgroup_form.custom_method }}
+                {{ campaign_form.description }}
             </div>
             </li>
 
@@ -196,16 +276,18 @@
         </ul>
     </fieldset>
 
-    {% if login_form %}
-    <fieldset class="alt login-credentials-fields network_type_dependant {{reporting_networks}} login-credentials" style="padding-top:20px">
+    {% if login_form and network.show_login %}
+    <fieldset class="alt login-credentials-fields" style="padding-top:20px">
         <legend>
-            <h2>
-                <span style="float: left;">Revenue Reporting</span>
-                <span id="networkLoginForm-show" class="ui-icon ui-icon-triangle-1-s {% if network.show_login %}hidden{% endif %}" style="margin-left: 10px; float: left; cursor:pointer;"></span>
-            </h2>
+                <h2>
+                    Revenue Reporting
+                    {% if network.name == "admob" or network.name == "inmobi" %}
+                    <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
+                    {% endif %}
+                </h2>
         </legend>
 
-        <div id="networkLoginForm" {% if not network.show_login %}class="hidden"{% endif %} style="clear: both;padding-top:10px">
+        <div>
             <div class="login-credentials-message">
                 {% if reporting %}
                 Revenue reporting for {{ network.pretty_name }} is turned on.
@@ -254,6 +336,7 @@
         </div>
     </fieldset>
     {% endif %}
+
     </div> <!-- <div class="content-main"> -->
     <div class="clear"></div><!-- Previous <div> is float:left -->
     <section id="dashboard-apps">
@@ -264,16 +347,23 @@
                     <tr>
                         <td class="icon"></td>
                         <td class="name"></td>
-                        <td class="name pub-id-data">Enabled</td>
-                        {% if ad_network_ids %}
+                        {% if login_form %}
+                        <td class="name">
+                            Reporting
+                        </td>
+                        {% endif %}
+                        <td class="name">
+                            Enabled
+                        </td>
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
                         <td class="name">Ad Network ID</td>
                         {% endif %}
-                        <td class="name">Rate (USD)</td>
+                        <td class="name">CPM</td>
                         {% if reporting %}
                         <th class="name">
                             <div>
                                 <a id="copy-7-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
+                                    <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
                                 </a>
                             </div>
                             <div>7-Day CPM</div>
@@ -281,7 +371,7 @@
                         <th class="stat">
                             <div>
                                 <a id="copy-14-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span> Copy All
+                                    <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
                                 </a>
                             </div>
                             <div>14-DayCPM</div>
@@ -302,56 +392,83 @@
                         <td class="name">
                             {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
                         </td>
+                        {% if login_form %}
                         <td class="text">
-                            <input id="{{app.key}}-all-adunits" class="all-adunits" type="checkbox" /> ( All )
+                            <input id="{{ app.key }}-reporting-active" type="checkbox" />
                         </td>
-                        {% if ad_network_ids %}
-                        <td class="text pub-id-data">
-                            <div class="campaign_type_dependant network">
-                                {% for field in app.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted"></span>
-                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
+                        {% endif %}
+                        <td class="text">
+                            <input class="all-adunits" type="checkbox" />
+                        </td>
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                        <td class="text">
+                            <div>
+                                <input name="app_{{ app.key }}-admob_pub_id" placeholder="AdMob Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-admob_pub_id" />
                             </div>
                         </td>
                         {% endif %}
-                        <td class="stat cpm-data" style="width:150px">
+                        <td class="text cpm-data" style="width:100px">
+                            {% if app.bid %}
+                            <input class="float bid app-level" type="text" value="{{ app.bid }}">
+                            {% endif %}
+                            <div class="cpm-close editable hidden">
+                                <span>
+                                    <b class="caret"></b>                            
+                                    <span class="editable-hidden">Set app CPM</span>
+                                </span>
+                            </div>    
                         </td>
                         {% if reporting %}
-                        <td class="stat 7-day-cpm network-data" id="{{app.key}}-7-day-cpm">
-                            <a id="copy-7-day-{{app.key}}-cpm" class="copy-7-day" style="cursor:pointer">
-                                <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
+                        <td>
+                            <a class="copy-7-day" style="color: orange; cursor:pointer">
+                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
+                                {{ app.seven_day_stats.cpm|currency }}
                             </a>
-                            {{ app.seven_day_stats.cpm|currency }}
                         </td>
-                        <td class="stat 14-day-cpm network-data" id="{{app.key}}-14-day-cpm">
-                            <a id="copy-14-day-{{app.key}}-cpm" class="copy-14-day" style="cursor:pointer">
-                                <span class="ui-icon ui-icon-arrow-1-w" style="float:left;"></span>
+                        <td>
+                            <a class="copy-14-day" style="color: orange; cursor:pointer;">
+                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
+                                {{ app.fourteen_day_stats.cpm|currency }}
                             </a>
-                            {{ app.fourteen_day_stats.cpm|currency }}
                         </td>
                         {% endif %}
                     </tr>
                     {% for adunit in app.adunits %}
-                    <tr class="sub">
+                    <tr class="sub" style="height:33px">
                         <td class="icon"></td>
                         <td class="name">
                             {{ adunit.name }}
                         </td>
-                        <td class="text">
+                        {% if login_form %}
+                        <td class="text"> </td>
+                        {% endif %}
+                        <td class="text" style="height:20px">
                             {{ adunit.adgroup_form.active }}
                         </td>
-                        {% if ad_network_ids %}
-                        <td class="text pub-id-data adunit">
-                            <div class="campaign_type_dependant network">
-                                {% for field in adunit.network_config_form %}{{ field }}{% endfor %}
-                                <span class="pub_id muted adunit"></span>
-                                <span class="pub_id ui-icon ui-icon-triangle-1-s" style="cursor:pointer;"></span>
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                        <td class="text adunit">
+                            {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                            <div>
+                                <div class="pub-id-input hidden">
+                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="{{ network.name }}_ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAgM-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
+                                    <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
+                                </div>
+                                <div class="pub-id-edit editable">
+                                    <span class="pub-id-value"></span>
+                                    <b class="caret"></b>
+                                </div>                            
                             </div>
+                            {% endif %}
                         </td>
                         {% endif %}
-                        <td class="stat cpm-data">
-                            {{ adunit.adgroup_form.bid }}
-                            {{ adunit.adgroup_form.bid_strategy }} 
+                        <td class="text cpm-data">
+                            <div class="cpm-edit editable">
+                                <span class="cpm-value"></span>
+                                <b class="caret"></b>                            
+                            </div>           
+                            <div class="cpm-input{% if app.bid %} hidden{% endif %}">
+                                {{ adunit.adgroup_form.bid }}
+                            </div>
                         </td>
                         {% if reporting %}
                         <td class="stat">
@@ -374,24 +491,9 @@
 {% endblock content %}
 
 {% block extraScripts %}
-<script type="text/html" id="popover-content">
-    {% include "networks/partials/popover_copy_all_content.html" %}
-</script>
-<script type="text/html" id="popover-template">
-    {% include "networks/partials/popover_copy_all_template.html" %}
-</script>
-{% include_script "libs/bootstrap" %}
-{% include_style "bootstrap" %}
+{% include_script "libs/bootstrap.min.js" %}
 {% include_script "controllers/networks" %}
 <script type="text/javascript">
-    function copy_bid(event, this_obj) {
-        var key = $(this_obj).attr("id").replace('-adunit-copy-bid', '');
-        var keys = key.split("-app-");
-        var app_key = keys[0];
-        var adunit_key = keys[1];
-        $('.' + app_key + '-cpm-field').val($('#id_' + adunit_key + '-bid').val());
-    }
-
     $(function () {
             EditNetworkController.initialize({
                 network_type: '{{ network.name }}',

@@ -43,6 +43,8 @@ INMOBI = 'inmobi'
 MOBFOX = 'mobfox'
 MOBFOX_PRETTY = 'MobFox'
 
+# TODO: Refactor the shit out of this, OMG can't believe I wrote some of this
+
 # TODO: Figure out where to put this. Basically ad_network_reports
 # package helper functions.
 class AdNetworkReportManager(CachedQueryManager):
@@ -168,8 +170,9 @@ class AdNetworkReportManager(CachedQueryManager):
                 yield network
 
 class AdNetworkLoginManager(CachedQueryManager):
+    # TODO: use get_by_key
     @classmethod
-    def get_login(cls,
+    def get_logins(cls,
                   account,
                   network=''):
         """
@@ -263,7 +266,7 @@ class AdNetworkMapperManager(CachedQueryManager):
         Return a generator of the AdNetworkAppMappers with this account.
         """
         for login in AdNetworkLoginManager. \
-                get_login(account):
+                get_logins(account):
             query = AdNetworkAppMapper.all().filter('ad_network_login =',
                     login)
             if network_name:
@@ -280,20 +283,14 @@ class AdNetworkMapperManager(CachedQueryManager):
 
     @classmethod
     def get_mapper(cls,
-                   mapper_key=None,
-                   publisher_id=None,
-                   ad_network_name=None):
-        """Keyword arguments: either an ad_network_app_mapper_key or a
-        publisher_id and login_credentials.
+                   pub_id,
+                   network):
+        return AdNetworkAppMapper.get_by_publisher_id(pub_id, network)
 
-        Return the corresponding AdNetworkAppMapper.
-        """
-        if mapper_key:
-            return AdNetworkAppMapper.get(mapper_key)
-        elif publisher_id and ad_network_name:
-            return AdNetworkAppMapper.get_by_publisher_id(publisher_id,
-                    ad_network_name)
-        return None
+    @classmethod
+    def get(cls,
+            mapper_key):
+        return AdNetworkAppMapper.get(mapper_key)
 
 class AdNetworkStatsManager(CachedQueryManager):
     @classmethod
@@ -440,16 +437,15 @@ class AdNetworkStatsManager(CachedQueryManager):
         return aggregate_stats
 
     @classmethod
-    def get_stats_list_for_mapper_and_days(cls,
-                                           ad_network_app_mapper_key,
-                                           days):
+    def get_stats_for_days(cls,
+                           mapper_key,
+                           days):
         """Filter AdNetworkScrapeStats for a given ad_network_app_mapper. Sort
         chronologically by day, newest first (decending order.)
 
         Return a list of stats sorted by date.
         """
-        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
-                ad_network_app_mapper_key, days)
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(mapper_key, days)
         return sorted(stats_list, key=lambda stats: stats.date, reverse=True)
 
     @classmethod
@@ -577,6 +573,21 @@ class AdNetworkAggregateManager(CachedQueryManager):
         return(AdNetworkStatsManager.roll_up_stats(stats_list))
 
 
+# TODO: refactor model naming: make it less verbose so shit like this won't
+# happen
+class AdNetworkNetworkStatsManager(CachedQueryManager):
+    @classmethod
+    def get_stats_for_days(cls, account, network, days):
+        return AdNetworkNetworkStats.get_by_network_and_days(account, network,
+                days)
+
+class AdNetworkAppStatsManager(CachedQueryManager):
+    @classmethod
+    def get_stats_for_days(cls, account, app, days):
+        return AdNetworkAppStats.get_by_app_and_days(account, app, days)
+
+# TODO: refactor model naming: make it less verbose so shit like this won't
+# happen
 class AdNetworkManagementStatsManager(CachedQueryManager):
     def __init__(self,
                  day,

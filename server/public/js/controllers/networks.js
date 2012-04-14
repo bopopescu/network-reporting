@@ -136,6 +136,15 @@ $(function() {
 
             initialize_show_network();
 
+            $('.appData').hover(
+                function() {
+                    $(this).find('.edit-link').show()
+                },
+                function() {
+                    $(this).find('.edit-link').hide()
+                }
+            );
+
             $('.show-apps').click(function() {
                 var key = $(this).attr('id');
                 var div = $('.' + key + '-apps-div');
@@ -157,7 +166,7 @@ $(function() {
 
             $('#network-editSelect-menu').find('li').first().hide();
 
-            //move to a utils package
+            // TODO: move to a utils package
             // checks if email is valid
             function isValidEmailAddress(emailAddress) {
                 var pattern = new RegExp(/^(\s*)(("[\w-+\s]+")|([\w-+]+(?:\.[\w-+]+)*)|("[\w-+\s]+")([\w-+]+(?:\.[\w-+]+)*))(@((?:[\w-+]+\.)*\w[\w-+]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][\d]\.|1[\d]{2}\.|[\d]{1,2}\.))((25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\.){2}(25[0-5]|2[0-4][\d]|1[\d]{2}|[\d]{1,2})\]?$)/i);
@@ -267,6 +276,33 @@ $(function() {
 
             var pub_id = pub_ids[network_type];
 
+            $('#campaignForm-keyword-helpLink').click(function(e) {
+                e.preventDefault();
+                $('#campaignForm-keyword-helpContent').dialog({
+                    buttons: { "Close": function() { $(this).dialog("close"); } }
+                });
+            });
+            $('#campaignForm-customHtml-helpLink').click(function(e) {
+                e.preventDefault();
+                $('#campaignForm-customHtml-helpContent').dialog({
+                    buttons: { "Close": function() { $(this).dialog("close"); }},
+                    width: 700
+                });
+            });
+
+            $('#network-settingsButton')
+                .button({ icons: { primary: "ui-icon-wrench" } })
+                .click(function(e) {
+                    e.preventDefault();
+                    if ($('#network-settingsForm').is(':visible')) {
+                        $('#network-settingsForm').slideUp('fast');
+                    } else {
+                        $('#network-settingsForm').slideDown('fast');
+                    }
+                });
+
+            // text entered for app level network ids should propogate to
+            // children
             $('.app-pub-id')
                 .keyup(function () {
                     var value = $(this).val();
@@ -274,72 +310,91 @@ $(function() {
                     $(div).find('input[name$="'+pub_id+'"]').each(function () {
                         if (!$(this).hasClass('initialized')) {
                             $(this).val(value);
-                        }
-                        if ($(this).is(':hidden')) {
-                            $(this).siblings('span.pub_id.muted.adunit').each(function () {
-                                $(this).text(value);
-                                if (value) {
-                                    $(this).show();
-                                    $(this).siblings('span.pub_id').show();
-                                } else {
-                                    $(this).hide();
-                                    $(this).siblings('span.pub_id').hide();
-                                }
-                            });
+                            var pub_id_value = value;
+                            if (!value) {
+                                pub_id_value = "Change Network ID";
+                            }
+                            $(this).closest('td').find('.pub-id-value').text(pub_id_value);
                         }
                     });
+                }).keyup();
+
+            $('.cpm-data input').keyup(function() {
+                var value = $(this).val();
+                var div = $(this).parents('tbody');
+                if (!value) value = 0;
+                $(div).find('.cpm-value').text(value);
+            }).keyup();
+
+            // set up active checkbox's for app level
+            $('.all-adunits')
+                .each(function() {
+                    var checkboxes = $(this).closest('tbody').find('input[name$="active"]');
+                    if (checkboxes.filter('input:checked').length == checkboxes.length) {
+                        $(this).attr('checked', 'checked');
+                    }
                 })
-                .focusout(function () {
-                    if ($(this).val()) {
-                        var div = $(this).parents('tbody');
-                        $(div).find('input[name$="'+pub_id+'"]').each(function () {
-                            $(this).addClass('initialized');
-                        });
+                .change(function() {
+                    var checkboxes = $(this).closest('tbody').find('input[name$="active"]');
+                    if ($(this).is(':checked')) {
+                        checkboxes.attr("checked", "checked");
+                    } else {
+                        checkboxes.removeAttr("checked");
                     }
                     });
 
-
-            // set up popovers to copy all cpms
-            _.each(adunits, function(key) {
-                var app_key = key[0];
-                var adunit_key = key[1];
-                $('#id_' + adunit_key + '-bid')
-                    .popover({html: true,
-                        content: function() {
-                            return _.template($('#popover-content').html(), {
-                                adunit_key: adunit_key,
-                                app_key: app_key,
-                            });
-                        },
-                        template: _.template($('#popover-template').html(), {}),
-                        trigger: 'focus'});
-                    });
-
-            // set up active checkbox's for app level
-            $('.all-adunits').click(function() {
-                var key = $(this).attr('id').replace('-all-adunits', '');
-                if ($(this).is(':checked')) {
-                    $('.' + key + '-adunit').attr("checked", "checked");
+            // perculate checked changes up
+            $('input[name$="active"]').click(function () {
+                var key = $(this).attr('class');
+                if($('.' + key + ':checked').length == $('.' + key).length) {
+                    $('.' + key).closest('tbody').find('.all-adunits').attr("checked", "checked");
                 } else {
-                    $('.' + key + '-adunit').removeAttr("checked");
+                    $('.' + key).closest('tbody').find('.all-adunits').removeAttr("checked");
                 }
-                });
-                
 
+                // TODO: review tooltip code
+                // If no ad network ID set up, show a tooltip
+                if ($(this).is(':checked')) {
+                    var network_input = $(this).parents('tr').find('input[name$="'+pub_id+'"]');
+                    var value = network_input.val();
+                    if (!value) {
+                        network_input.tooltip({
+                            title: 'Enter the network ID to enable (<a href="#">help!</a>)',
+                            trigger: 'manual',
+                            placement:'top'
+                        });
+                        network_input.tooltip('show');
+                    }
+                }
+                else {
+                    $(this).parents('tr').find('input[name$="'+pub_id+'"]').tooltip('hide');
+                }
+            });
+                
             // set cpms when copy all cpm button is clicked for either 14 day
             // or 7 day
             _.each(['7-day', '14-day'], function(days) {
+                // copy over cpms for all apps
                 $('#copy-' + days).click(function() {
-                    $('.' + days + '-cpm').each(function() {
-                        var key = $(this).attr('id').replace('-' + days, '');
-                        var cpm = parseFloat($(this).text().replace('$', '')).toString();
-                        $('.' + key + '-field').val(cpm);
+                    $('.inventory_table tbody').each(function() {
+                        var cpm = parseFloat($(this).find('.copy-' + days).text().replace('$', '')).toString();
+                        var input = $(this).find('tr.main .cpm-data input');
+                        // change app level cpm
+                        input.val(cpm);
+                        // change adunit level cpm
+                        $(this).find('.cpm-input input').val(cpm);
                         });
                     });
+                // copy over an individual app level cpm
                 $('.copy-' + days).click(function() {
-                    var key = $(this).attr('id').replace('copy-' + days + '-', '');
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
-                    $('.' + key + '-field').val(cpm);
+                    var tbody = $(this).closest('tbody')
+                    var input = tbody.find('tr.main .cpm-data input');
+                    // change app level cpm
+                    input.val(cpm);
+                    input.keyup();
+                    // change adunit level cpm
+                    tbody.find('.cpm-input input').val(cpm);
                     });
                 });
 
@@ -371,7 +426,7 @@ $(function() {
                     },
                     submitHandler: function(form) {
                         $(form).ajaxSubmit({
-                            data: {ajax: true, show_login: !$('#networkLoginForm').is(':hidden')},
+                            data: {ajax: true},
                             dataType: 'json',
                             success: function(jsonData, statusText, xhr, $form) {
                                 if(jsonData.success) {
@@ -423,70 +478,95 @@ $(function() {
                 });
 
 
-            $("#networkLoginForm-submit").click(function() {
-                    // Hack to serialize sub-section of forms data.
-                    // Add a new form and hide it.
-                    $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
-                    // Clone the fieldset into the new form.
-                    $('#form-to-submit').html($('.login-credentials-fields').clone());
-                    // Serialize the data.
-                    var data = $('#form-to-submit').serialize();
-                    // Remove the form.
-                    $('#form-to-submit').remove();
-                    data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
-
-                    // Check if data submitted in the form is valid login
-                    // information for the ad network
-                    var message = $('.login-credentials-message');
-                    $(message).html("Verifying login credentials...");
-
-                    $.ajax({url: 'https://checklogincredentials.mopub.com',
-                        data: data,
-                        crossDomain: true,
-                        dataType: "jsonp",
-                        success: function(valid) {
-                            // Upon success notify the user
-                            if (valid) {
-                                $(message).html("MoPub is currently optimizing "
-                                                + pretty_name
-                                                + " by pulling data from "
-                                                + pretty_name + " using the following credentials.");
-                                var username = $('#id_username_str').val();
-                                var password = $('#id_password_str').val();
-                                var client_key = $('#id_client_key').val();
-
-                                $('#id_username_str').hide();
-                                $('#id_password_str').hide();
-                                $('#id_client_key').hide();
-
-                                $('#username').text(username);
-                                var hidden_password = "";
-                                $.each( password, function(c){
-                                    hidden_password += "*";
-                                });
-                                $('#password').text(hidden_password);
-                                $('#client_key').text(client_key);
-                                $('.login-credentials-submit').hide();
-                                $('.login-credentials-settings').show();
-                                saved_new_login = true;
-                            } else {
-                                $(message).html("Invalid login information.");
-                            }
+            function setUpLoginForm() {
+                $("#networkLoginForm-submit").click(function() {
+                        if ($(this).hasClass('title-bar-level')) {
+                            var data = $(this).closest('.login-credentials-fields').serialize();
+                        } else {
+                            // Hack to serialize sub-section of forms data.
+                            // Add a new form and hide it.
+                            $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
+                            // Clone the fieldset into the new form.
+                            $('#form-to-submit').html($(this).closest('.login-credentials-fields').clone());
+                            // Serialize the data.
+                            var data = $('#form-to-submit').serialize();
+                            // Remove the form.
+                            $('#form-to-submit').remove();
                         }
-                    });
-            });
+                        data += ("&account_key=" + account_key + "&network=" + network_type + '&req_type=check');
+
+                        // Check if data submitted in the form is valid login
+                        // information for the ad network
+                        var message = $('.login-credentials-message');
+                        $(message).html("Verifying login credentials...");
+
+                        $.ajax({url: 'https://checklogincredentials.mopub.com',
+                            data: data,
+                            crossDomain: true,
+                            dataType: "jsonp",
+                            success: function(valid) {
+                                // Upon success notify the user
+                                if (valid) {
+                                    $(message).html("MoPub is currently optimizing "
+                                                    + pretty_name
+                                                    + " by pulling data from "
+                                                    + pretty_name + " using the following credentials.");
+                                    var username = $('#id_username_str').val();
+                                    var password = $('#id_password_str').val();
+                                    var client_key = $('#id_client_key').val();
+
+                                    $('#id_username_str').hide();
+                                    $('#id_password_str').hide();
+                                    $('#id_client_key').hide();
+
+                                    $('#username').text(username);
+                                    var hidden_password = "";
+                                    $.each( password, function(c){
+                                        hidden_password += "*";
+                                    });
+                                    $('#password').text(hidden_password);
+                                    $('#client_key').text(client_key);
+                                    $('.login-credentials-submit').hide();
+                                    $('.login-credentials-settings').show();
+                                    saved_new_login = true;
+                                } else {
+                                    $(message).html("Invalid login information.");
+                                }
+                            }
+                        });
+                });
+
+                $('#networkLoginForm-cancel').click(function () {
+                    if ($(this).closest('section').attr('id') == 'network-settingsForm') {
+                        $('#network-settingsForm').slideUp();
+                    } else {
+                        var fieldset = $(this).closest('.login-credentials-fields');
+                        // Clone the fieldset into the new form.
+                        $('#network-login-form').html($(fieldset).clone());
+
+                        $(fieldset).slideUp(400, function () {
+                            $(fieldset).remove();
+                            $('#title-bar-button').show();
+                        });
+
+                        setUpLoginForm();
+                    }
+                });
+            }
+
+            setUpLoginForm();
 
             $("#edit-login").click(function() {
-                    $('#id_username_str').show();
-                    $('#id_password_str').show();
-                    $('#id_client_key').show();
+                $('#id_username_str').show();
+                $('#id_password_str').show();
+                $('#id_client_key').show();
 
-                    $('#username').text('');
-                    $('#password').text('');
-                    $('#client_key').text('');
+                $('#username').text('');
+                $('#password').text('');
+                $('#client_key').text('');
 
-                    $('.login-credentials-submit').show();
-                    $('.login-credentials-settings').hide();
+                $('.login-credentials-submit').show();
+                $('.login-credentials-settings').hide();
             });
 
             $('.network_type_dependant').each(function() {
@@ -515,31 +595,78 @@ $(function() {
                 }
             }).filter(':checked').click();
 
-            $('span.pub_id').click(function() {
-                var pub_id = pub_ids[network_type];
-                $(this).siblings('input[name$="'+pub_id+'"]').show();
-                $(this).siblings('span').hide();
-                $(this).hide();
-            });
-
-
-            $('.pub_id').hide();
-
             $('td.pub-id-data').each(function () {
                 var input = $(this).children('div').children('input[name$="'+pub_id+'"]');
                 var value = input.val();
 
-                if(value) {
-                    input.siblings('span.pub_id.muted').text(value);
-                    input.siblings('span.pub_id').show();
-                }
-                else {
-                    if (!$(this).hasClass('adunit')) {
-                        input.show();
-                    }
-                }
-                });
+                // TODO: review
+                // Always show the app-level input
+                if (value || !$(this).hasClass('adunit')) {
+                    input.show();
+                    input.parents('td').find('.pub-id-edit').hide();
+                }                
+            });
 
+            // Click the ad unit placeholder text to edit
+            $('.pub-id-edit').click(function (event) {
+                event.preventDefault();
+                $(this).hide();
+                var div = $(this).siblings('.pub-id-input')
+                div.show();
+                div.find('input').addClass('initialized');
+            });
+            $('.pub-id-edit').tooltip({
+                title: "Set ID for this ad unit"
+            });
+            $('.cpm-edit').tooltip({
+                title: "Set CPM for each unit"
+            });            
+            $('.cpm-close').tooltip({
+                title: "Set CPM at the app level"
+            });                        
+            $('.cpm-edit').click(function (event) {
+                event.preventDefault();
+                var tbody = $(this).closest('tbody');
+                // hide app level bids
+                tbody.find('tr.main .cpm-data input').hide();
+                tbody.find('tr.main .cpm-data .editable').show();
+                // show adunit level bids
+                tbody.find('.cpm-edit').hide();
+                tbody.find('.cpm-input').show();
+            });
+            $('.pub-id-close').click(function (event) {
+                event.preventDefault;
+                var input_div = $(this).closest('.pub-id-input');
+                input_div.hide();
+
+                var value = input_div.children('input').val()
+                if (value) {
+                    $(this).closest('td').find('.pub-id-value').text(value);
+                } else {
+                    $(this).closest('td').find('.pub-id-value').text("Change Network ID");
+                }
+                $(this).closest('td').find('.pub-id-edit').show();
+            });
+            $('.cpm-close').click(function (event) {
+                event.preventDefault;
+                var tbody = $(this).closest('tbody');
+
+                // copy value of first adunit input to all cpm inputs
+                var value = tbody.find('.cpm-input input').val();
+                tbody.find('.cpm-value').text(value);
+                tbody.find('.cpm-input input').val(value);
+                tbody.find('tr.main .cpm-data input').val(value);
+
+                // show app level cpm
+                tbody.find('tr.main .cpm-data input').show();
+                // show app edit text
+                tbody.find('tr.main .cpm-data .editable').hide();
+
+                // hide adunit cpms for app
+                tbody.find('.cpm-input').hide();
+                // show adunit edit text
+                tbody.find('.cpm-edit').show();
+            });
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';
             var pre = {type: 'country', data: []};
@@ -609,16 +736,6 @@ $(function() {
                 }
             }).filter(':checked').click();
 
-            $('#networkLoginForm-cancel').click(function () {
-                $('#networkLoginForm').slideUp(400, function () {
-                    $('#networkLoginForm-show').show();
-                });
-            });
-
-            $('#networkLoginForm-show').click(function () {
-                $('#networkLoginForm-show').hide();
-                $('#networkLoginForm').slideDown();
-            });
         }
     }
 
@@ -648,7 +765,6 @@ $(function() {
                 .button({ icons: { primary: "ui-icon-wrench" } })
 
             $('#delete-network')
-                .button({ icons: { primary: "ui-icon-trash" } })
                 .click(function () {
                     var key = $(this).attr('id');
                     var div = $('.' + key);

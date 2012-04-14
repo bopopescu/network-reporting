@@ -1,8 +1,7 @@
 import logging
 
 from account.forms import AccountNetworkConfigForm, \
-        AppNetworkConfigForm, \
-        AdUnitNetworkConfigForm
+        AppNetworkConfigForm
 from account.query_managers import AccountQueryManager
 from account.models import NetworkConfig
 
@@ -65,6 +64,9 @@ DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
 ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
         'site_keys', 'name', 'bid', 'bid_strategy', 'active', 'network_type'])
 
+NETWORKS_WITH_PUB_IDS = set(NETWORKS.keys()) - set(['custom', 'custom_native',
+    'iad'])
+
 class NetworksHandler(RequestHandler):
     def get(self):
         """
@@ -72,7 +74,7 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        additional_networks = set(NETWORKS_WITHOUT_REPORTING.keys())
+        additional_networks = set(NETWORKS.keys())
         networks = []
         campaigns_data = []
         reporting = False
@@ -96,7 +98,7 @@ class NetworksHandler(RequestHandler):
                 if campaign.network_state == NetworkStates. \
                         DEFAULT_NETWORK_CAMPAIGN and network in \
                         REPORTING_NETWORKS:
-                    login = AdNetworkLoginManager.get_login(self.account,
+                    login = AdNetworkLoginManager.get_logins(self.account,
                             network).get()
 
                     if login:
@@ -107,11 +109,8 @@ class NetworksHandler(RequestHandler):
                 # Set up the rest of the attributes
                 network_data['name'] = network
                 network_data['pretty_name'] = campaign.name
+                network_data['active'] = campaign.active
                 network_data['campaign_key'] = campaign.key()
-
-                # Add this to the list of networks that we can set up
-                # additional campaigns for
-                additional_networks.add(network)
 
                 # Add this network to the list that goes in the page
                 networks.append(network_data)
@@ -130,6 +129,7 @@ class NetworksHandler(RequestHandler):
                 network_data['pretty_name'] = NETWORKS[network]
 
                 networks_to_setup.append(network_data)
+                additional_networks.remove(network)
 
         additional_networks_ = []
         custom_networks = []
@@ -180,7 +180,6 @@ class EditNetworkHandler(RequestHandler):
                 raise Http404
             network = campaign.network_type
             campaign_name = campaign.name
-            show_login = campaign.show_login
             campaign_form = NetworkCampaignForm(instance=campaign)
             custom_campaign = campaign.network_state == \
                     NetworkStates.CUSTOM_NETWORK_CAMPAIGN
@@ -190,7 +189,6 @@ class EditNetworkHandler(RequestHandler):
                     self.account, network).count(1) or 'custom' in network
             # Set the default campaign name to the network name
             campaign_name = NETWORKS[network]
-            show_login = True
             if custom_campaign and 'custom' not in network:
                 campaign_name += ' - Custom'
 
@@ -199,10 +197,9 @@ class EditNetworkHandler(RequestHandler):
 
         network_data = {'name': network,
                         'pretty_name': campaign_name,
-                        'show_login': show_login,
+                        'show_login': False if campaign_key else True,
                         'login_state': LoginStates.NOT_SETUP}
         reporting = False
-        ad_network_ids = False
 
         # We don't make login forms for certain networks that we're unable
         # to scrape stats from.
@@ -214,7 +211,7 @@ class EditNetworkHandler(RequestHandler):
         login = None
         if not custom_campaign and network in REPORTING_NETWORKS:
             # Create the login credentials form
-            login = AdNetworkLoginManager.get_login(self.account,
+            login = AdNetworkLoginManager.get_logins(self.account,
                     network).get()
             if login:
                 # Can't initialize username or password because it's encrypted
@@ -228,21 +225,12 @@ class EditNetworkHandler(RequestHandler):
         account_network_config_form = AccountNetworkConfigForm(instance=
                 self.account.network_config)
 
-        # Used to make css classes
-        reporting_networks = ' '.join(REPORTING_NETWORKS.keys())
-
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         adgroup = None
         for app in apps:
-            app.network_config_form = AppNetworkConfigForm(instance= \
-                    app.network_config, prefix="app_%s" % app.key())
-            app.pub_id = app.network_config_form.fields.get(network + '_pub_id',
-                    False)
-            if network + '_pub_id' in app.network_config_form.fields:
-                app.network_config_form.fields[network + '_pub_id'].widget. \
-                        attrs['class'] += ' app-pub-id'
-            if app.pub_id:
-                ad_network_ids = True
+            if network in NETWORKS_WITH_PUB_IDS:
+                app.pub_id = getattr(app.network_config, network + '_pub_id',
+                        False)
 
             seven_day_stats = AdNetworkStats()
 
@@ -266,32 +254,34 @@ class EditNetworkHandler(RequestHandler):
 
             # Create different adgroup form for each adunit
             app.adunits = []
+            min_cpm = 9999.9
+            max_cpm = 0.0
             for adunit in app.all_adunits:
                 adgroup = None
                 if campaign_key:
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(),
                             self.account.key(), True)
+                    if adgroup:
+                        min_cpm = min(adgroup.bid, min_cpm)
+                        max_cpm = max(adgroup.bid, max_cpm)
+
                 adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
                         prefix=str(adunit.key()))
-                # Add class based on app that adunit is under
-                adunit.adgroup_form.fields['active'].widget.attrs['class'] = \
-                        str(app.key()) + '-adunit'
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
-                        ' ' + str(app.key()) + '-cpm-field bid'
+                        ' bid'
 
-                adunit.network_config_form = AdUnitNetworkConfigForm(
-                        instance=adunit.network_config, prefix="adunit_%s" %
-                        adunit.key())
-                if getattr(adunit.network_config, network + '_pub_id', False):
-                    adunit.network_config_form.fields[network + '_pub_id']. \
-                            widget.attrs['class'] += ' initialized'
-
-                adunit.pub_id = adunit.network_config_form.fields.get(network +
+                adunit.pub_id = getattr(adunit.network_config, network +
                         '_pub_id', False)
+
                 app.adunits.append(adunit)
-                if adunit.pub_id:
-                    ad_network_ids = True
+            # Set app level bid
+            if min_cpm == max_cpm:
+                app.bid = max_cpm
+            elif not app.adunits or not campaign_key:
+                app.bid = 0.05
+            else:
+                app.bid = None
 
         # Create the default adgroup form
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
@@ -306,16 +296,16 @@ class EditNetworkHandler(RequestHandler):
                                       'campaign_form': campaign_form,
                                       'campaign_key': campaign_key,
                                       'REPORTING_NETWORKS': REPORTING_NETWORKS,
-                                      'reporting_networks': reporting_networks,
                                       'login_form': login_form,
                                       'adgroup_form': adgroup_form,
                                       'account_network_config_form':
                                             account_network_config_form,
                                       'apps': apps,
                                       'reporting': reporting,
-                                      'ad_network_ids': ad_network_ids,
                                       'LoginStates': simplejson.dumps(
                                           LoginStates.__dict__),
+                                      'NETWORKS_WITH_PUB_IDS': \
+                                              NETWORKS_WITH_PUB_IDS,
                                   })
 
     def post(self,
@@ -366,10 +356,6 @@ class EditNetworkHandler(RequestHandler):
             campaign.account = self.account
             campaign.network_type = network
             campaign.campaign_type = 'network'
-            if query_dict['show_login'] == 'true':
-                campaign.show_login = True
-            else:
-                campaign.show_login = False
 
             # Hack to get old validation working
             query_dict['bid'] = 0.5
@@ -491,7 +477,7 @@ class EditNetworkHandler(RequestHandler):
                             # Create an AdNetworkAppMapper if there exists a
                             # login for the network (safe to re-create if it
                             # already exists)
-                            login = AdNetworkLoginManager.get_login(
+                            login = AdNetworkLoginManager.get_logins(
                                     self.account, network).get()
                             mappers = AdNetworkMapperManager. \
                                     get_mappers_for_app(login=login, app=app)
@@ -620,7 +606,7 @@ class NetworkDetailsHandler(RequestHandler):
         #REFACTOR: handle the case when this isnt true.
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
-            login = AdNetworkLoginManager.get_login(self.account, network).get()
+            login = AdNetworkLoginManager.get_logins(self.account, network).get()
             if login:
                 network_data['login_state'] = login.state
                 campaign_data['reporting'] = True
@@ -711,7 +697,7 @@ class DeleteNetworkHandler(RequestHandler):
                 default_campaign.name = NETWORKS[default_campaign.network_type]
                 CampaignQueryManager.put(default_campaign)
             elif campaign.network_type in REPORTING_NETWORKS:
-                login = AdNetworkLoginManager.get_login(self.account,
+                login = AdNetworkLoginManager.get_logins(self.account,
                         campaign.network_type).get()
                 if login:
                     login.deleted = True

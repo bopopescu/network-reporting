@@ -42,12 +42,12 @@ USERNAME = "test@mopub.com"
 PASSWORD = "test"
 
 NUM_ACCOUNTS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
-NUM_APPS = 3
+NUM_APPS = 2
 NUM_CAMPAIGNS_PER_APP = 1
 NUM_CREATIVES_PER_ADGROUP = 1
-NUM_ADUNITS_PER_APP = 3
+NUM_ADUNITS_PER_APP = 2
 
-NETWORKS_TO_USE = ['admob', 'iad', 'admob', 'millennial']
+NETWORKS_TO_USE = ['admob', 'admob', 'millennial']
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
 
 ### End configuration parameters

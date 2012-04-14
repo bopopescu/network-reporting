@@ -126,7 +126,10 @@ class Campaign(db.Model):
     network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
     network_state = db.IntegerProperty(default=NetworkStates. \
             STANDARD_CAMPAIGN)
-    show_login = db.BooleanProperty(default=True)
+    # needed so old stats can be mapped to the new campaign on migration
+    # since we can't keep the same campaign key for optimization purposes
+    old_campaign = db.SelfReferenceProperty()
+    transition_date = db.DateProperty()
 
     @property
     def has_daily_budget(self):

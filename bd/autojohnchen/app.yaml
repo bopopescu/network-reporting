@@ -1,13 +1,18 @@
 application: mopub-billing
 version: 1
-runtime: python
+runtime: python27
 api_version: 1
+threadsafe: no
 
 handlers:
 - url: /images
   static_dir: images
   
 - url: /check
+  script: main.py
+  login: admin
+  
+- url: /mail/.*
   script: main.py
   login: admin
 

@@ -176,7 +176,7 @@ REPORTING_NETWORKS = {'admob': 'AdMob',
 NETWORKS_WITHOUT_REPORTING = {'mobfox': 'MobFox',
                               'millennial': 'Millennial',
                               'adsense': 'AdSense',
-                              'ejam': 'eJam',
+                              'ejam': 'TapIt',
                               'brightroll': 'BrightRoll',
                               'custom': 'Custom Network',
                               'custom_native': 'Custom Native Network'}

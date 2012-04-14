@@ -1204,7 +1204,7 @@ def create_iad_mapper(account, app):
     AdNetworkLoginCredentials exist
     """
     if app.iad_pub_id:
-        login = AdNetworkLoginManager.get_login(account, network='iad').get()
+        login = AdNetworkLoginManager.get_logins(account, network='iad').get()
         if login:
             mappers = AdNetworkMapperManager.get_mappers_for_app(login=login,
                     app=app)

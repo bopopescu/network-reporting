@@ -1,5 +1,6 @@
 {% extends "networks_base.html" %}
 {% load filters %}
+{% load elements %}
 
 {% block pageTitle %}
 <h1>
@@ -92,9 +93,19 @@ Make a table for ad networks that are active
                         </a>
                     </td>
                     <td class="dataTable-name">
-                        <a href="{% url network_details campaign_key=network.campaign_key %}">
-                            {{network.pretty_name}}
-                        </a>
+                        <div style="float: left;">
+                            {% status_icon network %}
+                        </div>
+                        <div style="margin: 0 5px 0 5px; float: left;">
+                            <a href="{% url network_details campaign_key=network.campaign_key %}">
+                                {{network.pretty_name}}
+                            </a>
+                        </div>
+                        <div class="edit-link hidden" style="float: left;">
+                            <a href="{% url edit_network campaign_key=network.campaign_key %}">
+                                <span class="ui-icon ui-icon-wrench"></span>
+                            </a>
+                        </div>
                     </td>
                     {% if network.reporting %}
                     <td class="dataTable-data numeric">

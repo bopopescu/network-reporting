@@ -122,7 +122,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                                        "network: " + network)
                     wants_email = self.get_argument('email', False) and True
                     accounts_login = set([creds.ad_network_name for
-                        creds in AdNetworkLoginManager.get_login(
+                        creds in AdNetworkLoginManager.get_logins(
                             account)])
                     AdNetworkReportManager. \
                             create_login_credentials_and_mappers(account=
@@ -138,7 +138,7 @@ class CheckLoginCredentialsHandler(tornado.web.RequestHandler):
                 logging.info("Invalid form.")
 
         if not error and req_type in ('pull', 'both'):
-            login = AdNetworkLoginManager.get_login(account, network).get()
+            login = AdNetworkLoginManager.get_logins(account, network).get()
             if login.state == LoginStates.NOT_SETUP:
                 login.state = LoginStates.PULLING_DATA
                 login.put()

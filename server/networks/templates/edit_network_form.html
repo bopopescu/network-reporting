@@ -15,10 +15,10 @@
 {% block content %}
 <form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
     <div class="content-main">
-    <div>
+    <div style="float:left;display:inline-block">
         <img src="/images/{{network.name}}-transparent.png"/>
     </div>
-    <fieldset>
+    <div>
         <ul class="form_fields">
             {% if custom_campaign %}
             <li>
@@ -41,7 +41,9 @@
             </div>
             </li>
         </ul>
-
+    </div>
+    <div class="clear"></div>
+    <fieldset>
         <div style="margin-top:15px">
             <a class="button" id="advanced">Show Advanced Settings</a>
         </div>

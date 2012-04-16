@@ -64,8 +64,8 @@ DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
 ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
         'site_keys', 'name', 'bid', 'bid_strategy', 'active', 'network_type'])
 
-NETWORKS_WITH_PUB_IDS = set(NETWORKS.keys()) - set(['custom', 'custom_native',
-    'iad'])
+NETWORKS_WITH_PUB_IDS = set(['admob', 'brightroll', 'ejam', 'jumptap', \
+        'millennial', 'mobfox'])
 
 class NetworksHandler(RequestHandler):
     def get(self):

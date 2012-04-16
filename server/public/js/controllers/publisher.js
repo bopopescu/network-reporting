@@ -810,7 +810,10 @@ var mopub = mopub || {};
              * TODO: document
              *
              * bootstrapping_data: {
-             *     account: account key
+             *     account: account key,
+             *     names: {
+                       key: name
+             *     }
              * }
              */
 
@@ -819,19 +822,17 @@ var mopub = mopub || {};
                 callbackParameter: "callback",
                 dataFilter: function (json) {
                     _.each(['sum', 'daily', 'hourly', 'vs_sum', 'vs_daily', 'vs_hourly'], function (key) {
-                        _.each(json[key], function (list) {
-                            _.each(list, function (obj) {
-                                obj.ctr = obj.imp > 0 ? obj.clk / obj.imp : 0;
-                            });
+                        _.each(json[key], function (obj) {
+                            obj.ctr = obj.imp === 0 ? 0 : obj.clk / obj.imp;
                         });
                     });
                     return json;
                 },
+                error: toast_error,
                 url: 'http://ec2-23-22-32-218.compute-1.amazonaws.com/'
             });
 
-            /**
-             * TODO: use routers
+            /* TODO: use routers
             var Dashboard = Backbone.Router.extend({
 
                 routes: {

@@ -12,7 +12,7 @@
  * Styles that are used throughout, like colors,
  * utilities, helper functions, etc.
  */
-// @import "common.scss";
+@import "common.scss";
 
 /*
  * Basic layout and site structure.
@@ -27,7 +27,11 @@
 @import "forms.scss";
 @import "tables.scss";
 @import "elements.scss";
+@import "buttons.scss";
+@import "dropdowns.scss";
+@import "datepicker.scss";
 @import "modals.scss";
+@import "sprites.scss";
 
 /*
  * Plugins

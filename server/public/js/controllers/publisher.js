@@ -311,7 +311,6 @@ var mopub = mopub || {};
 
         // Click handler for the tablet format
         $('#adunit-device_format_tablet').click(function(e){
-            console.log('tablet clicked');
             $('#adForm-phone-container').hide();
             $('#adForm-tablet-container')
                 .show()
@@ -1085,9 +1084,6 @@ var mopub = mopub || {};
             }
 
             function update_charts(start, end, data) {
-                console.log(start);
-                console.log(end);
-                console.log(data);
                 _.each(['rev', 'imp', 'clk'], function (stat) {
                     // chart
                     var chart = d3.select('#' + stat + ' svg g');
@@ -1096,17 +1092,13 @@ var mopub = mopub || {};
                     var min;
                     var max;
                     var serieses = _.map(data, function (datum) {
-                        console.log(datum);
                         return _.map(datum, function (slice) {
                             var value = slice[stat];
-                            console.log(value);
                             if(!min || value < min) min = value;
                             if(!max || value > max) max = value;
                             return value;
                         });
                     });
-
-                    console.log(serieses);
 
                     /* TODO: reimplement this
                     if(granularity == 'daily') {
@@ -1117,8 +1109,6 @@ var mopub = mopub || {};
                     if(max == min) {
                         max = min + 1;
                     }
-                    console.log(min);
-                    console.log(max);
                     var y = d3.scale.linear().domain([min, max]).range([MARGIN_BOTTOM, HEIGHT - MARGIN_TOP]);
                     var x = d3.scale.linear().domain([start, end]).range([MARGIN_LEFT, WIDTH - MARGIN_RIGHT]);
 
@@ -1338,157 +1328,6 @@ var mopub = mopub || {};
                             }
                         });
                     }
-                    /*
-                    $.jsonp({
-                        data: {
-                            data: JSON.stringify(charts_data)
-                        },
-                        success: function (json, textStatus) {
-                            _.defer(function () {
-                                _.each(['rev', 'imp', 'clk'], function (stat) {
-                                    if(update_rollups) {
-                                        var rollup = $('#' + stat + ' > div');
-                                        rollup.children('div.value').html(format_stat(stat, json.sum[0][stat]));
-                                        if(json.vs_sum.length && json.vs_sum[0][stat]) {
-                                            var delta = rollup.children('div.delta');
-                                            var val = (json.sum[0][stat] - json.vs_sum[0][stat]) / json.vs_sum[0][stat];
-                                            var html = '';
-                                            if(val > 0) {
-                                                html += '+';
-                                                delta.removeClass('negative');
-                                                delta.addClass('positive');
-                                            }
-                                            else {
-                                                delta.removeClass('positive');
-                                                delta.addClass('negative');
-                                            }
-                                            html += mopub.Utils.formatNumberAsPercentage(val);
-                                            delta.html(html);
-                                        }
-                                        else {
-                                            rollup.children('div.delta').html('');
-                                        }
-                                    }
-
-                                    if(update_charts) {
-                                        // chart
-                                        var chart = d3.select('#' + stat + ' svg g');
-                                        chart.selectAll('*').remove();
-
-                                        var series = _.map(json[granularity][0], function (slice) {
-                                            return slice[stat];
-                                        });
-                                        var min = d3.min(series);
-                                        var max = d3.max(series);
-
-                                        if(json['vs_' + granularity].length) {
-                                            var vs_series = _.map(json['vs_' + granularity][0], function (slice) {
-                                                return slice[stat];
-                                            });
-                                            if(d3.max(vs_series) > max) {
-                                                max = d3.max(vs_series);
-                                            }
-                                            if(d3.min(vs_series) < min) {
-                                                min = d3.min(vs_series);
-                                            }
-                                        }
-
-                                        if(granularity == 'daily') {
-                                            end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-                                        }
-
-                                        var y = d3.scale.linear().domain([min, max]).range([MARGIN_BOTTOM, HEIGHT - MARGIN_TOP]);
-                                        var x = d3.scale.linear().domain([start, end]).range([MARGIN_LEFT, WIDTH - MARGIN_RIGHT]);
-
-                                        // Lines
-                                        var line = d3.svg.line()
-                                            .x(function(d, i) { return x(start.getTime()+(end-start)*i/(series.length - 1)); })
-                                            .y(function(d) { return -1 * y(d); });
-
-                                        if(vs_series) {
-                                            chart.append("svg:path").attr("d", line(vs_series)).attr('class', 'comparison');
-                                        }
-                                        chart.append("svg:path").attr("d", line(series));
-
-                                        // X Axis
-                                        var x_label = function (d) {
-                                            d = new Date(d);
-                                            return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
-                                        };
-                                        var interval = 86400000;
-                                        if(granularity == 'hourly' && end - start <= 2 * 86400000) {
-                                            x_label = function (d) {
-                                                return date_to_string(new Date(d));
-                                            };
-                                            interval = 3600000;
-                                        }
-                                        else {
-                                        }
-
-                                        if(Math.round((end - start) / (interval * 5)) > 0) {
-                                            interval = interval * Math.round((end - start) / (interval * 5));
-                                        }
-
-                                        var x_ticks = [];
-                                        for(var value = start; value <= end; value = new Date(value.getTime() + interval)) {
-                                            x_ticks.push(value);
-                                        }
-
-                                        chart.append("svg:line")
-                                            .attr("x1", x(start))
-                                            .attr("y1", -1 * y(min))
-                                            .attr("x2", x(end))
-                                            .attr("y2", -1 * y(min));
-
-                                        chart.selectAll(".xLabel")
-                                            .data(x_ticks)
-                                            .enter().append("svg:text")
-                                            .attr("class", "xLabel")
-                                            .text(x_label)
-                                            .attr("x", function(d) { return x(d); })
-                                            .attr("y", 0)
-                                            .attr("text-anchor", "middle");
-
-                                        chart.selectAll(".xTicks")
-                                            .data(x_ticks)
-                                            .enter().append("svg:line")
-                                            .attr("class", "xTicks")
-                                            .attr("x1", function(d) { return x(d); })
-                                            .attr("y1", -1 * y(min))
-                                            .attr("x2", function(d) { return x(d); })
-                                            .attr("y2", -1 * (y(min) - 4));
-
-                                        // Y AXIS
-                                        chart.append("svg:line")
-                                            .attr("x1", x(start))
-                                            .attr("y1", -1 * y(min))
-                                            .attr("x2", x(start))
-                                            .attr("y2", -1 * y(max));
-
-                                        chart.selectAll(".yTicks")
-                                            .data(y.ticks(4))
-                                            .enter().append("svg:line")
-                                            .attr("class", "yTicks")
-                                            .attr("y1", function(d) { return -1 * y(d); })
-                                            .attr("x1", x(start) - 4)
-                                            .attr("y2", function(d) { return -1 * y(d); })
-                                            .attr("x2", x(start));
-
-                                        chart.selectAll(".yLabel")
-                                            .data(y.ticks(4))
-                                            .enter().append("svg:text")
-                                            .attr("class", "yLabel")
-                                            .text(function(d) { return number_compact(d, 1); })
-                                            .attr("x", MARGIN_LEFT - 5)
-                                            .attr("y", function(d) { return -1 * y(d); })
-                                            .attr("text-anchor", "end")
-                                            .attr("dy", 4);
-                                    }
-                                });
-                            });
-                        }
-                    });
-                    */
                 }
 
                 if(update_advertiser_table) {
@@ -1586,13 +1425,13 @@ var mopub = mopub || {};
 
             // export
             $('button#export').click(function () {
-                var advertiser = get_advertiser();
+                var advertiser_type = get_advertiser_type();
                 $('#export_wizard select[name="advertiser_breakdown"]').children('option').each(function (index, option) {
-                    $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== advertiser));
+                    $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== advertiser_type));
                 });
-                var publisher = get_publisher();
+                var publisher_type = get_publisher_type();
                 $('#export_wizard select[name="publisher_breakdown"]').children('option').each(function (index, option) {
-                    $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== publisher));
+                    $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== publisher_type));
                 });
                 $('#export_wizard').modal('show');
             });
@@ -1621,6 +1460,7 @@ var mopub = mopub || {};
                 end.setHours(23);
 
                 var query = {};
+
                 var advertiser_breakdown = $('select[name="advertiser_breakdown"]').val();
                 query[advertiser_breakdown] = get_keys(advertiser_breakdown);
                 var publisher_breakdown = $('select[name="publisher_breakdown"]').val();

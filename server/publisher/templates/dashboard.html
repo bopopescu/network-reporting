@@ -7,7 +7,8 @@
 {% endblock %}
 
 {% block extraScripts %}
-{% include_script 'controllers/publisher' %}
+{# TODO: {% include_script 'controllers/publisher' %} instead of #}
+<script src="/js/controllers/publisher.js?02394803298402398" type="text/javascript"></script>
 
 <script type="text/javascript">
 $(function () {
@@ -19,8 +20,11 @@ $(function () {
 {% endblock extraScripts %}
 
 {% block pageTitle %}
- <h1> New Fucking Awesome Dashboard </h1>
+<h1>New Fucking Awesome Dashboard</h1>
 {% endblock pageTitle %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
 
 {% block titleBarRight %}
 {% endblock titleBarRight %}

@@ -89,9 +89,13 @@
 <form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
     <div class="content-main">
     <div>
+        {% if network.name == "custom" or network.name == "cusom_native" %}
+        <h2> {{ network.pretty_name }} </h2>
+        {% else %}
         <img src="/images/{{network.name}}-transparent.png"/>
+        {% endif %}
     </div>
-    <fieldset>
+    <div>
         <ul class="form_fields">
             {% if custom_campaign %}
             <li>

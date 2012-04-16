@@ -24,7 +24,7 @@ SERVER_EMAIL = 'olp@mopub.com'
 REPLY_TO_EMAIL = 'support@mopub.com'
 
 ADMINS = (
-    ('Front End Team', 'fe@mopub.com'),
+    ('Front End Team', 'fe-bugs@mopub.com'),
 )
 
 MANAGERS = ADMINS

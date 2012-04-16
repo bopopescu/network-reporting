@@ -87,84 +87,85 @@
 {% endif %}
 
 <form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
-    <div class="content-main">
-    <div>
-        {% if network.name == "custom" or network.name == "cusom_native" %}
-        <h2> {{ network.pretty_name }} </h2>
-        {% else %}
-        <img src="/images/{{network.name}}-transparent.png"/>
-        {% endif %}
-    </div>
-    <div>
-        <ul class="form_fields">
-            {% if custom_campaign %}
-            <li>
-            {{ campaign_form.name.label_tag }}
-            <div>
-                {{ campaign_form.name }}
-            </div>
-            </li>
+    <fieldset>
+        <div>
+            {% if network.name == "custom" or network.name == "cusom_native" %}
+            <h2> {{ network.pretty_name }} </h2>
+            {% else %}
+            <img src="/images/{{network.name}}-transparent.png"/>
             {% endif %}
-
-            {% if network.name == "admob" or network.name == "millennial" %}
-            <li>
-                <label>Special Instructions:</label>
+        </div>
+        <div>
+            <ul class="form_fields">
+                {% if custom_campaign %}
+                <li>
+                {{ campaign_form.name.label_tag }}
                 <div>
-                    Requires Network SDK <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">(Learn more)</a>
+                    {{ campaign_form.name }}
                 </div>
-            </li>
-            {% endif %}
+                </li>
+                {% endif %}
 
-            {% if network.name == "jumptap" %}
-            <li>
-            {{ account_network_config_form.jumptap_pub_id.label_tag }}
-            <div>
-                {{ account_network_config_form.jumptap_pub_id }}
-            </div>
-            </li>
-            {% endif %}
+                {% if network.name == "admob" or network.name == "millennial" %}
+                <li>
+                    <label>Special Instructions:</label>
+                    <div>
+                        Requires Network SDK <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">(Learn more)</a>
+                    </div>
+                </li>
+                {% endif %}
 
-            {% if network.name == "custom_native" %}
-            <li>
-            {{ adgroup_form.custom_method.label_tag }}
-            <div>
-                {{ adgroup_form.custom_method }}
-            </div>
-            </li>
-            {% endif %}
-
-            {% if network.name == "custom" %}
-            <li>
-            {{ adgroup_form.custom_html.label_tag }}
-            <div>
-                {{ adgroup_form.custom_html }}
-                <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
-                <div id="campaignForm-customHtml-helpContent" class="hidden">
-                    <h3>Custom Network</h3>
-                    MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
-                    <br/>
-                    <br/>
-                    <h4>Example:</h4>
-                    A sample HTML snippet from Glam Media is:
-                    <br/>
-                    <br/>
-                    <code>
-                        &lt;script type="text/javascript"><br/>
-                        window.glam_affiliate_id = 1234567890;<br/>
-                        if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
-                        if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
-                        var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
-                        document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
-                        &lt;/script><br/>
-                    </code>
+                {% if network.name == "jumptap" %}
+                <li>
+                {{ account_network_config_form.jumptap_pub_id.label_tag }}
+                <div>
+                    {{ account_network_config_form.jumptap_pub_id }}
                 </div>
-            </div>
-            </li>
-            {% endif %}
-        </ul>
+                </li>
+                {% endif %}
 
-        <div style="margin-top:15px">
-            <a class="button" id="advanced">Show Advanced Settings</a>
+                {% if network.name == "custom_native" %}
+                <li>
+                {{ adgroup_form.custom_method.label_tag }}
+                <div>
+                    {{ adgroup_form.custom_method }}
+                </div>
+                </li>
+                {% endif %}
+
+                {% if network.name == "custom" %}
+                <li>
+                {{ adgroup_form.custom_html.label_tag }}
+                <div>
+                    {{ adgroup_form.custom_html }}
+                    <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
+                    <div id="campaignForm-customHtml-helpContent" class="hidden">
+                        <h3>Custom Network</h3>
+                        MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
+                        <br/>
+                        <br/>
+                        <h4>Example:</h4>
+                        A sample HTML snippet from Glam Media is:
+                        <br/>
+                        <br/>
+                        <code>
+                            &lt;script type="text/javascript"><br/>
+                            window.glam_affiliate_id = 1234567890;<br/>
+                            if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
+                            if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
+                            var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
+                            document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
+                            &lt;/script><br/>
+                        </code>
+                    </div>
+                </div>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div style="margin-top:15px">
+                <a class="button" id="advanced">Show Advanced Settings</a>
+            </div>
         </div>
     </fieldset>
 
@@ -341,9 +342,6 @@
     </fieldset>
     {% endif %}
 
-    </div> <!-- <div class="content-main"> -->
-    <div class="clear"></div><!-- Previous <div> is float:left -->
-    <section id="dashboard-apps">
         <h2>App Targeting</h2>
         <div>
             <table class="inventory_table">
@@ -477,7 +475,6 @@
         <a class="button" id="submit" href="#">Save</a>
         <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
     </div>
-    </section>
 </form>
 {% endblock content %}
 

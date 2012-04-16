@@ -189,14 +189,17 @@ class AdNetworkLoginManager(CachedQueryManager):
 
     @classmethod
     def get_all_logins(cls,
+                       network=None,
                        order_by_account=False):
         """
         Return all AdNetworkLoginCredential entities (ordered by account if
         the order by account flag is set).
         """
         query = AdNetworkLoginCredentials.all()
+        if network:
+            query.filter('ad_network_name =', network)
         if order_by_account:
-            return query.order('account')
+            query.order('account')
         return query
 
     @classmethod

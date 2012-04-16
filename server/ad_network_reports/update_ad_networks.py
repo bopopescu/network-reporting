@@ -70,6 +70,7 @@ def multiprocess_update_all(start_day=None,
                             end_day=None,
                             email=False,
                             processes=1,
+                            network=None,
                             testing=False):
     """
     Break up update script into multiple processes.
@@ -88,7 +89,7 @@ def multiprocess_update_all(start_day=None,
 
     def get_all_accounts_with_logins():
         logins_query = AdNetworkLoginManager.get_all_logins(
-                order_by_account=True)
+                network=network, order_by_account=True)
         last_account = None
         for login in logins_query:
             if login.account.key() != last_account:
@@ -350,7 +351,7 @@ def retry_login(login_key,
         valid_stats_list = update_login_stats(login, day,
                 management_stats=temp_stats, update_aggregates=True,
                 logger=logger)
-        result = ([stats for stats, mapper in valid_stats_list], temp_stats)
+        result = ([stats for mapper, stats in valid_stats_list], temp_stats)
         return result
     except Exception as exception:
         exc_traceback = sys.exc_info()[2]
@@ -689,6 +690,7 @@ def main(args):
     """
     update_networks.py [start_day=xxxx-xx-xx] [end_day=xxxx-xx-xx]
         [email=[Y y N n]] [processes=xx]
+        [network=admob|iad|jumptap|inmobi|mobfox]
 
     Updates the database from the given start date to the given end date
     sending emails if the flag is set and using the # of processes given.
@@ -719,6 +721,11 @@ def main(args):
 
     Processes can be any non negative integer value. The max value is the
     number of login credentials.
+
+    ================
+    network
+
+    The name of the network to pull stats for.
     """
     HELP = 'help'
 
@@ -726,6 +733,7 @@ def main(args):
     END_DAY = 'end_day'
     EMAIL = 'email'
     PROCESSES = 'processes'
+    NETWORK = 'network'
 
     RETRY = 'retry'
     DAY = 'day'
@@ -733,6 +741,7 @@ def main(args):
     start_day = None
     end_day = None
     email = False
+    network = None
     processes = 1
 
     setup_remote_api()
@@ -764,7 +773,10 @@ def main(args):
                     email = (arg[len(EMAIL) + 1:] in ('y', 'Y'))
                 elif field_name_match(arg, PROCESSES):
                     processes = int(arg[len(PROCESSES) + 1:])
-            multiprocess_update_all(start_day, end_day, email, processes)
+                elif field_name_match(arg, NETWORK):
+                    network = int(arg[len(NETWORK) + 1:])
+            multiprocess_update_all(start_day, end_day, email, processes,
+                    network)
 
 
 if __name__ == "__main__":

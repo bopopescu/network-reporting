@@ -23,7 +23,7 @@
 <section id="network-settingsForm" class="hidden">
     <form accept-charset="ascii" id="network-login-form">
         {% if not network.show_login %}
-        <fieldset class="alt login-credentials-fields" style="padding-top:20px">
+        <fieldset class="alt login-fields" style="padding-top:20px">
             <legend>
                 <h2>
                     Revenue Reporting
@@ -33,7 +33,7 @@
                 </h2>
             </legend>
 
-            <div id="networkLoginForm" style="clear: both;padding-top:10px">
+            <div style="clear: both;padding-top:10px">
                 <div class="login-credentials-message">
                     {% if reporting %}
                     Revenue reporting for {{ network.pretty_name }} is turned on.
@@ -67,14 +67,14 @@
                 {% endif %}
 
                 <div class="form-submit login-credentials-submit">
-                    {% if network.name == "mobfox" and not reporting %}
-                    <a class="button" id="networkLoginForm-submit title-bar-level">Turn on Reporting</a>
-                    {% else %}
-                    {% if network.name != "mobfox" %} 
-                    <a class="button" id="networkLoginForm-submit">Check and Save Credentials</a>
-                    {% endif %}
-                    {% endif %}
-                    <a class="button" id="networkLoginForm-cancel">No Thanks</a>
+                    <a class="submit button">
+                        {% if network.name == "mobfox" %} 
+                        Turn on Reporting
+                        {% else %}
+                        Check and Save Credentials
+                        {% endif %}
+                    </a>
+                    <a class="cancel button">No Thanks</a>
                 </div>
                 <div class="form-submit login-credentials-settings hidden">
                     <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
@@ -281,7 +281,7 @@
     </fieldset>
 
     {% if login_form and network.show_login %}
-    <fieldset class="alt login-credentials-fields" style="padding-top:20px">
+    <fieldset class="alt login-fields" style="padding-top:20px">
         <legend>
                 <h2>
                     Revenue Reporting
@@ -325,14 +325,14 @@
             {% endif %}
 
             <div class="form-submit login-credentials-submit">
-                {% if network.name == "mobfox" and not reporting %}
-                <a class="button" id="networkLoginForm-submit">Turn on Reporting</a>
-                {% else %}
-                {% if network.name != "mobfox" %} 
-                <a class="button" id="networkLoginForm-submit">Check and Save Credentials</a>
-                {% endif %}
-                {% endif %}
-                <a class="button" id="networkLoginForm-cancel">No Thanks</a>
+                <a class="submit button">
+                    {% if network.name == "mobfox" %} 
+                    Turn on Reporting
+                    {% else %}
+                    Check and Save Credentials
+                    {% endif %}
+                </a>
+                <a class="cancel button">No Thanks</a>
             </div>
             <div class="form-submit login-credentials-settings hidden">
                 <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>

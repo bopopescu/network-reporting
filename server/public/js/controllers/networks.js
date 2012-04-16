@@ -414,61 +414,57 @@ $(function() {
                 });
 
             // TODO: merge this with controllers/campaigns.js form
-            function setupNetworkForm() {
-                // select the appropriate campaign_type from the hash
-                if (window.location.hash.substring(1) !== '') {
-                    $('select[name="campaign_type"]').val(window.location.hash.substring(1));
-                }
+            // select the appropriate campaign_type from the hash
+            if (window.location.hash.substring(1) !== '') {
+                $('select[name="campaign_type"]').val(window.location.hash.substring(1));
+            }
 
-                var validator = $('form#campaign_and_adgroup').validate({
-                    errorPlacement: function(error, element) {
-                        element.closest('div').append(error);
-                    },
-                    submitHandler: function(form) {
-                        $(form).ajaxSubmit({
-                            data: {ajax: true},
-                            dataType: 'json',
-                            success: function(jsonData, statusText, xhr, $form) {
-                                if(jsonData.success) {
-                                    if (saved_new_login && login_state == LoginStates.NOT_SETUP) {
-                                        data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
+            var validator = $('form#campaign_and_adgroup').validate({
+                errorPlacement: function(error, element) {
+                    element.closest('div').append(error);
+                },
+                submitHandler: function(form) {
+                    $(form).ajaxSubmit({
+                        data: {ajax: true},
+                        dataType: 'json',
+                        success: function(jsonData, statusText, xhr, $form) {
+                            if(jsonData.success) {
+                                if (saved_new_login && login_state == LoginStates.NOT_SETUP) {
+                                    data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
 
-                                        $.ajax({url: 'https://checklogincredentials.mopub.com',
-                                            data: data,
-                                            crossDomain: true,
-                                            dataType: "jsonp",
-                                        });
-                                    }
-                                    window.location = jsonData.redirect;
-                                    $('form#campaign_and_adgroup #submit').button({
-                                        label: 'Success...',
-                                        disabled: true
-                                    });
-                                } else {
-                                    console.log(jsonData.errors);
-                                    validator.showErrors(jsonData.errors);
-                                    $('form#campaign_and_adgroup #submit').button({
-                                        label: 'Try Again',
-                                        disabled: false
+                                    $.ajax({url: 'https://checklogincredentials.mopub.com',
+                                        data: data,
+                                        crossDomain: true,
+                                        dataType: "jsonp",
                                     });
                                 }
-                            },
-                            error: function(jqXHR, textStatus, errorThrown) {
+                                window.location = jsonData.redirect;
+                                $('form#campaign_and_adgroup #submit').button({
+                                    label: 'Success...',
+                                    disabled: true
+                                });
+                            } else {
+                                console.log(jsonData.errors);
+                                validator.showErrors(jsonData.errors);
                                 $('form#campaign_and_adgroup #submit').button({
                                     label: 'Try Again',
                                     disabled: false
                                 });
-                            },
-                            beforeSubmit: function(arr, $form, options) {
-                                $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
-                                                                               disabled: true});
                             }
-                        });
-                    }
-                });
-            }
-
-            setupNetworkForm();
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            $('form#campaign_and_adgroup #submit').button({
+                                label: 'Try Again',
+                                disabled: false
+                            });
+                        },
+                        beforeSubmit: function(arr, $form, options) {
+                            $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
+                                                                           disabled: true});
+                        }
+                    });
+                }
+            });
 
             $('form#campaign_and_adgroup #submit')
                 .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
@@ -477,17 +473,16 @@ $(function() {
                     $('form#campaign_and_adgroup').submit();
                 });
 
-
-            function setUpLoginForm() {
-                $("#networkLoginForm-submit").click(function() {
-                        if ($(this).hasClass('title-bar-level')) {
-                            var data = $(this).closest('.login-credentials-fields').serialize();
+            function setupLoginForm() {
+                $('form#network-login-form .submit, form#campaign_and_adgroup .submit').click(function() {
+                        if ($(this).closest('form').attr('id') == 'network-login-form') {
+                            var data = $(this).closest('.login-fields').serialize();
                         } else {
                             // Hack to serialize sub-section of forms data.
                             // Add a new form and hide it.
                             $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
                             // Clone the fieldset into the new form.
-                            $('#form-to-submit').html($(this).closest('.login-credentials-fields').clone());
+                            $('#form-to-submit').html($(this).closest('.login-fields').clone());
                             // Serialize the data.
                             var data = $('#form-to-submit').serialize();
                             // Remove the form.
@@ -507,9 +502,7 @@ $(function() {
                             success: function(valid) {
                                 // Upon success notify the user
                                 if (valid) {
-                                    $(message).html("MoPub is currently optimizing "
-                                                    + pretty_name
-                                                    + " by pulling data from "
+                                    $(message).html("MoPub is currently pulling data from "
                                                     + pretty_name + " using the following credentials.");
                                     var username = $('#id_username_str').val();
                                     var password = $('#id_password_str').val();
@@ -532,29 +525,38 @@ $(function() {
                                 } else {
                                     $(message).html("Invalid login information.");
                                 }
-                            }
+                            },
                         });
                 });
 
-                $('#networkLoginForm-cancel').click(function () {
-                    if ($(this).closest('section').attr('id') == 'network-settingsForm') {
-                        $('#network-settingsForm').slideUp();
-                    } else {
-                        var fieldset = $(this).closest('.login-credentials-fields');
-                        // Clone the fieldset into the new form.
-                        $('#network-login-form').html($(fieldset).clone());
-
-                        $(fieldset).slideUp(400, function () {
-                            $(fieldset).remove();
-                            $('#title-bar-button').show();
-                        });
-
-                        setUpLoginForm();
-                    }
+                $('form#network-login-form .cancel').click(function () {
+                    $('#network-settingsForm').slideUp();
                 });
             }
 
-            setUpLoginForm();
+            setupLoginForm();
+
+            $('form#campaign_and_adgroup .cancel').click(function () {
+                var fieldset = $(this).closest('.login-fields');
+
+                $(this).removeClass('ui-state-hover');
+                $('#network-login-form').html(fieldset.clone());
+
+                // rebuild buttons
+                // TODO: remove terrible designer buttons so hacks like this
+                // aren't needed
+                $('form#network-login-form .button').addClass('button-small');
+                $('form#network-login-form .button').button();
+
+                fieldset.slideUp(400, function () {
+                    fieldset.remove();
+                    $('#title-bar-button').show();
+                });
+
+                // re-initialize event handlers for the moved form
+                setupLoginForm();
+            });
+
 
             $("#edit-login").click(function() {
                 $('#id_username_str').show();

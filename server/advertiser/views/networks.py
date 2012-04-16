@@ -8,12 +8,13 @@ from django.core.urlresolvers import reverse
 from common.utils.timezones import Pacific_tzinfo
 
 from advertiser.query_managers import CampaignQueryManager
-
+from account.query_managers import AccountQueryManager
 
 class NetworkIndexHandler(RequestHandler):
     def get(self):
-        #if self.account.display_new_networks:
-            #return HttpResponseRedirect(reverse('networks'))
+        account = AccountQueryManager.get_current_account(self.request)
+        if account.display_new_networks:
+            return HttpResponseRedirect(reverse('networks'))
 
         today = datetime.datetime.now(Pacific_tzinfo()).date()
         yesterday = today - datetime.timedelta(days=1)

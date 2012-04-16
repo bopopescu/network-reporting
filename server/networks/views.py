@@ -230,7 +230,7 @@ class EditNetworkHandler(RequestHandler):
         for app in apps:
             if network in NETWORKS_WITH_PUB_IDS:
                 app.pub_id = getattr(app.network_config, network + '_pub_id',
-                        False)
+                        '') or ''
 
             seven_day_stats = AdNetworkStats()
 

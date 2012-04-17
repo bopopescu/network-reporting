@@ -47,7 +47,7 @@ class CampaignQueryManager(QueryManager):
         return campaigns
 
     @classmethod
-    def get_network_campaigns(cls, account, network_type='', is_new=False):
+    def get_network_campaigns(cls, account, network_type=False, is_new=False):
         """
         is_new refers to models with the network_type attribute set,
         which means it's a new type of campaign (used by the networks django
@@ -58,7 +58,8 @@ class CampaignQueryManager(QueryManager):
                       .filter('account =',account)
         if is_new:
             campaigns.filter('network_type !=', '')
-        if network_type:
+        # network_type can be ''
+        if network_type != False:
             campaigns.filter('network_type =', network_type)
         return campaigns
 

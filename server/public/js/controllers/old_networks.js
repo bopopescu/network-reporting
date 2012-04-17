@@ -26,6 +26,7 @@ $(function() {
                 yesterday = bootstrapping_data.yesterday,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
+            console.log(adgroups_data);
             var adgroups = new AdGroups(adgroups_data);
 
             var graph_view = new CollectionGraphView({

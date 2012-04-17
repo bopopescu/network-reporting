@@ -74,6 +74,10 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
+        account = AccountQueryManager.get_current_account(self.request)
+        if not account.display_new_networks:
+            return HttpResponseRedirect(reverse('network_index'))
+
         additional_networks = set(NETWORKS.keys())
         networks = []
         campaigns_data = []

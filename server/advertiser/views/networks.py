@@ -11,20 +11,24 @@ from advertiser.query_managers import CampaignQueryManager
 from account.query_managers import AccountQueryManager
 
 class NetworkIndexHandler(RequestHandler):
+    """
+    Deprecated
+    """
     def get(self):
         account = AccountQueryManager.get_current_account(self.request)
-        if account.display_new_networks:
-            return HttpResponseRedirect(reverse('networks'))
 
         today = datetime.datetime.now(Pacific_tzinfo()).date()
         yesterday = today - datetime.timedelta(days=1)
 
-        today_index = (today - self.start_date).days if today >= self.start_date and today <= self.end_date else None
-        yesterday_index = (yesterday - self.start_date).days if yesterday >= self.start_date and yesterday <= self.end_date else None
+        today_index = (today - self.start_date).days if today >= \
+                self.start_date and today <= self.end_date else None
+        yesterday_index = (yesterday - self.start_date).days if yesterday >= \
+                self.start_date and yesterday <= self.end_date else None
 
         network_adgroups = []
+        # Old network campaigns don't have network_type set
         for campaign in CampaignQueryManager.get_network_campaigns(account=
-                self.account):
+                self.account, network_type=''):
             for adgroup in campaign.adgroups:
                 network_adgroups.append(adgroup)
         # sort alphabetically
@@ -33,6 +37,7 @@ class NetworkIndexHandler(RequestHandler):
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
                                   {
+                                      'account': account,
                                       'network_adgroups': network_adgroups,
                                       'start_date': self.start_date,
                                       'end_date': self.end_date,

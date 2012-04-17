@@ -605,6 +605,7 @@ class AdGroupDetailHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, adgroup_key):
+        account = AccountQueryManager.get_current_account(self.request)
 
         stats_q = StatsModelQueryManager(self.account, self.offline)
 
@@ -832,6 +833,7 @@ class AdGroupDetailHandler(RequestHandler):
         return render_to_response(self.request,
                                   'advertiser/adgroup.html',
                                   {
+                                      'account': account,
                                       'campaign': adgroup.campaign,
                                       'apps': apps.values(),
                                       'adgroup': adgroup,

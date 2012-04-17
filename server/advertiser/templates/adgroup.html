@@ -15,7 +15,7 @@
         <a href="{% url advertiser_archive %}"> Archived Campaigns</a> /
       {% else %}
         {% if campaign.network %}
-          <a href="{% url network_index %}">Networks</a> /
+          <a href="{% url networks %}">Networks</a> /
         {% else %}
           <a href="{% url advertiser_campaign %}">Campaigns</a> /
         {% endif %}
@@ -44,6 +44,7 @@
   {% endif %}
 
   <span class="titlebar-right">
+    {% if not campaign.network or account.display_new_networks %}
     {% if adgroup.active %}
       <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
         <option value="play" selected="selected">Running</option>
@@ -73,10 +74,11 @@
         </select>
       {% endif %}
     {% endif %}
+    {% endif %}
     {% if campaign.network %}
-      <a class="button"
-         id="advertisers-adgroups-editAdGroupButton"
-         href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
+      {% if not account.display_new_networks %}
+      <a class="button" id="advertisers-adgroups-editAdGroupButton" href="{% url advertiser_campaign_edit adgroup_key=adgroup.key %}">Edit network settings</a>
+      {% endif %}
     {% else %}
       <a class="button"
          id="advertisers-adgroups-editAdGroupButton"

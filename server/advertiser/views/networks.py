@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 from common.utils.request_handler import RequestHandler
 from common.ragendja.template import render_to_response
@@ -43,8 +44,8 @@ class NetworkIndexHandler(RequestHandler):
             adgroup.campaign = campaigns_dict[campaign_key]
 
         # Filter down to only network campaigns and sort alphabetically.
-        network_adgroups = filter(lambda a: a.campaign.campaign_type in
-                ['network'] and a.campaign.network_type == '', all_adgroups)
+        network_adgroups = filter(lambda a: a.campaign.campaign_type ==
+                'network' and not a.campaign.network_type, all_adgroups)
         network_adgroups.sort(key=lambda a: a.campaign.name.lower())
 
         return render_to_response(self.request,

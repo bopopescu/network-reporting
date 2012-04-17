@@ -33,7 +33,13 @@ $(function() {
                 model: campaign
             });
 
-            campaign.fetch({ data: ajax_query_string, });
+            campaign.fetch({ data: ajax_query_string,
+                error: function() {
+                    campaign.fetch({
+                        error: toast_error
+                    });
+                }
+            });
         });
 
         // Load NetworkApps Collections
@@ -46,7 +52,13 @@ $(function() {
         var network_apps_view = new NetworkAppsView({
             collection: network_apps
         });
-        network_apps.fetch({ data: ajax_query_string, });
+        network_apps.fetch({ data: ajax_query_string,
+            error: function() {
+                network_apps.fetch({
+                    error: toast_error
+                });
+            },
+        });
 
         return all_campaigns;
     }

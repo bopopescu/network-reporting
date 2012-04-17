@@ -44,7 +44,7 @@ class NetworkIndexHandler(RequestHandler):
 
         # Filter down to only network campaigns and sort alphabetically.
         network_adgroups = filter(lambda a: a.campaign.campaign_type in
-                ['network'] and a.campaign.network_type='', all_adgroups)
+                ['network'] and a.campaign.network_type == '', all_adgroups)
         network_adgroups.sort(key=lambda a: a.campaign.name.lower())
 
         return render_to_response(self.request,

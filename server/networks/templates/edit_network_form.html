@@ -119,9 +119,9 @@
 
                 {% if network.name == "jumptap" %}
                 <li>
-                {{ account_network_config_form.jumptap_pub_id.label_tag }}
+                <label for="id_{{ network.name }}_pub_id">{{ network.pretty_name }} Publisher Alias:</label>
                 <div>
-                    {{ account_network_config_form.jumptap_pub_id }}
+                    <input type="text" name="{{ network.name }}_pub_id" id="id_{{ network.name }}_pub_id" value="{{ network.pub_id|default_if_none:""  }}">
                 </div>
                 </li>
                 {% endif %}

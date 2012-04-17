@@ -226,8 +226,9 @@ class EditNetworkHandler(RequestHandler):
             else:
                 login_form = LoginCredentialsForm(network=network)
 
-        account_network_config_form = AccountNetworkConfigForm(instance=
-                self.account.network_config)
+        if network == 'jumptap':
+            network_data['pub_id'] = getattr(self.account.network_config,
+                    network + '_pub_id', '')
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         adgroup = None
@@ -307,8 +308,6 @@ class EditNetworkHandler(RequestHandler):
                                       'REPORTING_NETWORKS': REPORTING_NETWORKS,
                                       'login_form': login_form,
                                       'adgroup_form': adgroup_form,
-                                      'account_network_config_form':
-                                            account_network_config_form,
                                       'apps': apps,
                                       'reporting': reporting,
                                       'LoginStates': simplejson.dumps(
@@ -521,7 +520,8 @@ class EditNetworkHandler(RequestHandler):
                             network_config = self.account.network_config or \
                                     NetworkConfig()
                             setattr(network_config, network_config_field, \
-                                    self.request.POST.get('account_pub_id', ''))
+                                    self.request.POST.get(network +
+                                        '_pub_id', ''))
                             AccountQueryManager.update_config_and_put( \
                                     self.account, network_config)
 

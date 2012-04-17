@@ -101,6 +101,9 @@ Make a table for ad networks that are active
                                 {{network.pretty_name}}
                             </a>
                         </div>
+                        <div id="{{ network.campaign_key }}-loading" style="float: left;">
+                            <img class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+                        </div>
                         <div class="edit-link hidden" style="float: left;">
                             <a href="{% url edit_network campaign_key=network.campaign_key %}">
                                 <span class="ui-icon ui-icon-wrench"></span>

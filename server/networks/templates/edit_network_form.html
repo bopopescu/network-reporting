@@ -395,7 +395,7 @@
                         {% if network.name in NETWORKS_WITH_PUB_IDS %}
                         <td class="text">
                             <div>
-                                <input name="app_{{ app.key }}-admob_pub_id" placeholder="AdMob Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-admob_pub_id" />
+                                <input name="app_{{ app.key }}-admob_pub_id" placeholder="{{ network.pretty_name }} Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-admob_pub_id" />
                             </div>
                         </td>
                         {% endif %}

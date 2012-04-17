@@ -81,7 +81,7 @@
   </div>
   <dt class="admin_only">Intercept URL:</dt>
   <dd class="admin_only">
-    {{ form.launchpage|raw}}
+    <input type='text' name="{{form.launchpage.name}}" class="input-text {% if form.launchpage.errors %}form-error{% endif %}" value="{{form.launchpage|display_value}}" placeholder="Optional"/>
     <a href="#" class="whatsthis" id="creativeLaunchPage-url-helpLink">What's this?</a>
     <div id="creativeLaunchPage-url-helpContent" class="hidden">
       <h3>Intercept URL (admin only)</h3>
@@ -91,7 +91,7 @@
 
   <dt>Conversion Tracking ID:</dt>
   <dd>
-    {{ form.conv_appid|raw}}
+    <input type='text' name="{{form.conv_appid.name}}" class="input-text {% if form.conv_appid.errors %}form-error{% endif %}" value="{{form.conv_appid|display_value}}" placeholder="Optional"/>
     <a href="#" class="whatsthis" id="creativeConvAppid-url-helpLink">What's this?</a>
     <div id="creativeConvAppid-url-helpContent" class="hidden">
       <h3>Application ID for Conversion Tracking</h3>
@@ -105,6 +105,6 @@
   </dd>
   <dt>Impression Tracking URL</dt>
   <dd>
-    {{ form.tracking_url }}
+    <input type='text' name="{{form.tracking_url.name}}" class="input-text {% if form.tracking_url.errors %}form-error{% endif %}" value="{{form.tracking_url|display_value}}" placeholder="Optional"/>
   </dd>
 

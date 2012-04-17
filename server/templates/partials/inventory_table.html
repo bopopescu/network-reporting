@@ -10,6 +10,7 @@
       <td class="stat">Fill Rate</td>
       <td class="stat">Clicks</td>
       <td class="stat">CTR</td>
+      <td class="stat">Conv</td>
     </tr>
   </thead>
   {% for app in inventory %}
@@ -38,6 +39,7 @@
         <td class="fill_rate stat">--</td>
         <td class="clicks stat">--</td>
         <td class="ctr stat">--</td>
+        <td class="conversions stat">--</td>
       </tr>
       {% for adunit in app.adunits %}
         <tr class="sub adunit-row" id="adunit-{{ adunit.key }}">
@@ -56,6 +58,7 @@
           <td class="fill_rate stat">--</td>
           <td class="clicks stat">--</td>
           <td class="ctr stat">--</td>
+          <td class="conversions stat">--</td>
         </tr>
       {% endfor %}
     </tbody>

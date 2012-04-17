@@ -13,9 +13,11 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-<span id="title-bar-button" class="titlebar-right{% if login_form and network.show_login %} hidden{% endif %}">
+{% if login_form %}
+<span id="title-bar-button" class="titlebar-right{% if network.show_login %} hidden{% endif %}">
     <a class="button" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
 </span>
+{% endif %}
 {% endblock titleBarRight %}
 
 {% block content %}

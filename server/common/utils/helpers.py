@@ -135,7 +135,8 @@ def get_url_for_blob(blob, ssl=True):
         return url.replace('http:', 'https:')
     return url
 
-
+def secure_url_from_url(url):
+    return url.replace('http:', 'https:')
 
 def get_all(Model, limit=300, testing=False):
     cnt = 0

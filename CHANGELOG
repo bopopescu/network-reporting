@@ -1,33 +1,39 @@
+# Deployed Tuesday, April 17, 2012 at 12:48PM PST
+### Deployed by Andrew He
+### Tagged deploy-62
+### Bugs Fixed: []
+### Included Commits: 
+ 
 # Deployed Monday, April 09, 2012 at 07:32PM PST
 ### Deployed by John Pena
 ### Tagged deploy-60
 ### Bugs Fixed: []
-### Included Commits: 
- * cf2d294 Fix erroneous font sizes for AdUnit Detail's daily counts [#1098 state:review-requested assigned:johnpena]
- * 63b8409 Merge branch 'master' of github.com:mopub/mopub
- * 59ad43a Don't automatically email customers when update completes without arg email=y
- * e624ab4 Deployed without finding any bug fixes.
- * d5679c3 updated pages and reverse urls to use external ids on all customer facing stuff
- * 01296cc changed auth
- * 9a40eb8 Merge branch 'master' into hrd-migration-stats
- * 6aff286 Deployed without finding any bug fixes.
- * d1e0101 fixed syntax error
- * be737f5 Deployed without finding any bug fixes.
- * 746837e attempt to fix adnetwork scraper stuff
- * 973616c Deployed without finding any bug fixes.
- * 007e6dd Deployed without finding any bug fixes.
- * 31d2802 added hrd support to simple models
- * 5e0d045 blah
- * 6a79b8e Merge branch 'master' into hrd-migration-stats
- * 8bfc80c deleted index
- * e776e69 Merge branch 'master' into hrd-migration-stats
- * b049a11 continued cleaning up tests
- * f1b02a2 started fixing tests
- * c736517 merged
- * 5842e1c fixed helper
- * 46f966e changed version
- * 49e5f8a first commit
- 
+### Included Commits:
+* cf2d294 Fix erroneous font sizes for AdUnit Detail's daily counts [#1098 state:review-requested assigned:johnpena]
+* 63b8409 Merge branch 'master' of github.com:mopub/mopub
+* 59ad43a Don't automatically email customers when update completes without arg email=y
+* e624ab4 Deployed without finding any bug fixes.
+* d5679c3 updated pages and reverse urls to use external ids on all customer facing stuff
+* 01296cc changed auth
+* 9a40eb8 Merge branch 'master' into hrd-migration-stats
+* 6aff286 Deployed without finding any bug fixes.
+* d1e0101 fixed syntax error
+* be737f5 Deployed without finding any bug fixes.
+* 746837e attempt to fix adnetwork scraper stuff
+* 973616c Deployed without finding any bug fixes.
+* 007e6dd Deployed without finding any bug fixes.
+* 31d2802 added hrd support to simple models
+* 5e0d045 blah
+* 6a79b8e Merge branch 'master' into hrd-migration-stats
+* 8bfc80c deleted index
+* e776e69 Merge branch 'master' into hrd-migration-stats
+* b049a11 continued cleaning up tests
+* f1b02a2 started fixing tests
+* c736517 merged
+* 5842e1c fixed helper
+* 46f966e changed version
+* 49e5f8a first commit
+
 # Deployed Wednesday, April 04, 2012 at 12:44PM PST
 ### Deployed by John Pena
 ### Tagged deploy-54

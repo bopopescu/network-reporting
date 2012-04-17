@@ -22,9 +22,6 @@ skip_files:
 - ^(.*/)?.*\.bak$
 - ^(.*/)?local_settings\.py
 
-# Turn this on to debug
-# - appstats: on
-
 inbound_services:
 - warmup
 
@@ -53,7 +50,7 @@ handlers:
 
 - url: /placeholders
   static_dir: public/placeholders
-  
+
 ### END STATIC ASSETS ###
 
 ### BEGIN APP ENGINE BUILT-INS ###
@@ -112,3 +109,11 @@ handlers:
 - url: /.*
   script: main.py
   secure: optional
+
+# Uncomment these lines to enable AppStats.
+#- appstats: on
+
+#admin_console:
+#  pages:
+#  - name: Appstats
+#    url: /stats

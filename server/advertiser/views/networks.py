@@ -7,8 +7,10 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from common.utils.timezones import Pacific_tzinfo
 
-from advertiser.query_managers import CampaignQueryManager
 from account.query_managers import AccountQueryManager
+from advertiser.query_managers import AdvertiserQueryManager
+from advertiser.models import AdGroup
+
 
 class NetworkIndexHandler(RequestHandler):
     """
@@ -25,14 +27,25 @@ class NetworkIndexHandler(RequestHandler):
         yesterday_index = (yesterday - self.start_date).days if yesterday >= \
                 self.start_date and yesterday <= self.end_date else None
 
-        network_adgroups = []
-        # Old network campaigns don't have network_type set
-        for campaign in CampaignQueryManager.get_network_campaigns(account=
-                self.account, network_type=''):
-            for adgroup in campaign.adgroups:
-                network_adgroups.append(adgroup)
-        # sort alphabetically
-        network_adgroups.sort(key=lambda adgroup: adgroup.campaign.name.lower())
+        # Get all adgroups.
+        all_adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+                self.account).values()
+
+        # We need to loop through all of the adgroups to determine which are network campaigns.
+        # Normally, this would trigger a lot of sequential GETs (to obtain the campaign for each
+        # adgroup). However, we get around this by doing a batch (potentially memcached) GET of all
+        # campaigns and then manually populating the "campaign" property for each adgroup.
+        campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(self.account,
+                                                                               include_deleted=True)
+        for adgroup in all_adgroups:
+            campaign_key = str(AdGroup.campaign.get_value_for_datastore(
+                adgroup))
+            adgroup.campaign = campaigns_dict[campaign_key]
+
+        # Filter down to only network campaigns and sort alphabetically.
+        network_adgroups = filter(lambda a: a.campaign.campaign_type in
+                ['network'] and a.campaign.network_type='', all_adgroups)
+        network_adgroups.sort(key=lambda a: a.campaign.name.lower())
 
         return render_to_response(self.request,
                                   "advertiser/network_index.html",

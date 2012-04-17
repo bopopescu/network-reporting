@@ -65,6 +65,49 @@ if (typeof window.console == "undefined") {
             }
         }
 
+        // export tables as xls/csv
+        // id is the html table's id attribute
+        // format (optional) is either 'csv' or 'xls'
+        // filename (optional) desired name of output file with extension
+        function export_table(id, format, filename) {
+            if (format != 'csv')
+                format = 'xls';
+
+            filename = filename || 'ExportData.' + format;
+
+            output = {
+                'headers': [],
+                'body': [],
+            };
+
+            $table = $('#' + id);
+
+            $table.find('thead tr th').each(function() {
+                output.headers.push($(this).text());
+            });
+
+            $table.find('tbody tr').each(function() {
+                row = [];
+                $(this).find('th, td').each(function() {
+                    row.push($(this).text());
+                });
+                output.body.push(row);
+            });
+
+            output = escape(JSON.stringify(output));
+            filename = escape(JSON.stringify(filename));
+
+            // add and submit a hidden form to propagate POST data
+            // submit 'table' (the json data), 'format' (xls or csv), and 'filename' (string including extension)
+            table_export_url = '/inventory/table_export/'
+            $table.append('<form id="hidden-export-form" action="' + table_export_url + '" method="POST">');
+            $hidden_export_form = $('#hidden-export-form');
+            $hidden_export_form.append($('<input type="hidden" name="table" value="' + output + '">'));
+            $hidden_export_form.append($('<input type="hidden" name="format" value="' + format + '">'));
+            $hidden_export_form.append($('<input type="hidden" name="filename" value="' + filename + '">'));
+            $hidden_export_form.submit();
+        }
+
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();

@@ -15,6 +15,7 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, \
      render_to_string, \
+     HttpResponse, \
      JSONResponse
 
 ## Models
@@ -32,11 +33,13 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       CreativeQueryManager
 from publisher.query_managers import AppQueryManager, \
      AdUnitQueryManager, \
-     AdUnitContextQueryManager
+     AdUnitContextQueryManager, \
+     PublisherQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 # Util
-from common.utils import sswriter, date_magic
+from common.utils import sswriter, date_magic, xlwt
+from common.utils.unicode_writer import UnicodeWriter
 from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 #REFACTOR: only import what we need here
@@ -45,28 +48,15 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIExcept
 
 from budget import budget_service
 
+from google.appengine.api import memcache
+
 class AppIndexHandler(RequestHandler):
     """
     A list of apps and their real-time stats.
     """
     def get(self):
-
-        # Get all of the adunit keys for bootstrapping the apps
-        adunits = AdUnitQueryManager.get_adunits(account=self.account)
-
-        # We list the app traits in the table, and then load their
-        # stats over ajax using Backbone. Fetch the apps/adunits for the
-        # template load, and then create a list of keys for ajax bootstrapping.
-        apps = {}
-        for adunit in adunits:
-            app = apps.get(adunit.app_key.key())
-            if not app:
-                app = AppQueryManager.get(adunit.app_key.key())
-                app.adunits = [adunit]
-                apps[adunit.app_key.key()] = app
-            else:
-                app.adunits += [adunit]
-
+        # Get all of the business objects (apps and their adunits).
+        apps = PublisherQueryManager.get_objects_dict_for_account(self.account)
         app_keys = simplejson.dumps([str(k) for k in apps.keys()])
         app_values = sorted(apps.values(), lambda x, y: cmp(x.name, y.name))
 
@@ -393,15 +383,18 @@ class AppDetailHandler(RequestHandler):
     def get(self, app_key):
 
         # load the site
+        # 1 GET
         app = AppQueryManager.get(app_key)
 
         # create a stats manager
         stats_q = StatsModelQueryManager(self.account, self.offline)
         mpx_stats_q = MarketplaceStatsFetcher(self.account.key())
 
+        # 1 RunQuery
         app.adunits = AdUnitQueryManager.get_adunits(app=app)
 
         # organize impressions by days
+        # 1 GET per ad unit
         if len(app.adunits) > 0:
             for adunit in app.adunits:
                 adunit.all_stats = stats_q.get_stats_for_days(publisher=adunit,
@@ -414,6 +407,7 @@ class AppDetailHandler(RequestHandler):
                              key=lambda adunit: adunit.name,
                              reverse=True)
 
+        # 1 GET
         app.all_stats = stats_q.get_stats_for_days(publisher=app, days=self.days)
 
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
@@ -431,7 +425,9 @@ class AppDetailHandler(RequestHandler):
                                               for stats in bundled_adunits]
 
         # Create edit form and new adunit forms
+        # 1 memcache GET
         app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
+        # 1 memcache GET
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
 
         today = app.all_stats[-1]
@@ -447,8 +443,11 @@ class AppDetailHandler(RequestHandler):
         app.stats.user_count = max([sm.user_count for sm in app.all_stats])
 
         # get adgroups targeting this app
+        # 2 RunQuery???
         adgroups = AdGroupQueryManager.get_adgroups(app=app)
-        app.campaigns = dict([(adgroup.campaign.key(), adgroup.campaign) for
+        # Total: 2 GETs / 1 urlfetch per adgroup
+        # 1 GET for the campaign per adgroup
+        app.campaigns = dict([(adgroup._campaign, adgroup.campaign) for
             adgroup in adgroups]).values()
 
         for campaign in app.campaigns:
@@ -456,18 +455,22 @@ class AppDetailHandler(RequestHandler):
             if not campaign.network_type:
                 campaign.adgroup = adgroups[0]
 
+            # 1 GET
             campaign.all_stats = stats_q.get_stats_for_days(publisher = app,
                                                             advertiser =
                                                             campaign,
                                                             days = self.days)
-            campaign.stats = reduce(lambda x, y: x+y, campaign.all_stats, StatsModel())
-            budget_object = campaign.budget_obj
-            #ag.percent_delivered = budget_service.percent_delivered(budget_object)
+            campaign.stats = reduce(lambda x, y: x+y, campaign.all_stats,
+                    StatsModel())
+            #budget_object = campaign.budget_obj
+            #campaign.percent_delivered = budget_service.percent_delivered(
+                    #budget_object)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
             if campaign.campaign_type in ['marketplace']:
                 try:
+                    # 1 urlfetch
                     mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
                                                             self.start_date,
                                                             self.end_date)
@@ -1084,6 +1087,63 @@ class DashboardExportHandler(RequestHandler):
 def dashboard_export(request, *args, **kwargs):
     return DashboardExportHandler()(request, *args, **kwargs)
 
+class TableExportHandler(RequestHandler):
+    def post(self):
+        try:
+            data = urllib.unquote(self.request.POST['table'])
+            data = simplejson.loads(data)
+            format = self.request.POST['format']
+            filename = urllib.unquote(self.request.POST['filename'])
+        except Exception:
+            raise Http404
+
+        headers, body = data['headers'], data['body']
+
+        # strip both headers and body cells for leading/trailing whitespace
+        headers = [header.replace('<br>',' ').strip() for header in headers]
+        body = [[cell.replace('<br>',' ').strip() for cell in row] for row in body]
+
+        if format == 'xls':
+            # let's build this spreedsheet using xlwt
+            xls = xlwt.Workbook()
+            ws = xls.add_sheet('Worksheet')
+
+            # set up a bold style for the header
+            bold_style = xlwt.XFStyle()
+            font = xlwt.Font()
+            font.bold = True
+            bold_style.font = font
+
+            # write to spreadsheet
+            for column, header in enumerate(headers):
+                ws.write(0, column, header, bold_style)
+            for i, row in enumerate(body):
+                for j, col in enumerate(row):
+                    ws.write(i + 1, j, body[i][j])
+
+            # make column widths sane and submit
+            ws = set_column_widths(ws, headers, body)
+            response = HttpResponse(mimetype='application/ms-excel')
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            xls.save(response)
+            return response
+
+        elif format == 'csv':
+            response = HttpResponse(mimetype='text/csv')
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+
+            csv_writer = UnicodeWriter(response)
+            if headers:
+                csv_writer.writerow(headers)
+            csv_writer.writerows(body)
+
+            return response
+
+        raise Http404
+
+@login_required
+def table_export(request, *args, **kwargs):
+    return TableExportHandler()(request, *args, **kwargs)
 
 # Helper methods
 def enable_networks(adunit, account):
@@ -1246,4 +1306,26 @@ def filter_campaigns(campaigns, cfilter):
     filtered_campaigns = sorted(filtered_campaigns, lambda x,y: cmp(y.name,
         x.name))
     return filtered_campaigns
+
+def set_column_widths(ws, headers, body):
+    # xlwt defines the widtht of '0' character as 256, so let's give a bit
+    # of leeway
+    char_width = 275
+
+    body.insert(0, headers)
+
+    # maximum width of each column, in characters
+    def max_chars_in_column(column):
+        chars_in_column = [len(cell) for cell in column]
+        return max(chars_in_column)
+
+    # Andrew hated my nested list comprehension, so here's this
+    columns = zip(*body)
+    column_widths = [max_chars_in_column(col) for col in columns]
+
+    # traverse worksheet columns and set width appropriately
+    for i in range(len(body[0])):
+        ws.col(i).width = column_widths[i] * char_width
+
+    return ws
 

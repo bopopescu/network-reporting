@@ -466,8 +466,7 @@ class EditNetworkHandler(RequestHandler):
                     adgroups.append(adgroup)
 
                 # NetworkConfig for Apps
-                if network in ('admob', 'brightroll', 'ejam', 'inmobi',
-                        'jumptap', 'millennial', 'mobfox'):
+                if network in NETWORKS_WITH_PUB_IDS:
                     for app in apps:
                         network_config = app.network_config or NetworkConfig()
                         app_pub_id = self.request.POST.get("app_%s-%s" %
@@ -498,7 +497,7 @@ class EditNetworkHandler(RequestHandler):
                                         app=app)
 
                     # NetworkConfig for AdUnits
-                    if network in ('admob', 'jumptap', 'millennial'):
+                    if network in NETWORKS_WITH_PUB_IDS:
                         for adgroup, adunit in zip(adgroups, adunits):
                             network_config = adunit.network_config or \
                                     NetworkConfig()

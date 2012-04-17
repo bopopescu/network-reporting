@@ -275,8 +275,13 @@ class EditNetworkHandler(RequestHandler):
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
                         ' bid'
 
-                adunit.pub_id = getattr(adunit.network_config, network +
-                        '_pub_id', False)
+                if network in NETWORKS_WITH_PUB_IDS:
+                    adunit_pub_id = getattr(adunit.network_config, network +
+                            '_pub_id', False)
+                    if adunit_pub_id != app.pub_id:
+                        # only initialize th adunit level pub_id if it
+                        # differs from the app level one
+                        adunit.pub_id = adunit_pub_id
 
                 app.adunits.append(adunit)
             # Set app level bid
@@ -377,7 +382,8 @@ class EditNetworkHandler(RequestHandler):
                     network_adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(), self.account.key())
 
-                    query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
+                    query_dict[str(adunit.key()) + '-name'] = \
+                            network_adgroup.name
 
                     adgroup_form = AdUnitAdGroupForm(query_dict,
                             prefix=str(adunit.key()),
@@ -390,8 +396,9 @@ class EditNetworkHandler(RequestHandler):
                             (adunit.key(), network_config_field), '')
                     # Return error if adgroup is set to active yet
                     # the user didn't enter a pub id
-                    if not pub_id and adgroup_form.fields.get('active', False) and network in \
-                            ('jumptap', 'millennial'):
+                    if not pub_id and self.request.POST.get('%s-active' %
+                            adunit.key(), False) and network in \
+                                    NETWORKS_WITH_PUB_IDS:
                         return JSONResponse({
                             'errors': {'adunit_' + str(adunit.key()) + \
                                 '-admob_pub_id': "MoPub requires an" \

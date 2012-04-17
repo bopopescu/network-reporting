@@ -397,15 +397,15 @@
                         {% if network.name in NETWORKS_WITH_PUB_IDS %}
                         <td class="text">
                             <div>
-                                <input name="app_{{ app.key }}-admob_pub_id" placeholder="{{ network.pretty_name }} Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-admob_pub_id" />
+                                <input name="app_{{ app.key }}-{{ network.name }}_pub_id" placeholder="{{ network.pretty_name }} Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-{{ network.name }}_pub_id" />
                             </div>
                         </td>
                         {% endif %}
                         <td class="text cpm-data" style="width:100px">
-                            {% if app.bid %}
-                            <input class="float bid app-level" type="text" value="{{ app.bid }}">
-                            {% endif %}
-                            <div class="cpm-close editable hidden">
+                            <div class="cpm-input {% if not app.bid %}hidden{% endif %}">
+                                <input class="float bid app-level" type="text" value="{{ app.bid }}">
+                            </div>
+                            <div class="cpm-close editable{% if app.bid %} hidden{% endif %}">
                                 <span>
                                     <b class="caret"></b>                            
                                     <span class="editable-hidden">Set app CPM</span>
@@ -441,11 +441,11 @@
                             {% if network.name in NETWORKS_WITH_PUB_IDS %}
                             <div>
                                 <div class="pub-id-input hidden">
-                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="{{ network.name }}_ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAgM-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
+                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="adunit_{{ adunit.key }}-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
                                     <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
                                 </div>
                                 <div class="pub-id-edit editable">
-                                    <span class="pub-id-value"></span>
+                                    <span class="pub-id-value">{{ adunit.pub_id }}</span>
                                     <b class="caret"></b>
                                 </div>                            
                             </div>

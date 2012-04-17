@@ -654,18 +654,18 @@ $(function() {
                 var tbody = $(this).closest('tbody');
 
                 // copy value of first adunit input to all cpm inputs
-                var value = tbody.find('.cpm-input input').val();
+                var value = tbody.children().not('.main').find('.cpm-input input').val();
                 tbody.find('.cpm-value').text(value);
                 tbody.find('.cpm-input input').val(value);
                 tbody.find('tr.main .cpm-data input').val(value);
 
                 // show app level cpm
-                tbody.find('tr.main .cpm-data input').show();
+                tbody.find('tr.main .cpm-data .cpm-input').show();
                 // show app edit text
                 tbody.find('tr.main .cpm-data .editable').hide();
 
                 // hide adunit cpms for app
-                tbody.find('.cpm-input').hide();
+                tbody.children().not('.main').find('.cpm-input').hide();
                 // show adunit edit text
                 tbody.find('.cpm-edit').show();
             });

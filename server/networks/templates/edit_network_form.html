@@ -451,7 +451,7 @@
                         </td>
                         {% endif %}
                         <td class="text cpm-data">
-                            <div class="cpm-edit editable">
+                            <div class="cpm-edit editable{% if not app.bid %} hidden{% endif %}">
                                 <span class="cpm-value"></span>
                                 <b class="caret"></b>                            
                             </div>           

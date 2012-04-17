@@ -15,7 +15,7 @@ class NetworkIndexHandler(RequestHandler):
     Deprecated
     """
     def get(self):
-        account = AccountQueryManager.get_current_account(self.request)
+        account = AccountQueryManager.get_account_by_key(self.account.key())
 
         today = datetime.datetime.now(Pacific_tzinfo()).date()
         yesterday = today - datetime.timedelta(days=1)

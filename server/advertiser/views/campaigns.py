@@ -223,7 +223,8 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
 
     def get(self):
         campaign_form = CampaignForm(is_staff=self.request.user.is_staff,
-                account=AccountQueryManager.get_current_account(self.request))
+                account=AccountQueryManager.get_account_by_key(
+                    self.account.key()))
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
@@ -254,7 +255,8 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
 
         campaign_form = CampaignForm(self.request.POST,
                 is_staff=self.request.user.is_staff,
-                account=AccountQueryManager.get_current_account(self.request))
+                account=AccountQueryManager.get_account_by_key(
+                    self.account.key()))
         if campaign_form.is_valid():
             campaign = campaign_form.save()
             campaign.account = self.account
@@ -403,7 +405,8 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
                 initial={'bid': adgroup.bid,
                          'bid_strategy': adgroup.bid_strategy},
                 is_staff=self.request.user.is_staff,
-                account=AccountQueryManager.get_current_account(self.request))
+                account=AccountQueryManager.get_account_by_key(
+                    self.account.key()))
         adgroup_form = AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
@@ -441,7 +444,8 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
                 initial={'bid': adgroup.bid,
                          'bid_strategy': adgroup.bid_strategy},
                 is_staff=self.request.user.is_staff,
-                account=AccountQueryManager.get_current_account(self.request))
+                account=AccountQueryManager.get_account_by_key(
+                    self.account.key()))
 
         if campaign_form.is_valid():
             campaign = campaign_form.save()
@@ -605,7 +609,7 @@ class AdGroupDetailHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, adgroup_key):
-        account = AccountQueryManager.get_current_account(self.request)
+        account = AccountQueryManager.get_account_by_key(self.account.key())
 
         stats_q = StatsModelQueryManager(self.account, self.offline)
 

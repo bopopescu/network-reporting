@@ -44,7 +44,7 @@
   {% endif %}
 
   <span class="titlebar-right">
-    {% if not campaign.network or account.display_new_networks %}
+    {% if not campaign.network or not account.display_new_networks %}
     {% if adgroup.active %}
       <select name="campaign-status-options" id="campaign-status-options" class="selectmenu">
         <option value="play" selected="selected">Running</option>

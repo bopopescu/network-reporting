@@ -345,14 +345,14 @@ $(function() {
 
             // perculate checked changes up
             $('input[name$="active"]').click(function () {
+                var tbody = $(this).closest('tbody'); 
                 var key = $(this).attr('class');
-                if($('.' + key + ':checked').length == $('.' + key).length) {
-                    $('.' + key).closest('tbody').find('.all-adunits').attr("checked", "checked");
+                if(tbody.find('input[name$="active"]:checked').length == tbody.find('input[name$="active"]').length) {
+                    tbody.find('.all-adunits').attr("checked", "checked");
                 } else {
-                    $('.' + key).closest('tbody').find('.all-adunits').removeAttr("checked");
+                    tbody.find('.all-adunits').removeAttr("checked");
                 }
 
-                // TODO: review tooltip code
                 // If no ad network ID set up, show a tooltip
                 if ($(this).is(':checked')) {
                     var network_input = $(this).parents('tr').find('input[name$="'+pub_id+'"]');

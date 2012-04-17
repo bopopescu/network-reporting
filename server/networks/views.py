@@ -400,8 +400,8 @@ class EditNetworkHandler(RequestHandler):
                                     NETWORKS_WITH_PUB_IDS:
                         return JSONResponse({
                             'errors': {'adunit_' + str(adunit.key()) + \
-                                '-admob_pub_id': "MoPub requires an" \
-                                " ad network id for this adunit."},
+                                '-' + network + '_pub_id': "MoPub requires an" \
+                                " ad network id for enabled adunits."},
                             'success': False,
                         })
 

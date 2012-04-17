@@ -421,7 +421,7 @@ $(function() {
 
             var validator = $('form#campaign_and_adgroup').validate({
                 errorPlacement: function(error, element) {
-                    element.closest('div').append(error);
+                    element.parents('div').not(':hidden').first().append(error);
                 },
                 submitHandler: function(form) {
                     $(form).ajaxSubmit({

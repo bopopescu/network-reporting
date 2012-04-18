@@ -253,7 +253,7 @@ $(function () {
         </thead>
         <tbody>
             {% for app in apps %}
-                <tr class="app" id="{{ app.key }}">
+                <tr class="app" id="{{ app.external_key }}">
                     <td class="expand_control">
                         {% if app.all_adunits.count > 1 %}
                             <button class="btn btn-mini expand">
@@ -275,7 +275,7 @@ $(function () {
                 </tr>
                 {% if app.all_adunits.count > 1 %}
                     {% for adunit in app.all_adunits %}
-                        <tr class="adunit hidden" id="{{ adunit.key }}">
+                        <tr class="adunit hidden" id="{{ adunit.external_key }}">
                             <td></td>
                             <td><input type="checkbox" /></td>
                             <td class="name">{{ adunit.name }}</td>

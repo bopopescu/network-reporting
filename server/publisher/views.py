@@ -52,7 +52,7 @@ CAMPAIGN_LEVELS = ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo']
 class DashboardHandler(RequestHandler):
     def get(self):
         apps = AppQueryManager.get_apps(account=self.account)
-
+        logging.warn(self.account.key())
         direct_campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
         marketplace_campaign = CampaignQueryManager.get_marketplace(account=self.account)
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)

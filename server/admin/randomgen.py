@@ -185,19 +185,21 @@ def generate_budget():
     return budget
 
 
-def generate_adgroup(campaign, site_keys,
-                     account, adgroup_type,
-                     id=None, key=None):
-    if adgroup_type=="network":
-        rand_network_type = select_rand(NETWORK_TYPES)
-    else:
-        rand_network_type = None
+def generate_adgroup(campaign,
+                     site_keys,
+                     account,
+                     #adgroup_type,
+                     id=None,
+                     key=None):
+    
+
+    rand_network_type = select_rand(NETWORK_TYPES)
 
     start, end = get_random_datetime_pair()
 
     adgroup = AdGroup(key = _get_correct_key(key),
                       campaign=campaign,
-                      adgroup_type = adgroup_type,
+                      #adgroup_type = adgroup_type,
                       network_type=rand_network_type,
                       bid_strategy=select_rand(BID_STRATEGIES),
                       account=account,
@@ -212,7 +214,7 @@ def generate_adgroup(campaign, site_keys,
     # update the account's NetworkConfig object as well, so that ad
     # network configuration is set properly.
     if rand_network_type in NETWORK_TYPE_TO_PUB_ID_ATTR.keys() \
-       and adgroup.adgroup_type=="network":
+       and adgroup.campaign.campaign_type=="network":
         network_config = account.network_config
         setattr(network_config,
                 NETWORK_TYPE_TO_PUB_ID_ATTR[rand_network_type],
@@ -223,10 +225,16 @@ def generate_adgroup(campaign, site_keys,
     return adgroup
 
 
-def generate_campaign(account, budget, id=None, key=None):
+def generate_campaign(account,
+                      budget,
+                      adgroup_type = None,
+                      id=None,
+                      key=None):
+    
     campaign = Campaign(key = _get_correct_key(key),
                         name=get_campaign_name(),
                         account = account,
+                        campaign_type = adgroup_type,
                         advertiser = "John's Hat Co, Inc.",
                         is_order=True)
     campaign.put()
@@ -362,9 +370,8 @@ def main():
     adgroup_types = {'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOqInRIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGMHQwRIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGPqsqxIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOjarhIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGKufgQYM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGO7hqRIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGPeivhIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGKu6yBMM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGM2jrhEM': u'gtee_high', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOydzw8M': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGPXZ_hAM': u'marketplace', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGI-RuwgM': u'backfill_promo', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGP6ovRAM': u'gtee_high', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOqYsxEM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGIucgQoM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGL631hMM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGPGErhIM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGPid5QQM': u'backfill_promo', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGLm2kxIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGP7LtREM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGP-iyg0M': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOrqphIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGKvmzBIM': u'promo', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGKHA_w8M': u'gtee_high', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGL-4uRMM': u'gtee_high', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGL7EkRIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGPTS0gcM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGL-t5hEM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGIC25AcM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGJ-Y1AQM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGND3txEM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGLqvshIM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGLjD9Q4M': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGM340BMM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOGLsxAM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGI_yqQYM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOWJ_AUM': u'gtee_high', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGLHs_QoM': u'marketplace', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGNjYrQQM': u'promo', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGPyb9wcM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGIjszg0M': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGIPO7BEM': u'gtee_high', 'agltb3B1Yi1pbmNyOQsSCENhbXBhaWduIitta3Q6YWdsdGIzQjFZaTFwYm1OeUVBc1NCMEZqWTI5MWJuUVk4ZDc3QXd3DA': u'marketplace', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGM7z4wQM': u'promo', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGKqblwYM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGIj15QQM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGK-RohIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGJKxpxIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOOAng8M': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGJrH5wQM': u'backfill_promo', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGLDi9AYM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGI28sxIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGMyR9xAM': u'marketplace', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGIyFrwQM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOP1vxIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOf34AkM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGKfxtgQM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGJLMnhIM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGPODtwgM': u'gtee', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGP3hiw8M': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGLDb2QcM': u'promo', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGMCJ_QMM': u'promo', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGN26xgUM': u'network', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGOPSoRIM': u'gtee_high', 'agltb3B1Yi1pbmNyEQsSCENhbXBhaWduGMKU5gQM': u'network'}
     network_types = {'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZeUpuakVndww': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZazdMR0Vndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY_8u1EQw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYqqiACgw': u'admob_native', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYspzpEQw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYsuz9Cgw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZNTRxUEV3dww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY5uTLBww': u'custom_native', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYkJG7CAw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYzdqDEAw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZb0kzQUVndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYueTODQw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY8ejbBAw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYrZvrEQw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYwtCnEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY6-qmEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY8aruBww': u'custom_native', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY_NzdCQw': u'chartboost', 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZd3FiQ0Vndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY7q_6Dgw': u'iAd', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY0qzXEww': u'admob_native', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYnNiNEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYrqieDww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYq5uXBgw': u'inmobi', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY8cDBEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY3rrGBQw': u'jumptap', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYxNa_Egw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYrJ-BBgw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZdjRuOUF3dww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYifXlBAw': u'custom_native', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY9peCBAw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY_LDTEww': u'iAd', 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZM3JfLUNRdww': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZcXViTUVndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYlca3BAw': u'admob', 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZNHFhNkV3dww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY2cCsBAw': u'ejam', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY64SuEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY7OCsEgw': u'millennial_native', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY96HcBww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY4ouzEAw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYhd2BBgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY8dquEgw': u'iAd', 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZaF9LVUVndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYqcGfEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYhfe8Egw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYl9L-EAw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY0eOrEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYscyvEQw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZbUllMUVndww': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZdHBybEJ3dww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYuo-2CAw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYooWmEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY9rmJDww': u'admob_native', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY_6i9EAw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZaXBhQUR3dww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY_cSjEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY3u7zBgw': u'millennial', 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZdjZmUkV3dww': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZa3VheUVndww': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZMXQydEVndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYm8fnBAw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZMkw2T0Vndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYybflBAw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY6PjgBAw': u'admob_native', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY1erIEgw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZNDV5ekVndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY0fe3EQw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYttaqBAw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYq-iSEgw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZMGVtQkJBdww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYz8XPDww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY9tn-EAw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYzqOuEQw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZc2FidERndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY-b3MEww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY64idEgw': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYiPDIDQw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZa05qVEV3dww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYw5TmBAw': u'iAd', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYwLi5Eww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYupTnBww': u'custom_native', 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZOUlpRUJBdww': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZNlpfVEJ3dww': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZaHA2bEVRdww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAY3-CoBgw': u'chartboost', 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYk4OsEgw': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZXzdfYkV3dww': None, 'agltb3B1Yi1pbmNyNAsSB0FkR3JvdXAiJ21rdDphZ2x0YjNCMVlpMXBibU55RFFzU0JGTnBkR1VZenNIR0Vndww': None, 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYmMCiEgw': None}
     
-    account = generate_account(key=account_key)
-    
-    
+    account = generate_account(username='test@mopub.com', password='test', key=account_key)
+        
     apps = [generate_app(account, key=app_key) for app_key in publisher_keys.keys()]
 
     adunits_per_app = dict([(app,[]) for app in apps])
@@ -380,7 +387,11 @@ def main():
     for campaign_key in advertiser_keys.keys():
         budget = generate_budget()
         
-        campaign = generate_campaign(account, budget, key=campaign_key)
+        campaign = generate_campaign(account,
+                                     budget,
+                                     adgroup_type = adgroup_types[campaign_key],
+                                     key=campaign_key)
+                                     
 
         campaigns_per_app[app].append(campaign)
         
@@ -388,41 +399,10 @@ def main():
             adgroup = generate_adgroup(campaign,
                                        select_rand_subset(all_site_keys),
                                        account,
-                                       adgroup_types[campaign_key],
                                        key=adgroup_key)
             creatives_per_adgroup[str(adgroup)] = []
             for i in xrange(NUM_CREATIVES_PER_ADGROUP):
                 creatives_per_adgroup[str(adgroup)].append(generate_creative(account, adgroup))
-                    
-    cur_date = APP_STATS_SINCE
-    today = datetime.datetime.now()
-    day = datetime.timedelta(days=1)
-
-    # s = StatsModelQueryManager(account=account)
-    # 
-    # for app in apps:
-    #     cur_date = APP_STATS_SINCE
-    #     while cur_date <= today:
-    #         for campaign in campaigns_per_app[app]:
-    #             for adgroup in campaign.adgroups:
-    #                 stats= [generate_stats_model(adunit,
-    #                                          creative,
-    #                                          account,
-    #                                          cur_date)
-    #                         for creative in creatives_per_adgroup[str(adgroup)]
-    #                         for adunit in adunits_per_app[app] if adunit.key() in adgroup.site_keys]
-    # 
-    #                 req_stats = [generate_stats_model(adunit, None, account, cur_date) \
-    #                              for adunit in adunits_per_app[app]]
-    #                 for stat in req_stats:
-    #                     stat.impression_count = 0
-    #                     stat.click_count = 0
-    #                     stat.conversion_count = 0
-    # 
-    #                 s.put_stats(stats=stats+req_stats)
-    # 
-    #         cur_date+=day
-
 
 if __name__=="__main__":
     main()

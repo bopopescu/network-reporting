@@ -67,7 +67,8 @@ def start_dev_appserver():
   if hasattr(settings,'HISTORY_PATH'):
     hist_path = settings.HISTORY_PATH
 
-  print ds_path
+#  ds_path = './fixtures'
+  print 'Datastore Path:', ds_path
   args.extend(["--datastore_path", ds_path, "--history_path", hist_path])
 
   

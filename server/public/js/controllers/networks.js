@@ -333,10 +333,18 @@ $(function() {
 
             $('.cpm-data input').keyup(function() {
                 var value = $(this).val();
-                var div = $(this).parents('tbody');
+                var td = $(this).closest('td');
                 if (!value) value = 0;
-                $(div).find('.cpm-value').text(value);
+                $(td).find('.cpm-value').text(value);
             }).keyup();
+
+            $('tr.main .cpm-data input').keyup(function() {
+                var value = $(this).val();
+                var tbody = $(this).closest('tbody');
+                if (!value) value = 0;
+                $(tbody).find('.cpm-value').text(value);
+                $(tbody).find('.cpm-input input').val(value);
+            });
 
             // set up active checkbox's for app level
             $('.all-adunits')

@@ -384,15 +384,8 @@ class EditNetworkHandler(RequestHandler):
                 network_config_field = "%s_pub_id" % network
                 adgroup_forms = []
                 for adunit in adunits:
-                    network_adgroup = AdGroupQueryManager.get_network_adgroup(
-                            campaign, adunit.key(), self.account.key())
-
-                    query_dict[str(adunit.key()) + '-name'] = \
-                            network_adgroup.name
-
                     adgroup_form = AdUnitAdGroupForm(query_dict,
-                            prefix=str(adunit.key()),
-                            instance=network_adgroup)
+                            prefix=str(adunit.key()))
                     if not adgroup_form.is_valid():
                         adgroup_forms_are_valid = False
                         break
@@ -419,19 +412,22 @@ class EditNetworkHandler(RequestHandler):
             if adgroup_forms_are_valid:
                 logging.info('adgroup forms are valid')
 
-                # And then put in datastore again.
                 CampaignQueryManager.put(campaign)
 
                 for adgroup_form, adunit_key in adgroup_forms:
-                    adgroup = adgroup_form.save(commit=False)
-                    adgroup.account = self.account
-                    adgroup.campaign = campaign
-                    adgroup.name = campaign.name
-                    adgroup.site_keys = [adunit_key]
+                    adgroup = AdGroupQueryManager.get_network_adgroup(
+                            campaign, adunit_key, self.account.key())
+
+                    # copy fields from the default adgroup
                     for field in default_adgroup.properties().iterkeys():
                         if field not in ADGROUP_FIELD_EXCLUSION_LIST:
                             setattr(adgroup, field, getattr(default_adgroup,
                                 field))
+
+                    tmp_adgroup = adgroup_form.save(commit=False)
+                    # copy fields from the form for this adgroup
+                    for field in AdUnitAdGroupForm.base_fields.iterkeys():
+                        setattr(adgroup, field, getattr(tmp_adgroup, field))
 
                     if network in NETWORK_ADGROUP_TRANSLATION:
                         adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[

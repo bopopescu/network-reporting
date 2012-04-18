@@ -109,6 +109,9 @@ Make a table for ad networks that are active
                                 <span class="ui-icon ui-icon-wrench"></span>
                             </a>
                         </div>
+                        <div style="clear: both;">
+                            <a class="show-apps button button-small" id="{{network.campaign_key}}" style="width:75px;">Show Apps</a>
+                        </div>
                     </td>
                     {% if network.reporting %}
                     <td class="dataTable-data numeric">
@@ -161,9 +164,6 @@ Make a table for ad networks that are active
                 <tbody id="{{network.campaign_key}}-apps">
                 </tbody>
             </table>
-        </div>
-        <div style="margin-left:100px;">
-            <a class="show-apps button button-small" id="{{network.campaign_key}}" style="width:75px;">Show Apps</a>
         </div>
     </div>
     {% endfor %}

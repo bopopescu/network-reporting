@@ -334,14 +334,12 @@ $(function() {
             $('.cpm-data input').keyup(function() {
                 var value = $(this).val();
                 var td = $(this).closest('td');
-                if (!value) value = 0;
                 $(td).find('.cpm-value').text(value);
             }).keyup();
 
             $('tr.main .cpm-data input').keyup(function() {
                 var value = $(this).val();
                 var tbody = $(this).closest('tbody');
-                if (!value) value = 0;
                 $(tbody).find('.cpm-value').text(value);
                 $(tbody).find('.cpm-input input').val(value);
             });
@@ -650,11 +648,11 @@ $(function() {
                 event.preventDefault();
                 var tbody = $(this).closest('tbody');
                 // hide app level bids
-                tbody.find('tr.main .cpm-data input').hide();
+                tbody.find('tr.main .cpm-data .cpm-input').hide();
                 tbody.find('tr.main .cpm-data .editable').show();
                 // show adunit level bids
-                tbody.find('.cpm-edit').hide();
-                tbody.find('.cpm-input').show();
+                tbody.children().not('.main').find('.cpm-edit').hide();
+                tbody.children().not('.main').find('.cpm-input').show();
             });
             $('.pub-id-close').click(function (event) {
                 event.preventDefault;
@@ -681,7 +679,7 @@ $(function() {
 
                 // show app level cpm
                 tbody.find('tr.main .cpm-data .cpm-input').show();
-                // show app edit text
+                // hide app edit text
                 tbody.find('tr.main .cpm-data .editable').hide();
 
                 // hide adunit cpms for app

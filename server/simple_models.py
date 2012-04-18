@@ -327,7 +327,9 @@ class SimpleAdGroup(SimpleModel):
                  target_other=None,
                  cities=None,
                  geo_predicates=None,
-                 allocation_percentage=None
+                 allocation_percentage=None,
+                 optimizable=None,
+                 default_cpm=None,
                  ):
         self._key = key
         self.campaign = campaign.simplify()
@@ -359,6 +361,8 @@ class SimpleAdGroup(SimpleModel):
         self.cities = cities
         self.geo_predicates = geo_predicates
         self.allocation_percentage = allocation_percentage
+        self.optimizable = optimizable
+        self.default_cpm = default_cpm
 
     def __str__(self):
         return self.__repr__()

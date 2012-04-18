@@ -330,6 +330,9 @@ class AdGroup(db.Model):
 
     target_other = db.BooleanProperty(default=True)  # MobileWeb on blackberry etc.
 
+    optimizable = db.BooleanProperty(default=False)
+    default_cpm = db.FloatProperty()
+
     USER_TYPES = (
         ('any', 'Any'),
         ('active_7', '7 day active user'),
@@ -408,6 +411,8 @@ class AdGroup(db.Model):
                              cities = self.cities,
                              geo_predicates = self.geo_predicates,
                              allocation_percentage = self.allocation_percentage,
+                             optimizable = self.optimizable,
+                             default_cpm = self.default_cpm,
                              )
 
     def default_creative(self, custom_html=None, key_name=None):

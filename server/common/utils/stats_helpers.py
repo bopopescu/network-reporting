@@ -386,7 +386,7 @@ class AdNetworkStatsFetcher(object):
         for day in days:
             stats = AdNetworkAggregateManager.get_stats_for_day(account, day)
             stats.date = day
-            all_stats.append(StatsModel(ad_network_stats=stats).to_dict())
+            all_stats.append(stats.dict_)
         return all_stats
 
 

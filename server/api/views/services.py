@@ -396,8 +396,6 @@ class CampaignService(RequestHandler):
         stats_dict = summed_stats.to_dict()
 
         stats_dict['daily_stats'] = [s.to_dict() for s in campaign_stats]
-        logging.info('YAY')
-        logging.info(stats_dict['daily_stats'])
 
         # Give back max and min cpm for campaign if endpoint is for
         # mopub stats

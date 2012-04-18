@@ -1,7 +1,7 @@
 import datetime
 try:
     import json
-except ImportError:    
+except ImportError:
     from common.utils import simplejson as json
 import urllib
 import urllib2
@@ -18,14 +18,16 @@ def api_fetch(start_date, end_date,
               advertiser_key=None, response=None):
     """
     Hits the mongostats API and converts the response into StatsModels
-    
+
     Return: a list of StatsModel(s)
     """
     if not response: # used for testing only
-        url = _generate_api_url(start_date, end_date, 
-                                account_key, publisher_key, 
+        url = _generate_api_url(start_date, end_date,
+                                account_key, publisher_key,
                                 advertiser_key)
+        print url
         response = urllib2.urlopen(url).read()
+        print response
 
     try:
         response_dict = json.loads(response)
@@ -35,19 +37,19 @@ def api_fetch(start_date, end_date,
     status = response_dict['status']
     if status != 200:
         raise(APIException('status = %s' % status))
-    
+
     stats_models = [] # list of 'StatsModel's to be returned
-    
+
     all_stats = response_dict['all_stats'] # dictionary
-    
+
     for key in all_stats:
-        # 
+        #
         # key e.g. agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw||agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYw5TmBAw||agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww pylint: disable=C0301
         pub_str, adv_str, acct_str = key.split(DELIM)
         daily_stats = all_stats[key]['daily_stats'] # list of dictionaries
-        
+
         for stats_dict in daily_stats:
-            # stats_dict - e.g. 
+            # stats_dict - e.g.
             # {'attempt_count': 1283043,
             # 'click_count': 32907,
             # 'conversion_count': 0,
@@ -57,15 +59,15 @@ def api_fetch(start_date, end_date,
             # 'revenue': 2549.2771199999356}
 
             advertiser = _key_or_none(adv_str)
-            # Since request_count is overloaded we must 
-            # use attempt_count (from) as request_count if 
-            # the advertiser field is present else we just 
+            # Since request_count is overloaded we must
+            # use attempt_count (from) as request_count if
+            # the advertiser field is present else we just
             # use request_count
             if advertiser:
                 request_count = stats_dict['attempt_count']
-            else:    
+            else:
                 request_count = stats_dict['request_count']
-            
+
             stats_model = StatsModel(account=_key_or_none(acct_str),
                              publisher=_key_or_none(pub_str),
                              advertiser=advertiser,
@@ -92,14 +94,14 @@ def _generate_api_url(start_date, end_date,
         "pub": _str_or_empty(publisher_key),
         "adv": _str_or_empty(advertiser_key),
     }
-    
+
     query_string = urllib.urlencode(params)
-    
+
     return BASE_URL + '?' + query_string
-    
+
 class APIException(Exception):
-    pass    
-    
+    pass
+
 def _format_date(date_):
     """
     Formats the date like YYMMDD
@@ -111,7 +113,7 @@ def _datetime_from_str(date_string):
     date_string e.g. YYYY-MM-DD
     """
     return datetime.datetime.strptime(date_string, '%Y-%m-%d')
-    
+
 def _str_or_empty(key):
     """
     Stringifies the key or return the empty string

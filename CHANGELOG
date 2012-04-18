@@ -1,16 +1,23 @@
+# Deployed Wednesday, April 18, 2012 at 04:39AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-67
+### Bugs Fixed: []
+### Included Commits: 
+ * 58f5817 Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, April 18, 2012 at 04:32AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-66
 ### Bugs Fixed: []
-### Included Commits: 
- * b25bae5 skip deleted adunits in networks form, input changes to app level cpms to all adunit level cpms
- * e9ebe9c Merge branch 'master' of github.com:mopub/mopub
- * 5a7c860 allow debug for stats get in publisher view
- * 9f26123 Merge branch 'master' of github.com:mopub/mopub
- * 1becd78 sending down network type with simple adgroup
- * ab87aad Fixed network link in app details view
- * 409a434 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* b25bae5 skip deleted adunits in networks form, input changes to app level cpms to all adunit level cpms
+* e9ebe9c Merge branch 'master' of github.com:mopub/mopub
+* 5a7c860 allow debug for stats get in publisher view
+* 9f26123 Merge branch 'master' of github.com:mopub/mopub
+* 1becd78 sending down network type with simple adgroup
+* ab87aad Fixed network link in app details view
+* 409a434 Deployed without finding any bug fixes.
+
 # Deployed Wednesday, April 18, 2012 at 02:02AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-65

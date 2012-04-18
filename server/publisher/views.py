@@ -1042,6 +1042,8 @@ class DashboardExportHandler(RequestHandler):
                 resource_id = app.package
             else:
                 resource_id = app.url
+            if not resource_id:
+                resource_id = 'None'
             stats = stats_fetcher.get_stats_for_days(publisher=app,
                                                      days=days)
             summed_stats = sum(stats, StatsModel())
@@ -1080,6 +1082,7 @@ class DashboardExportHandler(RequestHandler):
         titles = ['App','Ad Unit','Pub ID','Resource ID', 'Requests',
                   'Impressions', 'Fill Rate', 'Clicks', 'CTR','Ad Size',
                   'Platform',]
+        
         return sswriter.export_writer(file_type, f_name, titles, data)
 
 

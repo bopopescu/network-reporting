@@ -77,7 +77,7 @@ div#charts {
 
 div#filters {
     margin-left: 10px;
-    table#campaigns, table#apps {
+    table#advertiser, table#publisher {
         border: 2px solid #bbb;
         font-size: 12px;
         thead {
@@ -131,7 +131,7 @@ div#filters {
         }
     }
 
-    table#campaigns {
+    table#advertiser {
         margin-bottom: 20px;
     }
 }

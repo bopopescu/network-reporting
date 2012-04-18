@@ -281,22 +281,19 @@ def generate_creative(account,adgroup):
     creative.put()
     return creative
 
-
-
-
 #Example Method to generate data. See top configuration contants for customizing result
 def main():
-    account = generate_account(USERNAME,PASSWORD,USERNAME)
+    account = generate_account(USERNAME, PASSWORD, USERNAME)
 
     # Create marketplace campaign
-    generate_campaign(account,campaign_type="marketplace")
+    generate_campaign(account, campaign_type="marketplace")
 
     apps = []
     for i in range(NUM_APPS):
         apps.append(generate_app(account))
 
-    adunits_per_app = dict([(app,[]) for app in apps])
-    campaigns_per_app = dict([(app,[]) for app in apps])
+    adunits_per_app = dict([(app, []) for app in apps])
+    campaigns_per_app = dict([(app, []) for app in apps])
     creatives_per_campaign = {}
 
     for app in apps:

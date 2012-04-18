@@ -7,15 +7,18 @@
 {% endblock %}
 
 {% block extraScripts %}
-{# TODO: {% include_script 'controllers/publisher' %} instead of #}
-<script src="/js/controllers/publisher.js?02394803298402398" type="text/javascript"></script>
+{% include_script 'controllers/publisher' %}
 
 <script type="text/javascript">
 $(function () {
     DashboardController.initializeDashboard({
-        account: '{{ account.key }}'
+        account: '{{ account.key }}',
+        names: {{ names|to_json|safe }}
     });
 });
+</script>
+<script id="filter_row" type="text/html">
+{% include 'publisher/partials/filter_row.html' %}
 </script>
 {% endblock extraScripts %}
 
@@ -123,11 +126,21 @@ $(function () {
             <g transform="translate(0, 150)"></g>
         </svg>
     </div>
+    <div id="ctr">
+        <div>
+            <div class="title">CTR</div>
+            <div class="value"></div>
+            <div class="delta"></div>
+        </div>
+        <svg height="150" width="550">
+            <g transform="translate(0, 150)"></g>
+        </svg>
+    </div>
 </div>
 
 <div id="filters">
     <label><input name="advertiser_compare" type="checkbox" /> Compare</label>
-    <table id="campaigns">
+    <table id="advertiser">
         <thead>
             <tr>
                 <th class="title" colspan="3">Campaigns and Adgroups</th>
@@ -138,11 +151,32 @@ $(function () {
             </tr>
         </thead>
         <tbody>
-            {% if direct_campaigns.count %}
-                <tr class="source" id="direct">
-                    <td></td>
-                    <td><input type="checkbox" /></td>
-                    <td class="name">Direct</td>
+            <tr class="source" id="direct">
+                <td></td>
+                <td><input type="checkbox" /></td>
+                <td class="name">Direct</td>
+                <td class="rev"></td>
+                <td class="rev_delta"></td>
+                <td class="imp"></td>
+                <td class="imp_delta"></td>
+                <td class="clk"></td>
+                <td class="clk_delta"></td>
+                <td class="ctr"></td>
+                <td class="ctr_delta"></td>
+            </tr>
+            {% comment %}
+            {% for campaign in direct_campaigns %}
+                <tr class="campaign" id="{{ campaign.key }}">
+                    <td class="expand_control">
+                        {% if campaign.adgroups.count > 1 %}
+                            <button class="btn btn-mini expand">
+                                <i class="icon-plus"> </i>
+                                <i class="icon-minus"> </i>
+                            </button>
+                        {% endif %}
+                    </td>
+                    <td class="checkbox"><input type="checkbox" /></td>
+                    <td class="name">{{ campaign.name }}</td>
                     <td class="rev"></td>
                     <td class="rev_delta"></td>
                     <td class="imp"></td>
@@ -152,51 +186,57 @@ $(function () {
                     <td class="ctr"></td>
                     <td class="ctr_delta"></td>
                 </tr>
-                {% for campaign in direct_campaigns %}
-                    <tr class="campaign" id="{{ campaign.key }}">
-                        <td class="expand_control">
-                            {% if campaign.adgroups.count > 1 %}
-                                <button class="btn btn-mini expand">
-                                    <i class="icon-plus"> </i>
-                                    <i class="icon-minus"> </i>
-                                </button>
-                            {% endif %}
-                        </td>
-                        <td class="checkbox"><input type="checkbox" /></td>
-                        <td class="name">{{ campaign.name }}</td>
-                        <td class="rev"></td>
-                        <td class="rev_delta"></td>
-                        <td class="imp"></td>
-                        <td class="imp_delta"></td>
-                        <td class="clk"></td>
-                        <td class="clk_delta"></td>
-                        <td class="ctr"></td>
-                        <td class="ctr_delta"></td>
-                    </tr>
-                    {% if campaign.adgroups.count > 1 %}
-                        {% for adgroup in campaign.adgroups %}
-                            <tr class="adgroup hidden" id="{{ adgroup.key }}">
-                                <td></td>
-                                <td><input type="checkbox" /></td>
-                                <td class="name">{{ adgroup.name }}</td>
-                                <td class="rev"></td>
-                                <td class="rev_delta"></td>
-                                <td class="imp"></td>
-                                <td class="imp_delta"></td>
-                                <td class="clk"></td>
-                                <td class="clk_delta"></td>
-                                <td class="ctr"></td>
-                                <td class="ctr_delta"></td>
-                            </tr>
-                        {% endfor %}
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-            {% if marketplace_campaign %}
-                <tr class="source" id="mpx">
+                {% if campaign.adgroups.count > 1 %}
+                    {% for adgroup in campaign.adgroups %}
+                        <tr class="adgroup hidden" id="{{ adgroup.key }}">
+                            <td></td>
+                            <td><input type="checkbox" /></td>
+                            <td class="name">{{ adgroup.name }}</td>
+                            <td class="rev"></td>
+                            <td class="rev_delta"></td>
+                            <td class="imp"></td>
+                            <td class="imp_delta"></td>
+                            <td class="clk"></td>
+                            <td class="clk_delta"></td>
+                            <td class="ctr"></td>
+                            <td class="ctr_delta"></td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            {% endcomment %}
+            <tr class="source" id="mpx">
+                <td></td>
+                <td><input type="checkbox" /></td>
+                <td class="name">Marketplace</td>
+                <td class="rev"></td>
+                <td class="rev_delta"></td>
+                <td class="imp"></td>
+                <td class="imp_delta"></td>
+                <td class="clk"></td>
+                <td class="clk_delta"></td>
+                <td class="ctr"></td>
+                <td class="ctr_delta"></td>
+            </tr>
+            <tr class="source" id="network">
+                <td></td>
+                <td><input type="checkbox" /></td>
+                <td class="name">Networks</td>
+                <td class="rev"></td>
+                <td class="rev_delta"></td>
+                <td class="imp"></td>
+                <td class="imp_delta"></td>
+                <td class="clk"></td>
+                <td class="clk_delta"></td>
+                <td class="ctr"></td>
+                <td class="ctr_delta"></td>
+            </tr>
+            {% comment %}
+            {% for campaign in network_campaigns %}
+                <tr class="campaign" id="{{ campaign.key }}">
                     <td></td>
                     <td><input type="checkbox" /></td>
-                    <td class="name">Marketplace</td>
+                    <td class="name">{{ campaign.name }}</td>
                     <td class="rev"></td>
                     <td class="rev_delta"></td>
                     <td class="imp"></td>
@@ -206,42 +246,13 @@ $(function () {
                     <td class="ctr"></td>
                     <td class="ctr_delta"></td>
                 </tr>
-            {% endif %}
-            {% if network_campaigns.count %}
-                <tr class="source" id="network">
-                    <td></td>
-                    <td><input type="checkbox" /></td>
-                    <td class="name">Networks</td>
-                    <td class="rev"></td>
-                    <td class="rev_delta"></td>
-                    <td class="imp"></td>
-                    <td class="imp_delta"></td>
-                    <td class="clk"></td>
-                    <td class="clk_delta"></td>
-                    <td class="ctr"></td>
-                    <td class="ctr_delta"></td>
-                </tr>
-                {% for campaign in network_campaigns %}
-                    <tr class="campaign" id="{{ campaign.key }}">
-                        <td></td>
-                        <td><input type="checkbox" /></td>
-                        <td class="name">{{ campaign.name }}</td>
-                        <td class="rev"></td>
-                        <td class="rev_delta"></td>
-                        <td class="imp"></td>
-                        <td class="imp_delta"></td>
-                        <td class="clk"></td>
-                        <td class="clk_delta"></td>
-                        <td class="ctr"></td>
-                        <td class="ctr_delta"></td>
-                    </tr>
-                {% endfor %}
-            {% endif %}
+            {% endfor %}
+            {% endcomment %}
         </tbody>
     </table>
 
     <label><input name="publisher_compare" type="checkbox" /> Compare</label>
-    <table id="apps">
+    <table id="publisher">
         <thead>
             <tr>
                 <th class="title" colspan="3">Apps and Adunits</th>

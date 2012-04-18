@@ -39,7 +39,7 @@ class ChartBoostUnitTests(unittest.TestCase):
         self.app = App(account=self.account, name="Test App")
         self.app.put()
 
-        self.network_config = NetworkConfig(chartboost_pub_id = '4de55942bb93162f4500006c')
+        self.network_config = NetworkConfig(account=self.account, chartboost_pub_id = '4de55942bb93162f4500006c')
         self.network_config.put()
         
         self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit", network_config=self.network_config)

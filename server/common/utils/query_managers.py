@@ -171,10 +171,11 @@ class CachedQueryManager(QueryManager):
     @classmethod
     def memcache_flush_entities_for_account_keys(cls, account_keys, entity_class):
         """
-        Given a collection of accounts and an entity class, this method will flush from memcache any
-        information about the entities for those accounts. For example, if this method is called
-        with accounts=[A, B] and entity_class=AdGroup, the cached dictionaries of AdGroups for
-        accounts A and B will be flushed. "accounts" may be a set, list, or a single object.
+        Given a collection of account keys and an entity class, this method will flush from memcache
+        any information about the entities for those accounts. For example, if this method is called
+        with account_keys=[key_A, key_B] and entity_class=AdGroup, the cached dictionaries of
+        AdGroups for accounts A and B will be flushed. "account_keys" may be a set, list, or a
+        single object.
         """
         if isinstance(account_keys, set):
             account_keys = list(account_keys)

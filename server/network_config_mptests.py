@@ -15,6 +15,10 @@ from advertiser.models import ( Campaign,
                                 AdGroup,
                                 Creative,
                                 )
+
+from account.query_managers import AccountQueryManager
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+
 from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
@@ -68,32 +72,28 @@ class TestNetworkConfig(unittest.TestCase):
         # Set up useful datetime
         self.dt = datetime.datetime(1987,4,4,4,4)# save some test time
         
-        # Set up network config
+        # Set up default models.
+        self.account = Account(company="awesomecorp")
+        AccountQueryManager.put(self.account)
+        self.app = App(account=self.account, name="Test App")
+        AppQueryManager.put(self.app)
+        self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit")
+        AdUnitQueryManager.put(self.adunit)
+
+        # Create network configurations and link them to the appropriate account / app.
         self.account_network_config = NetworkConfig(
+                                account=self.account,
                                 brightroll_pub_id="account-brightroll",
                                 millennial_pub_id="account-millennial",
                                 jumptap_pub_id="account-jumptap")
-        self.account_network_config.put()
-        
+        AccountQueryManager.update_config_and_put(self.account, self.account_network_config)
+
         self.app_network_config = NetworkConfig(
+                                account=self.account,
                                 jumptap_pub_id="app-jumptap",
                                 millennial_pub_id="app-millennial")
-                                
-        self.app_network_config.put()
+        AppQueryManager.update_config_and_put(self.app, self.app_network_config)
 
-        # Set up default models
-        self.account = Account(company="awesomecorp", 
-                               network_config=self.account_network_config)
-        self.account.put()
-
-        self.app = App(account=self.account, name="Test App",
-                               network_config=self.app_network_config)
-        self.app.put()
-
-        
-        self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit")
-        self.adunit.put()    
-        
         self.client_context = ClientContext(adunit=self.adunit,
                                             country_code="US", # Two characater country code.  
                                             raw_udid="fake_udid",   
@@ -120,11 +120,9 @@ class TestNetworkConfig(unittest.TestCase):
 
     def mptest_add_adunit(self):
         self.adunit_network_config = NetworkConfig(
+                                account=self.account,
                                 jumptap_pub_id="adunit-jumptap")
-        self.adunit_network_config.put()
-        
-        self.adunit.network_config = self.adunit_network_config
-        self.adunit.put()
+        AdUnitQueryManager.update_config_and_put(self.adunit, self.adunit_network_config)
         
         eq_(self.adunit.get_pub_id("jumptap_pub_id"), "adunit-jumptap")
         

@@ -341,7 +341,7 @@ def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,
         marketplace_config = MarketPlaceConfig()
         marketplace_config.put()
     if not network_config:
-        network_config = NetworkConfig()
+        network_config = NetworkConfig(account=account)
         network_config.put()
 
     manager = RegistrationManager()

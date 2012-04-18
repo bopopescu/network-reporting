@@ -12,7 +12,7 @@ builtins:
 
 # Uncomment this to enable appstats. You will also need to uncomment a line in the
 # webapp_add_wsgi_middleware method of appengine_config.py.
-# - appstats: on
+- appstats: on
 
 skip_files:
 - ^(.*/)?app\.yaml

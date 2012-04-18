@@ -1,10 +1,19 @@
+# Deployed Wednesday, April 18, 2012 at 08:55AM PST
+### Deployed by Andrew He
+### Tagged deploy-68
+### Bugs Fixed: []
+### Included Commits: 
+ * 7091266 Catch KeyError in AdGroupIndexHandler and email admins if the error occurs
+ * 55ce362 Removed debug prints
+ * 0b31b07 Deployed without finding any bug fixes.
+ 
 # Deployed Wednesday, April 18, 2012 at 04:39AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-67
 ### Bugs Fixed: []
-### Included Commits: 
- * 58f5817 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 58f5817 Deployed without finding any bug fixes.
+
 # Deployed Wednesday, April 18, 2012 at 04:32AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-66

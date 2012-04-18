@@ -102,9 +102,8 @@ var mopub = window.mopub || {};
                 if (!$('#show-network').is(':checked')) {
                     $(this.el + ' .network-data').hide();
                 }
-
-                $('#' + this.collection.campaign_key + '-loading').hide();
             }
+            $('#' + this.collection.campaign_key + '-loading').hide();
 
             return this;
         }

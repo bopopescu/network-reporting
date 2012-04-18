@@ -300,6 +300,9 @@ class EditNetworkHandler(RequestHandler):
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
                 instance=adgroup)
 
+        # Sort apps
+        apps = sorted(apps, key=lambda app_data: app_data.identifier)
+
         return render_to_response(self.request,
                                   'networks/edit_network_form.html',
                                   {

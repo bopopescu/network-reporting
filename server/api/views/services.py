@@ -443,149 +443,149 @@ class NetworkAppsService(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, campaign_key, adunits=False):
-        #try:
-        campaign = CampaignQueryManager.get(campaign_key)
+        try:
+            campaign = CampaignQueryManager.get(campaign_key)
 
-        # REFACTOR
-        # ensure the owner of this campaign is the request's
-        # current user
-        if not campaign or campaign.account.key() != self.account.key():
-            raise Http404
+            # REFACTOR
+            # ensure the owner of this campaign is the request's
+            # current user
+            if not campaign or campaign.account.key() != self.account.key():
+                raise Http404
 
-        network = campaign.network_type
+            network = campaign.network_type
 
-        network_apps_ = {}
-        stats_manager = StatsModelQueryManager(account=self.account)
-        # Iterate through all the apps and populate the stats for
-        # network_apps_
-        for app in AppQueryManager.get_apps(self.account):
-            # Get stats collected by networks if this is the first network
-            # campaign
-            if campaign.network_state == \
-                    NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
-                login = AdNetworkLoginManager.get_logins(self.account,
-                        network).get()
-                all_stats = False
-                if login:
-                    mappers = AdNetworkMapperManager.get_mappers_for_app(
-                            login, app)
-                    if mappers.count(limit=1):
-                        stats_by_day = {}
-                        for day in self.days:
-                            stats_by_day[day] = AdNetworkStats(date=
-                                    date.today())
+            network_apps_ = {}
+            stats_manager = StatsModelQueryManager(account=self.account)
+            # Iterate through all the apps and populate the stats for
+            # network_apps_
+            for app in AppQueryManager.get_apps(self.account):
+                # Get stats collected by networks if this is the first network
+                # campaign
+                if campaign.network_state == \
+                        NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
+                    login = AdNetworkLoginManager.get_logins(self.account,
+                            network).get()
+                    all_stats = False
+                    if login:
+                        mappers = AdNetworkMapperManager.get_mappers_for_app(
+                                login, app)
+                        if mappers.count(limit=1):
+                            stats_by_day = {}
+                            for day in self.days:
+                                stats_by_day[day] = AdNetworkStats(date=
+                                        date.today())
 
-                        for mapper in mappers:
-                            all_stats = AdNetworkStatsManager. \
-                                    get_stats_for_days(mapper.key(),
-                                            self.days)
-                            for stats in all_stats:
-                                if stats.date in stats_by_day:
-                                    stats_by_day[stats.date] += stats
+                            for mapper in mappers:
+                                all_stats = AdNetworkStatsManager. \
+                                        get_stats_for_days(mapper.key(),
+                                                self.days)
+                                for stats in all_stats:
+                                    if stats.date in stats_by_day:
+                                        stats_by_day[stats.date] += stats
 
-                        all_stats = sorted(stats_by_day.values(), key= \
-                                lambda stats: stats.date)
+                            all_stats = sorted(stats_by_day.values(), key= \
+                                    lambda stats: stats.date)
 
-                if all_stats:
-                    stats = reduce(lambda x, y: x+y, all_stats,
-                            AdNetworkStats())
+                    if all_stats:
+                        stats = reduce(lambda x, y: x+y, all_stats,
+                                AdNetworkStats())
+                        if app.key() not in network_apps_:
+                            network_apps_[app.key()] = app
+                        if hasattr(network_apps_[app.key()], 'network_stats'):
+                            network_apps_[app.key()].network_stats += stats
+                        else:
+                            network_apps_[app.key()].network_stats = stats
+
+                max_cpm = 0.0
+                min_cpm = 999.0
+                # Get stats collected by MoPub
+                for adunit in AdUnitQueryManager.get_adunits(account=self.
+                        account, app=app):
+                    # One adunit per adgroup for network adunits
+                    adgroup = AdGroupQueryManager.get_network_adgroup(
+                            campaign, adunit.key(),
+                            self.account.key(), get_from_db=True)
+                    adunit.active = adgroup.active
+
+                    all_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                                                                 advertiser=
+                                                                    campaign,
+                                                                 days=self.days)
+
+                    # Add old campaign stats to new ones if the query is for a
+                    # legacy date, shouldn't be common so doesn't have to be
+                    # super fast
+                    if campaign.transition_date and campaign.transition_date >= \
+                            self.start_date and campaign.transition_date <= \
+                            self.end_date and campaign.old_campaign:
+                        old_campaign_stats = stats_manager.get_stats_for_days(
+                                publisher=adunit,
+                                advertiser=campaign.old_campaign,
+                                days=self.days)
+                        all_stats = [sum(stats_for_day, StatsModel()) for \
+                                stats_for_day in zip(all_stats,
+                                    old_campaign_stats)]
+
+                    stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
+
                     if app.key() not in network_apps_:
                         network_apps_[app.key()] = app
-                    if hasattr(network_apps_[app.key()], 'network_stats'):
-                        network_apps_[app.key()].network_stats += stats
+                    if hasattr(network_apps_[app.key()], 'mopub_stats'):
+                        network_apps_[app.key()].mopub_stats += stats
                     else:
-                        network_apps_[app.key()].network_stats = stats
+                        network_apps_[app.key()].mopub_stats = stats
 
-            max_cpm = 0.0
-            min_cpm = 999.0
-            # Get stats collected by MoPub
-            for adunit in AdUnitQueryManager.get_adunits(account=self.
-                    account, app=app):
-                # One adunit per adgroup for network adunits
-                adgroup = AdGroupQueryManager.get_network_adgroup(
-                        campaign, adunit.key(),
-                        self.account.key(), get_from_db=True)
-                adunit.active = adgroup.active
+                    if adunits:
+                        adunit_data = adunit.toJSON()
+                        adunit_data['active'] = adunit.active
+                        adunit_data['url'] = '/inventory/adunit/' + \
+                                str(adunit.key())
+                        adunit_data['stats'] = stats.to_dict()
 
-                all_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                                                             advertiser=
-                                                                campaign,
-                                                             days=self.days)
+                        if adgroup.bid_strategy == 'cpm':
+                            adunit_data['stats']['cpm'] = adgroup.bid
+                        else:
+                            adunit_data['stats']['cpm'] = adgroup. \
+                                    calculated_cpm
+                        min_cpm = min(adunit_data['stats']['cpm'], min_cpm)
+                        max_cpm = max(adunit_data['stats']['cpm'], max_cpm)
 
-                # Add old campaign stats to new ones if the query is for a
-                # legacy date, shouldn't be common so doesn't have to be
-                # super fast
-                if campaign.transition_date and campaign.transition_date >= \
-                        self.start_date and campaign.transition_date <= \
-                        self.end_date and campaign.old_campaign:
-                    old_campaign_stats = stats_manager.get_stats_for_days(
-                            publisher=adunit,
-                            advertiser=campaign.old_campaign,
-                            days=self.days)
-                    all_stats = [sum(stats_for_day, StatsModel()) for \
-                            stats_for_day in zip(all_stats,
-                                old_campaign_stats)]
+                        if hasattr(network_apps_[app.key()], 'adunits'):
+                            network_apps_[app.key()].adunits.append(adunit_data)
+                        else:
+                            network_apps_[app.key()].adunits = [adunit_data]
 
-                stats = reduce(lambda x, y: x+y, all_stats, StatsModel())
-
-                if app.key() not in network_apps_:
-                    network_apps_[app.key()] = app
-                if hasattr(network_apps_[app.key()], 'mopub_stats'):
-                    network_apps_[app.key()].mopub_stats += stats
+                if min_cpm == max_cpm:
+                    network_apps_[app.key()].mopub_stats.cpm = min_cpm
+                    network_apps_[app.key()].mopub_stats.min_cpm = None
+                    network_apps_[app.key()].mopub_stats.max_cpm = None
                 else:
-                    network_apps_[app.key()].mopub_stats = stats
+                    network_apps_[app.key()].mopub_stats.cpm = None
+                    network_apps_[app.key()].mopub_stats.min_cpm = min_cpm
+                    network_apps_[app.key()].mopub_stats.max_cpm = max_cpm
 
+
+            network_apps_ = sorted(network_apps_.values(), key=lambda app_data:
+                    app_data.identifier)
+
+            network_apps = []
+            for app in network_apps_:
+                app_data = app.toJSON()
+                app_data['url'] = '/inventory/app/' + str(app.key())
                 if adunits:
-                    adunit_data = adunit.toJSON()
-                    adunit_data['active'] = adunit.active
-                    adunit_data['url'] = '/inventory/adunit/' + \
-                            str(adunit.key())
-                    adunit_data['stats'] = stats.to_dict()
-
-                    if adgroup.bid_strategy == 'cpm':
-                        adunit_data['stats']['cpm'] = adgroup.bid
-                    else:
-                        adunit_data['stats']['cpm'] = adgroup. \
-                                calculated_cpm
-                    min_cpm = min(adunit_data['stats']['cpm'], min_cpm)
-                    max_cpm = max(adunit_data['stats']['cpm'], max_cpm)
-
-                    if hasattr(network_apps_[app.key()], 'adunits'):
-                        network_apps_[app.key()].adunits.append(adunit_data)
-                    else:
-                        network_apps_[app.key()].adunits = [adunit_data]
-
-            if min_cpm == max_cpm:
-                network_apps_[app.key()].mopub_stats.cpm = min_cpm
-                network_apps_[app.key()].mopub_stats.min_cpm = None
-                network_apps_[app.key()].mopub_stats.max_cpm = None
-            else:
-                network_apps_[app.key()].mopub_stats.cpm = None
-                network_apps_[app.key()].mopub_stats.min_cpm = min_cpm
-                network_apps_[app.key()].mopub_stats.max_cpm = max_cpm
+                    app_data['adunits'] = app.adunits
+                app_data['mopub_stats'] = app.mopub_stats.to_dict()
+                if hasattr(app, 'network_stats'):
+                    app_data['network_stats'] = \
+                        StatsModel(ad_network_stats=app.network_stats).to_dict()
+                app_data['network'] = network
+                network_apps.append(app_data)
 
 
-        network_apps_ = sorted(network_apps_.values(), key=lambda app_data:
-                app_data.identifier)
+            return JSONResponse(network_apps)
 
-        network_apps = []
-        for app in network_apps_:
-            app_data = app.toJSON()
-            app_data['url'] = '/inventory/app/' + str(app.key())
-            if adunits:
-                app_data['adunits'] = app.adunits
-            app_data['mopub_stats'] = app.mopub_stats.to_dict()
-            if hasattr(app, 'network_stats'):
-                app_data['network_stats'] = \
-                    StatsModel(ad_network_stats=app.network_stats).to_dict()
-            app_data['network'] = network
-            network_apps.append(app_data)
-
-
-        return JSONResponse(network_apps)
-
-#        except Exception, exception:
-#            return JSONResponse({'error': str(exception)})
+        except Exception, exception:
+            return JSONResponse({'error': str(exception)})
 
 
     def post(self, *args, **kwagrs):

@@ -9,7 +9,7 @@ from urllib import urlencode
 from copy import deepcopy
 
 import base64, binascii
-from google.appengine.api import users, images, files
+from google.appengine.api import users, images, files, mail
 
 from google.appengine.ext import db
 
@@ -105,7 +105,13 @@ class AdGroupIndexHandler(RequestHandler):
             # Figure out which adunits are targeted by this adgroup.
             targeted_adunits = []
             for adunit_key in adgroup.site_keys:
-                adunit = adunits_dict[str(adunit_key)]
+                try:
+                    adunit = adunits_dict[str(adunit_key)]
+                except KeyError:
+                    body = "KeyError: Adgroup %s is targeting adunit %s which is not owned by %s" % (str(adgroup.key()), str(adunit_key), account.mpuser.email)
+                    mail.send_mail_to_admins(sender="olp@mopub.com",
+                                             subject="/campaigns error",
+                                             body="%s"%body)
                 if adunit.deleted:
                     continue
                 targeted_adunits.append(adunit)

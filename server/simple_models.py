@@ -330,6 +330,7 @@ class SimpleAdGroup(SimpleModel):
                  allocation_percentage=None,
                  optimizable=None,
                  default_cpm=None,
+                 network_type=None,
                  ):
         self._key = key
         self.campaign = campaign.simplify()
@@ -363,6 +364,7 @@ class SimpleAdGroup(SimpleModel):
         self.allocation_percentage = allocation_percentage
         self.optimizable = optimizable
         self.default_cpm = default_cpm
+        self.network_type = network_type
 
     def __str__(self):
         return self.__repr__()

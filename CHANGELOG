@@ -1,9 +1,19 @@
+# Deployed Tuesday, April 17, 2012 at 05:04PM PST
+### Deployed by Nafis Jamal
+### Tagged deploy-63
+### Bugs Fixed: []
+### Included Commits: 
+ * c9e6f14 added two fields: optimizable, default_cpm to the adgroup model + simple models
+ * bd09e16 A bunch of UI fixes for Fixit Day
+ * 678baa5 App Detail and AdUnit Detail -> Ad Sources: Add attempts App Detail and AdUnit Detail -> Daily Counts: Add request and conversions Campaigns Page -> Daily Counts -> Guaranteed: Add conversions partials/inventory_table: Add conversions Add/Edit Creative: Mark optional fields with placeholder text
+ * dd1c808 Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, April 17, 2012 at 12:48PM PST
 ### Deployed by Andrew He
 ### Tagged deploy-62
 ### Bugs Fixed: []
-### Included Commits: 
- 
+### Included Commits:
+
 # Deployed Monday, April 09, 2012 at 07:32PM PST
 ### Deployed by John Pena
 ### Tagged deploy-60

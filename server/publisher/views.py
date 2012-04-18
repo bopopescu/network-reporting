@@ -459,8 +459,7 @@ class AppDetailHandler(RequestHandler):
             campaign.all_stats = stats_q.get_stats_for_days(publisher=app,
                                                             advertiser=
                                                             campaign,
-                                                            days=self.days,
-                                                            use_mongo=True)
+                                                            days=self.days)
             campaign.stats = reduce(lambda x, y: x+y, campaign.all_stats,
                     StatsModel())
             #budget_object = campaign.budget_obj

@@ -318,8 +318,8 @@ $(function() {
             $('.app-pub-id')
                 .keyup(function () {
                     var value = $(this).val();
-                    var div = $(this).parents('tbody');
-                    $(div).find('input[name$="'+pub_id+'"]').each(function () {
+                    var tbody = $(this).closest('tbody');
+                    $(tbody).children().not('tr.main').find('input[name$="'+pub_id+'"]').each(function () {
                         if (!$(this).hasClass('initialized')) {
                             $(this).val(value);
                             var pub_id_value = value;
@@ -341,7 +341,7 @@ $(function() {
                 var value = $(this).val();
                 var tbody = $(this).closest('tbody');
                 $(tbody).find('.cpm-value').text(value);
-                $(tbody).find('.cpm-input input').val(value);
+                $(tbody).children().not('tr.main').find('.cpm-input input').val(value);
             });
 
             // set up active checkbox's for app level

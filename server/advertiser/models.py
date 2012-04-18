@@ -413,6 +413,7 @@ class AdGroup(db.Model):
                              allocation_percentage = self.allocation_percentage,
                              optimizable = self.optimizable,
                              default_cpm = self.default_cpm,
+                             network_type = self.network_type,
                              )
 
     def default_creative(self, custom_html=None, key_name=None):

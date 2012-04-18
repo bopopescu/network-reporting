@@ -288,13 +288,12 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
                 CampaignQueryManager.put(campaign)
 
                 # TODO: need to make sure a network type is selected if the campaign is a network campaign
-                adgroup = adgroup_form.save()
+                adgroup = adgroup_form.save(commit=False)
                 adgroup.account = campaign.account
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':
                     adgroup.network_type = None
-                adgroup.save()
 
                 #put adgroup so creative can have a reference to it
                 AdGroupQueryManager.put(adgroup)

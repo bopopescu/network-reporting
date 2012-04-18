@@ -442,7 +442,7 @@ class AdGroupForm(forms.ModelForm):
         model = AdGroup
         fields = ('name',
                   'network_type',
-                  'active',
+                  #'active',
                   'custom_html',
                   'custom_method',
                   'bid_strategy',

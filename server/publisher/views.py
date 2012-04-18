@@ -447,13 +447,19 @@ class AppDetailHandler(RequestHandler):
         adgroups = AdGroupQueryManager.get_adgroups(app=app)
         # Total: 2 GETs / 1 urlfetch per adgroup
         # 1 GET for the campaign per adgroup
-        # include deleted adunits
-        # Only include adgroups that are targeted for adunits under this app
-        # and are active
         app_adunits = set([adunit.key() for adunit in app.adunits])
+        def targeted(adgroup):
+            # If it's a new network campaign the adgroup must be targeted and
+            # active
+            if adgroup.campaign.network_type:
+                return set(adgroup.site_keys).intersection(app_adunits) and \
+                        adgroup.active
+            # Otherwiese the adgroup must be targeted
+            else:
+                return set(adgroup.site_keys).intersection(app_adunits)
+
         app.campaigns = dict([(adgroup._campaign, adgroup.campaign) for
-            adgroup in adgroups if set(adgroup.site_keys).intersection(
-                app_adunits) and adgroup.active]).values()
+            adgroup in adgroups if targeted(adgroup)]).values()
 
         for campaign in app.campaigns:
             # Used for non new network campaigns

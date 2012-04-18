@@ -1,14 +1,26 @@
+# Deployed Wednesday, April 18, 2012 at 07:27PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-70
+### Bugs Fixed: []
+### Included Commits: 
+ * 70eb9f6 AdGroup filtering in app details view differs if it's a new network campaign or an old one
+ * d0227af Fixed edit network js cursor problem on ad network id and cpm fields
+ * 4275e39 Merge branch 'master' into networks-page
+ * 325e7ca Added spinner for network details, not showing un targeted network campaigns in app details view, sort apps by name then by type in edit network view
+ * 8da0717 [#1137 state:resolved]
+ * b4f0a77 fixed some odd bugs with the networks form
+ 
 # Deployed Wednesday, April 18, 2012 at 06:06PM PST
 ### Deployed by John Pena
 ### Tagged deploy-69
 ### Bugs Fixed: ['1137']
-### Included Commits: 
- * c9bdbb9 removed active from adgroup form and only put to db via query manager [#1137 state:fixed]
- * fa7aff7 Merge branch 'master' of github.com:mopub/mopub
- * f1c9ded Deployed without finding any bug fixes.
- * da90a91 Merge branch 'master' of github.com:mopub/mopub
- * 45917f4 added network type to simple models
- 
+### Included Commits:
+* c9bdbb9 removed active from adgroup form and only put to db via query manager [#1137 state:fixed]
+* fa7aff7 Merge branch 'master' of github.com:mopub/mopub
+* f1c9ded Deployed without finding any bug fixes.
+* da90a91 Merge branch 'master' of github.com:mopub/mopub
+* 45917f4 added network type to simple models
+
 # Deployed Wednesday, April 18, 2012 at 08:55AM PST
 ### Deployed by Andrew He
 ### Tagged deploy-68

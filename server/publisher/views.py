@@ -453,13 +453,14 @@ class AppDetailHandler(RequestHandler):
         for campaign in app.campaigns:
             # Used for non new network campaigns
             if not campaign.network_type:
-                campaign.adgroup = adgroups[0]
+                campaign.adgroup = campaign.adgroups[0]
 
             # 1 GET
-            campaign.all_stats = stats_q.get_stats_for_days(publisher = app,
-                                                            advertiser =
+            campaign.all_stats = stats_q.get_stats_for_days(publisher=app,
+                                                            advertiser=
                                                             campaign,
-                                                            days = self.days)
+                                                            days=self.days,
+                                                            use_mongo=True)
             campaign.stats = reduce(lambda x, y: x+y, campaign.all_stats,
                     StatsModel())
             #budget_object = campaign.budget_obj

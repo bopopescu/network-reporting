@@ -1,12 +1,23 @@
+# Deployed Wednesday, April 18, 2012 at 06:06PM PST
+### Deployed by John Pena
+### Tagged deploy-69
+### Bugs Fixed: ['1137']
+### Included Commits: 
+ * c9bdbb9 removed active from adgroup form and only put to db via query manager [#1137 state:fixed]
+ * fa7aff7 Merge branch 'master' of github.com:mopub/mopub
+ * f1c9ded Deployed without finding any bug fixes.
+ * da90a91 Merge branch 'master' of github.com:mopub/mopub
+ * 45917f4 added network type to simple models
+ 
 # Deployed Wednesday, April 18, 2012 at 08:55AM PST
 ### Deployed by Andrew He
 ### Tagged deploy-68
 ### Bugs Fixed: []
-### Included Commits: 
- * 7091266 Catch KeyError in AdGroupIndexHandler and email admins if the error occurs
- * 55ce362 Removed debug prints
- * 0b31b07 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 7091266 Catch KeyError in AdGroupIndexHandler and email admins if the error occurs
+* 55ce362 Removed debug prints
+* 0b31b07 Deployed without finding any bug fixes.
+
 # Deployed Wednesday, April 18, 2012 at 04:39AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-67

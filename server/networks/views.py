@@ -262,6 +262,9 @@ class EditNetworkHandler(RequestHandler):
             min_cpm = 9999.9
             max_cpm = 0.0
             for adunit in app.all_adunits:
+                if adunit.deleted:
+                    continue
+
                 adgroup = None
                 if campaign_key:
                     adgroup = AdGroupQueryManager.get_network_adgroup(

@@ -96,6 +96,15 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                 advertiser=campaign, format_stats=False)
         return campaign_stats
 
+    def get_campaign_specific_app_stats(self, app_key, campaign,
+                                        start, end, *args, **kwargs):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        adgroup = CampaignQueryManager.get(campaign_key)
+        app_stats = self._get_publisher_stats(start, end, publisher=app,
+                                              advertiser=campaign)
+        return app_stats
+
     def get_app_stats(self, app_key, start, end, *args, **kwargs):
         # mongo
         app = AppQueryManager.get(app_key)

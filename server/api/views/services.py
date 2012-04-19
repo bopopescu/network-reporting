@@ -48,7 +48,7 @@ class AppService(RequestHandler):
     """
     API Service for delivering serialized App data
     """
-    def get(self, app_key=None, adgroup_key=None):
+    def get(self, app_key=None, adgroup_key=None, campaign_key=None):
 
         # make sure app_key/adgroup_key are for apps/adgroups that
         # belong to this user
@@ -60,6 +60,11 @@ class AppService(RequestHandler):
         if adgroup_key:
             adgroup = AdGroupQueryManager.get(adgroup_key)
             if adgroup.account.key() != self.account.key():
+                raise Http404
+
+        if campaign_key:
+            campaign = CampaignQueryManager.get(adgroup_key)
+            if campaign.account.key() != self.account.key():
                 raise Http404
 
         # Where are we getting stats from?
@@ -80,11 +85,17 @@ class AppService(RequestHandler):
         for app in apps:
 
             # if the adgroup key was specified, then we only want the app's
-            # stats to reflect how it performed within that adgroup.
+            # stats to reflect how it performed within that adgroup. Likewise
+            # for campaign.
             if adgroup_key:
 
                 app.update(stats.get_adgroup_specific_app_stats(str(app['id']),
                                                                 adgroup_key,
+                                                                self.start_date,
+                                                                self.end_date))
+            elif campaign_key:
+                app.update(stats.get_campaign_specific_app_stats(str(app['id']),
+                                                                campaign_key,
                                                                 self.start_date,
                                                                 self.end_date))
             else:

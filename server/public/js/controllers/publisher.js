@@ -794,9 +794,6 @@ var mopub = mopub || {};
     }
 
     function createChart(series, element, account_data, options) {
-
-        console.log(account_data);
-
         var all_chart_data = _.map(account_data, function(range, i){
             var individual_series_data = {
                 data: _.map(range, function(datapoint, j){
@@ -810,14 +807,14 @@ var mopub = mopub || {};
                         timeslice = j;
                     }
 
-                    return { 
-                        x: j, 
-                        y: datapoint[series] 
+                    return {
+                        x: j,
+                        y: datapoint[series]
                     };
                 }),
                 stroke: COLOR_THEME.stroke[i],
                 color: COLOR_THEME.color[i]
-            };            
+            };
             return individual_series_data;
         });
 
@@ -828,9 +825,9 @@ var mopub = mopub || {};
 
         // Create the new chart with our series data
         var chart = new Rickshaw.Graph({
-            element: document.querySelector(element), 
-            width: 550, 
-            height: 150, 
+            element: document.querySelector(element),
+            width: 550,
+            height: 150,
             renderer: 'area',
             stroke: true,
             series: all_chart_data
@@ -838,8 +835,8 @@ var mopub = mopub || {};
 
         var hoverDetail = new Rickshaw.Graph.HoverDetail( {
             graph: chart,
-            width: 550, 
-            height: 150, 
+            width: 550,
+            height: 150,
             xFormatter: function(x) { return x; },
             yFormatter: function(y) { return format_stat(series, y); }
         });
@@ -849,8 +846,8 @@ var mopub = mopub || {};
 	        ticksTreatment: 'glow',
         });
         xAxis.render();
-        
-        var yAxis = new Rickshaw.Graph.Axis.Y({ 
+
+        var yAxis = new Rickshaw.Graph.Axis.Y({
 	        graph: chart,
 	        tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
 	        ticksTreatment: 'glow'
@@ -1116,32 +1113,55 @@ var mopub = mopub || {};
             }
 
             function get_keys(type) {
-                return _.map($('tr.' + type + ' input:checked'), function (input) {
-                    return $(input).closest('tr').attr('id');
+                return _.map($('tr.' + type + '.selected'), function (tr) {
+                    return tr.id;
                 });
             }
 
             function get_advertiser_type() {
-                if($('tr.source input:checked').length) {
+                // if nothing is checked, return null
+                if($('tr.selected', 'table#advertiser').length === 0) {
+                    return null;
+                }
+
+                var use_source = true;
+                $('tr.source', 'table#advertiser').each(function (index, source) {
+                    if(!$(source).hasClass('selected')) {
+                        $(source).nextUntil('tr.source').each(function (index, campaign) {
+                            if($(campaign).hasClass('selected')) {
+                                use_source = false;
+                            }
+                        });
+                    }
+                });
+                if(use_source) {
                     return 'source';
                 }
-                if($('tr.campaign input:checked').length) {
-                    return 'campaign';
-                }
-                if($('tr.adgroup input:checked').length) {
-                    return 'adgroup';
-                }
-                return null;
+
+                return 'campaign';
             }
 
             function get_publisher_type() {
-                if($('tr.app input:checked').length) {
+                // if nothing is checked, return null
+                if($('tr.selected', 'table#publisher').length === 0) {
+                    return null;
+                }
+
+                var use_app = true;
+                $('tr.app', 'table#publisher').each(function (index, app) {
+                    if(!$(app).hasClass('selected')) {
+                        $(app).nextUntil('tr.app').each(function (index, adunit) {
+                            if($(adunit).hasClass('selected')) {
+                                use_app = false;
+                            }
+                        });
+                    }
+                });
+                if(use_app) {
                     return 'app';
                 }
-                if($('tr.adunit input:checked').length) {
-                    return 'adunit';
-                }
-                return null;
+
+                return 'adunit';
             }
 
             function get_advertiser_query(advertiser) {
@@ -1253,9 +1273,13 @@ var mopub = mopub || {};
                 }
 
                 var advertiser_type = get_advertiser_type();
+                console.log(advertiser_type);
                 var advertiser_query = get_advertiser_query(advertiser_type);
+                console.log(advertiser_query);
                 var publisher_type = get_publisher_type();
+                console.log(publisher_type);
                 var publisher_query = get_publisher_query(publisher_type);
+                console.log(publisher_query);
 
                 if(update_rollups_and_charts) {
 
@@ -1328,7 +1352,7 @@ var mopub = mopub || {};
 
                                         //update_charts(start, end, chart_data);
                                         initializeDashboardCharts(start, end, charts_data);
-                                        
+
                                     } else {
                                         update_rollups(json.sum[0]);
                                         var charts_data = [json[granularity][0]];
@@ -1541,10 +1565,10 @@ var mopub = mopub || {};
             }
 
             function update_sources(data, publisher_query, order, columns, selected, sources) {
-                _.each(sources, function (source, source_id) {
+                _.each(sources, function (source) {
                     var $source = $(render_filter_row(source, columns));
                     $('table#advertiser tr#' + source.id).replaceWith($source);
-                    if(source_id == 'direct' || source_id == 'network') {
+                    if(source.id == 'direct' || source.id == 'network') {
                         var campaign_data = _.clone(data);
                         campaign_data.granularity = 'top';
                         campaign_data.query = [_.extend(_.clone(publisher_query), {
@@ -1784,7 +1808,7 @@ var mopub = mopub || {};
                     .each(function (index, option) {
                         $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== advertiser_type));
                 });
-                
+
                 var publisher_type = get_publisher_type();
                 $('#export_wizard select[name="publisher_breakdown"]').children('option').each(function (index, option) {
                     $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== publisher_type));
@@ -1794,7 +1818,7 @@ var mopub = mopub || {};
 
             $('button#download').click(function () {
 
-                // Hide the modal when the download button is clicked. 
+                // Hide the modal when the download button is clicked.
                 $('#export_wizard').modal('hide');
 
 
@@ -1815,7 +1839,7 @@ var mopub = mopub || {};
                         case 'two_weeks':
                             start = new Date(end - 86400000 * 13);
                             break;
-                        default: start = end;                        
+                        default: start = end;
                     }
                 }
 

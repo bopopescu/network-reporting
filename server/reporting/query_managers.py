@@ -250,58 +250,19 @@ class StatsModelQueryManager(CachedQueryManager):
 
         #### BEGIN USE MONGOSTATS API ####
 
-        # we only want to get our data from mongostats API if we are not explicitly trying
-        # to get offline data (from GAE, i.e. 'offline=True') or explicitly don't want
-        # data from mongo
-        # TODO: remove this conditional so that we always use mongo data in all of our UI
-        #       including the admin page
-        if not offline and self.account_obj and self.account_obj.display_mongo and use_mongo:
-            realtime_stats = mongostats.api_fetch(start_date=days[0],
-                                              end_date=days[-1],
-                                              account_key=account,
-                                              publisher_key=publisher,
-                                              advertiser_key=advertiser,
-                                              )
+        # we only want to get our data from mongostats API including uniq user counts
+        # note that offline=True is now ineffective
 
-            # In order to get unique user counts we must also get the offline stats
-            # from the GAE datastore:
-            # Currently the UI only needs 'user_count' for the following types of queries
-            # (Account-*-*) and (Account-<Any Pub>-*)
-            # TODO: remove the if statement so that we always have this data available
-            # TODO: monogstats should be able to provide this data as well so we don't have to
-            #       do two queries (one to API one Datastore lookup)
-            if (account and not publisher and not advertiser) or \
-                (account and publisher and not advertiser):
-
-                # db get
-                offline_stats = StatsModel.get(keys)
-
-                # we patch the user_count data from the offline stats if possible
-                for rt_stat, offline_stat in zip(realtime_stats, offline_stats):
-                    rt_stat.user_count = offline_stat.user_count if offline_stat else 0
-
-            return realtime_stats
+        realtime_stats = mongostats.api_fetch(start_date=days[0],
+                                          end_date=days[-1],
+                                          account_key=account,
+                                          publisher_key=publisher,
+                                          advertiser_key=advertiser,
+                                          )
+        return realtime_stats
 
         #### END USE MONGOSTATS API ####
 
-        days_len = len(days)
-
-        stats = StatsModel.get(keys) # db get
-        #since pubs iterates more than once around days, stats might be too long
-        #but it should only iterate on MULTIPLES of days_len, so ct mod days_len
-
-        final_stats = []
-        for i,(key,stat) in enumerate(zip(keys,stats)):
-            if not stat:
-                pub_string = key.name().split(':')[1] # k:<publisher>:<advertiser>:<date>
-                publisher = db.Key(pub_string) if pub_string else None
-                stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()), account=account, publisher=publisher, advertiser=advertiser)
-                # if not self.offline:
-                #     self._patch_mongodb_stats(stat)
-            stat.include_geo = self.include_geo
-            final_stats.append(stat)
-
-        return final_stats
 
     def accumulate_stats(self, stat):
         self.stats.append(stat)

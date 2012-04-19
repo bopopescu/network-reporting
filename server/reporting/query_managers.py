@@ -250,19 +250,35 @@ class StatsModelQueryManager(CachedQueryManager):
 
         #### BEGIN USE MONGOSTATS API ####
 
-        # we only want to get our data from mongostats API including uniq user counts
-        # note that offline=True is now ineffective
-
-        realtime_stats = mongostats.api_fetch(start_date=days[0],
-                                          end_date=days[-1],
-                                          account_key=account,
-                                          publisher_key=publisher,
-                                          advertiser_key=advertiser,
-                                          )
-        return realtime_stats
+        if use_mongo:
+            realtime_stats = mongostats.api_fetch(start_date=days[0],
+                                              end_date=days[-1],
+                                              account_key=account,
+                                              publisher_key=publisher,
+                                              advertiser_key=advertiser,
+                                              )
+            return realtime_stats
 
         #### END USE MONGOSTATS API ####
 
+        days_len = len(days)
+
+        stats = StatsModel.get(keys) # db get
+        #since pubs iterates more than once around days, stats might be too long
+        #but it should only iterate on MULTIPLES of days_len, so ct mod days_len
+
+        final_stats = []
+        for i,(key,stat) in enumerate(zip(keys,stats)):
+            if not stat:
+                pub_string = key.name().split(':')[1] # k:<publisher>:<advertiser>:<date>
+                publisher = db.Key(pub_string) if pub_string else None
+                stat = stat or StatsModel(date=datetime.datetime.combine(days[i%days_len],datetime.time()), account=account, publisher=publisher, advertiser=advertiser)
+                # if not self.offline:
+                #     self._patch_mongodb_stats(stat)
+            stat.include_geo = self.include_geo
+            final_stats.append(stat)
+
+        return final_stats
 
     def accumulate_stats(self, stat):
         self.stats.append(stat)

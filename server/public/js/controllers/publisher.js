@@ -15,8 +15,8 @@ var mopub = mopub || {};
 (function($, Backbone, _){
 
     var COLOR_THEME = {
-            stroke: ['#C8CFD6', '#9EB1C1'],
-            color: ['#E5F1FB', '#A3C1DA']
+        secondary: ['#C8CFD6', '#9EB1C1'],
+        primary:   ['#E5F1FB', '#A3C1DA']
     };
 
 
@@ -793,6 +793,7 @@ var mopub = mopub || {};
         });
     }
 
+
     function createChart(series, element, account_data, options) {
 
         console.log(account_data);
@@ -815,8 +816,8 @@ var mopub = mopub || {};
                         y: datapoint[series] 
                     };
                 }),
-                stroke: COLOR_THEME.stroke[i],
-                color: COLOR_THEME.color[i]
+                stroke: COLOR_THEME.secondary[i],
+                color: COLOR_THEME.primary[i]
             };            
             return individual_series_data;
         });
@@ -1381,122 +1382,6 @@ var mopub = mopub || {};
                     } else {
                         rollup.children('div.delta').html('');
                     }
-                });
-            }
-
-            function update_charts(start, end, data) {
-                _.each(get_charts(), function (stat) {
-                    // chart
-                    var chart = d3.select('#' + stat + ' svg g');
-                    chart.selectAll('*').remove();
-
-                    var min;
-                    var max;
-                    var serieses = _.map(data, function (datum) {
-                        return _.map(datum, function (slice) {
-                            var value = slice[stat];
-                            if(!min || value < min) min = value;
-                            if(!max || value > max) max = value;
-                            return value;
-                        });
-                    });
-
-                    /* TODO: reimplement this
-                    if(granularity == 'daily') {
-                        end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-                    }
-                    */
-
-                    if(max == min) {
-                        max = min + 1;
-                    }
-                    var y = d3.scale.linear().domain([min, max]).range([MARGIN_BOTTOM, HEIGHT - MARGIN_TOP]);
-                    var x = d3.scale.linear().domain([start, end]).range([MARGIN_LEFT, WIDTH - MARGIN_RIGHT]);
-
-                    // Lines
-                    var line = d3.svg.line()
-                        .x(function(d, i) { return x(start.getTime()+(end-start)*i/(serieses[0].length - 1)); })
-                        .y(function(d) { return -1 * y(d); });
-
-                    _.each(serieses, function (series) {
-                        chart.append("svg:path").attr("d", line(series));
-                    });
-
-                    // X Axis
-                    var x_label = function (d) {
-                        d = new Date(d);
-                        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
-                    };
-                    var interval = 86400000;
-                    /* TODO: reimplement this
-                    if(granularity == 'hourly' && end - start <= 2 * 86400000) {
-                        x_label = function (d) {
-                            return date_to_string(new Date(d));
-                        };
-                        interval = 3600000;
-                    }
-                    else {
-                    }
-                    */
-
-                    if(Math.round((end - start) / (interval * 5)) > 0) {
-                        interval = interval * Math.round((end - start) / (interval * 5));
-                    }
-
-                    var x_ticks = [];
-                    for(var value = start; value <= end; value = new Date(value.getTime() + interval)) {
-                        x_ticks.push(value);
-                    }
-
-                    chart.append("svg:line")
-                        .attr("x1", x(start))
-                        .attr("y1", -1 * y(min))
-                        .attr("x2", x(end))
-                        .attr("y2", -1 * y(min));
-
-                    chart.selectAll(".xLabel")
-                        .data(x_ticks)
-                        .enter().append("svg:text")
-                        .attr("class", "xLabel")
-                        .text(x_label)
-                        .attr("x", function(d) { return x(d); })
-                        .attr("y", 0)
-                        .attr("text-anchor", "middle");
-
-                    chart.selectAll(".xTicks")
-                        .data(x_ticks)
-                        .enter().append("svg:line")
-                        .attr("class", "xTicks")
-                        .attr("x1", function(d) { return x(d); })
-                        .attr("y1", -1 * y(min))
-                        .attr("x2", function(d) { return x(d); })
-                        .attr("y2", -1 * (y(min) - 4));
-
-                    // Y AXIS
-                    chart.append("svg:line")
-                        .attr("x1", x(start))
-                        .attr("y1", -1 * y(min))
-                        .attr("x2", x(start))
-                        .attr("y2", -1 * y(max));
-
-                    chart.selectAll(".yTicks")
-                        .data(y.ticks(4))
-                        .enter().append("svg:line")
-                        .attr("class", "yTicks")
-                        .attr("y1", function(d) { return -1 * y(d); })
-                        .attr("x1", x(start) - 4)
-                        .attr("y2", function(d) { return -1 * y(d); })
-                        .attr("x2", x(start));
-
-                    chart.selectAll(".yLabel")
-                        .data(y.ticks(4))
-                        .enter().append("svg:text")
-                        .attr("class", "yLabel")
-                        .text(function(d) { return number_compact(d, 1); })
-                        .attr("x", MARGIN_LEFT - 5)
-                        .attr("y", function(d) { return -1 * y(d); })
-                        .attr("text-anchor", "end")
-                        .attr("dy", 4);
                 });
             }
 

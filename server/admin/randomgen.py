@@ -38,8 +38,8 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
 #Configuration Parameters for data generation
 ####
 
-USERNAME = "test1@mopub.com"
-PASSWORD = "test1"
+USERNAME = "test@mopub.com"
+PASSWORD = "test"
 
 NUM_ACCOUNTS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
 NUM_APPS = 2
@@ -385,6 +385,8 @@ def main():
             cur_date+=day
 
 
+# NOTE: main method for new network campaign creation
+# TODO: merge main method above
 def main_():
     account = generate_account(USERNAME,PASSWORD,USERNAME,
             display_new_networks=True)
@@ -503,10 +505,10 @@ def main_():
         network_totals = {}
         app_totals = {}
         for mapper in AdNetworkMapperManager.get_mappers(account):
-            revenue = random.random() * 10000
-            attempts = random.randint(1, 100000)
-            impressions = random.randint(1, attempts)
-            clicks = random.randint(1, impressions)
+            attempts = random.randint(0,10000)
+            impressions = int(random.random()*attempts)
+            clicks = int(random.random()*impressions)
+            revenue = clicks*.5
             stats = AdNetworkScrapeStats(revenue=revenue,
                                          attempts=attempts,
                                          impressions=impressions,

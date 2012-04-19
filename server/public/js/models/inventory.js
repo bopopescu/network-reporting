@@ -84,50 +84,6 @@ var mopub = mopub || {};
 
 
     /*
-     * ## NetworkApp Model
-     * contains two StatsModels one for network collected stats the other for
-     * mopub collected stats
-     */
-    var NetworkApp = Backbone.Model.extend({
-    });
-
-
-    /*
-     * ## NetworkApp Collection
-     */
-    var NetworkApps = Backbone.Collection.extend({
-        model: NetworkApp,
-
-        parse: function(response) {
-            var this_collection = this;
-
-            $.each(response, function (iter, network_app) {
-                network_app.mopub_stats = new StatsModel(network_app.mopub_stats);
-                if (network_app.network_stats) {
-                    network_app.network_stats = new StatsModel(network_app.network_stats);
-                } else {
-                    network_app.network_stats = false;
-                }
-
-                if (this_collection.type == 'adunits') {
-                    _.each(network_app.adunits, function (adunit) {
-                        adunit.stats = new StatsModel(adunit.stats);
-                    });
-                }
-            });
-            return response;
-        },
-
-        url: function() {
-            if (this.type == 'adunits') {
-                return '/api/network_apps/' + this.campaign_key + '/adunits';
-            }
-            return '/api/network_apps/' + this.campaign_key;
-        }
-    });
-
-
-    /*
      * ## StatsModel
      */
     var StatsModel = Backbone.Model.extend({
@@ -508,11 +464,46 @@ var mopub = mopub || {};
 
 
     /*
+     * ## NetworkApp Collection
+     */
+    var NetworkApps = Backbone.Collection.extend({
+        model: App,
+
+        parse: function(response) {
+            var this_collection = this;
+
+            _.each(response, function (network_app) {
+                network_app.mopub_stats = new StatsModel(network_app.mopub_stats);
+
+                if (network_app.network_stats) {
+                    network_app.network_stats = new StatsModel(network_app.network_stats);
+                } else {
+                    network_app.network_stats = false;
+                }
+
+                if (this_collection.type == 'adunits') {
+                    _.each(network_app.adunits, function (adunit) {
+                        adunit.stats = new StatsModel(adunit.stats);
+                    });
+                }
+            });
+            return response;
+        },
+
+        url: function() {
+            if (this.type == 'adunits') {
+                return '/api/network_apps/' + this.campaign_key + '/adunits';
+            }
+            return '/api/network_apps/' + this.campaign_key;
+        }
+    });
+
+
+    /*
      * EXPOSE HIS JUNK
      * (We should find a better way to do this.)
      */
     window.StatsModel = StatsModel;
-    window.NetworkApp = NetworkApp;
     window.NetworkApps = NetworkApps;
     window.AdUnit = AdUnit;
     window.AdUnitCollection = AdUnitCollection;

@@ -582,6 +582,7 @@ class NetworkAppsService(RequestHandler):
             network_apps = []
             for app in network_apps_:
                 app_data = app.toJSON()
+                app_data['app_type'] = app.app_type_text()
                 app_data['url'] = '/inventory/app/' + str(app.key())
                 if adunits:
                     app_data['adunits'] = app.adunits

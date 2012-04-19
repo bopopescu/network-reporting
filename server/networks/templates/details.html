@@ -236,6 +236,9 @@
 {% endblock innerContent %}
 
 {% block extraScripts %}
+<script type="text/html" id="adunit-template">
+    {% include "networks/partials/adunit.html" %}
+</script>
 {{ block.super }}
 <script>
     $(function () {

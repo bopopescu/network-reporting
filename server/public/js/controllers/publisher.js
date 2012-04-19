@@ -39,6 +39,8 @@ var mopub = mopub || {};
      * Refactor/remove
      */
     function populateGraphWithAccountStats(stats, start_date) {
+        if (!stats.hasOwnProperty("all_stats")) return;
+        
         var dailyStats = stats["all_stats"]["||"]["daily_stats"];
 
         mopub.dashboardStatsChartData = {

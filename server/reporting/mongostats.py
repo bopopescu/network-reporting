@@ -54,7 +54,8 @@ def api_fetch(start_date, end_date,
             # 'date': '2011-12-20',
             # 'impression_count': 1634152,
             # 'request_count': 0,
-            # 'revenue': 2549.2771199999356}
+            # 'revenue': 2549.2771199999356,
+            # 'unique_users': 318572}
 
             advertiser = _key_or_none(adv_str)
             # Since request_count is overloaded we must
@@ -74,6 +75,7 @@ def api_fetch(start_date, end_date,
                              impression_count=int(stats_dict['impression_count']),
                              click_count=int(stats_dict['click_count']),
                              conversion_count=int(stats_dict['conversion_count']),
+                             user_count=int(stats_dict['unique_users']),
                              revenue=float(stats_dict['revenue']))
             stats_models.append(stats_model)
     return stats_models

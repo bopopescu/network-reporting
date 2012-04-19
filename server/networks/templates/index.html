@@ -303,6 +303,9 @@ Make a table for the main ad networks that are not setup
 {% endblock innerContent %}
 
 {% block extraScripts %}
+<script type="text/html" id="app-template">
+    {% include "networks/partials/app.html" %}
+</script>
 {{ block.super }}
 <script>
     $(function () {

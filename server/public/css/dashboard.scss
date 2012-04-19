@@ -96,6 +96,9 @@ div#filters {
         }
         tbody {
             tr {
+                &.selected {
+                    background-color: #eef;
+                }
                 &.source {
                     border-top: 2px solid #ccc;
                     font-weight: bold;
@@ -129,9 +132,8 @@ div#filters {
                 }
             }
         }
-    }
-
-    table#advertiser {
-        margin-bottom: 20px;
+        &#advertiser {
+            margin-bottom: 20px;
+        }
     }
 }

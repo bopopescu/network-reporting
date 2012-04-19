@@ -1057,7 +1057,7 @@ var mopub = mopub || {};
                 var context = {
                     type: data.type,
                     id: data.id,
-                    checked: data.checked,
+                    selected: data.selected,
                     name: names[data.id],
                     columns: columns,
                     stats: {}
@@ -1379,6 +1379,8 @@ var mopub = mopub || {};
 
             /* Tables */
             function update_advertiser_table(data, publisher_query, order, columns) {
+                selected = _.map($('tr.selected'), function (tr) { return tr.id; });
+
                 $('tr.campaign, tr.adgroup', 'table#advertiser').remove();
 
                 var source_data = _.clone(data);
@@ -1401,7 +1403,7 @@ var mopub = mopub || {};
                                 var source = {
                                     type: 'source',
                                     id: query.source[0],
-                                    checked: false, // TODO: actually see if it was checked
+                                    selected: _.include(selected, query.source[0]),
                                     stats: json.sum[index]
                                 };
                                 if(json.vs_sum.length) {
@@ -1409,106 +1411,76 @@ var mopub = mopub || {};
                                 }
                                 sources.push(source);
                             });
-                            update_sources(data, publisher_query, order, columns, sources);
+                            update_sources(data, publisher_query, order, columns, selected, sources);
                         });
                     }
                 });
             }
 
-            function update_sources(data, publisher_query, order, columns, sources) {
+            function update_sources(data, publisher_query, order, columns, selected, sources) {
                 _.each(sources, function (source, source_id) {
                     var $source = $(render_filter_row(source, columns));
                     $('table#advertiser tr#' + source.id).replaceWith($source);
+                    if(source_id == 'direct' || source_id == 'network') {
+                        var campaign_data = _.clone(data);
+                        campaign_data.granularity = 'top';
+                        campaign_data.query = [_.extend(_.clone(publisher_query), {
+                            source: [source.id],
+                            order: order,
+                            top: 'campaign'
+                        })];
 
-                    var campaign_data = _.clone(data);
-                    campaign_data.granularity = 'top';
-                    campaign_data.query = [_.extend(_.clone(publisher_query), {
-                        source: [source.id],
-                        order: order,
-                        top: 'campaign'
-                    })];
-
-                    $.jsonp({
-                        data: {
-                            data: JSON.stringify(campaign_data)
-                        },
-                        success: function(json) {
-                            // defer so exceptions show up in the console
-                            _.defer(function() {
-                                var campaigns = [];
-                                _.each(json.top[0], function(top, index) {
-                                    var campaign = {
-                                        type: 'campaign',
-                                        id: top.campaign,
-                                        checked: false, // TODO: actually see if it was checked before
-                                        stats: top
-                                    };
-                                    if(json.vs_top.length) {
-                                        campaign.vs_stats = json.vs_top[0][index];
-                                    }
-                                    campaigns.push(campaign);
+                        $.jsonp({
+                            data: {
+                                data: JSON.stringify(campaign_data)
+                            },
+                            success: function(json) {
+                                // defer so exceptions show up in the console
+                                _.defer(function() {
+                                    var campaigns = [];
+                                    _.each(json.top[0], function(top, index) {
+                                        var campaign = {
+                                            type: 'campaign',
+                                            id: top.campaign,
+                                            selected: _.include(selected, top.campaign),
+                                            stats: top
+                                        };
+                                        if(json.vs_top.length) {
+                                            campaign.vs_stats = json.vs_top[0][index];
+                                        }
+                                        campaigns.push(campaign);
+                                    });
+                                    update_campaigns(columns, selected, $source, campaigns);
                                 });
-                                update_campaigns(data, publisher_query, order, columns, $source, campaigns);
-                            });
-                        },
-                        url: URL + 'topN/'
-                    });
+                            },
+                            url: URL + 'topN/'
+                        });
+                    }
                 });
             }
 
-            function update_campaigns(data, publisher_query, order, columns, $source, campaigns) {
+            function update_campaigns(columns, selected, $source, campaigns) {
                 var $last = $source;
                 _.each(campaigns, function (campaign) {
                     var $campaign = $(render_filter_row(campaign, columns));
                     $last.after($campaign);
                     $last = $campaign;
+                });
 
-                    var adgroup_data = _.clone(data);
-                    adgroup_data.granularity = 'top';
-                    adgroup_data.query = [_.extend(_.clone(publisher_query), {
-                        campaign: [campaign.id],
-                        order: order,
-                        top: 'adgroup'
-                    })];
-
-                    $.jsonp({
-                        data: {
-                            data: JSON.stringify(adgroup_data)
-                        },
-                        success: function (json) {
-                            // defer so exceptions show up in the console
-                            _.defer(function() {
-                                var adgroups = [];
-                                _.each(json.top[0], function(top, index) {
-                                    var adgroup = {
-                                        type: 'adgroup',
-                                        id: top.adgroup,
-                                        checked: false, // TODO: actually see if it was checked before
-                                        stats: top
-                                    };
-                                    if(json.vs_top.length) {
-                                        adgroup.vs_stats = json.vs_top[0][index];
-                                    }
-                                    adgroups.push(adgroup);
-                                });
-                                update_adgroups(columns, $campaign, adgroups);
-                            });
-                        },
-                        url: URL + 'topN/'
+                // hide unselected rows' stats
+                if($('tbody tr.selected', 'table#advertiser').length === 0) {
+                    $('tbody tr td.stat span, tbody tr td.delta span', 'table#advertiser').show();
+                }
+                else {
+                    $('tbody tr', 'table#advertiser').each(function () {
+                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
                     });
-                });
-            }
-
-            function update_adgroups(columns, $campaign, adgroups) {
-                var $last = $campaign;
-                _.each(adgroups, function (adgroup) {
-                    var $adgroup = $(render_filter_row(adgroup, columns));
-                    $last.after($adgroup);
-                    $last = $adgroup;
-                });
+                }
             }
 
             function update_publisher_table(data, advertiser_query, order, columns) {
+                selected = _.map($('tr.selected'), function (tr) { return tr.id; });
+
                 $('tr.app, tr.adunit', 'table#publisher').remove();
 
                 var app_data = _.clone(data);
@@ -1530,7 +1502,7 @@ var mopub = mopub || {};
                                 var app = {
                                     type: 'app',
                                     id: top.app,
-                                    checked: false, // TODO: actually see if it was checked before
+                                    selected: _.include(selected, top.app),
                                     stats: top
                                 };
                                 if(json.vs_top.length) {
@@ -1538,14 +1510,14 @@ var mopub = mopub || {};
                                 }
                                 apps.push(app);
                             });
-                            update_apps(data, advertiser_query, order, columns, apps);
+                            update_apps(data, advertiser_query, order, columns, selected, apps);
                         });
                     },
                     url: URL + 'topN/'
                 });
             }
 
-            function update_apps(data, advertiser_query, order, columns, apps) {
+            function update_apps(data, advertiser_query, order, columns, selected, apps) {
                 $publisher_table = $('table#publisher tbody');
                 _.each(apps, function (app) {
                     var $app = $(render_filter_row(app, columns));
@@ -1571,7 +1543,7 @@ var mopub = mopub || {};
                                     var adunit = {
                                         type: 'adunit',
                                         id: top.adunit,
-                                        checked: false, // TODO: actually see if it was checked before
+                                        selected: _.include(selected, top.adunit),
                                         stats: top
                                     };
                                     if(json.vs_top.length) {
@@ -1579,7 +1551,7 @@ var mopub = mopub || {};
                                     }
                                     adunits.push(adunit);
                                 });
-                                update_adunits(columns, $app, adunits);
+                                update_adunits(columns, selected, $app, adunits);
                             });
                         },
                         url: URL + 'topN/'
@@ -1587,13 +1559,23 @@ var mopub = mopub || {};
                 });
             }
 
-            function update_adunits(columns, $app, adunits) {
+            function update_adunits(columns, selected, $app, adunits) {
                 var $last = $app;
                 _.each(adunits, function (adunit) {
                     var $adunit = $(render_filter_row(adunit, columns));
                     $last.after($adunit);
                     $last = $adunit;
                 });
+
+                // hide unselected rows' stats
+                if($('tbody tr.selected', 'table#publisher').length === 0) {
+                    $('tbody tr td.stat span, tbody tr td.delta span', 'table#publisher').show();
+                }
+                else {
+                    $('tbody tr', 'table#publisher').each(function () {
+                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
+                    });
+                }
             }
 
             /* Controls */
@@ -1740,57 +1722,72 @@ var mopub = mopub || {};
             /* Advertiser Table */
             var advertiser_table = $('table#advertiser');
 
-            // check/uncheck sources
-            $('tr.source input', advertiser_table).live('click', function () {
-                if(this.checked) {
-                    $('tr.campaign input, tr.adgroup input')
-                        .prop('checked', false)
-                        .hide();
+            // select sources
+            $('tbody tr.source', advertiser_table).live('click', function () {
+                $(this).toggleClass('selected');
+
+                // select or deselect this source's campaigns
+                if($(this).hasClass('selected')) {
+                    $(this).nextUntil('.source').addClass('selected');
                 }
                 else{
-                    // if no sources are checked, show campaign and adgroup checkboxes
-                    var checked = false;
-                    $('tr.source').each(function (index, tr) {
-                        if($(tr).find('input').prop('checked')) {
-                            checked = true;
-                        }
-                    });
-                    if(!checked) {
-                        $('tr.campaign input, tr.adgroup input').show();
-                    }
+                    $(this).nextUntil('.source').removeClass('selected');
                 }
 
-                update_dashboard(true, false, true);
-            });
-
-            // check/uncheck campaigns
-            $('tr.campaign input', advertiser_table).live('click', function () {
-                if(this.checked) {
-                    $('tr.adgroup input')
-                        .prop('checked', false)
-                        .hide();
+                // hide unselected rows' stats
+                if($('tbody tr.selected', advertiser_table).length === 0) {
+                    $('tbody tr td.stat span, tbody tr td.delta span', advertiser_table).show();
                 }
                 else {
-                    // if no campaigns are checked, show adgroup checkboxes
-                    var checked = false;
-                    $('tr.campaign').each(function (index, tr) {
-                        if($(tr).find('input').prop('checked')) {
-                            checked = true;
-                        }
+                    $('tbody tr', advertiser_table).each(function () {
+                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
                     });
-                    if(!checked) {
-                        $('tr.adgroup input').show();
-                    }
                 }
 
                 update_dashboard(true, false, true);
             });
 
-            // check/uncheck adgroups
-            $('tr.adgroup input', advertiser_table).live('click', function () {
+            // select campaigns
+            $('tbody tr.campaign', advertiser_table).live('click', function () {
+                $(this).toggleClass('selected');
+
+                // TODO: there has to be a better way to select this...
+                $source = $(this).prev();
+                while(!$source.hasClass('source')) {
+                    $source = $source.prev();
+                }
+                if($(this).hasClass('selected')) {
+                    var selected = true;
+                    $source.nextUntil('.source').each(function () {
+                        if(!$(this).hasClass('selected')) {
+                            selected = false;
+                        }
+                    });
+                    if(selected) {
+                        $source.addClass('selected');
+                    }
+                    else {
+                        $source.removeClass('selected');
+                    }
+                }
+                else {
+                    $source.removeClass('selected');
+                }
+
+                // hide unselected rows' stats
+                if($('tbody tr.selected', advertiser_table).length === 0) {
+                    $('tbody tr td.stat span, tbody tr td.delta span', advertiser_table).show();
+                }
+                else {
+                    $('tbody tr', advertiser_table).each(function () {
+                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
+                    });
+                }
+
                 update_dashboard(true, false, true);
             });
 
+            /*
             // expand adgroups
             $('tr.campaign button.expand', advertiser_table).live('click', function () {
                 $(this).closest('tr').nextUntil('tr.campaign').show();
@@ -1804,38 +1801,77 @@ var mopub = mopub || {};
                 $(this).removeClass('collapse');
                 $(this).addClass('expand');
             });
+            */
 
             /* Publisher Table */
             var publisher_table = $('table#publisher');
 
-            // check/uncheck apps
-            $('tr.app input', publisher_table).live('click', function () {
-                if(this.checked) {
-                    $('tr.adunit input')
-                        .prop('checked', false)
-                        .hide();
+            // select apps
+            $('tbody tr.app', publisher_table).live('click', function () {
+                $(this).toggleClass('selected');
+
+                // select or deselect this source's campaigns
+                if($(this).hasClass('selected')) {
+                    $(this).nextUntil('.app').addClass('selected');
                 }
                 else{
-                    // if no apps are checked, show adunit checkboxes
-                    var checked = false;
-                    $('tr.app').each(function (index, tr) {
-                        if($(tr).find('input').prop('checked')) {
-                            checked = true;
-                        }
+                    $(this).nextUntil('.app').removeClass('selected');
+                }
+
+                // hide unselected rows' stats
+                if($('tbody tr.selected', publisher_table).length === 0) {
+                    $('tbody tr td.stat span, tbody tr td.delta span', publisher_table).show();
+                }
+                else {
+                    $('tbody tr', publisher_table).each(function () {
+                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
                     });
-                    if(!checked) {
-                        $('tr.adunit input').show();
-                    }
                 }
 
                 update_dashboard(true, true, false);
             });
 
-            // check/uncheck adunits
-            $('tr.adunit input', publisher_table).live('click', function () {
+            // select adunits
+            $('tbody tr.adunit', publisher_table).live('click', function () {
+                $(this).toggleClass('selected');
+
+                // TODO: there has to be a better way to select this...
+                $app = $(this).prev();
+                while(!$app.hasClass('app')) {
+                    $app = $app.prev();
+                }
+                if($(this).hasClass('selected')) {
+                    var selected = true;
+                    $app.nextUntil('.app').each(function () {
+                        if(!$(this).hasClass('selected')) {
+                            selected = false;
+                        }
+                    });
+                    if(selected) {
+                        $app.addClass('selected');
+                    }
+                    else {
+                        $app.removeClass('selected');
+                    }
+                }
+                else {
+                    $app.removeClass('selected');
+                }
+
+                // hide unselected rows' stats
+                if($('tbody tr.selected', publisher_table).length === 0) {
+                    $('tbody tr td.stat span, tbody tr td.delta span', publisher_table).show();
+                }
+                else {
+                    $('tbody tr', publisher_table).each(function () {
+                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
+                    });
+                }
+
                 update_dashboard(true, true, false);
             });
 
+            /*
             // expand adunits
             $('tr.app button.expand', publisher_table).live('click', function () {
                 $(this).closest('tr').nextUntil('tr.app').show();
@@ -1849,6 +1885,7 @@ var mopub = mopub || {};
                 $(this).removeClass('collapse');
                 $(this).addClass('expand');
             });
+            */
 
             update_dashboard(true, true, true);
         },

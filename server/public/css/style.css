@@ -4082,6 +4082,8 @@ div#filters {
         font-size: 14px;
         font-weight: 600;
         text-transform: none; }
+    div#filters table#advertiser tbody tr.selected, div#filters table#publisher tbody tr.selected {
+      background-color: #eef; }
     div#filters table#advertiser tbody tr.source, div#filters table#publisher tbody tr.source {
       border-top: 2px solid #ccc;
       font-weight: bold; }
@@ -4103,8 +4105,8 @@ div#filters {
         color: green; }
       div#filters table#advertiser tbody tr td.negative, div#filters table#publisher tbody tr td.negative {
         color: red; }
-  div#filters table#advertiser {
-    margin-bottom: 20px; }
+    div#filters table#advertiser#advertiser, div#filters table#publisher#advertiser {
+      margin-bottom: 20px; }
 
 /* Dashboard */
 #dashboard-stats {

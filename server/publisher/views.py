@@ -48,6 +48,7 @@ from budget import budget_service
 
 class DashboardHandler(RequestHandler):
     def get(self):
+
         marketplace_campaign = CampaignQueryManager.get_marketplace(account=self.account)
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
 

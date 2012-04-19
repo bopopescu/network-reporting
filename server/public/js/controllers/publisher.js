@@ -810,28 +810,68 @@ var mopub = mopub || {};
              * TODO: document
              *
              * bootstrapping_data: {
-             *     account: account key
+             *     account: account key,
+             *     names: {
+                       key: name
+             *     }
              * }
              */
 
-             // TODO: add error handling
+            /* Constants */
+            var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+            //var URL = 'http://localhost:8888/';
+
+            var STATS = {
+                'attempts': 'Attempts',
+                'clk': 'Clicks',
+                'conv': 'Conversions',
+                'conv_rate': 'Conversion Rate',
+                'cpm': 'CPM',
+                'ctr': 'CTR',
+                'fill_rate': 'Fill Rate',
+                'imp': 'Impressions',
+                'req': 'Requests',
+                'rev': 'Revenue'
+            };
+
+            var WIDTH = 550;
+            var HEIGHT = 150;
+
+            var MARGIN_TOP = 10;
+            var MARGIN_RIGHT = 30;
+            var MARGIN_BOTTOM = 15;
+            var MARGIN_LEFT = 50;
+
+            function calculate_stats(obj) {
+                obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
+                obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
+                obj.ctr = obj.imp === 0 ? 0 : obj.clk / obj.imp;
+                obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
+            }
+
+            /* JSONP Setup */
             $.jsonp.setup({
                 callbackParameter: "callback",
                 dataFilter: function (json) {
-                    _.each(['sum', 'daily', 'hourly', 'vs_sum', 'vs_daily', 'vs_hourly'], function (key) {
+                    _.each(['sum', 'vs_sum'], function (key) {
+                        _.each(json[key], function (obj) {
+                            calculate_stats(obj);
+                        });
+                    });
+                    _.each(['daily', 'hourly', 'vs_daily', 'vs_hourly', 'top', 'vs_top'], function (key) {
                         _.each(json[key], function (list) {
                             _.each(list, function (obj) {
-                                obj.ctr = obj.imp > 0 ? obj.clk / obj.imp : 0;
+                                calculate_stats(obj);
                             });
                         });
                     });
                     return json;
                 },
-                url: 'http://ec2-23-22-32-218.compute-1.amazonaws.com/'
+                error: toast_error,
+                url: URL
             });
 
-            /**
-             * TODO: use routers
+            /* TODO: use routers
             var Dashboard = Backbone.Router.extend({
 
                 routes: {
@@ -915,11 +955,11 @@ var mopub = mopub || {};
             /* Helpers */
             function format_stat(stat, value) {
                 switch (stat) {
+                    case 'attempts':
                     case 'clk':
-                    case 'conversions':
-                    case 'goal':
+                    case 'conv':
                     case 'imp':
-                    case 'requests':
+                    case 'req':
                         return number_compact(value, 10);
                     case 'cpm':
                     case 'rev':
@@ -928,12 +968,8 @@ var mopub = mopub || {};
                     case 'ctr':
                     case 'fill_rate':
                         return mopub.Utils.formatNumberAsPercentage(value);
-                    case 'status':
-                        return value;
-                    case 'pace':
-                        return (value*100).toFixed() + '%';
-                default:
-                    throw new Error('Unsupported stat "' + stat + '".');
+                    default:
+                        throw new Error('Unsupported stat "' + stat + '".');
                 }
             }
 
@@ -956,55 +992,16 @@ var mopub = mopub || {};
                 return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate() + '-' + date.getHours();
             }
 
-            function update_rows(type, base_data, base_query) {
-                var data = _.clone(base_data);
-                data.query = [];
-                $('tr.' + type).each(function (index, tr) {
-                    var query = _.clone(base_query);
-                    query[type] = [tr.id];
-                    data.query.push(query);
-                });
+            function get_charts() {
+                return ['rev', 'imp', 'clk', 'ctr'];
+            }
 
-                $.jsonp({
-                    data: {
-                        data: JSON.stringify(data)
-                    },
-                    success: function (json, textStatus) {
-                        _.each(data.query, function(query, index) {
-                            var tr = $('#' + query[type]);
-                            _.each(['rev', 'imp', 'clk', 'ctr'], function (stat) {
-                                var value = json.sum[index][stat];
-                                $('td.' + stat, tr).html(format_stat(stat, value));
-                                if(json.vs_sum.length) {
-                                    var td = $('td.' + stat + '_delta', tr);
-                                    var vs_value = json.vs_sum[index][stat];
-                                    if(vs_value !== 0) {
-                                        var delta = (value - vs_value) / vs_value;
-                                        delta = Math.round(delta*100);
-                                        if(delta > 0) {
-                                            delta = '+' + delta;
-                                            td.addClass('positive');
-                                            td.removeClass('negative');
-                                        }
-                                        else if(delta < 0) {
-                                            td.addClass('negative');
-                                            td.removeClass('positive');
-                                        }
-                                        else {
-                                            delta = '~' + delta;
-                                            td.removeClass('negative');
-                                            td.removeClass('positive');
-                                        }
-                                        delta = delta + '%';
-                                        td.html(delta);
-                                        return;
-                                    }
-                                }
-                                $('td.' + stat + '_delta', tr).html('');
-                            });
-                        });
-                    }
-                });
+            function get_columns() {
+                return ['rev', 'imp', 'clk', 'ctr'];
+            }
+
+            function get_order() {
+                return 'rev';
             }
 
             function get_keys(type) {
@@ -1052,163 +1049,54 @@ var mopub = mopub || {};
                 return query;
             }
 
-            function update_rollups(data, vs_data) {
-                _.each(['rev', 'imp', 'clk'], function (stat) {
-                    var rollup = $('#' + stat + ' > div');
-                    rollup.children('div.value').html(format_stat(stat, data[stat]));
-                    if(vs_data && vs_data[stat] !== 0) {
-                        var delta = rollup.children('div.delta');
-                        var val = Math.round(100 * (data[stat] - vs_data[stat]) / vs_data[stat]);
-                        var html = '';
-                        if(val > 0) {
-                            html += '+';
-                            delta.removeClass('negative');
-                            delta.addClass('positive');
-                        }
-                        else if(val < 0) {
-                            delta.removeClass('positive');
-                            delta.addClass('negative');
+            /* Templates */
+            var filter_row = _.template($('#filter_row').html());
+            var names = bootstrapping_data.names;
+
+            function render_filter_row(data, columns) {
+                var context = {
+                    type: data.type,
+                    id: data.id,
+                    checked: data.checked,
+                    name: names[data.id],
+                    columns: columns,
+                    stats: {}
+                };
+
+                _.each(columns, function (stat) {
+                    context.stats[stat] = format_stat(stat, data.stats[stat]);
+                });
+
+                if('vs_stats' in data) {
+                    context.stats_delta = {};
+                    context.stats_delta_class = {};
+                    _.each(columns, function (stat) {
+                        if(data.vs_stats[stat] === 0) {
+                            context.stats_delta[stat] = '';
+                            context.stats_delta_class[stat] = '';
                         }
                         else {
-                            html += '~';
-                            delta.removeClass('positive');
-                            delta.removeClass('negative');
+                            var delta = Math.round(100 * (data.stats[stat] - data.vs_stats[stat]) / data.vs_stats[stat]);
+                            if(delta === 0) {
+                                context.stats_delta[stat] = '~0%';
+                                context.stats_delta_class[stat] = '';
+                            }
+                            else if(delta < 0) {
+                                context.stats_delta[stat] = delta + '%';
+                                context.stats_delta_class[stat] = 'negative';
+                            }
+                            else {
+                                context.stats_delta[stat] = '+' + delta + '%';
+                                context.stats_delta_class[stat] = 'positive';
+                            }
                         }
-                        html += val + '%';
-                        delta.html(html);
-                    }
-                    else {
-                        rollup.children('div.delta').html('');
-                    }
-                });
+                    });
+                }
+
+                return filter_row(context);
             }
 
-            function update_charts(start, end, data) {
-                _.each(['rev', 'imp', 'clk'], function (stat) {
-                    // chart
-                    var chart = d3.select('#' + stat + ' svg g');
-                    chart.selectAll('*').remove();
-
-                    var min;
-                    var max;
-                    var serieses = _.map(data, function (datum) {
-                        return _.map(datum, function (slice) {
-                            var value = slice[stat];
-                            if(!min || value < min) min = value;
-                            if(!max || value > max) max = value;
-                            return value;
-                        });
-                    });
-
-                    /* TODO: reimplement this
-                    if(granularity == 'daily') {
-                        end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-                    }
-                    */
-
-                    if(max == min) {
-                        max = min + 1;
-                    }
-                    var y = d3.scale.linear().domain([min, max]).range([MARGIN_BOTTOM, HEIGHT - MARGIN_TOP]);
-                    var x = d3.scale.linear().domain([start, end]).range([MARGIN_LEFT, WIDTH - MARGIN_RIGHT]);
-
-                    // Lines
-                    var line = d3.svg.line()
-                        .x(function(d, i) { return x(start.getTime()+(end-start)*i/(serieses[0].length - 1)); })
-                        .y(function(d) { return -1 * y(d); });
-
-                    _.each(serieses, function (series) {
-                        chart.append("svg:path").attr("d", line(series));
-                    });
-
-                    // X Axis
-                    var x_label = function (d) {
-                        d = new Date(d);
-                        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
-                    };
-                    var interval = 86400000;
-                    /* TODO: reimplement this
-                    if(granularity == 'hourly' && end - start <= 2 * 86400000) {
-                        x_label = function (d) {
-                            return date_to_string(new Date(d));
-                        };
-                        interval = 3600000;
-                    }
-                    else {
-                    }
-                    */
-
-                    if(Math.round((end - start) / (interval * 5)) > 0) {
-                        interval = interval * Math.round((end - start) / (interval * 5));
-                    }
-
-                    var x_ticks = [];
-                    for(var value = start; value <= end; value = new Date(value.getTime() + interval)) {
-                        x_ticks.push(value);
-                    }
-
-                    chart.append("svg:line")
-                        .attr("x1", x(start))
-                        .attr("y1", -1 * y(min))
-                        .attr("x2", x(end))
-                        .attr("y2", -1 * y(min));
-
-                    chart.selectAll(".xLabel")
-                        .data(x_ticks)
-                        .enter().append("svg:text")
-                        .attr("class", "xLabel")
-                        .text(x_label)
-                        .attr("x", function(d) { return x(d); })
-                        .attr("y", 0)
-                        .attr("text-anchor", "middle");
-
-                    chart.selectAll(".xTicks")
-                        .data(x_ticks)
-                        .enter().append("svg:line")
-                        .attr("class", "xTicks")
-                        .attr("x1", function(d) { return x(d); })
-                        .attr("y1", -1 * y(min))
-                        .attr("x2", function(d) { return x(d); })
-                        .attr("y2", -1 * (y(min) - 4));
-
-                    // Y AXIS
-                    chart.append("svg:line")
-                        .attr("x1", x(start))
-                        .attr("y1", -1 * y(min))
-                        .attr("x2", x(start))
-                        .attr("y2", -1 * y(max));
-
-                    chart.selectAll(".yTicks")
-                        .data(y.ticks(4))
-                        .enter().append("svg:line")
-                        .attr("class", "yTicks")
-                        .attr("y1", function(d) { return -1 * y(d); })
-                        .attr("x1", x(start) - 4)
-                        .attr("y2", function(d) { return -1 * y(d); })
-                        .attr("x2", x(start));
-
-                    chart.selectAll(".yLabel")
-                        .data(y.ticks(4))
-                        .enter().append("svg:text")
-                        .attr("class", "yLabel")
-                        .text(function(d) { return number_compact(d, 1); })
-                        .attr("x", MARGIN_LEFT - 5)
-                        .attr("y", function(d) { return -1 * y(d); })
-                        .attr("text-anchor", "end")
-                        .attr("dy", 4);
-                });
-            }
-
-            /* Constants */
-            var WIDTH = 550;
-            var HEIGHT = 150;
-
-            var MARGIN_TOP = 10;
-            var MARGIN_RIGHT = 30;
-            var MARGIN_BOTTOM = 15;
-            var MARGIN_LEFT = 50;
-
-            function update_dashboard(update_rollups_and_charts, update_advertiser_table, update_publisher_table) {
+            function update_dashboard(update_rollups_and_charts, advertiser_table, publisher_table) {
                 var start, end;
                 if($('select[name="date_range"]').val() == 'custom') {
                     start = new Date($("#datepicker-start-input").val());
@@ -1330,22 +1218,382 @@ var mopub = mopub || {};
                     }
                 }
 
-                if(update_advertiser_table) {
-                    update_rows('source', data, publisher_query);
-                    update_rows('campaign', data, publisher_query);
+                var order = get_order();
+                var columns = get_columns();
+
+                if(advertiser_table) {
+                    update_advertiser_table(data, publisher_query, order, columns);
                 }
 
-                if(update_publisher_table) {
-                    update_rows('app', data, advertiser_query);
+                if(publisher_table) {
+                    update_publisher_table(data, advertiser_query, order, columns);
                 }
+            }
 
-                if(update_advertiser_table) {
-                    update_rows('adgroup', data, publisher_query);
-                }
+            function update_rollups(data, vs_data) {
+                _.each(get_charts(), function (stat) {
+                    var rollup = $('#' + stat + ' > div');
+                    rollup.children('div.value').html(format_stat(stat, data[stat]));
+                    if(vs_data && vs_data[stat] !== 0) {
+                        var delta = rollup.children('div.delta');
+                        var val = Math.round(100 * (data[stat] - vs_data[stat]) / vs_data[stat]);
+                        var html = '';
+                        if(val > 0) {
+                            html += '+';
+                            delta.removeClass('negative');
+                            delta.addClass('positive');
+                        }
+                        else if(val < 0) {
+                            delta.removeClass('positive');
+                            delta.addClass('negative');
+                        }
+                        else {
+                            html += '~';
+                            delta.removeClass('positive');
+                            delta.removeClass('negative');
+                        }
+                        html += val + '%';
+                        delta.html(html);
+                    }
+                    else {
+                        rollup.children('div.delta').html('');
+                    }
+                });
+            }
 
-                if(update_publisher_table) {
-                    update_rows('adunit', data, advertiser_query);
-                }
+            function update_charts(start, end, data) {
+                _.each(get_charts(), function (stat) {
+                    // chart
+                    var chart = d3.select('#' + stat + ' svg g');
+                    chart.selectAll('*').remove();
+
+                    var min;
+                    var max;
+                    var serieses = _.map(data, function (datum) {
+                        return _.map(datum, function (slice) {
+                            var value = slice[stat];
+                            if(!min || value < min) min = value;
+                            if(!max || value > max) max = value;
+                            return value;
+                        });
+                    });
+
+                    /* TODO: reimplement this
+                    if(granularity == 'daily') {
+                        end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+                    }
+                    */
+
+                    if(max == min) {
+                        max = min + 1;
+                    }
+                    var y = d3.scale.linear().domain([min, max]).range([MARGIN_BOTTOM, HEIGHT - MARGIN_TOP]);
+                    var x = d3.scale.linear().domain([start, end]).range([MARGIN_LEFT, WIDTH - MARGIN_RIGHT]);
+
+                    // Lines
+                    var line = d3.svg.line()
+                        .x(function(d, i) { return x(start.getTime()+(end-start)*i/(serieses[0].length - 1)); })
+                        .y(function(d) { return -1 * y(d); });
+
+                    _.each(serieses, function (series) {
+                        chart.append("svg:path").attr("d", line(series));
+                    });
+
+                    // X Axis
+                    var x_label = function (d) {
+                        d = new Date(d);
+                        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+                    };
+                    var interval = 86400000;
+                    /* TODO: reimplement this
+                    if(granularity == 'hourly' && end - start <= 2 * 86400000) {
+                        x_label = function (d) {
+                            return date_to_string(new Date(d));
+                        };
+                        interval = 3600000;
+                    }
+                    else {
+                    }
+                    */
+
+                    if(Math.round((end - start) / (interval * 5)) > 0) {
+                        interval = interval * Math.round((end - start) / (interval * 5));
+                    }
+
+                    var x_ticks = [];
+                    for(var value = start; value <= end; value = new Date(value.getTime() + interval)) {
+                        x_ticks.push(value);
+                    }
+
+                    chart.append("svg:line")
+                        .attr("x1", x(start))
+                        .attr("y1", -1 * y(min))
+                        .attr("x2", x(end))
+                        .attr("y2", -1 * y(min));
+
+                    chart.selectAll(".xLabel")
+                        .data(x_ticks)
+                        .enter().append("svg:text")
+                        .attr("class", "xLabel")
+                        .text(x_label)
+                        .attr("x", function(d) { return x(d); })
+                        .attr("y", 0)
+                        .attr("text-anchor", "middle");
+
+                    chart.selectAll(".xTicks")
+                        .data(x_ticks)
+                        .enter().append("svg:line")
+                        .attr("class", "xTicks")
+                        .attr("x1", function(d) { return x(d); })
+                        .attr("y1", -1 * y(min))
+                        .attr("x2", function(d) { return x(d); })
+                        .attr("y2", -1 * (y(min) - 4));
+
+                    // Y AXIS
+                    chart.append("svg:line")
+                        .attr("x1", x(start))
+                        .attr("y1", -1 * y(min))
+                        .attr("x2", x(start))
+                        .attr("y2", -1 * y(max));
+
+                    chart.selectAll(".yTicks")
+                        .data(y.ticks(4))
+                        .enter().append("svg:line")
+                        .attr("class", "yTicks")
+                        .attr("y1", function(d) { return -1 * y(d); })
+                        .attr("x1", x(start) - 4)
+                        .attr("y2", function(d) { return -1 * y(d); })
+                        .attr("x2", x(start));
+
+                    chart.selectAll(".yLabel")
+                        .data(y.ticks(4))
+                        .enter().append("svg:text")
+                        .attr("class", "yLabel")
+                        .text(function(d) { return number_compact(d, 1); })
+                        .attr("x", MARGIN_LEFT - 5)
+                        .attr("y", function(d) { return -1 * y(d); })
+                        .attr("text-anchor", "end")
+                        .attr("dy", 4);
+                });
+            }
+
+            /* Tables */
+            function update_advertiser_table(data, publisher_query, order, columns) {
+                $('tr.campaign, tr.adgroup', 'table#advertiser').remove();
+
+                var source_data = _.clone(data);
+                source_data.query = [];
+                $('tr.source', 'table#advertiser').each(function (index, tr) {
+                    var query = _.clone(publisher_query);
+                    query.source = [tr.id];
+                    source_data.query.push(query);
+                });
+
+                $.jsonp({
+                    data: {
+                        data: JSON.stringify(source_data)
+                    },
+                    success: function (json) {
+                        // defer so exceptions show up in the console
+                        _.defer(function() {
+                            var sources = [];
+                            _.each(source_data.query, function(query, index) {
+                                var source = {
+                                    type: 'source',
+                                    id: query.source[0],
+                                    checked: false, // TODO: actually see if it was checked
+                                    stats: json.sum[index]
+                                };
+                                if(json.vs_sum.length) {
+                                    source.vs_stats = json.vs_sum[index];
+                                }
+                                sources.push(source);
+                            });
+                            update_sources(data, publisher_query, order, columns, sources);
+                        });
+                    }
+                });
+            }
+
+            function update_sources(data, publisher_query, order, columns, sources) {
+                _.each(sources, function (source, source_id) {
+                    var $source = $(render_filter_row(source, columns));
+                    $('table#advertiser tr#' + source.id).replaceWith($source);
+
+                    var campaign_data = _.clone(data);
+                    campaign_data.granularity = 'top';
+                    campaign_data.query = [_.extend(_.clone(publisher_query), {
+                        source: [source.id],
+                        order: order,
+                        top: 'campaign'
+                    })];
+
+                    $.jsonp({
+                        data: {
+                            data: JSON.stringify(campaign_data)
+                        },
+                        success: function(json) {
+                            // defer so exceptions show up in the console
+                            _.defer(function() {
+                                var campaigns = [];
+                                _.each(json.top[0], function(top, index) {
+                                    var campaign = {
+                                        type: 'campaign',
+                                        id: top.campaign,
+                                        checked: false, // TODO: actually see if it was checked before
+                                        stats: top
+                                    };
+                                    if(json.vs_top.length) {
+                                        campaign.vs_stats = json.vs_top[0][index];
+                                    }
+                                    campaigns.push(campaign);
+                                });
+                                update_campaigns(data, publisher_query, order, columns, $source, campaigns);
+                            });
+                        },
+                        url: URL + 'topN/'
+                    });
+                });
+            }
+
+            function update_campaigns(data, publisher_query, order, columns, $source, campaigns) {
+                var $last = $source;
+                _.each(campaigns, function (campaign) {
+                    var $campaign = $(render_filter_row(campaign, columns));
+                    $last.after($campaign);
+                    $last = $campaign;
+
+                    var adgroup_data = _.clone(data);
+                    adgroup_data.granularity = 'top';
+                    adgroup_data.query = [_.extend(_.clone(publisher_query), {
+                        campaign: [campaign.id],
+                        order: order,
+                        top: 'adgroup'
+                    })];
+
+                    $.jsonp({
+                        data: {
+                            data: JSON.stringify(adgroup_data)
+                        },
+                        success: function (json) {
+                            // defer so exceptions show up in the console
+                            _.defer(function() {
+                                var adgroups = [];
+                                _.each(json.top[0], function(top, index) {
+                                    var adgroup = {
+                                        type: 'adgroup',
+                                        id: top.adgroup,
+                                        checked: false, // TODO: actually see if it was checked before
+                                        stats: top
+                                    };
+                                    if(json.vs_top.length) {
+                                        adgroup.vs_stats = json.vs_top[0][index];
+                                    }
+                                    adgroups.push(adgroup);
+                                });
+                                update_adgroups(columns, $campaign, adgroups);
+                            });
+                        },
+                        url: URL + 'topN/'
+                    });
+                });
+            }
+
+            function update_adgroups(columns, $campaign, adgroups) {
+                var $last = $campaign;
+                _.each(adgroups, function (adgroup) {
+                    var $adgroup = $(render_filter_row(adgroup, columns));
+                    $last.after($adgroup);
+                    $last = $adgroup;
+                });
+            }
+
+            function update_publisher_table(data, advertiser_query, order, columns) {
+                $('tr.app, tr.adunit', 'table#publisher').remove();
+
+                var app_data = _.clone(data);
+                app_data.granularity = 'top';
+                app_data.query = [_.extend(_.clone(advertiser_query), {
+                    order: order,
+                    top: 'app'
+                })];
+
+                $.jsonp({
+                    data: {
+                        data: JSON.stringify(app_data)
+                    },
+                    success: function(json) {
+                        // defer so exceptions show up in the console
+                        _.defer(function() {
+                            var apps = [];
+                            _.each(json.top[0], function(top, index) {
+                                var app = {
+                                    type: 'app',
+                                    id: top.app,
+                                    checked: false, // TODO: actually see if it was checked before
+                                    stats: top
+                                };
+                                if(json.vs_top.length) {
+                                    app.vs_stats = json.vs_top[0][index];
+                                }
+                                apps.push(app);
+                            });
+                            update_apps(data, advertiser_query, order, columns, apps);
+                        });
+                    },
+                    url: URL + 'topN/'
+                });
+            }
+
+            function update_apps(data, advertiser_query, order, columns, apps) {
+                $publisher_table = $('table#publisher tbody');
+                _.each(apps, function (app) {
+                    var $app = $(render_filter_row(app, columns));
+                    $publisher_table.append($app);
+
+                    var adunit_data = _.clone(data);
+                    adunit_data.granularity = 'top';
+                    adunit_data.query = [_.extend(_.clone(advertiser_query), {
+                        app: [app.id],
+                        order: order,
+                        top: 'adunit'
+                    })];
+
+                    $.jsonp({
+                        data: {
+                            data: JSON.stringify(adunit_data)
+                        },
+                        success: function (json) {
+                            // defer so exceptions show up in the console
+                            _.defer(function() {
+                                var adunits = [];
+                                _.each(json.top[0], function(top, index) {
+                                    var adunit = {
+                                        type: 'adunit',
+                                        id: top.adunit,
+                                        checked: false, // TODO: actually see if it was checked before
+                                        stats: top
+                                    };
+                                    if(json.vs_top.length) {
+                                        adunit.vs_stats = json.vs_top[0][index];
+                                    }
+                                    adunits.push(adunit);
+                                });
+                                update_adunits(columns, $app, adunits);
+                            });
+                        },
+                        url: URL + 'topN/'
+                    });
+                });
+            }
+
+            function update_adunits(columns, $app, adunits) {
+                var $last = $app;
+                _.each(adunits, function (adunit) {
+                    var $adunit = $(render_filter_row(adunit, columns));
+                    $last.after($adunit);
+                    $last = $adunit;
+                });
             }
 
             /* Controls */
@@ -1485,15 +1733,15 @@ var mopub = mopub || {};
                     names: names
                 };
 
-                window.location = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/csv/?data=' + JSON.stringify(data);
+                window.location = URL + 'csv/?data=' + JSON.stringify(data);
 
             });
 
-            /* Campaigns Table */
-            var campaigns_table = $('table#campaigns');
+            /* Advertiser Table */
+            var advertiser_table = $('table#advertiser');
 
             // check/uncheck sources
-            $('tr.source input', campaigns_table).click(function () {
+            $('tr.source input', advertiser_table).live('click', function () {
                 if(this.checked) {
                     $('tr.campaign input, tr.adgroup input')
                         .prop('checked', false)
@@ -1512,11 +1760,11 @@ var mopub = mopub || {};
                     }
                 }
 
-                update_dashboard(true, true, true);
+                update_dashboard(true, false, true);
             });
 
             // check/uncheck campaigns
-            $('tr.campaign input', campaigns_table).click(function () {
+            $('tr.campaign input', advertiser_table).live('click', function () {
                 if(this.checked) {
                     $('tr.adgroup input')
                         .prop('checked', false)
@@ -1535,33 +1783,33 @@ var mopub = mopub || {};
                     }
                 }
 
-                update_dashboard(true, true, true);
+                update_dashboard(true, false, true);
             });
 
             // check/uncheck adgroups
-            $('tr.adgroup input', campaigns_table).click(function () {
-                update_dashboard(true, true, true);
+            $('tr.adgroup input', advertiser_table).live('click', function () {
+                update_dashboard(true, false, true);
             });
 
             // expand adgroups
-            $('tr.campaign button.expand', campaigns_table).live('click', function () {
+            $('tr.campaign button.expand', advertiser_table).live('click', function () {
                 $(this).closest('tr').nextUntil('tr.campaign').show();
                 $(this).removeClass('expand');
                 $(this).addClass('collapse');
             });
 
             // collapse adgroups
-            $('tr.campaign button.collapse', campaigns_table).live('click', function () {
+            $('tr.campaign button.collapse', advertiser_table).live('click', function () {
                 $(this).closest('tr').nextUntil('tr.campaign').hide();
                 $(this).removeClass('collapse');
                 $(this).addClass('expand');
             });
 
-            /* Apps Table */
-            var apps_table = $('table#apps');
+            /* Publisher Table */
+            var publisher_table = $('table#publisher');
 
             // check/uncheck apps
-            $('tr.app input', apps_table).click(function () {
+            $('tr.app input', publisher_table).live('click', function () {
                 if(this.checked) {
                     $('tr.adunit input')
                         .prop('checked', false)
@@ -1580,23 +1828,23 @@ var mopub = mopub || {};
                     }
                 }
 
-                update_dashboard(true, true, true);
+                update_dashboard(true, true, false);
             });
 
             // check/uncheck adunits
-            $('tr.adunit input', apps_table).click(function () {
-                update_dashboard(true, true, true);
+            $('tr.adunit input', publisher_table).live('click', function () {
+                update_dashboard(true, true, false);
             });
 
             // expand adunits
-            $('tr.app button.expand', apps_table).live('click', function () {
+            $('tr.app button.expand', publisher_table).live('click', function () {
                 $(this).closest('tr').nextUntil('tr.app').show();
                 $(this).removeClass('expand');
                 $(this).addClass('collapse');
             });
 
             // collapse adunits
-            $('tr.app button.collapse', apps_table).live('click', function () {
+            $('tr.app button.collapse', publisher_table).live('click', function () {
                 $(this).closest('tr').nextUntil('tr.app').hide();
                 $(this).removeClass('collapse');
                 $(this).addClass('expand');

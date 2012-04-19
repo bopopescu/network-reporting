@@ -67,7 +67,7 @@ def start_dev_appserver():
   if hasattr(settings,'HISTORY_PATH'):
     hist_path = settings.HISTORY_PATH
 
-#  ds_path = './fixtures'
+  ds_path = '~/mopub_local_datastore.django'
   print 'Datastore Path:', ds_path
   args.extend(["--datastore_path", ds_path, "--history_path", hist_path])
 

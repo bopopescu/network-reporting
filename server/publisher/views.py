@@ -46,23 +46,34 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIExcept
 from budget import budget_service
 
 
-CAMPAIGN_LEVELS = ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo']
-
-
 class DashboardHandler(RequestHandler):
     def get(self):
-        apps = AppQueryManager.get_apps(account=self.account)
-        logging.warn(self.account.key())
-        direct_campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
+
         marketplace_campaign = CampaignQueryManager.get_marketplace(account=self.account)
         network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
 
+        apps = AppQueryManager.get_apps(account=self.account)
+
+        names = {
+            'direct': 'Direct Sold',
+            'mpx': 'Marketplace',
+            'network': 'Ad Networks',
+        }
+        for campaign in CampaignQueryManager.get_campaigns(account=self.account):
+            names[str(campaign.key())] = campaign.name
+            for adgroup in campaign.adgroups:
+                names[str(adgroup.key())] = adgroup.name
+        for app in apps:
+            names[str(app.key())] = app.name
+            for adunit in app.all_adunits:
+                names[str(adunit.key())] = adunit.name
+
         return {
             'page_width': 'wide',
-            'apps': apps,
-            'direct_campaigns': direct_campaigns,
             'marketplace_campaign': marketplace_campaign,
             'network_campaigns': network_campaigns,
+            'apps': apps,
+            'names': names,
         }
 
 

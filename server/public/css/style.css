@@ -4069,41 +4069,41 @@ div#charts {
 
 div#filters {
   margin-left: 10px; }
-  div#filters table#campaigns, div#filters table#apps {
+  div#filters table#advertiser, div#filters table#publisher {
     border: 2px solid #bbb;
     font-size: 12px; }
-    div#filters table#campaigns thead th, div#filters table#apps thead th {
+    div#filters table#advertiser thead th, div#filters table#publisher thead th {
       color: #555;
       font-weight: 300;
       padding: 5px 5px 5px 2px;
       text-transform: uppercase;
       vertical-align: bottom; }
-      div#filters table#campaigns thead th.title, div#filters table#apps thead th.title {
+      div#filters table#advertiser thead th.title, div#filters table#publisher thead th.title {
         font-size: 14px;
         font-weight: 600;
         text-transform: none; }
-    div#filters table#campaigns tbody tr.source, div#filters table#apps tbody tr.source {
+    div#filters table#advertiser tbody tr.source, div#filters table#publisher tbody tr.source {
       border-top: 2px solid #ccc;
       font-weight: bold; }
-    div#filters table#campaigns tbody tr.campaign, div#filters table#campaigns tbody tr.app, div#filters table#apps tbody tr.campaign, div#filters table#apps tbody tr.app {
+    div#filters table#advertiser tbody tr.campaign, div#filters table#advertiser tbody tr.app, div#filters table#publisher tbody tr.campaign, div#filters table#publisher tbody tr.app {
       border-top: 1px solid #ddd; }
-    div#filters table#campaigns tbody tr.adgroup, div#filters table#campaigns tbody tr.adunit, div#filters table#apps tbody tr.adgroup, div#filters table#apps tbody tr.adunit {
+    div#filters table#advertiser tbody tr.adgroup, div#filters table#advertiser tbody tr.adunit, div#filters table#publisher tbody tr.adgroup, div#filters table#publisher tbody tr.adunit {
       border-top: 1px solid #eee; }
-    div#filters table#campaigns tbody tr td, div#filters table#apps tbody tr td {
+    div#filters table#advertiser tbody tr td, div#filters table#publisher tbody tr td {
       padding: 2px; }
-      div#filters table#campaigns tbody tr td.expand_control, div#filters table#apps tbody tr td.expand_control {
+      div#filters table#advertiser tbody tr td.expand_control, div#filters table#publisher tbody tr td.expand_control {
         padding: 1px 2px; }
-        div#filters table#campaigns tbody tr td.expand_control button, div#filters table#apps tbody tr td.expand_control button {
+        div#filters table#advertiser tbody tr td.expand_control button, div#filters table#publisher tbody tr td.expand_control button {
           padding: 0 0 1px 1px; }
-          div#filters table#campaigns tbody tr td.expand_control button.expand i.icon-minus, div#filters table#apps tbody tr td.expand_control button.expand i.icon-minus {
+          div#filters table#advertiser tbody tr td.expand_control button.expand i.icon-minus, div#filters table#publisher tbody tr td.expand_control button.expand i.icon-minus {
             display: none; }
-          div#filters table#campaigns tbody tr td.expand_control button.collapse i.icon-plus, div#filters table#apps tbody tr td.expand_control button.collapse i.icon-plus {
+          div#filters table#advertiser tbody tr td.expand_control button.collapse i.icon-plus, div#filters table#publisher tbody tr td.expand_control button.collapse i.icon-plus {
             display: none; }
-      div#filters table#campaigns tbody tr td.positive, div#filters table#apps tbody tr td.positive {
+      div#filters table#advertiser tbody tr td.positive, div#filters table#publisher tbody tr td.positive {
         color: green; }
-      div#filters table#campaigns tbody tr td.negative, div#filters table#apps tbody tr td.negative {
+      div#filters table#advertiser tbody tr td.negative, div#filters table#publisher tbody tr td.negative {
         color: red; }
-  div#filters table#campaigns {
+  div#filters table#advertiser {
     margin-bottom: 20px; }
 
 /* Dashboard */

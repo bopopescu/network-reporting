@@ -65,64 +65,73 @@ class AppIndexHandler(RequestHandler):
         if len(apps) == 0:
             return HttpResponseRedirect(reverse('publisher_create_app'))
 
-        # Get stats totals for the stats breakdown pane
-        account_stats_mgr = StatsModelQueryManager(self.account, offline=self.offline)
-        totals_list = account_stats_mgr.get_stats_for_days(days=self.days)
-        today = totals_list[-1]
-        try:
-            yesterday = totals_list[-2]
-        except IndexError:
-            # If yesterday isn't within the date range or there
-            # are no stats for it, give it a blank stats model with
-            # normal defaults
-            yesterday = StatsModel()
-        totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
+        # XXX: When there are a lot of apps, the mongostats call below will fail with
+        # DeadlineExceededError. Until we can figure out how to make that call more performant,
+        # we don't really have a choice but to avoid it for certain publishers. In order to make
+        # this hack look decent, the template doesn't include the graph HTML when stats is empty.
+        # Likewise, the JS doesn't initialize the graph, since it doesn't exist. Blergh.
+        if len(apps) > 50:
+            response_dict = {}
+            stats = {}
+        else:
+            # Get stats totals for the stats breakdown pane
+            account_stats_mgr = StatsModelQueryManager(self.account, offline=self.offline)
+            totals_list = account_stats_mgr.get_stats_for_days(days=self.days)
+            today = totals_list[-1]
+            try:
+                yesterday = totals_list[-2]
+            except IndexError:
+                # If yesterday isn't within the date range or there
+                # are no stats for it, give it a blank stats model with
+                # normal defaults
+                yesterday = StatsModel()
+            totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
 
-        # this is the max active users over the date range
-        # NOT total unique users
-        totals.user_count = max([t.user_count for t in totals_list])
+            # this is the max active users over the date range
+            # NOT total unique users
+            totals.user_count = max([t.user_count for t in totals_list])
 
-        # REFACTOR: this can be removed if we remove the chart
-        # prepare account_stats object
-        key = "||"
-        stats_dict = {}
-        stats_dict[key] = {}
-        stats_dict[key]['name'] = "||"
-        stats_dict[key]['daily_stats'] = [s.to_dict() for s in totals_list]
-        summed_stats = sum(totals_list, StatsModel())
-        stats_dict[key]['sum'] = summed_stats.to_dict()
+            # REFACTOR: this can be removed if we remove the chart
+            # prepare account_stats object
+            key = "||"
+            stats_dict = {}
+            stats_dict[key] = {}
+            stats_dict[key]['name'] = "||"
+            stats_dict[key]['daily_stats'] = [s.to_dict() for s in totals_list]
+            summed_stats = sum(totals_list, StatsModel())
+            stats_dict[key]['sum'] = summed_stats.to_dict()
 
-        response_dict = {}
-        response_dict['status'] = 200
-        response_dict['all_stats'] = stats_dict
+            response_dict = {}
+            response_dict['status'] = 200
+            response_dict['all_stats'] = stats_dict
 
-        stats = {
-            'requests': {
-                'today': today.request_count,
-                'yesterday': yesterday.request_count,
-                'total': totals.request_count,
-            },
-            'impressions': {
-                'today': today.impression_count,
-                'yesterday': yesterday.impression_count,
-                'total': totals.impression_count,
-            },
-            'users': {
-                'today': today.user_count,
-                'yesterday': yesterday.user_count,
-                'total': totals.user_count
-            },
-            'ctr': {
-                'today': today.ctr,
-                'yesterday': yesterday.ctr,
-                'total': totals.ctr
-            },
-            'clicks': {
-                'today': today.click_count,
-                'yesterday': yesterday.click_count,
-                'total': totals.click_count
-            },
-        }
+            stats = {
+                'requests': {
+                    'today': today.request_count,
+                    'yesterday': yesterday.request_count,
+                    'total': totals.request_count,
+                },
+                'impressions': {
+                    'today': today.impression_count,
+                    'yesterday': yesterday.impression_count,
+                    'total': totals.impression_count,
+                },
+                'users': {
+                    'today': today.user_count,
+                    'yesterday': yesterday.user_count,
+                    'total': totals.user_count
+                },
+                'ctr': {
+                    'today': today.ctr,
+                    'yesterday': yesterday.ctr,
+                    'total': totals.ctr
+                },
+                'clicks': {
+                    'today': today.click_count,
+                    'yesterday': yesterday.click_count,
+                    'total': totals.click_count
+                },
+            }
 
         return render_to_response(self.request,
                                   'publisher/app_index.html',

@@ -149,16 +149,16 @@ class PublisherQueryManager(CachedQueryManager):
         apps_dict = cls.get_apps_dict_for_account(account)
         adunits = cls.get_adunits_dict_for_account(account).values()
 
+        for app in apps_dict.values():
+            app.adunits = []
+
         # Associate each ad unit with its app. We could have done this by looping through the apps
         # and getting each app's ad units, but that has a lot of GET overhead.
         for adunit in adunits:
             # Looks weird, but we're just avoiding adunit.app_key.key() since it incurs a fetch.
             app_key = str(AdUnit.app_key.get_value_for_datastore(adunit))
             app_for_this_adunit = apps_dict[app_key]
-            if not hasattr(app_for_this_adunit, 'adunits'):
-                app_for_this_adunit.adunits = [adunit]
-            else:
-                app_for_this_adunit.adunits += [adunit]
+            app_for_this_adunit.adunits += [adunit]
         
         return apps_dict
 

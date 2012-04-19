@@ -365,60 +365,60 @@ class CampaignService(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, campaign_key):
-        #try:
-        campaign = CampaignQueryManager.get(campaign_key)
+        try:
+            campaign = CampaignQueryManager.get(campaign_key)
 
-        # REFACTOR
-        # ensure the owner of this campaign is the request's
-        # current user
-        if not campaign or campaign.account.key() != self.account.key():
-            raise Http404
+            # REFACTOR
+            # ensure the owner of this campaign is the request's
+            # current user
+            if not campaign or campaign.account.key() != self.account.key():
+                raise Http404
 
-        # Get the stats for the campaign
-        stats_endpoint = self.request.GET.get('endpoint', 'all')
-        stats = get_stats_fetcher(self.account.key(), stats_endpoint)
-        campaign_stats = stats.get_campaign_stats(campaign_key,
-                self.start_date, self.end_date)
+            # Get the stats for the campaign
+            stats_endpoint = self.request.GET.get('endpoint', 'all')
+            stats = get_stats_fetcher(self.account.key(), stats_endpoint)
+            campaign_stats = stats.get_campaign_stats(campaign_key,
+                    self.start_date, self.end_date)
 
-        # Add old campaign stats to new ones if the query is for a legacy
-        # date, shouldn't be common so doesn't have to be super fast
-        if stats_endpoint == 'all' and campaign.transition_date and \
-                campaign._old_campaign and campaign.transition_date >= \
-                self.start_date and campaign.transition_date <= self.end_date:
-            old_campaign_stats = stats.get_campaign_stats(campaign. \
-                    _old_campaign, self.start_date, self.end_date)
-            campaign_stats = [sum(stats_for_day, StatsModel()) for \
-                    stats_for_day in zip(campaign_stats,
-                        old_campaign_stats)]
+            # Add old campaign stats to new ones if the query is for a legacy
+            # date, shouldn't be common so doesn't have to be super fast
+            if stats_endpoint == 'all' and campaign.transition_date and \
+                    campaign._old_campaign and campaign.transition_date >= \
+                    self.start_date and campaign.transition_date <= self.end_date:
+                old_campaign_stats = stats.get_campaign_stats(campaign. \
+                        _old_campaign, self.start_date, self.end_date)
+                campaign_stats = [sum(stats_for_day, StatsModel()) for \
+                        stats_for_day in zip(campaign_stats,
+                            old_campaign_stats)]
 
-        summed_stats = sum(campaign_stats, StatsModel())
+            summed_stats = sum(campaign_stats, StatsModel())
 
-        stats_dict = summed_stats.to_dict()
+            stats_dict = summed_stats.to_dict()
 
-        stats_dict['daily_stats'] = [s.to_dict() for s in campaign_stats]
+            stats_dict['daily_stats'] = [s.to_dict() for s in campaign_stats]
 
-        # Give back max and min cpm for campaign if endpoint is for
-        # mopub stats
-        if stats_endpoint == 'all':
-            adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
-                    else adgroup.calculated_cpm for adgroup in
-                    campaign.adgroups]
-            if adgroup_bids:
-                min_cpm = min(adgroup_bids)
-                max_cpm = max(adgroup_bids)
-                if min_cpm == max_cpm:
-                    stats_dict['cpm'] = max_cpm
+            # Give back max and min cpm for campaign if endpoint is for
+            # mopub stats
+            if stats_endpoint == 'all':
+                adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
+                        else adgroup.calculated_cpm for adgroup in
+                        campaign.adgroups if adgroup.active]
+                if adgroup_bids:
+                    min_cpm = min(adgroup_bids)
+                    max_cpm = max(adgroup_bids)
+                    if min_cpm == max_cpm:
+                        stats_dict['cpm'] = max_cpm
+                    else:
+                        stats_dict['cpm'] = None
+                        stats_dict['min_cpm'] = min_cpm
+                        stats_dict['max_cpm'] = max_cpm
                 else:
-                    stats_dict['cpm'] = None
-                    stats_dict['min_cpm'] = min_cpm
-                    stats_dict['max_cpm'] = max_cpm
-            else:
-                stats_dict['cpm'] = 0.0
+                    stats_dict['cpm'] = 0.0
 
 
-        return JSONResponse(stats_dict)
-#        except Exception, exception:
-#            return JSONResponse({'error': str(exception)})
+            return JSONResponse(stats_dict)
+        except Exception, exception:
+            return JSONResponse({'error': str(exception)})
 
 
     def post(self, *args, **kwagrs):

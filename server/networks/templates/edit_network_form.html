@@ -23,7 +23,7 @@
 {% block content %}
 {% if login_form %}
 <section id="network-settingsForm" class="hidden">
-    <form accept-charset="ascii" id="network-login-form">
+    <form accept-charset="ascii" id="network-login-form" autocomplete="off">
         {% if not network.show_login %}
         <fieldset class="alt login-fields" style="padding-top:20px">
             <legend>
@@ -88,7 +88,7 @@
 </section>
 {% endif %}
 
-<form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
+<form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post"  autocomplete="off">
     <fieldset>
         <div>
             <img src="/images/{{network.name}}-transparent.png"/>

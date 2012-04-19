@@ -46,7 +46,7 @@ var mopub = window.mopub || {};
                     var row = $("tr#" + network_app.id + "-row");
 
                     // Set app level mopub and network stats
-                    $.each(metrics, function (iter, metric) {
+                    _.each(metrics, function (metric) {
                         var stat = network_app.get('mopub_stats').get_stat(metric);
                         if (stat || stat == 0) {
                             var mopub_selector = '.mopub-' + metric;
@@ -66,14 +66,11 @@ var mopub = window.mopub || {};
 
                     // Set adunit level mopub and network stats
                     var renderedContent = '';
-                    $.each(network_app.get('adunits'), function (iter, adunit) {
-                        renderedContent += _.template($('#network-app-template').html(), {
+                    _.each(network_app.get('adunits'), function (adunit) {
+                        renderedContent += _.template($('#adunit-template').html(), {
                             name: adunit.name,
                             url: adunit.url,
-                            mopub_stats: adunit.stats,
-                            network_stats: false,
-                            buffer: true,
-                            icon: true,
+                            stats: adunit.stats,
                             active: adunit.active,
                         });
                     });
@@ -86,14 +83,13 @@ var mopub = window.mopub || {};
                 var renderedContent = '';
                 this.collection.each(function (network_app) {
 
-                    renderedContent += _.template($('#network-app-template').html(), {
+                    renderedContent += _.template($('#app-template').html(), {
                         name: network_app.get('name'),
+                        app_type: network_app.get('app_type'),
                         url: network_app.get('url'),
                         network: network_app.get('network'),
                         mopub_stats: network_app.get('mopub_stats'),
                         network_stats: network_app.get('network_stats'),
-                        buffer: false,
-                        icon: false,
                     });
                 });
 

@@ -65,7 +65,7 @@ ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
         'site_keys', 'name', 'bid', 'bid_strategy', 'active', 'network_type'])
 
 NETWORKS_WITH_PUB_IDS = set(['admob', 'brightroll', 'ejam', 'jumptap', \
-        'millennial', 'mobfox'])
+        'millennial', 'mobfox', 'inmobi'])
 
 class NetworksHandler(RequestHandler):
     def get(self):
@@ -122,12 +122,12 @@ class NetworksHandler(RequestHandler):
 
         # Sort networks alphabetically
         networks = sorted(networks, key=lambda network_data:
-                network_data['name'])
+                network_data['pretty_name'])
 
         networks_to_setup = []
         if not networks:
             # Generate list of primary networks that can be setup
-            for network in sorted(DEFAULT_NETWORKS):
+            for network in DEFAULT_NETWORKS:
                 network_data = {}
                 network_data['name'] = network
                 network_data['pretty_name'] = NETWORKS[network]
@@ -135,10 +135,13 @@ class NetworksHandler(RequestHandler):
                 networks_to_setup.append(network_data)
                 additional_networks.remove(network)
 
+        networks_to_setup = sorted(networks_to_setup, key=lambda
+                network_data: network_data['pretty_name'])
+
         additional_networks_ = []
         custom_networks = []
         # Generate list of additional networks that can be setup
-        for network in sorted(additional_networks):
+        for network in additional_networks:
             network_data = {}
             network_data['name'] = network
             network_data['pretty_name'] = NETWORKS[network]
@@ -148,6 +151,9 @@ class NetworksHandler(RequestHandler):
             else:
                 additional_networks_.append(network_data)
         additional_networks_ += custom_networks
+
+        additional_networks_ = sorted(additional_networks_, key=lambda
+                network_data: network_data['pretty_name'])
 
         return render_to_response(self.request,
               'networks/index.html',

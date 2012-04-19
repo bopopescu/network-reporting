@@ -404,8 +404,10 @@ def main():
     days = date_magic.gen_days(start, datetime.datetime.now())
     datapoints = []
     for day in days:
-        for adgroup in adgroups:
-            for adunit_key in adgroup.site_keys:
+        for i, adgroup in enumerate(adgroups):
+            for j, adunit_key in enumerate(adgroup.site_keys):
+                i += 1
+                j += 1
                 adunit = adunit_dict.get(adunit_key)
                 datapoints += [dict(
                     date         = day.strftime("%Y-%m-%d-00"),
@@ -418,12 +420,12 @@ def main():
                     source       = _get_source(adgroup),
                     source_type  = _get_source_type(adgroup),
                     
-                    rev          = get_stats(day)*10.0,
-                    req          = get_stats(day)*1000,
-                    imp          = get_stats(day)*900,
-                    clk          = get_stats(day)*90,
-                    conv         = get_stats(day)*0,
-                    attempts     = get_stats(day)*1000,
+                    rev          = get_stats(day)*10.0*random.random(),
+                    req          = int(get_stats(day)*1000*random.random()),
+                    imp          = int(get_stats(day)*900*random.random()),
+                    clk          = int(get_stats(day)*40*random.random()),
+                    conv         = int(get_stats(day)*random.random()),
+                    attempts     = int(get_stats(day)*1000*random.random()),
                     
                     mpx_rev      = 0,
                     mpx_req      = 0,
@@ -489,7 +491,7 @@ def _get_source_type(adgroup):
 
 import math
 def get_stats(day):    
-    return int(day.day + math.sin(day.day))
+    return int(day.day + math.sin(day.day)/3*day.day) 
     
 if __name__=="__main__":
     main()

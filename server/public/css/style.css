@@ -4299,6 +4299,8 @@ div#filters {
         color: green; }
       div#filters table#advertiser tbody tr td.negative, div#filters table#publisher tbody tr td.negative {
         color: red; }
+    div#filters table#advertiser tbody:hover, div#filters table#publisher tbody:hover {
+      cursor: pointer; }
     div#filters table#advertiser#advertiser, div#filters table#publisher#advertiser {
       margin-bottom: 20px; }
 

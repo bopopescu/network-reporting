@@ -123,6 +123,9 @@ div#filters {
                     }
                 }
             }
+            &:hover {
+                cursor: pointer;
+            }
         }
         &#advertiser {
             margin-bottom: 20px;

@@ -460,14 +460,11 @@ var mopub = window.mopub || {};
                 var selector = ''
             }
             var app_row = $('tr.app-row#app-' + this.model.id, this.el);
-            console.log('tr.app-row#app-' + this.model.id);
-            console.log($('tr.app-row#app-' + this.model.id));
-            console.log(app_row);
 
             /*jslint maxlen: 200 */
-            $('.revenue' + selector, app_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
+            $('.revenue', app_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
             $('.impressions' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('impressions')));
-            $('.ecpm' + selector, app_row).text(mopub.Utils.formatCurrency(this.model.get('ecpm')));
+            $('.ecpm', app_row).text(mopub.Utils.formatCurrency(this.model.get('ecpm')));
             $('.clicks' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
             $('.ctr' + selector, app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
             $('.fill_rate' + selector, app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));

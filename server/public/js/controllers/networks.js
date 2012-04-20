@@ -50,7 +50,7 @@ $(function() {
                         stats_endpoint: campaign.get('stats_endpoint')}});
 
             _.each(network_apps, function(app) {
-                network_app = new App(app);
+                var network_app = new App(app);
 
                 network_app.fetch({
                     error: function() {
@@ -59,9 +59,9 @@ $(function() {
                         });
                     },
                 });
-                new AppView({model: network_app,
-                             el: campaign.id + '-apps-div',
+                var app_view = new AppView({model: network_app,
                              endpoint_specific: true});
+                app_view.el = '.' + campaign.id + '-apps-div';
             });
         });
 

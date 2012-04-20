@@ -167,24 +167,19 @@ Make a table for ad networks that are active
                         <td class="dataTable-name">
                             <a href="{{ app.url }}">{{ app.name }} ({{ app.type }})</a>
                         </td>
-                        <td class="dataTable-data numeric">
-                            {% if network.reporting %}
-                            <div class="network-revenue" style="color:orange;">-</div>
-                            {% endif %}
+                        <td class="dataTable-data numeric revenue" style="color:orange;">
+                            {% if network.reporting %} - {% endif %}
                         </td>
-                        <td class="dataTable-data numeric cpm">
-                            {% if network.reporting %}
-                            <div class="network-data">-</div>
-                            {% endif %}
-                            <div class="mopub-data">-</div>
+                        <td class="dataTable-data numeric ecpm" style="color:orange;">
+                            {% if network.reporting %} - {% endif %}
                         </td>
-                        <td class="dataTable-data numeric request_count">
+                        <td class="dataTable-data numeric attempts">
                             {% if network.reporting and network.name != "mobfox" %}
                             <div class="network-data">-</div>
                             {% endif %}
                             <div class="mopub-data">-</div>
                         </td>
-                        <td class="dataTable-data numeric">
+                        <td class="dataTable-data numeric impressions">
                             {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}
@@ -196,7 +191,7 @@ Make a table for ad networks that are active
                             {% endif %}
                             <div class="mopub-data">-</div>
                         </td>
-                        <td class="dataTable-data numeric click_count">
+                        <td class="dataTable-data numeric clicks">
                             {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}

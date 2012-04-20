@@ -978,7 +978,7 @@ var mopub = mopub || {};
             /* Constants */
 
             var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-            var URL = 'http://localhost:8888/';
+            //var URL = 'http://localhost:8888/';
 
             var STATS = {
                 'attempts': 'Attempts',
@@ -1037,6 +1037,10 @@ var mopub = mopub || {};
                 'req',
                 'rev'
             ];
+
+            var MAX_CAMPAIGNS = 6;
+            var MAX_APPS = 12;
+            var MAX_ADUNITS = 6;
 
             var WIDTH = 550;
             var HEIGHT = 150;
@@ -1386,7 +1390,7 @@ var mopub = mopub || {};
                     var rollups_and_charts_data = _.clone(data);
                     var granularity = $('select[name="granularity"]').val();
                     rollups_and_charts_data.granularity = granularity;
-                    rollups_and_charts_data.query = [_.extend(advertiser_query, publisher_query)];
+                    rollups_and_charts_data.query = [_.extend(_.clone(advertiser_query), publisher_query)];
 
                     if($('[name="advertiser_compare"]').is(':checked')) {
 
@@ -1447,8 +1451,8 @@ var mopub = mopub || {};
                                         update_rollups(json.sum[0], json.vs_sum[0]);
 
                                         charts_data = [
-                                            _.extend(json[granularity][0], { name: 'This Period' }),
-                                            _.extend(json['vs_' + granularity][0], { name: 'Comparison Period' })
+                                            _.extend(_.clone(json[granularity][0]), { name: 'This Period' }),
+                                            _.extend(_.clone(json['vs_' + granularity][0]), { name: 'Comparison Period' })
                                         ];
                                     } else {
                                         update_rollups(json.sum[0]);
@@ -1566,7 +1570,7 @@ var mopub = mopub || {};
                                         var campaign = {
                                             type: 'campaign',
                                             id: top.campaign,
-                                            selected: _.include(selected, top.campaign),
+                                            selected: _.include(selected, source.id) || _.include(selected, top.campaign),
                                             stats: top
                                         };
                                         if(json.vs_top.length) {
@@ -1574,7 +1578,7 @@ var mopub = mopub || {};
                                         }
                                         campaigns.push(campaign);
                                     });
-                                    update_campaigns(order, selected, $source, campaigns, order);
+                                    update_campaigns(order, $source, campaigns, order);
                                 });
                             },
                             url: URL + 'topN/'
@@ -1583,10 +1587,10 @@ var mopub = mopub || {};
                 });
             }
 
-            function update_campaigns(order, selected, $source, campaigns) {
+            function update_campaigns(order, $source, campaigns, order) {
                 var $last = $source;
                 _.each(campaigns, function (campaign, index) {
-                    var $campaign = $(render_filter_body_row(campaign, ADVERTISER_COLUMNS, ADVERTISER_DEFAULT_COLUMNS, order, $('table#advertiser th.hidden').length, index > 2));
+                    var $campaign = $(render_filter_body_row(campaign, ADVERTISER_COLUMNS, ADVERTISER_DEFAULT_COLUMNS, order, $('table#advertiser th.hidden').length, index >= MAX_CAMPAIGNS));
                     $last.after($campaign);
                     $last = $campaign;
                 });
@@ -1644,7 +1648,7 @@ var mopub = mopub || {};
             function update_apps(data, advertiser_query, order, selected, apps) {
                 $publisher_table = $('table#publisher tbody');
                 _.each(apps, function (app, index) {
-                    var $app = $(render_filter_body_row(app, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, $('table#publisher th.hidden').length, index > 2));
+                    var $app = $(render_filter_body_row(app, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, $('table#publisher th.hidden').length, index >= MAX_APPS));
                     $publisher_table.append($app);
 
                     var adunit_data = _.clone(data);
@@ -1667,7 +1671,7 @@ var mopub = mopub || {};
                                     var adunit = {
                                         type: 'adunit',
                                         id: top.adunit,
-                                        selected: _.include(selected, top.adunit),
+                                        selected: _.include(selected, app.id) || _.include(selected, top.adunit),
                                         stats: top
                                     };
                                     if(json.vs_top.length) {
@@ -1675,7 +1679,7 @@ var mopub = mopub || {};
                                     }
                                     adunits.push(adunit);
                                 });
-                                update_adunits(order, selected, $app, adunits);
+                                update_adunits(order, $app, adunits, $('table#publisher th.hidden').length, index >= MAX_APPS);
                             });
                         },
                         url: URL + 'topN/'
@@ -1683,10 +1687,10 @@ var mopub = mopub || {};
                 });
             }
 
-            function update_adunits(order, selected, $app, adunits) {
+            function update_adunits(order, $app, adunits, hide) {
                 var $last = $app;
                 _.each(adunits, function (adunit, index) {
-                    var $adunit = $(render_filter_body_row(adunit, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, $('table#publisher th.hidden').length, index > 2));
+                    var $adunit = $(render_filter_body_row(adunit, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, hide || $('table#publisher th.hidden').length, index >= MAX_ADUNITS));
                     $last.after($adunit);
                     $last = $adunit;
                 });
@@ -1869,6 +1873,12 @@ var mopub = mopub || {};
                 $('th.sortable', 'table#advertiser').removeClass('sorted');
                 $('th.' + order, 'table#advertiser').addClass('sorted');
 
+                _.each(ADVERTISER_COLUMNS, function (column) {
+                    if(!_.include(ADVERTISER_DEFAULT_COLUMNS, column) && column !== get_advertiser_order()) {
+                        $('td.' + column + ', th.' + column, 'table#advertiser').addClass('hidden');
+                    }
+                });
+
                 update_dashboard(false, true, false);
             });
 
@@ -1885,6 +1895,12 @@ var mopub = mopub || {};
 
                 $('th.sortable', 'table#publisher').removeClass('sorted');
                 $('th.' + order, 'table#publisher').addClass('sorted');
+
+                _.each(PUBLISHER_COLUMNS, function (column) {
+                    if(!_.include(PUBLISHER_DEFAULT_COLUMNS, column) && column !== get_publisher_order()) {
+                        $('td.' + column + ', th.' + column, 'table#publisher').addClass('hidden');
+                    }
+                });
 
                 update_dashboard(false, false, true);
             });

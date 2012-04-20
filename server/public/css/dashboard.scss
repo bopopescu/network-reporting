@@ -9,11 +9,11 @@ div#controls {
     }
 }
 
-div#charts, div#filters {
+div#charts, div#advertiser_filters, div#publisher_filters {
     float: left;
 }
 
-#charts {
+div#charts {
     border: 2px solid #bbb;
     width: 650px;
 
@@ -60,12 +60,11 @@ div#charts, div#filters {
 
 }
 
-div#filters {
+div#advertiser_filters, div#publisher_filters {
     margin-left: 10px;
     table#advertiser, table#publisher {
         border: 2px solid #bbb;
         font-size: 12px;
-        float: left;
         thead {
             th {
                 color: #555;
@@ -88,18 +87,16 @@ div#filters {
         }
         tbody {
             tr {
+                cursor: pointer;
                 &.selected {
                     background-color: #eef;
                 }
-                &.source {
-                    border-top: 2px solid #ccc;
+                &.source, &.app {
+                    border-top: 2px solid #bbb;
                     font-weight: bold;
                 }
-                &.campaign, &.app {
+                &.campaign, &.adunit {
                     border-top: 1px solid #ddd;
-                }
-                &.adgroup, &.adunit {
-                    border-top: 1px solid #eee;
                 }
                 td {
                     padding: 2px;
@@ -123,12 +120,6 @@ div#filters {
                     }
                 }
             }
-            &:hover {
-                cursor: pointer;
-            }
-        }
-        &#advertiser {
-            margin-bottom: 20px;
         }
     }
 }

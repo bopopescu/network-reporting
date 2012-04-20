@@ -815,7 +815,7 @@ var mopub = mopub || {};
                 }),
                 stroke: COLOR_THEME.secondary[i],
                 color: COLOR_THEME.primary[i]
-            };            
+            };
             return individual_series_data;
         });
 
@@ -955,6 +955,12 @@ var mopub = mopub || {};
                 'conv_rate'
             ];
 
+            var ADVERTISER_DEFAULT_COLUMNS = [
+                'rev',
+                'imp',
+                'clk'
+            ];
+
             var PUBLISHER_COLUMNS = [
                 'rev',
                 'imp',
@@ -966,6 +972,12 @@ var mopub = mopub || {};
                 'conv_rate',
                 'fill_rate',
                 'req'
+            ];
+
+            var PUBLISHER_DEFAULT_COLUMNS = [
+                'rev',
+                'imp',
+                'clk'
             ];
 
             var SORTABLE_COLUMNS = [
@@ -1143,8 +1155,12 @@ var mopub = mopub || {};
                 return ['rev', 'imp', 'clk', 'ctr'];
             }
 
-            function get_order() {
-                return $('#order').val();
+            function get_advertiser_order() {
+                return $('#advertiser_order').val();
+            }
+
+            function get_publisher_order() {
+                return $('#publisher_order').val();
             }
 
             function get_keys(type) {
@@ -1219,14 +1235,17 @@ var mopub = mopub || {};
             var filter_body_row = _.template($('#filter_body_row').html());
             var names = bootstrapping_data.names;
 
-            function render_filter_body_row(data, columns, order) {
+            function render_filter_body_row(data, columns, default_columns, order, hidden, hide) {
                 var context = {
                     type: data.type,
                     id: data.id,
                     selected: data.selected,
                     name: names[data.id],
                     columns: columns,
-                    order: order,
+                    default_columns: default_columns,
+                    hidden: hidden,
+                    hide: hide,
+                    sorted: order,
                     stats: {}
                 };
 
@@ -1309,13 +1328,9 @@ var mopub = mopub || {};
                 }
 
                 var advertiser_type = get_advertiser_type();
-                console.log(advertiser_type);
                 var advertiser_query = get_advertiser_query(advertiser_type);
-                console.log(advertiser_query);
                 var publisher_type = get_publisher_type();
-                console.log(publisher_type);
                 var publisher_query = get_publisher_query(publisher_type);
-                console.log(publisher_query);
 
                 if(update_rollups_and_charts) {
 
@@ -1378,39 +1393,32 @@ var mopub = mopub || {};
                             success: function (json, textStatus) {
                                 // defer so exceptions show up in the console
                                 _.defer(function() {
+                                    var charts_data;
                                     if(json.vs_sum.length) {
                                         update_rollups(json.sum[0], json.vs_sum[0]);
 
-                                        var charts_data = [
+                                        charts_data = [
                                             _.extend(json[granularity][0], { name: 'This Period' }),
                                             _.extend(json['vs_' + granularity][0], { name: 'Comparison Period' })
                                         ];
-
-                                        //update_charts(start, end, chart_data);
-                                        initializeDashboardCharts(start, end, charts_data);
-
                                     } else {
                                         update_rollups(json.sum[0]);
-                                        var charts_data = [json[granularity][0]];
-
-                                        //update_charts(start, end, chart_data);
-                                        initializeDashboardCharts(start, end, charts_data);
+                                        charts_data = [json[granularity][0]];
                                     }
+                                    initializeDashboardCharts(start, end, charts_data);
                                 });
                             }
                         });
                     }
                 }
-
-                var order = get_order();
                 var columns = get_columns();
 
                 if (advertiser_table) {
-                    update_advertiser_table(data, publisher_query, order, columns);
+                    update_advertiser_table(data, publisher_query, get_advertiser_order(), columns);
                 }
 
                 if (publisher_table) {
-                    update_publisher_table(data, advertiser_query, order, columns);
+                    update_publisher_table(data, advertiser_query, get_publisher_order(), columns);
                 }
             }
 
@@ -1448,13 +1456,13 @@ var mopub = mopub || {};
             function update_advertiser_table(data, publisher_query, order) {
                 selected = _.map($('tr.selected'), function (tr) { return tr.id; });
 
-                $('tr.campaign, tr.adgroup', 'table#advertiser').remove();
+                $('tr.source, tr.campaign, tr.adgroup', 'table#advertiser').remove();
 
                 var source_data = _.clone(data);
                 source_data.query = [];
-                $('tr.source', 'table#advertiser').each(function (index, tr) {
+                _.each(['direct', 'mpx', 'network'], function (source) {
                     var query = _.clone(publisher_query);
-                    query.source = [tr.id];
+                    query.source = [source];
                     source_data.query.push(query);
                 });
 
@@ -1486,8 +1494,8 @@ var mopub = mopub || {};
 
             function update_sources(data, publisher_query, order, selected, sources) {
                 _.each(sources, function (source) {
-                    var $source = $(render_filter_body_row(source, ADVERTISER_COLUMNS, order));
-                    $('table#advertiser tr#' + source.id).replaceWith($source);
+                    var $source = $(render_filter_body_row(source, ADVERTISER_COLUMNS, ADVERTISER_DEFAULT_COLUMNS, order, $('table#advertiser th.hidden').length, false));
+                    $('table#advertiser').append($source);
                     if(source.id == 'direct' || source.id == 'network') {
                         var campaign_data = _.clone(data);
                         campaign_data.granularity = 'top';
@@ -1528,8 +1536,8 @@ var mopub = mopub || {};
 
             function update_campaigns(order, selected, $source, campaigns) {
                 var $last = $source;
-                _.each(campaigns, function (campaign) {
-                    var $campaign = $(render_filter_body_row(campaign, ADVERTISER_COLUMNS, order));
+                _.each(campaigns, function (campaign, index) {
+                    var $campaign = $(render_filter_body_row(campaign, ADVERTISER_COLUMNS, ADVERTISER_DEFAULT_COLUMNS, order, $('table#advertiser th.hidden').length, index > 2));
                     $last.after($campaign);
                     $last = $campaign;
                 });
@@ -1586,8 +1594,8 @@ var mopub = mopub || {};
 
             function update_apps(data, advertiser_query, order, selected, apps) {
                 $publisher_table = $('table#publisher tbody');
-                _.each(apps, function (app) {
-                    var $app = $(render_filter_body_row(app, PUBLISHER_COLUMNS, order));
+                _.each(apps, function (app, index) {
+                    var $app = $(render_filter_body_row(app, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, $('table#publisher th.hidden').length, index > 2));
                     $publisher_table.append($app);
 
                     var adunit_data = _.clone(data);
@@ -1628,8 +1636,8 @@ var mopub = mopub || {};
 
             function update_adunits(order, selected, $app, adunits) {
                 var $last = $app;
-                _.each(adunits, function (adunit) {
-                    var $adunit = $(render_filter_body_row(adunit, PUBLISHER_COLUMNS, order));
+                _.each(adunits, function (adunit, index) {
+                    var $adunit = $(render_filter_body_row(adunit, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, $('table#publisher th.hidden').length, index > 2));
                     $last.after($adunit);
                     $last = $adunit;
                 });
@@ -1799,20 +1807,37 @@ var mopub = mopub || {};
             });
 
             /* Filters */
-            $('th.sortable').live('click', function () {
+            $('th.sortable', 'table#advertiser').live('click', function () {
                 var $th = $(this);
                 var order;
                 _.each(STATS, function (title, stat) {
                     if($th.hasClass(stat)) {
                         order = stat;
-                        $('#order').val(stat);
+                        $('#advertiser_order').val(stat);
                     }
                 });
 
-                $('th.sortable').removeClass('sorted');
-                $('th.' + order).addClass('sorted');
+                $('th.sortable', 'table#advertiser').removeClass('sorted');
+                $('th.' + order, 'table#advertiser').addClass('sorted');
 
-                update_dashboard(false, true, true);
+                update_dashboard(false, true, false);
+            });
+
+            /* Filters */
+            $('th.sortable', 'table#publisher').live('click', function () {
+                var $th = $(this);
+                var order;
+                _.each(STATS, function (title, stat) {
+                    if($th.hasClass(stat)) {
+                        order = stat;
+                        $('#publisher_order').val(stat);
+                    }
+                });
+
+                $('th.sortable', 'table#publisher').removeClass('sorted');
+                $('th.' + order, 'table#publisher').addClass('sorted');
+
+                update_dashboard(false, false, true);
             });
 
             /* Advertiser Table */
@@ -1967,29 +1992,48 @@ var mopub = mopub || {};
                 update_dashboard(true, true, false);
             });
 
-            /*
-            // expand adunits
-            $('tr.app button.expand', publisher_table).live('click', function () {
-                $(this).closest('tr').nextUntil('tr.app').show();
-                $(this).removeClass('expand');
-                $(this).addClass('collapse');
+            $('#advertiser_expand').click(function () {
+                if($('td.hidden, th.hidden', 'table#advertiser').length) {
+                    $('td, th', 'table#advertiser').removeClass('hidden');
+                    $('tr.hide', 'table#advertiser').show();
+                    $(this).html('less');
+                }
+                else {
+                    _.each(ADVERTISER_COLUMNS, function (column) {
+                        if(!_.include(ADVERTISER_DEFAULT_COLUMNS, column) && column !== get_advertiser_order()) {
+                            $('td.' + column + ', th.' + column, 'table#advertiser').addClass('hidden');
+                        }
+                    });
+                    $('tr.hide', 'table#advertiser').hide();
+                    $(this).html('more');
+                }
             });
 
-            // collapse adunits
-            $('tr.app button.collapse', publisher_table).live('click', function () {
-                $(this).closest('tr').nextUntil('tr.app').hide();
-                $(this).removeClass('collapse');
-                $(this).addClass('expand');
+            $('#publisher_expand').click(function () {
+                if($('td.hidden, th.hidden', 'table#publisher').length) {
+                    $('td, th', 'table#publisher').removeClass('hidden');
+                    $('tr.hide', 'table#publisher').show();
+                    $(this).html('less');
+                }
+                else {
+                    _.each(PUBLISHER_COLUMNS, function (column) {
+                        if(!_.include(PUBLISHER_DEFAULT_COLUMNS, column) && column !== get_publisher_order()) {
+                            $('td.' + column + ', th.' + column, 'table#publisher').addClass('hidden');
+                        }
+                    });
+                    $('tr.hide', 'table#publisher').hide();
+                    $(this).html('more');
+                }
             });
-            */
 
             // set up tables
             var filter_header_row = _.template($('#filter_header_row').html());
             var $tr = filter_header_row({
                 title: 'Campaigns and AdGroups',
                 columns: ADVERTISER_COLUMNS,
+                default_columns: ADVERTISER_DEFAULT_COLUMNS,
                 sortable_columns: SORTABLE_COLUMNS,
-                sorted: get_order(),
+                sorted: get_advertiser_order(),
                 stats: STATS
             });
             $('table#advertiser thead').append($tr);
@@ -1997,8 +2041,9 @@ var mopub = mopub || {};
             $tr = filter_header_row({
                 title: 'Apps and AdUnits',
                 columns: PUBLISHER_COLUMNS,
+                default_columns: PUBLISHER_DEFAULT_COLUMNS,
                 sortable_columns: SORTABLE_COLUMNS,
-                sorted: get_order(),
+                sorted: get_publisher_order(),
                 stats: STATS
             });
             $('table#publisher thead').append($tr);

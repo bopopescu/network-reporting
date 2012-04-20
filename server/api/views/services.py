@@ -375,24 +375,24 @@ class CampaignService(RequestHandler):
     API Service for delivering serialized AdGroup data
     """
     def get(self, campaign_key):
-        try:
-            campaign = CampaignQueryManager.get(campaign_key)
+        #try:
+        campaign = CampaignQueryManager.get(campaign_key)
 
-            # REFACTOR
-            # ensure the owner of this campaign is the request's
-            # current user
-            if not campaign or campaign.account.key() != self.account.key():
-                raise Http404
+        # REFACTOR
+        # ensure the owner of this campaign is the request's
+        # current user
+        if not campaign or campaign.account.key() != self.account.key():
+            raise Http404
 
-            # Get the stats for the campaign
-            stats_endpoint = self.request.GET.get('endpoint', 'all')
-            stats = get_stats_fetcher(self.account.key(), stats_endpoint)
-            campaign_stats = stats.get_campaign_stats(campaign_key,
-                    self.start_date, self.end_date)
+        # Get the stats for the campaign
+        stats_endpoint = self.request.GET.get('endpoint', 'all')
+        stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)
+        campaign_stats = stats_fetcher.get_campaign_stats(campaign_key,
+                self.start_date, self.end_date)
 
-            # TODO
-            # Add old campaign stats to new ones if the query is for a legacy
-            # date, shouldn't be common so doesn't have to be super fast
+        # TODO
+        # Add old campaign stats to new ones if the query is for a legacy
+        # date, shouldn't be common so doesn't have to be super fast
 #            if stats_endpoint == 'all' and campaign.transition_date and \
 #                    campaign._old_campaign and campaign.transition_date >= \
 #                    self.start_date and campaign.transition_date <= self.end_date:
@@ -402,9 +402,9 @@ class CampaignService(RequestHandler):
 #                        stats_for_day in zip(campaign_stats,
 #                            old_campaign_stats)]
 
-            return JSONResponse(campaign_stats)
-        except Exception, exception:
-            return JSONResponse({'error': str(exception)})
+        return JSONResponse(campaign_stats)
+    #except Exception, exception:
+            #return JSONResponse({'error': str(exception)})
 
 
     def post(self, *args, **kwagrs):

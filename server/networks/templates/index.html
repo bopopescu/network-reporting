@@ -114,47 +114,47 @@ Make a table for ad networks that are active
                         </div>
                     </td>
                     {% if network.reporting %}
-                    <td class="dataTable-data numeric">
-                        <div class="networks-revenue" style="color:orange;">-</div>
+                    <td class="dataTable-data numeric rev" style="color:orange;">
+                        -
                     </td>
                     {% endif %}
-                    <td class="dataTable-data numeric">
+                    <td class="dataTable-data numeric cpm">
                         {% if network.reporting %}
-                        <div class="networks-cpm network-data">-</div>
+                        <div class="network-data">-</div>
                         {% endif %}
-                        <div class="all-cpm mopub-data">
-                            <span class="all-min_cpm"></span>-<span class="all-max_cpm"></span>
+                        <div class="mopub-data">
+                            <span class="min_cpm">{{ network.min_cpm }}</span>-<span class="max_cpm">{{ network.max_cpm }}</span>
                         </div>
                     </td>
-                    <td class="dataTable-data numeric">
+                    <td class="dataTable-data numeric att">
                         {% if network.reporting and network.name != "mobfox" %}
-                        <div class="networks-attempt_count network-data">-</div>
+                        <div class="network-data">-</div>
                         {% endif %}
-                        <div class="all-attempt_count mopub-data">-</div>
+                        <div class="mopub-data">-</div>
                     </td>
-                    <td class="dataTable-data numeric">
+                    <td class="dataTable-data numeric imp">
                         {% if network.reporting %}
-                        <div class="networks-impression_count network-data">-</div>
+                        <div class="network-data">-</div>
                         {% endif %}
-                        <div class="all-impression_count mopub-data">-</div>
+                        <div class="mopub-data">-</div>
                     </td>
-                    <td class="dataTable-data numeric">
+                    <td class="dataTable-data numeric fill_rate">
                         {% if network.reporting %}
-                        <div class="networks-fill_rate network-data">-</div>
+                        <div class="network-data">-</div>
                         {% endif %}
-                        <div class="all-fill_rate mopub-data">-</div>
+                        <div class="mopub-data">-</div>
                     </td>
-                    <td class="dataTable-data numeric">
+                    <td class="dataTable-data numeric clk">
                         {% if network.reporting %}
-                        <div class="networks-click_count network-data">-</div>
+                        <div class="network-data">-</div>
                         {% endif %}
-                        <div class="all-click_count mopub-data">-</div>
+                        <div class="mopub-data">-</div>
                     </td>
-                    <td class="dataTable-data numeric">
+                    <td class="dataTable-data numeric ctr">
                         {% if network.reporting %}
-                        <div class="networks-ctr network-data">-</div>
+                        <div class="network-data">-</div>
                         {% endif %}
-                        <div class="all-ctr mopub-data">-</div>
+                        <div class="mopub-data">-</div>
                     </td>
                 </tr>
             </tbody>
@@ -167,19 +167,19 @@ Make a table for ad networks that are active
                         <td class="dataTable-name">
                             <a href="{{ app.url }}">{{ app.name }} ({{ app.type }})</a>
                         </td>
-                        <td class="dataTable-data numeric revenue" style="color:orange;">
+                        <td class="dataTable-data numeric rev" style="color:orange;">
                             {% if network.reporting %} - {% endif %}
                         </td>
-                        <td class="dataTable-data numeric ecpm" style="color:orange;">
+                        <td class="dataTable-data numeric cpm" style="color:orange;">
                             {% if network.reporting %} - {% endif %}
                         </td>
-                        <td class="dataTable-data numeric attempts">
+                        <td class="dataTable-data numeric att">
                             {% if network.reporting and network.name != "mobfox" %}
                             <div class="network-data">-</div>
                             {% endif %}
                             <div class="mopub-data">-</div>
                         </td>
-                        <td class="dataTable-data numeric impressions">
+                        <td class="dataTable-data numeric imp">
                             {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}
@@ -191,7 +191,7 @@ Make a table for ad networks that are active
                             {% endif %}
                             <div class="mopub-data">-</div>
                         </td>
-                        <td class="dataTable-data numeric clicks">
+                        <td class="dataTable-data numeric clk">
                             {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}
@@ -233,7 +233,7 @@ Make a table for ad networks that are active
                 {% if reporting %}
                 <td class="dataTable-data numeric">
                     <b>
-                        <div class="networks-revenue" style="color:orange;">-</div>
+                        <div class="networks-rev" style="color:orange;">-</div>
                     </b>
                 </td>
                 <td class="dataTable-data numeric">
@@ -242,7 +242,7 @@ Make a table for ad networks that are active
                     </b>
                 </td>
                 {% endif %}
-                <td class="dataTable-data numeric impressions">
+                <td class="dataTable-data numeric imp">
                     <b>
                         {% if reporting %}
                         <div class="network-data">-</div>
@@ -250,7 +250,7 @@ Make a table for ad networks that are active
                         <div class="mopub-data">-</div>
                     </b>
                 </td>
-                <td class="dataTable-data numeric clicks">
+                <td class="dataTable-data numeric clk">
                     <b>
                         {% if reporting %}
                         <div class="network-data">-</div>
@@ -274,7 +274,7 @@ Make a table for ad networks that are active
                 <th class="dataTable-name">{{ day }}</th>
                 {% if reporting %}
                 <td class="dataTable-data numeric">
-                    <div class="networks-revenue" style="color:orange;">-</div>
+                    <div class="networks-rev" style="color:orange;">-</div>
                 </td>
                 <td class="dataTable-data numeric">
                     <div class="networks-cpm" style="color:orange;">-</div>
@@ -353,7 +353,8 @@ Make a table for the main ad networks that are not setup
 
         NetworksController.initialize({
             campaigns_data: [{% for network in networks %}{'id': '{{ network.key }}',
-                                                           'network': '{{ network.name }}'},{% endfor %}],
+                                                           'network': '{{ network.name }}',
+                                                           'reporting': {% if network.reporting|safe %}true{% else %}false{% endif %}},{% endfor %}],
             apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
             date_range: {{ date_range }},
             graph_start_date: graph_start_date,});

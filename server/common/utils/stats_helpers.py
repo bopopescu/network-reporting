@@ -32,11 +32,11 @@ except ImportError:
     except ImportError:
         from django.utils import simplejson as json
 
-ctr = lambda clicks, impressions: (clicks/float(impressions) if impressions
+ctr = lambda clicks, imp: (clicks/float(imp) if imp
         else 0)
-ecpm = lambda revenue, impressions: (revenue/float(impressions)*1000 if
-        impressions else 0)
-fill_rate = lambda requests, impressions: (impressions/float(requests) if
+cpm = lambda rev, imp: (rev/float(imp)*1000 if
+        imp else 0)
+fill_rate = lambda requests, imp: (imp/float(requests) if
         requests else 0)
 
 
@@ -56,36 +56,36 @@ class AbstractStatsFetcher(object):
 
     def format_stats(self, stats):
         stat_totals = {
-            'revenue': sum([stat.revenue for stat in stats]),
+            'rev': sum([stat.revenue for stat in stats]),
             'ctr': 0.0,
-            'ecpm': 0.0,
-            'impressions': sum([stat.impression_count for stat in stats]),
-            'clicks': sum([stat.click_count for stat in stats]),
-            'requests': sum([stat.request_count for stat in stats]),
+            'cpm': 0.0,
+            'imp': sum([stat.impression_count for stat in stats]),
+            'clk': sum([stat.click_count for stat in stats]),
+            'req': sum([stat.request_count for stat in stats]),
             'fill_rate': 0.0,
-            'conversions': sum([stat.conversion_count for stat in stats]),
-            'conversion_rate': sum([stat.conv_rate for stat in stats])/len(stats),
+            'conv': sum([stat.conversion_count for stat in stats]),
+            'conv_rate': sum([stat.conv_rate for stat in stats])/len(stats),
         }
 
-        stat_totals['ctr'] = ctr(stat_totals['clicks'], stat_totals['impressions'])
-        stat_totals['ecpm'] = ecpm(stat_totals['revenue'], stat_totals['impressions'])
-        stat_totals['fill_rate'] = fill_rate(stat_totals['requests'], stat_totals['impressions'])
+        stat_totals['ctr'] = ctr(stat_totals['clk'], stat_totals['imp'])
+        stat_totals['cpm'] = cpm(stat_totals['rev'], stat_totals['imp'])
+        stat_totals['fill_rate'] = fill_rate(stat_totals['req'], stat_totals['imp'])
 
         return stat_totals
 
     def format_daily_stats(self, all_stats):
-        stats_dict = {'sum': {'revenue': sum([stats.revenue for stat in
+        stats_dict = {'sum': {'rev': sum([stats.revenue for stats in
                                   all_stats]),
-                              'impressions': sum([stats.impression_count for
-                                  stat in all_stats]),
-                              'clicks': sum([stats.click_count for stat in
+                              'imp': sum([stats.impression_count for
+                                  stats in all_stats]),
+                              'clk': sum([stats.click_count for stats in
                                   all_stats]),
-                              'attempts': sum([stats.request_count for stat
+                              'att': sum([stats.request_count for stats
                                   in all_stats]), },
-                      'daily_stats': [{'revenue': stats.revenue,
-                                       'impressions': stats.impression_count,
-                                       'clicks': stats.click_count,
-                                       'attempts': stats.request_count,} for
+                      'daily_stats': [{'rev': stats.revenue,
+                                       'imp': stats.impression_count,
+                                       'clk': stats.click_count,
+                                       'att': stats.request_count,} for
                                        stats in all_stats], }
         return stats_dict
 
@@ -197,10 +197,10 @@ class MarketplaceStatsFetcher(object):
 
         stats_dict = {}
         for id, stats in response_dict.iteritems():
-            counts = {"revenue": currency(stats['pub_rev']),
-                      "impressions": int(stats['imp']),
+            counts = {"rev": currency(stats['pub_rev']),
+                      "imp": int(stats['imp']),
                       "clicks": stats['clk'],
-                      "ecpm": currency(ecpm(stats['pub_rev'], stats['imp'])),
+                      "cpm": currency(cpm(stats['pub_rev'], stats['imp'])),
                       "ctr": percentage(ctr(stats['clk'], stats['imp']))}
             stats_dict[id] = counts
         return stats_dict
@@ -217,27 +217,27 @@ class MarketplaceStatsFetcher(object):
         example output with daily flag set:
 
         {'ctr': '0.00%',
-        'revenue': '$0.08',
+        'rev': '$0.08',
         'daily': [{'ctr': '0.00%',
-                   'revenue': '$0.00',
-                   'ecpm': '$0.00',
+                   'rev': '$0.00',
+                   'cpm': '$0.00',
                    'date': u'2011-10-25',
-                   'impressions': 0,
+                   'imp': 0,
                    'clicks': 0},
                   {'ctr': '0.00%',
-                   'revenue': '$0.01',
-                   'ecpm': '$0.89',
+                   'rev': '$0.01',
+                   'cpm': '$0.89',
                    'date': u'2011-10-26',
-                   'impressions': 9,
+                   'imp': 9,
                    'clicks': 0},
                   {'ctr': '0.00%',
-                   'revenue': '$0.07',
-                   'ecpm': '$0.98',
+                   'rev': '$0.07',
+                   'cpm': '$0.98',
                    'date': u'2011-10-27',
-                   'impressions': 71,
+                   'imp': 71,
                    'clicks': 0}],
-         'ecpm': '$0.98',
-         'impressions': 80,
+         'cpm': '$0.98',
+         'imp': 80,
          'clicks': 0}
 
         """
@@ -378,11 +378,11 @@ class MarketplaceStatsFetcher(object):
         return {}
 
 class NetworkStatsFetcher(AbstractStatsFetcher):
-    def _get_publisher_stats(self, start, end, account_key, app_key=None,
-            network=None):
+    def _get_publisher_stats(self, start, end, account_key, app_key='*',
+            network='*'):
         # network stats api
-        stats = get_network_stats(app_key, network, account_key, start,
-                end).values()[0]
+        stats = get_network_stats(str(app_key), network, str(account_key),
+                start, end).values()[0]
         return stats
 
     def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
@@ -390,7 +390,7 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
         days = date_magic.gen_days(start, end)
         if campaign.network_state == \
                 NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
-            stats = self._get_publisher_stats(start, end,
+            stats = self._get_publisher_stats(start, end, campaign._account,
                     network=campaign.network_type)
         else:
             return None
@@ -398,8 +398,8 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
 
     def get_campaign_specific_app_stats(self, app_key, campaign, start, end,
             *args, **kwargs):
-        app_stats = self._get_publisher_stats(start, end, account_key,
-                    network=campaign.network_type)
+        app_stats = self._get_publisher_stats(start, end, campaign._account,
+                app_key=app_key, network=campaign.network_type)
         return app_stats
 
 # TODO: refactor stuff that uses this and remove it
@@ -457,10 +457,10 @@ class AdNetworkStatsFetcher(object):
 # Helper/Utility functions
 
 def _transform_stats(stats_dict):
-    return {"revenue": stats_dict['rev'],
-            "impressions": int(stats_dict['imp']),
-            "clicks": stats_dict.get('clk', 0), # no clk currently from /stats/pub
-            "ecpm": ecpm(stats_dict['rev'], stats_dict['imp']),
+    return {"rev": stats_dict['rev'],
+            "imp": int(stats_dict['imp']),
+            "clk": stats_dict.get('clk', 0), # no clk currently from /stats/pub
+            "cpm": cpm(stats_dict['rev'], stats_dict['imp']),
             "ctr": ctr(stats_dict.get('clk', 0), stats_dict['imp'])}
 
 

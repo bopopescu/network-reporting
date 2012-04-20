@@ -4260,7 +4260,8 @@ div#filters {
   margin-left: 10px; }
   div#filters table#advertiser, div#filters table#publisher {
     border: 2px solid #bbb;
-    font-size: 12px; }
+    font-size: 12px;
+    float: left; }
     div#filters table#advertiser thead th, div#filters table#publisher thead th {
       color: #555;
       font-weight: 300;
@@ -4271,6 +4272,10 @@ div#filters {
         font-size: 14px;
         font-weight: 600;
         text-transform: none; }
+      div#filters table#advertiser thead th.sortable, div#filters table#publisher thead th.sortable {
+        cursor: pointer; }
+        div#filters table#advertiser thead th.sortable.sorted, div#filters table#publisher thead th.sortable.sorted {
+          background-color: #ccc; }
     div#filters table#advertiser tbody tr.selected, div#filters table#publisher tbody tr.selected {
       background-color: #eef; }
     div#filters table#advertiser tbody tr.source, div#filters table#publisher tbody tr.source {

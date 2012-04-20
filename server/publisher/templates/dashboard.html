@@ -9,7 +9,6 @@
 {% block extraScripts %}
 {% include_script 'controllers/publisher' %}
 
-
 {% include_script "libs/rickshaw" %}
 {% include_script "libs/Rickshaw.Graph.Axis.X" %}
 {% include_script "libs/Rickshaw.Graph.MoPubHoverDetail" %}
@@ -26,8 +25,11 @@ $(function () {
 <script id="chart" type="text/html">
 {% include 'publisher/partials/dashboard_chart.html' %}
 </script>
-<script id="filter_row" type="text/html">
-{% include 'publisher/partials/dashboard_filter_row.html' %}
+<script id="filter_header_row" type="text/html">
+{% include 'publisher/partials/dashboard_filter_header_row.html' %}
+</script>
+<script id="filter_body_row" type="text/html">
+{% include 'publisher/partials/dashboard_filter_body_row.html' %}
 </script>
 {% endblock extraScripts %}
 
@@ -38,7 +40,6 @@ $(function () {
 {% block dateButtons %}{% endblock dateButtons %}
 
 {% block titleBarRight %}{% endblock titleBarRight %}
-
 
 {% block content %}
 
@@ -166,16 +167,11 @@ $(function () {
 </div>
 
 <div id="filters">
-    {# <label><input name="advertiser_compare" type="checkbox" /> Compare</label> #}
+    <input id="order" type="hidden" value="rev" />
+
+    <label><input name="advertiser_compare" type="checkbox" /> Compare</label>
     <table id="advertiser">
         <thead>
-            <tr>
-                <th class="title" colspan="2">Campaigns and Adgroups</th>
-                <th class="rev" colspan="2">Revenue</th>
-                <th class="imp" colspan="2">Impressions</th>
-                <th class="clk" colspan="2">Clicks</th>
-                <th class="ctr" colspan="2">CTR</th>
-            </tr>
         </thead>
         <tbody>
             <tr class="source" id="direct">
@@ -217,16 +213,9 @@ $(function () {
         </tbody>
     </table>
 
-    {# <label><input name="publisher_compare" type="checkbox" /> Compare</label> #}
+    <label><input name="publisher_compare" type="checkbox" /> Compare</label>
     <table id="publisher">
         <thead>
-            <tr>
-                <th class="title" colspan="2">Apps and Adunits</th>
-                <th class="rev" colspan="2">Revenue</th>
-                <th class="imp" colspan="2">Impressions</th>
-                <th class="clk" colspan="2">Clicks</th>
-                <th class="ctr" colspan="2">CTR</th>
-            </tr>
         </thead>
         <tbody>
         </tbody>

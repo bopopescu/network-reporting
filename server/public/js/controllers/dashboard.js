@@ -176,7 +176,7 @@ var mopub = mopub || {};
                 return mopub.Utils.formatNumberWithCommas() + 'M';
         }
         if (number >= 1000*multiplier) {
-            return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000)) + 'k';
+            return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000)) + 'K';
         }
         return mopub.Utils.formatNumberWithCommas(Math.round(number));
     }

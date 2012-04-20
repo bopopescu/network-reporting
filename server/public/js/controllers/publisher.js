@@ -13,17 +13,42 @@
 var mopub = mopub || {};
 
 (function($, Backbone, _){
-
+    
     var COLOR_THEME = {
-        secondary: ['#C8CFD6', '#9EB1C1'],
-        primary:   ['#E5F1FB', '#A3C1DA']
+        primary: [
+            'rgba(229,241,251,0.8)',
+            'rgba(163,193,218,0.8)',
+            'rgba(236,183,150,1)',
+            'rgba(178,164,112,1)',
+            'rgba(210,237,130,1)',
+            'rgba(221,203,83,1)'
+        ],
+        secondary: [
+            'rgba(200,207,214,1)',
+            'rgba(158,177,193,1)',
+            'rgba(220,143,112,1)',
+            'rgba(146,135,90,1)',
+            'rgba(187,228,104,1)',
+            'rgba(197,163,47,1)'
+        ]
     };
 
-
+    var STATS = {
+        'attempts': 'Attempts',
+        'clk': 'Clicks',
+        'conv': 'Conversions',
+        'conv_rate': 'Conversion Rate',
+        'cpm': 'CPM',
+        'ctr': 'CTR',
+        'fill_rate': 'Fill Rate',
+        'imp': 'Impressions',
+        'req': 'Requests',
+        'rev': 'Revenue'
+    };
+    
     /*
      * ## Helpers for DashboardController
      */
-
     var toast_error = function () {
         var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){
@@ -32,6 +57,23 @@ var mopub = mopub || {};
             });
         Toast.error(message, "Error fetching app data.");
     };
+
+    /*
+     * Gets a javascript Date from a datapoint object with a
+     * stringified date or hour field (like the one we'd get
+     * in a response from the stats service).
+     */
+    function get_date_from_datapoint(datapoint) {
+        var timeslice = null;
+        if (datapoint.hasOwnProperty('hour')) {
+            timeslice = moment(datapoint['hour'], "YYYY-MM-DD-HH");
+            timeslice = timeslice.format('M/D HH:00');
+        } else if (datapoint.hasOwnProperty('date')) {
+            timeslice = moment(datapoint['date'], "YYYY-MM-DD-HH");
+            timeslice = timeslice.format('M/D');
+        }
+        return timeslice;
+    }
 
     function format_stat(stat, value) {
         switch (stat) {
@@ -794,27 +836,20 @@ var mopub = mopub || {};
     }
 
 
-    function createChart(series, element, account_data, options) {
+    function createChart(series, element, account_data) {
+        
         var all_chart_data = _.map(account_data, function(range, i){
-            var individual_series_data = {
-                data: _.map(range, function(datapoint, j){
 
-                    var timeslice;
-                    if (datapoint.hasOwnProperty('hour')) {
-                        timeslice = new Date('date');
-                    } else if (datapoint.hasOwnProperty('date')) {
-                        timeslice = new Date('date');
-                    } else {
-                        timeslice = j;
-                    }
-
+            var individual_series_data = {                
+                data: _.map(range, function(datapoint, j){                    
                     return {
-                        x: j,
+                        x: j, 
                         y: datapoint[series]
                     };
                 }),
                 stroke: COLOR_THEME.secondary[i],
-                color: COLOR_THEME.primary[i]
+                color: COLOR_THEME.primary[i],
+                name: range.name || STATS[series]
             };            
             return individual_series_data;
         });
@@ -834,23 +869,37 @@ var mopub = mopub || {};
             series: all_chart_data
         });
 
-        var hoverDetail = new Rickshaw.Graph.HoverDetail( {
+        var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail( {
             graph: chart,
             width: 550,
             height: 150,
-            xFormatter: function(x) { return x; },
-            yFormatter: function(y) { return format_stat(series, y); }
+            xFormatter: function(x) {
+                var labels = _.map(account_data, function(range){
+                    var single_datapoint = range[x];
+                    var date = get_date_from_datapoint(single_datapoint);
+                    var formatted_stat = format_stat(series, single_datapoint[series]);
+
+                    return date + ": " + formatted_stat;
+                });
+
+                return labels.join('<br />');
+            },
+            // yFormatter: function(y) {
+            //     return format_stat(series, y); 
+            // }
         });
 
-        var xAxis = new Rickshaw.Graph.Axis.Time({
+        var xAxis = new Rickshaw.Graph.Axis.X({
 	        graph: chart,
-	        ticksTreatment: 'glow',
+            labels: _.map(account_data[0], function(datapoint){                
+                return get_date_from_datapoint(datapoint);
+            }),
+	        ticksTreatment: 'glow'
         });
         xAxis.render();
 
         var yAxis = new Rickshaw.Graph.Axis.Y({
 	        graph: chart,
-	        tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
 	        ticksTreatment: 'glow'
         } );
         yAxis.render();
@@ -929,19 +978,6 @@ var mopub = mopub || {};
             /* Constants */
             var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
             var URL = 'http://localhost:8888/';
-
-            var STATS = {
-                'attempts': 'Attempts',
-                'clk': 'Clicks',
-                'conv': 'Conversions',
-                'conv_rate': 'Conversion Rate',
-                'cpm': 'CPM',
-                'ctr': 'CTR',
-                'fill_rate': 'Fill Rate',
-                'imp': 'Impressions',
-                'req': 'Requests',
-                'rev': 'Revenue'
-            };
 
             var WIDTH = 550;
             var HEIGHT = 150;
@@ -1274,13 +1310,9 @@ var mopub = mopub || {};
                 }
 
                 var advertiser_type = get_advertiser_type();
-                console.log(advertiser_type);
                 var advertiser_query = get_advertiser_query(advertiser_type);
-                console.log(advertiser_query);
                 var publisher_type = get_publisher_type();
-                console.log(publisher_type);
                 var publisher_query = get_publisher_query(publisher_type);
-                console.log(publisher_query);
 
                 if(update_rollups_and_charts) {
 

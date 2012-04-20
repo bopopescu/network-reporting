@@ -42,49 +42,65 @@ $(function () {
 {% block titleBarRight %}{% endblock titleBarRight %}
 
 {% block content %}
+<div id="controls">
 
-  <div id="controls">
-
-    <div id="datepicker-custom-range" class="hidden">
-      <div class="date-field-container">
-        <span class="start-date date-label"> From: </span>
-        <input id="datepicker-start-input"
-               name="start-date"
-               type="text"
-               value='{{ start_date|date:'m-d-Y' }}'
-               data-date='{{ start_date|date:'m-d-Y' }}'
-               data-date-format="mm-dd-yyyy" />
-      </div>
-      <div class="date-field-container">
-        <span class="end-date date-label"> To: </span>
-        <input id="datepicker-end-input"
-               name="end-date"
-               type="text"
-               value="{{ end_date|date:"m-d-Y" }}"
-               data-date='{{ end_date|date:'m-d-Y' }}'
-               data-date-format="mm-dd-yyyy" />
-       </div>
-       <a id="custom-date-submit" class="right btn btn-primary"> Submit </a>
+    <div id="date_modal" class="hidden">
+        <label>
+            From:
+            <input data-date-format="yyyy-mm-dd" id="start" type="text" />
+        </label>
+        <label>
+            To:
+            <input data-date-format="yyyy-mm-dd" id="end" type="text" />
+        </label>
+        <button class="btn btn-primary" id="date_modal_submit">Update</button>
     </div>
 
-    <select name="date_range">
-      <option value="day">Day</option>
-      <option selected="selected" value="week">Week</option>
-      <option value="two_weeks">Two Weeks</option>
-      <option value="custom">Custom</option>
-    </select>
-    <span class="hidden" id="custom_date_range"></span>
+    <div class="btn-group">
+        <button class="btn dropdown-toggle" data-toggle="dropdown">
+            Dates
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <li><a href="javascript:void(0);" id="today">Today</a></li>
+            <li><a href="javascript:void(0);" id="yesterday">Yesterday</a></li>
+            <li><a href="javascript:void(0);" id="last_7_days">Last 7 Days</a></li>
+            <li><a href="javascript:void(0);" id="last_14_days">Last 14 Days</a></li>
+            <li><a href="javascript:void(0);" id="custom">Custom</a></li>
+        </ul>
+    </div>
 
+    <input id="start" type="hidden" />
+    <input id="end" type="hidden" />
+
+    <div class="btn-group">
+        <button class="btn dropdown-toggle" data-toggle="dropdown">
+            Comparison
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <li><a href="javascript:void(0);" id="today">Today</a></li>
+            <li><a href="javascript:void(0);" id="yesterday">Yesterday</a></li>
+            <li><a href="javascript:void(0);" id="last_7_days">Last 7 Days</a></li>
+            <li><a href="javascript:void(0);" id="last_14_days">Last 14 Days</a></li>
+            <li><a href="javascript:void(0);" id="custom">Custom</a></li>
+        </ul>
+    </div>
+
+    <input id="vs_start" type="hidden" />
+    <input id="vs_end" type="hidden" />
+
+
+    {% comment %}
     <select name="granularity">
-      <option value="hourly">Hourly</option>
-      <option selected="selected" value="daily">Daily</option>
+        <option value="hourly">Hourly</option>
+        <option selected="selected" value="daily">Daily</option>
     </select>
+    {% endcomment %}
+    <input id="granularity" type="hidden" value="daily" />
 
-    <label>
-      <input name="compare" type="checkbox" /> Compare to <span id="comparison_range">the week before</span>
-    </label>
 
-    <button class="btn btn-small" id="export">Export</button>
+    <button class="btn right" id="export">Export</button>
 
     <div class="modal hidden" id="export_wizard">
       <div class="modal-header">

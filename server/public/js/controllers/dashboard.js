@@ -1,5 +1,5 @@
 /*
- * # MoPub Dashboard 
+ * # MoPub Dashboard
  */
 
 var mopub = mopub || {};
@@ -43,7 +43,7 @@ var mopub = mopub || {};
 
     /*
      * Pops up a growl-style message when something has
-     * gone wrong fetching data. Use this to catch 500/503 
+     * gone wrong fetching data. Use this to catch 500/503
      * errors from the server.
      */
     var toast_error = function () {
@@ -99,9 +99,9 @@ var mopub = mopub || {};
     }
 
     /*
-     * Formats a number in KMBT (thousands, millions, 
+     * Formats a number in KMBT (thousands, millions,
      * billions, trillions) formatting.
-     * 
+     *
      * Example: 1000000 -> 1M, 1230000000 -> 12.3B
      */
     function format_kmbt(number, multiplier) {
@@ -116,17 +116,17 @@ var mopub = mopub || {};
 
 
     /*
-     * Create a new chart using Rickshaw/d3. 
-     * 
+     * Create a new chart using Rickshaw/d3.
+     *
      * `series` is the type of series we're representing (e.g. 'rev',
      * 'imp', 'clk') and is used for formatting axes and tooltips.
-     * 
+     *
      * `element` is the name of the element (e.g. '#chart') to render
-     * the chart in. The chart will be rendered when the function is 
+     * the chart in. The chart will be rendered when the function is
      * called.
-     * 
+     *
      * `account_data` is all of the data you get back from a query.
-     * 
+     *
      * `options` is not currently used, but will be used in the future
      * to specify stuff like height, width, and other rendering options.
      */
@@ -208,7 +208,7 @@ var mopub = mopub || {};
      * Initialization function that renders all 4 of the charts in the
      * dashboard page.
      */
-    function initializeDashboardCharts(start_date, end_date, account_data) {
+    function initializeDashboardCharts(account_data) {
         var rev_chart = createChart('rev', '#rev_chart', account_data);
         var imp_chart = createChart('imp', '#imp_chart', account_data);
         var clk_chart = createChart('clk', '#clk_chart', account_data);
@@ -231,8 +231,8 @@ var mopub = mopub || {};
 
             /* Constants */
 
-            var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-            //var URL = 'http://localhost:8888/';
+            //var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+            var URL = 'http://localhost:8888/';
 
             var STATS = {
                 'attempts': 'Attempts',
@@ -589,27 +589,9 @@ var mopub = mopub || {};
                 return filter_body_row(context);
             }
 
-            function update_dashboard(update_rollups_and_charts, advertiser_table, publisher_table) {
-                var start, end;
-                if($('select[name="date_range"]').val() == 'custom') {
-                    start = new Date($("#datepicker-start-input").val());
-                    end = new Date($("#datepicker-end-input").val());
-                }
-                else {
-                    end = new Date(new Date().toDateString());
-                    switch($('select[name="date_range"]').val()) {
-                        case 'day':
-                            start = end;
-                            break;
-                        case 'week':
-                            start = new Date(end - 86400000 * 6);
-                            break;
-                        case 'two_weeks':
-                            start = new Date(end - 86400000 * 13);
-                            break;
-                    }
-                }
-                end.setHours(23);
+            function get_data() {
+                var start = new Date($('#start').val());
+                var end = new Date($('#end').val());
 
                 var data = {
                     account: bootstrapping_data['account'],
@@ -634,6 +616,12 @@ var mopub = mopub || {};
                     data['vs_end'] = date_to_string(new Date(end - diff));
                 }
 
+                return data;
+            }
+
+            function update_dashboard(update_rollups_and_charts, advertiser_table, publisher_table) {
+                var data = get_data();
+
                 var advertiser_type = get_advertiser_type();
                 var advertiser_query = get_advertiser_query(advertiser_type);
                 var publisher_type = get_publisher_type();
@@ -642,7 +630,7 @@ var mopub = mopub || {};
                 if(update_rollups_and_charts) {
 
                     var rollups_and_charts_data = _.clone(data);
-                    var granularity = $('select[name="granularity"]').val();
+                    var granularity = $('#granularity').val();
                     rollups_and_charts_data.granularity = granularity;
                     rollups_and_charts_data.query = [_.extend(_.clone(advertiser_query), publisher_query)];
 
@@ -663,8 +651,7 @@ var mopub = mopub || {};
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
-                                    //update_charts(start, end, charts_data);
-                                    initializeDashboardCharts(start, end, charts_data);
+                                    initializeDashboardCharts(charts_data);
                                 });
                             }
                         });
@@ -686,8 +673,7 @@ var mopub = mopub || {};
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
-                                    //update_charts(start, end, charts_data);
-                                    initializeDashboardCharts(start, end, charts_data);
+                                    initializeDashboardCharts(charts_data);
                                 });
                             }
                         });
@@ -712,7 +698,7 @@ var mopub = mopub || {};
                                         update_rollups(json.sum[0]);
                                         charts_data = [json[granularity][0]];
                                     }
-                                    initializeDashboardCharts(start, end, charts_data);
+                                    initializeDashboardCharts(charts_data);
                                 });
                             }
                         });
@@ -960,65 +946,102 @@ var mopub = mopub || {};
                 }
             }
 
+            /* EVENT HANDLERS */
+
+            function get_today() {
+                var now = new Date();
+                return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            }
+
+            function update_start_end(start, end) {
+                $('#start').val(start);
+                $('#end').val(end);
+
+                start_end_changed();
+            }
+
+            function start_end_changed() {
+                update_start_end_text();
+
+                $('#vs_start').val(start);
+                $('#vs_end').val(end);
+                // TODO: remove vs_start/_end label
+
+                update_dashboard(true, true, true);
+            }
+
+            function update_start_end_text() {
+                var start = $('#start').val();
+                var end = $('#end').val();
+                $('#start_end_label').html(start + ' to ' + end);
+            }
+
             /* Controls */
-            // date controls
-            // Set up the two date fields with datepickers
+            $('#today').click(function () {
+                var start = get_today();
+                var end = get_today();
+                end.setHours(23);
+
+                update_start_end(start, end);
+            });
+
+            $('#yesterday').click(function() {
+                var start = new Date(get_today() - 86400000);
+                var end = new Date(get_today() - 3600000);
+
+                update_start_end(start, end);
+            });
+
+            $('#last_7_days').click(function() {
+                var start = new Date(get_today() - 86400000 * 6);
+                var end = get_today();
+                end.setHours(23);
+
+                update_start_end(start, end);
+            });
+
+            $('#last_14_days').click(function() {
+                var start = new Date(get_today() - 86400000 * 13);
+                var end = get_today();
+                end.setHours(23);
+
+                update_start_end(start, end);
+            });
+
+            $('#custom').click(function() {
+                ('#date_modal').show();
+            });
+
             var valid_date_range = {
                 endDate: "0d"
             };
-            $("input[name='start-date']").datepicker(valid_date_range);
-            $("input[name='end-date']").datepicker(valid_date_range);
+            $('#start').datepicker(valid_date_range);
+            $('#end').datepicker(valid_date_range);
 
-            // On submit, get the date range from the two inputs and
-            // form the url, and reload the page.
-            $("#custom-date-submit").unbind('click').click(function() {
-                $('#custom_date_range').html($("#datepicker-start-input").val() + ' to ' + $("#datepicker-end-input").val());
-                $('#custom_date_range').show();
-                $("#datepicker-custom-range").toggleClass('hidden');
-                update_dashboard(true, true, true);
+            $('#date_modal_submit').click(function () {
+                ('#date_modal').hide();
+
+                tart_end_changed();
             });
 
-            $("#custom_date_range").click(function () {
-                $("#datepicker-custom-range").toggleClass('hidden');
-            });
-
-            $('[name="date_range"]').change(function () {
-                if($(this).val() == 'custom') {
-                    $("#datepicker-custom-range").toggleClass('hidden');
-                    $('[name="compare"]').removeProp('checked');
-                    $('[name="compare"]').closest('label').hide();
+            /*
+            if($('[name="compare"]').is(':checked')) {
+                var diff;
+                switch($('select[name="date_range"]').val()) {
+                    case 'day':
+                        diff = 86400000;
+                        break;
+                    case 'week':
+                        diff = 86400000 * 7;
+                        break;
+                    case 'two_weeks':
+                        diff = 86400000 * 14;
+                        break;
                 }
-                else {
-                    $('#custom_date_range').hide();
-                    $('[name="compare"]').closest('label').show();
-                    if($(this).val() == 'day') {
-                        // granularity can't be daily
-                        if($('[name="granularity"]').val() == 'daily') {
-                            $('[name="granularity"]').val('hourly');
-                        }
-                        $('[name="granularity"] option[value="daily"]').attr('disabled', 'disabled');
-                        $('span#comparison_range').html('yesterday');
-                    }
-                    else {
-                        // granularity can be daily
-                        $('[name="granularity"] option[value="daily"]').removeAttr('disabled');
-                        if($(this).val() == 'week') {
-                            $('span#comparison_range').html('the week before');
-                        }
-                        else if($(this).val() == 'two_weeks') {
-                            $('span#comparison_range').html('the two weeks before');
-                        }
-                    }
-                    update_dashboard(true, true, true);
-                }
-            });
+                data['vs_start'] = date_to_string(new Date(start - diff));
+                data['vs_end'] = date_to_string(new Date(end - diff));
+            }
 
-            // granularity
-            $('[name="granularity"]').change(function () {
-                update_dashboard(true, false, false);
-            });
-
-            // comparison
             $('[name="compare"]').change(function () {
                 $('[name="advertiser_compare"]').prop('checked', false);
                 $('[name="publisher_compare"]').prop('checked', false);
@@ -1034,6 +1057,14 @@ var mopub = mopub || {};
                 $('[name="advertiser_compare"]').prop('checked', false);
                 update_dashboard(true, true, true);
             });
+            */
+
+            /*
+            // granularity
+            $('#granularity').change(function () {
+                update_dashboard(true, false, false);
+            });
+            */
 
             // export
             $('button#export').click(function () {
@@ -1056,29 +1087,7 @@ var mopub = mopub || {};
                 // Hide the modal when the download button is clicked.
                 $('#export_wizard').modal('hide');
 
-
-                // Extrapolate the start and end date
-                var start, end;
-                if ($('select[name="date_range"]').val() == 'custom') {
-                    start = new Date($("#datepicker-start-input").val());
-                    end = new Date($("#datepicker-end-input").val());
-                } else {
-                    end = new Date(new Date().toDateString());
-                    switch($('select[name="date_range"]').val()) {
-                        case 'day':
-                            start = end;
-                            break;
-                        case 'week':
-                            start = new Date(end - 86400000 * 6);
-                            break;
-                        case 'two_weeks':
-                            start = new Date(end - 86400000 * 13);
-                            break;
-                        default: start = end;
-                    }
-                }
-
-                end.setHours(23);
+                var data = get_data();
 
                 // Determine the query
                 var query = {};
@@ -1098,16 +1107,16 @@ var mopub = mopub || {};
                     names[id] = $.trim($('#' + id + ' td.name').html());
                 });
 
-                var data = {
+                _.extend(data, {
                     account: bootstrapping_data['account'],
                     start: date_to_string(start),
                     end: date_to_string(end),
-                    granularity: $('select[name="granularity"]').val(),
+                    granularity: $('#granularity').val(),
                     advertiser_breakdown: advertiser_breakdown,
                     publisher_breakdown: publisher_breakdown,
                     query: query,
                     names: names
-                };
+                });
 
                 window.location = URL + 'csv/?data=' + JSON.stringify(data);
 
@@ -1367,10 +1376,10 @@ var mopub = mopub || {};
             });
             $('table#publisher thead').append($tr);
 
-            update_dashboard(true, true, true);
+            $('#last_7_days').click();
         },
     };
 
     window.DashboardController = DashboardController;
-    
+
 })(this.jQuery, this.Backbone, this._);

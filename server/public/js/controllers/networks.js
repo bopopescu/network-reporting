@@ -59,7 +59,8 @@ $(function() {
                         });
                     },
                 });
-                new AppView({collection: network_app,
+                new AppView({model: network_app,
+                             el: campaign.id + '-apps-div',
                              endpoint_specific: true});
             });
         });

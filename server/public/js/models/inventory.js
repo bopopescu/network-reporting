@@ -384,7 +384,7 @@ var mopub = mopub || {};
      * We might consider turning derivative values (ecpm, fill_rate, ctr) into
      * functions.
      */
-    var App = Backbone.Model.extend({
+    var App = StatsModel.extend({
         defaults : {
             name: '',
             url:'#',
@@ -423,11 +423,6 @@ var mopub = mopub || {};
             }
         },
         parse: function (response) {
-            // In this case we just take in stats
-            if (this.get('campaign_id')) {
-                return response;
-            }
-
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
             var app = response[0];

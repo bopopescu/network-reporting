@@ -437,6 +437,9 @@ var mopub = window.mopub || {};
      */
     var AppView = Backbone.View.extend({
         initialize: function () {
+            if (this.options.endpoint_specific) {
+                this.model.bind('change', this.render, this);
+            }
             try {
                 this.template = _.template($('#app-template').html());
             } catch (e) {
@@ -457,6 +460,9 @@ var mopub = window.mopub || {};
                 var selector = ''
             }
             var app_row = $('tr.app-row#app-' + this.model.id, this.el);
+            console.log('tr.app-row#app-' + this.model.id);
+            console.log($('tr.app-row#app-' + this.model.id));
+            console.log(app_row);
 
             /*jslint maxlen: 200 */
             $('.revenue' + selector, app_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
@@ -476,6 +482,10 @@ var mopub = window.mopub || {};
             return this;
         },
         render: function () {
+            if(!this.template) {
+                return this.renderInline();
+            }
+
             var renderedContent = $(this.template(this.model.toJSON()));
 
             // When we render an appview, we also attach a handler to fetch

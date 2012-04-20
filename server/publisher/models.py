@@ -101,7 +101,8 @@ class App(db.Model):
                          primary_category = self.primary_category,
                          secondary_category = self.secondary_category)
 
-    def app_type_text(self):
+    @property
+    def type(self):
         types = {
             'iphone': 'iOS',
             'android': 'Android',
@@ -128,7 +129,7 @@ class App(db.Model):
 
     @property
     def full_name(self):
-        return self.name + " (" + self.app_type_text() + ")"
+        return self.name + " (" + self.type + ")"
 
     @property
     def key_(self):

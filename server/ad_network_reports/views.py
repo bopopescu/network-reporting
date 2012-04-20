@@ -245,7 +245,7 @@ class AppDetailHandler(RequestHandler):
                       'date_range' : self.date_range,
                       'ad_network_name' :
                         REPORTING_NETWORKS[ad_network_app_mapper.ad_network_name],
-                      'app_name' : '%s (%s)' % (app.name, app.app_type_text()),
+                      'app_name' : '%s (%s)' % (app.name, app.type),
                       'aggregates' : aggregates,
                       'daily_stats' :
                         simplejson.dumps(daily_stats),

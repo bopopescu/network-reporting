@@ -1073,7 +1073,7 @@ class DashboardExportHandler(RequestHandler):
                          resource_id] + \
                         app_stats(summed_stats) + \
                         ["N/A",
-                         app.app_type_text()])
+                         app.type])
             adunits = AdUnitQueryManager.get_adunits(app=app)
 
             for adunit in adunits:
@@ -1090,7 +1090,7 @@ class DashboardExportHandler(RequestHandler):
                              resource_id] + \
                             app_stats(summed_stats) +
                             [ad_size,
-                             app.app_type_text()])
+                             app.type])
 
         f_name_dict = {
             'start': start.strftime('%b %d'),

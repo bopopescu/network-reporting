@@ -68,7 +68,7 @@ class AppService(RequestHandler):
                 raise Http404
 
         # Where are we getting stats from?
-        # Choices are 'mpx', 'direct', 'networks', or 'all'
+        # Choices are 'mpx', 'direct', or 'all'
         stats_endpoint = self.request.GET.get('endpoint', 'all')
 
         # Get the stats fetcher
@@ -133,7 +133,7 @@ class AdUnitService(RequestHandler):
         metadata and stats data
         """
         # where are we getting stats from?
-        # choices are 'mpx', 'direct', 'networks', or 'all'
+        # choices are 'mpx', 'direct', or 'all'
         stats_endpoint = self.request.GET.get('endpoint', 'all')
         stats = get_stats_fetcher(self.account.key(), stats_endpoint)
 
@@ -582,7 +582,7 @@ class NetworkAppsService(RequestHandler):
             network_apps = []
             for app in network_apps_:
                 app_data = app.toJSON()
-                app_data['app_type'] = app.app_type_text()
+                app_data['app_type'] = app.type
                 app_data['url'] = '/inventory/app/' + str(app.key())
                 if adunits:
                     app_data['adunits'] = app.adunits
@@ -628,12 +628,9 @@ def get_stats_fetcher(account_key, stats_endpoint):
     elif stats_endpoint == 'direct':
         stats = DirectSoldStatsFetcher(account_key)
         stats = []
-    elif stats_endpoint == 'networks':
-        stats = NetworkStatsFetcher(account_key)
     elif stats_endpoint == 'all':
         stats = SummedStatsFetcher(account_key)
     else:
         raise Exception("""You passed an invalid stats_endpoint. Valid
-                        parameters are 'mpx', 'direct', 'networks', and
-                        'all'.""")
+                        parameters are 'mpx', 'direct', and 'all'.""")
     return stats

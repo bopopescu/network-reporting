@@ -476,19 +476,6 @@ class AdNetworkStatsManager(CachedQueryManager):
                     stat))
 
 
-class NetworkStatsQueryManager(CachedQueryManager):
-    def __init__(self, account):
-        self.account = account
-
-    def get_stats_for_days(self, network, days):
-        """
-        Return list of stats model stats for the given days.
-        """
-        return [StatsModel(ad_network_stats=AdNetworkNetworkStats.
-                get_by_network_and_day(self.account, network, day)) for day
-                in days]
-
-
 class AdNetworkAggregateManager(CachedQueryManager):
     @classmethod
     def create_stats(cls,

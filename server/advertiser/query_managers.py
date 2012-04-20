@@ -48,7 +48,7 @@ class AdvertiserQueryManager(CachedQueryManager):
     @classmethod
     def get_adgroups_dict_for_account(cls, account, include_deleted=False, include_archived=False):
         return cls.get_entities_for_account(account, AdGroup, include_deleted, include_archived)
-    
+
     @classmethod
     def get_creatives_dict_for_account(cls, account, include_deleted=False):
         return cls.get_entities_for_account(account, Creative, include_deleted)
@@ -71,15 +71,20 @@ class CampaignQueryManager(QueryManager):
         which means it's a new type of campaign (used by the networks django
         app).
         """
-        campaigns = cls.Model.all().filter('campaign_type =', 'network')\
-                      .filter('deleted =',False)\
-                      .filter('account =',account)
-        if is_new:
-            campaigns.filter('network_type !=', '')
-        # network_type can be ''
-        if network_type != False:
-            campaigns.filter('network_type =', network_type)
-        return campaigns
+        # get campaigns for the account from memcache
+        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
+                account)
+
+        def network_campaign_filter(campaign):
+            if campaign.campaign_type == 'network':
+                if network_type:
+                    return campaign.network_type == network_type
+                elif is_new:
+                    return campaign.network_type
+                else:
+                    return not campaign.network_type
+
+        return filter(campaigns.values(), network_campaign_filter)
 
     @classmethod
     def get_default_network_campaign(cls, account, network, get_from_db=False):

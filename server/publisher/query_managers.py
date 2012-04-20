@@ -159,7 +159,7 @@ class PublisherQueryManager(CachedQueryManager):
             app_key = str(AdUnit.app_key.get_value_for_datastore(adunit))
             app_for_this_adunit = apps_dict[app_key]
             app_for_this_adunit.adunits += [adunit]
-        
+
         return apps_dict
 
     @classmethod
@@ -261,7 +261,7 @@ class AppQueryManager(CachedQueryManager):
         for app in apps:
             adunits = AdUnitQueryManager.get_adunits(app=app)
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
-        
+
         # For each account, clear its apps and adunits from memcache.
         affected_accounts = set([app.account for app in apps])
         PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, App)
@@ -453,7 +453,7 @@ class AdUnitQueryManager(QueryManager):
 
         put_response = db.put(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
-        
+
         affected_accounts = set([adunit.account for adunit in adunits])
         PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdUnit)
 

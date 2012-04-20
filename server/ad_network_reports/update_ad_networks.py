@@ -556,12 +556,12 @@ def send_stats_mail(account, day, stats_list):
             mapper, stats in stats_list])
         stats_list = sorted(stats_list, key = lambda stats:
                 '%s-%s-%s' % (stats[0].application.name.lower(),
-                stats[0].application.app_type_text().lower(),
+                stats[0].application.type.lower(),
                 stats[0].ad_network_name))
         email_body = ""
         for mapper, stats in stats_list:
             app_name = '%s (%s)' % (mapper.application.name,
-                    mapper.application.app_type_text())
+                    mapper.application.type)
 
             stats_dict = {'app': app_name,
                    'network_name': REPORTING_NETWORKS[mapper.ad_network_name],

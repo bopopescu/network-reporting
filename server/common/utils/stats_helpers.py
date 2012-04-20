@@ -9,8 +9,7 @@ from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
-        AdNetworkAggregateManager, \
-        NetworkStatsQueryManager
+        AdNetworkAggregateManager
 from common.constants import REPORTING_NETWORKS
 
 from publisher.query_managers import AppQueryManager,\
@@ -100,7 +99,7 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                                         start, end, *args, **kwargs):
         # mongo
         app = AppQueryManager.get(app_key)
-        adgroup = CampaignQueryManager.get(campaign_key)
+        campaign = CampaignQueryManager.get(campaign_key)
         app_stats = self._get_publisher_stats(start, end, publisher=app,
                                               advertiser=campaign)
         return app_stats
@@ -360,22 +359,6 @@ class MarketplaceStatsFetcher(object):
             limit = 3
 
         return {}
-
-class NetworkStatsFetcher(AbstractStatsFetcher):
-    def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
-        # ad network stats
-        campaign = CampaignQueryManager.get(campaign_key)
-        days = date_magic.gen_days(start, end)
-        if campaign.network_state == \
-                NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
-            query_manager = NetworkStatsQueryManager(
-                    AccountQueryManager.get(self.account_key))
-            stats = query_manager.get_stats_for_days(campaign.network_type,
-                    days=days)
-        else:
-            stats = [StatsModel(date=datetime.combined(day, time())) for day in
-                    days]
-        return stats
 
 # TODO: refactor stuff that uses this and remove it
 class AdNetworkStatsFetcher(object):

@@ -78,47 +78,37 @@ class NetworksHandler(RequestHandler):
         if not account.display_new_networks:
             return HttpResponseRedirect(reverse('network_index'))
 
-        additional_networks = set(NETWORKS.keys())
+        additional_networks_set = set(NETWORKS.keys())
         networks = []
-        campaigns_data = []
         reporting = False
 
         for campaign in CampaignQueryManager.get_network_campaigns(
                 self.account, is_new=True):
             network = str(campaign.network_type)
 
-            network_data = {}
-            if campaign:
+            network_data = {'name': network,
+                            'pretty_name': campaign.name,
+                            'active': campaign.active,
+                            'key': campaign.key()}
 
-                # start building the campaign data that we'll show in
-                # the page
-                campaign_data = {'id': str(campaign.key()),
-                                 'network': network}
+            # If this campaign is the first campaign of this
+            # network type and they have valid network
+            # credentials, then we can mark this as a campaign
+            # for which we have scraped network stats.
+            if campaign.network_state == NetworkStates. \
+                    DEFAULT_NETWORK_CAMPAIGN and network in \
+                    REPORTING_NETWORKS:
+                login = AdNetworkLoginManager.get_logins(self.account,
+                        network).get()
 
-                # If this campaign is the first campaign of this
-                # network type and they have valid network
-                # credentials, then we can mark this as a campaign
-                # for which we have scraped network stats.
-                if campaign.network_state == NetworkStates. \
-                        DEFAULT_NETWORK_CAMPAIGN and network in \
-                        REPORTING_NETWORKS:
-                    login = AdNetworkLoginManager.get_logins(self.account,
-                            network).get()
+                if login:
+                    reporting = True
+                    network_data['reporting'] = True
 
-                    if login:
-                        reporting = True
-                        campaign_data['reporting'] = True
-                        network_data['reporting'] = True
+            # Set up the rest of the attributes
 
-                # Set up the rest of the attributes
-                network_data['name'] = network
-                network_data['pretty_name'] = campaign.name
-                network_data['active'] = campaign.active
-                network_data['campaign_key'] = campaign.key()
-
-                # Add this network to the list that goes in the page
-                networks.append(network_data)
-                campaigns_data.append(campaign_data)
+            # Add this network to the list that goes in the page
+            networks.append(network_data)
 
         # Sort networks alphabetically
         networks = sorted(networks, key=lambda network_data:
@@ -126,22 +116,23 @@ class NetworksHandler(RequestHandler):
 
         networks_to_setup = []
         if not networks:
-            # Generate list of primary networks that can be setup
+            # Generate list of primary networks that can be setup. This is
+            # shown only on initial setup
             for network in DEFAULT_NETWORKS:
                 network_data = {}
                 network_data['name'] = network
                 network_data['pretty_name'] = NETWORKS[network]
 
                 networks_to_setup.append(network_data)
-                additional_networks.remove(network)
+                additional_networks_set.remove(network)
 
         networks_to_setup = sorted(networks_to_setup, key=lambda
                 network_data: network_data['pretty_name'])
 
-        additional_networks_ = []
+        additional_networks = []
         custom_networks = []
         # Generate list of additional networks that can be setup
-        for network in additional_networks:
+        for network in additional_networks_set:
             network_data = {}
             network_data['name'] = network
             network_data['pretty_name'] = NETWORKS[network]
@@ -149,11 +140,13 @@ class NetworksHandler(RequestHandler):
             if 'custom' in network:
                 custom_networks.append(network_data)
             else:
-                additional_networks_.append(network_data)
-        additional_networks_ += custom_networks
+                additional_networks.append(network_data)
+        additional_networks += custom_networks
 
-        additional_networks_ = sorted(additional_networks_, key=lambda
+        additional_networks = sorted(additional_networks, key=lambda
                 network_data: network_data['pretty_name'])
+
+        apps = PublisherQueryManager.get_apps_dict_for_account(account)
 
         return render_to_response(self.request,
               'networks/index.html',
@@ -165,10 +158,9 @@ class NetworksHandler(RequestHandler):
                   'graph': True if networks else False,
                   'networks': networks,
                   'networks_to_setup': networks_to_setup,
-                  'additional_networks': additional_networks_,
+                  'additional_networks': additional_networks,
+                  'apps': apps,
                   'reporting': reporting,
-                  'campaigns_data': simplejson.dumps(campaigns_data),
-                  'MOBFOX': MOBFOX,
               })
 
 @login_required

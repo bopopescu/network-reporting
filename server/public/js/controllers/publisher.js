@@ -806,6 +806,7 @@ var mopub = mopub || {};
             $('#publisher-dashboard-exportSelect-menu').find('li').first().hide();
         },
 
+
         initializeGeo: function (bootstrapping_data) {
             initializeCommon();
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());

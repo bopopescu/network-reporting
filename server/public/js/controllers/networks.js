@@ -8,13 +8,12 @@ $(function() {
         Toast.error(message, "Error fetching app data.");
     };
 
-    function initialize_campaign_data(campaign_data, include_adunits, ajax_query_string) {
+    function initialize_campaign_data(campaign_data, apps, include_adunits) {
         // create mopub campaign
         // endpoint=all
         var mopub_campaign = new Campaign(campaign_data);
 
         var all_campaigns = [mopub_campaign];
-        var endpoints = ['all']
 
         // create network campaign
         // endpoint=network
@@ -25,8 +24,6 @@ $(function() {
             var network_campaign = new Campaign(network_campaign_data);
 
             all_campaigns.push(network_campaign);
-
-            endpoints.append('reporting')
         }
 
         // Create CampaignView and fetch mopub campaign and network
@@ -36,7 +33,7 @@ $(function() {
                 model: campaign
             });
 
-            campaign.fetch({ data: ajax_query_string,
+            campaign.fetch({
                 error: function() {
                     campaign.fetch({
                         error: toast_error
@@ -46,20 +43,24 @@ $(function() {
         });
 
         // TODO: include adunits in special case
-        _.each(endpoints, function(endpoint) {
+        _.each(all_campaigns, function(campaign) {
             var network_apps = _.map(apps, function(app) {
                 return {id: app.id,
-                        endpoint: 'networks'}});
-            network_apps = AppCollection(apps);
+                        campaign_id: campaign.id,
+                        stats_endpoint: campaign.get('stats_endpoint')}});
 
-            apps.each(function(app) {
-                network_app.fetch({ data: ajax_query_string,
+            _.each(network_apps, function(app) {
+                network_app = new App(app);
+
+                network_app.fetch({
                     error: function() {
-                        network_apps.fetch({
+                        network_app.fetch({
                             error: toast_error
                         });
                     },
                 });
+                new AppView({collection: network_app,
+                             endpoint_specific: true});
             });
         });
 
@@ -126,23 +127,20 @@ $(function() {
             var campaigns_data = bootstrapping_data.campaigns_data,
                 apps = bootstrapping_data.apps,
                 date_range = bootstrapping_data.date_range,
-                graph_start_date = bootstrapping_data.graph_start_date,
-                ajax_query_string = bootstrapping_data.ajax_query_string;
+                graph_start_date = bootstrapping_data.graph_start_date;
 
             // TODO: move fuction to mopub.js
             initializeDateButtons();
 
-            /*
             var all_campaigns = [];
             _.each(campaigns_data, function(campaign_data) {
-                all_campaigns = all_campaigns.concat(initialize_campaign_data(campaign_data, false, ajax_query_string));
+                all_campaigns = all_campaigns.concat(initialize_campaign_data(campaign_data, apps, false));
             });
-            */
 
             var campaigns = new Campaigns(all_campaigns);
 
             // Load chart
-            var graph_view = new NetworkGraphView({
+            new NetworkGraphView({
                 collection: campaigns,
                 date_range: date_range,
                 start_date: graph_start_date,
@@ -768,17 +766,16 @@ $(function() {
     var NetworkDetailsController = { 
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
-                graph_start_date = bootstrapping_data.graph_start_date,
-                ajax_query_string = bootstrapping_data.ajax_query_string;
+                graph_start_date = bootstrapping_data.graph_start_date;
 
             initializeDateButtons();
 
-            var all_campaigns = initialize_campaign_data(campaign_data, true, ajax_query_string);
+            var all_campaigns = initialize_campaign_data(campaign_data, true);
 
             // create campaigns collection
             campaigns = new Campaigns(all_campaigns);
 
-            var graph_view = new NetworkGraphView({
+            new NetworkGraphView({
                 collection: campaigns,
                 start_date: graph_start_date,
                 line_graph: true,

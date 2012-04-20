@@ -84,7 +84,7 @@ class CampaignQueryManager(QueryManager):
                 else:
                     return not campaign.network_type
 
-        return filter(campaigns.values(), network_campaign_filter)
+        return filter(network_campaign_filter, campaigns.values())
 
     @classmethod
     def get_default_network_campaign(cls, account, network, get_from_db=False):

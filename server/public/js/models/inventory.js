@@ -404,14 +404,30 @@ var mopub = mopub || {};
         },
         url: function () {
             var stats_endpoint = this.get('stats_endpoint');
-            return '/api/app/'
-                + this.id
-                + "?"
-                + window.location.search.substring(1)
-                + '&endpoint='
-                + stats_endpoint;
+            if (this.get('campaign_id')) {
+                return '/api/campaign/'
+                    + this.get('campaign_id')
+                    + '/apps/'
+                    + this.id
+                    + "?"
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + stats_endpoint;
+            } else {
+                return '/api/app/'
+                    + this.id
+                    + "?"
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + stats_endpoint;
+            }
         },
         parse: function (response) {
+            // In this case we just take in stats
+            if (this.get('campaign_id')) {
+                return response;
+            }
+
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
             var app = response[0];

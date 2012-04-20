@@ -35,7 +35,8 @@ from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
 
 from publisher.query_managers import AppQueryManager, \
-        AdUnitContextQueryManager
+        AdUnitContextQueryManager, \
+        PublisherQueryManager
 from networks.forms import NetworkCampaignForm, AdUnitAdGroupForm
 
 from datetime import date, time
@@ -146,7 +147,7 @@ class NetworksHandler(RequestHandler):
         additional_networks = sorted(additional_networks, key=lambda
                 network_data: network_data['pretty_name'])
 
-        apps = PublisherQueryManager.get_apps_dict_for_account(account)
+        apps = PublisherQueryManager.get_apps_dict_for_account(account).values()
 
         return render_to_response(self.request,
               'networks/index.html',

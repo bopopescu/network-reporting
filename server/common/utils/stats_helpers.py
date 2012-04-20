@@ -3,14 +3,15 @@ from urllib2 import urlopen
 from common.utils import date_magic
 from datetime import datetime, date, time
 
+from api.networks_helpers import get_all_stats as get_network_stats
+
 from account.query_managers import AccountQueryManager
 from advertiser.models import NetworkStates
 from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
-        AdNetworkAggregateManager, \
-        NetworkStatsQueryManager
+        AdNetworkAggregateManager
 from common.constants import REPORTING_NETWORKS
 
 from publisher.query_managers import AppQueryManager,\
@@ -72,10 +73,26 @@ class AbstractStatsFetcher(object):
 
         return stat_totals
 
+    def format_daily_stats(self, all_stats):
+        stats_dict = {'sum': {'revenue': sum([stats.revenue for stat in
+                                  all_stats]),
+                              'impressions': sum([stats.impression_count for
+                                  stat in all_stats]),
+                              'clicks': sum([stats.click_count for stat in
+                                  all_stats]),
+                              'attempts': sum([stats.request_count for stat
+                                  in all_stats]), },
+                      'daily_stats': [{'revenue': stats.revenue,
+                                       'impressions': stats.impression_count,
+                                       'clicks': stats.click_count,
+                                       'attempts': stats.request_count,} for
+                                       stats in all_stats], }
+        return stats_dict
+
 
 class SummedStatsFetcher(AbstractStatsFetcher):
     def _get_publisher_stats(self, start, end, publisher=None,
-                             advertiser=None, format_stats=True,
+                             advertiser=None, daily=False,
                              *args, **kwargs):
         # mongo
         days = date_magic.gen_days(start, end)
@@ -84,23 +101,22 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         stats = query_manager.get_stats_for_days(publisher=publisher,
                                                  advertiser=advertiser,
                                                  days=days)
-        if format_stats:
-            return self.format_stats(stats)
+        if daily:
+            return self.format_daily_stats(stats)
         else:
-            return stats
+            return self.format_stats(stats)
 
     def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
         # mongo
         campaign = CampaignQueryManager.get(campaign_key)
         campaign_stats = self._get_publisher_stats(start, end,
-                advertiser=campaign, format_stats=False)
+                advertiser=campaign, daily=True)
         return campaign_stats
 
     def get_campaign_specific_app_stats(self, app_key, campaign,
                                         start, end, *args, **kwargs):
         # mongo
         app = AppQueryManager.get(app_key)
-        campaign = CampaignQueryManager.get(campaign_key)
         app_stats = self._get_publisher_stats(start, end, publisher=app,
                                               advertiser=campaign)
         return app_stats
@@ -370,23 +386,20 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
         return stats
 
     def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
-        # ad network stats
         campaign = CampaignQueryManager.get(campaign_key)
         days = date_magic.gen_days(start, end)
         if campaign.network_state == \
                 NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
+            stats = self._get_publisher_stats(start, end,
+                    network=campaign.network_type)
         else:
             return None
         return stats
 
-    def get_campaign_specific_app_stats(self, app_key, campaign,
-                                        start, end, *args, **kwargs):
-        # mongo
-        app = AppQueryManager.get(app_key)
-        campaign = CampaignQueryManager.get(campaign_key)
-
-        app_stats = AdNetworkStatsManager.get_stats_for_days(mapper.key(),
-            days) for mapper in mappers])]
+    def get_campaign_specific_app_stats(self, app_key, campaign, start, end,
+            *args, **kwargs):
+        app_stats = self._get_publisher_stats(start, end, account_key,
+                    network=campaign.network_type)
         return app_stats
 
 # TODO: refactor stuff that uses this and remove it

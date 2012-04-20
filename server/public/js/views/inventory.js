@@ -446,18 +446,29 @@ var mopub = window.mopub || {};
         },
 
         renderInline: function () {
-            /*jslint maxlen: 200 */
+
+            if (this.options.endpoint_specific) {
+                if (this.model.get('endpoint') == 'networks') {
+                    var selector = ' .network-data';
+                } else {
+                    var selector = ' .mopub-data';
+                }
+            } else {
+                var selector = ''
+            }
             var app_row = $('tr.app-row#app-' + this.model.id, this.el);
-            $('.revenue', app_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
-            $('.impressions', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('impressions')));
-            $('.ecpm', app_row).text(mopub.Utils.formatCurrency(this.model.get('ecpm')));
-            $('.clicks', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
-            $('.ctr', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
-            $('.fill_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
-            $('.requests', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
-            $('.attempts', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
-            $('.conversions', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conversions')));
-            $('.conv_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conversion_rate')));
+
+            /*jslint maxlen: 200 */
+            $('.revenue' + selector, app_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
+            $('.impressions' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('impressions')));
+            $('.ecpm' + selector, app_row).text(mopub.Utils.formatCurrency(this.model.get('ecpm')));
+            $('.clicks' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
+            $('.ctr' + selector, app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
+            $('.fill_rate' + selector, app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
+            $('.requests' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
+            $('.attempts' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
+            $('.conversions' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conversions')));
+            $('.conv_rate' + selector, app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conversion_rate')));
             /*jslint maxlen: 110 */
 
             $(".loading-img", app_row).hide();

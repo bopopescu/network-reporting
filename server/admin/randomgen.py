@@ -322,7 +322,7 @@ def generate_creative(account,adgroup):
 
 
 #Example Method to generate data. See top configuration contants for customizing result
-def main():
+def main_():
     account = generate_account(USERNAME,PASSWORD,USERNAME)
 
     # Create marketplace campaign
@@ -387,7 +387,7 @@ def main():
 
 # NOTE: main method for new network campaign creation
 # TODO: merge main method above
-def main_():
+def main():
     account = generate_account(USERNAME,PASSWORD,USERNAME,
             display_new_networks=True)
 

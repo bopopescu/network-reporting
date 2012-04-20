@@ -28,7 +28,6 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      SummedStatsFetcher, \
      DirectSoldStatsFetcher, \
      NetworkStatsFetcher, \
-     AdNetworkStatsFetcher, \
      MPStatsAPIException
 from common.constants import REPORTING_NETWORKS
 
@@ -63,12 +62,12 @@ class AppService(RequestHandler):
                 raise Http404
 
         if campaign_key:
-            campaign = CampaignQueryManager.get(adgroup_key)
+            campaign = CampaignQueryManager.get(campaign_key)
             if campaign.account.key() != self.account.key():
                 raise Http404
 
         # Where are we getting stats from?
-        # Choices are 'mpx', 'direct', or 'all'
+        # Choices are 'mpx', 'direct', 'networks' or 'all'
         stats_endpoint = self.request.GET.get('endpoint', 'all')
 
         # Get the stats fetcher
@@ -95,7 +94,7 @@ class AppService(RequestHandler):
                                                                 self.end_date))
             elif campaign_key:
                 app.update(stats.get_campaign_specific_app_stats(str(app['id']),
-                                                                campaign_key,
+                                                                campaign,
                                                                 self.start_date,
                                                                 self.end_date))
             else:
@@ -133,7 +132,7 @@ class AdUnitService(RequestHandler):
         metadata and stats data
         """
         # where are we getting stats from?
-        # choices are 'mpx', 'direct', or 'all'
+        # choices are 'mpx', 'direct', 'networks' or 'all'
         stats_endpoint = self.request.GET.get('endpoint', 'all')
         stats = get_stats_fetcher(self.account.key(), stats_endpoint)
 
@@ -391,43 +390,19 @@ class CampaignService(RequestHandler):
             campaign_stats = stats.get_campaign_stats(campaign_key,
                     self.start_date, self.end_date)
 
+            # TODO
             # Add old campaign stats to new ones if the query is for a legacy
             # date, shouldn't be common so doesn't have to be super fast
-            if stats_endpoint == 'all' and campaign.transition_date and \
-                    campaign._old_campaign and campaign.transition_date >= \
-                    self.start_date and campaign.transition_date <= self.end_date:
-                old_campaign_stats = stats.get_campaign_stats(campaign. \
-                        _old_campaign, self.start_date, self.end_date)
-                campaign_stats = [sum(stats_for_day, StatsModel()) for \
-                        stats_for_day in zip(campaign_stats,
-                            old_campaign_stats)]
+#            if stats_endpoint == 'all' and campaign.transition_date and \
+#                    campaign._old_campaign and campaign.transition_date >= \
+#                    self.start_date and campaign.transition_date <= self.end_date:
+#                old_campaign_stats = stats.get_campaign_stats(campaign. \
+#                        _old_campaign, self.start_date, self.end_date)
+#                campaign_stats = [sum(stats_for_day, StatsModel()) for \
+#                        stats_for_day in zip(campaign_stats,
+#                            old_campaign_stats)]
 
-            summed_stats = sum(campaign_stats, StatsModel())
-
-            stats_dict = summed_stats.to_dict()
-
-            stats_dict['daily_stats'] = [s.to_dict() for s in campaign_stats]
-
-            # Give back max and min cpm for campaign if endpoint is for
-            # mopub stats
-            if stats_endpoint == 'all':
-                adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
-                        else adgroup.calculated_cpm for adgroup in
-                        campaign.adgroups if adgroup.active]
-                if adgroup_bids:
-                    min_cpm = min(adgroup_bids)
-                    max_cpm = max(adgroup_bids)
-                    if min_cpm == max_cpm:
-                        stats_dict['cpm'] = max_cpm
-                    else:
-                        stats_dict['cpm'] = None
-                        stats_dict['min_cpm'] = min_cpm
-                        stats_dict['max_cpm'] = max_cpm
-                else:
-                    stats_dict['cpm'] = 0.0
-
-
-            return JSONResponse(stats_dict)
+            return JSONResponse(campaign_stats)
         except Exception, exception:
             return JSONResponse({'error': str(exception)})
 
@@ -629,9 +604,12 @@ def get_stats_fetcher(account_key, stats_endpoint):
     elif stats_endpoint == 'direct':
         stats = DirectSoldStatsFetcher(account_key)
         stats = []
+    elif stats_endpoint == 'networks':
+        stats = NetworkStatsFetcher(account_key)
     elif stats_endpoint == 'all':
         stats = SummedStatsFetcher(account_key)
     else:
         raise Exception("""You passed an invalid stats_endpoint. Valid
-                        parameters are 'mpx', 'direct', and 'all'.""")
+                        parameters are 'mpx', 'direct', 'networks' and
+                        'all'.""")
     return stats

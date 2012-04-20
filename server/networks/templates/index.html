@@ -88,7 +88,7 @@ Make a table for ad networks that are active
             <tbody>
                 <tr id="{{network.key}}-row">
                     <td class="networkData-icon">
-                        <a href="{% url network_details key=network.key %}">
+                        <a href="{% url network_details campaign_key=network.key %}">
                             <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
                         </a>
                     </td>
@@ -97,7 +97,7 @@ Make a table for ad networks that are active
                             {% status_icon network %}
                         </div>
                         <div style="margin: 0 5px 0 5px; float: left;">
-                            <a href="{% url network_details key=network.key %}">
+                            <a href="{% url network_details campaign_key=network.key %}">
                                 {{network.pretty_name}}
                             </a>
                         </div>
@@ -105,7 +105,7 @@ Make a table for ad networks that are active
                             <img class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
                         </div>
                         <div class="edit-link hidden" style="float: left;">
-                            <a href="{% url edit_network key=network.key %}">
+                            <a href="{% url edit_network campaign_key=network.key %}">
                                 <span class="ui-icon ui-icon-wrench"></span>
                             </a>
                         </div>
@@ -161,9 +161,9 @@ Make a table for ad networks that are active
         </table>
         <div class="appData-details hidden {{ network.key }}-apps-div" style="margin: 0 0 0 86px">
             <table class="dataTable">
-                <tbody id="{{ network.key }}-apps">
+                <tbody>
                     {% for app in apps %}
-                    <tr class="details-row">
+                    <tr class="app-row" id="app-{{ app.key }}">
                         <td class="dataTable-name">
                             <a href="{{ app.url }}">{{ app.name }} ({{ app.type }})</a>
                         </td>
@@ -247,28 +247,28 @@ Make a table for ad networks that are active
                     </b>
                 </td>
                 {% endif %}
-                <td class="dataTable-data numeric">
+                <td class="dataTable-data numeric impressions">
                     <b>
                         {% if reporting %}
-                        <div class="networks-impression_count network-data">-</div>
+                        <div class="network-data">-</div>
                         {% endif %}
-                        <div class="all-impression_count mopub-data">-</div>
+                        <div class="mopub-data">-</div>
                     </b>
                 </td>
-                <td class="dataTable-data numeric">
+                <td class="dataTable-data numeric clicks">
                     <b>
                         {% if reporting %}
-                        <div class="networks-click_count network-data">-</div>
+                        <div class="network-data">-</div>
                         {% endif %}
-                        <div class="all-click_count mopub-data">-</div>
+                        <div class="mopub-data">-</div>
                     </b>
                 </td>
-                <td class="dataTable-data numeric">
+                <td class="dataTable-data numeric ctr">
                     <b>
                         {% if reporting %}
-                        <div class="networks-ctr network-data">-</div>
+                        <div class="network-data">-</div>
                         {% endif %}
-                        <div class="all-ctr mopub-data">-</div>
+                        <div class="mopub-data">-</div>
                     </b>
                 </td>
             </tr>
@@ -360,12 +360,11 @@ Make a table for the main ad networks that are not setup
         var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
 
         NetworksController.initialize({
-            campaigns_data: [{% for network in networks %}{'id': {{ network.key }},
-                                                           'network': {{ network.name }}},{% endfor %}],
-            apps: [{% for app in apps %}{'id': {{ app.key }}},{% endfor %}],
+            campaigns_data: [{% for network in networks %}{'id': '{{ network.key }}',
+                                                           'network': '{{ network.name }}'},{% endfor %}],
+            apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
             date_range: {{ date_range }},
-            graph_start_date: graph_start_date,
-            ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});
+            graph_start_date: graph_start_date,});
 
     });
 </script>

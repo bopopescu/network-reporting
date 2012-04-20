@@ -3,11 +3,11 @@
 {% load filters %}
 
 {% block pageTitleTag %}
-  - Dashboard ( Alpha )
+  - Dashboard β
 {% endblock %}
 
 {% block extraScripts %}
-{% include_script 'controllers/publisher' %}
+{% include_script "controllers/dashboard" %}
 
 {% include_script "libs/rickshaw" %}
 {% include_script "libs/Rickshaw.Graph.Axis.X" %}
@@ -34,7 +34,7 @@ $(function () {
 {% endblock extraScripts %}
 
 {% block pageTitle %}
-  <h1>New Fucking Decent Dashboard</h1>
+  <h1>Dashboard (β)</h1>
 {% endblock pageTitle %}
 
 {% block dateButtons %}{% endblock dateButtons %}
@@ -166,53 +166,20 @@ $(function () {
 
 </div>
 
-<div id="filters">
-    <input id="order" type="hidden" value="rev" />
-
+<div id="advertiser_filters">
+    <input id="advertiser_order" type="hidden" value="rev" />
     <label><input name="advertiser_compare" type="checkbox" /> Compare</label>
     <table id="advertiser">
         <thead>
         </thead>
         <tbody>
-            <tr class="source" id="direct">
-                <td></td>
-                <td class="name">Direct</td>
-                <td class="stat rev"><span></span></td>
-                <td class="delta rev"><span></span></td>
-                <td class="stat imp"><span></span></td>
-                <td class="delta imp"><span></span></td>
-                <td class="stat clk"><span></span></td>
-                <td class="delta clk"><span></span></td>
-                <td class="stat ctr"><span></span></td>
-                <td class="delta ctr"><span></span></td>
-            </tr>
-            <tr class="source" id="mpx">
-                <td></td>
-                <td class="name">Marketplace</td>
-                <td class="stat rev"><span></span></td>
-                <td class="delta rev"><span></span></td>
-                <td class="stat imp"><span></span></td>
-                <td class="delta imp"><span></span></td>
-                <td class="stat clk"><span></span></td>
-                <td class="delta clk"><span></span></td>
-                <td class="stat ctr"><span></span></td>
-                <td class="delta ctr"><span></span></td>
-            </tr>
-            <tr class="source" id="network">
-                <td></td>
-                <td class="name">Networks</td>
-                <td class="stat rev"><span></span></td>
-                <td class="delta rev"><span></span></td>
-                <td class="stat imp"><span></span></td>
-                <td class="delta imp"><span></span></td>
-                <td class="stat clk"><span></span></td>
-                <td class="delta clk"><span></span></td>
-                <td class="stat ctr"><span></span></td>
-                <td class="delta ctr"><span></span></td>
-            </tr>
         </tbody>
     </table>
+    <button class="btn btn-small" id="advertiser_expand">more</button>
+</div>
 
+<div id="publisher_filters">
+    <input id="publisher_order" type="hidden" value="rev" />
     <label><input name="publisher_compare" type="checkbox" /> Compare</label>
     <table id="publisher">
         <thead>
@@ -220,5 +187,6 @@ $(function () {
         <tbody>
         </tbody>
     </table>
+    <button class="btn btn-small" id="publisher_expand">more</button>
 </div>
 {% endblock content %}

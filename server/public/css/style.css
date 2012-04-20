@@ -4221,88 +4221,83 @@ div#controls {
     left: 0;
     float: none; }
 
-div#charts, div#filters {
+div#charts, div#advertiser_filters, div#publisher_filters {
   float: left; }
 
-#charts {
+div#charts {
   border: 2px solid #bbb;
   width: 650px; }
-  #charts .chart_container {
+  div#charts .chart_container {
     border-bottom: 1px solid #ddd;
     padding: 5px;
     width: 640px;
     height: 150px; }
-    #charts .chart_container .summed_stats {
+    div#charts .chart_container .summed_stats {
       float: left;
       padding: 10px;
       width: 70px;
       height: 120px; }
-      #charts .chart_container .summed_stats div.title {
+      div#charts .chart_container .summed_stats div.title {
         font-size: 14px;
         color: #666; }
-      #charts .chart_container .summed_stats div.value {
+      div#charts .chart_container .summed_stats div.value {
         font-size: 20px;
         font-weight: bold; }
-      #charts .chart_container .summed_stats div.delta {
+      div#charts .chart_container .summed_stats div.delta {
         font-size: 14px; }
-      #charts .chart_container .summed_stats div.delta.positive {
+      div#charts .chart_container .summed_stats div.delta.positive {
         color: green; }
-      #charts .chart_container .summed_stats div.delta.negative {
+      div#charts .chart_container .summed_stats div.delta.negative {
         color: red; }
-    #charts .chart_container .chart {
+    div#charts .chart_container .chart {
       float: left;
       width: 550px;
       height: 150px; }
-    #charts .chart_container:last-child {
+    div#charts .chart_container:last-child {
       border-bottom: 0; }
 
-div#filters {
+div#advertiser_filters, div#publisher_filters {
   margin-left: 10px; }
-  div#filters table#advertiser, div#filters table#publisher {
+  div#advertiser_filters table#advertiser, div#advertiser_filters table#publisher, div#publisher_filters table#advertiser, div#publisher_filters table#publisher {
     border: 2px solid #bbb;
-    font-size: 12px;
-    float: left; }
-    div#filters table#advertiser thead th, div#filters table#publisher thead th {
+    font-size: 12px; }
+    div#advertiser_filters table#advertiser thead th, div#advertiser_filters table#publisher thead th, div#publisher_filters table#advertiser thead th, div#publisher_filters table#publisher thead th {
       color: #555;
       font-weight: 300;
       padding: 5px 5px 5px 2px;
       text-transform: uppercase;
       vertical-align: bottom; }
-      div#filters table#advertiser thead th.title, div#filters table#publisher thead th.title {
+      div#advertiser_filters table#advertiser thead th.title, div#advertiser_filters table#publisher thead th.title, div#publisher_filters table#advertiser thead th.title, div#publisher_filters table#publisher thead th.title {
         font-size: 14px;
         font-weight: 600;
         text-transform: none; }
-      div#filters table#advertiser thead th.sortable, div#filters table#publisher thead th.sortable {
+      div#advertiser_filters table#advertiser thead th.sortable, div#advertiser_filters table#publisher thead th.sortable, div#publisher_filters table#advertiser thead th.sortable, div#publisher_filters table#publisher thead th.sortable {
         cursor: pointer; }
-        div#filters table#advertiser thead th.sortable.sorted, div#filters table#publisher thead th.sortable.sorted {
+        div#advertiser_filters table#advertiser thead th.sortable.sorted, div#advertiser_filters table#publisher thead th.sortable.sorted, div#publisher_filters table#advertiser thead th.sortable.sorted, div#publisher_filters table#publisher thead th.sortable.sorted {
           background-color: #ccc; }
-    div#filters table#advertiser tbody tr.selected, div#filters table#publisher tbody tr.selected {
-      background-color: #eef; }
-    div#filters table#advertiser tbody tr.source, div#filters table#publisher tbody tr.source {
-      border-top: 2px solid #ccc;
-      font-weight: bold; }
-    div#filters table#advertiser tbody tr.campaign, div#filters table#advertiser tbody tr.app, div#filters table#publisher tbody tr.campaign, div#filters table#publisher tbody tr.app {
-      border-top: 1px solid #ddd; }
-    div#filters table#advertiser tbody tr.adgroup, div#filters table#advertiser tbody tr.adunit, div#filters table#publisher tbody tr.adgroup, div#filters table#publisher tbody tr.adunit {
-      border-top: 1px solid #eee; }
-    div#filters table#advertiser tbody tr td, div#filters table#publisher tbody tr td {
-      padding: 2px; }
-      div#filters table#advertiser tbody tr td.expand_control, div#filters table#publisher tbody tr td.expand_control {
-        padding: 1px 2px; }
-        div#filters table#advertiser tbody tr td.expand_control button, div#filters table#publisher tbody tr td.expand_control button {
-          padding: 0 0 1px 1px; }
-          div#filters table#advertiser tbody tr td.expand_control button.expand i.icon-minus, div#filters table#publisher tbody tr td.expand_control button.expand i.icon-minus {
-            display: none; }
-          div#filters table#advertiser tbody tr td.expand_control button.collapse i.icon-plus, div#filters table#publisher tbody tr td.expand_control button.collapse i.icon-plus {
-            display: none; }
-      div#filters table#advertiser tbody tr td.positive, div#filters table#publisher tbody tr td.positive {
-        color: green; }
-      div#filters table#advertiser tbody tr td.negative, div#filters table#publisher tbody tr td.negative {
-        color: red; }
-    div#filters table#advertiser tbody:hover, div#filters table#publisher tbody:hover {
+    div#advertiser_filters table#advertiser tbody tr, div#advertiser_filters table#publisher tbody tr, div#publisher_filters table#advertiser tbody tr, div#publisher_filters table#publisher tbody tr {
       cursor: pointer; }
-    div#filters table#advertiser#advertiser, div#filters table#publisher#advertiser {
-      margin-bottom: 20px; }
+      div#advertiser_filters table#advertiser tbody tr.selected, div#advertiser_filters table#publisher tbody tr.selected, div#publisher_filters table#advertiser tbody tr.selected, div#publisher_filters table#publisher tbody tr.selected {
+        background-color: #eef; }
+      div#advertiser_filters table#advertiser tbody tr.source, div#advertiser_filters table#advertiser tbody tr.app, div#advertiser_filters table#publisher tbody tr.source, div#advertiser_filters table#publisher tbody tr.app, div#publisher_filters table#advertiser tbody tr.source, div#publisher_filters table#advertiser tbody tr.app, div#publisher_filters table#publisher tbody tr.source, div#publisher_filters table#publisher tbody tr.app {
+        border-top: 2px solid #bbb;
+        font-weight: bold; }
+      div#advertiser_filters table#advertiser tbody tr.campaign, div#advertiser_filters table#advertiser tbody tr.adunit, div#advertiser_filters table#publisher tbody tr.campaign, div#advertiser_filters table#publisher tbody tr.adunit, div#publisher_filters table#advertiser tbody tr.campaign, div#publisher_filters table#advertiser tbody tr.adunit, div#publisher_filters table#publisher tbody tr.campaign, div#publisher_filters table#publisher tbody tr.adunit {
+        border-top: 1px solid #ddd; }
+      div#advertiser_filters table#advertiser tbody tr td, div#advertiser_filters table#publisher tbody tr td, div#publisher_filters table#advertiser tbody tr td, div#publisher_filters table#publisher tbody tr td {
+        padding: 2px; }
+        div#advertiser_filters table#advertiser tbody tr td.expand_control, div#advertiser_filters table#publisher tbody tr td.expand_control, div#publisher_filters table#advertiser tbody tr td.expand_control, div#publisher_filters table#publisher tbody tr td.expand_control {
+          padding: 1px 2px; }
+          div#advertiser_filters table#advertiser tbody tr td.expand_control button, div#advertiser_filters table#publisher tbody tr td.expand_control button, div#publisher_filters table#advertiser tbody tr td.expand_control button, div#publisher_filters table#publisher tbody tr td.expand_control button {
+            padding: 0 0 1px 1px; }
+            div#advertiser_filters table#advertiser tbody tr td.expand_control button.expand i.icon-minus, div#advertiser_filters table#publisher tbody tr td.expand_control button.expand i.icon-minus, div#publisher_filters table#advertiser tbody tr td.expand_control button.expand i.icon-minus, div#publisher_filters table#publisher tbody tr td.expand_control button.expand i.icon-minus {
+              display: none; }
+            div#advertiser_filters table#advertiser tbody tr td.expand_control button.collapse i.icon-plus, div#advertiser_filters table#publisher tbody tr td.expand_control button.collapse i.icon-plus, div#publisher_filters table#advertiser tbody tr td.expand_control button.collapse i.icon-plus, div#publisher_filters table#publisher tbody tr td.expand_control button.collapse i.icon-plus {
+              display: none; }
+        div#advertiser_filters table#advertiser tbody tr td.positive, div#advertiser_filters table#publisher tbody tr td.positive, div#publisher_filters table#advertiser tbody tr td.positive, div#publisher_filters table#publisher tbody tr td.positive {
+          color: green; }
+        div#advertiser_filters table#advertiser tbody tr td.negative, div#advertiser_filters table#publisher tbody tr td.negative, div#publisher_filters table#advertiser tbody tr td.negative, div#publisher_filters table#publisher tbody tr td.negative {
+          color: red; }
 
 /* Dashboard */
 #dashboard-stats {

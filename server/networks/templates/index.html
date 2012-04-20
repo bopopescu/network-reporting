@@ -168,53 +168,45 @@ Make a table for ad networks that are active
                             <a href="{{ app.url }}">{{ app.name }} ({{ app.type }})</a>
                         </td>
                         <td class="dataTable-data numeric">
-                            <% if(network_stats) { %>
-                            <div style="color:orange;"><%= network_stats.get_formatted_stat('revenue') %></div>
-                            <% } %>
+                            {% if network.reporting %}
+                            <div class="network-revenue" style="color:orange;">-</div>
+                            {% endif %}
+                        </td>
+                        <td class="dataTable-data numeric cpm">
+                            {% if network.reporting %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
+                        </td>
+                        <td class="dataTable-data numeric request_count">
+                            {% if network.reporting and network.name != "mobfox" %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
                         </td>
                         <td class="dataTable-data numeric">
-                            <% if(network_stats) { %>
-                            <% if(mopub_stats.get_stat('cpm')) { %>
-                            <div class="network-data">
-                            <% } else { %>
-                            <div style="color:orange;">
-                            <% } %>
-                                <%= network_stats.get_formatted_stat('cpm') %>
-                            </div>
-                            <% } %>
-                            <% if(mopub_stats.get_stat('cpm')) { %>
-                            <div class="mopub-data"><%= mopub_stats.get_formatted_stat('cpm') %></div>
-                            <% } %>
+                            {% if network.reporting %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
                         </td>
-                        <td class="dataTable-data numeric">
-                            <% if(network_stats && network != 'mobfox') { %>
-                            <div class="network-data"><%= network_stats.get_formatted_stat('request_count') %></div>
-                            <% } %>
-                            <div class="mopub-data"><%= mopub_stats.get_formatted_stat('request_count') %></div>
+                        <td class="dataTable-data numeric fill_rate">
+                            {% if network.reporting and network.name != "mobfox" %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
                         </td>
-                        <td class="dataTable-data numeric">
-                            <% if(network_stats) { %>
-                            <div class="network-data"><%= network_stats.get_formatted_stat('impression_count') %></div>
-                            <% } %>
-                            <div class="mopub-data"><%= mopub_stats.get_formatted_stat('impression_count') %></div>
+                        <td class="dataTable-data numeric click_count">
+                            {% if network.reporting %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
                         </td>
-                        <td class="dataTable-data numeric">
-                            <% if(network_stats && network != 'mobfox') { %>
-                            <div class="network-data"><%= network_stats.get_formatted_stat('fill_rate') %></div>
-                            <% } %>
-                            <div class="mopub-data"><%= mopub_stats.get_formatted_stat('fill_rate') %></div>
-                        </td>
-                        <td class="dataTable-data numeric">
-                            <% if(network_stats) { %>
-                            <div class="network-data"><%= network_stats.get_formatted_stat('click_count') %></div>
-                            <% } %>
-                            <div class="mopub-data"><%= mopub_stats.get_formatted_stat('click_count') %></div>
-                        </td>
-                        <td class="dataTable-data numeric">
-                            <% if(network_stats) { %>
-                            <div class="network-data"><%= network_stats.get_formatted_stat('ctr') %></div>
-                            <% } %>
-                            <div class="mopub-data"><%= mopub_stats.get_formatted_stat('ctr') %></div>
+                        <td class="dataTable-data numeric ctr">
+                            {% if network.reporting %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -368,8 +360,9 @@ Make a table for the main ad networks that are not setup
         var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
 
         NetworksController.initialize({
-            campaigns_data: [{% for network in networks %}{{ network.key }},{% endfor %}],
-            apps: [{% for app in apps %}{{ app.key }},{% endfor %}],
+            campaigns_data: [{% for network in networks %}{'id': {{ network.key }},
+                                                           'network': {{ network.name }}},{% endfor %}],
+            apps: [{% for app in apps %}{'id': {{ app.key }}},{% endfor %}],
             date_range: {{ date_range }},
             graph_start_date: graph_start_date,
             ajax_query_string: 's={{ start_date.year }}-{{ start_date.month }}-{{ start_date.day }}&r={{ date_range }}'});

@@ -9,7 +9,8 @@ from advertiser.query_managers import AdGroupQueryManager, \
         CampaignQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager, \
-        AdNetworkAggregateManager
+        AdNetworkAggregateManager, \
+        NetworkStatsQueryManager
 from common.constants import REPORTING_NETWORKS
 
 from publisher.query_managers import AppQueryManager,\
@@ -359,6 +360,34 @@ class MarketplaceStatsFetcher(object):
             limit = 3
 
         return {}
+
+class NetworkStatsFetcher(AbstractStatsFetcher):
+    def _get_publisher_stats(self, start, end, account_key, app_key=None,
+            network=None):
+        # network stats api
+        stats = get_network_stats(app_key, network, account_key, start,
+                end).values()[0]
+        return stats
+
+    def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
+        # ad network stats
+        campaign = CampaignQueryManager.get(campaign_key)
+        days = date_magic.gen_days(start, end)
+        if campaign.network_state == \
+                NetworkStates.DEFAULT_NETWORK_CAMPAIGN:
+        else:
+            return None
+        return stats
+
+    def get_campaign_specific_app_stats(self, app_key, campaign,
+                                        start, end, *args, **kwargs):
+        # mongo
+        app = AppQueryManager.get(app_key)
+        campaign = CampaignQueryManager.get(campaign_key)
+
+        app_stats = AdNetworkStatsManager.get_stats_for_days(mapper.key(),
+            days) for mapper in mappers])]
+        return app_stats
 
 # TODO: refactor stuff that uses this and remove it
 class AdNetworkStatsFetcher(object):

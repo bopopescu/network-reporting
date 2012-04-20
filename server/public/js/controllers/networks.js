@@ -14,6 +14,7 @@ $(function() {
         var mopub_campaign = new Campaign(campaign_data);
 
         var all_campaigns = [mopub_campaign];
+        var endpoints = ['all']
 
         // create network campaign
         // endpoint=network
@@ -24,6 +25,8 @@ $(function() {
             var network_campaign = new Campaign(network_campaign_data);
 
             all_campaigns.push(network_campaign);
+
+            endpoints.append('reporting')
         }
 
         // Create CampaignView and fetch mopub campaign and network
@@ -42,22 +45,22 @@ $(function() {
             });
         });
 
-        // Load NetworkApps Collections
-        var network_apps = new NetworkApps();
-        if (include_adunits) {
-            network_apps.type = 'adunits';
-        }
-        network_apps.campaign_key = campaign_data.id;
+        // TODO: include adunits in special case
+        _.each(endpoints, function(endpoint) {
+            var network_apps = _.map(apps, function(app) {
+                return {id: app.id,
+                        endpoint: 'networks'}});
+            network_apps = AppCollection(apps);
 
-        var network_apps_view = new NetworkAppsView({
-            collection: network_apps
-        });
-        network_apps.fetch({ data: ajax_query_string,
-            error: function() {
-                network_apps.fetch({
-                    error: toast_error
+            apps.each(function(app) {
+                network_app.fetch({ data: ajax_query_string,
+                    error: function() {
+                        network_apps.fetch({
+                            error: toast_error
+                        });
+                    },
                 });
-            },
+            });
         });
 
         return all_campaigns;
@@ -121,17 +124,20 @@ $(function() {
     var NetworksController = { 
         initialize: function(bootstrapping_data) {
             var campaigns_data = bootstrapping_data.campaigns_data,
+                apps = bootstrapping_data.apps,
                 date_range = bootstrapping_data.date_range,
                 graph_start_date = bootstrapping_data.graph_start_date,
-                networks = bootstrapping_data.networks,
                 ajax_query_string = bootstrapping_data.ajax_query_string;
 
+            // TODO: move fuction to mopub.js
             initializeDateButtons();
 
+            /*
             var all_campaigns = [];
             _.each(campaigns_data, function(campaign_data) {
                 all_campaigns = all_campaigns.concat(initialize_campaign_data(campaign_data, false, ajax_query_string));
             });
+            */
 
             var campaigns = new Campaigns(all_campaigns);
 

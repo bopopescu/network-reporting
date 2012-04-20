@@ -449,6 +449,7 @@ def campaign_service(request, *args, **kwargs):
     return CampaignService()(request, use_cache=False, *args, **kwargs)
 
 
+# TODO: remove
 class NetworkAppsService(RequestHandler):
     """
     API Service for delivering serialized AdGroup data

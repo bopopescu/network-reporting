@@ -86,11 +86,9 @@ div#filters {
                 }
             }
         }
+
         tbody {
             tr {
-                &.selected {
-                    background-color: #eef;
-                }
                 &.source {
                     border-top: 2px solid #ccc;
                     font-weight: bold;

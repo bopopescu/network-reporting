@@ -837,7 +837,9 @@ var mopub = mopub || {};
 
 
     function createChart(series, element, account_data) {
-        
+
+        console.log(account_data)
+
         var all_chart_data = _.map(account_data, function(range, i){
 
             var individual_series_data = {                
@@ -1370,14 +1372,23 @@ var mopub = mopub || {};
                     rollups_and_charts_data.granularity = granularity;
                     rollups_and_charts_data.query = [_.extend(advertiser_query, publisher_query)];
 
-                    if($('[name="advertiser_compare"]').is(':checked')) {
+                    // Get the advertiser data from the API when the 
+                    // advertiser compare check box is checked. We 
+                    // only do this when one or more rows have been
+                    // selected, otherwise we default to the sum like 
+                    // usual.
+                    if($('[name="advertiser_compare"]').is(':checked') &&
+                       $('table#advertiser tr.selected').length > 0) {
 
+                        // Construct the query for all of the rows that were selected
                         _.each(advertiser_query[advertiser_type], function(advertiser) {
                             var query = _.clone(publisher_query);
                             query[advertiser_type] = [advertiser];
                             rollups_and_charts_data.query.push(query);
                         });
-
+                        
+                        // Make the query, and then update the table
+                        // when the response comes back to us
                         $.jsonp({
                             data: {
                                 data: JSON.stringify(rollups_and_charts_data)
@@ -1387,30 +1398,38 @@ var mopub = mopub || {};
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
-                                    //update_charts(start, end, charts_data);
                                     initializeDashboardCharts(start, end, charts_data);
                                 });
                             }
                         });
 
-                    } else if ($('[name="publisher_compare"]').is(':checked')) {
+                    // Get the publisher data from the API when the 
+                    // publisher compare check box is checked. We 
+                    // only do this when one or more rows have been
+                    // selected, otherwise we default to the sum like 
+                    // usual (just like for advertiser comparing).
+                    } else if ($('[name="publisher_compare"]').is(':checked') && 
+                               $('table#publisher tr.selected').length > 0) {
 
+                        // Construct the query for all of the rows that were selected
                         _.each(publisher_query[publisher_type], function(publisher) {
                             var query = _.clone(advertiser_query);
                             query[publisher_type] = [publisher];
                             rollups_and_charts_data.query.push(query);
                         });
 
+                        // Make the query, and then update the table
+                        // when the response comes back to us
                         $.jsonp({
                             data: {
                                 data: JSON.stringify(rollups_and_charts_data)
                             },
                             success: function (json, textStatus) {
-                                // defer so exceptions show up in the console
+                                // exceptions won't show up in the
+                                // console unless we defer.
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
-                                    //update_charts(start, end, charts_data);
                                     initializeDashboardCharts(start, end, charts_data);
                                 });
                             }
@@ -1431,15 +1450,11 @@ var mopub = mopub || {};
                                             _.extend(json[granularity][0], { name: 'This Period' }),
                                             _.extend(json['vs_' + granularity][0], { name: 'Comparison Period' })
                                         ];
-
-                                        //update_charts(start, end, chart_data);
                                         initializeDashboardCharts(start, end, charts_data);
 
                                     } else {
                                         update_rollups(json.sum[0]);
                                         var charts_data = [json[granularity][0]];
-
-                                        //update_charts(start, end, chart_data);
                                         initializeDashboardCharts(start, end, charts_data);
                                     }
                                 });
@@ -1853,7 +1868,7 @@ var mopub = mopub || {};
                         order = stat;
                         $('#order').val(stat);
                     }
-                });
+                }); 
 
                 $('th.sortable').removeClass('sorted');
                 $('th.' + order).addClass('sorted');
@@ -1870,7 +1885,10 @@ var mopub = mopub || {};
 
                 // select or deselect this source's campaigns
                 if($(this).hasClass('selected')) {
-                    $(this).nextUntil('.source').addClass('selected');
+                    var num_selected = $('tbody tr.source.selected').length;
+                    console.log(num_selected);
+                    $(this).nextUntil('.source')
+                        .addClass('selected');
                 }
                 else{
                     $(this).nextUntil('.source').removeClass('selected');

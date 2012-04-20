@@ -60,7 +60,7 @@ def label(bound_field, label):
     return bound_field
 
 @register.filter
-def awesome_number_formatter(value):
+def kmbt(value):
     if value:
         value = withsep(int(value))
         endings = ['K', 'M', 'B', 'T', 'Q']

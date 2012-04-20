@@ -6,6 +6,13 @@ var mopub = mopub || {};
 
 (function($, Backbone, _){
 
+    /*
+     * Settings
+     */
+
+    var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+    var URL = 'http://localhost:8888/';
+
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
@@ -40,6 +47,66 @@ var mopub = mopub || {};
         'rev': 'Revenue'
     };
 
+    var ADVERTISER_COLUMNS = [
+        'rev',
+        'imp',
+        'clk',
+        'ctr',
+        'cpm',
+        'attempts',
+        'conv',
+        'conv_rate'
+    ];
+
+    var ADVERTISER_DEFAULT_COLUMNS = [
+        'rev',
+        'imp',
+        'clk'
+    ];
+
+    var PUBLISHER_COLUMNS = [
+        'rev',
+        'imp',
+        'clk',
+        'ctr',
+        'cpm',
+        'attempts',
+        'conv',
+        'conv_rate',
+        'fill_rate',
+        'req'
+    ];
+
+    var PUBLISHER_DEFAULT_COLUMNS = [
+        'rev',
+        'imp',
+        'clk'
+    ];
+    
+    var SORTABLE_COLUMNS = [
+        'attempts',
+        'clk',
+        'conv',
+        'imp',
+        'req',
+        'rev'
+    ];
+    
+    var MAX_CAMPAIGNS = 6;
+    var MAX_APPS = 12;
+    var MAX_ADUNITS = 6;
+        
+    var WIDTH = 550;
+    var HEIGHT = 150;
+    
+    var MARGIN_TOP = 10;
+    var MARGIN_RIGHT = 30;
+    var MARGIN_BOTTOM = 15;
+    var MARGIN_LEFT = 50;
+
+    /*
+     * Helper functions
+     */
 
     /*
      * Pops up a growl-style message when something has
@@ -56,7 +123,7 @@ var mopub = mopub || {};
     };
 
     /*
-     * Gets a javascript Date from a datapoint object with a
+     * Gets a date string (MM/DD) from a datapoint object with a
      * stringified date or hour field (like the one we'd get
      * in a response from the stats service).
      */
@@ -161,6 +228,8 @@ var mopub = mopub || {};
             series: all_chart_data
         });
 
+        // When the graph is hovered over, we display the date and the
+        // current value in a tooltip at the top.
         var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail( {
             graph: chart,
             width: 550,
@@ -175,12 +244,13 @@ var mopub = mopub || {};
                 });
 
                 return labels.join('<br />');
-            },
+            }
             // yFormatter: function(y) {
             //     return format_stat(series, y);
             // }
         });
-
+        
+        // On the X-axis, display the date in MM/DD form.
         var xAxis = new Rickshaw.Graph.Axis.X({
 	        graph: chart,
             labels: _.map(account_data[0], function(datapoint){
@@ -188,16 +258,19 @@ var mopub = mopub || {};
             }),
 	        ticksTreatment: 'glow'
         });
+
         xAxis.render();
 
+        // On the Y-axis, display the amount in KMBT form.
         var yAxis = new Rickshaw.Graph.Axis.Y({
 	        graph: chart,
 	        ticksTreatment: 'glow',
             tickFormat: Rickshaw.Fixtures.Number.formatKMBT
         } );
+
         yAxis.render();
 
-
+        // Render and return the chart
         chart.renderer.unstack = true;
         chart.render();
         return chart;
@@ -215,6 +288,11 @@ var mopub = mopub || {};
         var ctr_chart = createChart('ctr', '#ctr_chart', account_data);
     }
 
+    
+    var DashboardHelpers = {
+        get_date_from_datapoint: get_date_from_datapoint,
+        format_stat: format_stat
+    };
 
     var DashboardController = {
         initializeDashboard: function(bootstrapping_data) {
@@ -229,81 +307,10 @@ var mopub = mopub || {};
              * }
              */
 
-            /* Constants */
-
-            var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-            //var URL = 'http://localhost:8888/';
-
-            var STATS = {
-                'attempts': 'Attempts',
-                'clk': 'Clicks',
-                'conv': 'Conversions',
-                'conv_rate': 'Conversion Rate',
-                'cpm': 'CPM',
-                'ctr': 'CTR',
-                'fill_rate': 'Fill Rate',
-                'imp': 'Impressions',
-                'req': 'Requests',
-                'rev': 'Revenue'
-            };
-
-            var ADVERTISER_COLUMNS = [
-                'rev',
-                'imp',
-                'clk',
-                'ctr',
-                'cpm',
-                'attempts',
-                'conv',
-                'conv_rate'
-            ];
-
-            var ADVERTISER_DEFAULT_COLUMNS = [
-                'rev',
-                'imp',
-                'clk'
-            ];
-
-            var PUBLISHER_COLUMNS = [
-                'rev',
-                'imp',
-                'clk',
-                'ctr',
-                'cpm',
-                'attempts',
-                'conv',
-                'conv_rate',
-                'fill_rate',
-                'req'
-            ];
-
-            var PUBLISHER_DEFAULT_COLUMNS = [
-                'rev',
-                'imp',
-                'clk'
-            ];
-
-            var SORTABLE_COLUMNS = [
-                'attempts',
-                'clk',
-                'conv',
-                'imp',
-                'req',
-                'rev'
-            ];
-
-            var MAX_CAMPAIGNS = 6;
-            var MAX_APPS = 12;
-            var MAX_ADUNITS = 6;
-
-            var WIDTH = 550;
-            var HEIGHT = 150;
-
-            var MARGIN_TOP = 10;
-            var MARGIN_RIGHT = 30;
-            var MARGIN_BOTTOM = 15;
-            var MARGIN_LEFT = 50;
-
+            // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
+            // The object is in the form that we normally expect from the server.
+            // The new keys and values are set on the object in place, so nothing 
+            // is returned.
             function calculate_stats(obj) {
                 obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
                 obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
@@ -311,7 +318,8 @@ var mopub = mopub || {};
                 obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
             }
 
-            /* JSONP Setup */
+            // Set up JSONP. We calculate derivative stats upon every
+            // query response.
             $.jsonp.setup({
                 callbackParameter: "callback",
                 dataFilter: function (json) {
@@ -333,117 +341,6 @@ var mopub = mopub || {};
                 url: URL
             });
 
-            /* TODO: use routers
-            var Dashboard = Backbone.Router.extend({
-
-                routes: {
-                    ":start_date/:end_date/": "update"   // #search/kiwis/p7
-                },
-
-                update: function(start, end) {
-                     var account = bootstrapping_data['account'];
-                     var granularity = 'daily';
-
-                     var campaigns = '';
-
-                     var queries = [
-
-                     ];
-
-                     var data = {
-                        account: account,
-                        start: start,
-                        end: end,
-                        granularity: granularity,
-                        queries: [{
-                            campaign: '*', // or just dont include it
-                            adgroup: '123',
-                            app: '12345',
-                            adunit: 'aaa',
-                            source: 'direct', // or mpx or networks
-                            source_type: 'promo'
-                        },{
-                            // example: will fetch all promo stats
-                            source: 'direct',
-                            source_type: 'promo'
-                        },{
-                            // example: will get all stats for this adunit that
-                            // were delivered in this adgroup
-                            adgroup: 'asdASidnasdianlsdASD',
-                            adunit: 'aaaBBBcccDDDeeeeFFF'
-                        }]
-                     };
-
-                    $.jsonp({
-                        data: data,
-                        error: function (xOptions, textStatus) {
-                            console.log('JSONP Error: using random data instead.');
-                            start_date = string_to_date(start);
-                            end_date = string_to_date(end);
-                            var date_range = (end_date - start_date) / 86400000 + 1;
-                            var series1 = [];
-                            var series2 = [];
-                            for(var i = 0; i <= date_range; i++) {
-                                series1[i] = Math.random() * 200;
-                                series2[i] = Math.random() * 200;
-                            }
-                            var data = {
-                                'Series 1': series1,
-                                'Series 2': series2
-                            };
-                            update_chart(start_date, end_date, data);
-                        },
-                        success: function (json, textStatus) {
-                            console.log('Success : ' + json + '.');
-                        },
-                        url: 'http://statservice.mopub.com/'
-                    });
-                }
-
-            });
-
-            var dashboard = new Dashboard();
-
-            Backbone.history.start({
-                pushState: true,
-                root: '/inventory/dashboard/'
-            });
-
-            var start_date = new Date(end_date - date_range * 86400000);
-            var url = date_to_string(start_date) + '/' + date_to_string(end_date) + '/';
-            dashboard.navigate(url, {trigger: true});
-            */
-
-            /* Helpers */
-            function format_stat(stat, value) {
-                switch (stat) {
-                    case 'attempts':
-                    case 'clk':
-                    case 'conv':
-                    case 'imp':
-                    case 'req':
-                        return number_compact(value, 10);
-                    case 'cpm':
-                    case 'rev':
-                        return '$' + number_compact(value, 10);
-                    case 'conv_rate':
-                    case 'ctr':
-                    case 'fill_rate':
-                        return mopub.Utils.formatNumberAsPercentage(value);
-                    default:
-                        throw new Error('Unsupported stat "' + stat + '".');
-                }
-            }
-
-            function number_compact(number, multiplier) {
-                if(number >= 1000000*multiplier) {
-                    return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000000)) + 'M';
-                }
-                if(number >= 1000*multiplier) {
-                    return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000)) + 'k';
-                }
-                return mopub.Utils.formatNumberWithCommas(Math.round(number));
-            }
 
             function string_to_date(date_string) {
                 var parts = date_string.split('-');
@@ -1372,5 +1269,6 @@ var mopub = mopub || {};
     };
 
     window.DashboardController = DashboardController;
-    
+    window.DashboardHelpers = DashboardHelpers;
+
 })(this.jQuery, this.Backbone, this._);

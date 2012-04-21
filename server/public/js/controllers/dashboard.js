@@ -152,10 +152,10 @@ var mopub = mopub || {};
           case 'conv':
           case 'imp':
           case 'req':
-            return format_kmbt(value, 10);
+            return format_kmbt(value);
           case 'cpm':
           case 'rev':
-            return '$' + format_kmbt(value, 10);
+            return '$' + format_kmbt(value, true);
           case 'conv_rate':
           case 'ctr':
           case 'fill_rate':
@@ -171,14 +171,39 @@ var mopub = mopub || {};
      * 
      * Example: 1000000 -> 1M, 1230000000 -> 12.3B
      */
-    function format_kmbt(number, multiplier) {
-        if (number >= 1000000*multiplier) {
-                return mopub.Utils.formatNumberWithCommas() + 'M';
+    function format_kmbt(number, with_decimal) {
+
+        if (with_decimal === undefined) {
+            with_decimal = false;
         }
-        if (number >= 1000*multiplier) {
-            return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000)) + 'K';
+
+        // Numbers greater than this are ridiculous and
+        // so we aren't supporting their existance.
+        if (number > 999999999999999.999) {
+            return number;
         }
-        return mopub.Utils.formatNumberWithCommas(Math.round(number));
+
+        //var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
+        var endings = ['', 'K', 'M', 'B', 'T'];
+        
+        var with_commas = mopub.Utils.formatNumberWithCommas(number);
+        var parts = with_commas.split(',');
+
+        if (parts.length > 1 && with_decimal) {
+            var decimal = "." + parts[1].substring(0,2);
+            return "" + parts[0] + decimal + endings[parts.length-1];
+        } else if (parts.length > 1) {
+            return "" + parts[0] + endings[parts.length-1];
+        } else {
+            var n = "" + number;            
+            if (n.indexOf('.') >= 0) {
+                return n;
+            } else if (with_decimal) {
+                return n + ".00";
+            } else {
+                return n;
+            }
+        }
     }
 
 
@@ -291,7 +316,8 @@ var mopub = mopub || {};
     
     var DashboardHelpers = {
         get_date_from_datapoint: get_date_from_datapoint,
-        format_stat: format_stat
+        format_stat: format_stat,
+        format_kmbt: format_kmbt
     };
 
     var DashboardController = {

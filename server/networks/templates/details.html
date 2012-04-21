@@ -203,9 +203,9 @@
     </table>
     <div class="appData-details" style="margin: -10px 0 0 86px">
         <table class="dataTable">
-            <tbody id="{{app.key}}-adunits">
+            <tbody>
                 {% for adunit in app.adunits %}
-                <tr class="details-row">
+                <tr class="adunit-row" id="adunit-{{ adunit.key }}">
                     <td class="dataTable-name">
                         {% comment %}
                         <img src="/images/<% if(!active) { %>in<% } %>active.gif" height=9 width=9 style="margin-right:5px;" />
@@ -222,7 +222,7 @@
                     </td>
                     <td class="dataTable-data numeric clk">
                     </td>
-                    <td class="dataTable-data numeric crt">
+                    <td class="dataTable-data numeric ctr">
                     </td>
                 </tr>
                 {% endfor %}

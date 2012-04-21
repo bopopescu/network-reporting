@@ -590,7 +590,7 @@ class NetworkDetailsHandler(RequestHandler):
                         'key': str(campaign.key()),
                         'active': campaign.active,
                         'login_state': LoginStates.NOT_SETUP,
-                        'reporing': False,
+                        'reporting': False,
                         'targeting': []}
 
         # Get the campaign targeting information.  We need an adunit

@@ -114,6 +114,14 @@ class SummedStatsFetcher(AbstractStatsFetcher):
                 advertiser=campaign, daily=True)
         return campaign_stats
 
+    def get_campaign_specific_adunit_stats(self, adunit_key, campaign, start, end,
+            *args, **kwargs):
+        # mongo
+        adunit = AdUnitQueryManager.get(adunit_key);
+        adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
+                                              advertiser=campaign)
+        return adunit_stats
+
     def get_campaign_specific_app_stats(self, app_key, campaign,
                                         start, end, *args, **kwargs):
         # mongo

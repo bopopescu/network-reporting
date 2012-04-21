@@ -44,13 +44,10 @@ $(function() {
 
         // TODO: include adunits in special case
         _.each(all_campaigns, function(campaign) {
-            var network_apps = _.map(apps, function(app) {
-                return {id: app.id,
-                        campaign_id: campaign.id,
-                        stats_endpoint: campaign.get('stats_endpoint')}});
-
-            _.each(network_apps, function(app) {
-                var network_app = new App(app);
+            _.each(apps, function(app) {
+                var network_app = new App({id: app.id,
+                                           campaign_id: campaign.id,
+                                           stats_endpoint: campaign.get('stats_endpoint')});
 
                 var app_view = new AppView({model: network_app,
                              endpoint_specific: true});
@@ -64,6 +61,20 @@ $(function() {
                     },
                 });
             });
+        });
+
+        var adunits = new AdUnitCollection();
+        adunits.campaign_id = mopub_campaign.id;
+        adunits.stats_endpoint = mopub_campaign.get('stats_endpoint');
+
+        new AdUnitCollectionView({collection: adunits});
+
+        adunits.fetch({
+            error: function() {
+                adunits.fetch({
+                    error: toast_error
+                });
+            },
         });
 
         return all_campaigns;

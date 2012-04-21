@@ -349,7 +349,7 @@ var mopub = mopub || {};
     /*
      * ## AdUnit
      */
-    var AdUnit = Backbone.Model.extend({
+    var AdUnit = StatsModel.extend({
         // If we don't set defaults, the templates will explode
         defaults : {
             active: false,
@@ -399,14 +399,23 @@ var mopub = mopub || {};
         url: function() {
             // window.location.search.substring(1) is used to preserve date ranges from the url
             // this makes the fetching work with the datepicker.
-            var stats_endpoint = this.stats_endpoint;
-            return '/api/app/'
-                + this.app_id
-                + '/adunits/'
-                + '?'
-                + window.location.search.substring(1)
-                + '&endpoint='
-                + stats_endpoint;
+            if (this.campaign_id) {
+                return '/api/campaign/'
+                    + this.campaign_id
+                    + '/adunits/'
+                    + '?'
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + this.stats_endpoint;
+            } else {
+                return '/api/app/'
+                    + this.get('app_id')
+                    + '/adunits/'
+                    + '?'
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + this.get('stats_endpoint');
+            }
         }
     });
 

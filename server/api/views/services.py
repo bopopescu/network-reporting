@@ -10,7 +10,8 @@ from ad_network_reports.query_managers import AdNetworkLoginManager, \
         AdNetworkMapperManager
 
 from publisher.query_managers import AdUnitQueryManager, \
-     AppQueryManager
+     AppQueryManager, \
+     PublisherQueryManager
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
@@ -126,7 +127,8 @@ class AdUnitService(RequestHandler):
     """
     API Service for delivering serialized AdUnit data
     """
-    def get(self, app_key=None, adgroup_key=None, adunit_key=None):
+    def get(self, app_key=None, adgroup_key=None, campaign_key=None,
+            adunit_key=None):
         """
         Returns individual or lists of JSON-represented adunit
         metadata and stats data
@@ -203,6 +205,33 @@ class AdUnitService(RequestHandler):
             for adunit in response:
                 adunit_stats = stats.get_adgroup_specific_adunit_stats(adunit['id'],
                                                                        adgroup_key,
+                                                                       self.start_date,
+                                                                       self.end_date)
+
+                # We update with the app and adgroup id/key because our
+                # backbone models often need it for reference
+                adunit_stats.update({'app_id': str(adunit['app_key'])})
+                adunit.update(adunit_stats)
+
+            return JSONResponse(response)
+
+        elif campaign_key:
+            campaign = CampaignQueryManager.get(campaign_key)
+
+            # REFACTOR
+            # ensure the owner of this campaign is the request's
+            # current user
+            if campaign.account.key() != self.account.key():
+                raise Http404
+
+            adunits = PublisherQueryManager.get_adunits_dict_for_account(self.account).values()
+
+            response = [adunit.toJSON() for adunit in adunits]
+
+            # Update each app with stats from the selected endpoint
+            for adunit in response:
+                adunit_stats = stats.get_campaign_specific_adunit_stats(adunit['id'],
+                                                                       campaign,
                                                                        self.start_date,
                                                                        self.end_date)
 

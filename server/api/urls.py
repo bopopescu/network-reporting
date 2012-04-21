@@ -58,8 +58,14 @@ urlpatterns = patterns(
         'campaign_service',
         name='campaign_service'),
 
+    # /api/campaign/<campaign_key>/adunits
+    # all adunit stats for a campaign
+    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/adunits/$',
+        'adunit_service',
+        name='campaign_adunit_service'),
+
     # /api/adgroup/<adgroup_key/apps/<app_key>
-    # individual app from an adgroup
+    # individual app from a campaign
     url(r'^campaign/(?P<campaign_key>[-\w\.]+)/apps/(?P<app_key>[-\w\.]+)$',
         'app_service',
         name='campaign_app_service'),

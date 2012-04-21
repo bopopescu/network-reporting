@@ -528,9 +528,12 @@ var mopub = window.mopub || {};
             /*jslint maxlen: 200 */
             var current_model = this.model;
             var adunit_row = $('tr.adunit-row#adunit-' + this.model.id, this.el);
-            $('.rev', adunit_row).text(mopub.Utils.formatCurrency(this.model.get('rev')));
-            $('.cpm', adunit_row).text(mopub.Utils.formatCurrency(this.model.get('cpm')));
-            $('.imp', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('imp')));
+            var metrics = ['rev', 'cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+
+            _.each(metrics, function (metric) {
+                $(metric, adunit_row).text(current_model.get_formatted_stat(metric));
+            });
+
             $('.price_floor', adunit_row).html('<img class="loading-img hidden" ' +
                                                'src="/images/icons-custom/spinner-12.gif">' +
                                                '</img> ' +
@@ -544,13 +547,6 @@ var mopub = window.mopub || {};
                                              'src="/images/icons-custom/spinner-12.gif"></img> ' +
                                              '<input class="targeting-box" type="checkbox">');
 
-            $('.fill_rate', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
-            $('.ctr', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
-            $('.clk', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clk')));
-            $('.req', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('req')));
-            $('.att', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('req')));
-            $('.conv', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conv')));
-            $('.conv_rate', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conv_rate')));
             /*jslint maxlen: 110 */
 
             if (this.model.get('active')) {
@@ -603,6 +599,10 @@ var mopub = window.mopub || {};
          * it's app's row.
          */
         render: function () {
+            if(!this.template) {
+                return this.renderInline();
+            }
+
             // render the adunit and attach it to the table after it's adunit's row
             var current_model = this.model;
             var renderedContent = $(this.template(this.model.toJSON()));
@@ -648,9 +648,53 @@ var mopub = window.mopub || {};
         }
     });
 
+    /*
+     * ## AdUnitCollectionView
+     */
+    var AdUnitCollectionView = Backbone.View.extend({
+        initialize: function () {
+            this.collection.bind('reset', this.render, this);
+        },
+
+        render: function () {
+            /*jslint maxlen: 200 */
+
+            this.collection.each(function(model) {
+                var adunit_row = $('tr.adunit-row#adunit-' + model.id);
+                var metrics = ['rev', 'cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+
+                _.each(metrics, function (metric) {
+                    $('.' + metric, adunit_row).text(model.get_formatted_stat(metric));
+                });
+
+                /*jslint maxlen: 110 */
+
+                if (model.get('active')) {
+                    $('input.targeting-box', adunit_row).attr('checked', 'checked');
+                }
+
+                // Add the event handler to submit targeting changes over ajax.
+                $('input.targeting-box', adunit_row).click(function () {
+                    var loading_img = $('.targeting .loading-img', adunit_row);
+                    loading_img.show();
+                    model.save({'active': $(this).is(':checked')}, {
+                        success: function () {
+                            setTimeout(function () {
+                                loading_img.hide();
+                            }, 2000);
+                        }
+                    });
+                });
+            });
+
+            return this;
+        },
+    });
+
     window.NetworkAppsView = NetworkAppsView;
     window.NetworkDailyCountsView = NetworkDailyCountsView;
     window.AdUnitView = AdUnitView;
+    window.AdUnitCollectionView = AdUnitCollectionView;
     window.AppView = AppView;
     window.AdGroupsView = AdGroupsView;
     window.CampaignView = CampaignView;

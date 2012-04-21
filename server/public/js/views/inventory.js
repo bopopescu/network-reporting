@@ -407,14 +407,14 @@ var mopub = window.mopub || {};
                     // Mopub doesn't track rev
                     if (metric == 'rev' || metric == 'cpm') {
                         var mopub_selector = null;
-                        var network_selector = selector + ' .networks-' + metric;
+                        var network_selector = selector + ' .' + metric;
                     } else {
-                        var mopub_selector = selector + ' .all-' + metric;
-                        var network_selector = selector + ' .networks-' + metric;
+                        var mopub_selector = selector + ' .' + metric + ' .mopub-data';
+                        var network_selector = selector + ' .' + metric + ' .network-data';
                     }
-                    $(mopub_selector).html(mopub_campaigns.get_formatted_stat(metric));
+                    $(mopub_selector).text(mopub_campaigns.get_formatted_stat(metric));
                     if (!_.isEmpty(network_campaigns.models)) {
-                        $(network_selector).html(network_campaigns.get_formatted_stat(metric));
+                        $(network_selector).text(network_campaigns.get_formatted_stat(metric));
                     }
 
                     function renderColumn(campaigns, selector) {
@@ -422,12 +422,16 @@ var mopub = window.mopub || {};
                         // Render td in rows a column at a time
                         $('.dailyCounts-stats').each(function (index, row) {
                             var value = totals[index];
-                            $(row).find(selector + metric).text(value);
+                            if (metric == 'rev' || metric == 'cpm') {
+                                $(row).find('.' + metric).text(value);
+                            } else {
+                                $(row).find('.' + metric + selector).text(value);
+                            }
                         });
                     }
-                    renderColumn(mopub_campaigns, '.all-');
+                    renderColumn(mopub_campaigns, ' .mopub-data');
                     if (!_.isEmpty(network_campaigns.models)) {
-                        renderColumn(network_campaigns, '.networks-');
+                        renderColumn(network_campaigns, ' .network-data');
                     }
                 });
 

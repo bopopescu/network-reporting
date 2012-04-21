@@ -233,40 +233,30 @@ Make a table for ad networks that are active
             <tr>
                 <th class="dataTable-name big">Totals</th>
                 {% if reporting %}
-                <td class="dataTable-data numeric">
-                    <b>
-                        <div class="networks-rev" style="color:orange;">-</div>
-                    </b>
+                <td class="dataTable-data numeric rev" style="color:orange;">
+                    -
                 </td>
-                <td class="dataTable-data numeric">
-                    <b>
-                        <div class="networks-cpm" style="color:orange;">-</div>
-                    </b>
+                <td class="dataTable-data numeric cpm" style="color:orange;">
+                    -
                 </td>
                 {% endif %}
                 <td class="dataTable-data numeric imp">
-                    <b>
-                        {% if reporting %}
-                        <div class="network-data">-</div>
-                        {% endif %}
-                        <div class="mopub-data">-</div>
-                    </b>
+                    {% if reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    <div class="mopub-data">-</div>
                 </td>
                 <td class="dataTable-data numeric clk">
-                    <b>
-                        {% if reporting %}
-                        <div class="network-data">-</div>
-                        {% endif %}
-                        <div class="mopub-data">-</div>
-                    </b>
+                    {% if reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    <div class="mopub-data">-</div>
                 </td>
                 <td class="dataTable-data numeric ctr">
-                    <b>
-                        {% if reporting %}
-                        <div class="network-data">-</div>
-                        {% endif %}
-                        <div class="mopub-data">-</div>
-                    </b>
+                    {% if reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    <div class="mopub-data">-</div>
                 </td>
             </tr>
         </tbody>
@@ -275,30 +265,30 @@ Make a table for ad networks that are active
             <tr class="dailyCounts-stats">
                 <th class="dataTable-name">{{ day }}</th>
                 {% if reporting %}
-                <td class="dataTable-data numeric">
-                    <div class="networks-rev" style="color:orange;">-</div>
+                <td class="dataTable-data numeric rev" style="color:orange;">
+                    -
                 </td>
-                <td class="dataTable-data numeric">
-                    <div class="networks-cpm" style="color:orange;">-</div>
+                <td class="dataTable-data numeric cpm" style="color:orange;">
+                    -
                 </td>
                 {% endif %}
-                <td class="dataTable-data numeric">
+                <td class="dataTable-data numeric imp">
                     {% if reporting %}
-                    <div class="networks-impression_count network-data">-</div>
+                    <div class="network-data">-</div>
                     {% endif %}
-                    <div class="all-impression_count mopub-data">-</div>
+                    <div class="mopub-data">-</div>
                 </td>
-                <td class="dataTable-data numeric">
+                <td class="dataTable-data numeric clk">
                     {% if reporting %}
-                    <div class="networks-click_count network-data">-</div>
+                    <div class="network-data">-</div>
                     {% endif %}
-                    <div class="all-click_count mopub-data">-</div>
+                    <div class="mopub-data">-</div>
                 </td>
-                <td class="dataTable-data numeric">
+                <td class="dataTable-data numeric ctr">
                     {% if reporting %}
-                    <div class="networks-ctr network-data">-</div>
+                    <div class="network-data">-</div>
                     {% endif %}
-                    <div class="all-ctr mopub-data">-</div>
+                    <div class="mopub-data">-</div>
                 </td>
             </tr>
             {% endfor %}

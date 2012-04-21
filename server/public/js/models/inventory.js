@@ -107,6 +107,7 @@ var mopub = mopub || {};
                 case 'req':
                 case 'att':
                 case 'rev':
+                case 'conv_rate':
                     return this.get(stat);
                 default:
                     throw 'Unsupported stat "' + stat + '".';
@@ -306,10 +307,12 @@ var mopub = mopub || {};
                 + stats_endpoint;
         },
         parse: function(response) {
-            var campaign_data = response.sum;
-            campaign_data.daily_stats = response.daily_stats;
+            if (response) {
+                var campaign_data = response.sum;
+                campaign_data.daily_stats = response.daily_stats;
 
-            return campaign_data;
+                return campaign_data;
+            }
         }
     });
 

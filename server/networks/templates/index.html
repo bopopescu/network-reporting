@@ -102,7 +102,9 @@ Make a table for ad networks that are active
                             </a>
                         </div>
                         <div id="{{ network.key }}-loading" style="float: left;">
+                            {% comment %}
                             <img class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+                            {% endcomment %}
                         </div>
                         <div class="edit-link hidden" style="float: left;">
                             <a href="{% url edit_network campaign_key=network.key %}">
@@ -354,7 +356,7 @@ Make a table for the main ad networks that are not setup
         NetworksController.initialize({
             campaigns_data: [{% for network in networks %}{'id': '{{ network.key }}',
                                                            'network': '{{ network.name }}',
-                                                           'reporting': {% if network.reporting|safe %}true{% else %}false{% endif %}},{% endfor %}],
+                                                           'reporting': {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
             apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
             date_range: {{ date_range }},
             graph_start_date: graph_start_date,});

@@ -116,11 +116,9 @@ var mopub = window.mopub || {};
             this.model.bind('change', this.render, this);
         },
         render: function () {
-            console.log(this.model);
             var metrics = ['att', 'imp', 'fill_rate', 'clk', 'ctr'];
             var this_view = this;
             var row = $("tr#" + this_view.model.id + "-row");
-            console.log(row);
 
             if (this_view.model.get('stats_endpoint') == 'networks') {
                 var selector = ' .network-data';
@@ -459,10 +457,10 @@ var mopub = window.mopub || {};
         },
 
         renderInline: function () {
-
+            var this_view = this;
             // Will there be multiple stats endpoints in this app row?
-            if (this.options.endpoint_specific) {
-                if (this.model.get('endpoint') == 'networks') {
+            if (this_view.options.endpoint_specific) {
+                if (this_view.model.get('stats_endpoint') == 'networks') {
                     var selector = ' .network-data';
                 } else {
                     var selector = ' .mopub-data';
@@ -470,21 +468,17 @@ var mopub = window.mopub || {};
             } else {
                 var selector = ''
             }
-            var app_row = $('tr.app-row#app-' + this.model.id, this.el);
+            var app_row = $('tr.app-row#app-' + this_view.model.id, this_view.el);
 
             /*jslint maxlen: 200 */
-            if (!this.options.endpoint_specific || this.model.get('endpoint') == 'networks') {
-                $('.rev', app_row).text(mopub.Utils.formatCurrency(this.model.get('rev')));
-                $('.cpm', app_row).text(mopub.Utils.formatCurrency(this.model.get('cpm')));
+            if (!this_view.options.endpoint_specific || this_view.model.get('stats_endpoint') == 'networks') {
+                $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
+                $('.cpm', app_row).text(this_view.model.get_formatted_stat('cpm'));
             }
-            $('.imp' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('imp')));
-            $('.clk' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clk')));
-            $('.ctr' + selector, app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
-            $('.fill_rate' + selector, app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
-            $('.req' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('req')));
-            $('.att' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('req')));
-            $('.conv' + selector, app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conv')));
-            $('.conv_rate' + selector, app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conv_rate')));
+            var metrics = ['imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+            _.each(metrics, function (metric) {
+                $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
+            });
             /*jslint maxlen: 110 */
 
             $(".loading-img", app_row).hide();

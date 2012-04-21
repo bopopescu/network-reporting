@@ -62,6 +62,7 @@ class AbstractStatsFetcher(object):
             'imp': sum([stat.impression_count for stat in stats]),
             'clk': sum([stat.click_count for stat in stats]),
             'req': sum([stat.request_count for stat in stats]),
+            'att': sum([stat.attempt_count for stat in stats]),
             'fill_rate': 0.0,
             'conv': sum([stat.conversion_count for stat in stats]),
             'conv_rate': sum([stat.conv_rate for stat in stats])/len(stats),
@@ -399,7 +400,7 @@ class NetworkStatsFetcher(AbstractStatsFetcher):
     def get_campaign_specific_app_stats(self, app_key, campaign, start, end,
             *args, **kwargs):
         app_stats = self._get_publisher_stats(start, end, campaign._account,
-                app_key=app_key, network=campaign.network_type)
+                app_key=app_key, network=campaign.network_type)['sum']
         return app_stats
 
 # TODO: refactor stuff that uses this and remove it

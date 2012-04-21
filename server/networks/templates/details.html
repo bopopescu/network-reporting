@@ -163,17 +163,10 @@
                     <span class="muted unbold">({{ app.type }})</span>
                 </td>
                 {% if reporting %}
-                <td class="dataTable-data numeric">
-                    <div class="network-rev" style="color:orange;"></div>
+                <td class="dataTable-data numeric rev" style="color:orange;">
                 </td>
                 {% endif %}
-                <td class="dataTable-data numeric cpm">
-                    {% if reporting %}
-                    <div class="network-data"></div>
-                    {% endif %}
-                    <div class="mopub-data">
-                        <span class="mopub-min_cpm"></span>-<span class="mopub-max_cpm"></span>
-                    </div>
+                <td class="dataTable-data numeric cpm" style="color:orange;">
                 </td>
                 <td class="dataTable-data numeric att">
                     {% if reporting and network.name != "mobfox" %}
@@ -211,6 +204,28 @@
     <div class="appData-details" style="margin: -10px 0 0 86px">
         <table class="dataTable">
             <tbody id="{{app.key}}-adunits">
+                {% for adunit in app.adunits %}
+                <tr class="details-row">
+                    <td class="dataTable-name">
+                        {% comment %}
+                        <img src="/images/<% if(!active) { %>in<% } %>active.gif" height=9 width=9 style="margin-right:5px;" />
+                        {% endcomment %}
+                        <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
+                    </td>
+                    <td class="dataTable-data numeric cpm">
+                    </td>
+                    <td class="dataTable-data numeric att">
+                    </td>
+                    <td class="dataTable-data numeric imp">
+                    </td>
+                    <td class="dataTable-data numeric fill_rate">
+                    </td>
+                    <td class="dataTable-data numeric clk">
+                    </td>
+                    <td class="dataTable-data numeric crt">
+                    </td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>

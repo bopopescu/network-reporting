@@ -473,8 +473,6 @@ var mopub = window.mopub || {};
                 var selector = ''
             }
             var app_row = $('tr.app-row#app-' + this_view.model.id, this_view.el);
-            console.log('tr.app-row#app-' + this_view.model.id, this_view.el);
-            console.log(app_row);
 
             /*jslint maxlen: 200 */
             if (!this_view.options.endpoint_specific || this_view.model.get('stats_endpoint') == 'networks') {

@@ -624,9 +624,8 @@ class NetworkDetailsHandler(RequestHandler):
                 network_data['login_state'] = login.state
                 network_data['reporting'] = True
 
-        apps = PublisherQueryManager.get_apps_dict_for_account(self.account). \
-                values()
-
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                self.account).values()
         apps = sorted(apps, key=lambda app: app.identifier)
 
         return render_to_response(self.request,

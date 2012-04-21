@@ -768,11 +768,12 @@ $(function() {
     var NetworkDetailsController = { 
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
+                apps = bootstrapping_data.apps,
                 graph_start_date = bootstrapping_data.graph_start_date;
 
             initializeDateButtons();
 
-            var all_campaigns = initialize_campaign_data(campaign_data, true);
+            var all_campaigns = initialize_campaign_data(campaign_data, apps, true);
 
             // create campaigns collection
             campaigns = new Campaigns(all_campaigns);

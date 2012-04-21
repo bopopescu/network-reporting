@@ -75,8 +75,9 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        account = AccountQueryManager.get_account_by_key(self.account.key())
-        if not account.display_new_networks:
+        # TODO: Is this needed? Are all account fields stored in memcache?
+        #account = AccountQueryManager.get_account_by_key(self.account.key())
+        if not self.account.display_new_networks:
             return HttpResponseRedirect(reverse('network_index'))
 
         additional_networks_set = set(NETWORKS.keys())
@@ -147,7 +148,10 @@ class NetworksHandler(RequestHandler):
         additional_networks = sorted(additional_networks, key=lambda
                 network_data: network_data['pretty_name'])
 
-        apps = PublisherQueryManager.get_apps_dict_for_account(account).values()
+        apps = PublisherQueryManager.get_apps_dict_for_account(self.account). \
+                values()
+
+        apps = sorted(apps, key=lambda app: app.identifier)
 
         return render_to_response(self.request,
               'networks/index.html',
@@ -583,9 +587,10 @@ class NetworkDetailsHandler(RequestHandler):
         network = campaign.network_type
         network_data = {'name': network,
                         'pretty_name': campaign.name,
-                        'campaign_key': str(campaign.key()),
+                        'key': str(campaign.key()),
                         'active': campaign.active,
                         'login_state': LoginStates.NOT_SETUP,
+                        'reporing': False,
                         'targeting': []}
 
         # Get the campaign targeting information.  We need an adunit
@@ -607,32 +612,22 @@ class NetworkDetailsHandler(RequestHandler):
         else:
             network_data['targeting'] = 'All'
 
-        campaign_data = {'id': str(campaign.key()),
-                         'network': network,
-                         'reporting': False}
-
         # This campaign is a default network campaign if its the
         # only one of this type. If this is the default, and if we have
         # login info, then we have reporting stats.
         #REFACTOR: handle the case when this isnt true.
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
-            login = AdNetworkLoginManager.get_logins(self.account, network).get()
+            login = AdNetworkLoginManager.get_logins(self.account, network). \
+                    get()
             if login:
                 network_data['login_state'] = login.state
-                campaign_data['reporting'] = True
+                network_data['reporting'] = True
 
-        # Iterate through all the apps and populate the stats for network_data
-        for app in AppQueryManager.get_apps(self.account):
-            if 'mopub_app_stats' not in network_data:
-                network_data['mopub_app_stats'] = {}
-            if app.key() not in network_data['mopub_app_stats']:
-                network_data['mopub_app_stats'][app.key()] = app
+        apps = PublisherQueryManager.get_apps_dict_for_account(self.account). \
+                values()
 
-        if 'mopub_app_stats' in network_data:
-            network_data['mopub_app_stats'] = sorted(network_data[
-                'mopub_app_stats'].values(), key=lambda
-                    app_data: app_data.identifier)
+        apps = sorted(apps, key=lambda app: app.identifier)
 
         return render_to_response(self.request,
               'networks/details.html',
@@ -641,10 +636,9 @@ class NetworkDetailsHandler(RequestHandler):
                   'end_date' : self.days[-1],
                   'date_range' : self.date_range,
                   'graph' : True,
-                  'reporting' : campaign_data['reporting'],
+                  'reporting' : network_data['reporting'],
                   'network': network_data,
-                  'campaign_data': simplejson.dumps(campaign_data),
-                  'MOBFOX': MOBFOX,
+                  'apps': apps,
                   'LoginStates': LoginStates,
               })
 

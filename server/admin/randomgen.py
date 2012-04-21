@@ -29,7 +29,8 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkStats, \
      AdNetworkScrapeStats, \
      AdNetworkNetworkStats, \
-     AdNetworkAppStats
+     AdNetworkAppStats, \
+     LoginStates
 
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager
@@ -410,7 +411,8 @@ def main():
         login = AdNetworkLoginCredentials(account=account,
                            ad_network_name=network,
                            client_key=str(random.random()*10),
-                           send_email=False)
+                           send_email=False,
+                           state=LoginStates.WORKING)
         login_by_network[network] = login
         login.put()
 

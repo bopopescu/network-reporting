@@ -76,19 +76,6 @@ urlpatterns = patterns(
         'networks_api',
         name='networks_api'),
 
-    #TODO: remove /api/network_apps
-    # /api/network_apps/<network>
-    # all app stats for the network
-    url(r'^network_apps/(?P<campaign_key>[-\w\.]+)$',
-        'network_apps_service',
-        name='network_apps_service'),
-
-    # /api/network_apps/<network>/adunits
-    # all app stats for the network including adunits
-    url(r'^network_apps/(?P<campaign_key>[-\w\.]+)/(?P<adunits>adunits)$',
-        'network_apps_service',
-        name='network_apps_service'),
-
     # TODO: remove when migration to new networks is done
     url(r'^ad_network/account_roll_up/$',
         'account_roll_up_service',

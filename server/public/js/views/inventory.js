@@ -17,96 +17,6 @@ var mopub = window.mopub || {};
 (function ($, Backbone, _) {
     "use strict";
     /*
-     * ## NetworkAppsView
-     * Parameters:
-     * * model: NetworkApp
-     * * el: element that will hold the content
-     */
-    var NetworkAppsView = Backbone.View.extend({
-        initialize: function () {
-            this.collection.bind('reset', this.render, this);
-
-            this.el = '#' + this.collection.campaign_key + '-apps';
-
-            try {
-                this.template = _.template($('#network-app-template').html());
-            } catch (e) {
-                // you load the template partial in the page. ok if
-                // you intend to renderInline.
-            }
-        },
-        render: function () {
-            var this_view = this;
-
-            if (this.collection.type == 'adunits') {
-                var metrics = ['cpm', 'att', 'imp', 'fill_rate', 'clk', 'ctr'];
-
-                this.collection.each(function (network_app) {
-
-                    var row = $("tr#" + network_app.id + "-row");
-
-                    // Set app level mopub and network stats
-                    _.each(metrics, function (metric) {
-                        var stat = network_app.get('mopub_stats').get_stat(metric);
-                        if (stat || stat == 0) {
-                            var mopub_selector = '.mopub-' + metric;
-                            $(mopub_selector, row).text(network_app.get('mopub_stats').get_formatted_stat(metric));
-                        }
-                        var network_stats = network_app.get('network_stats');
-                        if (network_stats && (network_stats.get_stat(metric) || network_stats.get_stat(metric) == 0)) {
-                            var network_selector = '.network-' + metric;
-                            $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat(metric));
-                        }
-                    });
-                    var network_selector = '.network-rev';
-
-                    if (network_app.get('network_stats')) {
-                        $(network_selector, row).text(network_app.get('network_stats').get_formatted_stat('rev'));
-                    }
-
-                    // Set adunit level mopub and network stats
-                    var renderedContent = '';
-                    _.each(network_app.get('adunits'), function (adunit) {
-                        renderedContent += _.template($('#adunit-template').html(), {
-                            name: adunit.name,
-                            url: adunit.url,
-                            stats: adunit.stats,
-                            active: adunit.active,
-                        });
-                    });
-
-                    var tbody = $("tbody#" + network_app.id + "-adunits");
-
-                    $(tbody).html(renderedContent);
-                });
-            } else {
-                var renderedContent = '';
-                this.collection.each(function (network_app) {
-
-                    renderedContent += _.template($('#app-template').html(), {
-                        name: network_app.get('name'),
-                        app_type: network_app.get('app_type'),
-                        url: network_app.get('url'),
-                        network: network_app.get('network'),
-                        mopub_stats: network_app.get('mopub_stats'),
-                        network_stats: network_app.get('network_stats'),
-                    });
-                });
-
-                $(this.el).html(renderedContent);
-
-                if (!$('#show-network').is(':checked')) {
-                    $(this.el + ' .network-data').hide();
-                }
-            }
-            $('#' + this.collection.campaign_key + '-loading').hide();
-
-            return this;
-        }
-    });
-
-    
-    /*
      * ## CampaignView
      * Parameters:
      * * model: Campaign
@@ -691,7 +601,6 @@ var mopub = window.mopub || {};
         },
     });
 
-    window.NetworkAppsView = NetworkAppsView;
     window.NetworkDailyCountsView = NetworkDailyCountsView;
     window.AdUnitView = AdUnitView;
     window.AdUnitCollectionView = AdUnitCollectionView;

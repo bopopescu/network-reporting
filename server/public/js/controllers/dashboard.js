@@ -1,5 +1,5 @@
 /*
- * # MoPub Dashboard 
+ * # MoPub Dashboard
  */
 
 var mopub = mopub || {};
@@ -11,7 +11,7 @@ var mopub = mopub || {};
      */
 
     var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-    var URL = 'http://localhost:8888/';
+    //var URL = 'http://localhost:8888/';
 
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
@@ -82,7 +82,7 @@ var mopub = mopub || {};
         'imp',
         'clk'
     ];
-    
+
     var SORTABLE_COLUMNS = [
         'attempts',
         'clk',
@@ -91,14 +91,14 @@ var mopub = mopub || {};
         'req',
         'rev'
     ];
-    
+
     var MAX_CAMPAIGNS = 6;
     var MAX_APPS = 12;
     var MAX_ADUNITS = 6;
-        
+
     var WIDTH = 550;
     var HEIGHT = 150;
-    
+
     var MARGIN_TOP = 10;
     var MARGIN_RIGHT = 30;
     var MARGIN_BOTTOM = 15;
@@ -110,7 +110,7 @@ var mopub = mopub || {};
 
     /*
      * Pops up a growl-style message when something has
-     * gone wrong fetching data. Use this to catch 500/503 
+     * gone wrong fetching data. Use this to catch 500/503
      * errors from the server.
      */
     var toast_error = function () {
@@ -166,9 +166,9 @@ var mopub = mopub || {};
     }
 
     /*
-     * Formats a number in KMBT (thousands, millions, 
+     * Formats a number in KMBT (thousands, millions,
      * billions, trillions) formatting.
-     * 
+     *
      * Example: 1000000 -> 1M, 1230000000 -> 12.3B
      */
     function format_kmbt(number, with_decimal) {
@@ -208,17 +208,17 @@ var mopub = mopub || {};
 
 
     /*
-     * Create a new chart using Rickshaw/d3. 
-     * 
+     * Create a new chart using Rickshaw/d3.
+     *
      * `series` is the type of series we're representing (e.g. 'rev',
      * 'imp', 'clk') and is used for formatting axes and tooltips.
-     * 
+     *
      * `element` is the name of the element (e.g. '#chart') to render
-     * the chart in. The chart will be rendered when the function is 
+     * the chart in. The chart will be rendered when the function is
      * called.
-     * 
+     *
      * `account_data` is all of the data you get back from a query.
-     * 
+     *
      * `options` is not currently used, but will be used in the future
      * to specify stuff like height, width, and other rendering options.
      */
@@ -274,7 +274,7 @@ var mopub = mopub || {};
             //     return format_stat(series, y);
             // }
         });
-        
+
         // On the X-axis, display the date in MM/DD form.
         var xAxis = new Rickshaw.Graph.Axis.X({
 	        graph: chart,
@@ -306,14 +306,14 @@ var mopub = mopub || {};
      * Initialization function that renders all 4 of the charts in the
      * dashboard page.
      */
-    function initializeDashboardCharts(start_date, end_date, account_data) {
+    function initializeDashboardCharts(account_data) {
         var rev_chart = createChart('rev', '#rev_chart', account_data);
         var imp_chart = createChart('imp', '#imp_chart', account_data);
         var clk_chart = createChart('clk', '#clk_chart', account_data);
         var ctr_chart = createChart('ctr', '#ctr_chart', account_data);
     }
 
-    
+
     var DashboardHelpers = {
         get_date_from_datapoint: get_date_from_datapoint,
         format_stat: format_stat,
@@ -335,7 +335,7 @@ var mopub = mopub || {};
 
             // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
             // The object is in the form that we normally expect from the server.
-            // The new keys and values are set on the object in place, so nothing 
+            // The new keys and values are set on the object in place, so nothing
             // is returned.
             function calculate_stats(obj) {
                 obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
@@ -367,6 +367,9 @@ var mopub = mopub || {};
                 url: URL
             });
 
+            function pad(integer) {
+                return integer < 10 ? '0' + integer : integer;
+            }
 
             function string_to_date(date_string) {
                 var parts = date_string.split('-');
@@ -374,6 +377,24 @@ var mopub = mopub || {};
             }
 
             function date_to_string(date) {
+                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+            }
+
+            function pretty_string_to_date(date_string) {
+                var parts = date_string.split('/');
+                return new Date(parts[2], parts[0] - 1, parts[1]);
+            }
+
+            function date_to_pretty_string(date) {
+                return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear();
+            }
+
+            function string_to_date_hour(date_string) {
+                var parts = date_string.split('-');
+                return new Date(parts[0], parts[1] - 1, parts[2], parts[3]);
+            }
+
+            function date_hour_to_string(date) {
                 return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate() + '-' + date.getHours();
             }
 
@@ -394,6 +415,12 @@ var mopub = mopub || {};
             }
 
             function get_keys(type) {
+                if(((type == 'source' || type == 'campaign') && !$('tr.source.selected, tr.campaign.selected')) || ((type == 'app' || type == 'adunit') && !$('tr.app.selected, tr.adunit.selected'))) {
+                    return _.map($('tr.' + type), function (tr) {
+                        return tr.id;
+                    });
+                }
+
                 return _.map($('tr.' + type + '.selected'), function (tr) {
                     return tr.id;
                 });
@@ -512,50 +539,26 @@ var mopub = mopub || {};
                 return filter_body_row(context);
             }
 
-            function update_dashboard(update_rollups_and_charts, advertiser_table, publisher_table) {
-                var start, end;
-                if($('select[name="date_range"]').val() == 'custom') {
-                    start = new Date($("#datepicker-start-input").val());
-                    end = new Date($("#datepicker-end-input").val());
-                }
-                else {
-                    end = new Date(new Date().toDateString());
-                    switch($('select[name="date_range"]').val()) {
-                        case 'day':
-                            start = end;
-                            break;
-                        case 'week':
-                            start = new Date(end - 86400000 * 6);
-                            break;
-                        case 'two_weeks':
-                            start = new Date(end - 86400000 * 13);
-                            break;
-                    }
-                }
-                end.setHours(23);
+            function get_data() {
+                var start = $('#start').val();
+                var end = $('#end').val();
 
                 var data = {
                     account: bootstrapping_data['account'],
-                    start: date_to_string(start),
-                    end: date_to_string(end)
+                    start: start,
+                    end: end
                 };
 
-                if($('[name="compare"]').is(':checked')) {
-                    var diff;
-                    switch($('select[name="date_range"]').val()) {
-                        case 'day':
-                            diff = 86400000;
-                            break;
-                        case 'week':
-                            diff = 86400000 * 7;
-                            break;
-                        case 'two_weeks':
-                            diff = 86400000 * 14;
-                            break;
-                    }
-                    data['vs_start'] = date_to_string(new Date(start - diff));
-                    data['vs_end'] = date_to_string(new Date(end - diff));
+                if($('#vs_start').val() && $('#vs_end').val()) {
+                    data['vs_start'] = $('#vs_start').val();
+                    data['vs_end'] = $('#vs_end').val();
                 }
+
+                return data;
+            }
+
+            function update_dashboard(update_rollups_and_charts, advertiser_table, publisher_table) {
+                var data = get_data();
 
                 var advertiser_type = get_advertiser_type();
                 var advertiser_query = get_advertiser_query(advertiser_type);
@@ -565,7 +568,7 @@ var mopub = mopub || {};
                 if(update_rollups_and_charts) {
 
                     var rollups_and_charts_data = _.clone(data);
-                    var granularity = $('select[name="granularity"]').val();
+                    var granularity = $('#granularity').val();
                     rollups_and_charts_data.granularity = granularity;
                     rollups_and_charts_data.query = [_.extend(_.clone(advertiser_query), publisher_query)];
 
@@ -586,8 +589,7 @@ var mopub = mopub || {};
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
-                                    //update_charts(start, end, charts_data);
-                                    initializeDashboardCharts(start, end, charts_data);
+                                    initializeDashboardCharts(charts_data);
                                 });
                             }
                         });
@@ -609,8 +611,7 @@ var mopub = mopub || {};
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
-                                    //update_charts(start, end, charts_data);
-                                    initializeDashboardCharts(start, end, charts_data);
+                                    initializeDashboardCharts(charts_data);
                                 });
                             }
                         });
@@ -635,7 +636,7 @@ var mopub = mopub || {};
                                         update_rollups(json.sum[0]);
                                         charts_data = [json[granularity][0]];
                                     }
-                                    initializeDashboardCharts(start, end, charts_data);
+                                    initializeDashboardCharts(charts_data);
                                 });
                             }
                         });
@@ -883,94 +884,142 @@ var mopub = mopub || {};
                 }
             }
 
-            /* Controls */
-            // date controls
-            // Set up the two date fields with datepickers
-            var valid_date_range = {
-                endDate: "0d"
-            };
-            $("input[name='start-date']").datepicker(valid_date_range);
-            $("input[name='end-date']").datepicker(valid_date_range);
+            /* EVENT HANDLERS */
 
-            // On submit, get the date range from the two inputs and
-            // form the url, and reload the page.
-            $("#custom-date-submit").unbind('click').click(function() {
-                $('#custom_date_range').html($("#datepicker-start-input").val() + ' to ' + $("#datepicker-end-input").val());
-                $('#custom_date_range').show();
-                $("#datepicker-custom-range").toggleClass('hidden');
+            function get_today() {
+                var now = new Date();
+                return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            }
+
+            function update_start_end(start_end) {
+                var start, end;
+                if(start_end == 'custom') {
+                    start = pretty_string_to_date($('#custom_start').val());
+                    end = pretty_string_to_date($('#custom_end').val());
+                    end.setHours(23);
+                }
+                else {
+                    switch(start_end) {
+                        case 'today':
+                            start = get_today();
+                            end = get_today();
+                            break;
+                        case 'yesterday':
+                            start = new Date(get_today() - 86400000);
+                            end = new Date(get_today() - 86400000);
+                            break;
+                        case 'last_7_days':
+                            start = new Date(get_today() - 86400000 * 6);
+                            end = get_today();
+                            break;
+                        case 'last_14_days':
+                            start = new Date(get_today() - 86400000 * 13);
+                            end = get_today();
+                            break;
+                    }
+                    end.setHours(23);
+
+                    $('#custom_start').val(date_to_pretty_string(start));
+                    $('#custom_end').val(date_to_pretty_string(end));
+                }
+
+                $('#start').val(date_hour_to_string(start));
+                $('#end').val(date_hour_to_string(end));
+
+                if(start_end == 'today' || start_end == 'yesterday') {
+                    $('#start_end_label').html(date_to_pretty_string(start));
+                }
+                else {
+                    $('#start_end_label').html(date_to_pretty_string(start) + ' to ' + date_to_pretty_string(end));
+                }
+
+                $('#vs li').hide();
+                $('#vs li.' + start_end).show();
+
+                update_vs_start_end('none');
+            }
+
+            function update_vs_start_end(vs_start_end) {
+                if(vs_start_end == 'none') {
+                    $('#vs_start').val('');
+                    $('#vs_end').val('');
+                    $('#vs_start_end_label').html('None');
+                }
+                else {
+                    var start = string_to_date_hour($('#start').val());
+                    var end = string_to_date_hour($('#end').val());
+                    var diff;
+                    switch(vs_start_end) {
+                        case 'day':
+                            diff = 86400000;
+                            break;
+                        case 'week':
+                            diff = 86400000 * 7;
+                            break;
+                        case '14_days':
+                            diff = 86400000 * 14;
+                            break;
+                    }
+                    var vs_start = new Date(start - diff);
+                    var vs_end = new Date(end - diff);
+
+                    $('#vs_start').val(date_hour_to_string(vs_start));
+                    $('#vs_end').val(date_hour_to_string(vs_end));
+
+                    if(vs_start_end == 'day' || (vs_start_end == 'week' && end - start <= 86400000)) {
+                        $('#vs_start_end_label').html(date_to_pretty_string(vs_start));
+                    }
+                    else {
+                        $('#vs_start_end_label').html(date_to_pretty_string(vs_start) + ' to ' + date_to_pretty_string(vs_end));
+                    }
+                }
+            }
+
+            /* Controls */
+            $('#today, #yesterday, #last_7_days, #last_14_days').click(function () {
+                update_start_end(this.id);
                 update_dashboard(true, true, true);
             });
 
-            $("#custom_date_range").click(function () {
-                $("#datepicker-custom-range").toggleClass('hidden');
+            $('#custom').click(function() {
+                $('#date_modal').show();
             });
 
-            $('[name="date_range"]').change(function () {
-                if($(this).val() == 'custom') {
-                    $("#datepicker-custom-range").toggleClass('hidden');
-                    $('[name="compare"]').removeProp('checked');
-                    $('[name="compare"]').closest('label').hide();
-                }
-                else {
-                    $('#custom_date_range').hide();
-                    $('[name="compare"]').closest('label').show();
-                    if($(this).val() == 'day') {
-                        // granularity can't be daily
-                        if($('[name="granularity"]').val() == 'daily') {
-                            $('[name="granularity"]').val('hourly');
-                        }
-                        $('[name="granularity"] option[value="daily"]').attr('disabled', 'disabled');
-                        $('span#comparison_range').html('yesterday');
-                    }
-                    else {
-                        // granularity can be daily
-                        $('[name="granularity"] option[value="daily"]').removeAttr('disabled');
-                        if($(this).val() == 'week') {
-                            $('span#comparison_range').html('the week before');
-                        }
-                        else if($(this).val() == 'two_weeks') {
-                            $('span#comparison_range').html('the two weeks before');
-                        }
-                    }
-                    update_dashboard(true, true, true);
-                }
+            $('#date_modal_submit').click(function () {
+                $('#date_modal').hide();
+                update_start_end('custom');
+                update_dashboard(true, true, true);
             });
 
-            // granularity
-            $('[name="granularity"]').change(function () {
+            $('#date_modal_cancel').click(function () {
+                $('#date_modal').hide();
+            });
+
+            $('#none, #day, #week, #14_days').click(function () {
+                update_vs_start_end(this.id);
+                update_dashboard(true, true, true);
+            });
+
+            $('[name="advertiser_compare"]').change(function () {
+                $('[name="publisher_compare"]').prop('checked', false);
+                update_vs_start_end('none');
+                update_dashboard(true, false, false);
+            });
+            $('[name="publisher_compare"]').change(function () {
+                $('[name="advertiser_compare"]').prop('checked', false);
+                update_vs_start_end('none');
                 update_dashboard(true, false, false);
             });
 
-            // comparison
-            $('[name="compare"]').change(function () {
-                $('[name="advertiser_compare"]').prop('checked', false);
-                $('[name="publisher_compare"]').prop('checked', false);
-                update_dashboard(true, true, true);
+            /*
+            // granularity
+            $('#granularity').change(function () {
+                update_dashboard(true, false, false);
             });
-            $('[name="advertiser_compare"]').change(function () {
-                $('[name="compare"]').prop('checked', false);
-                $('[name="publisher_compare"]').prop('checked', false);
-                update_dashboard(true, true, true);
-            });
-            $('[name="publisher_compare"]').change(function () {
-                $('[name="compare"]').prop('checked', false);
-                $('[name="advertiser_compare"]').prop('checked', false);
-                update_dashboard(true, true, true);
-            });
+            */
 
             // export
             $('button#export').click(function () {
-                var advertiser_type = get_advertiser_type();
-                $('#export_wizard select[name="advertiser_breakdown"]')
-                    .children('option')
-                    .each(function (index, option) {
-                        $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== advertiser_type));
-                });
-
-                var publisher_type = get_publisher_type();
-                $('#export_wizard select[name="publisher_breakdown"]').children('option').each(function (index, option) {
-                    $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== publisher_type));
-                });
                 $('#export_wizard').modal('show');
             });
 
@@ -979,29 +1028,7 @@ var mopub = mopub || {};
                 // Hide the modal when the download button is clicked.
                 $('#export_wizard').modal('hide');
 
-
-                // Extrapolate the start and end date
-                var start, end;
-                if ($('select[name="date_range"]').val() == 'custom') {
-                    start = new Date($("#datepicker-start-input").val());
-                    end = new Date($("#datepicker-end-input").val());
-                } else {
-                    end = new Date(new Date().toDateString());
-                    switch($('select[name="date_range"]').val()) {
-                        case 'day':
-                            start = end;
-                            break;
-                        case 'week':
-                            start = new Date(end - 86400000 * 6);
-                            break;
-                        case 'two_weeks':
-                            start = new Date(end - 86400000 * 13);
-                            break;
-                        default: start = end;
-                    }
-                }
-
-                end.setHours(23);
+                var data = get_data();
 
                 // Determine the query
                 var query = {};
@@ -1021,16 +1048,13 @@ var mopub = mopub || {};
                     names[id] = $.trim($('#' + id + ' td.name').html());
                 });
 
-                var data = {
-                    account: bootstrapping_data['account'],
-                    start: date_to_string(start),
-                    end: date_to_string(end),
-                    granularity: $('select[name="granularity"]').val(),
+                _.extend(data, {
+                    granularity: $('#granularity').val(),
                     advertiser_breakdown: advertiser_breakdown,
                     publisher_breakdown: publisher_breakdown,
                     query: query,
                     names: names
-                };
+                });
 
                 window.location = URL + 'csv/?data=' + JSON.stringify(data);
 
@@ -1290,7 +1314,16 @@ var mopub = mopub || {};
             });
             $('table#publisher thead').append($tr);
 
-            update_dashboard(true, true, true);
+            /* Setup */
+            $('#vs_start_end_label').val('None');
+
+            $('#last_7_days').click();
+
+            var valid_date_range = {
+                endDate: "0d"
+            };
+            $('#custom_start').datepicker(valid_date_range);
+            $('#custom_end').datepicker(valid_date_range);
         },
     };
 

@@ -1,11 +1,26 @@
 div#controls {
     margin-bottom: 20px;
     position: relative;
-    div#datepicker-custom-range {
+    div#date_modal {
         position: absolute;
-        top: 18px;
+        top: 25px;
         left: 0;
-        float: none;
+        @include well;
+        padding: 10px;
+        z-index: 2;
+        border: 1px solid darken($light_gray, 5%);
+        background: $white;
+        @include box-shadow;
+    }
+    > span {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0 5px;
+        vertical-align: 5px;
+    }
+    #export {
+        margin-left: 20px;
+        vertical-align: top;
     }
 }
 

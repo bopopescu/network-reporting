@@ -42,7 +42,7 @@ $(function() {
             });
         });
 
-        // TODO: include adunits in special case
+        var network_apps = [];
         _.each(all_campaigns, function(campaign) {
             _.each(apps, function(app) {
                 var network_app = new App({id: app.id,
@@ -53,31 +53,21 @@ $(function() {
                              endpoint_specific: true});
                 app_view.el = '.' + campaign.id + '-apps-div';
 
-                network_app.fetch({
-                    error: function() {
-                        network_app.fetch({
-                            error: toast_error
-                        });
-                    },
-                });
+                network_apps.push(network_app);
             });
         });
 
-        var adunits = new AdUnitCollection();
-        adunits.campaign_id = mopub_campaign.id;
-        adunits.stats_endpoint = mopub_campaign.get('stats_endpoint');
+        if(include_adunits) {
+            var adunits = new AdUnitCollection();
+            adunits.campaign_id = mopub_campaign.id;
+            adunits.stats_endpoint = mopub_campaign.get('stats_endpoint');
 
-        new AdUnitCollectionView({collection: adunits});
+            new AdUnitCollectionView({collection: adunits});
 
-        adunits.fetch({
-            error: function() {
-                adunits.fetch({
-                    error: toast_error
-                });
-            },
-        });
-
-        return all_campaigns;
+            return [all_campaigns, network_apps, adunits];
+        } else {
+            return [all_campaigns, network_apps];
+        }
     }
 
     var show_network_chart_data = true;
@@ -146,8 +136,21 @@ $(function() {
             initializeDateButtons();
 
             var all_campaigns = [];
+            var network_apps = [];
             _.each(campaigns_data, function(campaign_data) {
-                all_campaigns = all_campaigns.concat(initialize_campaign_data(campaign_data, apps, false));
+                var result = initialize_campaign_data(campaign_data, apps, false);
+                all_campaigns = all_campaigns.concat(result[0]);
+                network_apps = network_apps.concat(result[1]);
+            });
+
+            _.each(network_apps, function(network_app) {
+                network_app.fetch({
+                    error: function() {
+                        network_app.fetch({
+                            error: toast_error
+                        });
+                    },
+                });
             });
 
             var campaigns = new Campaigns(all_campaigns);
@@ -784,7 +787,29 @@ $(function() {
 
             initializeDateButtons();
 
-            var all_campaigns = initialize_campaign_data(campaign_data, apps, true);
+            var result = initialize_campaign_data(campaign_data, apps, true);
+            var all_campaigns = result[0];
+            var network_apps = result[1];
+            var adunits = result[2];
+
+
+            _.each(network_apps, function(network_app) {
+                network_app.fetch({
+                    error: function() {
+                        network_app.fetch({
+                            error: toast_error
+                        });
+                    },
+                });
+            });
+
+            adunits.fetch({
+                error: function() {
+                    adunits.fetch({
+                        error: toast_error
+                    });
+                },
+            });
 
             // create campaigns collection
             campaigns = new Campaigns(all_campaigns);

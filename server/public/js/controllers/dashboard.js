@@ -6,6 +6,13 @@ var mopub = mopub || {};
 
 (function($, Backbone, _){
 
+    /*
+     * Settings
+     */
+
+    var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+    //var URL = 'http://localhost:8888/';
+
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
@@ -40,6 +47,66 @@ var mopub = mopub || {};
         'rev': 'Revenue'
     };
 
+    var ADVERTISER_COLUMNS = [
+        'rev',
+        'imp',
+        'clk',
+        'ctr',
+        'cpm',
+        'attempts',
+        'conv',
+        'conv_rate'
+    ];
+
+    var ADVERTISER_DEFAULT_COLUMNS = [
+        'rev',
+        'imp',
+        'clk'
+    ];
+
+    var PUBLISHER_COLUMNS = [
+        'rev',
+        'imp',
+        'clk',
+        'ctr',
+        'cpm',
+        'attempts',
+        'conv',
+        'conv_rate',
+        'fill_rate',
+        'req'
+    ];
+
+    var PUBLISHER_DEFAULT_COLUMNS = [
+        'rev',
+        'imp',
+        'clk'
+    ];
+
+    var SORTABLE_COLUMNS = [
+        'attempts',
+        'clk',
+        'conv',
+        'imp',
+        'req',
+        'rev'
+    ];
+
+    var MAX_CAMPAIGNS = 6;
+    var MAX_APPS = 12;
+    var MAX_ADUNITS = 6;
+
+    var WIDTH = 550;
+    var HEIGHT = 150;
+
+    var MARGIN_TOP = 10;
+    var MARGIN_RIGHT = 30;
+    var MARGIN_BOTTOM = 15;
+    var MARGIN_LEFT = 50;
+
+    /*
+     * Helper functions
+     */
 
     /*
      * Pops up a growl-style message when something has
@@ -56,7 +123,7 @@ var mopub = mopub || {};
     };
 
     /*
-     * Gets a javascript Date from a datapoint object with a
+     * Gets a date string (MM/DD) from a datapoint object with a
      * stringified date or hour field (like the one we'd get
      * in a response from the stats service).
      */
@@ -161,6 +228,8 @@ var mopub = mopub || {};
             series: all_chart_data
         });
 
+        // When the graph is hovered over, we display the date and the
+        // current value in a tooltip at the top.
         var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail( {
             graph: chart,
             width: 550,
@@ -175,12 +244,13 @@ var mopub = mopub || {};
                 });
 
                 return labels.join('<br />');
-            },
+            }
             // yFormatter: function(y) {
             //     return format_stat(series, y);
             // }
         });
 
+        // On the X-axis, display the date in MM/DD form.
         var xAxis = new Rickshaw.Graph.Axis.X({
 	        graph: chart,
             labels: _.map(account_data[0], function(datapoint){
@@ -188,16 +258,19 @@ var mopub = mopub || {};
             }),
 	        ticksTreatment: 'glow'
         });
+
         xAxis.render();
 
+        // On the Y-axis, display the amount in KMBT form.
         var yAxis = new Rickshaw.Graph.Axis.Y({
 	        graph: chart,
 	        ticksTreatment: 'glow',
             tickFormat: Rickshaw.Fixtures.Number.formatKMBT
         } );
+
         yAxis.render();
 
-
+        // Render and return the chart
         chart.renderer.unstack = true;
         chart.render();
         return chart;
@@ -216,6 +289,11 @@ var mopub = mopub || {};
     }
 
 
+    var DashboardHelpers = {
+        get_date_from_datapoint: get_date_from_datapoint,
+        format_stat: format_stat
+    };
+
     var DashboardController = {
         initializeDashboard: function(bootstrapping_data) {
             /**
@@ -229,81 +307,10 @@ var mopub = mopub || {};
              * }
              */
 
-            /* Constants */
-
-            //var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-            var URL = 'http://localhost:8888/';
-
-            var STATS = {
-                'attempts': 'Attempts',
-                'clk': 'Clicks',
-                'conv': 'Conversions',
-                'conv_rate': 'Conversion Rate',
-                'cpm': 'CPM',
-                'ctr': 'CTR',
-                'fill_rate': 'Fill Rate',
-                'imp': 'Impressions',
-                'req': 'Requests',
-                'rev': 'Revenue'
-            };
-
-            var ADVERTISER_COLUMNS = [
-                'rev',
-                'imp',
-                'clk',
-                'ctr',
-                'cpm',
-                'attempts',
-                'conv',
-                'conv_rate'
-            ];
-
-            var ADVERTISER_DEFAULT_COLUMNS = [
-                'rev',
-                'imp',
-                'clk'
-            ];
-
-            var PUBLISHER_COLUMNS = [
-                'rev',
-                'imp',
-                'clk',
-                'ctr',
-                'cpm',
-                'attempts',
-                'conv',
-                'conv_rate',
-                'fill_rate',
-                'req'
-            ];
-
-            var PUBLISHER_DEFAULT_COLUMNS = [
-                'rev',
-                'imp',
-                'clk'
-            ];
-
-            var SORTABLE_COLUMNS = [
-                'attempts',
-                'clk',
-                'conv',
-                'imp',
-                'req',
-                'rev'
-            ];
-
-            var MAX_CAMPAIGNS = 6;
-            var MAX_APPS = 12;
-            var MAX_ADUNITS = 6;
-
-            var WIDTH = 550;
-            var HEIGHT = 150;
-
-            var MARGIN_TOP = 10;
-            var MARGIN_RIGHT = 30;
-            var MARGIN_BOTTOM = 15;
-            var MARGIN_LEFT = 50;
-
+            // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
+            // The object is in the form that we normally expect from the server.
+            // The new keys and values are set on the object in place, so nothing
+            // is returned.
             function calculate_stats(obj) {
                 obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
                 obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
@@ -311,7 +318,8 @@ var mopub = mopub || {};
                 obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
             }
 
-            /* JSONP Setup */
+            // Set up JSONP. We calculate derivative stats upon every
+            // query response.
             $.jsonp.setup({
                 callbackParameter: "callback",
                 dataFilter: function (json) {
@@ -333,116 +341,8 @@ var mopub = mopub || {};
                 url: URL
             });
 
-            /* TODO: use routers
-            var Dashboard = Backbone.Router.extend({
-
-                routes: {
-                    ":start_date/:end_date/": "update"   // #search/kiwis/p7
-                },
-
-                update: function(start, end) {
-                     var account = bootstrapping_data['account'];
-                     var granularity = 'daily';
-
-                     var campaigns = '';
-
-                     var queries = [
-
-                     ];
-
-                     var data = {
-                        account: account,
-                        start: start,
-                        end: end,
-                        granularity: granularity,
-                        queries: [{
-                            campaign: '*', // or just dont include it
-                            adgroup: '123',
-                            app: '12345',
-                            adunit: 'aaa',
-                            source: 'direct', // or mpx or networks
-                            source_type: 'promo'
-                        },{
-                            // example: will fetch all promo stats
-                            source: 'direct',
-                            source_type: 'promo'
-                        },{
-                            // example: will get all stats for this adunit that
-                            // were delivered in this adgroup
-                            adgroup: 'asdASidnasdianlsdASD',
-                            adunit: 'aaaBBBcccDDDeeeeFFF'
-                        }]
-                     };
-
-                    $.jsonp({
-                        data: data,
-                        error: function (xOptions, textStatus) {
-                            console.log('JSONP Error: using random data instead.');
-                            start_date = string_to_date(start);
-                            end_date = string_to_date(end);
-                            var date_range = (end_date - start_date) / 86400000 + 1;
-                            var series1 = [];
-                            var series2 = [];
-                            for(var i = 0; i <= date_range; i++) {
-                                series1[i] = Math.random() * 200;
-                                series2[i] = Math.random() * 200;
-                            }
-                            var data = {
-                                'Series 1': series1,
-                                'Series 2': series2
-                            };
-                            update_chart(start_date, end_date, data);
-                        },
-                        success: function (json, textStatus) {
-                            console.log('Success : ' + json + '.');
-                        },
-                        url: 'http://statservice.mopub.com/'
-                    });
-                }
-
-            });
-
-            var dashboard = new Dashboard();
-
-            Backbone.history.start({
-                pushState: true,
-                root: '/inventory/dashboard/'
-            });
-
-            var start_date = new Date(end_date - date_range * 86400000);
-            var url = date_to_string(start_date) + '/' + date_to_string(end_date) + '/';
-            dashboard.navigate(url, {trigger: true});
-            */
-
-            /* Helpers */
-            function format_stat(stat, value) {
-                switch (stat) {
-                    case 'attempts':
-                    case 'clk':
-                    case 'conv':
-                    case 'imp':
-                    case 'req':
-                        return number_compact(value, 10);
-                    case 'cpm':
-                    case 'rev':
-                        return '$' + number_compact(value, 10);
-                    case 'conv_rate':
-                    case 'ctr':
-                    case 'fill_rate':
-                        return mopub.Utils.formatNumberAsPercentage(value);
-                    default:
-                        throw new Error('Unsupported stat "' + stat + '".');
-                }
-            }
-
-            function number_compact(number, multiplier) {
-                if(number >= 1000000*multiplier) {
-                    return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000000)) + 'M';
-                }
-                if(number >= 1000*multiplier) {
-                    return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000)) + 'k';
-                }
-                return mopub.Utils.formatNumberWithCommas(Math.round(number));
+            function pad(integer) {
+                return integer < 10 ? '0' + integer : integer;
             }
 
             function string_to_date(date_string) {
@@ -451,6 +351,24 @@ var mopub = mopub || {};
             }
 
             function date_to_string(date) {
+                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+            }
+
+            function pretty_string_to_date(date_string) {
+                var parts = date_string.split('/');
+                return new Date(parts[2], parts[0] - 1, parts[1]);
+            }
+
+            function date_to_pretty_string(date) {
+                return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear();
+            }
+
+            function string_to_date_hour(date_string) {
+                var parts = date_string.split('-');
+                return new Date(parts[0], parts[1] - 1, parts[2], parts[3]);
+            }
+
+            function date_hour_to_string(date) {
                 return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate() + '-' + date.getHours();
             }
 
@@ -471,6 +389,12 @@ var mopub = mopub || {};
             }
 
             function get_keys(type) {
+                if(((type == 'source' || type == 'campaign') && !$('tr.source.selected, tr.campaign.selected')) || ((type == 'app' || type == 'adunit') && !$('tr.app.selected, tr.adunit.selected'))) {
+                    return _.map($('tr.' + type), function (tr) {
+                        return tr.id;
+                    });
+                }
+
                 return _.map($('tr.' + type + '.selected'), function (tr) {
                     return tr.id;
                 });
@@ -590,30 +514,18 @@ var mopub = mopub || {};
             }
 
             function get_data() {
-                var start = new Date($('#start').val());
-                var end = new Date($('#end').val());
+                var start = $('#start').val();
+                var end = $('#end').val();
 
                 var data = {
                     account: bootstrapping_data['account'],
-                    start: date_to_string(start),
-                    end: date_to_string(end)
+                    start: start,
+                    end: end
                 };
 
-                if($('[name="compare"]').is(':checked')) {
-                    var diff;
-                    switch($('select[name="date_range"]').val()) {
-                        case 'day':
-                            diff = 86400000;
-                            break;
-                        case 'week':
-                            diff = 86400000 * 7;
-                            break;
-                        case 'two_weeks':
-                            diff = 86400000 * 14;
-                            break;
-                    }
-                    data['vs_start'] = date_to_string(new Date(start - diff));
-                    data['vs_end'] = date_to_string(new Date(end - diff));
+                if($('#vs_start').val() && $('#vs_end').val()) {
+                    data['vs_start'] = $('#vs_start').val();
+                    data['vs_end'] = $('#vs_end').val();
                 }
 
                 return data;
@@ -953,111 +865,125 @@ var mopub = mopub || {};
                 return new Date(now.getFullYear(), now.getMonth(), now.getDate());
             }
 
-            function update_start_end(start, end) {
-                $('#start').val(start);
-                $('#end').val(end);
+            function update_start_end(start_end) {
+                var start, end;
+                if(start_end == 'custom') {
+                    start = pretty_string_to_date($('#custom_start').val());
+                    end = pretty_string_to_date($('#custom_end').val());
+                    end.setHours(23);
+                }
+                else {
+                    switch(start_end) {
+                        case 'today':
+                            start = get_today();
+                            end = get_today();
+                            break;
+                        case 'yesterday':
+                            start = new Date(get_today() - 86400000);
+                            end = new Date(get_today() - 86400000);
+                            break;
+                        case 'last_7_days':
+                            start = new Date(get_today() - 86400000 * 6);
+                            end = get_today();
+                            break;
+                        case 'last_14_days':
+                            start = new Date(get_today() - 86400000 * 13);
+                            end = get_today();
+                            break;
+                    }
+                    end.setHours(23);
 
-                start_end_changed();
+                    $('#custom_start').val(date_to_pretty_string(start));
+                    $('#custom_end').val(date_to_pretty_string(end));
+                }
+
+                $('#start').val(date_hour_to_string(start));
+                $('#end').val(date_hour_to_string(end));
+
+                if(start_end == 'today' || start_end == 'yesterday') {
+                    $('#start_end_label').html(date_to_pretty_string(start));
+                }
+                else {
+                    $('#start_end_label').html(date_to_pretty_string(start) + ' to ' + date_to_pretty_string(end));
+                }
+
+                $('#vs li').hide();
+                $('#vs li.' + start_end).show();
+
+                update_vs_start_end('none');
             }
 
-            function start_end_changed() {
-                update_start_end_text();
+            function update_vs_start_end(vs_start_end) {
+                if(vs_start_end == 'none') {
+                    $('#vs_start').val('');
+                    $('#vs_end').val('');
+                    $('#vs_start_end_label').html('None');
+                }
+                else {
+                    var start = string_to_date_hour($('#start').val());
+                    var end = string_to_date_hour($('#end').val());
+                    var diff;
+                    switch(vs_start_end) {
+                        case 'day':
+                            diff = 86400000;
+                            break;
+                        case 'week':
+                            diff = 86400000 * 7;
+                            break;
+                        case '14_days':
+                            diff = 86400000 * 14;
+                            break;
+                    }
+                    var vs_start = new Date(start - diff);
+                    var vs_end = new Date(end - diff);
 
-                $('#vs_start').val(start);
-                $('#vs_end').val(end);
-                // TODO: remove vs_start/_end label
+                    $('#vs_start').val(date_hour_to_string(vs_start));
+                    $('#vs_end').val(date_hour_to_string(vs_end));
 
-                update_dashboard(true, true, true);
-            }
-
-            function update_start_end_text() {
-                var start = $('#start').val();
-                var end = $('#end').val();
-                $('#start_end_label').html(start + ' to ' + end);
+                    if(vs_start_end == 'day' || (vs_start_end == 'week' && end - start <= 86400000)) {
+                        $('#vs_start_end_label').html(date_to_pretty_string(vs_start));
+                    }
+                    else {
+                        $('#vs_start_end_label').html(date_to_pretty_string(vs_start) + ' to ' + date_to_pretty_string(vs_end));
+                    }
+                }
             }
 
             /* Controls */
-            $('#today').click(function () {
-                var start = get_today();
-                var end = get_today();
-                end.setHours(23);
-
-                update_start_end(start, end);
-            });
-
-            $('#yesterday').click(function() {
-                var start = new Date(get_today() - 86400000);
-                var end = new Date(get_today() - 3600000);
-
-                update_start_end(start, end);
-            });
-
-            $('#last_7_days').click(function() {
-                var start = new Date(get_today() - 86400000 * 6);
-                var end = get_today();
-                end.setHours(23);
-
-                update_start_end(start, end);
-            });
-
-            $('#last_14_days').click(function() {
-                var start = new Date(get_today() - 86400000 * 13);
-                var end = get_today();
-                end.setHours(23);
-
-                update_start_end(start, end);
+            $('#today, #yesterday, #last_7_days, #last_14_days').click(function () {
+                update_start_end(this.id);
+                update_dashboard(true, true, true);
             });
 
             $('#custom').click(function() {
-                ('#date_modal').show();
+                $('#date_modal').show();
             });
-
-            var valid_date_range = {
-                endDate: "0d"
-            };
-            $('#start').datepicker(valid_date_range);
-            $('#end').datepicker(valid_date_range);
 
             $('#date_modal_submit').click(function () {
-                ('#date_modal').hide();
-
-                tart_end_changed();
-            });
-
-            /*
-            if($('[name="compare"]').is(':checked')) {
-                var diff;
-                switch($('select[name="date_range"]').val()) {
-                    case 'day':
-                        diff = 86400000;
-                        break;
-                    case 'week':
-                        diff = 86400000 * 7;
-                        break;
-                    case 'two_weeks':
-                        diff = 86400000 * 14;
-                        break;
-                }
-                data['vs_start'] = date_to_string(new Date(start - diff));
-                data['vs_end'] = date_to_string(new Date(end - diff));
-            }
-
-            $('[name="compare"]').change(function () {
-                $('[name="advertiser_compare"]').prop('checked', false);
-                $('[name="publisher_compare"]').prop('checked', false);
+                $('#date_modal').hide();
+                update_start_end('custom');
                 update_dashboard(true, true, true);
             });
+
+            $('#date_modal_cancel').click(function () {
+                $('#date_modal').hide();
+            });
+
+            $('#none, #day, #week, #14_days').click(function () {
+                update_vs_start_end(this.id);
+                update_dashboard(true, true, true);
+            });
+
             $('[name="advertiser_compare"]').change(function () {
-                $('[name="compare"]').prop('checked', false);
                 $('[name="publisher_compare"]').prop('checked', false);
-                update_dashboard(true, true, true);
+                update_vs_start_end('none');
+                update_dashboard(true, false, false);
             });
             $('[name="publisher_compare"]').change(function () {
-                $('[name="compare"]').prop('checked', false);
                 $('[name="advertiser_compare"]').prop('checked', false);
-                update_dashboard(true, true, true);
+                update_vs_start_end('none');
+                update_dashboard(true, false, false);
             });
-            */
 
             /*
             // granularity
@@ -1068,17 +994,6 @@ var mopub = mopub || {};
 
             // export
             $('button#export').click(function () {
-                var advertiser_type = get_advertiser_type();
-                $('#export_wizard select[name="advertiser_breakdown"]')
-                    .children('option')
-                    .each(function (index, option) {
-                        $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== advertiser_type));
-                });
-
-                var publisher_type = get_publisher_type();
-                $('#export_wizard select[name="publisher_breakdown"]').children('option').each(function (index, option) {
-                    $(option).prop('disabled', ($(option).val() !== '' && $(option).val() !== publisher_type));
-                });
                 $('#export_wizard').modal('show');
             });
 
@@ -1108,9 +1023,6 @@ var mopub = mopub || {};
                 });
 
                 _.extend(data, {
-                    account: bootstrapping_data['account'],
-                    start: date_to_string(start),
-                    end: date_to_string(end),
                     granularity: $('#granularity').val(),
                     advertiser_breakdown: advertiser_breakdown,
                     publisher_breakdown: publisher_breakdown,
@@ -1376,10 +1288,20 @@ var mopub = mopub || {};
             });
             $('table#publisher thead').append($tr);
 
+            /* Setup */
+            $('#vs_start_end_label').val('None');
+
             $('#last_7_days').click();
+
+            var valid_date_range = {
+                endDate: "0d"
+            };
+            $('#custom_start').datepicker(valid_date_range);
+            $('#custom_end').datepicker(valid_date_range);
         },
     };
 
     window.DashboardController = DashboardController;
+    window.DashboardHelpers = DashboardHelpers;
 
 })(this.jQuery, this.Backbone, this._);

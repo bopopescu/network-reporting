@@ -567,34 +567,9 @@ var mopub = window.mopub || {};
         },
 
         render: function () {
-            /*jslint maxlen: 200 */
-
-            this.collection.each(function(model) {
-                var adunit_row = $('tr.adunit-row#adunit-' + model.id);
-                var metrics = ['rev', 'cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
-
-                _.each(metrics, function (metric) {
-                    $('.' + metric, adunit_row).text(model.get_formatted_stat(metric));
-                });
-
-                /*jslint maxlen: 110 */
-
-                if (model.get('active')) {
-                    $('input.targeting-box', adunit_row).attr('checked', 'checked');
-                }
-
-                // Add the event handler to submit targeting changes over ajax.
-                $('input.targeting-box', adunit_row).click(function () {
-                    var loading_img = $('.targeting .loading-img', adunit_row);
-                    loading_img.show();
-                    model.save({'active': $(this).is(':checked')}, {
-                        success: function () {
-                            setTimeout(function () {
-                                loading_img.hide();
-                            }, 2000);
-                        }
-                    });
-                });
+            this.collection.each(function(adunit) {
+                var adunit_view new AdUnitView(adunit);
+                adunit_view.renderInline();
             });
 
             return this;

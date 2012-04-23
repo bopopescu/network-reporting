@@ -120,6 +120,7 @@ class AdGroupIndexHandler(RequestHandler):
             set_of_targeted_apps = set()
             for adunit in targeted_adunits:
                 # Looks weird, but we're just avoiding adunit.app_key.key() since it incurs a fetch.
+                # TODO: adunit._app works without a fetch right?
                 app_key = str(Site.app_key.get_value_for_datastore(adunit))
                 set_of_targeted_apps.add(app_key)
 

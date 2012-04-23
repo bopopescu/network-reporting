@@ -280,7 +280,7 @@ def generate_stats_model(publisher,advertiser,account,date):
     impression_count = int(random.random()*request_count)
     click_count = int(random.random()*impression_count)
     conversion_count = int(random.random()*click_count)
-    revenue = click_count*.5
+    revenue = click_count*.002
 
     user_count = int(request_count*.75)
     request_user_count = user_count

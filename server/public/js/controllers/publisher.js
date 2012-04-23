@@ -46,10 +46,10 @@ var mopub = mopub || {};
         mopub.dashboardStatsChartData = {
             pointStart: start_date,
             pointInterval: 86400000,
-            requests: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "request_count")}],
-            impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impression_count")}],
-            clicks: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "click_count")}],
-            users: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "user_count")}]
+            req: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "req")}],
+            imp: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "imp")}],
+            clk: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "clk")}],
+            usr: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "usr")}]
         };
 
         mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
@@ -778,6 +778,7 @@ var mopub = mopub || {};
             initializeCommon();
 
             // Populate the graph
+            // REFACTOR: use CollectionGraphView
             populateGraphWithAccountStats(bootstrapping_data.account_stats,
                                           bootstrapping_data.start_date);
 

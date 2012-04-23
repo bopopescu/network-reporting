@@ -234,6 +234,7 @@ var mopub = window.mopub || {};
 
     var NetworkGraphView = CollectionGraphView.extend({
         render: function () {
+            console.log('boom');
             var this_view = this;
 
             if (this_view.collection.isFullyLoaded()) {
@@ -441,7 +442,7 @@ var mopub = window.mopub || {};
             var metrics = ['rev', 'cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
 
             _.each(metrics, function (metric) {
-                $(metric, adunit_row).text(current_model.get_formatted_stat(metric));
+                $('.' + metric, adunit_row).text(current_model.get_formatted_stat(metric));
             });
 
             $('.price_floor', adunit_row).html('<img class="loading-img hidden" ' +

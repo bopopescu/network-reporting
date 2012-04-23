@@ -409,12 +409,12 @@ var mopub = mopub || {};
                     + this.stats_endpoint;
             } else {
                 return '/api/app/'
-                    + this.get('app_id')
+                    + this.app_id
                     + '/adunits/'
                     + '?'
                     + window.location.search.substring(1)
                     + '&endpoint='
-                    + this.get('stats_endpoint');
+                    + this.stats_endpoint;
             }
         }
     });

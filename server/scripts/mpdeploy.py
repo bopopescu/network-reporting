@@ -421,7 +421,7 @@ def main():
             # only post a message in hipchat if its in production
             if deploy_server == 'frontend-0':
                 post_to_hipchat(message, room_id="21565") #mopub chat room
-            post_to_hipchat(message, room_id="47652") #frontend chat room
+            #post_to_hipchat(message, room_id="47652") #frontend chat room
 
         except Exception, error:
             puts(colored.red("Deploy failed."))

@@ -97,7 +97,11 @@ class AppIndexHandler(RequestHandler):
             stats_dict = {}
             stats_dict[key] = {}
             stats_dict[key]['name'] = "||"
-            stats_dict[key]['daily_stats'] = [s.to_dict() for s in totals_list]
+            # REFACTOR: StatsModel field naming
+            stats_dict[key]['daily_stats'] = [{'req': s.request_count,
+                                               'imp': s.impression_count,
+                                               'clk': s.click_count,
+                                               'usr': s.user_count} for s in totals_list]
             summed_stats = sum(totals_list, StatsModel())
             stats_dict[key]['sum'] = summed_stats.to_dict()
 
@@ -106,12 +110,12 @@ class AppIndexHandler(RequestHandler):
             response_dict['all_stats'] = stats_dict
 
             stats = {
-                'requests': {
+                'req': {
                     'today': today.request_count,
                     'yesterday': yesterday.request_count,
                     'total': totals.request_count,
                 },
-                'impressions': {
+                'imp': {
                     'today': today.impression_count,
                     'yesterday': yesterday.impression_count,
                     'total': totals.impression_count,
@@ -126,7 +130,7 @@ class AppIndexHandler(RequestHandler):
                     'yesterday': yesterday.ctr,
                     'total': totals.ctr
                 },
-                'clicks': {
+                'clk': {
                     'today': today.click_count,
                     'yesterday': yesterday.click_count,
                     'total': totals.click_count
@@ -1102,7 +1106,7 @@ class DashboardExportHandler(RequestHandler):
         titles = ['App','Ad Unit','Pub ID','Resource ID', 'Requests',
                   'Impressions', 'Fill Rate', 'Clicks', 'CTR','Ad Size',
                   'Platform',]
-        
+
         return sswriter.export_writer(file_type, f_name, titles, data)
 
 

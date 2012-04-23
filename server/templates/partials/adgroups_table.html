@@ -116,11 +116,11 @@
                     <td class="dataTable-data numeric dataTable-goals"><%
                         if(adgroup.get('goal')) {
                             if(adgroup.get('bid_strategy') == 'cpm') { %>
-                                <%= adgroup.get_formatted_stat('goal') %>
+                                <%= adgroup.get('goal') %>
                                 <div class="muted">Impressions</div>
                             <% }
                             else if(adgroup.get('bid_strategy') == 'cpc') { %>
-                                $<%= adgroup.get_formatted_stat('goal') %>
+                                $<%= adgroup.get('goal') %>
                                 <div class="muted">USD</div>
                             <% }
                         }

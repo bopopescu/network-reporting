@@ -36,12 +36,6 @@
 
 
 {% block titleBarRight %}
-  {% if not account.status %}
-    <!-- MixPanel Tracking -->
-    <script type="text/javascript">
-      mpq.push(["track", "Post sign up: Campaign viewed"]);
-    </script>
-  {% endif %}
 
   <span class="titlebar-right">
     {% if adgroup.active %}

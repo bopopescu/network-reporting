@@ -16,12 +16,12 @@ var mopub = mopub || {};
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
-            'rgba(229,241,251,0.6)',
-            'rgba(163,193,218,0.6)',
-            'rgba(236,183,150,0.8)',
-            'rgba(178,164,112,0.8)',
-            'rgba(210,237,130,1)',
-            'rgba(221,203,83,1)'
+            'rgba(229,241,251,0.4)',
+            'rgba(163,193,218,0.4)',
+            'rgba(236,183,150,0.4)',
+            'rgba(178,164,112,0.4)',
+            'rgba(210,237,130,0.4)',
+            'rgba(221,203,83,0.4)'
         ],
         secondary: [
             'rgba(200,207,214,1)',
@@ -308,6 +308,8 @@ var mopub = mopub || {};
         // renders a new one, so we have to do it manually.
         $(element).html('');
 
+        var graph_tension = all_chart_data[0].length > 7 ? 0.8 : 1.0;
+
         // Create the new chart with our series data
         var chart = new Rickshaw.Graph({
             element: document.querySelector(element),
@@ -315,7 +317,9 @@ var mopub = mopub || {};
             height: 150,
             renderer: 'area',
             stroke: true,
+            tension: 1.0,
             series: all_chart_data
+
         });
 
         // When the graph is hovered over, we display the date and the
@@ -578,6 +582,13 @@ var mopub = mopub || {};
                 var advertiser_query = get_advertiser_query(advertiser_type);
                 var publisher_type = get_publisher_type();
                 var publisher_query = get_publisher_query(publisher_type);
+
+                console.log(advertiser_query);
+                console.log(publisher_query);
+                mixpanel.track('Updated dashboard data', {
+                    advertiser: '' + advertiser_query,
+                    publisher: '' + publisher_query
+                });
 
                 if(update_rollups_and_charts) {
 
@@ -899,7 +910,7 @@ var mopub = mopub || {};
             }
 
             /* EVENT HANDLERS */
-
+            
             function get_today() {
                 var now = new Date();
                 return new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -951,6 +962,10 @@ var mopub = mopub || {};
                 $('#vs li.' + start_end).show();
 
                 update_vs_start_end('none');
+                return {
+                    'start': start,
+                    'end': end,
+                };
             }
 
             function update_vs_start_end(vs_start_end) {
@@ -991,6 +1006,8 @@ var mopub = mopub || {};
 
             /* Controls */
             $('#today, #yesterday, #last_7_days, #last_14_days').click(function () {
+                console.log(this.id);
+                mixpanel.track('Changed date', {'date_range': this.id});
                 update_start_end(this.id);
                 update_dashboard(true, true, true);
             });
@@ -999,9 +1016,14 @@ var mopub = mopub || {};
                 $('#date_modal').show();
             });
 
-            $('#date_modal_submit').click(function () {
+            $('#date_modal_submit').click(function () {                
                 $('#date_modal').hide();
-                update_start_end('custom');
+                var dates = update_start_end('custom');
+                mixpanel.track('Changed date', {
+                    date_range: 'custom', 
+                    start: dates.start, 
+                    end: dates.end
+                });
                 update_dashboard(true, true, true);
             });
 
@@ -1010,6 +1032,7 @@ var mopub = mopub || {};
             });
 
             $('#none, #day, #week, #14_days').click(function () {
+                mixpanel.track('Changed vs date', {date_range: $(this).attr('id')});
                 update_vs_start_end(this.id);
                 update_dashboard(true, true, true);
             });
@@ -1070,6 +1093,13 @@ var mopub = mopub || {};
                     names: names
                 });
 
+                console.log(data.advertiser_breakdown);
+                console.log(data.publisher_breakdown);
+                mixpanel.track('Dashboard Export', {
+                    advertiser_breakdown: data.advertiser_breakdown,
+                    publisher_breakdown: data.publisher_breakdown
+                });
+
                 window.location = URL + 'csv/?data=' + JSON.stringify(data);
 
             });
@@ -1094,6 +1124,9 @@ var mopub = mopub || {};
                     }
                 });
 
+                console.log(order);
+                mixpanel.track('Sorted advertiser table', {dimension: order});
+
                 update_dashboard(false, true, false);
             });
 
@@ -1117,8 +1150,12 @@ var mopub = mopub || {};
                     }
                 });
 
+                console.log(order);
+                mixpanel.track('Sorted publisher table', {dimension: order});
+
                 update_dashboard(false, false, true);
             });
+
 
             /* Advertiser Table */
             var advertiser_table = $('table#advertiser');
@@ -1145,6 +1182,8 @@ var mopub = mopub || {};
                     });
                 }
 
+                mixpanel.track("Selected source(s)", {});
+
                 update_dashboard(true, false, true);
             });
 
@@ -1153,7 +1192,7 @@ var mopub = mopub || {};
                 $(this).toggleClass('selected');
 
                 // TODO: there has to be a better way to select this...
-                $source = $(this).prev();
+                var $source = $(this).prev();
                 while(!$source.hasClass('source')) {
                     $source = $source.prev();
                 }
@@ -1276,6 +1315,7 @@ var mopub = mopub || {};
                 if($('td.hidden, th.hidden', 'table#advertiser').length) {
                     $('td, th', 'table#advertiser').removeClass('hidden');
                     $('tr.hide', 'table#advertiser').show();
+                    mixpanel.track('Expanded advertiser table');
                     $(this).html('less');
                 }
                 else {
@@ -1285,6 +1325,7 @@ var mopub = mopub || {};
                         }
                     });
                     $('tr.hide', 'table#advertiser').hide();
+                    mixpanel.track('Contracted advertiser table');
                     $(this).html('more');
                 }
             });
@@ -1294,6 +1335,7 @@ var mopub = mopub || {};
                     $('td, th', 'table#publisher').removeClass('hidden');
                     $('tr.hide', 'table#publisher').show();
                     $(this).html('less');
+                    mixpanel.track('Expanded publisher table');
                 }
                 else {
                     _.each(PUBLISHER_COLUMNS, function (column) {
@@ -1303,6 +1345,7 @@ var mopub = mopub || {};
                     });
                     $('tr.hide', 'table#publisher').hide();
                     $(this).html('more');
+                    mixpanel.track('Contracted publisher table');
                 }
             });
 

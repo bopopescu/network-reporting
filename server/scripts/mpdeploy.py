@@ -342,9 +342,14 @@ def main():
             active_branch_name = git_branch_name()
             deploy_server = clint.args.get(0)
             deployer = git_get_user()
+            
+            # If no branch is specified, default to frontend-staging
+            if deploy_server == None:
+                puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
+                deploy_server = 'frontend-staging'
 
-            if active_branch_name != "master":
-                puts(colored.yellow("Careful! You're deploying a non-master branch."))
+            if active_branch_name != "master" and deploy_server == 'frontend-0':
+                puts(colored.yellow("Careful! You're deploying a non-master branch to production."))
                 y_or_n = raw_input('Are you sure you want to deploy ' + active_branch_name + '? (y/n) >> ')
                 if y_or_n == 'n':
                     sys.exit(1)
@@ -379,10 +384,6 @@ def main():
                 puts("Minifying Javascript")
                 minify_javascript()
 
-                # Updating version numbers
-                puts("Updating Version Numbers")
-                update_static_version_numbers()
-
                 # Write to the changelog
                 puts("Writing changelog")
                 write_changelog(deploy_tag_name, fixed_tickets, new_commits)
@@ -397,11 +398,10 @@ def main():
             else:
                 puts("Skipping ticket update process because you're not deploying to production")
 
-            # Deploy the branch to the server
-            if deploy_server == None:
-                puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
-                deploy_server = 'frontend-staging'
-
+            # Updating version numbers
+            puts("Updating Version Numbers")
+            update_static_version_numbers()
+                
             puts("Deploying " + colored.green(active_branch_name) + " to " + colored.green(deploy_server))
             launch_deploy_process(server=deploy_server)
 

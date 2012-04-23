@@ -12,7 +12,7 @@ mopub.Utils = mopub.Utils || {};
 /*
  * Make sure there's a console.log function in case we forgot to remove debug statements
  */
-if (typeof window.console == "undefined") {
+if (window.console === undefined) {
     window.console = {
         log: function() {}
     };

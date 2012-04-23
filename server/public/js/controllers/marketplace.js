@@ -301,22 +301,11 @@ var mopub = mopub || {};
                             aaData: creative_data
                         };
 
-                        try {
-                            mpq.push(['track', 'Creative Review Load Success']);
-                        } catch (x) {
-                            // noop
-                        }
-
                         fnCallback(response, textStatus, jqXHR);
                     },
                     dataType: "jsonp",
                     cache: false,
                     error: function(data, textStatus, jqXHR) {
-                        try {
-                            mpq.push(['track', 'Creative Review Load Fail']);
-                        } catch (x) {
-                            // noop
-                        }
                     }
                 } );
             },

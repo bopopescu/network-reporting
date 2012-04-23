@@ -173,7 +173,7 @@ var mopub = mopub || {};
      */
     function format_kmbt(number, multiplier) {
         if (number >= 1000000*multiplier) {
-                return mopub.Utils.formatNumberWithCommas() + 'M';
+                return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000000)) + 'M';
         }
         if (number >= 1000*multiplier) {
             return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000)) + 'k';

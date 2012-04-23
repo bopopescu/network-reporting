@@ -26,21 +26,21 @@ var mopub = mopub || {};
      * Helper functions for stats
      */
     function calculate_ctr(imp, clk) {
-        if (imp === null || clk === null) {
+        if (imp === null || clk === null || imp === undefined || clk === undefined) {
             return null;
         }
         return (imp === 0) ? 0 : clk / imp;
     }
 
     function calculate_fill_rate(att, imp) {
-        if (att === null || imp === null) {
+        if (att === null || imp === null || att === undefined || imp === undefined) {
             return null;
         }
         return (att === 0) ? 0 : imp / att;
     }
 
     function calculate_cpm(imp, rev) {
-        if (imp === null || rev === null) {
+        if (imp === null || rev === null || imp === undefined || rev === undefined) {
             return null;
         }
         return (imp === 0) ? 0 : rev / imp * 1000;

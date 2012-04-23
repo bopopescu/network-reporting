@@ -83,7 +83,7 @@
                 <% } %>
                 <% if(type == 'gtee' || type == 'promo' || type == 'backfill_promo') { %>
                     <td class="dataTable-data numeric">
-                        <%= adgroup.get_formatted_stat('status') %><%
+                        <%= adgroup.get('status') %><%
                             if(adgroup.get('status') == "Running") {
                                 if (adgroup.get('pace_type')) {}
                                     if(adgroup.get('pace_type') == "delivery") { %>

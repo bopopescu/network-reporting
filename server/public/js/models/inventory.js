@@ -47,7 +47,7 @@ var mopub = mopub || {};
     }
 
     function format_stat(stat, value) {
-        if (value === null) {
+        if (value === null || value === undefined) {
             return '--';
         }
         // TODO: standardize naming

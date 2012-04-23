@@ -92,7 +92,6 @@ var mopub = window.mopub || {};
                     var type = this.options.type;
                     _.each(this.options.tables, function (filter, title) {
                         var filtered_adgroups = new AdGroups(adgroups.filter(filter));
-                        console.log(filtered_adgroups);
                         if(filtered_adgroups.length) {
                             html += _.template($('#adgroups-table-template').html(), {
                                 adgroups: filtered_adgroups,
@@ -235,7 +234,6 @@ var mopub = window.mopub || {};
 
     var NetworkGraphView = CollectionGraphView.extend({
         render: function () {
-            console.log('boom');
             var this_view = this;
 
             if (this_view.collection.isFullyLoaded()) {

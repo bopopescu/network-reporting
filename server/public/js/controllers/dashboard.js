@@ -11,7 +11,7 @@ var mopub = mopub || {};
      */
 
     var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-    var URL = 'http://localhost:8888/';
+    //var URL = 'http://localhost:8888/';
 
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
@@ -425,7 +425,11 @@ var mopub = mopub || {};
 
 
             function get_keys(type) {
-                if(((type == 'source' || type == 'campaign') && !$('tr.source.selected, tr.campaign.selected')) || ((type == 'app' || type == 'adunit') && !$('tr.app.selected, tr.adunit.selected'))) {
+                if(((type == 'source' || type == 'campaign') && 
+                    !$('tr.source.selected, tr.campaign.selected')) || 
+                   ((type == 'app' || type == 'adunit') && 
+                    !$('tr.app.selected, tr.adunit.selected'))) {
+
                     return _.map($('tr.' + type), function (tr) {
                         return tr.id;
                     });

@@ -152,10 +152,10 @@ var mopub = mopub || {};
           case 'conv':
           case 'imp':
           case 'req':
-            return format_kmbt(value, 10);
+            return format_kmbt(value, true);
           case 'cpm':
           case 'rev':
-            return '$' + format_kmbt(value, 10);
+            return '$' + format_kmbt(value, true);
           case 'conv_rate':
           case 'ctr':
           case 'fill_rate':
@@ -171,15 +171,105 @@ var mopub = mopub || {};
      *
      * Example: 1000000 -> 1M, 1230000000 -> 12.3B
      */
-    function format_kmbt(number, multiplier) {
-        if (number >= 1000000*multiplier) {
-                return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000000)) + 'M';
+    function format_kmbt(number, with_decimal) {
+
+        if (with_decimal === undefined) {
+            with_decimal = false;
         }
-        if (number >= 1000*multiplier) {
-            return mopub.Utils.formatNumberWithCommas(Math.round(number / 1000)) + 'k';
+
+        // Numbers greater than this are ridiculous and
+        // so we aren't supporting their existance.
+        if (number > 999999999999999.999) {
+            return number;
         }
-        return mopub.Utils.formatNumberWithCommas(Math.round(number));
+
+        //var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
+        var endings = ['', 'K', 'M', 'B', 'T'];
+
+        var with_commas = mopub.Utils.formatNumberWithCommas(number);
+        var parts = with_commas.split(',');
+
+        if (parts.length > 1 && with_decimal) {
+            var decimal = "." + parts[1].substring(0,2);
+            return "" + parts[0] + decimal + endings[parts.length-1];
+        } else if (parts.length > 1) {
+            return "" + parts[0] + endings[parts.length-1];
+        } else {
+            var n = "" + number;
+            if (n.indexOf('.') >= 0) {
+                return n.substring(0, n.indexOf('.') + 3);
+            } else if (with_decimal) {
+                return n + ".00";
+            } else {
+                return n;
+            }
+        }
     }
+
+
+    // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
+    // The object is in the form that we normally expect from the server.
+    // The new keys and values are set on the object in place, so nothing
+    // is returned.
+    function calculate_stats(obj) {
+        obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
+        obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
+        obj.ctr = obj.imp === 0 ? 0 : obj.clk / obj.imp;
+        obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
+    }
+
+    function pad(integer) {
+        return integer < 10 ? '0' + integer : integer;
+    }
+
+    function string_to_date(date_string) {
+        var parts = date_string.split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function date_to_string(date) {
+        return date.getFullYear() + '-' +
+            (date.getMonth() + 1) + '-' +
+            date.getDate();
+    }
+
+    function pretty_string_to_date(date_string) {
+        var parts = date_string.split('/');
+        return new Date(parts[2], parts[0] - 1, parts[1]);
+    }
+
+    function date_to_pretty_string(date) {
+        return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear();
+    }
+
+    function string_to_date_hour(date_string) {
+        var parts = date_string.split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2], parts[3]);
+    }
+
+    function date_hour_to_string(date) {
+        return date.getFullYear() +
+            '-' + (date.getMonth() + 1) +
+            '-' + date.getDate() +
+            '-' + date.getHours();
+    }
+
+    function get_charts() {
+        return ['rev', 'imp', 'clk', 'ctr'];
+    }
+
+    function get_columns() {
+        return ['rev', 'imp', 'clk', 'ctr'];
+    }
+
+    function get_advertiser_order() {
+        return $('#advertiser_order').val();
+    }
+
+    function get_publisher_order() {
+        return $('#publisher_order').val();
+    }
+
 
 
     /*
@@ -291,7 +381,10 @@ var mopub = mopub || {};
 
     var DashboardHelpers = {
         get_date_from_datapoint: get_date_from_datapoint,
-        format_stat: format_stat
+        format_stat: format_stat,
+        format_kmbt: format_kmbt,
+        string_to_date: string_to_date,
+        date_to_string: date_to_string,
     };
 
     var DashboardController = {
@@ -306,17 +399,6 @@ var mopub = mopub || {};
              *     }
              * }
              */
-
-            // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
-            // The object is in the form that we normally expect from the server.
-            // The new keys and values are set on the object in place, so nothing
-            // is returned.
-            function calculate_stats(obj) {
-                obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
-                obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
-                obj.ctr = obj.imp === 0 ? 0 : obj.clk / obj.imp;
-                obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
-            }
 
             // Set up JSONP. We calculate derivative stats upon every
             // query response.
@@ -341,55 +423,13 @@ var mopub = mopub || {};
                 url: URL
             });
 
-            function pad(integer) {
-                return integer < 10 ? '0' + integer : integer;
-            }
-
-            function string_to_date(date_string) {
-                var parts = date_string.split('-');
-                return new Date(parts[0], parts[1] - 1, parts[2]);
-            }
-
-            function date_to_string(date) {
-                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
-            }
-
-            function pretty_string_to_date(date_string) {
-                var parts = date_string.split('/');
-                return new Date(parts[2], parts[0] - 1, parts[1]);
-            }
-
-            function date_to_pretty_string(date) {
-                return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear();
-            }
-
-            function string_to_date_hour(date_string) {
-                var parts = date_string.split('-');
-                return new Date(parts[0], parts[1] - 1, parts[2], parts[3]);
-            }
-
-            function date_hour_to_string(date) {
-                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate() + '-' + date.getHours();
-            }
-
-            function get_charts() {
-                return ['rev', 'imp', 'clk', 'ctr'];
-            }
-
-            function get_columns() {
-                return ['rev', 'imp', 'clk', 'ctr'];
-            }
-
-            function get_advertiser_order() {
-                return $('#advertiser_order').val();
-            }
-
-            function get_publisher_order() {
-                return $('#publisher_order').val();
-            }
 
             function get_keys(type) {
-                if(((type == 'source' || type == 'campaign') && !$('tr.source.selected, tr.campaign.selected')) || ((type == 'app' || type == 'adunit') && !$('tr.app.selected, tr.adunit.selected'))) {
+                if(((type == 'source' || type == 'campaign') &&
+                    !$('tr.source.selected, tr.campaign.selected')) ||
+                   ((type == 'app' || type == 'adunit') &&
+                    !$('tr.app.selected, tr.adunit.selected'))) {
+
                     return _.map($('tr.' + type), function (tr) {
                         return tr.id;
                     });

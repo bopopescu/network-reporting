@@ -17,7 +17,7 @@ function validate_query(query) {
 }
 
 
-describe("helpers", function () {
+describe("number formatting helpers", function () {
 
     it("get_data_from_datapoint parses dates correctly", function () {
 
@@ -142,24 +142,89 @@ describe("helpers", function () {
         
     });
 
+    it('calculate_stats calculates derivative values (conv_rate, cpm, ctr, fill_rate) in place', function () {});
+
+    it('pad adds a zero to the front of an integer if its less than 10', function () {});
+
+});
+
+
+describe("date formatting helpers", function () {
+    
+    it('string_to_date converts a string to a date', function () {
+        
+        var t = function(string, expected) {
+            var actual = DashboardHelpers.string_to_date(string);
+            expect(actual).toEqual(expected);
+        };
+
+        t('2012-01-01', new Date(2012, 0, 1));
+        t('2012-1-1', new Date(2012, 0, 1));
+        t('2012-2-29', new Date(2012, 1, 29));
+        t('2012-02-25', new Date(2012, 1, 25));
+        t('1012-9-7', new Date(1012, 8, 7));
+        t('2012-03-11', new Date(2012, 2, 11));
+        t('2012-03-11', new Date(2012, 2, 11));
+        t('2012-03-11', new Date(2012, 2, 11));
+        t('2012-03-11', new Date(2012, 2, 11));
+        t('2012-3-11', new Date(2012, 2, 11));
+
+    });
+
+    it('date_to_string converts a date to a string', function () {});
+    it('pretty_string_to_date converts a pretty string to a date', function () {});
+    it('date_to_pretty_string converts a date to a pretty string', function () {});
+    it('date_hour_to_string converts a datehour to a string', function () {});
+    it('string_to_date_hour converts a string to a datehour', function () {});
+
 });
 
 
 describe("charts", function () {
+
+    
 
 });
 
 
 describe("queries", function () {
 
-    beforeEach(function() {
-        
-    });
+    // function get_query_response(query) {
+    //     return 'Got it!';
+    // }
 
-    afterEach(function() {
+    // beforeEach(function() {
 
-    });
+    //     registerFakeAjax({
+    //         "/test_url": function () {
+    //             console.log(arguments);
+    //             return get_query_response;
+    //         }
+    //     });
+
+    //     $.jsonp.setup({
+    //         callbackParameter: "callback",
+    //         url: "/test_url",
+    //     });
+
+
+    // });
+
+    // it('makes jsonp calls', function(){
+    //     $.jsonp({
+
+    //         data: {
+    //             'hello': 'goodbye'
+    //         },
+            
+    //     });
+    // });
 
 });
 
 
+describe('page rendering', function () {
+    
+    
+
+});

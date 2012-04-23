@@ -11,7 +11,7 @@ var mopub = mopub || {};
      */
 
     var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-    //var URL = 'http://localhost:8888/';
+    var URL = 'http://localhost:8888/';
 
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
@@ -152,7 +152,7 @@ var mopub = mopub || {};
           case 'conv':
           case 'imp':
           case 'req':
-            return format_kmbt(value);
+            return format_kmbt(value, true);
           case 'cpm':
           case 'rev':
             return '$' + format_kmbt(value, true);
@@ -197,7 +197,7 @@ var mopub = mopub || {};
         } else {
             var n = "" + number;            
             if (n.indexOf('.') >= 0) {
-                return n;
+                return n.substring(0, n.indexOf('.') + 3);
             } else if (with_decimal) {
                 return n + ".00";
             } else {
@@ -205,6 +205,71 @@ var mopub = mopub || {};
             }
         }
     }
+
+
+    // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
+    // The object is in the form that we normally expect from the server.
+    // The new keys and values are set on the object in place, so nothing
+    // is returned.
+    function calculate_stats(obj) {
+        obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
+        obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
+        obj.ctr = obj.imp === 0 ? 0 : obj.clk / obj.imp;
+        obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
+    }
+
+    function pad(integer) {
+        return integer < 10 ? '0' + integer : integer;
+    }
+    
+    function string_to_date(date_string) {
+        var parts = date_string.split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    
+    function date_to_string(date) {
+        return date.getFullYear() + '-' + 
+            (date.getMonth() + 1) + '-' + 
+            date.getDate();
+    }
+    
+    function pretty_string_to_date(date_string) {
+        var parts = date_string.split('/');
+        return new Date(parts[2], parts[0] - 1, parts[1]);
+    }
+    
+    function date_to_pretty_string(date) {
+        return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear();
+    }
+
+    function string_to_date_hour(date_string) {
+        var parts = date_string.split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2], parts[3]);
+    }
+    
+    function date_hour_to_string(date) {
+        return date.getFullYear() + 
+            '-' + (date.getMonth() + 1) + 
+            '-' + date.getDate() + 
+            '-' + date.getHours();
+    }
+    
+    function get_charts() {
+        return ['rev', 'imp', 'clk', 'ctr'];
+    }
+    
+    function get_columns() {
+        return ['rev', 'imp', 'clk', 'ctr'];
+    }
+    
+    function get_advertiser_order() {
+        return $('#advertiser_order').val();
+    }
+    
+    function get_publisher_order() {
+        return $('#publisher_order').val();
+    }
+
 
 
     /*
@@ -317,7 +382,9 @@ var mopub = mopub || {};
     var DashboardHelpers = {
         get_date_from_datapoint: get_date_from_datapoint,
         format_stat: format_stat,
-        format_kmbt: format_kmbt
+        format_kmbt: format_kmbt,
+        string_to_date: string_to_date,
+        date_to_string: date_to_string,
     };
 
     var DashboardController = {
@@ -332,17 +399,6 @@ var mopub = mopub || {};
              *     }
              * }
              */
-
-            // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
-            // The object is in the form that we normally expect from the server.
-            // The new keys and values are set on the object in place, so nothing
-            // is returned.
-            function calculate_stats(obj) {
-                obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
-                obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
-                obj.ctr = obj.imp === 0 ? 0 : obj.clk / obj.imp;
-                obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
-            }
 
             // Set up JSONP. We calculate derivative stats upon every
             // query response.
@@ -367,52 +423,6 @@ var mopub = mopub || {};
                 url: URL
             });
 
-            function pad(integer) {
-                return integer < 10 ? '0' + integer : integer;
-            }
-
-            function string_to_date(date_string) {
-                var parts = date_string.split('-');
-                return new Date(parts[0], parts[1] - 1, parts[2]);
-            }
-
-            function date_to_string(date) {
-                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
-            }
-
-            function pretty_string_to_date(date_string) {
-                var parts = date_string.split('/');
-                return new Date(parts[2], parts[0] - 1, parts[1]);
-            }
-
-            function date_to_pretty_string(date) {
-                return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear();
-            }
-
-            function string_to_date_hour(date_string) {
-                var parts = date_string.split('-');
-                return new Date(parts[0], parts[1] - 1, parts[2], parts[3]);
-            }
-
-            function date_hour_to_string(date) {
-                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate() + '-' + date.getHours();
-            }
-
-            function get_charts() {
-                return ['rev', 'imp', 'clk', 'ctr'];
-            }
-
-            function get_columns() {
-                return ['rev', 'imp', 'clk', 'ctr'];
-            }
-
-            function get_advertiser_order() {
-                return $('#advertiser_order').val();
-            }
-
-            function get_publisher_order() {
-                return $('#publisher_order').val();
-            }
 
             function get_keys(type) {
                 if(((type == 'source' || type == 'campaign') && !$('tr.source.selected, tr.campaign.selected')) || ((type == 'app' || type == 'adunit') && !$('tr.app.selected, tr.adunit.selected'))) {

@@ -62,7 +62,8 @@ class MarketplaceIndexHandler(RequestHandler):
                 start_date = end_date - datetime.timedelta(13)
 
         try:
-            mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
+            mpx_stats = stats_fetcher.get_account_stats(start_date,
+                    end_date, daily=True)
         except MPStatsAPIException, e:
             mpx_stats = {}
 
@@ -70,7 +71,8 @@ class MarketplaceIndexHandler(RequestHandler):
         blocklist = []
         network_config = self.account.network_config
         if network_config:
-            blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
+            blocklist = [str(domain) for domain in network_config.blocklist
+                    if not str(domain) in ("", "#")]
 
         # Get today and yesterday's stats for the graph
         today_stats = []
@@ -81,20 +83,20 @@ class MarketplaceIndexHandler(RequestHandler):
             yesterday_stats = mpx_stats["daily"][-2]
 
             stats = {
-                'revenue': {
-                    'today': today_stats['revenue'],
-                    'yesterday': yesterday_stats['revenue'],
-                    'total': mpx_stats['revenue']
+                'rev': {
+                    'today': today_stats['rev'],
+                    'yesterday': yesterday_stats['rev'],
+                    'total': mpx_stats['rev']
                 },
-                'impressions': {
-                    'today': today_stats['impressions'],
-                    'yesterday': yesterday_stats['impressions'],
-                    'total': mpx_stats['impressions'],
+                'imp': {
+                    'today': today_stats['imp'],
+                    'yesterday': yesterday_stats['imp'],
+                    'total': mpx_stats['imp'],
                 },
-                'ecpm': {
-                    'today': today_stats['ecpm'],
-                    'yesterday': yesterday_stats['ecpm'],
-                    'total': mpx_stats['ecpm']
+                'cpm': {
+                    'today': today_stats['cpm'],
+                    'yesterday': yesterday_stats['cpm'],
+                    'total': mpx_stats['cpm']
                 },
             }
 

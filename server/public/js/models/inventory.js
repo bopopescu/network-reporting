@@ -310,12 +310,11 @@ var mopub = mopub || {};
             if (response) {
                 var campaign_data = response.sum;
                 campaign_data.daily_stats = response.daily_stats;
-                console.log(campaign_data);
 
                 // REFACTOR attempts vs requests
-                if(!campaign_data.req) {
+                if(campaign_data.req == null || campaign_data.req == undefined) {
                     campaign_data.req = campaign_data.att;
-                } else if(!campaign_data.att) {
+                } else if(campaign_data.att == null || campaign_data.att == undefined) {
                     campaign_data.att = campaign_data.req;
                 } 
 
@@ -424,6 +423,13 @@ var mopub = mopub || {};
                     + '&endpoint='
                     + this.stats_endpoint;
             }
+        },
+
+        isFullyLoaded: function() {
+            // TODO: make this less hacky
+            return this.reduce(function(memo, adgroup) {
+                return memo && adgroup.has('imp');
+            }, true);
         }
     });
 
@@ -477,9 +483,9 @@ var mopub = mopub || {};
             var app = response[0];
 
             // REFACTOR attempts vs requests
-            if(!app.req) {
+            if(app.req == null || app.req == undefined) {
                 app.req = app.att;
-            } else if (!app.att) {
+            } else if (app.att == null || app.att == undefined) {
                 app.att = app.req;
             }
 

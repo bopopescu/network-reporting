@@ -180,11 +180,19 @@ class Campaign(db.Model):
         else:
             return False
 
-    def get_bid_range(self):
-        # TODO: use memcache to get adgroups
-        adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
-                else adgroup.calculated_cpm for adgroup in
-                campaign.adgroups if adgroup.active]
+    def get_bid_range(self, adgroups=None):
+        """
+        pass in this campaigns adgroups to avoid a query
+        """
+        if not adgroups:
+            adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
+                    else adgroup.calculated_cpm for adgroup in
+                    self.adgroups if adgroup.active]
+        else:
+            adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
+                    else adgroup.calculated_cpm for adgroup in
+                    adgroups if adgroup.active and adgroup._campaign ==
+                    self.key()]
 
         min_cpm = None
         max_cpm = None

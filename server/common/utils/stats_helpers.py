@@ -50,8 +50,6 @@ class AbstractStatsFetcher(object):
     def format_stats(self, stats):
         stat_totals = {
             'rev': sum([stat.revenue for stat in stats]),
-            'ctr': 0.0,
-            'cpm': 0.0,
             'imp': sum([stat.impression_count for stat in stats]),
             'clk': sum([stat.click_count for stat in stats]),
             'req': sum([stat.request_count for stat in stats]),
@@ -195,9 +193,7 @@ class MarketplaceStatsFetcher(object):
         for id, stats in response_dict.iteritems():
             counts = {"rev": currency(stats['pub_rev']),
                       "imp": int(stats['imp']),
-                      "clicks": stats['clk'],
-                      "cpm": currency(cpm(stats['pub_rev'], stats['imp'])),
-                      "ctr": percentage(ctr(stats['clk'], stats['imp']))}
+                      "clk": stats['clk'], }
             stats_dict[id] = counts
         return stats_dict
 
@@ -212,29 +208,21 @@ class MarketplaceStatsFetcher(object):
 
         example output with daily flag set:
 
-        {'ctr': '0.00%',
-        'rev': '$0.08',
-        'daily': [{'ctr': '0.00%',
-                   'rev': '$0.00',
-                   'cpm': '$0.00',
+        {'rev': '$0.08',
+        'daily': [{'rev': '$0.00',
                    'date': u'2011-10-25',
                    'imp': 0,
-                   'clicks': 0},
-                  {'ctr': '0.00%',
-                   'rev': '$0.01',
-                   'cpm': '$0.89',
+                   'clk': 0},
+                  {'rev': '$0.01',
                    'date': u'2011-10-26',
                    'imp': 9,
-                   'clicks': 0},
-                  {'ctr': '0.00%',
-                   'rev': '$0.07',
-                   'cpm': '$0.98',
+                   'clk': 0},
+                  {'rev': '$0.07',
                    'date': u'2011-10-27',
                    'imp': 71,
-                   'clicks': 0}],
-         'cpm': '$0.98',
+                   'clk': 0}],
          'imp': 80,
-         'clicks': 0}
+         'clk': 0}
 
         """
         if isinstance(start, date):
@@ -304,8 +292,6 @@ class MarketplaceStatsFetcher(object):
             # these values has been kind of a pain in the ass to generate
             # in the template/on the client side, so generate them here.
             # ideally they'd be generated client side.
-            dsp['stats']['ctr'] = ctr(dsp['stats']['clk'], dsp['stats']['imp'])
-            dsp['stats']['ecpm'] = ecpm(dsp['stats']['pub_rev'], dsp['stats']['imp'])
 
             dsp_list.append(dsp)
 
@@ -340,9 +326,6 @@ class MarketplaceStatsFetcher(object):
         if not dsp_key in creative_stats:
             return {}
         creatives = [creative for creative in creative_stats[dsp_key].values()]
-        for creative in creatives:
-            creative['stats'].update(ctr = ctr(creative['stats']['clk'], creative['stats']['imp']))
-            creative['stats'].update(ecpm = ecpm(creative['stats']['pub_rev'], creative['stats']['imp']))
 
         return creatives
 
@@ -358,9 +341,6 @@ class MarketplaceStatsFetcher(object):
             creative_stats = _fetch_and_decode(url)
             if dsp_key in creative_stats:
                 creatives = [creative for creative in creative_stats[dsp_key].values()]
-                for creative in creatives:
-                    creative['stats'].update(ctr = ctr(creative['stats']['clk'], creative['stats']['imp']))
-                    creative['stats'].update(ecpm = ecpm(creative['stats']['pub_rev'], creative['stats']['imp']))
 
                 all_creatives.extend(creatives)
         return all_creatives
@@ -455,9 +435,7 @@ class AdNetworkStatsFetcher(object):
 def _transform_stats(stats_dict):
     return {"rev": stats_dict['rev'],
             "imp": int(stats_dict['imp']),
-            "clk": stats_dict.get('clk', 0), # no clk currently from /stats/pub
-            "cpm": cpm(stats_dict['rev'], stats_dict['imp']),
-            "ctr": ctr(stats_dict.get('clk', 0), stats_dict['imp'])}
+            "clk": stats_dict.get('clk', 0),} # no clk currently from /stats/pub
 
 
 def _fetch_and_decode(url):

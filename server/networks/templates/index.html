@@ -125,7 +125,11 @@ Make a table for ad networks that are active
                         <div class="network-data">-</div>
                         {% endif %}
                         <div class="mopub-data">
-                            <span class="min_cpm">{{ network.min_cpm }}</span>-<span class="max_cpm">{{ network.max_cpm }}</span>
+                            {% if network.min_cpm == network.max_cpm %}
+                            {{ network.min_cpm }}
+                            {% else %}
+                            {{ network.min_cpm }}-{{ network.max_cpm }}
+                            {% endif %}
                         </div>
                     </td>
                     <td class="dataTable-data numeric att">

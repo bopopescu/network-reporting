@@ -989,7 +989,7 @@ if (typeof window.console == "undefined") {
             yAxis: {
                 labels: {
                     formatter: function() {
-                        if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                        if(activeMetric == 'rev' || activeMetric == 'cpm') {
                             return '$' + Highcharts.numberFormat(this.value, 0);
                         } else if(activeMetric == 'ctr') {
                             return Highcharts.numberFormat(this.value, 0) + '%';
@@ -1013,23 +1013,34 @@ if (typeof window.console == "undefined") {
             tooltip: {
                 formatter: function() {
                     var text = '', value = '', total = '';
+                    metric_translation = {att: 'attempts',
+                                          clk: 'clicks',
+                                          conv: 'conversions',
+                                          imp: 'impressions',
+                                          req: 'requests',
+                                          cpm: 'CPM',
+                                          rev: 'revenue',
+                                          conv_rate: 'conversion rate',
+                                          ctr: 'click through rate',
+                                          fill_rate: 'fill rate', 
+                                          usr: 'user count'};
 
-                    if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                    if(activeMetric == 'rev' || activeMetric == 'cpm') {
                         value = '$' + Highcharts.numberFormat(this.y, 2);
                         if(data.total) {
                             total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
                         }
-                    } else if (activeMetric == 'clicks') {
-                        value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                    } else if (activeMetric == 'clk') {
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_translation[activeMetric];
                         if(data.total) {
-                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_translation[activeMetric];
                         }
                     } else if (activeMetric == 'ctr') {
                         value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
                     } else {
-                        value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_translation[activeMetric];
                         if(data.total) {
-                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_translation[activeMetric];
                         }
                     }
 

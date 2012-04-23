@@ -1183,7 +1183,7 @@ def enable_networks(adunit, account):
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                 adunit.key(), account.key())
         preexisting_adgroup = AdGroupQueryManager.get_adgroups(campaign=
-                campaign).get()
+                campaign)[0]
         adgroup.active = preexisting_adgroup.active
         adgroup.device_targeting = preexisting_adgroup.device_targeting
         for device, pretty_name in adgroup.DEVICE_CHOICES:

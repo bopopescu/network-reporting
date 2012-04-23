@@ -34,6 +34,7 @@ from common.ragendja.template import render_to_response, \
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
 
+from advertiser.query_managers import AdvertiserQueryManager
 from publisher.query_managers import AppQueryManager, \
         AdUnitContextQueryManager, \
         PublisherQueryManager
@@ -84,14 +85,23 @@ class NetworksHandler(RequestHandler):
         networks = []
         reporting = False
 
+        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+                self.account).values()
+
         for campaign in CampaignQueryManager.get_network_campaigns(
                 self.account, is_new=True):
             network = str(campaign.network_type)
 
+            # MoPub reported campaign cpm comes from meta data not stats so
+            # we calculate it here instead of over ajax
+            bid_range = campaign.get_bid_range(adgroups)
             network_data = {'name': network,
                             'pretty_name': campaign.name,
                             'active': campaign.active,
-                            'key': campaign.key()}
+                            'key': campaign.key(),
+                            'min_cpm': bid_range[0],
+                            'max_cpm': bid_range[1],
+                            }
 
             # If this campaign is the first campaign of this
             # network type and they have valid network
@@ -584,6 +594,13 @@ class NetworkDetailsHandler(RequestHandler):
         if not campaign or campaign.account.key() != self.account.key():
             raise Http404
 
+        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+                self.account).values()
+
+        # MoPub reported campaign cpm comes from meta data not stats so
+        # we calculate it here instead of over ajax
+        bid_range = campaign.get_bid_range(adgroups)
+
         network = campaign.network_type
         network_data = {'name': network,
                         'pretty_name': campaign.name,
@@ -591,7 +608,9 @@ class NetworkDetailsHandler(RequestHandler):
                         'active': campaign.active,
                         'login_state': LoginStates.NOT_SETUP,
                         'reporting': False,
-                        'targeting': []}
+                        'targeting': [],
+                        'min_cpm': bid_range[0],
+                        'max_cpm': bid_range[1],}
 
         # Get the campaign targeting information.  We need an adunit
         # and an adgroup to determine targeting.  Any adunit will do

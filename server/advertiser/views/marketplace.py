@@ -82,6 +82,16 @@ class MarketplaceIndexHandler(RequestHandler):
             today_stats = mpx_stats["daily"][-1]
             yesterday_stats = mpx_stats["daily"][-2]
 
+            # REFACTOR: load this data via ajax and use CollectionGraphView
+            def cpm(rev, imp):
+                if imp:
+                    return rev / imp * 1000
+                else:
+                    return 0
+
+            for stats in mpx_stats['daily']:
+                stats['cpm'] = cpm(stats['rev'], stats['imp'])
+
             stats = {
                 'rev': {
                     'today': today_stats['rev'],
@@ -94,9 +104,10 @@ class MarketplaceIndexHandler(RequestHandler):
                     'total': mpx_stats['imp'],
                 },
                 'cpm': {
-                    'today': today_stats['cpm'],
-                    'yesterday': yesterday_stats['cpm'],
-                    'total': mpx_stats['cpm']
+                    'today': cpm(today_stats['rev'], today_stats['imp']),
+                    'yesterday': cpm(yesterday_stats['rev'],
+                        yesterday_stats['imp']),
+                    'total': cpm(mpx_stats['rev'], mpx_stats['imp']),
                 },
             }
 

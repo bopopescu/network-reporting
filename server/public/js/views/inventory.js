@@ -567,10 +567,13 @@ var mopub = window.mopub || {};
         },
 
         render: function () {
-            this.collection.each(function(adunit) {
-                var adunit_view = new AdUnitView(adunit);
-                adunit_view.renderInline();
-            });
+            if(this.collection.isFullyLoaded()) {
+                this.collection.each(function(adunit) {
+                    var adunit_view = new AdUnitView({model: adunit,
+                                                      el: 'div#content'});
+                    adunit_view.renderInline();
+                });
+            }
 
             return this;
         },

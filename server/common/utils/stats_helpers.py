@@ -32,13 +32,6 @@ except ImportError:
     except ImportError:
         from django.utils import simplejson as json
 
-ctr = lambda clicks, imp: (clicks/float(imp) if imp
-        else 0)
-cpm = lambda rev, imp: (rev/float(imp)*1000 if
-        imp else 0)
-fill_rate = lambda requests, imp: (imp/float(requests) if
-        requests else 0)
-
 
 class AbstractStatsFetcher(object):
 
@@ -62,15 +55,9 @@ class AbstractStatsFetcher(object):
             'imp': sum([stat.impression_count for stat in stats]),
             'clk': sum([stat.click_count for stat in stats]),
             'req': sum([stat.request_count for stat in stats]),
-            'att': sum([stat.attempt_count for stat in stats]),
-            'fill_rate': 0.0,
             'conv': sum([stat.conversion_count for stat in stats]),
             'conv_rate': sum([stat.conv_rate for stat in stats])/len(stats),
         }
-
-        stat_totals['ctr'] = ctr(stat_totals['clk'], stat_totals['imp'])
-        stat_totals['cpm'] = cpm(stat_totals['rev'], stat_totals['imp'])
-        stat_totals['fill_rate'] = fill_rate(stat_totals['req'], stat_totals['imp'])
 
         return stat_totals
 
@@ -81,12 +68,12 @@ class AbstractStatsFetcher(object):
                                   stats in all_stats]),
                               'clk': sum([stats.click_count for stats in
                                   all_stats]),
-                              'att': sum([stats.request_count for stats
+                              'req': sum([stats.request_count for stats
                                   in all_stats]), },
                       'daily_stats': [{'rev': stats.revenue,
                                        'imp': stats.impression_count,
                                        'clk': stats.click_count,
-                                       'att': stats.request_count,} for
+                                       'req': stats.request_count,} for
                                        stats in all_stats], }
         return stats_dict
 

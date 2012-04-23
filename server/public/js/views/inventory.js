@@ -568,7 +568,7 @@ var mopub = window.mopub || {};
 
         render: function () {
             this.collection.each(function(adunit) {
-                var adunit_view new AdUnitView(adunit);
+                var adunit_view = new AdUnitView(adunit);
                 adunit_view.renderInline();
             });
 

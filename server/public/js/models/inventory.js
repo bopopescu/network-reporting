@@ -32,11 +32,11 @@ var mopub = mopub || {};
         return (imp === 0) ? 0 : clk / imp;
     }
 
-    function calculate_fill_rate(att, imp) {
-        if (att === null || imp === null || att === undefined || imp === undefined) {
+    function calculate_fill_rate(req, imp) {
+        if (req === null || imp === null || req === undefined || imp === undefined) {
             return null;
         }
-        return (att === 0) ? 0 : imp / att;
+        return (req === 0) ? 0 : imp / req;
     }
 
     function calculate_cpm(imp, rev) {
@@ -96,7 +96,7 @@ var mopub = mopub || {};
                     return calculate_ctr(this.get('imp'),
                                          this.get('clk'));
                 case 'fill_rate':
-                    return calculate_fill_rate(this.get('att'),
+                    return calculate_fill_rate(this.get('req'),
                                                this.get('imp'));
                 case 'cpm':
                     return calculate_cpm(this.get('imp'),
@@ -157,7 +157,7 @@ var mopub = mopub || {};
                     return calculate_ctr(this.get_stat('imp'),
                                          this.get_stat('clk'));
                 case 'fill_rate':
-                    return calculate_fill_rate(this.get_stat('att'),
+                    return calculate_fill_rate(this.get_stat('req'),
                                                this.get_stat('imp'));
                 case 'cpm':
                     return calculate_cpm(this.get_stat('imp'),
@@ -198,7 +198,7 @@ var mopub = mopub || {};
                     return calculate_ctr(this.get_stat_for_day('imp', day),
                                          this.get_stat_for_day('clk', day));
                 case 'fill_rate':
-                    return calculate_fill_rate(this.get_stat_for_day('att', day),
+                    return calculate_fill_rate(this.get_stat_for_day('req', day),
                                                this.get_stat_for_day('imp', day));
                 case 'cpm':
                     return calculate_cpm(this.get_stat_for_day('imp', day),
@@ -310,6 +310,14 @@ var mopub = mopub || {};
             if (response) {
                 var campaign_data = response.sum;
                 campaign_data.daily_stats = response.daily_stats;
+                console.log(campaign_data);
+
+                // REFACTOR attempts vs requests
+                if(!campaign_data.req) {
+                    campaign_data.req = campaign_data.att;
+                } else if(!campaign_data.att) {
+                    campaign_data.att = campaign_data.req;
+                } 
 
                 return campaign_data;
             }
@@ -467,6 +475,13 @@ var mopub = mopub || {};
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
             var app = response[0];
+
+            // REFACTOR attempts vs requests
+            if(!app.req) {
+                app.req = app.att;
+            } else if (!app.att) {
+                app.att = app.req;
+            }
 
             if (app.app_type === 'iphone') {
                 app.app_type = 'iOS';

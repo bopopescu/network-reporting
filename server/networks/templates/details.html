@@ -1,5 +1,6 @@
 {% extends "networks_base.html" %}
 {% load filters %}
+{% load elements %}
 
 {% block pageTitle %}
 <h1>
@@ -152,7 +153,7 @@
         </thead>
     </table>
 </div>
-{% for app in apps %}
+{% for app, app_bids in network.apps %}
 <div class="{% cycle 'appData' 'appData appData-alt' %} {{ network.key }}-apps-div">
     <table class="dataTable appData-main">
         <tbody>
@@ -170,7 +171,15 @@
                 <td class="dataTable-data numeric rev" style="color:orange;">
                 </td>
                 {% endif %}
-                <td class="dataTable-data numeric cpm" style="color:orange;">
+                <td class="dataTable-data numeric cpm">
+                    {% if network.reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    {% if app_bids.min_cpm == app_bids.max_cpm %}
+                    <div>{{ app_bids.min_cpm|currency }}</div>
+                    {% else %}
+                    <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
+                    {% endif %}
                 </td>
                 <td class="dataTable-data numeric att">
                     {% if reporting and network.name != "mobfox" %}
@@ -211,12 +220,11 @@
                 {% for adunit in app.adunits %}
                 <tr class="adunit-row" id="adunit-{{ adunit.key }}">
                     <td class="dataTable-name">
-                        {% comment %}
-                        <img src="/images/<% if(!active) { %>in<% } %>active.gif" height=9 width=9 style="margin-right:5px;" />
-                        {% endcomment %}
+                        {% status_icon adunit %}
                         <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
                     </td>
-                    <td class="dataTable-data numeric cpm">
+                    <td class="dataTable-data numeric">
+                        {{ adunit.cpm|currency }}
                     </td>
                     <td class="dataTable-data numeric att">
                     </td>

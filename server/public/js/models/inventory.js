@@ -423,10 +423,23 @@ var mopub = mopub || {};
             }
         },
 
+        parse: function(response) {
+            // REFACTOR attempts vs requests
+            _.each(response, function(adunit) {
+                if(adunit.req == null || adunit.req == undefined) {
+                    adunit.req = adunit.att;
+                } else if (adunit.att == null || adunit.att == undefined) {
+                    adunit.att = adunit.req;
+                }
+            });
+
+            return response;
+        },
+
         isFullyLoaded: function() {
             // TODO: make this less hacky
-            return this.reduce(function(memo, adgroup) {
-                return memo && adgroup.has('imp');
+            return this.reduce(function(memo, adunit) {
+                return memo && adunit.has('imp');
             }, true);
         }
     });

@@ -86,13 +86,17 @@ class NetworksHandler(RequestHandler):
         adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
                 self.account).values()
 
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                self.account).values()
+
         for campaign in CampaignQueryManager.get_network_campaigns(
                 self.account, is_new=True):
             network = str(campaign.network_type)
 
             # MoPub reported campaign cpm comes from meta data not stats so
             # we calculate it here instead of over ajax
-            bid_range = campaign.get_bid_range(adgroups)
+            campaign_adgroups = filter_adgroups_for_campaign(campaign, adgroups)
+            bid_range = get_bid_range(campaign_adgroups)
             network_data = {'name': network,
                             'pretty_name': campaign.name,
                             'active': campaign.active,
@@ -115,7 +119,17 @@ class NetworksHandler(RequestHandler):
                     reporting = True
                     network_data['reporting'] = True
 
-            # Set up the rest of the attributes
+            adgroups_by_adunit = get_adgroups_by_adunit(campaign_adgroups)
+
+            app_bids = []
+            for app in apps:
+                app_adgroups = filter_adgroups_for_app(app, adgroups_by_adunit)
+                bid_range = get_bid_range(app_adgroups)
+                app_bids.append({'min_cpm': bid_range[0],
+                                 'max_cpm': bid_range[1]})
+            network_data['apps'] = zip(apps, app_bids)
+            network_data['apps'] = sorted(network_data['apps'], key=lambda
+                    app_and_bid: app_and_bid[0].identifier)
 
             # Add this network to the list that goes in the page
             networks.append(network_data)
@@ -155,9 +169,6 @@ class NetworksHandler(RequestHandler):
 
         additional_networks = sorted(additional_networks, key=lambda
                 network_data: network_data['pretty_name'])
-
-        apps = PublisherQueryManager.get_apps_dict_for_account(self.account). \
-                values()
 
         apps = sorted(apps, key=lambda app: app.identifier)
 
@@ -597,7 +608,8 @@ class NetworkDetailsHandler(RequestHandler):
 
         # MoPub reported campaign cpm comes from meta data not stats so
         # we calculate it here instead of over ajax
-        bid_range = campaign.get_bid_range(adgroups)
+        campaign_adgroups = filter_adgroups_for_campaign(campaign, adgroups)
+        bid_range = get_bid_range(campaign_adgroups)
 
         network = campaign.network_type
         network_data = {'name': network,
@@ -643,6 +655,29 @@ class NetworkDetailsHandler(RequestHandler):
 
         apps = PublisherQueryManager.get_objects_dict_for_account(
                 self.account).values()
+
+
+        adgroups_by_adunit = get_adgroups_by_adunit(campaign_adgroups)
+
+        app_bids = []
+        for app in apps:
+            app_adgroups = filter_adgroups_for_app(app, adgroups_by_adunit)
+            bid_range = get_bid_range(app_adgroups)
+            app_bids.append({'min_cpm': bid_range[0],
+                             'max_cpm': bid_range[1]})
+
+        network_data['apps'] = zip(apps, app_bids)
+        network_data['apps'] = sorted(network_data['apps'], key=lambda
+                app_and_bid: app_and_bid[0].identifier)
+
+        # set adunit cpms to corresponding adgroup bids
+        for app in apps:
+            for adunit in app.adunits:
+                if str(adunit.key()) in adgroups_by_adunit:
+                    adgroup = adgroups_by_adunit[str(adunit.key())]
+                    adunit.cpm = adgroup.bid
+                    adunit.active = adgroup.active
+
         apps = sorted(apps, key=lambda app: app.identifier)
 
         return render_to_response(self.request,
@@ -738,4 +773,46 @@ class DeleteNetworkHandler(RequestHandler):
 @login_required
 def delete_network(request, *args, **kwargs):
     return DeleteNetworkHandler()(request, *args, **kwargs)
+
+## Helpers
+#
+def get_bid_range(adgroups):
+    adgroup_bids = [adgroup.bid for adgroup in adgroups if adgroup.active]
+
+    min_cpm = None
+    max_cpm = None
+    if adgroup_bids:
+        min_cpm = min(adgroup_bids)
+        max_cpm = max(adgroup_bids)
+
+    return (min_cpm, max_cpm)
+
+def get_adgroups_by_adunit(adgroups):
+    """
+    Return a dict of adgroups keyed by adunit
+
+    Network adgroups have one adunit.
+    """
+    adgroups_by_adunit = {}
+    for adgroup in adgroups:
+        adgroups_by_adunit[str(adgroup.site_keys[0])] = adgroup
+
+    return adgroups_by_adunit
+
+
+def filter_adgroups_for_app(app, adgroups_by_adunit):
+    """
+    Return list of adgroups for the given app.
+
+    Network adgroups have one adunit.
+    """
+    return [adgroups_by_adunit[str(adunit.key())] for adunit in
+            app.adunits if str(adunit.key()) in adgroups_by_adunit]
+
+def filter_adgroups_for_campaign(campaign, adgroups):
+    """
+    Filter adgroups by campaign
+    """
+    return [adgroup for adgroup in adgroups if adgroup._campaign ==
+            campaign.key()]
 

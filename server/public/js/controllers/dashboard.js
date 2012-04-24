@@ -10,13 +10,13 @@ var mopub = mopub || {};
      * Settings
      */
 
-    //var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-    var URL = 'http://localhost:8888/';
+    var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+    //var URL = 'http://localhost:8888/';
 
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
-            'rgba(229,241,251,0.4)',
+            'rgba(200,225,251,0.4)',
             'rgba(163,193,218,0.4)',
             'rgba(236,183,150,0.4)',
             'rgba(178,164,112,0.4)',
@@ -24,7 +24,7 @@ var mopub = mopub || {};
             'rgba(221,203,83,0.4)'
         ],
         secondary: [
-            'rgba(200,207,214,1)',
+            'rgba(200,225,251,1)',
             'rgba(158,177,193,1)',
             'rgba(220,143,112,1)',
             'rgba(146,135,90,1)',

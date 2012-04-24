@@ -105,7 +105,7 @@ div#advertiser_filters, div#publisher_filters {
             tr {
                 cursor: pointer;
                 &.selected {
-                    background-color: #eef;
+                    background-color: rgba(200,225,251,1);
                 }
                 &.source, &.app {
                     border-top: 2px solid #bbb;

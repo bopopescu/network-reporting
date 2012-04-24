@@ -4405,7 +4405,7 @@ div#advertiser_filters, div#publisher_filters {
     div#advertiser_filters table#advertiser tbody tr, div#advertiser_filters table#publisher tbody tr, div#publisher_filters table#advertiser tbody tr, div#publisher_filters table#publisher tbody tr {
       cursor: pointer; }
       div#advertiser_filters table#advertiser tbody tr.selected, div#advertiser_filters table#publisher tbody tr.selected, div#publisher_filters table#advertiser tbody tr.selected, div#publisher_filters table#publisher tbody tr.selected {
-        background-color: #eef; }
+        background-color: #c8e1fb; }
       div#advertiser_filters table#advertiser tbody tr.source, div#advertiser_filters table#advertiser tbody tr.app, div#advertiser_filters table#publisher tbody tr.source, div#advertiser_filters table#publisher tbody tr.app, div#publisher_filters table#advertiser tbody tr.source, div#publisher_filters table#advertiser tbody tr.app, div#publisher_filters table#publisher tbody tr.source, div#publisher_filters table#publisher tbody tr.app {
         border-top: 2px solid #bbb;
         font-weight: bold; }

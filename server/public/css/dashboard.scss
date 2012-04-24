@@ -30,19 +30,19 @@ div#charts, div#advertiser_filters, div#publisher_filters {
 
 div#charts {
     border: 2px solid #bbb;
-    width: 650px;
+    width: 600px;
 
     .chart_container {
         border-bottom: 1px solid #ddd;
         padding: 5px;
-        width: 640px;
-        height: 150px;
+        width: 590px;
+        height: 125px;
 
         .summed_stats {
             float: left;
             padding: 10px;
             width: 70px;
-            height: 120px;
+            height: 110px;
             div.title {
                 font-size: 14px;
                 color: #666;
@@ -64,8 +64,8 @@ div#charts {
 
         .chart {
             float: left;
-            width: 550px;
-            height: 150px;
+            width: 500px;
+            height: 125px;
         }
 
         &:last-child {

@@ -92,16 +92,6 @@ $(function () {
     <input id="vs_start" type="hidden" />
     <input id="vs_end" type="hidden" />
 
-
-    {% comment %}
-    <select name="granularity">
-        <option value="hourly">Hourly</option>
-        <option selected="selected" value="daily">Daily</option>
-    </select>
-    {% endcomment %}
-    <input id="granularity" type="hidden" value="daily" />
-
-
     <button class="btn" id="export">Export</button>
 
     <div class="modal hidden" id="export_wizard">
@@ -115,7 +105,6 @@ $(function () {
             <option value=""></option>
             <option value="source">Source</option>
             <option value="campaign">Campaign</option>
-            <option value="adgroup">Ad Group</option>
           </select>
           and
           <select name="publisher_breakdown">

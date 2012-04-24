@@ -96,8 +96,8 @@ var mopub = mopub || {};
     var MAX_APPS = 12;
     var MAX_ADUNITS = 6;
 
-    var WIDTH = 550;
-    var HEIGHT = 150;
+    var WIDTH = 500;
+    var HEIGHT = 125;
 
     var MARGIN_TOP = 10;
     var MARGIN_RIGHT = 30;
@@ -343,8 +343,8 @@ var mopub = mopub || {};
         // Create the new chart with our series data
         var chart = new Rickshaw.Graph({
             element: document.querySelector(element),
-            width: 550,
-            height: 150,
+            width: WIDTH,
+            height: HEIGHT,
             renderer: 'area',
             stroke: true,
             tension: 1.0,
@@ -356,8 +356,6 @@ var mopub = mopub || {};
         // current value in a tooltip at the top.
         var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail( {
             graph: chart,
-            width: 550,
-            height: 150,
             xFormatter: function(x) {
                 var labels = _.map(account_data, function(range){
                     var single_datapoint = range[x];

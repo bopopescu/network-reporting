@@ -76,8 +76,6 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        # TODO: Is this needed? Are all account fields stored in memcache?
-        #account = AccountQueryManager.get_account_by_key(self.account.key())
         if not self.account.display_new_networks:
             return HttpResponseRedirect(reverse('network_index'))
 
@@ -254,8 +252,8 @@ class EditNetworkHandler(RequestHandler):
 
             # Populate network collected cpm for optimization
             fourteen_day_stats = AdNetworkStats()
-            last_7_days = gen_last_days(omit=1)
-            last_14_days = gen_last_days(date_range=14, omit=1)
+            last_7_days = gen_last_days(omit=2)
+            last_14_days = gen_last_days(date_range=14, omit=2)
             if login:
                 reporting = True
                 for mapper in AdNetworkMapperManager.get_mappers_for_app(

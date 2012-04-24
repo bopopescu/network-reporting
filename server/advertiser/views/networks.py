@@ -8,7 +8,6 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from common.utils.timezones import Pacific_tzinfo
 
-from account.query_managers import AccountQueryManager
 from advertiser.query_managers import AdvertiserQueryManager
 from advertiser.models import AdGroup
 
@@ -18,8 +17,6 @@ class NetworkIndexHandler(RequestHandler):
     Deprecated
     """
     def get(self):
-        account = AccountQueryManager.get_account_by_key(self.account.key())
-
         today = datetime.datetime.now(Pacific_tzinfo()).date()
         yesterday = today - datetime.timedelta(days=1)
 
@@ -51,7 +48,7 @@ class NetworkIndexHandler(RequestHandler):
         return render_to_response(self.request,
                                   "advertiser/network_index.html",
                                   {
-                                      'account': account,
+                                      'account': self.account,
                                       'network_adgroups': network_adgroups,
                                       'start_date': self.start_date,
                                       'end_date': self.end_date,

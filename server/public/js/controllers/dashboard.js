@@ -199,7 +199,7 @@ var mopub = mopub || {};
 
         //var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
         var endings = ['', 'K', 'M', 'B', 'T'];
-        
+
         var with_commas = mopub.Utils.formatNumberWithCommas(number);
         var parts = with_commas.split(',');
 
@@ -209,7 +209,7 @@ var mopub = mopub || {};
         } else if (parts.length > 1) {
             return "" + parts[0] + endings[parts.length-1];
         } else {
-            var n = "" + number;            
+            var n = "" + number;
             if (n.indexOf('.') >= 0) {
                 return n.substring(0, n.indexOf('.') + 3);
             } else if (with_decimal) {
@@ -235,23 +235,23 @@ var mopub = mopub || {};
     function pad(integer) {
         return integer < 10 ? '0' + integer : integer;
     }
-    
+
     function string_to_date(date_string) {
         var parts = date_string.split('-');
         return new Date(parts[0], parts[1] - 1, parts[2]);
     }
-    
+
     function date_to_string(date) {
-        return date.getFullYear() + '-' + 
-            (date.getMonth() + 1) + '-' + 
+        return date.getFullYear() + '-' +
+            (date.getMonth() + 1) + '-' +
             date.getDate();
     }
-    
+
     function pretty_string_to_date(date_string) {
         var parts = date_string.split('/');
         return new Date(parts[2], parts[0] - 1, parts[1]);
     }
-    
+
     function date_to_pretty_string(date) {
         return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear();
     }
@@ -260,26 +260,26 @@ var mopub = mopub || {};
         var parts = date_string.split('-');
         return new Date(parts[0], parts[1] - 1, parts[2], parts[3]);
     }
-    
+
     function date_hour_to_string(date) {
-        return date.getFullYear() + 
-            '-' + (date.getMonth() + 1) + 
-            '-' + date.getDate() + 
+        return date.getFullYear() +
+            '-' + (date.getMonth() + 1) +
+            '-' + date.getDate() +
             '-' + date.getHours();
     }
-    
+
     function get_charts() {
         return ['rev', 'imp', 'clk', 'ctr'];
     }
-    
+
     function get_columns() {
         return ['rev', 'imp', 'clk', 'ctr'];
     }
-    
+
     function get_advertiser_order() {
         return $('#advertiser_order').val();
     }
-    
+
     function get_publisher_order() {
         return $('#publisher_order').val();
     }
@@ -443,9 +443,9 @@ var mopub = mopub || {};
 
 
             function get_keys(type) {
-                if(((type == 'source' || type == 'campaign') && 
-                    !$('tr.source.selected, tr.campaign.selected')) || 
-                   ((type == 'app' || type == 'adunit') && 
+                if(((type == 'source' || type == 'campaign') &&
+                    !$('tr.source.selected, tr.campaign.selected')) ||
+                   ((type == 'app' || type == 'adunit') &&
                     !$('tr.app.selected, tr.adunit.selected'))) {
 
                     return _.map($('tr.' + type), function (tr) {

@@ -455,6 +455,9 @@ var mopub = mopub || {};
                 url: URL
             });
 
+            function get_granularity() {
+                return 'daily';
+            }
 
             function get_keys(type) {
                 if(((type == 'source' || type == 'campaign') &&
@@ -630,7 +633,7 @@ var mopub = mopub || {};
                     $('tr.source, tr.campaign, tr.app, tr.adunit').removeAttr('style');
 
                     var rollups_and_charts_data = _.clone(data);
-                    var granularity = $('#granularity').val();
+                    var granularity = get_granularity();
                     rollups_and_charts_data.granularity = granularity;
                     rollups_and_charts_data.query = [_.extend(_.clone(advertiser_query), publisher_query)];
 
@@ -1121,7 +1124,7 @@ var mopub = mopub || {};
                 });
 
                 _.extend(data, {
-                    granularity: $('#granularity').val(),
+                    granularity: get_granularity(),
                     advertiser_breakdown: advertiser_breakdown,
                     publisher_breakdown: publisher_breakdown,
                     query: query,

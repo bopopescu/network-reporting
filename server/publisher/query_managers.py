@@ -130,7 +130,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
                 task = taskqueue.Task(url='/fetch_api/adunit_update_push',
                                       method='GET',
                                       name = task_name,
-                                      countdown=5,
+                                      countdown=60,
                                       params={'adunit_key':key})
                 try:
                     queue.delete_tasks(task)

@@ -122,6 +122,20 @@ var mopub = mopub || {};
         Toast.error(message, "Error fetching app data.");
     };
 
+    function record_metric (name, args) {
+        try {
+            _kmq.push(['record', name, args]);
+        } catch (x) {
+            console.log(x);
+        }
+ 
+        try {
+            mixpanel.track(name, args);
+        } catch (x) {
+            console.log(x);
+        }
+    }
+
     /*
      * Gets a date string (MM/DD) from a datapoint object with a
      * stringified date or hour field (like the one we'd get
@@ -583,9 +597,7 @@ var mopub = mopub || {};
                 var publisher_type = get_publisher_type();
                 var publisher_query = get_publisher_query(publisher_type);
 
-                console.log(advertiser_query);
-                console.log(publisher_query);
-                mixpanel.track('Updated dashboard data', {
+                record_metric('Updated dashboard data', {
                     advertiser: '' + advertiser_query,
                     publisher: '' + publisher_query
                 });
@@ -1006,8 +1018,7 @@ var mopub = mopub || {};
 
             /* Controls */
             $('#today, #yesterday, #last_7_days, #last_14_days').click(function () {
-                console.log(this.id);
-                mixpanel.track('Changed date', {'date_range': this.id});
+                record_metric('Changed date', {'date_range': this.id});
                 update_start_end(this.id);
                 update_dashboard(true, true, true);
             });
@@ -1019,7 +1030,7 @@ var mopub = mopub || {};
             $('#date_modal_submit').click(function () {                
                 $('#date_modal').hide();
                 var dates = update_start_end('custom');
-                mixpanel.track('Changed date', {
+                record_metric('Changed date', {
                     date_range: 'custom', 
                     start: dates.start, 
                     end: dates.end
@@ -1032,7 +1043,9 @@ var mopub = mopub || {};
             });
 
             $('#none, #day, #week, #14_days').click(function () {
-                mixpanel.track('Changed vs date', {date_range: $(this).attr('id')});
+                record_metric('Changed vs date', {
+                    date_range: $(this).attr('id')
+                });
                 update_vs_start_end(this.id);
                 update_dashboard(true, true, true);
             });
@@ -1095,7 +1108,7 @@ var mopub = mopub || {};
 
                 console.log(data.advertiser_breakdown);
                 console.log(data.publisher_breakdown);
-                mixpanel.track('Dashboard Export', {
+                record_metric('Dashboard Export', {
                     advertiser_breakdown: data.advertiser_breakdown,
                     publisher_breakdown: data.publisher_breakdown
                 });
@@ -1124,8 +1137,7 @@ var mopub = mopub || {};
                     }
                 });
 
-                console.log(order);
-                mixpanel.track('Sorted advertiser table', {dimension: order});
+                record_metric('Sorted advertiser table', {dimension: order});
 
                 update_dashboard(false, true, false);
             });
@@ -1150,8 +1162,7 @@ var mopub = mopub || {};
                     }
                 });
 
-                console.log(order);
-                mixpanel.track('Sorted publisher table', {dimension: order});
+                record_metric('Sorted publisher table', {dimension: order});
 
                 update_dashboard(false, false, true);
             });
@@ -1182,7 +1193,7 @@ var mopub = mopub || {};
                     });
                 }
 
-                mixpanel.track("Selected source(s)", {});
+                record_metric("Selected source(s)", {});
 
                 update_dashboard(true, false, true);
             });
@@ -1315,7 +1326,8 @@ var mopub = mopub || {};
                 if($('td.hidden, th.hidden', 'table#advertiser').length) {
                     $('td, th', 'table#advertiser').removeClass('hidden');
                     $('tr.hide', 'table#advertiser').show();
-                    mixpanel.track('Expanded advertiser table');
+
+                    record_metric('Expanded advertiser table');
                     $(this).html('less');
                 }
                 else {
@@ -1325,7 +1337,8 @@ var mopub = mopub || {};
                         }
                     });
                     $('tr.hide', 'table#advertiser').hide();
-                    mixpanel.track('Contracted advertiser table');
+                    _kmq.push(['record', 'Contracted advertiser table']);
+                    record_metric('Contracted advertiser table');
                     $(this).html('more');
                 }
             });
@@ -1335,7 +1348,8 @@ var mopub = mopub || {};
                     $('td, th', 'table#publisher').removeClass('hidden');
                     $('tr.hide', 'table#publisher').show();
                     $(this).html('less');
-                    mixpanel.track('Expanded publisher table');
+
+                    record_metric('Expanded publisher table');
                 }
                 else {
                     _.each(PUBLISHER_COLUMNS, function (column) {
@@ -1345,7 +1359,8 @@ var mopub = mopub || {};
                     });
                     $('tr.hide', 'table#publisher').hide();
                     $(this).html('more');
-                    mixpanel.track('Contracted publisher table');
+
+                    record_metric('Contracted publisher table');
                 }
             });
 

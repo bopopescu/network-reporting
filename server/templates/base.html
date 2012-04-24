@@ -72,6 +72,20 @@
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
   </script>
+
+  <script type="text/javascript">
+    var _kmq = _kmq || [];
+    function _kms(u){
+        setTimeout(function(){
+            var s = document.createElement('script'); var f = document.getElementsByTagName('script')[0]; s.type = 'text/javascript'; s.async = true;
+            s.src = u; f.parentNode.insertBefore(s, f);
+        }, 1);
+    }
+    _kms('//i.kissmetrics.com/i.js');_kms('//doug1izaerwt3.cloudfront.net/df1cac838b87437e951e9a26136cc8ae203e052e.1.js');
+
+    _kmq.push(['identify', '{{ user.email }}']);
+    
+  </script>
 </head>
 
 <input type=hidden value="{{user.is_staff}}" id='is_admin_input'></input>

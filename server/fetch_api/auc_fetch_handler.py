@@ -1,4 +1,5 @@
 import cPickle as pickle
+import logging
 import urllib
 
 from google.appengine.ext import webapp
@@ -13,7 +14,10 @@ def adunitcontext_fetch(adunit_key, created_at=None, testing=False):
     # This is a service to the AWS/Tornado adserver.
     # We are not following the RequestHandler pattern here (simple function instead), because we do not want to require login.
     complex_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_key)
-    if created_at == int(complex_context.created_at):
+    if created_at <= int(complex_context.created_at):
+        return None
+    elif created_at > int(complex_context.created_at):
+        logging.warning("Awkward state, EC2 context is newer than GAE context")
         return None
     simple_context = complex_context.simplify()
     basic_context = simple_context.to_basic_dict()

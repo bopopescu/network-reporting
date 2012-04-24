@@ -50,7 +50,6 @@ var mopub = mopub || {};
         if (value === null || value === undefined) {
             return '--';
         }
-        // TODO: standardize naming
         switch (stat) {
           case 'att':
           case 'clk':
@@ -62,8 +61,6 @@ var mopub = mopub || {};
           case 'att':
             return mopub.Utils.formatNumberWithCommas(value);
           case 'cpm':
-          case 'min_cpm':
-          case 'max_cpm':
           case 'rev':
             return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
           case 'conv_rate':
@@ -107,6 +104,8 @@ var mopub = mopub || {};
                 case 'req':
                 case 'att':
                 case 'rev':
+                case 'goal':
+                case 'pace':
                 case 'conv_rate':
                     return this.get(stat);
                 default:

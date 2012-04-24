@@ -6,13 +6,13 @@
       {% if stats.rev %}
         <tr class="active" id="stats-breakdown-rev">
           <td class="stats-breakdown-value today">
-            <span class="inner">{{stats.revenue.today|currency}}</span>
+            <span class="inner">{{stats.rev.today|currency}}</span>
           </td>
           <td class="stats-breakdown-value yesterday">
-            <span class="inner">{{stats.revenue.yesterday|currency}}</span>
+            <span class="inner">{{stats.rev.yesterday|currency}}</span>
           </td>
           <td class="stats-breakdown-value all">
-          <span class="inner">{{stats.revenue.total|currency}}</span>
+          <span class="inner">{{stats.rev.total|currency}}</span>
           </td>
           <th class="stats-breakdown-name">
             <span class="inner">Revenue</span>

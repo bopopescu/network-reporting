@@ -150,7 +150,6 @@ var mopub = mopub || {};
         },
 
         get_stat: function(stat) {
-            // TODO: standardize naming
             switch(stat) {
                 case 'ctr':
                     return calculate_ctr(this.get_stat('imp'),
@@ -159,8 +158,8 @@ var mopub = mopub || {};
                     return calculate_fill_rate(this.get_stat('req'),
                                                this.get_stat('imp'));
                 case 'cpm':
-                    return this.get_stat(stat) || calculate_cpm(this.get_stat('imp'),
-                                                                this.get_stat('rev'));
+                    return this.get(stat) || calculate_cpm(this.get_stat('imp'),
+                                                           this.get_stat('rev'));
                 case 'clk':
                 case 'conv':
                 case 'imp':
@@ -200,8 +199,8 @@ var mopub = mopub || {};
                     return calculate_fill_rate(this.get_stat_for_day('req', day),
                                                this.get_stat_for_day('imp', day));
                 case 'cpm':
-                    return this.get_stat_for_day('imp', day) || calculate_cpm(this.get_stat_for_day('imp', day),
-                                                                              this.get_stat_for_day('rev', day));
+                    return calculate_cpm(this.get_stat_for_day('imp', day),
+                                         this.get_stat_for_day('rev', day));
                 case 'clk':
                 case 'conv':
                 case 'imp':

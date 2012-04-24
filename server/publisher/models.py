@@ -63,6 +63,7 @@ class App(db.Model):
     categories = db.StringListProperty()
 
     icon_blob = blobstore.BlobReferenceProperty()
+    image_serve_url = db.StringProperty()
 
     # Ad network overrides
     jumptap_app_id = db.StringProperty()
@@ -83,6 +84,8 @@ class App(db.Model):
 
     use_proxy_bids = db.BooleanProperty(default=True)
 
+    force_marketplace = db.BooleanProperty(default=True)
+
     def simplify(self):
         return SimpleApp(key = str(self.key()),
                          account = self.account,
@@ -100,7 +103,8 @@ class App(db.Model):
                          primary_category = self.primary_category,
                          secondary_category = self.secondary_category)
 
-    def app_type_text(self):
+    @property
+    def type(self):
         types = {
             'iphone': 'iOS',
             'android': 'Android',
@@ -112,16 +116,14 @@ class App(db.Model):
     @property
     def icon_url(self):
         from common.utils import helpers
-        if not self.icon_blob:
+        if not self.image_serve_url:
             return "/placeholders/image.gif"
-        try:
-            url = helpers.get_url_for_blob(self.icon_blob)
-            # hack to get images to appear on localhost
+        else:
+            url = self.image_serve_url
             if settings.DEBUG:
-                url = url.replace('https', 'http')
-            return url
-        except Exception:
-            return "/placeholders/image.gif"
+                return url
+            else:
+                return helpers.secure_url_from_url(url)
 
     @property
     def identifier(self):
@@ -129,7 +131,7 @@ class App(db.Model):
 
     @property
     def full_name(self):
-        return self.name + " (" + self.app_type_text() + ")"
+        return self.name + " (" + self.type + ")"
 
     @property
     def key_(self):

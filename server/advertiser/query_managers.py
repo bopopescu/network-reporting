@@ -36,6 +36,24 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
+class AdvertiserQueryManager(CachedQueryManager):
+    @classmethod
+    def get_objects_dict_for_account(cls, account):
+        pass
+
+    @classmethod
+    def get_campaigns_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, Campaign, include_deleted)
+
+    @classmethod
+    def get_adgroups_dict_for_account(cls, account, include_deleted=False, include_archived=False):
+        return cls.get_entities_for_account(account, AdGroup, include_deleted, include_archived)
+
+    @classmethod
+    def get_creatives_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, Creative, include_deleted)
+
+
 class CampaignQueryManager(QueryManager):
     Model = Campaign
 
@@ -47,20 +65,26 @@ class CampaignQueryManager(QueryManager):
         return campaigns
 
     @classmethod
-    def get_network_campaigns(cls, account, network_type='', is_new=False):
+    def get_network_campaigns(cls, account, network_type=False, is_new=False):
         """
         is_new refers to models with the network_type attribute set,
         which means it's a new type of campaign (used by the networks django
         app).
         """
-        campaigns = cls.Model.all().filter('campaign_type =', 'network')\
-                      .filter('deleted =',False)\
-                      .filter('account =',account)
-        if is_new:
-            campaigns.filter('network_type !=', '')
-        if network_type:
-            campaigns.filter('network_type =', network_type)
-        return campaigns
+        # get campaigns for the account from memcache
+        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
+                account)
+
+        def network_campaign_filter(campaign):
+            if campaign.campaign_type == 'network':
+                if network_type:
+                    return campaign.network_type == network_type
+                elif is_new:
+                    return campaign.network_type
+                else:
+                    return not campaign.network_type
+
+        return filter(network_campaign_filter, campaigns.values())
 
     @classmethod
     def get_default_network_campaign(cls, account, network, get_from_db=False):
@@ -195,12 +219,18 @@ class CampaignQueryManager(QueryManager):
 
         # Clear cache
         adunits = []
+        affected_accounts = set([])
         for campaign in campaigns:
+            affected_accounts.add(campaign.account)
             for adgroup in campaign.adgroups:
                 adunits.extend(adgroup.site_keys)
 
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Campaign)
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
 
         return put_response
 
@@ -410,6 +440,10 @@ class AdGroupQueryManager(QueryManager):
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
+        affected_accounts = set([adgroup.account for adgroup in adgroups])
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
+
         return put_response
 
 
@@ -480,6 +514,9 @@ class CreativeQueryManager(QueryManager):
             adunits = AdUnitQueryManager.get(creative.ad_group.site_keys)
             if adunits:
                 AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        affected_accounts = set([creative.account for creative in creatives])
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
 
         return put_response
 

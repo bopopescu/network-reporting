@@ -21,7 +21,8 @@ from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
-from common.constants import REPORTING_NETWORKS
+from common.constants import NETWORKS, \
+        REPORTING_NETWORKS
 
 from publisher.query_managers import AppQueryManager, \
         ALL_NETWORKS
@@ -69,7 +70,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
         for network in sorted(REPORTING_NETWORKS.keys()):
             network_data = {}
             network_data['name'] = network
-            network_data['pretty_name'] = AD_NETWORK_NAMES[network]
+            network_data['pretty_name'] = NETWORKS[network]
             login = AdNetworkLoginManager.get_logins(self.account,
                     network).get()
             if login:
@@ -244,7 +245,7 @@ class AppDetailHandler(RequestHandler):
                       'date_range' : self.date_range,
                       'ad_network_name' :
                         REPORTING_NETWORKS[ad_network_app_mapper.ad_network_name],
-                      'app_name' : '%s (%s)' % (app.name, app.app_type_text()),
+                      'app_name' : '%s (%s)' % (app.name, app.type),
                       'aggregates' : aggregates,
                       'daily_stats' :
                         simplejson.dumps(daily_stats),

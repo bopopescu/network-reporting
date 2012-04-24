@@ -15,6 +15,7 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from common.ragendja.template import render_to_response, \
      render_to_string, \
+     HttpResponse, \
      JSONResponse
 
 ## Models
@@ -32,11 +33,13 @@ from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager,
                                       CreativeQueryManager
 from publisher.query_managers import AppQueryManager, \
      AdUnitQueryManager, \
-     AdUnitContextQueryManager
+     AdUnitContextQueryManager, \
+     PublisherQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
 # Util
-from common.utils import sswriter, date_magic
+from common.utils import sswriter, date_magic, xlwt
+from common.utils.unicode_writer import UnicodeWriter
 from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 #REFACTOR: only import what we need here
@@ -45,28 +48,15 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIExcept
 
 from budget import budget_service
 
+from google.appengine.api import memcache
+
 class AppIndexHandler(RequestHandler):
     """
     A list of apps and their real-time stats.
     """
     def get(self):
-
-        # Get all of the adunit keys for bootstrapping the apps
-        adunits = AdUnitQueryManager.get_adunits(account=self.account)
-
-        # We list the app traits in the table, and then load their
-        # stats over ajax using Backbone. Fetch the apps/adunits for the
-        # template load, and then create a list of keys for ajax bootstrapping.
-        apps = {}
-        for adunit in adunits:
-            app = apps.get(adunit.app_key.key())
-            if not app:
-                app = AppQueryManager.get(adunit.app_key.key())
-                app.adunits = [adunit]
-                apps[adunit.app_key.key()] = app
-            else:
-                app.adunits += [adunit]
-
+        # Get all of the business objects (apps and their adunits).
+        apps = PublisherQueryManager.get_objects_dict_for_account(self.account)
         app_keys = simplejson.dumps([str(k) for k in apps.keys()])
         app_values = sorted(apps.values(), lambda x, y: cmp(x.name, y.name))
 
@@ -75,64 +65,77 @@ class AppIndexHandler(RequestHandler):
         if len(apps) == 0:
             return HttpResponseRedirect(reverse('publisher_create_app'))
 
-        # Get stats totals for the stats breakdown pane
-        account_stats_mgr = StatsModelQueryManager(self.account, offline=self.offline)
-        totals_list = account_stats_mgr.get_stats_for_days(days=self.days)
-        today = totals_list[-1]
-        try:
-            yesterday = totals_list[-2]
-        except IndexError:
-            # If yesterday isn't within the date range or there
-            # are no stats for it, give it a blank stats model with
-            # normal defaults
-            yesterday = StatsModel()
-        totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
+        # XXX: When there are a lot of apps, the mongostats call below will fail with
+        # DeadlineExceededError. Until we can figure out how to make that call more performant,
+        # we don't really have a choice but to avoid it for certain publishers. In order to make
+        # this hack look decent, the template doesn't include the graph HTML when stats is empty.
+        # Likewise, the JS doesn't initialize the graph, since it doesn't exist. Blergh.
+        if len(apps) > 50:
+            response_dict = {}
+            stats = {}
+        else:
+            # Get stats totals for the stats breakdown pane
+            account_stats_mgr = StatsModelQueryManager(self.account, offline=self.offline)
+            totals_list = account_stats_mgr.get_stats_for_days(days=self.days)
+            today = totals_list[-1]
+            try:
+                yesterday = totals_list[-2]
+            except IndexError:
+                # If yesterday isn't within the date range or there
+                # are no stats for it, give it a blank stats model with
+                # normal defaults
+                yesterday = StatsModel()
+            totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
 
-        # this is the max active users over the date range
-        # NOT total unique users
-        totals.user_count = max([t.user_count for t in totals_list])
+            # this is the max active users over the date range
+            # NOT total unique users
+            totals.user_count = max([t.user_count for t in totals_list])
 
-        # REFACTOR: this can be removed if we remove the chart
-        # prepare account_stats object
-        key = "||"
-        stats_dict = {}
-        stats_dict[key] = {}
-        stats_dict[key]['name'] = "||"
-        stats_dict[key]['daily_stats'] = [s.to_dict() for s in totals_list]
-        summed_stats = sum(totals_list, StatsModel())
-        stats_dict[key]['sum'] = summed_stats.to_dict()
+            # REFACTOR: this can be removed if we remove the chart
+            # prepare account_stats object
+            key = "||"
+            stats_dict = {}
+            stats_dict[key] = {}
+            stats_dict[key]['name'] = "||"
+            # REFACTOR: StatsModel field naming
+            stats_dict[key]['daily_stats'] = [{'req': s.request_count,
+                                               'imp': s.impression_count,
+                                               'clk': s.click_count,
+                                               'usr': s.user_count} for s in totals_list]
+            summed_stats = sum(totals_list, StatsModel())
+            stats_dict[key]['sum'] = summed_stats.to_dict()
 
-        response_dict = {}
-        response_dict['status'] = 200
-        response_dict['all_stats'] = stats_dict
+            response_dict = {}
+            response_dict['status'] = 200
+            response_dict['all_stats'] = stats_dict
 
-        stats = {
-            'requests': {
-                'today': today.request_count,
-                'yesterday': yesterday.request_count,
-                'total': totals.request_count,
-            },
-            'impressions': {
-                'today': today.impression_count,
-                'yesterday': yesterday.impression_count,
-                'total': totals.impression_count,
-            },
-            'users': {
-                'today': today.user_count,
-                'yesterday': yesterday.user_count,
-                'total': totals.user_count
-            },
-            'ctr': {
-                'today': today.ctr,
-                'yesterday': yesterday.ctr,
-                'total': totals.ctr
-            },
-            'clicks': {
-                'today': today.click_count,
-                'yesterday': yesterday.click_count,
-                'total': totals.click_count
-            },
-        }
+            stats = {
+                'req': {
+                    'today': today.request_count,
+                    'yesterday': yesterday.request_count,
+                    'total': totals.request_count,
+                },
+                'imp': {
+                    'today': today.impression_count,
+                    'yesterday': yesterday.impression_count,
+                    'total': totals.impression_count,
+                },
+                'users': {
+                    'today': today.user_count,
+                    'yesterday': yesterday.user_count,
+                    'total': totals.user_count
+                },
+                'ctr': {
+                    'today': today.ctr,
+                    'yesterday': yesterday.ctr,
+                    'total': totals.ctr
+                },
+                'clk': {
+                    'today': today.click_count,
+                    'yesterday': yesterday.click_count,
+                    'total': totals.click_count
+                },
+            }
 
         return render_to_response(self.request,
                                   'publisher/app_index.html',
@@ -393,15 +396,18 @@ class AppDetailHandler(RequestHandler):
     def get(self, app_key):
 
         # load the site
+        # 1 GET
         app = AppQueryManager.get(app_key)
 
         # create a stats manager
         stats_q = StatsModelQueryManager(self.account, self.offline)
         mpx_stats_q = MarketplaceStatsFetcher(self.account.key())
 
+        # 1 RunQuery
         app.adunits = AdUnitQueryManager.get_adunits(app=app)
 
         # organize impressions by days
+        # 1 GET per ad unit
         if len(app.adunits) > 0:
             for adunit in app.adunits:
                 adunit.all_stats = stats_q.get_stats_for_days(publisher=adunit,
@@ -414,6 +420,7 @@ class AppDetailHandler(RequestHandler):
                              key=lambda adunit: adunit.name,
                              reverse=True)
 
+        # 1 GET
         app.all_stats = stats_q.get_stats_for_days(publisher=app, days=self.days)
 
         help_text = 'Create an Ad Unit below' if len(app.adunits) == 0 else None
@@ -431,7 +438,9 @@ class AppDetailHandler(RequestHandler):
                                               for stats in bundled_adunits]
 
         # Create edit form and new adunit forms
+        # 1 memcache GET
         app_form_fragment = AppUpdateAJAXHandler(self.request).get(app=app)
+        # 1 memcache GET
         adunit_form_fragment = AdUnitUpdateAJAXHandler(self.request).get(app=app)
 
         today = app.all_stats[-1]
@@ -447,27 +456,45 @@ class AppDetailHandler(RequestHandler):
         app.stats.user_count = max([sm.user_count for sm in app.all_stats])
 
         # get adgroups targeting this app
+        # 2 RunQuery???
         adgroups = AdGroupQueryManager.get_adgroups(app=app)
-        app.campaigns = dict([(adgroup.campaign.key(), adgroup.campaign) for
-            adgroup in adgroups]).values()
+        # Total: 2 GETs / 1 urlfetch per adgroup
+        # 1 GET for the campaign per adgroup
+        app_adunits = set([adunit.key() for adunit in app.adunits])
+        def targeted(adgroup):
+            # If it's a new network campaign the adgroup must be targeted and
+            # active
+            if adgroup.campaign.network_type:
+                return set(adgroup.site_keys).intersection(app_adunits) and \
+                        adgroup.active
+            # Otherwiese the adgroup must be targeted
+            else:
+                return set(adgroup.site_keys).intersection(app_adunits)
+
+        app.campaigns = dict([(adgroup._campaign, adgroup.campaign) for
+            adgroup in adgroups if targeted(adgroup)]).values()
 
         for campaign in app.campaigns:
             # Used for non new network campaigns
             if not campaign.network_type:
-                campaign.adgroup = adgroups[0]
+                campaign.adgroup = campaign.adgroups[0]
 
-            campaign.all_stats = stats_q.get_stats_for_days(publisher = app,
-                                                            advertiser =
+            # 1 GET
+            campaign.all_stats = stats_q.get_stats_for_days(publisher=app,
+                                                            advertiser=
                                                             campaign,
-                                                            days = self.days)
-            campaign.stats = reduce(lambda x, y: x+y, campaign.all_stats, StatsModel())
-            budget_object = campaign.budget_obj
-            #ag.percent_delivered = budget_service.percent_delivered(budget_object)
+                                                            days=self.days)
+            campaign.stats = reduce(lambda x, y: x+y, campaign.all_stats,
+                    StatsModel())
+            #budget_object = campaign.budget_obj
+            #campaign.percent_delivered = budget_service.percent_delivered(
+                    #budget_object)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
             if campaign.campaign_type in ['marketplace']:
                 try:
+                    # 1 urlfetch
                     mpx_stats = mpx_stats_q.get_app_stats(str(app_key),
                                                             self.start_date,
                                                             self.end_date)
@@ -475,12 +502,15 @@ class AppDetailHandler(RequestHandler):
                     logging.warn(str(e))
                     mpx_stats = {}
 
-                campaign.stats.revenue = float(mpx_stats.get('revenue', 0.0))
-                campaign.stats.impression_count = int(mpx_stats.get('impressions', 0))
+                campaign.stats.rev = float(mpx_stats.get('rev', 0.0))
+                campaign.stats.imp = int(mpx_stats.get('imp', 0))
 
             if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
                     'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
                 campaign.calculated_ecpm = calculate_ecpm(campaign)
+
+            # Use new naming conventions
+            campaign.stats = campaign.stats.to_dict()
 
 
         # Sort out all of the campaigns that are targeting this app
@@ -688,8 +718,8 @@ class AdUnitShowHandler(RequestHandler):
                                                                self.end_date)
                 except MPStatsAPIException, e:
                     mpx_stats = {}
-                ag.stats.revenue = float(mpx_stats.get('revenue'))
-                ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
+                ag.stats.revenue = float(mpx_stats.get('rev'))
+                ag.stats.impression_count = int(mpx_stats.get('imp', 0))
 
             if ag.campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
                 ag.calculated_ecpm = calculate_ecpm(ag)
@@ -1039,6 +1069,8 @@ class DashboardExportHandler(RequestHandler):
                 resource_id = app.package
             else:
                 resource_id = app.url
+            if not resource_id:
+                resource_id = 'None'
             stats = stats_fetcher.get_stats_for_days(publisher=app,
                                                      days=days)
             summed_stats = sum(stats, StatsModel())
@@ -1048,7 +1080,7 @@ class DashboardExportHandler(RequestHandler):
                          resource_id] + \
                         app_stats(summed_stats) + \
                         ["N/A",
-                         app.app_type_text()])
+                         app.type])
             adunits = AdUnitQueryManager.get_adunits(app=app)
 
             for adunit in adunits:
@@ -1065,7 +1097,7 @@ class DashboardExportHandler(RequestHandler):
                              resource_id] + \
                             app_stats(summed_stats) +
                             [ad_size,
-                             app.app_type_text()])
+                             app.type])
 
         f_name_dict = {
             'start': start.strftime('%b %d'),
@@ -1077,6 +1109,7 @@ class DashboardExportHandler(RequestHandler):
         titles = ['App','Ad Unit','Pub ID','Resource ID', 'Requests',
                   'Impressions', 'Fill Rate', 'Clicks', 'CTR','Ad Size',
                   'Platform',]
+
         return sswriter.export_writer(file_type, f_name, titles, data)
 
 
@@ -1084,6 +1117,63 @@ class DashboardExportHandler(RequestHandler):
 def dashboard_export(request, *args, **kwargs):
     return DashboardExportHandler()(request, *args, **kwargs)
 
+class TableExportHandler(RequestHandler):
+    def post(self):
+        try:
+            data = urllib.unquote(self.request.POST['table'])
+            data = simplejson.loads(data)
+            format = self.request.POST['format']
+            filename = urllib.unquote(self.request.POST['filename'])
+        except Exception:
+            raise Http404
+
+        headers, body = data['headers'], data['body']
+
+        # strip both headers and body cells for leading/trailing whitespace
+        headers = [header.replace('<br>',' ').strip() for header in headers]
+        body = [[cell.replace('<br>',' ').strip() for cell in row] for row in body]
+
+        if format == 'xls':
+            # let's build this spreedsheet using xlwt
+            xls = xlwt.Workbook()
+            ws = xls.add_sheet('Worksheet')
+
+            # set up a bold style for the header
+            bold_style = xlwt.XFStyle()
+            font = xlwt.Font()
+            font.bold = True
+            bold_style.font = font
+
+            # write to spreadsheet
+            for column, header in enumerate(headers):
+                ws.write(0, column, header, bold_style)
+            for i, row in enumerate(body):
+                for j, col in enumerate(row):
+                    ws.write(i + 1, j, body[i][j])
+
+            # make column widths sane and submit
+            ws = set_column_widths(ws, headers, body)
+            response = HttpResponse(mimetype='application/ms-excel')
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+            xls.save(response)
+            return response
+
+        elif format == 'csv':
+            response = HttpResponse(mimetype='text/csv')
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename
+
+            csv_writer = UnicodeWriter(response)
+            if headers:
+                csv_writer.writerow(headers)
+            csv_writer.writerows(body)
+
+            return response
+
+        raise Http404
+
+@login_required
+def table_export(request, *args, **kwargs):
+    return TableExportHandler()(request, *args, **kwargs)
 
 # Helper methods
 def enable_networks(adunit, account):
@@ -1096,7 +1186,7 @@ def enable_networks(adunit, account):
         adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
                 adunit.key(), account.key())
         preexisting_adgroup = AdGroupQueryManager.get_adgroups(campaign=
-                campaign).get()
+                campaign)[0]
         adgroup.active = preexisting_adgroup.active
         adgroup.device_targeting = preexisting_adgroup.device_targeting
         for device, pretty_name in adgroup.DEVICE_CHOICES:
@@ -1246,4 +1336,26 @@ def filter_campaigns(campaigns, cfilter):
     filtered_campaigns = sorted(filtered_campaigns, lambda x,y: cmp(y.name,
         x.name))
     return filtered_campaigns
+
+def set_column_widths(ws, headers, body):
+    # xlwt defines the widtht of '0' character as 256, so let's give a bit
+    # of leeway
+    char_width = 275
+
+    body.insert(0, headers)
+
+    # maximum width of each column, in characters
+    def max_chars_in_column(column):
+        chars_in_column = [len(cell) for cell in column]
+        return max(chars_in_column)
+
+    # Andrew hated my nested list comprehension, so here's this
+    columns = zip(*body)
+    column_widths = [max_chars_in_column(col) for col in columns]
+
+    # traverse worksheet columns and set width appropriately
+    for i in range(len(body[0])):
+        ws.col(i).width = column_widths[i] * char_width
+
+    return ws
 

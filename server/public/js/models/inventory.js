@@ -25,43 +25,43 @@ var mopub = mopub || {};
     /*
      * Helper functions for stats
      */
-    function calculate_ctr(impression_count, click_count) {
-        if (impression_count === null || click_count === null) {
+    function calculate_ctr(imp, clk) {
+        if (imp === null || clk === null || imp === undefined || clk === undefined) {
             return null;
         }
-        return (impression_count === 0) ? 0 : click_count / impression_count;
+        return (imp === 0) ? 0 : clk / imp;
     }
 
-    function calculate_fill_rate(request_count, impression_count) {
-        if (request_count === null || impression_count === null) {
+    function calculate_fill_rate(req, imp) {
+        if (req === null || imp === null || req === undefined || imp === undefined) {
             return null;
         }
-        return (request_count === 0) ? 0 : impression_count / request_count;
+        return (req === 0) ? 0 : imp / req;
     }
 
-    function calculate_cpm(impression_count, revenue) {
-        if (impression_count === null || revenue === null) {
+    function calculate_cpm(imp, rev) {
+        if (imp === null || rev === null || imp === undefined || rev === undefined) {
             return null;
         }
-        return (impression_count === 0) ? 0 : revenue / impression_count * 1000;
+        return (imp === 0) ? 0 : rev / imp * 1000;
     }
 
     function format_stat(stat, value) {
-        if (value === null) {
+        if (value === null || value === undefined) {
             return '--';
         }
         switch (stat) {
-          case 'attempt_count':
-          case 'click_count':
-          case 'conversion_count':
+          case 'att':
+          case 'clk':
+          case 'conv':
           case 'goal':
-          case 'impression_count':
-          case 'request_count':
+          case 'imp':
+          case 'imp':
+          case 'req':
+          case 'att':
             return mopub.Utils.formatNumberWithCommas(value);
           case 'cpm':
-          case 'min_cpm':
-          case 'max_cpm':
-          case 'revenue':
+          case 'rev':
             return '$' + mopub.Utils.formatNumberWithCommas(value.toFixed(2));
           case 'conv_rate':
           case 'ctr':
@@ -84,58 +84,33 @@ var mopub = mopub || {};
 
 
     /*
-     * ## NetworkApp Model
-     * contains two StatsModels one for network collected stats the other for
-     * mopub collected stats
-     */
-    var NetworkApp = Backbone.Model.extend({
-    });
-
-
-    /*
-     * ## NetworkApp Collection
-     */
-    var NetworkApps = Backbone.Collection.extend({
-        model: NetworkApp,
-
-        parse: function(response) {
-            var this_collection = this;
-
-            $.each(response, function (iter, network_app) {
-                network_app.mopub_stats = new StatsModel(network_app.mopub_stats);
-                if (network_app.network_stats) {
-                    network_app.network_stats = new StatsModel(network_app.network_stats);
-                } else {
-                    network_app.network_stats = false;
-                }
-
-                if (this_collection.type == 'adunits') {
-                    _.each(network_app.adunits, function (adunit) {
-                        adunit.stats = new StatsModel(adunit.stats);
-                    });
-                }
-            });
-            return response;
-        },
-
-        url: function() {
-            if (this.type == 'adunits') {
-                return '/api/network_apps/' + this.campaign_key + '/adunits';
-            }
-            return '/api/network_apps/' + this.campaign_key;
-        }
-    });
-
-
-    /*
      * ## StatsModel
      */
     var StatsModel = Backbone.Model.extend({
         get_stat: function(stat) {
-            if (!this.has(stat)) {
-                return null;
+            switch(stat) {
+                case 'ctr':
+                    return calculate_ctr(this.get('imp'),
+                                         this.get('clk'));
+                case 'fill_rate':
+                    return calculate_fill_rate(this.get('req'),
+                                               this.get('imp'));
+                case 'cpm':
+                    return this.get(stat) || calculate_cpm(this.get('imp'),
+                                                           this.get('rev'));
+                case 'clk':
+                case 'conv':
+                case 'imp':
+                case 'req':
+                case 'att':
+                case 'rev':
+                case 'goal':
+                case 'pace':
+                case 'conv_rate':
+                    return this.get(stat);
+                default:
+                    throw 'Unsupported stat "' + stat + '".';
             }
-            return this.get(stat);
         },
 
         get_formatted_stat: function(stat) {
@@ -177,19 +152,20 @@ var mopub = mopub || {};
         get_stat: function(stat) {
             switch(stat) {
                 case 'ctr':
-                    return calculate_ctr(this.get_stat('impression_count'),
-                                         this.get_stat('click_count'));
+                    return calculate_ctr(this.get_stat('imp'),
+                                         this.get_stat('clk'));
                 case 'fill_rate':
-                    return calculate_fill_rate(this.get_stat('request_count'),
-                                               this.get_stat('impression_count'));
+                    return calculate_fill_rate(this.get_stat('req'),
+                                               this.get_stat('imp'));
                 case 'cpm':
-                    return calculate_cpm(this.get_stat('impression_count'),
-                                         this.get_stat('revenue'));
-                case 'click_count':
-                case 'conversion_count':
-                case 'impression_count':
-                case 'request_count':
-                case 'revenue':
+                    return this.get(stat) || calculate_cpm(this.get_stat('imp'),
+                                                           this.get_stat('rev'));
+                case 'clk':
+                case 'conv':
+                case 'imp':
+                case 'req':
+                case 'att':
+                case 'rev':
                     return this.get_stat_sum(stat);
                 default:
                     throw 'Unsupported stat "' + stat + '".';
@@ -214,21 +190,23 @@ var mopub = mopub || {};
         },
 
         get_stat_for_day: function(stat, day) {
+            // TODO: Standardize field naming
             switch(stat) {
                 case 'ctr':
-                    return calculate_ctr(this.get_stat_for_day('impression_count', day),
-                                         this.get_stat_for_day('click_count', day));
+                    return calculate_ctr(this.get_stat_for_day('imp', day),
+                                         this.get_stat_for_day('clk', day));
                 case 'fill_rate':
-                    return calculate_fill_rate(this.get_stat_for_day('request_count', day),
-                                               this.get_stat_for_day('impression_count', day));
+                    return calculate_fill_rate(this.get_stat_for_day('req', day),
+                                               this.get_stat_for_day('imp', day));
                 case 'cpm':
-                    return calculate_cpm(this.get_stat_for_day('impression_count', day),
-                                               this.get_stat_for_day('revenue', day));
-                case 'click_count':
-                case 'conversion_count':
-                case 'impression_count':
-                case 'request_count':
-                case 'revenue':
+                    return calculate_cpm(this.get_stat_for_day('imp', day),
+                                         this.get_stat_for_day('rev', day));
+                case 'clk':
+                case 'conv':
+                case 'imp':
+                case 'req':
+                case 'att':
+                case 'rev':
                     return this.get_stat_sum_for_day(stat, day);
                 default:
                     throw 'Unsupported stat "' + stat + '".';
@@ -266,7 +244,7 @@ var mopub = mopub || {};
             }
             var sorted_adgroups = _.sortBy(adgroups, function(adgroup) {
                 // dash because we're sorting in reverse order
-                return -adgroup.get('impression_count');
+                return -adgroup.get('imp');
             });
             var top_three_adgroups = sorted_adgroups.splice(0, 3);
             var other_adgroups = new AdGroups(sorted_adgroups);
@@ -301,7 +279,7 @@ var mopub = mopub || {};
         isFullyLoaded: function() {
             // TODO: make this less hacky
             return this.reduce(function(memo, adgroup) {
-                return memo && adgroup.has('impression_count');
+                return memo && adgroup.has('imp');
             }, true);
         }
     });
@@ -325,6 +303,21 @@ var mopub = mopub || {};
                 + window.location.search.substring(1)
                 + '&endpoint='
                 + stats_endpoint;
+        },
+        parse: function(response) {
+            if (response) {
+                var campaign_data = response.sum;
+                campaign_data.daily_stats = response.daily_stats;
+
+                // REFACTOR attempts vs requests
+                if(campaign_data.req == null || campaign_data.req == undefined) {
+                    campaign_data.req = campaign_data.att;
+                } else if(campaign_data.att == null || campaign_data.att == undefined) {
+                    campaign_data.att = campaign_data.req;
+                } 
+
+                return campaign_data;
+            }
         }
     });
 
@@ -361,20 +354,20 @@ var mopub = mopub || {};
     /*
      * ## AdUnit
      */
-    var AdUnit = Backbone.Model.extend({
+    var AdUnit = StatsModel.extend({
         // If we don't set defaults, the templates will explode
         defaults : {
             active: false,
-            attempts: 0,
-            clicks: 0,
+            att: 0,
+            clk: 0,
             ctr: 0,
-            ecpm: 0,
+            cpm: 0,
             fill_rate: 0,
-            impressions: 0,
+            imp: 0,
             name: '',
             price_floor: 0,
             requests: 0,
-            revenue: 0,
+            rev: 0,
             stats_endpoint: 'all'
         },
         validate: function(attributes) {
@@ -411,54 +404,88 @@ var mopub = mopub || {};
         url: function() {
             // window.location.search.substring(1) is used to preserve date ranges from the url
             // this makes the fetching work with the datepicker.
-            var stats_endpoint = this.stats_endpoint;
-            return '/api/app/'
-                + this.app_id
-                + '/adunits/'
-                + '?'
-                + window.location.search.substring(1)
-                + '&endpoint='
-                + stats_endpoint;
+            if (this.campaign_id) {
+                return '/api/campaign/'
+                    + this.campaign_id
+                    + '/adunits/'
+                    + '?'
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + this.stats_endpoint;
+            } else {
+                return '/api/app/'
+                    + this.app_id
+                    + '/adunits/'
+                    + '?'
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + this.stats_endpoint;
+            }
+        },
+
+        isFullyLoaded: function() {
+            // TODO: make this less hacky
+            return this.reduce(function(memo, adgroup) {
+                return memo && adgroup.has('imp');
+            }, true);
         }
     });
 
 
     /*
      * ## App
-     * We might consider turning derivative values (ecpm, fill_rate, ctr) into
+     * We might consider turning derivative values (cpm, fill_rate, ctr) into
      * functions.
      */
-    var App = Backbone.Model.extend({
+    var App = StatsModel.extend({
         defaults : {
             name: '',
             url:'#',
             icon_url: "/placeholders/image.gif",
             app_type: '',
             active: false,
-            attempts: 0,
-            clicks: 0,
+            att: 0,
+            clk: 0,
             ctr: 0,
-            ecpm: 0,
+            cpm: 0,
             fill_rate: 0,
-            impressions: 0,
+            imp: 0,
             price_floor: 0,
             requests: 0,
-            revenue: 0,
+            rev: 0,
             stats_endpoint: 'all'
         },
         url: function () {
             var stats_endpoint = this.get('stats_endpoint');
-            return '/api/app/'
-                + this.id
-                + "?"
-                + window.location.search.substring(1)
-                + '&endpoint='
-                + stats_endpoint;
+            if (this.get('campaign_id')) {
+                return '/api/campaign/'
+                    + this.get('campaign_id')
+                    + '/apps/'
+                    + this.id
+                    + "?"
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + stats_endpoint;
+            } else {
+                return '/api/app/'
+                    + this.id
+                    + "?"
+                    + window.location.search.substring(1)
+                    + '&endpoint='
+                    + stats_endpoint;
+            }
         },
         parse: function (response) {
             // The api returns everything from this url as a list,
             // so that you can request one or all apps.
             var app = response[0];
+
+            // REFACTOR attempts vs requests
+            if(app.req == null || app.req == undefined) {
+                app.req = app.att;
+            } else if (app.att == null || app.att == undefined) {
+                app.att = app.req;
+            }
 
             if (app.app_type === 'iphone') {
                 app.app_type = 'iOS';
@@ -512,8 +539,6 @@ var mopub = mopub || {};
      * (We should find a better way to do this.)
      */
     window.StatsModel = StatsModel;
-    window.NetworkApp = NetworkApp;
-    window.NetworkApps = NetworkApps;
     window.AdUnit = AdUnit;
     window.AdUnitCollection = AdUnitCollection;
     window.App = App;

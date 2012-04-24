@@ -65,6 +65,49 @@ if (typeof window.console == "undefined") {
             }
         }
 
+        // export tables as xls/csv
+        // id is the html table's id attribute
+        // format (optional) is either 'csv' or 'xls'
+        // filename (optional) desired name of output file with extension
+        function export_table(id, format, filename) {
+            if (format != 'csv')
+                format = 'xls';
+
+            filename = filename || 'ExportData.' + format;
+
+            output = {
+                'headers': [],
+                'body': [],
+            };
+
+            $table = $('#' + id);
+
+            $table.find('thead tr th').each(function() {
+                output.headers.push($(this).text());
+            });
+
+            $table.find('tbody tr').each(function() {
+                row = [];
+                $(this).find('th, td').each(function() {
+                    row.push($(this).text());
+                });
+                output.body.push(row);
+            });
+
+            output = escape(JSON.stringify(output));
+            filename = escape(JSON.stringify(filename));
+
+            // add and submit a hidden form to propagate POST data
+            // submit 'table' (the json data), 'format' (xls or csv), and 'filename' (string including extension)
+            table_export_url = '/inventory/table_export/'
+            $table.append('<form id="hidden-export-form" action="' + table_export_url + '" method="POST">');
+            $hidden_export_form = $('#hidden-export-form');
+            $hidden_export_form.append($('<input type="hidden" name="table" value="' + output + '">'));
+            $hidden_export_form.append($('<input type="hidden" name="format" value="' + format + '">'));
+            $hidden_export_form.append($('<input type="hidden" name="filename" value="' + filename + '">'));
+            $hidden_export_form.submit();
+        }
+
         // marketplace hiding
         if ($('#is_admin_input').val()=='False') {
             $('.marketplace').hide();
@@ -946,7 +989,7 @@ if (typeof window.console == "undefined") {
             yAxis: {
                 labels: {
                     formatter: function() {
-                        if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                        if(activeMetric == 'rev' || activeMetric == 'cpm') {
                             return '$' + Highcharts.numberFormat(this.value, 0);
                         } else if(activeMetric == 'ctr') {
                             return Highcharts.numberFormat(this.value, 0) + '%';
@@ -970,23 +1013,38 @@ if (typeof window.console == "undefined") {
             tooltip: {
                 formatter: function() {
                     var text = '', value = '', total = '';
+                    metric_translation = {att: 'attempts',
+                                          clk: 'clicks',
+                                          conv: 'conversions',
+                                          imp: 'impressions',
+                                          req: 'requests',
+                                          cpm: 'CPM',
+                                          rev: 'revenue',
+                                          conv_rate: 'conversion rate',
+                                          ctr: 'click through rate',
+                                          fill_rate: 'fill rate', 
+                                          usr: 'user count'};
 
-                    if(activeMetric == 'revenue' || activeMetric == 'ecpm') {
+                    // If the metric isn't in the dict use the unformatted name
+                    var metric_name = metric_translation[activeMetric];
+                    metric_name = metric_name ? metric_name : activeMetric;
+
+                    if(activeMetric == 'rev' || activeMetric == 'cpm') {
                         value = '$' + Highcharts.numberFormat(this.y, 2);
                         if(data.total) {
                             total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
                         }
-                    } else if (activeMetric == 'clicks') {
-                        value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                    } else if (activeMetric == 'clk') {
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_name;
                         if(data.total) {
-                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_name;
                         }
                     } else if (activeMetric == 'ctr') {
                         value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
                     } else {
-                        value = Highcharts.numberFormat(this.y, 0) + ' ' + activeMetric;
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_name;
                         if(data.total) {
-                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + activeMetric;
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_name;
                         }
                     }
 

@@ -8,7 +8,7 @@ $(function() {
         Toast.error(message, "Error fetching app data.");
     };
 
-    function initialize_campaign_data(campaign_data, include_adunits, ajax_query_string) {
+    function initialize_campaign_data(campaign_data, apps, include_adunits) {
         // create mopub campaign
         // endpoint=all
         var mopub_campaign = new Campaign(campaign_data);
@@ -33,22 +33,41 @@ $(function() {
                 model: campaign
             });
 
-            campaign.fetch({ data: ajax_query_string, });
+            campaign.fetch({
+                error: function() {
+                    campaign.fetch({
+                        error: toast_error
+                    });
+                }
+            });
         });
 
-        // Load NetworkApps Collections
-        var network_apps = new NetworkApps();
-        if (include_adunits) {
-            network_apps.type = 'adunits';
+        var network_apps = [];
+        _.each(all_campaigns, function(campaign) {
+            _.each(apps, function(app) {
+                var network_app = new App({id: app.id,
+                                           campaign_id: campaign.id,
+                                           stats_endpoint: campaign.get('stats_endpoint')});
+
+                var app_view = new AppView({model: network_app,
+                             endpoint_specific: true});
+                app_view.el = '.' + campaign.id + '-apps-div';
+
+                network_apps.push(network_app);
+            });
+        });
+
+        if(include_adunits) {
+            var adunits = new AdUnitCollection();
+            adunits.campaign_id = mopub_campaign.id;
+            adunits.stats_endpoint = mopub_campaign.get('stats_endpoint');
+
+            new AdUnitCollectionView({collection: adunits});
+
+            return [all_campaigns, network_apps, adunits];
+        } else {
+            return [all_campaigns, network_apps];
         }
-        network_apps.campaign_key = campaign_data.id;
-
-        var network_apps_view = new NetworkAppsView({
-            collection: network_apps
-        });
-        network_apps.fetch({ data: ajax_query_string, });
-
-        return all_campaigns;
     }
 
     var show_network_chart_data = true;
@@ -109,22 +128,35 @@ $(function() {
     var NetworksController = { 
         initialize: function(bootstrapping_data) {
             var campaigns_data = bootstrapping_data.campaigns_data,
+                apps = bootstrapping_data.apps,
                 date_range = bootstrapping_data.date_range,
-                graph_start_date = bootstrapping_data.graph_start_date,
-                networks = bootstrapping_data.networks,
-                ajax_query_string = bootstrapping_data.ajax_query_string;
+                graph_start_date = bootstrapping_data.graph_start_date;
 
+            // TODO: move fuction to mopub.js
             initializeDateButtons();
 
             var all_campaigns = [];
+            var network_apps = [];
             _.each(campaigns_data, function(campaign_data) {
-                all_campaigns = all_campaigns.concat(initialize_campaign_data(campaign_data, false, ajax_query_string));
+                var result = initialize_campaign_data(campaign_data, apps, false);
+                all_campaigns = all_campaigns.concat(result[0]);
+                network_apps = network_apps.concat(result[1]);
+            });
+
+            _.each(network_apps, function(network_app) {
+                network_app.fetch({
+                    error: function() {
+                        network_app.fetch({
+                            error: toast_error
+                        });
+                    },
+                });
             });
 
             var campaigns = new Campaigns(all_campaigns);
 
             // Load chart
-            var graph_view = new NetworkGraphView({
+            new NetworkGraphView({
                 collection: campaigns,
                 date_range: date_range,
                 start_date: graph_start_date,
@@ -306,8 +338,8 @@ $(function() {
             $('.app-pub-id')
                 .keyup(function () {
                     var value = $(this).val();
-                    var div = $(this).parents('tbody');
-                    $(div).find('input[name$="'+pub_id+'"]').each(function () {
+                    var tbody = $(this).closest('tbody');
+                    $(tbody).children().not('tr.main').find('input[name$="'+pub_id+'"]').each(function () {
                         if (!$(this).hasClass('initialized')) {
                             $(this).val(value);
                             var pub_id_value = value;
@@ -321,10 +353,16 @@ $(function() {
 
             $('.cpm-data input').keyup(function() {
                 var value = $(this).val();
-                var div = $(this).parents('tbody');
-                if (!value) value = 0;
-                $(div).find('.cpm-value').text(value);
+                var td = $(this).closest('td');
+                $(td).find('.cpm-value').text(value);
             }).keyup();
+
+            $('tr.main .cpm-data input').keyup(function() {
+                var value = $(this).val();
+                var tbody = $(this).closest('tbody');
+                $(tbody).find('.cpm-value').text(value);
+                $(tbody).children().not('tr.main').find('.cpm-input input').val(value);
+            });
 
             // set up active checkbox's for app level
             $('.all-adunits')
@@ -345,14 +383,14 @@ $(function() {
 
             // perculate checked changes up
             $('input[name$="active"]').click(function () {
+                var tbody = $(this).closest('tbody'); 
                 var key = $(this).attr('class');
-                if($('.' + key + ':checked').length == $('.' + key).length) {
-                    $('.' + key).closest('tbody').find('.all-adunits').attr("checked", "checked");
+                if(tbody.find('input[name$="active"]:checked').length == tbody.find('input[name$="active"]').length) {
+                    tbody.find('.all-adunits').attr("checked", "checked");
                 } else {
-                    $('.' + key).closest('tbody').find('.all-adunits').removeAttr("checked");
+                    tbody.find('.all-adunits').removeAttr("checked");
                 }
 
-                // TODO: review tooltip code
                 // If no ad network ID set up, show a tooltip
                 if ($(this).is(':checked')) {
                     var network_input = $(this).parents('tr').find('input[name$="'+pub_id+'"]');
@@ -414,61 +452,57 @@ $(function() {
                 });
 
             // TODO: merge this with controllers/campaigns.js form
-            function setupNetworkForm() {
-                // select the appropriate campaign_type from the hash
-                if (window.location.hash.substring(1) !== '') {
-                    $('select[name="campaign_type"]').val(window.location.hash.substring(1));
-                }
+            // select the appropriate campaign_type from the hash
+            if (window.location.hash.substring(1) !== '') {
+                $('select[name="campaign_type"]').val(window.location.hash.substring(1));
+            }
 
-                var validator = $('form#campaign_and_adgroup').validate({
-                    errorPlacement: function(error, element) {
-                        element.closest('div').append(error);
-                    },
-                    submitHandler: function(form) {
-                        $(form).ajaxSubmit({
-                            data: {ajax: true},
-                            dataType: 'json',
-                            success: function(jsonData, statusText, xhr, $form) {
-                                if(jsonData.success) {
-                                    if (saved_new_login && login_state == LoginStates.NOT_SETUP) {
-                                        data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
+            var validator = $('form#campaign_and_adgroup').validate({
+                errorPlacement: function(error, element) {
+                    element.parents('div').not(':hidden').first().append(error);
+                },
+                submitHandler: function(form) {
+                    $(form).ajaxSubmit({
+                        data: {ajax: true},
+                        dataType: 'json',
+                        success: function(jsonData, statusText, xhr, $form) {
+                            if(jsonData.success) {
+                                if (saved_new_login && login_state == LoginStates.NOT_SETUP) {
+                                    data = "&account_key=" + account_key + "&network=" + network_type + '&req_type=pull';
 
-                                        $.ajax({url: 'https://checklogincredentials.mopub.com',
-                                            data: data,
-                                            crossDomain: true,
-                                            dataType: "jsonp",
-                                        });
-                                    }
-                                    window.location = jsonData.redirect;
-                                    $('form#campaign_and_adgroup #submit').button({
-                                        label: 'Success...',
-                                        disabled: true
-                                    });
-                                } else {
-                                    console.log(jsonData.errors);
-                                    validator.showErrors(jsonData.errors);
-                                    $('form#campaign_and_adgroup #submit').button({
-                                        label: 'Try Again',
-                                        disabled: false
+                                    $.ajax({url: 'https://checklogincredentials.mopub.com',
+                                        data: data,
+                                        crossDomain: true,
+                                        dataType: "jsonp",
                                     });
                                 }
-                            },
-                            error: function(jqXHR, textStatus, errorThrown) {
+                                window.location = jsonData.redirect;
+                                $('form#campaign_and_adgroup #submit').button({
+                                    label: 'Success...',
+                                    disabled: true
+                                });
+                            } else {
+                                console.log(jsonData.errors);
+                                validator.showErrors(jsonData.errors);
                                 $('form#campaign_and_adgroup #submit').button({
                                     label: 'Try Again',
                                     disabled: false
                                 });
-                            },
-                            beforeSubmit: function(arr, $form, options) {
-                                $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
-                                                                               disabled: true});
                             }
-                        });
-                    }
-                });
-            }
-
-            setupNetworkForm();
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            $('form#campaign_and_adgroup #submit').button({
+                                label: 'Try Again',
+                                disabled: false
+                            });
+                        },
+                        beforeSubmit: function(arr, $form, options) {
+                            $('form#campaign_and_adgroup #submit').button({label: 'Submitting...',
+                                                                           disabled: true});
+                        }
+                    });
+                }
+            });
 
             $('form#campaign_and_adgroup #submit')
                 .button({ icons : { secondary : 'ui-icon-circle-triangle-e' } })
@@ -477,17 +511,16 @@ $(function() {
                     $('form#campaign_and_adgroup').submit();
                 });
 
-
-            function setUpLoginForm() {
-                $("#networkLoginForm-submit").click(function() {
-                        if ($(this).hasClass('title-bar-level')) {
-                            var data = $(this).closest('.login-credentials-fields').serialize();
+            function setupLoginForm() {
+                $('form#network-login-form .submit, form#campaign_and_adgroup .submit').click(function() {
+                        if ($(this).closest('form').attr('id') == 'network-login-form') {
+                            var data = $(this).closest('.login-fields').serialize();
                         } else {
                             // Hack to serialize sub-section of forms data.
                             // Add a new form and hide it.
                             $('#campaign_and_adgroup').append('<form id="form-to-submit" style="visibility:hidden;"></form>');
                             // Clone the fieldset into the new form.
-                            $('#form-to-submit').html($(this).closest('.login-credentials-fields').clone());
+                            $('#form-to-submit').html($(this).closest('.login-fields').clone());
                             // Serialize the data.
                             var data = $('#form-to-submit').serialize();
                             // Remove the form.
@@ -507,9 +540,7 @@ $(function() {
                             success: function(valid) {
                                 // Upon success notify the user
                                 if (valid) {
-                                    $(message).html("MoPub is currently optimizing "
-                                                    + pretty_name
-                                                    + " by pulling data from "
+                                    $(message).html("MoPub is currently pulling data from "
                                                     + pretty_name + " using the following credentials.");
                                     var username = $('#id_username_str').val();
                                     var password = $('#id_password_str').val();
@@ -532,29 +563,38 @@ $(function() {
                                 } else {
                                     $(message).html("Invalid login information.");
                                 }
-                            }
+                            },
                         });
                 });
 
-                $('#networkLoginForm-cancel').click(function () {
-                    if ($(this).closest('section').attr('id') == 'network-settingsForm') {
-                        $('#network-settingsForm').slideUp();
-                    } else {
-                        var fieldset = $(this).closest('.login-credentials-fields');
-                        // Clone the fieldset into the new form.
-                        $('#network-login-form').html($(fieldset).clone());
-
-                        $(fieldset).slideUp(400, function () {
-                            $(fieldset).remove();
-                            $('#title-bar-button').show();
-                        });
-
-                        setUpLoginForm();
-                    }
+                $('form#network-login-form .cancel').click(function () {
+                    $('#network-settingsForm').slideUp();
                 });
             }
 
-            setUpLoginForm();
+            setupLoginForm();
+
+            $('form#campaign_and_adgroup .cancel').click(function () {
+                var fieldset = $(this).closest('.login-fields');
+
+                $(this).removeClass('ui-state-hover');
+                $('#network-login-form').html(fieldset.clone());
+
+                // rebuild buttons
+                // TODO: remove terrible designer buttons so hacks like this
+                // aren't needed
+                $('form#network-login-form .button').addClass('button-small');
+                $('form#network-login-form .button').button();
+
+                fieldset.slideUp(400, function () {
+                    fieldset.remove();
+                    $('#title-bar-button').show();
+                });
+
+                // re-initialize event handlers for the moved form
+                setupLoginForm();
+            });
+
 
             $("#edit-login").click(function() {
                 $('#id_username_str').show();
@@ -628,11 +668,11 @@ $(function() {
                 event.preventDefault();
                 var tbody = $(this).closest('tbody');
                 // hide app level bids
-                tbody.find('tr.main .cpm-data input').hide();
+                tbody.find('tr.main .cpm-data .cpm-input').hide();
                 tbody.find('tr.main .cpm-data .editable').show();
                 // show adunit level bids
-                tbody.find('.cpm-edit').hide();
-                tbody.find('.cpm-input').show();
+                tbody.children().not('.main').find('.cpm-edit').hide();
+                tbody.children().not('.main').find('.cpm-input').show();
             });
             $('.pub-id-close').click(function (event) {
                 event.preventDefault;
@@ -652,18 +692,18 @@ $(function() {
                 var tbody = $(this).closest('tbody');
 
                 // copy value of first adunit input to all cpm inputs
-                var value = tbody.find('.cpm-input input').val();
+                var value = tbody.children().not('.main').find('.cpm-input input').val();
                 tbody.find('.cpm-value').text(value);
                 tbody.find('.cpm-input input').val(value);
                 tbody.find('tr.main .cpm-data input').val(value);
 
                 // show app level cpm
-                tbody.find('tr.main .cpm-data input').show();
-                // show app edit text
+                tbody.find('tr.main .cpm-data .cpm-input').show();
+                // hide app edit text
                 tbody.find('tr.main .cpm-data .editable').hide();
 
                 // hide adunit cpms for app
-                tbody.find('.cpm-input').hide();
+                tbody.children().not('.main').find('.cpm-input').hide();
                 // show adunit edit text
                 tbody.find('.cpm-edit').show();
             });
@@ -742,17 +782,39 @@ $(function() {
     var NetworkDetailsController = { 
         initialize: function(bootstrapping_data) {
             var campaign_data = bootstrapping_data.campaign_data,
-                graph_start_date = bootstrapping_data.graph_start_date,
-                ajax_query_string = bootstrapping_data.ajax_query_string;
+                apps = bootstrapping_data.apps,
+                graph_start_date = bootstrapping_data.graph_start_date;
 
             initializeDateButtons();
 
-            var all_campaigns = initialize_campaign_data(campaign_data, true, ajax_query_string);
+            var result = initialize_campaign_data(campaign_data, apps, true);
+            var all_campaigns = result[0];
+            var network_apps = result[1];
+            var adunits = result[2];
+
+
+            _.each(network_apps, function(network_app) {
+                network_app.fetch({
+                    error: function() {
+                        network_app.fetch({
+                            error: toast_error
+                        });
+                    },
+                });
+            });
+
+            adunits.fetch({
+                error: function() {
+                    adunits.fetch({
+                        error: toast_error
+                    });
+                },
+            });
 
             // create campaigns collection
             campaigns = new Campaigns(all_campaigns);
 
-            var graph_view = new NetworkGraphView({
+            new NetworkGraphView({
                 collection: campaigns,
                 start_date: graph_start_date,
                 line_graph: true,

@@ -139,7 +139,39 @@ class AdUnitContextQueryManager(CachedQueryManager):
         return success
 
 
-class AppQueryManager(QueryManager):
+class PublisherQueryManager(CachedQueryManager):
+    @classmethod
+    def get_objects_dict_for_account(cls, account):
+        """
+        Returns a dictionary mapping App keys to App entities carrying adunit data. Adunits for each
+        app can be retrieved as a list by using app.adunit.
+        """
+        apps_dict = cls.get_apps_dict_for_account(account)
+        adunits = cls.get_adunits_dict_for_account(account).values()
+
+        for app in apps_dict.values():
+            app.adunits = []
+
+        # Associate each ad unit with its app. We could have done this by looping through the apps
+        # and getting each app's ad units, but that has a lot of GET overhead.
+        for adunit in adunits:
+            # Looks weird, but we're just avoiding adunit.app_key.key() since it incurs a fetch.
+            app_key = str(AdUnit.app_key.get_value_for_datastore(adunit))
+            app_for_this_adunit = apps_dict[app_key]
+            app_for_this_adunit.adunits += [adunit]
+
+        return apps_dict
+
+    @classmethod
+    def get_apps_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, App, include_deleted)
+
+    @classmethod
+    def get_adunits_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, AdUnit, include_deleted)
+
+
+class AppQueryManager(CachedQueryManager):
     Model = App
 
     @classmethod
@@ -225,10 +257,15 @@ class AppQueryManager(QueryManager):
     def put(cls, apps):
         put_response = db.put(apps)
 
-        # Clear cache
+        # Invalidate cache entries as necessary.
         for app in apps:
             adunits = AdUnitQueryManager.get_adunits(app=app)
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        # For each account, clear its apps and adunits from memcache.
+        affected_accounts = set([app.account for app in apps])
+        PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, App)
+        PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdUnit)
 
         return put_response
 
@@ -407,6 +444,7 @@ class AdUnitQueryManager(QueryManager):
             return None
         else:
             return self.adunit
+
     @classmethod
     @wraps_first_arg
     def put(cls, adunits):
@@ -415,6 +453,9 @@ class AdUnitQueryManager(QueryManager):
 
         put_response = db.put(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        affected_accounts = set([adunit.account for adunit in adunits])
+        PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdUnit)
 
         return put_response
 

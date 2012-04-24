@@ -15,7 +15,8 @@ from account.query_managers import AccountQueryManager
 from advertiser.query_managers import CampaignQueryManager
 from publisher.query_managers import AdUnitQueryManager, \
      AppQueryManager, \
-     AdUnitContextQueryManager
+     AdUnitContextQueryManager, \
+     PublisherQueryManager
 from common.utils.stats_helpers import MarketplaceStatsFetcher, \
      MPStatsAPIException
 
@@ -32,24 +33,14 @@ class MarketplaceIndexHandler(RequestHandler):
         # one should exist per account.
         marketplace_campaign = CampaignQueryManager.get_marketplace(self.account, from_db=True)
 
-        # Get all of the adunit keys for bootstrapping the apps
-        adunits = AdUnitQueryManager.get_adunits(account=self.account)
-        adunit_keys = simplejson.dumps([str(au.key()) for au in adunits])
+        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
+        alphabetically_sorted_apps = sorted(apps_dict.values(), lambda x, y: cmp(x.name, y.name))
+        app_keys_json = simplejson.dumps(apps_dict.keys())
 
-        # We list the app traits in the table, and then load their
-        # stats over ajax using Backbone.  Fetch the apps for the
-        # template load, and then create a list of keys for ajax
-        # bootstrapping.
-        apps = {}
-        for au in adunits:
-            app = apps.get(au.app_key.key())
-            if not app:
-                app = AppQueryManager.get(au.app_key.key())
-                app.adunits = [au]
-                apps[au.app_key.key()] = app
-            else:
-                app.adunits += [au]
-        app_keys = simplejson.dumps([str(k) for k in apps.keys()])
+        adunit_keys = []
+        for app_key, app in apps_dict.iteritems():
+            if app.adunits is not None:
+                adunit_keys += [adunit.key() for adunit in app.adunits]
 
         # Set up a MarketplaceStatsFetcher with this account
         stats_fetcher = MarketplaceStatsFetcher(self.account.key())
@@ -71,7 +62,8 @@ class MarketplaceIndexHandler(RequestHandler):
                 start_date = end_date - datetime.timedelta(13)
 
         try:
-            mpx_stats = stats_fetcher.get_account_stats(start_date, end_date, daily=True)
+            mpx_stats = stats_fetcher.get_account_stats(start_date,
+                    end_date, daily=True)
         except MPStatsAPIException, e:
             mpx_stats = {}
 
@@ -79,7 +71,8 @@ class MarketplaceIndexHandler(RequestHandler):
         blocklist = []
         network_config = self.account.network_config
         if network_config:
-            blocklist = [str(domain) for domain in network_config.blocklist if not str(domain) in ("", "#")]
+            blocklist = [str(domain) for domain in network_config.blocklist
+                    if not str(domain) in ("", "#")]
 
         # Get today and yesterday's stats for the graph
         today_stats = []
@@ -89,21 +82,34 @@ class MarketplaceIndexHandler(RequestHandler):
             today_stats = mpx_stats["daily"][-1]
             yesterday_stats = mpx_stats["daily"][-2]
 
+            # REFACTOR: load this data via ajax and use CollectionGraphView
+            def cpm(rev, imp):
+                if imp:
+                    return rev / imp * 1000
+                else:
+                    return 0
+
+            mpx_stats['cpm'] = cpm(mpx_stats['rev'], mpx_stats['imp'])
+
+            for stats in mpx_stats['daily']:
+                stats['cpm'] = cpm(stats['rev'], stats['imp'])
+
             stats = {
-                'revenue': {
-                    'today': today_stats['revenue'],
-                    'yesterday': yesterday_stats['revenue'],
-                    'total': mpx_stats['revenue']
+                'rev': {
+                    'today': today_stats['rev'],
+                    'yesterday': yesterday_stats['rev'],
+                    'total': mpx_stats['rev']
                 },
-                'impressions': {
-                    'today': today_stats['impressions'],
-                    'yesterday': yesterday_stats['impressions'],
-                    'total': mpx_stats['impressions'],
+                'imp': {
+                    'today': today_stats['imp'],
+                    'yesterday': yesterday_stats['imp'],
+                    'total': mpx_stats['imp'],
                 },
-                'ecpm': {
-                    'today': today_stats['ecpm'],
-                    'yesterday': yesterday_stats['ecpm'],
-                    'total': mpx_stats['ecpm']
+                'cpm': {
+                    'today': cpm(today_stats['rev'], today_stats['imp']),
+                    'yesterday': cpm(yesterday_stats['rev'],
+                        yesterday_stats['imp']),
+                    'total': cpm(mpx_stats['rev'], mpx_stats['imp']),
                 },
             }
 
@@ -119,8 +125,8 @@ class MarketplaceIndexHandler(RequestHandler):
                                   "advertiser/marketplace_index.html",
                                   {
                                       'marketplace': marketplace_campaign,
-                                      'apps': sorted(apps.values(), lambda x, y: cmp(x.name, y.name)),
-                                      'app_keys': app_keys,
+                                      'apps': alphabetically_sorted_apps,
+                                      'app_keys': app_keys_json,
                                       'adunit_keys': adunit_keys,
                                       'pub_key': self.account.key(),
                                       'mpx_stats': simplejson.dumps(mpx_stats),

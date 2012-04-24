@@ -9,7 +9,7 @@ from urllib import urlencode
 from copy import deepcopy
 
 import base64, binascii
-from google.appengine.api import users, images, files
+from google.appengine.api import users, images, files, mail
 
 from google.appengine.ext import db
 
@@ -29,13 +29,15 @@ from account.query_managers import AccountQueryManager
 from advertiser.forms import (CampaignForm, AdGroupForm, BaseCreativeForm,
                               TextCreativeForm, ImageCreativeForm,
                               TextAndTileCreativeForm, HtmlCreativeForm)
-from advertiser.query_managers import (CampaignQueryManager,
+from advertiser.query_managers import (AdvertiserQueryManager,
+                                       CampaignQueryManager,
                                        AdGroupQueryManager,
                                        CreativeQueryManager,
                                        TextCreativeQueryManager,
                                        ImageCreativeQueryManager,
                                        TextAndTileCreativeQueryManager,
                                        HtmlCreativeQueryManager)
+from advertiser.models import AdGroup, Campaign
 from ad_server.optimizer.optimizer import DEFAULT_CTR
 from budget import budget_service
 from common.ragendja.template import (JSONResponse, render_to_response,
@@ -49,55 +51,32 @@ from common.utils.timezones import Pacific_tzinfo
 from common.utils.tzinfo import Pacific, utc
 from publisher.models import Site
 from publisher.query_managers import (AdUnitQueryManager, AppQueryManager,
-                                      AdUnitContextQueryManager)
+                                      AdUnitContextQueryManager, PublisherQueryManager)
 from reporting.models import StatsModel
 from reporting.query_managers import StatsModelQueryManager
 
-
+from google.appengine.api import memcache
 CAMPAIGN_LEVELS = ['gtee_high', 'gtee', 'gtee_low', 'promo', 'backfill_promo']
 
 
 class AdGroupIndexHandler(RequestHandler):
 
     def get(self):
-
         # Set up the date range
         num_days = 90
         today = datetime.datetime.now(Pacific_tzinfo()).date()
-
         days = date_magic.gen_days(today - datetime.timedelta(days=(num_days-1)), today)
 
-        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
-        campaigns = CampaignQueryManager.get_campaigns_by_types(self.account, CAMPAIGN_LEVELS)
+        # Get all adgroups, filtering out those that are archived or deleted.
+        adgroups_dict = AdvertiserQueryManager.get_adgroups_dict_for_account(self.account)
+        adgroups = self._attach_targeted_app_keys_to_adgroups(adgroups_dict.values(), self.account)
 
-        # Get a list of adgroups (for sorting), and get a list of each adunit
-        # and attach them to each adgroup
-        adgroups = []
-        adunits_dict = {}
-        for campaign in campaigns:
-            for adgroup in campaign.adgroups:
-                if not (adgroup.archived or adgroup.deleted):
-                    adunits = []
-                    adunit_keys_to_fetch = []
-                    adgroup.targeted_app_keys = []
-                    adunit_keys = [adunit_key for adunit_key in adgroup.site_keys]
-                    for adunit_key in adunit_keys:
-                        if adunit_key in adunits_dict:
-                            adunits.append(adunits_dict[adunit_key])
-                        else:
-                            adunit_keys_to_fetch.append(adunit_key)
+        # Divide adgroups into buckets based on priorities, and sort each bucket by bid.
+        promo_adgroups, gtee_adgroups, backfill_promo_adgroups = _sort_adgroups(adgroups,
+                                                                                self.account)
 
-                    if adunit_keys_to_fetch:
-                        adunits += AdUnitQueryManager.get(adunit_keys_to_fetch)
-
-                    for adunit in adunits:
-                        adunits_dict[adunit.key()] = adunit
-                        if adunit:
-                            adgroup.targeted_app_keys.append(adunit._app_key)
-
-                    adgroups.append(adgroup)
-
-        promo_adgroups, gtee_adgroups, backfill_promo_adgroups = _sort_campaigns(adgroups)
+        apps = PublisherQueryManager.get_apps_dict_for_account(self.account).values()
+        apps = sorted(apps, lambda x, y: cmp(x.name, y.name))
 
         # TODO: do I need to add 'account': self.account,?
         return render_to_response(self.request,
@@ -112,11 +91,48 @@ class AdGroupIndexHandler(RequestHandler):
                                       'offline': self.offline,
                                   })
 
+    def _attach_targeted_app_keys_to_adgroups(self, adgroups, account):
+        """
+        Takes in a list of adgroups. For each adgroup, determines the apps targeted by that adgroup,
+        and attaches this information to the adgroup. Returns the list of updated adgroups.
+        """
+        # Get all adunits for this account. Important: include the deleted ones, because adgroups
+        # can still technically target deleted adunits.
+        adunits_dict = PublisherQueryManager.get_adunits_dict_for_account(account,
+                                                                          include_deleted=True)
+
+        for adgroup in adgroups:
+            # Figure out which adunits are targeted by this adgroup.
+            targeted_adunits = []
+            for adunit_key in adgroup.site_keys:
+                try:
+                    adunit = adunits_dict[str(adunit_key)]
+                except KeyError:
+                    body = "KeyError: Adgroup %s is targeting adunit %s which is not owned by %s" % (str(adgroup.key()), str(adunit_key), account.mpuser.email)
+                    mail.send_mail_to_admins(sender="olp@mopub.com",
+                                             subject="/campaigns error",
+                                             body="%s"%body)
+                if adunit.deleted:
+                    continue
+                targeted_adunits.append(adunit)
+
+            # Determine the apps that the targeted adunits belong to.
+            set_of_targeted_apps = set()
+            for adunit in targeted_adunits:
+                # Looks weird, but we're just avoiding adunit.app_key.key() since it incurs a fetch.
+                # TODO: adunit._app works without a fetch right?
+                app_key = str(Site.app_key.get_value_for_datastore(adunit))
+                set_of_targeted_apps.add(app_key)
+
+            # Attach to the adgroup object.
+            adgroup.targeted_app_keys = list(set_of_targeted_apps)
+
+        return adgroups
+
 
 @login_required
 def adgroups(request, *args, **kwargs):
     return AdGroupIndexHandler()(request, use_cache=False, *args, **kwargs)
-
 
 ####### Helpers for campaign page #######
 def _sort_guarantee_levels(guaranteed_campaigns):
@@ -140,26 +156,30 @@ def _sort_guarantee_levels(guaranteed_campaigns):
             level['display'] = False
     return gtee_levels
 
-
-def _sort_campaigns(adgroups):
+def _sort_adgroups(adgroups, account):
     """
-    Helper for the adgroup_index page which probably could be refactored
+    Divides the given list of adgroups into three separate lists (promo, guaranteed, and backfill).
+    Within each sub-list, adgroups will be sorted by bid in descending order.
     """
-    promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['promo'], adgroups)
-    promo_campaigns = sorted(promo_campaigns, lambda x, y: cmp(y.bid, x.bid))
+    # Populate the "campaign" property for all adgroups.
+    campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(account)
+    for adgroup in adgroups:
+        campaign_key = str(AdGroup.campaign.get_value_for_datastore(adgroup))
+        adgroup.campaign = campaigns_dict[campaign_key]
 
-    guaranteed_campaigns = filter(lambda x: x.campaign.campaign_type in ['gtee_high', 'gtee_low', 'gtee'], adgroups)
-    guaranteed_campaigns = sorted(guaranteed_campaigns, lambda x, y: cmp(y.bid, x.bid))
-
-    backfill_promo_campaigns = filter(lambda x: x.campaign.campaign_type in ['backfill_promo'], adgroups)
-    backfill_promo_campaigns = sorted(backfill_promo_campaigns, lambda x, y: cmp(y.bid, x.bid))
+    promo_adgroups = _sorted_adgroups_for_types(adgroups, ['promo'])
+    gtee_adgroups = _sorted_adgroups_for_types(adgroups, ['gtee_high', 'gtee_low', 'gtee'])
+    backfill_adgroups = _sorted_adgroups_for_types(adgroups, ['backfill_promo'])
 
     return [
-        promo_campaigns,
-        guaranteed_campaigns,
-        backfill_promo_campaigns,
+        promo_adgroups,
+        gtee_adgroups,
+        backfill_adgroups,
     ]
 
+def _sorted_adgroups_for_types(adgroups, types):
+    filtered_adgroups = filter(lambda x: x.campaign_type in types, adgroups)
+    return sorted(filtered_adgroups, lambda x, y: cmp(y.bid, x.bid))
 
 def _calc_app_level_stats(adgroups):
     # adgroup1.all_stats = [StatsModel(day=1), StatsModel(day=2), StatsModel(day=3)]
@@ -222,7 +242,9 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
     """ Replaces CreateCampaignAJAXHandler and CreateCampaignHandler """
 
     def get(self):
-        campaign_form = CampaignForm(is_staff=self.request.user.is_staff)
+        campaign_form = CampaignForm(is_staff=self.request.user.is_staff,
+                account=AccountQueryManager.get_account_by_key(
+                    self.account.key()))
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
@@ -251,7 +273,10 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
         apps = AppQueryManager.get_apps(account=self.account)
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
-        campaign_form = CampaignForm(self.request.POST)
+        campaign_form = CampaignForm(self.request.POST,
+                is_staff=self.request.user.is_staff,
+                account=AccountQueryManager.get_account_by_key(
+                    self.account.key()))
         if campaign_form.is_valid():
             campaign = campaign_form.save()
             campaign.account = self.account
@@ -264,13 +289,12 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
                 CampaignQueryManager.put(campaign)
 
                 # TODO: need to make sure a network type is selected if the campaign is a network campaign
-                adgroup = adgroup_form.save()
+                adgroup = adgroup_form.save(commit=False)
                 adgroup.account = campaign.account
                 adgroup.campaign = campaign
                 # TODO: put this in the adgroup form
                 if not adgroup.campaign.campaign_type == 'network':
                     adgroup.network_type = None
-                adgroup.save()
 
                 #put adgroup so creative can have a reference to it
                 AdGroupQueryManager.put(adgroup)
@@ -396,8 +420,12 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
     def get(self, adgroup_key):
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
-        campaign_form = CampaignForm(instance=adgroup.campaign, initial={'bid': adgroup.bid,
-                                                                         'bid_strategy': adgroup.bid_strategy})
+        campaign_form = CampaignForm(instance=adgroup.campaign,
+                initial={'bid': adgroup.bid,
+                         'bid_strategy': adgroup.bid_strategy},
+                is_staff=self.request.user.is_staff,
+                account=AccountQueryManager.get_account_by_key(
+                    self.account.key()))
         adgroup_form = AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
@@ -430,8 +458,13 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
         apps = AppQueryManager.get_apps(account=self.account)
         adunits = AdUnitQueryManager.get_adunits(account=self.account)
 
-        campaign_form = CampaignForm(self.request.POST, instance=adgroup.campaign, initial={'bid': adgroup.bid,
-                                                                                            'bid_strategy': adgroup.bid_strategy})
+        campaign_form = CampaignForm(self.request.POST,
+                instance=adgroup.campaign,
+                initial={'bid': adgroup.bid,
+                         'bid_strategy': adgroup.bid_strategy},
+                is_staff=self.request.user.is_staff,
+                account=AccountQueryManager.get_account_by_key(
+                    self.account.key()))
 
         if campaign_form.is_valid():
             campaign = campaign_form.save()
@@ -595,10 +628,12 @@ class AdGroupDetailHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, adgroup_key):
+        account = AccountQueryManager.get_account_by_key(self.account.key())
 
         stats_q = StatsModelQueryManager(self.account, self.offline)
 
         # Load the ad group
+        # 1 GET
         adgroup = AdGroupQueryManager.get(adgroup_key)
 
         show_graph = True
@@ -606,6 +641,7 @@ class AdGroupDetailHandler(RequestHandler):
         # Direct sold campaigns have a start date, and sometimes an end date.
         # Use those values if they both exist, otherwise set the range from
         # start to start + 90 days
+        # 1 GET
         if adgroup.campaign.gtee() or adgroup.campaign.promo():
             today = datetime.datetime.now(Pacific_tzinfo())
 
@@ -660,11 +696,14 @@ class AdGroupDetailHandler(RequestHandler):
         fill_rate = lambda requests, impressions: \
                     (impressions/float(requests) if requests else 0)
 
+        # 1 GET
         adgroup.all_stats = stats_q.get_stats_for_days(advertiser=adgroup,
                 days=self.days)
         adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
         try:
+            # TODO: ecpm = bid or rev / imp * 1000 should be dependent on
+            # campaign_type
             adgroup.stats.ecpm = ecpm(adgroup.stats.revenue,
                                       adgroup.stats.impression_count)
         except Exception:
@@ -685,6 +724,7 @@ class AdGroupDetailHandler(RequestHandler):
 
 
         # Load creatives and populate
+        # 1 RunQuery
         creatives = CreativeQueryManager.get_creatives(adgroup=adgroup)
         creatives = list(creatives)
         for c in creatives:
@@ -698,13 +738,17 @@ class AdGroupDetailHandler(RequestHandler):
             c.size = c.format.partition('x')
 
         # Load all adunits targeted by this adgroup/camaign
+        # 1 GET
         adunits = AdUnitQueryManager.get_adunits(keys=adgroup.site_keys)
         apps = {}
         for au in adunits:
+            # 1 GET per adunit
             app = apps.get(au.app_key.key())
             if not app:
+                # 1 GET per adunit
                 app = AppQueryManager.get(au.app_key.key())
                 app.adunits = [au]
+                # 1 GET
                 app.all_stats = StatsModelQueryManager(self.account, offline=self.offline).\
                                         get_stats_for_days(publisher=app,
                                                            advertiser=adgroup,
@@ -714,6 +758,7 @@ class AdGroupDetailHandler(RequestHandler):
             else:
                 app.adunits += [au]
 
+            # 1 GET
             stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
             au.all_stats = stats_manager.get_stats_for_days(publisher=au,
                                                             advertiser=adgroup,
@@ -822,6 +867,7 @@ class AdGroupDetailHandler(RequestHandler):
         return render_to_response(self.request,
                                   'advertiser/adgroup.html',
                                   {
+                                      'account': account,
                                       'campaign': adgroup.campaign,
                                       'apps': apps.values(),
                                       'adgroup': adgroup,

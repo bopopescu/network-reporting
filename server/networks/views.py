@@ -34,8 +34,10 @@ from common.ragendja.template import render_to_response, \
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
 
+from advertiser.query_managers import AdvertiserQueryManager
 from publisher.query_managers import AppQueryManager, \
-        AdUnitContextQueryManager
+        AdUnitContextQueryManager, \
+        PublisherQueryManager
 from networks.forms import NetworkCampaignForm, AdUnitAdGroupForm
 
 from datetime import date, time
@@ -64,8 +66,8 @@ DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
 ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
         'site_keys', 'name', 'bid', 'bid_strategy', 'active', 'network_type'])
 
-NETWORKS_WITH_PUB_IDS = set(NETWORKS.keys()) - set(['custom', 'custom_native',
-    'iad'])
+NETWORKS_WITH_PUB_IDS = set(['admob', 'brightroll', 'ejam', 'jumptap', \
+        'millennial', 'mobfox', 'inmobi'])
 
 class NetworksHandler(RequestHandler):
     def get(self):
@@ -74,67 +76,75 @@ class NetworksHandler(RequestHandler):
         Create a manager and get required stats for the webpage.
         Return a webpage with the list of stats in a table.
         """
-        additional_networks = set(NETWORKS.keys())
+        # TODO: Is this needed? Are all account fields stored in memcache?
+        #account = AccountQueryManager.get_account_by_key(self.account.key())
+        if not self.account.display_new_networks:
+            return HttpResponseRedirect(reverse('network_index'))
+
+        additional_networks_set = set(NETWORKS.keys())
         networks = []
-        campaigns_data = []
         reporting = False
+
+        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+                self.account).values()
 
         for campaign in CampaignQueryManager.get_network_campaigns(
                 self.account, is_new=True):
             network = str(campaign.network_type)
 
-            network_data = {}
-            if campaign:
+            # MoPub reported campaign cpm comes from meta data not stats so
+            # we calculate it here instead of over ajax
+            bid_range = campaign.get_bid_range(adgroups)
+            network_data = {'name': network,
+                            'pretty_name': campaign.name,
+                            'active': campaign.active,
+                            'key': campaign.key(),
+                            'min_cpm': bid_range[0],
+                            'max_cpm': bid_range[1],
+                            }
 
-                # start building the campaign data that we'll show in
-                # the page
-                campaign_data = {'id': str(campaign.key()),
-                                 'network': network}
+            # If this campaign is the first campaign of this
+            # network type and they have valid network
+            # credentials, then we can mark this as a campaign
+            # for which we have scraped network stats.
+            if campaign.network_state == NetworkStates. \
+                    DEFAULT_NETWORK_CAMPAIGN and network in \
+                    REPORTING_NETWORKS:
+                login = AdNetworkLoginManager.get_logins(self.account,
+                        network).get()
 
-                # If this campaign is the first campaign of this
-                # network type and they have valid network
-                # credentials, then we can mark this as a campaign
-                # for which we have scraped network stats.
-                if campaign.network_state == NetworkStates. \
-                        DEFAULT_NETWORK_CAMPAIGN and network in \
-                        REPORTING_NETWORKS:
-                    login = AdNetworkLoginManager.get_logins(self.account,
-                            network).get()
+                if login:
+                    reporting = True
+                    network_data['reporting'] = True
 
-                    if login:
-                        reporting = True
-                        campaign_data['reporting'] = True
-                        network_data['reporting'] = True
+            # Set up the rest of the attributes
 
-                # Set up the rest of the attributes
-                network_data['name'] = network
-                network_data['pretty_name'] = campaign.name
-                network_data['active'] = campaign.active
-                network_data['campaign_key'] = campaign.key()
-
-                # Add this network to the list that goes in the page
-                networks.append(network_data)
-                campaigns_data.append(campaign_data)
+            # Add this network to the list that goes in the page
+            networks.append(network_data)
 
         # Sort networks alphabetically
         networks = sorted(networks, key=lambda network_data:
-                network_data['name'])
+                network_data['pretty_name'])
 
         networks_to_setup = []
         if not networks:
-            # Generate list of primary networks that can be setup
-            for network in sorted(DEFAULT_NETWORKS):
+            # Generate list of primary networks that can be setup. This is
+            # shown only on initial setup
+            for network in DEFAULT_NETWORKS:
                 network_data = {}
                 network_data['name'] = network
                 network_data['pretty_name'] = NETWORKS[network]
 
                 networks_to_setup.append(network_data)
-                additional_networks.remove(network)
+                additional_networks_set.remove(network)
 
-        additional_networks_ = []
+        networks_to_setup = sorted(networks_to_setup, key=lambda
+                network_data: network_data['pretty_name'])
+
+        additional_networks = []
         custom_networks = []
         # Generate list of additional networks that can be setup
-        for network in sorted(additional_networks):
+        for network in additional_networks_set:
             network_data = {}
             network_data['name'] = network
             network_data['pretty_name'] = NETWORKS[network]
@@ -142,8 +152,16 @@ class NetworksHandler(RequestHandler):
             if 'custom' in network:
                 custom_networks.append(network_data)
             else:
-                additional_networks_.append(network_data)
-        additional_networks_ += custom_networks
+                additional_networks.append(network_data)
+        additional_networks += custom_networks
+
+        additional_networks = sorted(additional_networks, key=lambda
+                network_data: network_data['pretty_name'])
+
+        apps = PublisherQueryManager.get_apps_dict_for_account(self.account). \
+                values()
+
+        apps = sorted(apps, key=lambda app: app.identifier)
 
         return render_to_response(self.request,
               'networks/index.html',
@@ -155,10 +173,9 @@ class NetworksHandler(RequestHandler):
                   'graph': True if networks else False,
                   'networks': networks,
                   'networks_to_setup': networks_to_setup,
-                  'additional_networks': additional_networks_,
+                  'additional_networks': additional_networks,
+                  'apps': apps,
                   'reporting': reporting,
-                  'campaigns_data': simplejson.dumps(campaigns_data),
-                  'MOBFOX': MOBFOX,
               })
 
 @login_required
@@ -222,15 +239,16 @@ class EditNetworkHandler(RequestHandler):
             else:
                 login_form = LoginCredentialsForm(network=network)
 
-        account_network_config_form = AccountNetworkConfigForm(instance=
-                self.account.network_config)
+        if network == 'jumptap':
+            network_data['pub_id'] = getattr(self.account.network_config,
+                    network + '_pub_id', '')
 
         apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
         adgroup = None
         for app in apps:
             if network in NETWORKS_WITH_PUB_IDS:
                 app.pub_id = getattr(app.network_config, network + '_pub_id',
-                        False)
+                        '') or ''
 
             seven_day_stats = AdNetworkStats()
 
@@ -257,6 +275,9 @@ class EditNetworkHandler(RequestHandler):
             min_cpm = 9999.9
             max_cpm = 0.0
             for adunit in app.all_adunits:
+                if adunit.deleted:
+                    continue
+
                 adgroup = None
                 if campaign_key:
                     adgroup = AdGroupQueryManager.get_network_adgroup(
@@ -271,8 +292,13 @@ class EditNetworkHandler(RequestHandler):
                 adunit.adgroup_form.fields['bid'].widget.attrs['class'] += \
                         ' bid'
 
-                adunit.pub_id = getattr(adunit.network_config, network +
-                        '_pub_id', False)
+                if network in NETWORKS_WITH_PUB_IDS:
+                    adunit_pub_id = getattr(adunit.network_config, network +
+                            '_pub_id', False)
+                    if adunit_pub_id != app.pub_id:
+                        # only initialize th adunit level pub_id if it
+                        # differs from the app level one
+                        adunit.pub_id = adunit_pub_id
 
                 app.adunits.append(adunit)
             # Set app level bid
@@ -287,6 +313,9 @@ class EditNetworkHandler(RequestHandler):
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
                 instance=adgroup)
 
+        # Sort apps
+        apps = sorted(apps, key=lambda app_data: app_data.identifier)
+
         return render_to_response(self.request,
                                   'networks/edit_network_form.html',
                                   {
@@ -298,8 +327,6 @@ class EditNetworkHandler(RequestHandler):
                                       'REPORTING_NETWORKS': REPORTING_NETWORKS,
                                       'login_form': login_form,
                                       'adgroup_form': adgroup_form,
-                                      'account_network_config_form':
-                                            account_network_config_form,
                                       'apps': apps,
                                       'reporting': reporting,
                                       'LoginStates': simplejson.dumps(
@@ -370,14 +397,8 @@ class EditNetworkHandler(RequestHandler):
                 network_config_field = "%s_pub_id" % network
                 adgroup_forms = []
                 for adunit in adunits:
-                    network_adgroup = AdGroupQueryManager.get_network_adgroup(
-                            campaign, adunit.key(), self.account.key())
-
-                    query_dict[str(adunit.key()) + '-name'] = network_adgroup.name
-
                     adgroup_form = AdUnitAdGroupForm(query_dict,
-                            prefix=str(adunit.key()),
-                            instance=network_adgroup)
+                            prefix=str(adunit.key()))
                     if not adgroup_form.is_valid():
                         adgroup_forms_are_valid = False
                         break
@@ -386,12 +407,13 @@ class EditNetworkHandler(RequestHandler):
                             (adunit.key(), network_config_field), '')
                     # Return error if adgroup is set to active yet
                     # the user didn't enter a pub id
-                    if not pub_id and adgroup_form.fields.get('active', False) and network in \
-                            ('jumptap', 'millennial'):
+                    if not pub_id and self.request.POST.get('%s-active' %
+                            adunit.key(), False) and network in \
+                                    NETWORKS_WITH_PUB_IDS:
                         return JSONResponse({
                             'errors': {'adunit_' + str(adunit.key()) + \
-                                '-admob_pub_id': "MoPub requires an" \
-                                " ad network id for this adunit."},
+                                '-' + network + '_pub_id': "MoPub requires an" \
+                                " ad network id for enabled adunits."},
                             'success': False,
                         })
 
@@ -403,19 +425,22 @@ class EditNetworkHandler(RequestHandler):
             if adgroup_forms_are_valid:
                 logging.info('adgroup forms are valid')
 
-                # And then put in datastore again.
                 CampaignQueryManager.put(campaign)
 
                 for adgroup_form, adunit_key in adgroup_forms:
-                    adgroup = adgroup_form.save(commit=False)
-                    adgroup.account = self.account
-                    adgroup.campaign = campaign
-                    adgroup.name = campaign.name
-                    adgroup.site_keys = [adunit_key]
+                    adgroup = AdGroupQueryManager.get_network_adgroup(
+                            campaign, adunit_key, self.account.key())
+
+                    # copy fields from the default adgroup
                     for field in default_adgroup.properties().iterkeys():
                         if field not in ADGROUP_FIELD_EXCLUSION_LIST:
                             setattr(adgroup, field, getattr(default_adgroup,
                                 field))
+
+                    tmp_adgroup = adgroup_form.save(commit=False)
+                    # copy fields from the form for this adgroup
+                    for field in AdUnitAdGroupForm.base_fields.iterkeys():
+                        setattr(adgroup, field, getattr(tmp_adgroup, field))
 
                     if network in NETWORK_ADGROUP_TRANSLATION:
                         adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[
@@ -462,8 +487,7 @@ class EditNetworkHandler(RequestHandler):
                     adgroups.append(adgroup)
 
                 # NetworkConfig for Apps
-                if network in ('admob', 'brightroll', 'ejam', 'inmobi',
-                        'jumptap', 'millennial', 'mobfox'):
+                if network in NETWORKS_WITH_PUB_IDS:
                     for app in apps:
                         network_config = app.network_config or NetworkConfig()
                         app_pub_id = self.request.POST.get("app_%s-%s" %
@@ -494,7 +518,7 @@ class EditNetworkHandler(RequestHandler):
                                         app=app)
 
                     # NetworkConfig for AdUnits
-                    if network in ('admob', 'jumptap', 'millennial'):
+                    if network in NETWORKS_WITH_PUB_IDS:
                         for adgroup, adunit in zip(adgroups, adunits):
                             network_config = adunit.network_config or \
                                     NetworkConfig()
@@ -511,7 +535,8 @@ class EditNetworkHandler(RequestHandler):
                             network_config = self.account.network_config or \
                                     NetworkConfig()
                             setattr(network_config, network_config_field, \
-                                    self.request.POST.get('account_pub_id', ''))
+                                    self.request.POST.get(network +
+                                        '_pub_id', ''))
                             AccountQueryManager.update_config_and_put( \
                                     self.account, network_config)
 
@@ -569,13 +594,23 @@ class NetworkDetailsHandler(RequestHandler):
         if not campaign or campaign.account.key() != self.account.key():
             raise Http404
 
+        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+                self.account).values()
+
+        # MoPub reported campaign cpm comes from meta data not stats so
+        # we calculate it here instead of over ajax
+        bid_range = campaign.get_bid_range(adgroups)
+
         network = campaign.network_type
         network_data = {'name': network,
                         'pretty_name': campaign.name,
-                        'campaign_key': str(campaign.key()),
+                        'key': str(campaign.key()),
                         'active': campaign.active,
                         'login_state': LoginStates.NOT_SETUP,
-                        'targeting': []}
+                        'reporting': False,
+                        'targeting': [],
+                        'min_cpm': bid_range[0],
+                        'max_cpm': bid_range[1],}
 
         # Get the campaign targeting information.  We need an adunit
         # and an adgroup to determine targeting.  Any adunit will do
@@ -596,32 +631,21 @@ class NetworkDetailsHandler(RequestHandler):
         else:
             network_data['targeting'] = 'All'
 
-        campaign_data = {'id': str(campaign.key()),
-                         'network': network,
-                         'reporting': False}
-
         # This campaign is a default network campaign if its the
         # only one of this type. If this is the default, and if we have
         # login info, then we have reporting stats.
         #REFACTOR: handle the case when this isnt true.
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
-            login = AdNetworkLoginManager.get_logins(self.account, network).get()
+            login = AdNetworkLoginManager.get_logins(self.account, network). \
+                    get()
             if login:
                 network_data['login_state'] = login.state
-                campaign_data['reporting'] = True
+                network_data['reporting'] = True
 
-        # Iterate through all the apps and populate the stats for network_data
-        for app in AppQueryManager.get_apps(self.account):
-            if 'mopub_app_stats' not in network_data:
-                network_data['mopub_app_stats'] = {}
-            if app.key() not in network_data['mopub_app_stats']:
-                network_data['mopub_app_stats'][app.key()] = app
-
-        if 'mopub_app_stats' in network_data:
-            network_data['mopub_app_stats'] = sorted(network_data[
-                'mopub_app_stats'].values(), key=lambda
-                    app_data: app_data.identifier)
+        apps = PublisherQueryManager.get_objects_dict_for_account(
+                self.account).values()
+        apps = sorted(apps, key=lambda app: app.identifier)
 
         return render_to_response(self.request,
               'networks/details.html',
@@ -630,10 +654,9 @@ class NetworkDetailsHandler(RequestHandler):
                   'end_date' : self.days[-1],
                   'date_range' : self.date_range,
                   'graph' : True,
-                  'reporting' : campaign_data['reporting'],
+                  'reporting' : network_data['reporting'],
                   'network': network_data,
-                  'campaign_data': simplejson.dumps(campaign_data),
-                  'MOBFOX': MOBFOX,
+                  'apps': apps,
                   'LoginStates': LoginStates,
               })
 

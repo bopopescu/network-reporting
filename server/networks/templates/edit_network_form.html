@@ -13,17 +13,19 @@
 {% endblock pageTitle %}
 
 {% block titleBarRight %}
-<span id="title-bar-button" class="titlebar-right{% if login_form and network.show_login %} hidden{% endif %}">
+{% if login_form %}
+<span id="title-bar-button" class="titlebar-right{% if network.show_login %} hidden{% endif %}">
     <a class="button" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
 </span>
+{% endif %}
 {% endblock titleBarRight %}
 
 {% block content %}
 {% if login_form %}
 <section id="network-settingsForm" class="hidden">
-    <form accept-charset="ascii" id="network-login-form">
+    <form accept-charset="ascii" id="network-login-form" autocomplete="off">
         {% if not network.show_login %}
-        <fieldset class="alt login-credentials-fields" style="padding-top:20px">
+        <fieldset class="alt login-fields" style="padding-top:20px">
             <legend>
                 <h2>
                     Revenue Reporting
@@ -33,7 +35,7 @@
                 </h2>
             </legend>
 
-            <div id="networkLoginForm" style="clear: both;padding-top:10px">
+            <div style="clear: both;padding-top:10px">
                 <div class="login-credentials-message">
                     {% if reporting %}
                     Revenue reporting for {{ network.pretty_name }} is turned on.
@@ -67,14 +69,14 @@
                 {% endif %}
 
                 <div class="form-submit login-credentials-submit">
-                    {% if network.name == "mobfox" and not reporting %}
-                    <a class="button" id="networkLoginForm-submit title-bar-level">Turn on Reporting</a>
-                    {% else %}
-                    {% if network.name != "mobfox" %} 
-                    <a class="button" id="networkLoginForm-submit">Check and Save Credentials</a>
-                    {% endif %}
-                    {% endif %}
-                    <a class="button" id="networkLoginForm-cancel">No Thanks</a>
+                    <a class="submit button">
+                        {% if network.name == "mobfox" %} 
+                        Turn on Reporting
+                        {% else %}
+                        Check and Save Credentials
+                        {% endif %}
+                    </a>
+                    <a class="cancel button">No Thanks</a>
                 </div>
                 <div class="form-submit login-credentials-settings hidden">
                     <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
@@ -86,81 +88,82 @@
 </section>
 {% endif %}
 
-<form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post">
-    <div class="content-main">
-    <div>
-        <img src="/images/{{network.name}}-transparent.png"/>
-    </div>
+<form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post"  autocomplete="off">
     <fieldset>
-        <ul class="form_fields">
-            {% if custom_campaign %}
-            <li>
-            {{ campaign_form.name.label_tag }}
-            <div>
-                {{ campaign_form.name }}
-            </div>
-            </li>
-            {% endif %}
-
-            {% if network.name == "admob" or network.name == "millennial" %}
-            <li>
-                <label>Special Instructions:</label>
+        <div>
+            <img src="/images/{{network.name}}-transparent.png"/>
+        </div>
+        <div>
+            <ul class="form_fields">
+                {% if custom_campaign %}
+                <li>
+                {{ campaign_form.name.label_tag }}
                 <div>
-                    Requires Network SDK <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">(Learn more)</a>
+                    {{ campaign_form.name }}
                 </div>
-            </li>
-            {% endif %}
+                </li>
+                {% endif %}
 
-            {% if network.name == "jumptap" %}
-            <li>
-            {{ account_network_config_form.jumptap_pub_id.label_tag }}
-            <div>
-                {{ account_network_config_form.jumptap_pub_id }}
-            </div>
-            </li>
-            {% endif %}
+                {% if network.name == "admob" or network.name == "millennial" %}
+                <li>
+                    <label>Special Instructions:</label>
+                    <div>
+                        Requires Network SDK <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">(Learn more)</a>
+                    </div>
+                </li>
+                {% endif %}
 
-            {% if network.name == "custom_native" %}
-            <li>
-            {{ adgroup_form.custom_method.label_tag }}
-            <div>
-                {{ adgroup_form.custom_method }}
-            </div>
-            </li>
-            {% endif %}
-
-            {% if network.name == "custom" %}
-            <li>
-            {{ adgroup_form.custom_html.label_tag }}
-            <div>
-                {{ adgroup_form.custom_html }}
-                <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
-                <div id="campaignForm-customHtml-helpContent" class="hidden">
-                    <h3>Custom Network</h3>
-                    MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
-                    <br/>
-                    <br/>
-                    <h4>Example:</h4>
-                    A sample HTML snippet from Glam Media is:
-                    <br/>
-                    <br/>
-                    <code>
-                        &lt;script type="text/javascript"><br/>
-                        window.glam_affiliate_id = 1234567890;<br/>
-                        if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
-                        if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
-                        var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
-                        document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
-                        &lt;/script><br/>
-                    </code>
+                {% if network.name == "jumptap" %}
+                <li>
+                <label for="id_{{ network.name }}_pub_id">{{ network.pretty_name }} Publisher Alias:</label>
+                <div>
+                    <input type="text" name="{{ network.name }}_pub_id" id="id_{{ network.name }}_pub_id" value="{{ network.pub_id|default_if_none:""  }}">
                 </div>
-            </div>
-            </li>
-            {% endif %}
-        </ul>
+                </li>
+                {% endif %}
 
-        <div style="margin-top:15px">
-            <a class="button" id="advanced">Show Advanced Settings</a>
+                {% if network.name == "custom_native" %}
+                <li>
+                {{ adgroup_form.custom_method.label_tag }}
+                <div>
+                    {{ adgroup_form.custom_method }}
+                </div>
+                </li>
+                {% endif %}
+
+                {% if network.name == "custom" %}
+                <li>
+                {{ adgroup_form.custom_html.label_tag }}
+                <div>
+                    {{ adgroup_form.custom_html }}
+                    <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
+                    <div id="campaignForm-customHtml-helpContent" class="hidden">
+                        <h3>Custom Network</h3>
+                        MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
+                        <br/>
+                        <br/>
+                        <h4>Example:</h4>
+                        A sample HTML snippet from Glam Media is:
+                        <br/>
+                        <br/>
+                        <code>
+                            &lt;script type="text/javascript"><br/>
+                            window.glam_affiliate_id = 1234567890;<br/>
+                            if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
+                            if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
+                            var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
+                            document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
+                            &lt;/script><br/>
+                        </code>
+                    </div>
+                </div>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div style="margin-top:15px">
+                <a class="button" id="advanced">Show Advanced Settings</a>
+            </div>
         </div>
     </fieldset>
 
@@ -277,7 +280,7 @@
     </fieldset>
 
     {% if login_form and network.show_login %}
-    <fieldset class="alt login-credentials-fields" style="padding-top:20px">
+    <fieldset class="alt login-fields" style="padding-top:20px">
         <legend>
                 <h2>
                     Revenue Reporting
@@ -321,14 +324,14 @@
             {% endif %}
 
             <div class="form-submit login-credentials-submit">
-                {% if network.name == "mobfox" and not reporting %}
-                <a class="button" id="networkLoginForm-submit">Turn on Reporting</a>
-                {% else %}
-                {% if network.name != "mobfox" %} 
-                <a class="button" id="networkLoginForm-submit">Check and Save Credentials</a>
-                {% endif %}
-                {% endif %}
-                <a class="button" id="networkLoginForm-cancel">No Thanks</a>
+                <a class="submit button">
+                    {% if network.name == "mobfox" %} 
+                    Turn on Reporting
+                    {% else %}
+                    Check and Save Credentials
+                    {% endif %}
+                </a>
+                <a class="cancel button">No Thanks</a>
             </div>
             <div class="form-submit login-credentials-settings hidden">
                 <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
@@ -337,9 +340,6 @@
     </fieldset>
     {% endif %}
 
-    </div> <!-- <div class="content-main"> -->
-    <div class="clear"></div><!-- Previous <div> is float:left -->
-    <section id="dashboard-apps">
         <h2>App Targeting</h2>
         <div>
             <table class="inventory_table">
@@ -385,7 +385,7 @@
                             </div>
                         </td>
                         <td class="name">
-                            {{ app.name }} <span class="muted">({{ app.app_type_text }})</span>
+                            {{ app.name }} <span class="muted">({{ app.type }})</span>
                         </td>
                         <td class="text">
                             <input class="all-adunits" type="checkbox" />
@@ -393,15 +393,15 @@
                         {% if network.name in NETWORKS_WITH_PUB_IDS %}
                         <td class="text">
                             <div>
-                                <input name="app_{{ app.key }}-admob_pub_id" placeholder="AdMob Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-admob_pub_id" />
+                                <input name="app_{{ app.key }}-{{ network.name }}_pub_id" placeholder="{{ network.pretty_name }} Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-{{ network.name }}_pub_id" />
                             </div>
                         </td>
                         {% endif %}
                         <td class="text cpm-data" style="width:100px">
-                            {% if app.bid %}
-                            <input class="float bid app-level" type="text" value="{{ app.bid }}">
-                            {% endif %}
-                            <div class="cpm-close editable hidden">
+                            <div class="cpm-input {% if not app.bid %}hidden{% endif %}">
+                                <input class="float bid app-level" type="text" value="{{ app.bid }}">
+                            </div>
+                            <div class="cpm-close editable{% if app.bid %} hidden{% endif %}">
                                 <span>
                                     <b class="caret"></b>                            
                                     <span class="editable-hidden">Set app CPM</span>
@@ -437,11 +437,11 @@
                             {% if network.name in NETWORKS_WITH_PUB_IDS %}
                             <div>
                                 <div class="pub-id-input hidden">
-                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="{{ network.name }}_ag1kZXZ-bW9wdWItaW5jcgoLEgRTaXRlGAgM-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
+                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="adunit_{{ adunit.key }}-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
                                     <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
                                 </div>
                                 <div class="pub-id-edit editable">
-                                    <span class="pub-id-value"></span>
+                                    <span class="pub-id-value">{{ adunit.pub_id }}</span>
                                     <b class="caret"></b>
                                 </div>                            
                             </div>
@@ -449,7 +449,7 @@
                         </td>
                         {% endif %}
                         <td class="text cpm-data">
-                            <div class="cpm-edit editable">
+                            <div class="cpm-edit editable{% if not app.bid %} hidden{% endif %}">
                                 <span class="cpm-value"></span>
                                 <b class="caret"></b>                            
                             </div>           
@@ -473,7 +473,6 @@
         <a class="button" id="submit" href="#">Save</a>
         <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
     </div>
-    </section>
 </form>
 {% endblock content %}
 

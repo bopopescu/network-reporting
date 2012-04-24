@@ -127,12 +127,14 @@ class CampaignForm(forms.ModelForm):
                 initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
         is_staff = kwargs.pop('is_staff', False)
-        network = kwargs.pop('network', False)
+        account = kwargs.pop('account', False)
 
         super(forms.ModelForm, self).__init__(*args, **kwargs)
 
-        # show deprecated networks if user is staff
-        if is_staff or network:
+        # show deprecated networks if user is staff or hasn't migrated
+        if (is_staff or (account and not account.display_new_networks)) and \
+                ('network', 'Network') not in self.fields['campaign_type']. \
+                choices:
             self.fields['campaign_type'].choices.append(('network', 'Network'))
 
         # hack to make the forms ordered correctly
@@ -440,7 +442,7 @@ class AdGroupForm(forms.ModelForm):
         model = AdGroup
         fields = ('name',
                   'network_type',
-                  'active',
+                  #'active',
                   'custom_html',
                   'custom_method',
                   'bid_strategy',

@@ -14,20 +14,20 @@ def mapper(s):
     props = {}
     for k in StatsModel.properties():
         props[k] = getattr(s,'_%s'%k) # gets underlying data w/ no derefernce
-    
+
     for k in s.dynamic_properties():
-        props[k] = getattr(s,k)    
+        props[k] = getattr(s,k)
 
     account = props.get('account',None)
     offline = props.get('offline',False)
     parent_key = None
     parent = s.parent()
-    
+
     if not account and parent:
         # parent = StatsModel.get(parent.key())
         # if parent:
         account = parent._account
-    
+
     if account and parent:
         props.update(account=account)
         parent_key = MPStatsModel.get_key(account=account,
@@ -36,10 +36,10 @@ def mapper(s):
     new_stat = MPStatsModel(parent=parent_key,**props)
     yield op.db.Put(new_stat)
     # or yield op.db.Delete(entity)
-    
+
 def deleter(entity):
     yield op.db.Delete(entity)
-    
+
 def blober(entity):
     image_blob = None
     _attribute = None
@@ -67,15 +67,17 @@ def store_icon(icon):
     files.finalize(fname)
     return files.blobstore.get_blob_key(fname)
 
-def blob_urler(creative):
-    if 'TextAndTileCreative' in creative._class or 'ImageCreative' in creative._class:
-        if creative.image_blob and not creative.image_serve_url:
-            try:
-                creative.image_serve_url = helpers.get_url_for_blob(creative.image_blob, ssl=False)
-                yield op.db.Put(creative)
-            except images.Error:
-                pass
-            
+def blob_urler(obj):
+    image_blob = None
+    if hasattr(obj, 'icon_blob'):
+        image_blob = obj.icon_blob if obj.icon_blob else None
+    elif hasattr(obj, 'image_blob'):
+        image_blob = obj.image_blob if obj.image_blob else None
+
+    if image_blob and not obj.image_serve_url:
+        obj.image_serve_url = helpers.get_url_for_blob(image_blob, ssl=False)
+        yield op.db.Put(obj)
+
 
 def creative_pauser(creative):
     if getattr(creative, 'image_blob', None):

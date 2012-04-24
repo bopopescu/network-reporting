@@ -29,7 +29,8 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
      AdNetworkStats, \
      AdNetworkScrapeStats, \
      AdNetworkNetworkStats, \
-     AdNetworkAppStats
+     AdNetworkAppStats, \
+     LoginStates
 
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkStatsManager
@@ -38,8 +39,8 @@ from ad_network_reports.query_managers import AdNetworkMapperManager, \
 #Configuration Parameters for data generation
 ####
 
-USERNAME = "test1@mopub.com"
-PASSWORD = "test1"
+USERNAME = "test@mopub.com"
+PASSWORD = "test"
 
 NUM_ACCOUNTS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
 NUM_APPS = 2
@@ -279,7 +280,7 @@ def generate_stats_model(publisher,advertiser,account,date):
     impression_count = int(random.random()*request_count)
     click_count = int(random.random()*impression_count)
     conversion_count = int(random.random()*click_count)
-    revenue = click_count*.5
+    revenue = click_count*.002
 
     user_count = int(request_count*.75)
     request_user_count = user_count
@@ -385,6 +386,8 @@ def main():
             cur_date+=day
 
 
+# NOTE: main method for new network campaign creation
+# TODO: merge main method above
 def main_():
     account = generate_account(USERNAME,PASSWORD,USERNAME,
             display_new_networks=True)
@@ -408,7 +411,8 @@ def main_():
         login = AdNetworkLoginCredentials(account=account,
                            ad_network_name=network,
                            client_key=str(random.random()*10),
-                           send_email=False)
+                           send_email=False,
+                           state=LoginStates.WORKING)
         login_by_network[network] = login
         login.put()
 
@@ -503,10 +507,10 @@ def main_():
         network_totals = {}
         app_totals = {}
         for mapper in AdNetworkMapperManager.get_mappers(account):
-            revenue = random.random() * 10000
-            attempts = random.randint(1, 100000)
-            impressions = random.randint(1, attempts)
-            clicks = random.randint(1, impressions)
+            attempts = random.randint(0,10000)
+            impressions = int(random.random()*attempts)
+            clicks = int(random.random()*impressions)
+            revenue = clicks*.5
             stats = AdNetworkScrapeStats(revenue=revenue,
                                          attempts=attempts,
                                          impressions=impressions,

@@ -58,17 +58,17 @@ urlpatterns = patterns(
         'campaign_service',
         name='campaign_service'),
 
-    # /api/network_apps/<network>
-    # all app stats for the network
-    url(r'^network_apps/(?P<campaign_key>[-\w\.]+)$',
-        'network_apps_service',
-        name='network_apps_service'),
+    # /api/campaign/<campaign_key>/adunits
+    # all adunit stats for a campaign
+    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/adunits/$',
+        'adunit_service',
+        name='campaign_adunit_service'),
 
-    # /api/network_apps/<network>/adunits
-    # all app stats for the network including adunits
-    url(r'^network_apps/(?P<campaign_key>[-\w\.]+)/(?P<adunits>adunits)$',
-        'network_apps_service',
-        name='network_apps_service'),
+    # /api/adgroup/<adgroup_key/apps/<app_key>
+    # individual app from a campaign
+    url(r'^campaign/(?P<campaign_key>[-\w\.]+)/apps/(?P<app_key>[-\w\.]+)$',
+        'app_service',
+        name='campaign_app_service'),
 
     # TODO: make subdomain networks.mopub.com
     # networks api
@@ -76,7 +76,7 @@ urlpatterns = patterns(
         'networks_api',
         name='networks_api'),
 
-    # REFACTOR: move this to ad_network_reports
+    # TODO: remove when migration to new networks is done
     url(r'^ad_network/account_roll_up/$',
         'account_roll_up_service',
         name='account_roll_up_service'),

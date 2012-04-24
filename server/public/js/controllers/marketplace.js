@@ -610,7 +610,7 @@ var mopub = mopub || {};
              */
             function getCurrentChartSeriesType() {
                 var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
-                if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ecpm') return 'line';
+                if (activeBreakdownsElem.attr('id') == 'stats-breakdown-cpm') return 'line';
                 else return 'area';
             }
 
@@ -625,9 +625,9 @@ var mopub = mopub || {};
             mopub.dashboardStatsChartData = {
                 pointStart: mopub.graphStartDate,
                 pointInterval: 86400000,
-                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
-                impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
-                ecpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ecpm")}]
+                rev: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "rev")}],
+                imp: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "imp")}],
+                cpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "cpm")}]
             };
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
 

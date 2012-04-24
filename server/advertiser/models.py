@@ -180,6 +180,28 @@ class Campaign(db.Model):
         else:
             return False
 
+    def get_bid_range(self, adgroups=None):
+        """
+        pass in this campaigns adgroups to avoid a query
+        """
+        if not adgroups:
+            adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
+                    else adgroup.calculated_cpm for adgroup in
+                    self.adgroups if adgroup.active]
+        else:
+            adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
+                    else adgroup.calculated_cpm for adgroup in
+                    adgroups if adgroup.active and adgroup._campaign ==
+                    self.key()]
+
+        min_cpm = None
+        max_cpm = None
+        if adgroup_bids:
+            min_cpm = min(adgroup_bids)
+            max_cpm = max(adgroup_bids)
+
+        return (min_cpm, max_cpm)
+
     def get_owner(self):
         return None
 
@@ -330,6 +352,9 @@ class AdGroup(db.Model):
 
     target_other = db.BooleanProperty(default=True)  # MobileWeb on blackberry etc.
 
+    optimizable = db.BooleanProperty(default=False)
+    default_cpm = db.FloatProperty()
+
     USER_TYPES = (
         ('any', 'Any'),
         ('active_7', '7 day active user'),
@@ -408,6 +433,9 @@ class AdGroup(db.Model):
                              cities = self.cities,
                              geo_predicates = self.geo_predicates,
                              allocation_percentage = self.allocation_percentage,
+                             optimizable = self.optimizable,
+                             default_cpm = self.default_cpm,
+                             network_type = self.network_type,
                              )
 
     def default_creative(self, custom_html=None, key_name=None):

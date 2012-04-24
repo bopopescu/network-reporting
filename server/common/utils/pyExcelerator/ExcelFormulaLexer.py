@@ -71,7 +71,7 @@ pattern_type_tuples = (
 )
 
 
-type_text_tuples = (
+type_tuples = (
     (ExcelFormulaParser.NE, '<>'),
     (ExcelFormulaParser.LE, '<='),
     (ExcelFormulaParser.GE, '>='),
@@ -144,7 +144,7 @@ class Lexer(TokenStream):
             if t:
                 return t
         # second, we want find short tokens
-        for ty, te in type_text_tuples:
+        for ty, te in type_tuples:
             if self.rest().startswith(te):
                 self.next_ch(len(te))
                 return Tok(type = ty, text = te, col = self._pos)

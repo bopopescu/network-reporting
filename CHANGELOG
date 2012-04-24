@@ -1,11 +1,65 @@
+# Deployed Tuesday, April 24, 2012 at 04:06AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-76
+### Bugs Fixed: []
+### Included Commits: 
+ * 107780f Merge branch 'master' of github.com:mopub/mopub
+ * f4eac1b Deployed without finding any bug fixes.
+ * 90e6658 Merge branch 'master' of github.com:mopub/mopub
+ * 636d23a fixed recursive get_stat js bug
+ 
+# Deployed Tuesday, April 24, 2012 at 04:02AM PST
+### Deployed by John Pena
+### Tagged deploy-75
+### Bugs Fixed: []
+### Included Commits:
+* 3b1d8ee added force_marketplace flag
+* 619324e Ready to push to master
+* 54030e4 calculate cpm in js if it's not passed in
+* fe02573 goal on adgroup index is formatted with commas, marketplace should show revenue impression totals correctly
+* 28a8b4d Formatted metric names in chart only used when needed, app and adunit details fix for getting mpx stats
+* c25a677 Graph naming for tooltips fixed, lots of other changes and fixes for field naming change
+* 88456f1 att req naming problem fix, this is temporary
+* 1845bd4 Cleaned up AdUnitCollection render method
+* 11628b9 Check for undefined for calculated fields in js, updated field naming for chart in old networks page
+* 9281613 Updated js version # for staging, removed fet formatted stat for non stat goal
+* 8b290e6 Fixed MPX after field name refactor
+* 3542af4 Advertiser pages work since after field name refactor
+* 7f68473 Started StatsModel field name refactor
+* 75e5704 Dashboard index renders correctly after field naming change
+* 0712cb7 fetch campaigns first then apps and adunits
+* 9291132 remove unused partials
+* b684890 removed network apps bs
+* 2e08756 adunit stats load on network details page
+* fdcbea5 Added adunit rows to network details page
+* 632e768 app data loading on network details page
+* fea4ca0 Fixed chart on index page after field name refactor
+* 0442add Daily counts on network index page fixed after field name refactor
+* dc4e130 added missing file, consider moving it to networks app
+* 4ee1865 App stats loading after name refactor
+* 7c81c00 Refactored field naming using: att clk conv imp req cpm rev conv_rate ctr fill_rate, campaigns view loading on networks index page
+* 4d37fad MoPub app stats load
+* 88ddcb6 displaying numbers on app rows
+* 3952544 Load app stats individually over ajax for networks pages
+* 93bd5d0 networks controller change, stats api change
+* b4ad3c7 Removed network endpoint from api/services, changed app_type_text method to type_text property, use memcache in networks index view to get apps and campaigns
+* 747e4ce Merge branch 'master' into networks-app-refactor
+* 5fd736a Fixed bug introduced in 1690ebe where mongo_stats are exclusively used, frontend engineers need local test data
+* 35e5b40 added missing partial template
+* 261373f Merge branch 'master' into networks-page
+* ceac627 Made fake reporting stats more realistic
+* 2fcb39a Sort on name instead of network_type, InMobi should have network IDs, Revenue at app level, Add OS type in App rows on the dashboard, Turn off autocomplete on revenue reporting user/pass
+* a330493 Started networks app refactor
+* 125f06b Deployed without finding any bug fixes.
+
 # Deployed Thursday, April 19, 2012 at 07:12PM PST
 ### Deployed by Andrew He
 ### Tagged deploy-74
 ### Bugs Fixed: []
-### Included Commits: 
- * 0020f59 Remove graph on inventory page for pubs with >50 apps. Fix marketplace 500 relating to caching layer.
- * a2b0a5e Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 0020f59 Remove graph on inventory page for pubs with >50 apps. Fix marketplace 500 relating to caching layer.
+* a2b0a5e Deployed without finding any bug fixes.
+
 # Deployed Thursday, April 19, 2012 at 02:11AM PST
 ### Deployed by James Sun
 ### Tagged deploy-73

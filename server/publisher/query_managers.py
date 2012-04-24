@@ -120,16 +120,23 @@ class AdUnitContextQueryManager(CachedQueryManager):
             clear_uri = clear_uri + '&testing=True&port=%s' % port
             fetcher.fetch(clear_uri)
         else:
-            pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
+            queue = taskqueue.Queue('push-context-update')
             for key in adunit_keys:
                 # For each adunit, spin up a TQ to ping the adserver
                 # admins with new data
-                taskqueue.add(url='/fetch_api/adunit_update_push',
-                              method='GET',
-                              queue_name='push-context-update',
-                              params={'adunit_key':key})
+                task_name = 'adunit_context_push:%s' % key
+                task = taskqueue.Task(url='/fetch_api/adunit_update_push',
+                                      method='GET',
+                                      name = task_name,
+                                      countdown=5,
+                                      params={'adunit_key':key})
+                try:
+                    queue.delete_tasks(task)
+                except:
+                    pass
+                queue.add(task)
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)

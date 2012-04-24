@@ -4,6 +4,7 @@ to the ones that live on GAE as far as the adserver is concerned, but they don't
 have any of the builtins for db putting and other things that the adserver doesn't
 give a shit about """
 from datetime import datetime
+import time
 import logging
 
 MAX_OBJECTS = 200
@@ -137,11 +138,15 @@ class SimpleModel(object):
         return obj
 
 class SimpleAdUnitContext(SimpleModel):
-    def __init__(self, adunit, campaigns, adgroups, creatives):
+    def __init__(self, adunit, campaigns, adgroups, creatives, created_at=None):
         self.adunit = adunit.simplify()
         self.campaigns = [camp.simplify() for camp in campaigns]
         self.adgroups = [ag.simplify() for ag in adgroups]
         self.creatives = [crtv.simplify() for crtv in creatives]
+        if created_at is None:
+            self.created_at = int(time.mktime(datetime.utcnow().timetuple()))
+        else:
+            self.created_at = int(float(created_at))
 
     def get_creative_by_key(self, creative_key):
         crtv = None

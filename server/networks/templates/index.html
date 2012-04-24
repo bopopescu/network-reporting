@@ -126,9 +126,9 @@ Make a table for ad networks that are active
                         {% endif %}
                         <div class="mopub-data">
                             {% if network.min_cpm == network.max_cpm %}
-                            {{ network.min_cpm }}
+                            {{ network.min_cpm|currency }}
                             {% else %}
-                            {{ network.min_cpm }}-{{ network.max_cpm }}
+                            {{ network.min_cpm|currency }}-{{ network.max_cpm|currency }}
                             {% endif %}
                         </div>
                     </td>

@@ -294,6 +294,14 @@ $(function() {
             
             var saved_new_login = false;
 
+            // set up tabIndex attributes for vertical tabbing
+            var rows = $('table.inventory_table').children().not('thead').find('tr');
+            rows.each(function(row_iter, row) {
+                $(row).find('td').each(function(data_iter, data) {
+                    $(data).find('input').attr('tabIndex', rows.length * data_iter + row_iter);
+                });
+            });
+
             // make necessary changes based on network type
             var pub_ids = {
                 'admob': 'admob_pub_id',

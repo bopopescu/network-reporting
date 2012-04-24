@@ -778,11 +778,11 @@ def main(args):
                 elif field_name_match(arg, END_DAY):
                     end_day = parse_day(arg, END_DAY)
                 elif field_name_match(arg, EMAIL):
-                    email = (arg[len(EMAIL) + 1:] in ('y', 'Y'))
+                    email = arg[len(EMAIL) + 1:] in ('y', 'Y')
                 elif field_name_match(arg, PROCESSES):
                     processes = int(arg[len(PROCESSES) + 1:])
                 elif field_name_match(arg, NETWORK):
-                    network = int(arg[len(NETWORK) + 1:])
+                    network = arg[len(NETWORK) + 1:]
             multiprocess_update_all(start_day, end_day, email, processes,
                     network)
 

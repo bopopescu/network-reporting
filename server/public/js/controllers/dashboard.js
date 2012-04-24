@@ -10,8 +10,8 @@ var mopub = mopub || {};
      * Settings
      */
 
-    var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-    //var URL = 'http://localhost:8888/';
+    //var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+    var URL = 'http://localhost:8888/';
 
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
@@ -128,7 +128,7 @@ var mopub = mopub || {};
         } catch (x) {
             console.log(x);
         }
- 
+
         try {
             mixpanel.track(name, args);
         } catch (x) {
@@ -303,7 +303,23 @@ var mopub = mopub || {};
      */
     function createChart(series, element, account_data, options) {
         var all_chart_data = _.map(account_data, function(range, i){
-
+            var stroke;
+            var color;
+            if(range.id === 'vs') {
+                stroke = 'rgba(223, 223, 223, 1.0)';
+                color = 'rgba(223, 223, 223, 0.4)';
+            }
+            else {
+                stroke = COLOR_THEME.secondary[i];
+                color = COLOR_THEME.primary[i];
+                if(range.id) {
+                    $tr = $('#' + range.id);
+                    $tr.css('background-color', color);
+                    if($tr.hasClass('source') || $tr.hasClass('app')) {
+                        $tr.nextUntil('.source, .app').css('background-color', color);
+                    }
+                }
+            }
             var individual_series_data = {
                 data: _.map(range, function(datapoint, j){
                     return {
@@ -311,8 +327,8 @@ var mopub = mopub || {};
                         y: datapoint[series]
                     };
                 }),
-                stroke: COLOR_THEME.secondary[i],
-                color: COLOR_THEME.primary[i]
+                stroke: stroke,
+                color: color
             };
             return individual_series_data;
         });
@@ -597,12 +613,23 @@ var mopub = mopub || {};
                 var publisher_type = get_publisher_type();
                 var publisher_query = get_publisher_query(publisher_type);
 
+                var columns = get_columns();
+
+                if (advertiser_table) {
+                    update_advertiser_table(data, publisher_query, get_advertiser_order(), columns);
+                }
+
+                if (publisher_table) {
+                    update_publisher_table(data, advertiser_query, get_publisher_order(), columns);
+                }
+
                 record_metric('Updated dashboard data', {
                     advertiser: '' + advertiser_query,
                     publisher: '' + publisher_query
                 });
 
                 if(update_rollups_and_charts) {
+                    $('tr.source, tr.campaign, tr.app, tr.adunit').removeAttr('style');
 
                     var rollups_and_charts_data = _.clone(data);
                     var granularity = $('#granularity').val();
@@ -626,6 +653,9 @@ var mopub = mopub || {};
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
+                                    _.each(charts_data, function (series, index) {
+                                        series.id = rollups_and_charts_data.query[index + 1][advertiser_type][0];
+                                    });
                                     initializeDashboardCharts(charts_data);
                                 });
                             }
@@ -648,6 +678,9 @@ var mopub = mopub || {};
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
+                                    _.each(charts_data, function (series, index) {
+                                        series.id = rollups_and_charts_data.query[index + 1][publisher_type][0];
+                                    });
                                     initializeDashboardCharts(charts_data);
                                 });
                             }
@@ -666,8 +699,8 @@ var mopub = mopub || {};
                                         update_rollups(json.sum[0], json.vs_sum[0]);
 
                                         charts_data = [
-                                            _.extend(_.clone(json[granularity][0]), { name: 'This Period' }),
-                                            _.extend(_.clone(json['vs_' + granularity][0]), { name: 'Comparison Period' })
+                                            _.clone(json[granularity][0]),
+                                            _.extend(_.clone(json['vs_' + granularity][0]), { id: 'vs' })
                                         ];
                                     } else {
                                         update_rollups(json.sum[0]);
@@ -678,15 +711,6 @@ var mopub = mopub || {};
                             }
                         });
                     }
-                }
-                var columns = get_columns();
-
-                if (advertiser_table) {
-                    update_advertiser_table(data, publisher_query, get_advertiser_order(), columns);
-                }
-
-                if (publisher_table) {
-                    update_publisher_table(data, advertiser_query, get_publisher_order(), columns);
                 }
             }
 
@@ -922,7 +946,7 @@ var mopub = mopub || {};
             }
 
             /* EVENT HANDLERS */
-            
+
             function get_today() {
                 var now = new Date();
                 return new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -976,7 +1000,7 @@ var mopub = mopub || {};
                 update_vs_start_end('none');
                 return {
                     'start': start,
-                    'end': end,
+                    'end': end
                 };
             }
 
@@ -1027,12 +1051,12 @@ var mopub = mopub || {};
                 $('#date_modal').show();
             });
 
-            $('#date_modal_submit').click(function () {                
+            $('#date_modal_submit').click(function () {
                 $('#date_modal').hide();
                 var dates = update_start_end('custom');
                 record_metric('Changed date', {
-                    date_range: 'custom', 
-                    start: dates.start, 
+                    date_range: 'custom',
+                    start: dates.start,
                     end: dates.end
                 });
                 update_dashboard(true, true, true);
@@ -1139,7 +1163,7 @@ var mopub = mopub || {};
 
                 record_metric('Sorted advertiser table', {dimension: order});
 
-                update_dashboard(false, true, false);
+                update_dashboard(true, true, false);
             });
 
             /* Filters */
@@ -1164,7 +1188,7 @@ var mopub = mopub || {};
 
                 record_metric('Sorted publisher table', {dimension: order});
 
-                update_dashboard(false, false, true);
+                update_dashboard(true, false, true);
             });
 
 

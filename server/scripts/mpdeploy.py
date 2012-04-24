@@ -11,6 +11,8 @@ PWD = os.path.dirname(__file__)
 sys.path.append(os.path.join(PWD, '..'))
 import common.utils.test.setup
 
+from common.utils.timezones import Pacific_tzinfo
+
 import datetime
 import re
 import yaml
@@ -110,14 +112,15 @@ def git_tag_current_deploy():
     try:
         deploy_number = int(git_get_most_recent_deploy_tag().replace('deploy-',''))
         new_deploy_number = deploy_number + 1
-    except IndexError, ValueError:
+    except (IndexError, ValueError):
         new_deploy_number = 0
 
     new_deploy_tag = "deploy-" + str(new_deploy_number)
 
     # Make the message for the deploy
-    deploy_datetime = datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M%p PST")
-    message = "Deployed by %s on %s." % (git_get_user(), deploy_datetime)
+    deploy_datetime = datetime.datetime.now(Pacific_tzinfo())
+    deploy_datetime_readable = deploy_datetime.strftime("%A, %B %d, %Y at %I:%M%p PST")
+    message = "Deployed by %s on %s." % (git_get_user(), deploy_datetime_readable)
 
     # Tag the commit
     #command = 'tag -m \'%s\' -a %s' % (message, new_deploy_tag)

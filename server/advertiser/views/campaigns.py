@@ -702,6 +702,8 @@ class AdGroupDetailHandler(RequestHandler):
         adgroup.stats = reduce(lambda x, y: x + y, adgroup.all_stats, StatsModel())
         adgroup.percent_delivered = budget_service.percent_delivered(adgroup.campaign.budget_obj)
         try:
+            # TODO: ecpm = bid or rev / imp * 1000 should be dependent on
+            # campaign_type
             adgroup.stats.ecpm = ecpm(adgroup.stats.revenue,
                                       adgroup.stats.impression_count)
         except Exception:

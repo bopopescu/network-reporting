@@ -89,6 +89,8 @@ class MarketplaceIndexHandler(RequestHandler):
                 else:
                     return 0
 
+            mpx_stats['cpm'] = cpm(mpx_stats['rev'], mpx_stats['imp'])
+
             for stats in mpx_stats['daily']:
                 stats['cpm'] = cpm(stats['rev'], stats['imp'])
 

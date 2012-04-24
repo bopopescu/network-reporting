@@ -1,13 +1,26 @@
+# Deployed Tuesday, April 24, 2012 at 09:24PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-78
+### Bugs Fixed: []
+### Included Commits: 
+ * 29f8465 Merge branch 'master' into networks-page
+ * 384ff7c Merge branch 'master' of github.com:mopub/mopub
+ * 87c42ab App level bids shown under cpm in new networks pages, adunit status icons added to details page
+ * 0774b22 Deployed without finding any bug fixes.
+ * 94a2fa6 Removed some get account by key lookups and modified date range for cpm calculation in edit network form
+ * 7e057d2 vertical tabbing on edit networks form
+ * 0d8ecb6 min and max cpm's on networks page should be formatted as currency
+ 
 # Deployed Tuesday, April 24, 2012 at 06:33PM PST
 ### Deployed by Nafis Jamal
 ### Tagged deploy-77
 ### Bugs Fixed: []
-### Included Commits: 
- * 27c5a53 removed second conditional for network page
- * 5e26c9a Merge branch 'master' of github.com:mopub/mopub
- * 65b7c21 added flag to app object
- * 985b045 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 27c5a53 removed second conditional for network page
+* 5e26c9a Merge branch 'master' of github.com:mopub/mopub
+* 65b7c21 added flag to app object
+* 985b045 Deployed without finding any bug fixes.
+
 # Deployed Tuesday, April 24, 2012 at 04:06AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-76

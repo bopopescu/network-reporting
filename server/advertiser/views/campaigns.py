@@ -861,7 +861,7 @@ class AdGroupDetailHandler(RequestHandler):
         return render_to_response(self.request,
                                   'advertiser/adgroup.html',
                                   {
-                                      'account': account,
+                                      'account': self.account,
                                       'campaign': adgroup.campaign,
                                       'apps': apps.values(),
                                       'adgroup': adgroup,

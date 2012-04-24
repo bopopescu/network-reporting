@@ -502,12 +502,15 @@ class AppDetailHandler(RequestHandler):
                     logging.warn(str(e))
                     mpx_stats = {}
 
-                campaign.stats.revenue = float(mpx_stats.get('revenue', 0.0))
-                campaign.stats.impression_count = int(mpx_stats.get('impressions', 0))
+                campaign.stats.rev = float(mpx_stats.get('rev', 0.0))
+                campaign.stats.imp = int(mpx_stats.get('imp', 0))
 
             if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
                     'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
                 campaign.calculated_ecpm = calculate_ecpm(campaign)
+
+            # Use new naming conventions
+            campaign.stats = campaign.stats.to_dict()
 
 
         # Sort out all of the campaigns that are targeting this app
@@ -715,8 +718,8 @@ class AdUnitShowHandler(RequestHandler):
                                                                self.end_date)
                 except MPStatsAPIException, e:
                     mpx_stats = {}
-                ag.stats.revenue = float(mpx_stats.get('revenue'))
-                ag.stats.impression_count = int(mpx_stats.get('impressions', 0))
+                ag.stats.revenue = float(mpx_stats.get('rev'))
+                ag.stats.impression_count = int(mpx_stats.get('imp', 0))
 
             if ag.campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
                 ag.calculated_ecpm = calculate_ecpm(ag)

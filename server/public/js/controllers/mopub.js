@@ -1025,22 +1025,26 @@ if (typeof window.console == "undefined") {
                                           fill_rate: 'fill rate', 
                                           usr: 'user count'};
 
+                    // If the metric isn't in the dict use the unformatted name
+                    var metric_name = metric_translation[activeMetric];
+                    metric_name = metric_name ? metric_name : activeMetric;
+
                     if(activeMetric == 'rev' || activeMetric == 'cpm') {
                         value = '$' + Highcharts.numberFormat(this.y, 2);
                         if(data.total) {
                             total = '$' + Highcharts.numberFormat(this.total, 2) + ' total';
                         }
                     } else if (activeMetric == 'clk') {
-                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_translation[activeMetric];
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_name;
                         if(data.total) {
-                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_translation[activeMetric];
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_name;
                         }
                     } else if (activeMetric == 'ctr') {
                         value = Highcharts.numberFormat(this.y*100, 2) + "% click through";
                     } else {
-                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_translation[activeMetric];
+                        value = Highcharts.numberFormat(this.y, 0) + ' ' + metric_name;
                         if(data.total) {
-                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_translation[activeMetric];
+                            total = Highcharts.numberFormat(this.total, 0) + ' total ' + metric_name;
                         }
                     }
 

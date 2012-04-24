@@ -521,7 +521,7 @@ class SimpleApp(SimpleModel):
     def __init__(self, key=None, account=None, global_id=None, adsense_app_name=None, adsense_app_id=None,
                  admob_bgcolor=None, admob_textcolor=None, app_type=None, package=None, url=None,
                  network_config=None, primary_category=None, secondary_category=None, name=None,
-                 experimental_fraction=.001):
+                 experimental_fraction=.001, force_marketplace=True):
         self._key = key
         self.account = account.simplify()
         self.global_id = global_id
@@ -537,6 +537,7 @@ class SimpleApp(SimpleModel):
         self.primary_category = primary_category
         self.secondary_category = secondary_category
         self.experimental_fraction = experimental_fraction
+        self.force_marketplace = force_marketplace
 
     def key(self):
         return self._key

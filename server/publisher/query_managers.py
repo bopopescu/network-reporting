@@ -141,8 +141,11 @@ class AdUnitContextQueryManager(CachedQueryManager):
                 try:
                     queue.delete_tasks(task)
                 except:
-                    pass
-            queue.add(tasks)
+                    logging.warning("%s does not exist in push-context-update queue" % task)
+            try:
+                queue.add(tasks)
+            except:
+                logging.warning("Error adding %s to push-context-update queue" % tasks)
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)

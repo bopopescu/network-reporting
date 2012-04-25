@@ -18,9 +18,9 @@ def adunitcontext_fetch(adunit_key, created_at=None, testing=False):
     complex_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_key)
     now = int(time.mktime(datetime.utcnow().timetuple()))
     context_created_at = getattr(complex_context, 'created_at', now)
-    if created_at <= context_created_at:
+    if created_at <= context_created_at and created_at != 0:
         return None
-    elif created_at > context_created_at:
+    elif created_at > context_created_at and created_at != 0:
         logging.warning("Awkward state, EC2 context is newer than GAE context")
         return None
     simple_context = complex_context.simplify()

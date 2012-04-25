@@ -281,14 +281,15 @@ class AppQueryManager(CachedQueryManager):
         put_response = db.put(apps)
 
         # Invalidate cache entries as necessary.
+        affected_account_keys = set()
         for app in apps:
             adunits = AdUnitQueryManager.get_adunits(app=app)
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+            affected_account_keys.add(App.account.get_value_for_datastore(app))
 
         # For each account, clear its apps and adunits from memcache.
-        affected_accounts = set([app.account for app in apps])
-        PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, App)
-        PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdUnit)
+        PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, App)
+        PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdUnit)
 
         return put_response
 
@@ -477,8 +478,11 @@ class AdUnitQueryManager(QueryManager):
         put_response = db.put(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
-        affected_accounts = set([adunit.account for adunit in adunits])
-        PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdUnit)
+        affected_account_keys = set()
+        for adunit in adunits:
+            affected_account_keys.add(AdUnit.account.get_value_for_datastore(adunit))
+            
+        PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdUnit)
 
         return put_response
 

@@ -5,6 +5,7 @@ import re
 from hypercache import hypercache
 import datetime
 import urllib2
+import time
 
 from google.appengine.ext import db
 from google.appengine.api import memcache, taskqueue
@@ -90,7 +91,13 @@ class AdUnitContextQueryManager(CachedQueryManager):
             new_timestamp = memcache_ts
 
         # We got new information for the hypercache, give it a new timestamp
+
+
         if adunit_context:
+            context_created_at = getattr(adunit_context, 'created_at', None)
+            if context_created_at is None:
+                now = int(time.mktime(datetime.datetime.utcnow().timetuple()))
+                adunit_context.created_at = now
             adunit_context._hyper_ts = new_timestamp
             hypercache.set(adunit_context_key, adunit_context)
 

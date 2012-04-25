@@ -24,16 +24,12 @@ if (window.console === undefined) {
  * it should go here.
  */
 (function($) {
-
+    
     var mopub = window.mopub || {};
     var Chart = window.Chart || {};
     var Stats = window.Stats || {};
 
     $(document).ready(function() {
-
-        /*
-         * ## Mixpanel Event Tracking
-         */
         
 
         // export tables as xls/csv
@@ -148,7 +144,7 @@ if (window.console === undefined) {
         });
 
         // Override default jQuery UI datepicker options
-        $.datepicker.setDefaults({
+        $.xdatepicker.setDefaults({
             dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         });
 
@@ -166,24 +162,6 @@ if (window.console === undefined) {
             $(this).parent().fadeOut();
         });
 
-        // Set up tooltips.
-        // FYI: These are being phased out
-        $.fn.qtip.styles.mopub = {
-            background: '#303030',
-            color: '#ffffff',
-            border: {
-                radius: 5
-            },
-            tip: {
-                size: {
-                    x: 10,
-                    y: 10
-                }
-            },
-            name: 'dark' // Inherit the rest of the attributes from the preset dark style
-        };
-
-        $('a[title]').qtip({ style: { name: 'mopub', tip: true } });
         $('.formFields-field-help-link[title]').click(function(e) { e.preventDefault(); });
 
 

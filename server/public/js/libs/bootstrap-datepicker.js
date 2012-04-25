@@ -1,26 +1,7 @@
-/* =========================================================
- * bootstrap-datepicker.js 
- * http://www.eyecon.ro/bootstrap-datepicker
- * =========================================================
- * Copyright 2012 Stefan Petre
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ========================================================= */
- 
 !function( $ ) {
-	
+    $.fn.xdatepicker = $.fn.datepicker;
+    $.xdatepicker = $.datepicker;
 	// Picker object
-	
 	var Datepicker = function(element, options){
 		this.element = $(element);
 		this.format = DPGlobal.parseFormat(options.format||this.element.data('date-format')||'mm/dd/yyyy');
@@ -369,33 +350,33 @@
 			return date.join(format.separator);
 		},
 		headTemplate: '<thead>'+
-							'<tr>'+
-								'<th class="prev"><i class="icon-arrow-left"/></th>'+
-								'<th colspan="5" class="switch"></th>'+
-								'<th class="next"><i class="icon-arrow-right"/></th>'+
-							'</tr>'+
-						'</thead>',
+			'<tr>'+
+			'<th class="prev"><i class="icon-arrow-left"/></th>'+
+			'<th colspan="5" class="switch"></th>'+
+			'<th class="next"><i class="icon-arrow-right"/></th>'+
+			'</tr>'+
+			'</thead>',
 		contTemplate: '<tbody><tr><td colspan="7"></td></tr></tbody>'
 	};
 	DPGlobal.template = '<div class="datepicker dropdown-menu">'+
-							'<div class="datepicker-days">'+
-								'<table class=" table-condensed">'+
-									DPGlobal.headTemplate+
-									'<tbody></tbody>'+
-								'</table>'+
-							'</div>'+
-							'<div class="datepicker-months">'+
-								'<table class="table-condensed">'+
-									DPGlobal.headTemplate+
-									DPGlobal.contTemplate+
-								'</table>'+
-							'</div>'+
-							'<div class="datepicker-years">'+
-								'<table class="table-condensed">'+
-									DPGlobal.headTemplate+
-									DPGlobal.contTemplate+
-								'</table>'+
-							'</div>'+
-						'</div>';
+		'<div class="datepicker-days">'+
+		'<table class=" table-condensed">'+
+		DPGlobal.headTemplate+
+		'<tbody></tbody>'+
+		'</table>'+
+		'</div>'+
+		'<div class="datepicker-months">'+
+		'<table class="table-condensed">'+
+		DPGlobal.headTemplate+
+		DPGlobal.contTemplate+
+		'</table>'+
+		'</div>'+
+		'<div class="datepicker-years">'+
+		'<table class="table-condensed">'+
+		DPGlobal.headTemplate+
+		DPGlobal.contTemplate+
+		'</table>'+
+		'</div>'+
+		'</div>';
 
-}( window.jQuery )
+}( window.jQuery );

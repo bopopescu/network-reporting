@@ -1,12 +1,18 @@
+# Deployed Wednesday, April 25, 2012 at 06:55PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-82
+### Bugs Fixed: []
+### Included Commits: 
+ 
 # Deployed Wednesday, April 25, 2012 at 02:14AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-80
 ### Bugs Fixed: ['1150']
-### Included Commits: 
- * 62e43eb [#1150 state:fixed]
- * b5fd5ae fixed old networks page to only show old network campaigns
- * 7dae379 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 62e43eb [#1150 state:fixed]
+* b5fd5ae fixed old networks page to only show old network campaigns
+* 7dae379 Deployed without finding any bug fixes.
+
 # Deployed Tuesday, April 24, 2012 at 11:46PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-79

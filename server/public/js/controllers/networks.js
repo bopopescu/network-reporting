@@ -825,6 +825,13 @@ $(function() {
                 $('.app-cpm-close').show();
             });
 
+            // Options form
+            $('.advanced-options-edit').click(function () {
+                $('.options-form').dialog({
+                    buttons: { "Close": function() { $(this).dialog('close');} },
+                    width: 500
+                });
+            });
 
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';

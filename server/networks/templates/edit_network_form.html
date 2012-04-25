@@ -396,7 +396,7 @@
                             <div class="global-cpm-close editable{% if network.bid %} hidden{% endif %}">
                                 <span>
                                     <b class="caret"></b>                            
-                                    <span class="editable-hidden">Set global CPM</span>
+                                    <span>Set global CPM</span>
                                 </span>
                             </div>    
                         </td>
@@ -407,13 +407,10 @@
                         </td>
                         {% endif %}
                         <td class="text">
-                            <div class="advanced-input {% if not network.bid %}hidden{% endif %}">
-                                <input class="float bid" type="text" value="{{ network.bid }}">
-                            </div>
-                            <div class="advanced-close editable{% if network.bid %} hidden{% endif %}">
+                            <div class="advanced-options-edit  editable{% if network.bid %} hidden{% endif %}">
                                 <span>
                                     <b class="caret"></b>                            
-                                    <span class="editable-hidden">Set global options</span>
+                                    <span>None</span>
                                 </span>
                             </div>    
                         </td>
@@ -449,7 +446,7 @@
                             <div class="app-cpm-close editable{% if app.bid and not network.bid %} hidden{% endif %}">
                                 <span>
                                     <b class="caret"></b>                            
-                                    <span class="editable-hidden">Set app CPM</span>
+                                    <span>Set app CPM</span>
                                 </span>
                             </div>    
                         </td>
@@ -468,13 +465,10 @@
                         </td>
                         {% endif %}
                         <td class="text">
-                            <div class="advanced-input {% if not network.bid %}hidden{% endif %}">
-                                <input class="float bid" type="text" value="{{ network.bid }}">
-                            </div>
-                            <div class="advanced-close editable{% if network.bid %} hidden{% endif %}">
+                            <div class="advanced-options-edit  editable{% if network.bid %} hidden{% endif %}">
                                 <span>
                                     <b class="caret"></b>                            
-                                    <span class="editable-hidden">Set app options</span>
+                                    <span>None</span>
                                 </span>
                             </div>    
                         </td>
@@ -520,13 +514,10 @@
                         </td>
                         {% endif %}
                         <td class="text">
-                            <div class="advanced-input {% if not network.bid %}hidden{% endif %}">
-                                <input class="float bid" type="text" value="{{ network.bid }}">
-                            </div>
-                            <div class="advanced-close editable{% if network.bid %} hidden{% endif %}">
+                            <div class="advanced-options-edit editable{% if network.bid %} hidden{% endif %}">
                                 <span>
                                     <b class="caret"></b>                            
-                                    <span class="editable-hidden">Set adunit options</span>
+                                    <span>None</span>
                                 </span>
                             </div>    
                         </td>
@@ -540,6 +531,16 @@
         <a class="button" id="submit" href="#">Save</a>
         <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
     </div>
+
+
+    {% comment %}
+    Hidden Options (Advanced Settings) forms that are put into dialogs
+    {% endcomment %}
+    <div class="hidden">
+        <fieldset class="options-form">
+            <h2> Options </h2>
+        </fieldset>
+    <div>
 </form>
 {% endblock content %}
 

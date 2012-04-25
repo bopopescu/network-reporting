@@ -4,25 +4,24 @@
 
 var mopub = mopub || {};
 
-(function ($, Backbone, _) {
-    "use strict"
+(function($, Backbone, _){
 
     /*
      * Settings
      */
 
-    //var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-    var URL = 'http://localhost:8888/';
+    var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+    //var URL = 'http://localhost:8888/';
 
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
             'rgba(200,225,251,0.4)',
-            'rgba(163,193,218,0.0)',
-            'rgba(236,183,150,0.0)',
-            'rgba(178,164,112,0.0)',
-            'rgba(210,237,130,0.0)',
-            'rgba(221,203,83,0.0)'
+            'rgba(163,193,218,0.4)',
+            'rgba(236,183,150,0.4)',
+            'rgba(178,164,112,0.4)',
+            'rgba(210,237,130,0.4)',
+            'rgba(221,203,83,0.4)'
         ],
         secondary: [
             'rgba(200,225,251,1)',
@@ -233,10 +232,6 @@ var mopub = mopub || {};
         obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
     }
 
-    /*
-     * Pads a single digit integer with a zero on the left. Used for
-     * formatting dates (03/08 instead of 3/8).
-     */
     function pad(integer) {
         return integer < 10 ? '0' + integer : integer;
     }
@@ -273,27 +268,9 @@ var mopub = mopub || {};
             '-' + date.getHours();
     }
 
-    function get_today() {
-        var now = new Date();
-        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    }
-
     function get_charts() {
         return ['rev', 'imp', 'clk', 'ctr'];
     }
-
-    function get_columns() {
-        return ['rev', 'imp', 'clk', 'ctr'];
-    }
-
-    function get_advertiser_order() {
-        return $('#advertiser_order').val();
-    }
-
-    function get_publisher_order() {
-        return $('#publisher_order').val();
-    }
-
 
 
     /*
@@ -322,13 +299,6 @@ var mopub = mopub || {};
             else {
                 stroke = COLOR_THEME.secondary[i];
                 color = COLOR_THEME.primary[i];
-                if(range.id) {
-                    var $tr = $('#' + range.id);
-                    $tr.css('background-color', color);
-                    if($tr.hasClass('source') || $tr.hasClass('app')) {
-                        $tr.nextUntil('.source, .app').css('background-color', color);
-                    }
-                }
             }
             var individual_series_data = {
                 data: _.map(range, function(datapoint, j){
@@ -426,22 +396,13 @@ var mopub = mopub || {};
         format_stat: format_stat,
         format_kmbt: format_kmbt,
         string_to_date: string_to_date,
-        date_to_string: date_to_string
+        date_to_string: date_to_string,
     };
-
-
-    var DashboardRouter = Backbone.Router.extend({
-        routes: {
-            '': 'update'
-        },
-    });
 
     var DashboardController = {
         initializeDashboard: function(bootstrapping_data) {
             /**
-             * TODO: document
-             *
-             * bootstrapping_data: {
+             * @param {object} bootstrapping_data: {
              *     account: account key,
              *     names: {
                        key: name
@@ -449,10 +410,8 @@ var mopub = mopub || {};
              * }
              */
 
-            /*
-             * Set up jsonp. Upon success, calculate all derivative
-             * stats (ctr, cpm, fill rate, etc).
-             */
+            // Set up JSONP. We calculate derivative stats upon every
+            // query response.
             $.jsonp.setup({
                 callbackParameter: "callback",
                 dataFilter: function (json) {
@@ -474,17 +433,7 @@ var mopub = mopub || {};
                 url: URL
             });
 
-            /*
-             * 
-             */
-            function get_granularity() {
-                return 'daily';
-            }
 
-
-            /*
-             * 
-             */
             function get_keys(type) {
                 if(((type == 'source' || type == 'campaign') &&
                     !$('tr.source.selected, tr.campaign.selected')) ||
@@ -501,9 +450,6 @@ var mopub = mopub || {};
                 });
             }
 
-            /*
-             * 
-             */
             function get_advertiser_type() {
                 // if nothing is checked, return null
                 if($('tr.selected', 'table#advertiser').length === 0) {
@@ -527,9 +473,6 @@ var mopub = mopub || {};
                 return 'campaign';
             }
 
-            /*
-             * 
-             */
             function get_publisher_type() {
                 // if nothing is checked, return null
                 if($('tr.selected', 'table#publisher').length === 0) {
@@ -553,9 +496,6 @@ var mopub = mopub || {};
                 return 'adunit';
             }
 
-            /*
-             * 
-             */
             function get_advertiser_query(advertiser) {
                 var query = {};
                 if(advertiser) {
@@ -564,9 +504,6 @@ var mopub = mopub || {};
                 return query;
             }
 
-            /*
-             * 
-             */
             function get_publisher_query(publisher) {
                 var query = {};
                 if(publisher) {
@@ -626,9 +563,6 @@ var mopub = mopub || {};
                 return filter_body_row(context);
             }
 
-            /*
-             * 
-             */
             function get_data() {
                 var start = $('#start').val();
                 var end = $('#end').val();
@@ -647,9 +581,6 @@ var mopub = mopub || {};
                 return data;
             }
 
-            /*
-             * 
-             */
             function update_dashboard(update_rollups_and_charts, advertiser_table, publisher_table) {
                 var data = get_data();
 
@@ -658,36 +589,26 @@ var mopub = mopub || {};
                 var publisher_type = get_publisher_type();
                 var publisher_query = get_publisher_query(publisher_type);
 
-                var columns = get_columns();
-
-                if (advertiser_table) {
-                    update_advertiser_table(data, publisher_query, 
-                                            get_advertiser_order(), columns);
-                }
-
-                if (publisher_table) {
-                    update_publisher_table(data, advertiser_query, 
-                                           get_publisher_order(), columns);
-                }
-
                 record_metric('Updated dashboard data', {
                     advertiser: '' + advertiser_query,
                     publisher: '' + publisher_query
                 });
 
                 if(update_rollups_and_charts) {
-                    $('tr.source, tr.campaign, tr.app, tr.adunit').removeAttr('style');
-
                     var rollups_and_charts_data = _.clone(data);
                     var granularity = get_granularity();
                     rollups_and_charts_data.granularity = granularity;
                     rollups_and_charts_data.query = [_.extend(_.clone(advertiser_query), publisher_query)];
 
-                    if($('[name="advertiser_compare"]').is(':checked')) {
-
-                        _.each(advertiser_query[advertiser_type], function(advertiser) {
+                    if(advertiser_comparison_shown()) {
+                        $('tr.selected', '#advertiser').each(function (index, tr) {
                             var query = _.clone(publisher_query);
-                            query[advertiser_type] = [advertiser];
+                            if($(tr).hasClass('source')) {
+                                query.source = [tr.id];
+                            }
+                            else {
+                                query.campaign = [tr.id];
+                            }
                             rollups_and_charts_data.query.push(query);
                         });
 
@@ -700,21 +621,23 @@ var mopub = mopub || {};
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
-                                    _.each(charts_data, function (series, index) {
-                                        series.id = rollups_and_charts_data.query[index + 1][advertiser_type][0];
-                                    });
                                     initializeDashboardCharts(charts_data);
                                 });
                             }
                         });
-
-                    } else if ($('[name="publisher_compare"]').is(':checked')) {
-
-                        _.each(publisher_query[publisher_type], function(publisher) {
+                    } else if(publisher_comparison_shown()) {
+                        $('tr.selected', '#publisher').each(function (index, tr) {
                             var query = _.clone(advertiser_query);
-                            query[publisher_type] = [publisher];
+                            if($(tr).hasClass('app')) {
+                                query.app = [tr.id];
+                            }
+                            else {
+                                query.adunit = [tr.id];
+                            }
                             rollups_and_charts_data.query.push(query);
                         });
+
+                        console.log(rollups_and_charts_data);
 
                         $.jsonp({
                             data: {
@@ -725,14 +648,10 @@ var mopub = mopub || {};
                                 _.defer(function() {
                                     update_rollups(json.sum[0]);
                                     var charts_data = json[granularity].slice(1);
-                                    _.each(charts_data, function (series, index) {
-                                        series.id = rollups_and_charts_data.query[index + 1][publisher_type][0];
-                                    });
                                     initializeDashboardCharts(charts_data);
                                 });
                             }
                         });
-
                     } else {
                         $.jsonp({
                             data: {
@@ -744,7 +663,6 @@ var mopub = mopub || {};
                                     var charts_data;
                                     if(json.vs_sum.length) {
                                         update_rollups(json.sum[0], json.vs_sum[0]);
-
                                         charts_data = [
                                             _.clone(json[granularity][0]),
                                             _.extend(_.clone(json['vs_' + granularity][0]), { id: 'vs' })
@@ -759,11 +677,16 @@ var mopub = mopub || {};
                         });
                     }
                 }
+
+                if (advertiser_table) {
+                    update_advertiser_table(data, publisher_query, get_advertiser_order());
+                }
+
+                if (publisher_table) {
+                    update_publisher_table(data, advertiser_query, get_publisher_order(), PUBLISHER_DEFAULT_COLUMNS);
+                }
             }
 
-            /*
-             * 
-             */
             function update_rollups(data, vs_data) {
                 _.each(get_charts(), function (stat) {
 
@@ -794,20 +717,15 @@ var mopub = mopub || {};
                 });
             }
 
-            /*
-             * 
-             */
+            /* Tables */
             function update_advertiser_table(data, publisher_query, order) {
-                var selected = _.map($('tr.selected'), function (tr) { return tr.id; });
-
-                $('tr.source, tr.campaign, tr.adgroup', 'table#advertiser').remove();
+                var selected = _.map($('tr.selected', '#advertiser'), function (tr) { return tr.id; });
 
                 var source_data = _.clone(data);
-                source_data.query = [];
-                _.each(['direct', 'mpx', 'network'], function (source) {
+                source_data.query = _.map(['direct', 'mpx', 'network'], function (source) {
                     var query = _.clone(publisher_query);
                     query.source = [source];
-                    source_data.query.push(query);
+                    return query;
                 });
 
                 $.jsonp({
@@ -836,20 +754,20 @@ var mopub = mopub || {};
                 });
             }
 
-            
-            /*
-             * 
-             */
             function update_sources(data, publisher_query, order, selected, sources) {
-                _.each(sources, function (source) {
-                    var $source = $(render_filter_body_row(source, 
-                                                           ADVERTISER_COLUMNS, 
-                                                           ADVERTISER_DEFAULT_COLUMNS, 
-                                                           order, 
-                                                           $('table#advertiser th.hidden').length, 
-                                                           false));
+                $('tr.campaign', 'table#advertiser').remove();
 
-                    $('table#advertiser').append($source);
+                _.each(sources, function (source) {
+                    var $source = $(render_filter_body_row(source, ADVERTISER_COLUMNS, ADVERTISER_DEFAULT_COLUMNS, order, $('table#advertiser th.hidden').length, false));
+                    if(advertiser_comparison_shown()) {
+                        $source.css('background-color', COLOR_THEME.primary[selected.indexOf(source.id)]);
+                    }
+                    if($('#' + source.id).length) {
+                        $('#' + source.id).replaceWith($source);
+                    }
+                    else {
+                        $('#advertiser').append($source);
+                    }
                     if(source.id == 'direct' || source.id == 'network') {
                         var campaign_data = _.clone(data);
                         campaign_data.granularity = 'top';
@@ -871,8 +789,7 @@ var mopub = mopub || {};
                                         var campaign = {
                                             type: 'campaign',
                                             id: top.campaign,
-                                            selected: _.include(selected, source.id) || 
-                                                      _.include(selected, top.campaign),
+                                            selected: _.include(selected, top.campaign) || (!advertiser_comparison_shown() && _.include(selected, source.id)),
                                             stats: top
                                         };
                                         if(json.vs_top.length) {
@@ -880,7 +797,7 @@ var mopub = mopub || {};
                                         }
                                         campaigns.push(campaign);
                                     });
-                                    update_campaigns(order, $source, campaigns);
+                                    update_campaigns(order, $source, campaigns, order);
                                 });
                             },
                             url: URL + 'topN/'
@@ -888,19 +805,14 @@ var mopub = mopub || {};
                     }
                 });
             }
-            
-            /*
-             * 
-             */
+
             function update_campaigns(order, $source, campaigns) {
                 var $last = $source;
                 _.each(campaigns, function (campaign, index) {
-                    var $campaign = $(render_filter_body_row(campaign, 
-                                                             ADVERTISER_COLUMNS, 
-                                                             ADVERTISER_DEFAULT_COLUMNS, 
-                                                             order, 
-                                                             $('table#advertiser th.hidden').length, 
-                                                             index >= MAX_CAMPAIGNS));
+                    var $campaign = $(render_filter_body_row(campaign, ADVERTISER_COLUMNS, ADVERTISER_DEFAULT_COLUMNS, order, $('table#advertiser th.hidden').length, index >= MAX_CAMPAIGNS));
+                    if(advertiser_comparison_shown()) {
+                        $campaign.css('background-color', COLOR_THEME.primary[selected.indexOf(campaign.id)]);
+                    }
                     $last.after($campaign);
                     $last = $campaign;
                 });
@@ -916,11 +828,8 @@ var mopub = mopub || {};
                 }
             }
 
-            /*
-             * 
-             */
             function update_publisher_table(data, advertiser_query, order) {
-                var selected = _.map($('tr.selected'), function (tr) { return tr.id; });
+                selected = _.map($('tr.selected'), function (tr) { return tr.id; });
 
                 $('tr.app, tr.adunit', 'table#publisher').remove();
 
@@ -958,18 +867,12 @@ var mopub = mopub || {};
                 });
             }
 
-            /*
-             * 
-             */
             function update_apps(data, advertiser_query, order, selected, apps) {
-                var $publisher_table = $('table#publisher tbody');
                 _.each(apps, function (app, index) {
-                    var $app = $(render_filter_body_row(app, 
-                                                        PUBLISHER_COLUMNS, 
-                                                        PUBLISHER_DEFAULT_COLUMNS, 
-                                                        order, 
-                                                        $('table#publisher th.hidden').length, 
-                                                        index >= MAX_APPS));
+                    var $app = $(render_filter_body_row(app, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, $('table#publisher th.hidden').length, index >= MAX_APPS));
+                    if(publisher_comparison_shown()) {
+                        $app.css('background-color', COLOR_THEME.primary[selected.indexOf(app.id)]);
+                    }
                     $publisher_table.append($app);
 
                     var adunit_data = _.clone(data);
@@ -992,7 +895,7 @@ var mopub = mopub || {};
                                     var adunit = {
                                         type: 'adunit',
                                         id: top.adunit,
-                                        selected: _.include(selected, app.id) || _.include(selected, top.adunit),
+                                        selected: _.include(selected, top.adunit) || (!publisher_comparison_shown() && _.include(selected, app.id)),
                                         stats: top
                                     };
                                     if(json.vs_top.length) {
@@ -1007,20 +910,14 @@ var mopub = mopub || {};
                     });
                 });
             }
-            
 
-            /*
-             * 
-             */
             function update_adunits(order, $app, adunits, hide) {
                 var $last = $app;
                 _.each(adunits, function (adunit, index) {
-                    var $adunit = $(render_filter_body_row(adunit, 
-                                                           PUBLISHER_COLUMNS, 
-                                                           PUBLISHER_DEFAULT_COLUMNS, 
-                                                           order, 
-                                                           hide || $('table#publisher th.hidden').length, 
-                                                           index >= MAX_ADUNITS));
+                    var $adunit = $(render_filter_body_row(adunit, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, hide || $('table#publisher th.hidden').length, index >= MAX_ADUNITS));
+                    if(publisher_comparison_shown()) {
+                        $adunit.css('background-color', COLOR_THEME.primary[selected.indexOf(adunit.id)]);
+                    }
                     $last.after($adunit);
                     $last = $adunit;
                 });
@@ -1037,8 +934,22 @@ var mopub = mopub || {};
             }
 
 
+            /* Date Range */
+
+            // TODO: move?
+            /**
+             * @return {Date} today's date with time zero
+             */
+            function get_today() {
+                var now = new Date();
+                return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            }
+
+            /**
+             * @param {string} start_end 'today', 'yesterday', 'last_7_days',
+             *     'last_14_days', or 'custom'
+             */
             function update_start_end(start_end) {
-                console.log(start_end);
                 var start, end;
                 if(start_end == 'custom') {
                     start = pretty_string_to_date($('#custom_start').val());
@@ -1077,9 +988,7 @@ var mopub = mopub || {};
                     $('#start_end_label').html(date_to_pretty_string(start));
                 }
                 else {
-                    $('#start_end_label').html(date_to_pretty_string(start) + 
-                                               ' to ' + 
-                                               date_to_pretty_string(end));
+                    $('#start_end_label').html(date_to_pretty_string(start) + ' to ' + date_to_pretty_string(end));
                 }
 
                 $('#vs li').hide();
@@ -1092,6 +1001,33 @@ var mopub = mopub || {};
                 };
             }
 
+            $('#today, #yesterday, #last_7_days, #last_14_days').click(function () {
+                update_start_end(this.id);
+                record_metric('Changed date', {'date_range': this.id});
+                update_dashboard(true, true, true);
+            });
+
+            $('#custom').click(function() {
+                $('#date_modal').show();
+            });
+
+            $('#date_modal_submit').click(function () {
+                $('#date_modal').hide();
+                var dates = update_start_end('custom');
+                record_metric('Changed date', {
+                    date_range: 'custom',
+                    start: dates.start,
+                    end: dates.end
+                });
+                update_dashboard(true, true, true);
+            });
+
+            $('#date_modal_cancel').click(function () {
+                $('#date_modal').hide();
+            });
+
+
+            /* Comparison Date Range */
             function update_vs_start_end(vs_start_end) {
                 if(vs_start_end == 'none') {
                     $('#vs_start').val('');
@@ -1099,6 +1035,9 @@ var mopub = mopub || {};
                     $('#vs_start_end_label').html('None');
                 }
                 else {
+                    hide_advertiser_comparison();
+                    hide_publisher_comparison();
+
                     var start = string_to_date_hour($('#start').val());
                     var end = string_to_date_hour($('#end').val());
                     var diff;
@@ -1123,72 +1062,31 @@ var mopub = mopub || {};
                         $('#vs_start_end_label').html(date_to_pretty_string(vs_start));
                     }
                     else {
-                        $('#vs_start_end_label').html(date_to_pretty_string(vs_start) + 
-                                                      ' to ' + 
-                                                      date_to_pretty_string(vs_end));
+                        $('#vs_start_end_label').html(date_to_pretty_string(vs_start) + ' to ' + date_to_pretty_string(vs_end));
                     }
                 }
             }
 
-            /* Controls */
-            $('#today, #yesterday, #last_7_days, #last_14_days').click(function () {
-                record_metric('Changed date', {'date_range': this.id});
-                update_start_end(this.id);
-                update_dashboard(true, true, true);
-            });
-
-            $('#custom').click(function() {
-                $('#date_modal').show();
-            });
-
-            $('#date_modal_submit').click(function () {
-                $('#date_modal').hide();
-                var dates = update_start_end('custom');
-                record_metric('Changed date', {
-                    date_range: 'custom',
-                    start: dates.start,
-                    end: dates.end
-                });
-                update_dashboard(true, true, true);
-            });
-
-            $('#date_modal_cancel').click(function () {
-                $('#date_modal').hide();
-            });
-
             $('#none, #day, #week, #14_days').click(function () {
+                update_vs_start_end(this.id);
                 record_metric('Changed vs date', {
                     date_range: $(this).attr('id')
                 });
-                update_vs_start_end(this.id);
                 update_dashboard(true, true, true);
             });
 
-            $('[name="advertiser_compare"]').change(function () {
-                $('[name="publisher_compare"]').prop('checked', false);
-                update_vs_start_end('none');
-                update_dashboard(true, false, false);
-            });
-            $('[name="publisher_compare"]').change(function () {
-                $('[name="advertiser_compare"]').prop('checked', false);
-                update_vs_start_end('none');
-                update_dashboard(true, false, false);
-            });
 
-            /*
-            // granularity
-            $('#granularity').change(function () {
-                update_dashboard(true, false, false);
-            });
-            */
+            /* Granularity */
+            function get_granularity() {
+                return 'daily';
+            }
 
-            // export
+
+            /* Export */
             $('button#export').click(function () {
                 $('#export_wizard').modal('show');
             });
-
             $('button#download').click(function () {
-
                 // Hide the modal when the download button is clicked.
                 $('#export_wizard').modal('hide');
 
@@ -1220,61 +1118,211 @@ var mopub = mopub || {};
                     names: names
                 });
 
-                console.log(data.advertiser_breakdown);
-                console.log(data.publisher_breakdown);
                 record_metric('Dashboard Export', {
                     advertiser_breakdown: data.advertiser_breakdown,
                     publisher_breakdown: data.publisher_breakdown
                 });
 
                 window.location = URL + 'csv/?data=' + JSON.stringify(data);
-
             });
 
-            /* Filters */
-            $('th.sortable', 'table#advertiser').live('click', function () {
+
+            /**
+             * TABLES
+             */
+
+            var $advertiser_table = $('#advertiser');
+            var $publisher_table = $('#publisher');
+
+
+            /* Advertiser/Publisher Comparison */
+            var $advertiser_comparison = $('#advertiser_comparison');
+
+            function advertiser_comparison_shown() {
+                return $advertiser_comparison.hasClass('hide');
+            }
+
+            function show_advertiser_comparison() {
+                $advertiser_comparison.addClass('hide');
+                $advertiser_comparison.removeClass('show');
+
+                // default comparison selection: all sources
+                $('tr.source', $advertiser_table).addClass('selected');
+                $('tr.campaign', $advertiser_table).removeClass('selected');
+
+                update_advertiser_colors();
+            }
+
+            function hide_advertiser_comparison() {
+                $advertiser_comparison.addClass('show');
+                $advertiser_comparison.removeClass('hide');
+
+                // select subcomponents of selected
+                $('tr.source.selected', $advertiser_table).each(function (index, tr) {
+                    $(tr).nextUntil('tr.source').addClass('selected');
+                });
+
+                update_advertiser_colors();
+            }
+
+            $advertiser_comparison.click(function () {
+                if(advertiser_comparison_shown()) {
+                    hide_advertiser_comparison();
+                }
+                else {
+                    update_vs_start_end('none');
+                    hide_publisher_comparison();
+                    show_advertiser_comparison();
+                }
+
+                update_dashboard(true, false, false);
+            });
+
+            var $publisher_comparison = $('#publisher_comparison');
+
+            function publisher_comparison_shown() {
+                return $publisher_comparison.hasClass('hide');
+            }
+
+            function show_publisher_comparison() {
+                $publisher_comparison.addClass('hide');
+                $publisher_comparison.removeClass('show');
+
+                // default comparison selection: all apps
+                $('tr.app', $publisher_table).addClass('selected');
+                $('tr.adunit', $publisher_table).removeClass('selected');
+
+                update_publisher_colors();
+            }
+
+            function hide_publisher_comparison() {
+                $publisher_comparison.addClass('show');
+                $publisher_comparison.removeClass('hide');
+
+                // select subcomponents of selected
+                $('tr.app.selected', $publisher_table).each(function (index, tr) {
+                    $(tr).nextUntil('tr.app').addClass('selected');
+                });
+
+                update_publisher_colors();
+            }
+
+            $publisher_comparison.click(function () {
+                if(publisher_comparison_shown()) {
+                    hide_publisher_comparison();
+                }
+                else {
+                    update_vs_start_end('none');
+                    hide_advertiser_comparison();
+                    show_publisher_comparison();
+                }
+
+                update_dashboard(true, false, false);
+            });
+
+            /* Columns */
+            var $advertiser_columns = $('#advertiser_columns');
+
+            function advertiser_columns_shown() {
+                return $advertiser_columns.hasClass('hide');
+            }
+
+            $advertiser_columns.click(function () {
+                if(advertiser_columns_shown()) {
+                    $advertiser_columns.addClass('hide');
+                    $advertiser_columns.removeClass('show');
+
+                    $('th, td', $advertiser_table).show();
+
+                    record_metric('Showed advertiser columns');
+                }
+                else {
+                    $advertiser_columns.addClass('show');
+                    $advertiser_columns.removeClass('hide');
+
+                    _.each(ADVERTISER_COLUMNS, function (column) {
+                        if(!_.include(ADVERTISER_DEFAULT_COLUMNS, column) && column !== get_advertiser_order()) {
+                            $('th.' + column + ', td.' + column, $advertiser_table).hide();
+                        }
+                    });
+
+                    record_metric('Hid advertiser columns');
+                }
+            });
+
+            var $publisher_columns = $('#publisher_columns');
+
+            function publisher_columns_shown() {
+                return $publisher_columns.hasClass('hide');
+            }
+
+            $publisher_columns.click(function () {
+                if(publisher_columns_shown()) {
+                    $publisher_columns.addClass('hide');
+                    $publisher_columns.removeClass('show');
+
+                    $('th, td', $publisher_table).show();
+
+                    record_metric('Showed publisher columns');
+                }
+                else {
+                    $publisher_columns.addClass('show');
+                    $publisher_columns.removeClass('hide');
+
+                    _.each(PUBLISHER_COLUMNS, function (column) {
+                        if(!_.include(PUBLISHER_DEFAULT_COLUMNS, column) && column !== get_publisher_order()) {
+                            $('th.' + column + ', td.' + column, $publisher_table).hide();
+                        }
+                    });
+
+                    record_metric('Hid publisher columns');
+                }
+            });
+
+
+            /* Order */
+            var $advertiser_order = $('#advertiser_order');
+
+            function get_advertiser_order() {
+                return $advertiser_order.val();
+            }
+
+            $('th.sortable', $advertiser_table).live('click', function () {
                 var $th = $(this);
                 var order;
                 _.each(STATS, function (title, stat) {
                     if($th.hasClass(stat)) {
                         order = stat;
-                        $('#advertiser_order').val(stat);
+                        $advertiser_order.val(stat);
                     }
                 });
 
-                $('th.sortable', 'table#advertiser').removeClass('sorted');
-                $('th.' + order, 'table#advertiser').addClass('sorted');
-
-                _.each(ADVERTISER_COLUMNS, function (column) {
-                    if(!_.include(ADVERTISER_DEFAULT_COLUMNS, column) && column !== get_advertiser_order()) {
-                        $('td.' + column + ', th.' + column, 'table#advertiser').addClass('hidden');
-                    }
-                });
+                $('th.sortable', $advertiser_table).removeClass('sorted');
+                $('th.' + order, $advertiser_table).addClass('sorted');
 
                 record_metric('Sorted advertiser table', {dimension: order});
 
                 update_dashboard(true, true, false);
             });
 
-            /* Filters */
-            $('th.sortable', 'table#publisher').live('click', function () {
+            var $publisher_order = $('#publisher_order');
+
+            function get_publisher_order() {
+                return $publisher_order.val();
+            }
+
+            $('th.sortable', $publisher_table).live('click', function () {
                 var $th = $(this);
                 var order;
                 _.each(STATS, function (title, stat) {
                     if($th.hasClass(stat)) {
                         order = stat;
-                        $('#publisher_order').val(stat);
+                        $publisher_order.val(stat);
                     }
                 });
 
-                $('th.sortable', 'table#publisher').removeClass('sorted');
-                $('th.' + order, 'table#publisher').addClass('sorted');
-
-                _.each(PUBLISHER_COLUMNS, function (column) {
-                    if(!_.include(PUBLISHER_DEFAULT_COLUMNS, column) && column !== get_publisher_order()) {
-                        $('td.' + column + ', th.' + column, 'table#publisher').addClass('hidden');
-                    }
-                });
+                $('th.sortable', $publisher_table).removeClass('sorted');
+                $('th.' + order, $publisher_table).addClass('sorted');
 
                 record_metric('Sorted publisher table', {dimension: order});
 
@@ -1282,29 +1330,50 @@ var mopub = mopub || {};
             });
 
 
-            /* Advertiser Table */
-            var advertiser_table = $('table#advertiser');
+            /* Tables */
+            function update_advertiser_colors() {
+                $('tr', $advertiser_table).removeAttr('style');
+                if(advertiser_comparison_shown()) {
+                    $('tr.selected', $advertiser_table).each(function (index, tr) {
+                        $(tr).css('background-color', COLOR_THEME.primary[index]);
+                    });
+                }
+            }
+
+            function update_publisher_colors() {
+                $('tr', $publisher_table).removeAttr('style');
+                if(publisher_comparison_shown()) {
+                    $('tr.selected', $publisher_table).each(function (index, tr) {
+                        $(tr).css('background-color', COLOR_THEME.primary[index]);
+                    });
+                }
+            }
 
             // select sources
-            $('tbody tr.source', advertiser_table).live('click', function () {
+            $('tbody tr.source', $advertiser_table).live('click', function () {
                 $(this).toggleClass('selected');
 
-                // select or deselect this source's campaigns
-                if($(this).hasClass('selected')) {
-                    $(this).nextUntil('.source').addClass('selected');
-                }
-                else{
-                    $(this).nextUntil('.source').removeClass('selected');
-                }
-
-                // hide unselected rows' stats
-                if($('tbody tr.selected', advertiser_table).length === 0) {
-                    $('tbody tr td.stat span, tbody tr td.delta span', advertiser_table).show();
+                if(advertiser_comparison_shown()) {
+                    update_advertiser_colors();
                 }
                 else {
-                    $('tbody tr', advertiser_table).each(function () {
-                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
-                    });
+                    // select or deselect this source's campaigns
+                    if($(this).hasClass('selected')) {
+                        $(this).nextUntil('.source').addClass('selected');
+                    }
+                    else{
+                        $(this).nextUntil('.source').removeClass('selected');
+                    }
+
+                    // hide unselected rows' stats
+                    if($('tbody tr.selected', $advertiser_table).length === 0) {
+                        $('tbody tr td.stat span, tbody tr td.delta span', $advertiser_table).show();
+                    }
+                    else {
+                        $('tbody tr', $advertiser_table).each(function () {
+                            $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
+                        });
+                    }
                 }
 
                 record_metric("Selected source(s)", {});
@@ -1313,194 +1382,204 @@ var mopub = mopub || {};
             });
 
             // select campaigns
-            $('tbody tr.campaign', advertiser_table).live('click', function () {
+            $('tbody tr.campaign', $advertiser_table).live('click', function () {
                 $(this).toggleClass('selected');
 
-                // TODO: there has to be a better way to select this...
-                var $source = $(this).prev();
-                while(!$source.hasClass('source')) {
-                    $source = $source.prev();
+                if(advertiser_comparison_shown()) {
+                    update_advertiser_colors();
                 }
-                if($(this).hasClass('selected')) {
-                    var selected = true;
-                    $source.nextUntil('.source').each(function () {
-                        if(!$(this).hasClass('selected')) {
-                            selected = false;
+                else {
+                    // TODO: there has to be a better way to select this...
+                    var $source = $(this).prev();
+                    while(!$source.hasClass('source')) {
+                        $source = $source.prev();
+                    }
+                    if($(this).hasClass('selected')) {
+                        var selected = true;
+                        $source.nextUntil('.source').each(function () {
+                            if(!$(this).hasClass('selected')) {
+                                selected = false;
+                            }
+                        });
+                        if(selected) {
+                            $source.addClass('selected');
                         }
-                    });
-                    if(selected) {
-                        $source.addClass('selected');
+                        else {
+                            $source.removeClass('selected');
+                        }
                     }
                     else {
                         $source.removeClass('selected');
                     }
-                }
-                else {
-                    $source.removeClass('selected');
-                }
 
-                // hide unselected rows' stats
-                if($('tbody tr.selected', advertiser_table).length === 0) {
-                    $('tbody tr td.stat span, tbody tr td.delta span', advertiser_table).show();
-                }
-                else {
-                    $('tbody tr', advertiser_table).each(function () {
-                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
-                    });
+                    // hide unselected rows' stats
+                    if($('tbody tr.selected', $advertiser_table).length === 0) {
+                        $('tbody tr td.stat span, tbody tr td.delta span', $advertiser_table).show();
+                    }
+                    else {
+                        $('tbody tr', $advertiser_table).each(function () {
+                            $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
+                        });
+                    }
                 }
 
                 update_dashboard(true, false, true);
             });
 
-            /*
-            // expand adgroups
-            $('tr.campaign button.expand', advertiser_table).live('click', function () {
-                $(this).closest('tr').nextUntil('tr.campaign').show();
-                $(this).removeClass('expand');
-                $(this).addClass('collapse');
-            });
-
-            // collapse adgroups
-            $('tr.campaign button.collapse', advertiser_table).live('click', function () {
-                $(this).closest('tr').nextUntil('tr.campaign').hide();
-                $(this).removeClass('collapse');
-                $(this).addClass('expand');
-            });
-            */
-
-            /* Publisher Table */
-            var publisher_table = $('table#publisher');
-
             // select apps
-            $('tbody tr.app', publisher_table).live('click', function () {
+            $('tbody tr.app', $publisher_table).live('click', function () {
                 $(this).toggleClass('selected');
 
-                // select or deselect this source's campaigns
-                if($(this).hasClass('selected')) {
-                    $(this).nextUntil('.app').addClass('selected');
-                }
-                else{
-                    $(this).nextUntil('.app').removeClass('selected');
-                }
-
-                // hide unselected rows' stats
-                if($('tbody tr.selected', publisher_table).length === 0) {
-                    $('tbody tr td.stat span, tbody tr td.delta span', publisher_table).show();
+                if(publisher_comparison_shown()) {
+                    update_publisher_colors();
                 }
                 else {
-                    $('tbody tr', publisher_table).each(function () {
-                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
-                    });
+                    // select or deselect this source's campaigns
+                    if($(this).hasClass('selected')) {
+                        $(this).nextUntil('.app').addClass('selected');
+                    }
+                    else{
+                        $(this).nextUntil('.app').removeClass('selected');
+                    }
+
+                    // hide unselected rows' stats
+                    if($('tbody tr.selected', $publisher_table).length === 0) {
+                        $('tbody tr td.stat span, tbody tr td.delta span', $publisher_table).show();
+                    }
+                    else {
+                        $('tbody tr', $publisher_table).each(function () {
+                            $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
+                        });
+                    }
                 }
 
                 update_dashboard(true, true, false);
             });
 
             // select adunits
-            $('tbody tr.adunit', publisher_table).live('click', function () {
+            $('tbody tr.adunit', $publisher_table).live('click', function () {
                 $(this).toggleClass('selected');
 
-                // TODO: there has to be a better way to select this...
-                var $app = $(this).prev();
-                while(!$app.hasClass('app')) {
-                    $app = $app.prev();
+                if(publisher_comparison_shown()) {
+                    update_publisher_colors();
                 }
-                if($(this).hasClass('selected')) {
-                    var selected = true;
-                    $app.nextUntil('.app').each(function () {
-                        if(!$(this).hasClass('selected')) {
-                            selected = false;
+                else {
+                    // TODO: there has to be a better way to select this...
+                    $app = $(this).prev();
+                    while(!$app.hasClass('app')) {
+                        $app = $app.prev();
+                    }
+                    if($(this).hasClass('selected')) {
+                        var selected = true;
+                        $app.nextUntil('.app').each(function () {
+                            if(!$(this).hasClass('selected')) {
+                                selected = false;
+                            }
+                        });
+                        if(selected) {
+                            $app.addClass('selected');
                         }
-                    });
-                    if(selected) {
-                        $app.addClass('selected');
+                        else {
+                            $app.removeClass('selected');
+                        }
                     }
                     else {
                         $app.removeClass('selected');
                     }
-                }
-                else {
-                    $app.removeClass('selected');
-                }
 
-                // hide unselected rows' stats
-                if($('tbody tr.selected', publisher_table).length === 0) {
-                    $('tbody tr td.stat span, tbody tr td.delta span', publisher_table).show();
-                }
-                else {
-                    $('tbody tr', publisher_table).each(function () {
-                        $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
-                    });
+                    // hide unselected rows' stats
+                    if($('tbody tr.selected', $publisher_table).length === 0) {
+                        $('tbody tr td.stat span, tbody tr td.delta span', $publisher_table).show();
+                    }
+                    else {
+                        $('tbody tr', $publisher_table).each(function () {
+                            $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
+                        });
+                    }
                 }
 
                 update_dashboard(true, true, false);
             });
 
-            $('#advertiser_expand').click(function () {
-                if($('td.hidden, th.hidden', 'table#advertiser').length) {
-                    $('td, th', 'table#advertiser').removeClass('hidden');
-                    $('tr.hide', 'table#advertiser').show();
 
-                    record_metric('Expanded advertiser table');
-                    $(this).html('less');
+            /* Rows */
+            var $advertiser_rows = $('#advertiser_rows');
+
+            function advertiser_rows_shown() {
+                return $advertiser_rows.hasClass('hide');
+            }
+
+            $advertiser_rows.click(function () {
+                if(advertiser_rows_shown()) {
+                    $advertiser_rows.addClass('hide');
+                    $advertiser_rows.removeClass('show');
+
+                    $('tr', $advertiser_table).show();
+
+                    record_metric('Showed advertiser rows');
                 }
                 else {
-                    _.each(ADVERTISER_COLUMNS, function (column) {
-                        if(!_.include(ADVERTISER_DEFAULT_COLUMNS, column) && column !== get_advertiser_order()) {
-                            $('td.' + column + ', th.' + column, 'table#advertiser').addClass('hidden');
-                        }
-                    });
-                    $('tr.hide', 'table#advertiser').hide();
-                    _kmq.push(['record', 'Contracted advertiser table']);
-                    record_metric('Contracted advertiser table');
-                    $(this).html('more');
+                    $advertiser_rows.addClass('show');
+                    $advertiser_rows.removeClass('hide');
+
+                    $('tr.hide', $advertiser_table).hide();
+
+                    record_metric('Hid advertiser rows');
                 }
             });
 
-            $('#publisher_expand').click(function () {
-                if($('td.hidden, th.hidden', 'table#publisher').length) {
-                    $('td, th', 'table#publisher').removeClass('hidden');
-                    $('tr.hide', 'table#publisher').show();
-                    $(this).html('less');
+            var $publisher_rows = $('#publisher_rows');
 
-                    record_metric('Expanded publisher table');
+            function publisher_rows_shown() {
+                return $publisher_rows.hasClass('hide');
+            }
+
+            $publisher_rows.click(function () {
+                if(publisher_rows_shown()) {
+                    $publisher_rows.addClass('hide');
+                    $publisher_rows.removeClass('show');
+
+                    $('tr', $publisher_table).show();
+
+                    record_metric('Showed publisher rows');
                 }
                 else {
-                    _.each(PUBLISHER_COLUMNS, function (column) {
-                        if(!_.include(PUBLISHER_DEFAULT_COLUMNS, column) && column !== get_publisher_order()) {
-                            $('td.' + column + ', th.' + column, 'table#publisher').addClass('hidden');
-                        }
-                    });
-                    $('tr.hide', 'table#publisher').hide();
-                    $(this).html('more');
+                    $publisher_rows.addClass('show');
+                    $publisher_rows.removeClass('hide');
 
-                    record_metric('Contracted publisher table');
+                    $('tr.hide', $publisher_table).hide();
+
+                    record_metric('Hid publisher rows');
                 }
             });
 
-            // set up tables
+
+            /**
+             * SETUP
+             */
+
+            /* Tables */
             var filter_header_row = _.template($('#filter_header_row').html());
-            var $tr = filter_header_row({
+            $('thead', $advertiser_table).html(filter_header_row({
                 title: 'Campaigns and AdGroups',
                 columns: ADVERTISER_COLUMNS,
                 default_columns: ADVERTISER_DEFAULT_COLUMNS,
                 sortable_columns: SORTABLE_COLUMNS,
                 sorted: get_advertiser_order(),
                 stats: STATS
-            });
-            $('table#advertiser thead').append($tr);
+            }));
 
-            $tr = filter_header_row({
+            $('thead', $publisher_table).html(filter_header_row({
                 title: 'Apps and AdUnits',
                 columns: PUBLISHER_COLUMNS,
                 default_columns: PUBLISHER_DEFAULT_COLUMNS,
                 sortable_columns: SORTABLE_COLUMNS,
                 sorted: get_publisher_order(),
                 stats: STATS
-            });
-            $('table#publisher thead').append($tr);
+            }));
 
-            /* Setup */
+
+            /* Controls */
             $('#vs_start_end_label').val('None');
 
             $('#last_7_days').click();
@@ -1508,7 +1587,6 @@ var mopub = mopub || {};
             var valid_date_range = {
                 endDate: "0d"
             };
-
             $('#custom_start').datepicker(valid_date_range);
             $('#custom_end').datepicker(valid_date_range);
         }
@@ -1516,6 +1594,5 @@ var mopub = mopub || {};
 
     window.DashboardController = DashboardController;
     window.DashboardHelpers = DashboardHelpers;
-    window.DashboardRouter = DashboardRouter;
 
 })(this.jQuery, this.Backbone, this._);

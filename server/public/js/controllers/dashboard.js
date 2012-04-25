@@ -594,14 +594,6 @@ var mopub = mopub || {};
                     publisher: '' + publisher_query
                 });
 
-                if (advertiser_table) {
-                    update_advertiser_table(data, publisher_query, get_advertiser_order());
-                }
-
-                if (publisher_table) {
-                    update_publisher_table(data, advertiser_query, get_publisher_order(), PUBLISHER_DEFAULT_COLUMNS);
-                }
-
                 if(update_rollups_and_charts) {
                     var rollups_and_charts_data = _.clone(data);
                     var granularity = get_granularity();
@@ -609,7 +601,7 @@ var mopub = mopub || {};
                     rollups_and_charts_data.query = [_.extend(_.clone(advertiser_query), publisher_query)];
 
                     if(advertiser_comparison_shown()) {
-                        $('tr.selected', '#advertiser').each(function(index, tr) {
+                        $('tr.selected', '#advertiser').each(function (index, tr) {
                             var query = _.clone(publisher_query);
                             if($(tr).hasClass('source')) {
                                 query.source = [tr.id];
@@ -634,11 +626,18 @@ var mopub = mopub || {};
                             }
                         });
                     } else if(publisher_comparison_shown()) {
-                        _.each(publisher_query[publisher_type], function(publisher) {
+                        $('tr.selected', '#publisher').each(function (index, tr) {
                             var query = _.clone(advertiser_query);
-                            query[publisher_type] = [publisher];
+                            if($(tr).hasClass('app')) {
+                                query.app = [tr.id];
+                            }
+                            else {
+                                query.adunit = [tr.id];
+                            }
                             rollups_and_charts_data.query.push(query);
                         });
+
+                        console.log(rollups_and_charts_data);
 
                         $.jsonp({
                             data: {
@@ -677,6 +676,14 @@ var mopub = mopub || {};
                             }
                         });
                     }
+                }
+
+                if (advertiser_table) {
+                    update_advertiser_table(data, publisher_query, get_advertiser_order());
+                }
+
+                if (publisher_table) {
+                    update_publisher_table(data, advertiser_query, get_publisher_order(), PUBLISHER_DEFAULT_COLUMNS);
                 }
             }
 
@@ -863,6 +870,9 @@ var mopub = mopub || {};
             function update_apps(data, advertiser_query, order, selected, apps) {
                 _.each(apps, function (app, index) {
                     var $app = $(render_filter_body_row(app, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, $('table#publisher th.hidden').length, index >= MAX_APPS));
+                    if(publisher_comparison_shown()) {
+                        $app.css('background-color', COLOR_THEME.primary[selected.indexOf(app.id)]);
+                    }
                     $publisher_table.append($app);
 
                     var adunit_data = _.clone(data);
@@ -885,7 +895,7 @@ var mopub = mopub || {};
                                     var adunit = {
                                         type: 'adunit',
                                         id: top.adunit,
-                                        selected: _.include(selected, app.id) || _.include(selected, top.adunit),
+                                        selected: _.include(selected, top.adunit) || (!publisher_comparison_shown() && _.include(selected, app.id)),
                                         stats: top
                                     };
                                     if(json.vs_top.length) {
@@ -905,6 +915,9 @@ var mopub = mopub || {};
                 var $last = $app;
                 _.each(adunits, function (adunit, index) {
                     var $adunit = $(render_filter_body_row(adunit, PUBLISHER_COLUMNS, PUBLISHER_DEFAULT_COLUMNS, order, hide || $('table#publisher th.hidden').length, index >= MAX_ADUNITS));
+                    if(publisher_comparison_shown()) {
+                        $adunit.css('background-color', COLOR_THEME.primary[selected.indexOf(adunit.id)]);
+                    }
                     $last.after($adunit);
                     $last = $adunit;
                 });
@@ -1022,6 +1035,9 @@ var mopub = mopub || {};
                     $('#vs_start_end_label').html('None');
                 }
                 else {
+                    hide_advertiser_comparison();
+                    hide_publisher_comparison();
+
                     var start = string_to_date_hour($('#start').val());
                     var end = string_to_date_hour($('#end').val());
                     var diff;
@@ -1127,20 +1143,22 @@ var mopub = mopub || {};
             }
 
             function show_advertiser_comparison() {
-                $advertiser_comparison.removeClass('show');
                 $advertiser_comparison.addClass('hide');
+                $advertiser_comparison.removeClass('show');
 
-                $('tr.campaign', $advertiser_table).removeClass('selected');
+                // default comparison selection: all sources
                 $('tr.source', $advertiser_table).addClass('selected');
+                $('tr.campaign', $advertiser_table).removeClass('selected');
 
                 update_advertiser_colors();
             }
 
             function hide_advertiser_comparison() {
-                $advertiser_comparison.removeClass('hide');
                 $advertiser_comparison.addClass('show');
+                $advertiser_comparison.removeClass('hide');
 
-                $('tr.source', $advertiser_table).each(function (tr) {
+                // select subcomponents of selected
+                $('tr.source.selected', $advertiser_table).each(function (index, tr) {
                     $(tr).nextUntil('tr.source').addClass('selected');
                 });
 
@@ -1152,6 +1170,7 @@ var mopub = mopub || {};
                     hide_advertiser_comparison();
                 }
                 else {
+                    update_vs_start_end('none');
                     hide_publisher_comparison();
                     show_advertiser_comparison();
                 }
@@ -1166,14 +1185,40 @@ var mopub = mopub || {};
             }
 
             function show_publisher_comparison() {
-                $publisher_comparison.removeClass('show');
                 $publisher_comparison.addClass('hide');
+                $publisher_comparison.removeClass('show');
+
+                // default comparison selection: all apps
+                $('tr.app', $publisher_table).addClass('selected');
+                $('tr.adunit', $publisher_table).removeClass('selected');
+
+                update_publisher_colors();
             }
 
             function hide_publisher_comparison() {
-                $publisher_comparison.removeClass('hide');
                 $publisher_comparison.addClass('show');
+                $publisher_comparison.removeClass('hide');
+
+                // select subcomponents of selected
+                $('tr.app.selected', $publisher_table).each(function (index, tr) {
+                    $(tr).nextUntil('tr.app').addClass('selected');
+                });
+
+                update_publisher_colors();
             }
+
+            $publisher_comparison.click(function () {
+                if(publisher_comparison_shown()) {
+                    hide_publisher_comparison();
+                }
+                else {
+                    update_vs_start_end('none');
+                    hide_advertiser_comparison();
+                    show_publisher_comparison();
+                }
+
+                update_dashboard(true, false, false);
+            });
 
             /* Columns */
             var $advertiser_columns = $('#advertiser_columns');
@@ -1184,16 +1229,16 @@ var mopub = mopub || {};
 
             $advertiser_columns.click(function () {
                 if(advertiser_columns_shown()) {
-                    $advertiser_columns.removeClass('show');
                     $advertiser_columns.addClass('hide');
+                    $advertiser_columns.removeClass('show');
 
                     $('th, td', $advertiser_table).show();
 
                     record_metric('Showed advertiser columns');
                 }
                 else {
-                    $advertiser_columns.removeClass('hide');
                     $advertiser_columns.addClass('show');
+                    $advertiser_columns.removeClass('hide');
 
                     _.each(ADVERTISER_COLUMNS, function (column) {
                         if(!_.include(ADVERTISER_DEFAULT_COLUMNS, column) && column !== get_advertiser_order()) {
@@ -1205,18 +1250,25 @@ var mopub = mopub || {};
                 }
             });
 
-            $('#publisher_columns').click(function () {
-                var $this = $(this);
-                if($this.hasClass('show')) {
-                    $this.removeClass('show');
-                    $this.addClass('hide');
+            var $publisher_columns = $('#publisher_columns');
+
+            function publisher_columns_shown() {
+                return $publisher_columns.hasClass('hide');
+            }
+
+            $publisher_columns.click(function () {
+                if(publisher_columns_shown()) {
+                    $publisher_columns.addClass('hide');
+                    $publisher_columns.removeClass('show');
+
                     $('th, td', $publisher_table).show();
 
                     record_metric('Showed publisher columns');
                 }
                 else {
-                    $this.removeClass('hide');
-                    $this.addClass('show');
+                    $publisher_columns.addClass('show');
+                    $publisher_columns.removeClass('hide');
+
                     _.each(PUBLISHER_COLUMNS, function (column) {
                         if(!_.include(PUBLISHER_DEFAULT_COLUMNS, column) && column !== get_publisher_order()) {
                             $('th.' + column + ', td.' + column, $publisher_table).hide();
@@ -1229,8 +1281,10 @@ var mopub = mopub || {};
 
 
             /* Order */
+            var $advertiser_order = $('#advertiser_order');
+
             function get_advertiser_order() {
-                return $('#advertiser_order').val();
+                return $advertiser_order.val();
             }
 
             $('th.sortable', $advertiser_table).live('click', function () {
@@ -1239,7 +1293,7 @@ var mopub = mopub || {};
                 _.each(STATS, function (title, stat) {
                     if($th.hasClass(stat)) {
                         order = stat;
-                        $('#advertiser_order').val(stat);
+                        $advertiser_order.val(stat);
                     }
                 });
 
@@ -1251,8 +1305,10 @@ var mopub = mopub || {};
                 update_dashboard(true, true, false);
             });
 
+            var $publisher_order = $('#publisher_order');
+
             function get_publisher_order() {
-                return $('#publisher_order').val();
+                return $publisher_order.val();
             }
 
             $('th.sortable', $publisher_table).live('click', function () {
@@ -1261,7 +1317,7 @@ var mopub = mopub || {};
                 _.each(STATS, function (title, stat) {
                     if($th.hasClass(stat)) {
                         order = stat;
-                        $('#publisher_order').val(stat);
+                        $publisher_order.val(stat);
                     }
                 });
 
@@ -1284,43 +1340,14 @@ var mopub = mopub || {};
                 }
             }
 
-
-            /* Rows */
-            $('#advertiser_rows').click(function () {
-                var $this = $(this);
-                if($this.hasClass('show')) {
-                    $this.removeClass('show');
-                    $this.addClass('hide');
-                    $('tr', $advertiser_table).show();
-
-                    record_metric('Showed advertiser rows');
+            function update_publisher_colors() {
+                $('tr', $publisher_table).removeAttr('style');
+                if(publisher_comparison_shown()) {
+                    $('tr.selected', $publisher_table).each(function (index, tr) {
+                        $(tr).css('background-color', COLOR_THEME.primary[index]);
+                    });
                 }
-                else {
-                    $this.removeClass('hide');
-                    $this.addClass('show');
-                    $('tr.hide', $advertiser_table).hide();
-
-                    record_metric('Hid advertiser rows');
-                }
-            });
-
-            $('#publisher_table_rows').click(function () {
-                var $this = $(this);
-                if($this.hasClass('show')) {
-                    $this.removeClass('show');
-                    $this.addClass('hide');
-                    $('tr', $publisher_table).show();
-
-                    record_metric('Showed publisher rows');
-                }
-                else {
-                    $this.removeClass('hide');
-                    $this.addClass('show');
-                    $('tr.hide', $publisher_table).hide();
-
-                    record_metric('Hid publisher rows');
-                }
-            });
+            }
 
             // select sources
             $('tbody tr.source', $advertiser_table).live('click', function () {
@@ -1403,8 +1430,10 @@ var mopub = mopub || {};
             $('tbody tr.app', $publisher_table).live('click', function () {
                 $(this).toggleClass('selected');
 
-                if(!publisher_comparison_shown()) {
-
+                if(publisher_comparison_shown()) {
+                    update_publisher_colors();
+                }
+                else {
                     // select or deselect this source's campaigns
                     if($(this).hasClass('selected')) {
                         $(this).nextUntil('.app').addClass('selected');
@@ -1422,7 +1451,6 @@ var mopub = mopub || {};
                             $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
                         });
                     }
-
                 }
 
                 update_dashboard(true, true, false);
@@ -1432,8 +1460,10 @@ var mopub = mopub || {};
             $('tbody tr.adunit', $publisher_table).live('click', function () {
                 $(this).toggleClass('selected');
 
-                if(!publisher_comparison_shown()) {
-
+                if(publisher_comparison_shown()) {
+                    update_publisher_colors();
+                }
+                else {
                     // TODO: there has to be a better way to select this...
                     $app = $(this).prev();
                     while(!$app.hasClass('app')) {
@@ -1466,10 +1496,61 @@ var mopub = mopub || {};
                             $('td.stat span, td.delta span', this).toggle($(this).hasClass('selected'));
                         });
                     }
-
                 }
 
                 update_dashboard(true, true, false);
+            });
+
+
+            /* Rows */
+            var $advertiser_rows = $('#advertiser_rows');
+
+            function advertiser_rows_shown() {
+                return $advertiser_rows.hasClass('hide');
+            }
+
+            $advertiser_rows.click(function () {
+                if(advertiser_rows_shown()) {
+                    $advertiser_rows.addClass('hide');
+                    $advertiser_rows.removeClass('show');
+
+                    $('tr', $advertiser_table).show();
+
+                    record_metric('Showed advertiser rows');
+                }
+                else {
+                    $advertiser_rows.addClass('show');
+                    $advertiser_rows.removeClass('hide');
+
+                    $('tr.hide', $advertiser_table).hide();
+
+                    record_metric('Hid advertiser rows');
+                }
+            });
+
+            var $publisher_rows = $('#publisher_rows');
+
+            function publisher_rows_shown() {
+                return $publisher_rows.hasClass('hide');
+            }
+
+            $publisher_rows.click(function () {
+                if(publisher_rows_shown()) {
+                    $publisher_rows.addClass('hide');
+                    $publisher_rows.removeClass('show');
+
+                    $('tr', $publisher_table).show();
+
+                    record_metric('Showed publisher rows');
+                }
+                else {
+                    $publisher_rows.addClass('show');
+                    $publisher_rows.removeClass('hide');
+
+                    $('tr.hide', $publisher_table).hide();
+
+                    record_metric('Hid publisher rows');
+                }
             });
 
 

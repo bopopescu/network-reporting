@@ -4352,7 +4352,8 @@ div#controls {
     vertical-align: top; }
 
 div#charts, div#advertiser_filters, div#publisher_filters {
-  float: left; }
+  float: left;
+  margin-bottom: 10px; }
 
 div#charts {
   border: 2px solid #bbb;
@@ -4387,7 +4388,7 @@ div#charts {
       border-bottom: 0; }
 
 div#advertiser_filters, div#publisher_filters {
-  margin: 0 0 10px 10px; }
+  margin-left: 10px; }
   div#advertiser_filters button.show span.hide, div#advertiser_filters button.hide span.show, div#publisher_filters button.show span.hide, div#publisher_filters button.hide span.show {
     display: none; }
   div#advertiser_filters table#advertiser, div#advertiser_filters table#publisher, div#publisher_filters table#advertiser, div#publisher_filters table#publisher {

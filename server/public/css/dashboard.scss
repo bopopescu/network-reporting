@@ -26,6 +26,7 @@ div#controls {
 
 div#charts, div#advertiser_filters, div#publisher_filters {
     float: left;
+    margin-bottom: 10px;
 }
 
 div#charts {
@@ -76,7 +77,7 @@ div#charts {
 }
 
 div#advertiser_filters, div#publisher_filters {
-    margin: 0 0 10px 10px;
+    margin-left: 10px;
 
     button.show span.hide, button.hide span.show {
         display: none;

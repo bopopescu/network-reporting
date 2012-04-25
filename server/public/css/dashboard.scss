@@ -1,5 +1,5 @@
 div#controls {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     position: relative;
     div#date_modal {
         position: absolute;
@@ -76,10 +76,18 @@ div#charts {
 }
 
 div#advertiser_filters, div#publisher_filters {
-    margin-left: 10px;
+    margin: 0 0 10px 10px;
+
+    button.show span.hide, button.hide span.show {
+        display: none;
+    }
+
     table#advertiser, table#publisher {
         border: 2px solid #bbb;
+        clear: both;
         font-size: 12px;
+        margin: 5px 0;
+
         thead {
             th {
                 color: #555;
@@ -94,8 +102,11 @@ div#advertiser_filters, div#publisher_filters {
                 }
                 &.sortable {
                     cursor: pointer;
-                    &.sorted {
-                        background-color: #ccc;
+                    .icon-chevron-down {
+                        display: none;
+                    }
+                    &.sorted .icon-chevron-down {
+                        display: inline-block;
                     }
                 }
             }

@@ -86,7 +86,7 @@
     _kms('//i.kissmetrics.com/i.js');_kms('//doug1izaerwt3.cloudfront.net/df1cac838b87437e951e9a26136cc8ae203e052e.1.js');
 
     _kmq.push(['identify', '{{ user.email }}']);
-    
+
   </script>
 </head>
 
@@ -155,9 +155,7 @@
         </div>
       </div>
       <div id="content">
-        <div {% if page_width == 'wide' %}style="padding: 0 20px;"{% else %}class="pageWidth"{% endif %}>
-
-
+        <div class="pageWidth {% if page_width == 'wide' %}wide{% endif %}">
           {% block flash %}
             {% if flash %}
               {# There's one or more flash-scoped objects #}

@@ -1,6 +1,11 @@
 <tr>
     <th class="title" colspan="2"><%= title %></th>
     <% _.each(columns, function (stat) { %>
-        <th class="stat <%= stat %> <% if(_.include(sortable_columns, stat)) { %> sortable <% } %> <% if(stat == sorted) { %> sorted <% } %> <% if(!_.include(default_columns, stat) && stat !== sorted) { %> hidden <% } %>" colspan="2"><%= stats[stat] %></th>
+        <th class="stat <%= stat %> <% if(_.include(sortable_columns, stat)) { %> sortable <% } %> <% if(stat == sorted) { %> sorted <% } %> <% if(!_.include(default_columns, stat) && stat !== sorted) { %> hidden <% } %>" colspan="2">
+            <%= stats[stat] %>
+            <% if(_.include(sortable_columns, stat)) { %>
+                <i class="icon-chevron-down"></i>
+            <% } %>
+        </th>
     <%  }); %>
 </tr>

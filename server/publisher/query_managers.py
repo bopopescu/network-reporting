@@ -120,16 +120,32 @@ class AdUnitContextQueryManager(CachedQueryManager):
             clear_uri = clear_uri + '&testing=True&port=%s' % port
             fetcher.fetch(clear_uri)
         else:
-            pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
+            queue = taskqueue.Queue('push-context-update')
+            tasks = []
             for key in adunit_keys:
                 # For each adunit, spin up a TQ to ping the adserver
                 # admins with new data
-                taskqueue.add(url='/fetch_api/adunit_update_push',
-                              method='GET',
-                              queue_name='push-context-update',
-                              params={'adunit_key':key})
+                task_name = 'adunit_context_push:%s' % key
+                task = taskqueue.Task(url='/fetch_api/adunit_update_push',
+                                      method='GET',
+                                      name = task_name,
+                                      countdown=60,
+                                      params={'adunit_key':key})
+                tasks.append(task)
+                # Have to delete one at a time, because if we try to batch delete
+                # and any one doesn't exist, an error is immediately
+                # raised and all subsequent tasks are ignored and not
+                # deleted
+                try:
+                    queue.delete_tasks(task)
+                except:
+                    logging.warning("%s does not exist in push-context-update queue" % task)
+            try:
+                queue.add(tasks)
+            except:
+                logging.warning("Error adding %s to push-context-update queue" % tasks)
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)

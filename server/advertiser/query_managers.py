@@ -39,7 +39,45 @@ def chunks(l, n):
 class AdvertiserQueryManager(CachedQueryManager):
     @classmethod
     def get_objects_dict_for_account(cls, account):
-        pass
+        """
+        Returns a dictionary mapping Campaign keys to Campaign entities carrying Adgroup data.
+        Adgroups for each campaign can be retrieved as a list by using campaign.adgroups. Similarly,
+        each Adgroup contains a list of its creatives, accessible as adgroup.creatives.
+        """
+        campaigns_dict = cls.get_campaigns_dict_for_account(account)
+        adgroups_dict = cls.get_adgroups_dict_for_account(account, include_deleted=False, include_archived=True)
+        creatives_dict = cls.get_creatives_dict_for_account(account)
+
+        # Initialize the _creatives property for all of our adgroups.
+        for adgroup in adgroups_dict.values():
+            adgroup._creatives = []
+
+        # Associate each creative with its adgroup.
+        for creative in creatives_dict.values():
+            # Looks weird, but we're just avoiding creative.app_group.key() since it incurs a fetch.
+            adgroup_key = str(Creative.ad_group.get_value_for_datastore(creative))
+            try:
+                adgroup_for_this_creative = adgroups_dict[adgroup_key]
+                adgroup_for_this_creative._creatives.append(creative)
+            except KeyError:
+                # We should patch out this buggy data ridiculousness. :(
+                # For now, we're just going to pass.
+                pass
+
+        # Initialize the _adgroups property for all of our campaigns.
+        for campaign in campaigns_dict.values():
+            campaign._adgroups = []
+
+        # Now we have a dictionary (adgroups_dict) mapping adgroup keys to adgroup objects, where
+        # each adgroup object has a list of its creatives. We can take this one step further to
+        # work campaigns into this dict.
+        for adgroup in adgroups_dict.values():
+            # Again, getting around the fetch.
+            campaign_key = str(AdGroup.campaign.get_value_for_datastore(adgroup))
+            campaign_for_this_adgroup = campaigns_dict[campaign_key]
+            campaign_for_this_adgroup._adgroups.append(adgroup)
+
+        return campaigns_dict
 
     @classmethod
     def get_campaigns_dict_for_account(cls, account, include_deleted=False):

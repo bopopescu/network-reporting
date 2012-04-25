@@ -978,6 +978,9 @@ class PauseAdGroupHandler(RequestHandler):
         elif action in ["delete"]:
             self.request.flash["message"] = "Your campaign has been successfully deleted."
 
+
+        # TODO: we need a cross-platform default redirect in case    
+        # HTTP_REFERER doesn't exist
         return HttpResponseRedirect(self.request.environ.get('HTTP_REFERER'))
 
 @login_required

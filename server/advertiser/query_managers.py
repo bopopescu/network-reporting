@@ -1,3 +1,4 @@
+import logging
 import random
 
 from google.appengine.api import memcache
@@ -60,9 +61,10 @@ class AdvertiserQueryManager(CachedQueryManager):
                 adgroup_for_this_creative = adgroups_dict[adgroup_key]
                 adgroup_for_this_creative._creatives.append(creative)
             except KeyError:
-                # We should patch out this buggy data ridiculousness. :(
-                # For now, we're just going to pass.
-                pass
+                # If we get here, it means that the creative belongs to an adgroup that is not
+                # owned by this account. This is clearly a sign of data corruption, and these objects
+                # need to be fixed manually.
+                logging.error("KeyError: Creative %s belongs to AdGroup %s which is not owned by %s" % (str(creative.key()), str(adgroup_key), account.mpuser.email))
 
         # Initialize the _adgroups property for all of our campaigns.
         for campaign in campaigns_dict.values():

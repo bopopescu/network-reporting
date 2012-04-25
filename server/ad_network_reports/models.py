@@ -54,7 +54,9 @@ class AdNetworkLoginCredentials(db.Model):
     # List of application publisher ids that aren't tracked in MoPub.
     app_pub_ids = db.StringListProperty(default=[])
 
-    state = db.IntegerProperty(default=LoginStates.WORKING)
+    state = db.IntegerProperty(default=LoginStates.NOT_SETUP)
+
+    deleted = db.BooleanProperty(default=False)
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('key', None):
@@ -152,6 +154,7 @@ class AdNetworkStats(db.Model):
     impressions = db.IntegerProperty(default=0)
     clicks = db.IntegerProperty(default=0)
 
+    # TODO: create new rather than copy
     def __add__(self,
                 stats):
         """
@@ -160,6 +163,7 @@ class AdNetworkStats(db.Model):
         for stat in STAT_NAMES:
             # example: self.revenue += stats.revenue
             setattr(self, stat, getattr(self, stat) + getattr(stats, stat))
+        self.date = self.date or stats.date
         return self
 
     def __sub_(self,
@@ -279,6 +283,11 @@ class AdNetworkNetworkStats(AdNetworkStats):
         return cls.get_by_key_name('k:%s:%s:%s' % (account.key(),
             network, day.strftime('%Y-%m-%d')))
 
+    @classmethod
+    def get_by_network_and_days(cls, account, network, days):
+        return cls.get_by_key_name(['k:%s:%s:%s' % (account.key(), network,
+            day.strftime('%Y-%m-%d')) for day in days])
+
 class AdNetworkAppStats(AdNetworkStats):
     """
     key:
@@ -302,6 +311,11 @@ class AdNetworkAppStats(AdNetworkStats):
     def get_by_app_and_day(cls, account, app, day):
         return cls.get_by_key_name('k:%s:%s:%s' % (account.key(),
             app.key(), day.strftime('%Y-%m-%d')))
+
+    @classmethod
+    def get_by_app_and_days(cls, account, app, days):
+        return cls.get_by_key_name(['k:%s:%s:%s' % (account.key(),
+            app.key(), day.strftime('%Y-%m-%d')) for day in days])
 
 class AdNetworkManagementStats(db.Model): #(date)
     """

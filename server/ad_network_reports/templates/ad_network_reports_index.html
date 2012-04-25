@@ -31,7 +31,6 @@
             </dl>
           </div>
           <div class="form-submit" style="clear:both;">
-            <span class="hidden" id="networkSettingsForm-loading"><img src="/images/loading2.gif"/></span>
             <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-cancel">Cancel</a></span>
             <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-submit">Save</a></span>
           </div>
@@ -264,7 +263,7 @@
           <tr class="app-row" id="{{app.key_}}-row">
             <td class="appData-icon"><a href="/inventory/app/{{app.key_}}"><img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" /></a></td> <td class="dataTable-name">
                 <a href="/inventory/app/{{app.key_}}">{{app.name}}</a>
-                <span class="muted unbold">({{app.app_type_text}})</span>
+                <span class="muted unbold">({{app.type}})</span>
                 <img id="{{app.identifier}}-img" class="loading-img" style="display:none;" src="../images/icons-custom/spinner-12.gif"></img>
             </td>
             <td class="dataTable-data numeric revenue">--</td>

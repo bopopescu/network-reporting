@@ -539,6 +539,9 @@ a {
                 display: block;
                 padding: 7px 8px 1px 10px;
                 height: 29px;
+                &.network-chart-data {
+                    color: orange;
+                }
             }
         }
         &.stats-breakdown-name {

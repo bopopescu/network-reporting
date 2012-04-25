@@ -81,6 +81,11 @@ indexes:
   - name: date
     direction: desc
 
+- kind: AdNetworkLoginCredentials
+  properties:
+    - name: ad_network_name
+    - name: account
+
 - kind: AdGroup
   properties:
   - name: account

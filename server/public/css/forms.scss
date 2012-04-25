@@ -80,7 +80,7 @@ fieldset {
     font-size: 13px;
 }
 
-fieldset.alt {
+fieldset.alt, div.alt {
     background: #f7f7f7;
 }
 
@@ -295,11 +295,11 @@ input.price_floor_change {
     vertical-align: top;
 }
 
-form#campaign_and_adgroup {
+form#campaign_and_adgroup, form#network-login-form {
     fieldset {
         padding: 0 25px 25px 25px;
     }
-    input[type="text"], textarea {
+    input[type="text"], input[type="password"], textarea {
         padding: 1px 2px 2px 3px;
         border: 1px solid #eaeaea;
         border-top-color: #b9b9b9;
@@ -317,6 +317,15 @@ form#campaign_and_adgroup {
     }
     input[type="text"].number, input[type="text"].float {
         width: 70px;
+    }
+    input[type="text"].app-pub-id {
+        width: 160px;
+    }
+    input[type="text"].adunit-pub-id {
+        width: 135px;
+    }
+    input[type="text"].bid {
+        width: 40px;
     }
     input.error, textarea.error {
         background: #fff2f2;
@@ -343,6 +352,11 @@ form#campaign_and_adgroup {
         list-style-type: none;
         margin: 0;
         padding: 0;
+        li.network-type {
+            label, div {
+                vertical-align: middle;
+            }
+        }
         > li {
             margin: 12px 0 0 0;
             padding: 0;

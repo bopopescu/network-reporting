@@ -599,7 +599,7 @@ var mopub = mopub || {};
              */
             function getCurrentChartSeriesType() {
                 var activeBreakdownsElem = $('#dashboard-stats .stats-breakdown .active');
-                if (activeBreakdownsElem.attr('id') == 'stats-breakdown-ecpm') return 'line';
+                if (activeBreakdownsElem.attr('id') == 'stats-breakdown-cpm') return 'line';
                 else return 'area';
             }
 
@@ -614,9 +614,9 @@ var mopub = mopub || {};
             mopub.dashboardStatsChartData = {
                 pointStart: mopub.graphStartDate,
                 pointInterval: 86400000,
-                revenue: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "revenue")}],
-                impressions: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "impressions")}],
-                ecpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "ecpm")}]
+                rev: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "rev")}],
+                imp: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "imp")}],
+                cpm: [{ "Total": mopub.Stats.statArrayFromDailyStats(dailyStats, "cpm")}]
             };
             mopub.Chart.setupDashboardStatsChart(getCurrentChartSeriesType());
 
@@ -632,8 +632,8 @@ var mopub = mopub || {};
                                 text: 'Set dates',
                                 css: { fontWeight: '600' },
                                 click: function() {
-                                    var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
-                                    var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                                    var from_date=$('#dashboard-dateOptions-custom-from').xdatepicker("getDate");
+                                    var to_date=$('#dashboard-dateOptions-custom-to').xdatepicker("getDate");
                                     var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
 
                                     var from_day=from_date.getDate();
@@ -670,32 +670,32 @@ var mopub = mopub || {};
             });
 
             // set up custom dateOptions modal dialog
-            $('#dashboard-dateOptions-custom-from').datepicker({
+            $('#dashboard-dateOptions-custom-from').xdatepicker({
                 defaultDate: '-15d',
                 maxDate: '0d',
                 onSelect: function(selectedDate) {
                     var other = $('#dashboard-dateOptions-custom-to');
-                    var instance = $(this).data("datepicker");
-                    var date = $.datepicker
+                    var instance = $(this).data("xdatepicker");
+                    var date = $.xdatepicker
                         .parseDate(instance.settings.dateFormat ||
-                                   $.datepicker._defaults.dateFormat,
+                                   $.xdatepicker._defaults.dateFormat,
                                    selectedDate,
                                    instance.settings);
-                    other.datepicker('option', 'minDate', date);
+                    other.xdatepicker('option', 'minDate', date);
                 }
             });
-            $('#dashboard-dateOptions-custom-to').datepicker({
+            $('#dashboard-dateOptions-custom-to').xdatepicker({
                 defaultDate: '-1d',
                 maxDate: '0d',
                 onSelect: function(selectedDate) {
                     var other = $('#dashboard-dateOptions-custom-from');
-                    var instance = $(this).data("datepicker");
-                    var date = $.datepicker
+                    var instance = $(this).data("xdatepicker");
+                    var date = $.xdatepicker
                         .parseDate(instance.settings.dateFormat ||
-                                   $.datepicker._defaults.dateFormat,
+                                   $.xdatepicker._defaults.dateFormat,
                                    selectedDate,
                                    instance.settings);
-                    other.datepicker('option', 'maxDate', date);
+                    other.xdatepicker('option', 'maxDate', date);
                 }
             });
 

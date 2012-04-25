@@ -1,3 +1,7 @@
+/*
+ * @depends rickshaw.js
+ */
+
 Rickshaw.namespace('Rickshaw.Graph.MultiGraphLegend');
 
 Rickshaw.Graph.Legend = function(args) {

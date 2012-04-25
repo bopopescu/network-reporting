@@ -15,6 +15,36 @@ from country_codes import COUNTRY_CODE_DICT
 
 register = template.Library()
 
+numeric_test = re.compile("^\d+$")
+
+@register.filter
+def getattribute(value, arg):
+    """Gets an attribute of an object dynamically from a string name"""
+    if hasattr(value, str(arg)):
+        return getattr(value, arg)
+    elif hasattr(value, 'has_key') and value.has_key(arg):
+        return value[arg]
+    elif numeric_test.match(str(arg)) and len(value) > int(arg):
+        return value[int(arg)]
+    else:
+        return settings.TEMPLATE_STRING_IF_INVALID
+
+class_re = re.compile(r'(?<=class=["\'])(.*)(?=["\'])')
+@register.filter
+def add_class(value, css_class):
+    string = unicode(value)
+    match = class_re.search(string)
+    if match:
+        m = re.search(r'^%s$|^%s\s|\s%s\s|\s%s$' % (css_class, css_class,
+            css_class, css_class), match.group(1))
+        print match.group(1)
+        if not m:
+            return mark_safe(class_re.sub(match.group(1) + " " + css_class,
+                string))
+        else:
+            return mark_safe(string.replace('>', ' class="%s">' % css_class))
+        return value
+
 @register.filter
 def attrs(bound_field, attrs_json):
     """

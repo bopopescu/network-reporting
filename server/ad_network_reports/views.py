@@ -2,11 +2,10 @@ import logging
 
 from account.query_managers import AccountQueryManager
 
-from ad_network_reports.forms import LoginInfoForm
+from ad_network_reports.forms import LoginCredentialsForm
 from ad_network_reports.models import LoginStates, \
         MANAGEMENT_STAT_NAMES
-from ad_network_reports.query_managers import AD_NETWORK_NAMES, \
-        ADMOB, \
+from ad_network_reports.query_managers import ADMOB, \
         IAD, \
         INMOBI, \
         MOBFOX, \
@@ -22,6 +21,8 @@ from common.utils.decorators import staff_login_required
 from common.ragendja.template import render_to_response, TextResponse
 from common.utils.request_handler import RequestHandler
 from common.utils import sswriter
+from common.constants import NETWORKS, \
+        REPORTING_NETWORKS
 
 from publisher.query_managers import AppQueryManager, \
         ALL_NETWORKS
@@ -66,11 +67,11 @@ class AdNetworkReportIndexHandler(RequestHandler):
         networks = []
         apps_with_data = {}
         apps_for_network = None
-        for network in sorted(AD_NETWORK_NAMES.keys()):
+        for network in sorted(REPORTING_NETWORKS.keys()):
             network_data = {}
             network_data['name'] = network
-            network_data['pretty_name'] = AD_NETWORK_NAMES[network]
-            login = AdNetworkLoginManager.get_login(self.account,
+            network_data['pretty_name'] = NETWORKS[network]
+            login = AdNetworkLoginManager.get_logins(self.account,
                     network).get()
             if login:
                 network_data['pub_ids_without_data'] = login.app_pub_ids
@@ -83,7 +84,7 @@ class AdNetworkReportIndexHandler(RequestHandler):
                 if not apps_for_network:
                     apps_for_network = AppQueryManager.get_apps_without_pub_ids(
                             self.account,
-                            AD_NETWORK_NAMES.keys())
+                            REPORTING_NETWORKS.keys())
                 apps_list = apps_for_network[network] + \
                         apps_for_network[ALL_NETWORKS]
 
@@ -102,12 +103,12 @@ class AdNetworkReportIndexHandler(RequestHandler):
             try:
                 login = AdNetworkLoginCredentials. \
                         get_by_ad_network_name(self.account, network)
-                form = LoginInfoForm(instance=login, prefix=network)
+                form = LoginCredentialsForm(instance=login, prefix=network)
                 # Encryption doesn't work on app engine...
                 #form.initial['password'] = login.decoded_password
                 #form.initial['username'] = login.decoded_password
             except Exception, error:
-                form = LoginInfoForm(prefix=network)
+                form = LoginCredentialsForm(prefix=network)
             network_data['form'] = form
             networks.append(network_data)
 
@@ -219,9 +220,8 @@ class AppDetailHandler(RequestHandler):
         else:
             days = self.days
 
-        ad_network_app_mapper = AdNetworkMapperManager.get_mapper(mapper_key=
-                mapper_key)
-        stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
+        ad_network_app_mapper = AdNetworkMapperManager.get(mapper_key)
+        stats_list = AdNetworkStatsManager.get_stats_for_days(
                 mapper_key, days)
         daily_stats = []
         for stats in stats_list:
@@ -244,8 +244,8 @@ class AppDetailHandler(RequestHandler):
                       'end_date' : days[-1],
                       'date_range' : self.date_range,
                       'ad_network_name' :
-                        AD_NETWORK_NAMES[ad_network_app_mapper.ad_network_name],
-                      'app_name' : '%s (%s)' % (app.name, app.app_type_text()),
+                        REPORTING_NETWORKS[ad_network_app_mapper.ad_network_name],
+                      'app_name' : '%s (%s)' % (app.name, app.type),
                       'aggregates' : aggregates,
                       'daily_stats' :
                         simplejson.dumps(daily_stats),
@@ -273,7 +273,7 @@ class ExportAppDetailFileHandler(RequestHandler):
         else:
             days = self.days
 
-        stats_list = AdNetworkStatsManager.get_stats_list_for_mapper_and_days(
+        stats_list = AdNetworkStatsManager.get_stats_for_days(
                 mapper_key, days)
         mapper = db.get(mapper_key)
         if mapper.ad_network_name == MOBFOX:
@@ -284,7 +284,7 @@ class ExportAppDetailFileHandler(RequestHandler):
                     CPM, FILL_RATE, CLICKS, CPC, CTR)
         return sswriter.write_stats(f_type, stat_names, stats_list, days=days,
                 key_type=sswriter.AD_NETWORK_APP_KEY, app_detail_name=('%s_%s' %
-                (mapper.application.name.encode('utf8'), AD_NETWORK_NAMES[
+                (mapper.application.name.encode('utf8'), REPORTING_NETWORKS[
                     mapper.ad_network_name])))
 
 @login_required

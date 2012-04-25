@@ -17,6 +17,41 @@ var mopub = window.mopub || {};
 (function ($, Backbone, _) {
     "use strict";
     /*
+     * ## CampaignView
+     * Parameters:
+     * * model: Campaign
+     */
+    var CampaignView = Backbone.View.extend({
+        initialize: function () {
+            this.model.bind('change', this.render, this);
+        },
+        render: function () {
+            var metrics = ['att', 'imp', 'fill_rate', 'clk', 'ctr'];
+            var this_view = this;
+            var row = $("tr#" + this_view.model.id + "-row");
+
+            if (this_view.model.get('stats_endpoint') == 'networks') {
+                var selector = ' .network-data';
+
+                $('.rev', row).text(this_view.model.get_formatted_stat('rev'));
+                $('.cpm' + selector, row).text(this_view.model.get_formatted_stat('cpm'));
+            } else {
+                var selector = ' .mopub-data';
+            }
+
+            _.each(metrics, function (metric) {
+                var stat = this_view.model.get_stat(metric);
+                if (stat || stat == 0) {
+                    $('.' + metric + selector, row).text(this_view.model.get_formatted_stat(metric));
+                }
+            });
+
+            return this;
+        }
+    });
+
+    
+    /*
      * ## AdGroupsView
      * Parameters:
      * * collection: AdGroups
@@ -26,6 +61,59 @@ var mopub = window.mopub || {};
      * * tables: mapping of... MAPPING OF WHAT? I'M DYING TO KNOW
      */
     var AdGroupsView = Backbone.View.extend({
+        initialize: function () {
+            this.collection.bind('change', this.render, this);
+        },
+        filtered_collection: function () {
+            // TODO: uses elements not in this view
+            var status = $('#campaigns-filterOptions').find(':checked').val();
+            var app = $('#campaigns-appFilterOptions').val();
+            return new AdGroups(this.collection.reject(function (adgroup) {
+                return (status && status !== adgroup.get('status')) ||
+                       (app && adgroup.get('apps').indexOf(app) === -1);
+            }));
+        },
+        render: function () {
+            var adgroups = this.filtered_collection();
+
+            // TODO: uses elements not in this view, with multiple views there are conflicts
+
+            var html;
+            if (adgroups.size() === 0) {
+                html = '<h2>No ' + this.options.title + '</h2>';
+            } else {
+                html = _.template($('#adgroups-rollup-template').html(), {
+                    adgroups: adgroups,
+                    title: this.options.title,
+                    type: this.options.type
+                });
+
+                if (this.options.tables) {
+                    var type = this.options.type;
+                    _.each(this.options.tables, function (filter, title) {
+                        var filtered_adgroups = new AdGroups(adgroups.filter(filter));
+                        if(filtered_adgroups.length) {
+                            html += _.template($('#adgroups-table-template').html(), {
+                                adgroups: filtered_adgroups,
+                                title: title,
+                                type: type,
+                            });
+                        }
+                    });
+                } else {
+                    html += _.template($('#adgroups-table-template').html(), {
+                        adgroups: adgroups,
+                        title: 'Name',
+                        type: this.options.type
+                    });
+                }
+            }
+            $(this.el).html(html);
+            return this;
+        }
+    });
+
+    var NetworkAdGroupsView = Backbone.View.extend({
         initialize: function () {
             this.collection.bind('change', this.render, this);
         },
@@ -79,6 +167,7 @@ var mopub = window.mopub || {};
     });
 
 
+
     /*
      * # CollectionGraphView
      * Renders a collection as a graph
@@ -90,10 +179,12 @@ var mopub = window.mopub || {};
         },
 
         show_chart: function () {
+            var this_view = this;
             if(this.collection.isFullyLoaded()) {
                 var active_chart = $('#dashboard-stats .stats-breakdown .active');
                 var use_ctr = active_chart.attr('id') === 'stats-breakdown-ctr';
-                mopub.Chart.setupDashboardStatsChart(use_ctr ? 'line' : 'area');
+                mopub.Chart.setupDashboardStatsChart((use_ctr || this_view.options.line_graph) ? 'line' : 'area');
+                $('#dashboard-stats-chart').show();
             }
         },
 
@@ -101,7 +192,7 @@ var mopub = window.mopub || {};
             var this_view = this;
             if (this_view.collection.isFullyLoaded()) {
 
-                var metrics = ['impression_count', 'revenue', 'click_count', 'ctr'];
+                var metrics = ['imp', 'rev', 'clk', 'ctr'];
 
                 // Render the stats breakdown for "all""
                 $.each(metrics, function (iter, metric) {
@@ -130,15 +221,134 @@ var mopub = window.mopub || {};
                 mopub.dashboardStatsChartData = {
                     pointStart: this_view.options.start_date,
                     pointInterval: 86400000,
-                    impression_count: this_view.collection.get_chart_data('impression_count'),
-                    revenue: this_view.collection.get_chart_data('revenue'),
-                    click_count: this_view.collection.get_chart_data('click_count'),
-                    ctr: this_view.collection.get_chart_data('ctr')
+                    imp: this_view.collection.get_chart_data('imp', this_view.options.mopub_optimized),
+                    rev: this_view.collection.get_chart_data('rev', this_view.options.mopub_optimized),
+                    clk: this_view.collection.get_chart_data('clk', this_view.options.mopub_optimized),
+                    ctr: this_view.collection.get_chart_data('ctr', this_view.options.mopub_optimized),
+                    total: false
                 };
-                this_view.show_chart();
+                this.show_chart();
             }
         }
     });
+
+    var NetworkGraphView = CollectionGraphView.extend({
+        render: function () {
+            var this_view = this;
+
+            if (this_view.collection.isFullyLoaded()) {
+                var metrics = ['rev', 'imp', 'clk', 'ctr'];
+
+                var network_campaigns = new Campaigns(_.filter(this.collection.models,
+                    function(campaign){
+                        return campaign.get('stats_endpoint') == 'networks';
+                        }));;
+                var mopub_campaigns = new Campaigns(_.filter(this.collection.models,
+                    function(campaign){
+                        return campaign.get('stats_endpoint') == 'all';
+                        }));
+
+                // Render the stats breakdown for each metric
+                _.each(metrics, function (metric) {
+                    var selector = '#stats-breakdown-' + metric;
+                    // Mopub doesn't track rev
+                    if (metric == 'rev') {
+                        var mopub_selector = null;
+                        var network_selector = selector + ' .network-chart-rev';
+                    } else {
+                        var mopub_selector = selector + ' .mopub-chart-data';
+                        var network_selector = selector + ' .network-chart-data';
+                    }
+                    $(mopub_selector).html(mopub_campaigns.get_formatted_stat(metric));
+                    $(network_selector).html(network_campaigns.get_formatted_stat(metric));
+                });
+
+                // Chart
+                if (_.isEmpty(network_campaigns.models)) {
+                    mopub.dashboardStatsChartData = {
+                        pointStart: this_view.options.start_date,
+                        pointInterval: 86400000,
+                        imp: [{'Total': mopub_campaigns.get_total_daily_stats('imp')}],
+                        clk: [{'Total': mopub_campaigns.get_total_daily_stats('clk')}],
+                        ctr: [{'Total': mopub_campaigns.get_total_daily_stats('ctr')}],
+                        total: false
+                    };
+                } else {
+                    mopub.dashboardStatsChartData = {
+                        pointStart: this_view.options.start_date,
+                        pointInterval: 86400000,
+                        imp: [{'From MoPub': mopub_campaigns.get_total_daily_stats('imp')}, {'From Networks': network_campaigns.get_total_daily_stats('imp')}],
+                        rev: [{'From Networks': {'data': network_campaigns.get_total_daily_stats('rev'), 'color': '#e57300'}}],
+                        clk: [{'From MoPub': mopub_campaigns.get_total_daily_stats('clk')}, {'From Networks': network_campaigns.get_total_daily_stats('clk')}],
+                        ctr: [{'From MoPub': mopub_campaigns.get_total_daily_stats('ctr')}, {'From Networks': network_campaigns.get_total_daily_stats('ctr')}],
+                        total: false
+                    };
+                }
+                mopub.Chart.setupDashboardStatsChart('line');
+                $('#dashboard-stats-chart').show();
+            }
+        }
+    });
+
+
+    var NetworkDailyCountsView = Backbone.View.extend({
+        initialize: function () {
+            this.collection.bind('change', this.render, this);
+        },
+
+        render: function () {
+            var this_view = this;
+
+            if (this_view.collection.isFullyLoaded()) {
+                var metrics = ['rev', 'cpm', 'imp', 'clk', 'ctr'];
+
+                var network_campaigns = new Campaigns(_.filter(this.collection.models,
+                    function(campaign){
+                        return campaign.get('stats_endpoint') == 'networks';
+                        }));;
+                var mopub_campaigns = new Campaigns(_.filter(this.collection.models,
+                    function(campaign){
+                        return campaign.get('stats_endpoint') == 'all';
+                        }));
+
+                // Render Total daily count stats
+                _.each(metrics, function (metric) {
+                    var selector = '#dailyCounts-totals';
+                    // Mopub doesn't track rev
+                    if (metric == 'rev' || metric == 'cpm') {
+                        var mopub_selector = null;
+                        var network_selector = selector + ' .' + metric;
+                    } else {
+                        var mopub_selector = selector + ' .' + metric + ' .mopub-data';
+                        var network_selector = selector + ' .' + metric + ' .network-data';
+                    }
+                    $(mopub_selector).text(mopub_campaigns.get_formatted_stat(metric));
+                    if (!_.isEmpty(network_campaigns.models)) {
+                        $(network_selector).text(network_campaigns.get_formatted_stat(metric));
+                    }
+
+                    function renderColumn(campaigns, selector) {
+                        var totals = campaigns.get_formatted_total_daily_stats(metric).reverse();
+                        // Render td in rows a column at a time
+                        $('.dailyCounts-stats').each(function (index, row) {
+                            var value = totals[index];
+                            if (metric == 'rev' || metric == 'cpm') {
+                                $(row).find('.' + metric).text(value);
+                            } else {
+                                $(row).find('.' + metric + selector).text(value);
+                            }
+                        });
+                    }
+                    renderColumn(mopub_campaigns, ' .mopub-data');
+                    if (!_.isEmpty(network_campaigns.models)) {
+                        renderColumn(network_campaigns, ' .network-data');
+                    }
+                });
+
+            }
+        }
+    });
+
 
     /*
      * ## AppView
@@ -149,6 +359,9 @@ var mopub = window.mopub || {};
      */
     var AppView = Backbone.View.extend({
         initialize: function () {
+            if (this.options.endpoint_specific) {
+                this.model.bind('change', this.render, this);
+            }
             try {
                 this.template = _.template($('#app-template').html());
             } catch (e) {
@@ -158,18 +371,28 @@ var mopub = window.mopub || {};
         },
 
         renderInline: function () {
+            var this_view = this;
+            // Will there be multiple stats endpoints in this app row?
+            if (this_view.options.endpoint_specific) {
+                if (this_view.model.get('stats_endpoint') == 'networks') {
+                    var selector = ' .network-data';
+                } else {
+                    var selector = ' .mopub-data';
+                }
+            } else {
+                var selector = ''
+            }
+            var app_row = $('tr.app-row#app-' + this_view.model.id, this_view.el);
+
             /*jslint maxlen: 200 */
-            var app_row = $('tr.app-row#app-' + this.model.id, this.el);
-            $('.revenue', app_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
-            $('.impressions', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('impressions')));
-            $('.ecpm', app_row).text(mopub.Utils.formatCurrency(this.model.get('ecpm')));
-            $('.clicks', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
-            $('.ctr', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
-            $('.fill_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
-            $('.requests', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
-            $('.attempts', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
-            $('.conversions', app_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conversions')));
-            $('.conv_rate', app_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conversion_rate')));
+            if (!this_view.options.endpoint_specific || this_view.model.get('stats_endpoint') == 'networks') {
+                $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
+                $('.cpm', app_row).text(this_view.model.get_formatted_stat('cpm'));
+            }
+            var metrics = ['imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+            _.each(metrics, function (metric) {
+                $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
+            });
             /*jslint maxlen: 110 */
 
             $(".loading-img", app_row).hide();
@@ -177,6 +400,10 @@ var mopub = window.mopub || {};
             return this;
         },
         render: function () {
+            if(!this.template) {
+                return this.renderInline();
+            }
+
             var renderedContent = $(this.template(this.model.toJSON()));
 
             // When we render an appview, we also attach a handler to fetch
@@ -211,9 +438,12 @@ var mopub = window.mopub || {};
             /*jslint maxlen: 200 */
             var current_model = this.model;
             var adunit_row = $('tr.adunit-row#adunit-' + this.model.id, this.el);
-            $('.revenue', adunit_row).text(mopub.Utils.formatCurrency(this.model.get('revenue')));
-            $('.ecpm', adunit_row).text(mopub.Utils.formatCurrency(this.model.get('ecpm')));
-            $('.impressions', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('impressions')));
+            var metrics = ['rev', 'cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+
+            _.each(metrics, function (metric) {
+                $('.' + metric, adunit_row).text(current_model.get_formatted_stat(metric));
+            });
+
             $('.price_floor', adunit_row).html('<img class="loading-img hidden" ' +
                                                'src="/images/icons-custom/spinner-12.gif">' +
                                                '</img> ' +
@@ -227,13 +457,6 @@ var mopub = window.mopub || {};
                                              'src="/images/icons-custom/spinner-12.gif"></img> ' +
                                              '<input class="targeting-box" type="checkbox">');
 
-            $('.fill_rate', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')));
-            $('.ctr', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')));
-            $('.clicks', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('clicks')));
-            $('.requests', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
-            $('.attempts', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('requests')));
-            $('.conversions', adunit_row).text(mopub.Utils.formatNumberWithCommas(this.model.get('conversions')));
-            $('.conv_rate', adunit_row).text(mopub.Utils.formatNumberAsPercentage(this.model.get('conversion_rate')));
             /*jslint maxlen: 110 */
 
             if (this.model.get('active')) {
@@ -286,6 +509,10 @@ var mopub = window.mopub || {};
          * it's app's row.
          */
         render: function () {
+            if(!this.template) {
+                return this.renderInline();
+            }
+
             // render the adunit and attach it to the table after it's adunit's row
             var current_model = this.model;
             var renderedContent = $(this.template(this.model.toJSON()));
@@ -331,9 +558,35 @@ var mopub = window.mopub || {};
         }
     });
 
+    /*
+     * ## AdUnitCollectionView
+     */
+    var AdUnitCollectionView = Backbone.View.extend({
+        initialize: function () {
+            this.collection.bind('reset', this.render, this);
+        },
+
+        render: function () {
+            if(this.collection.isFullyLoaded()) {
+                this.collection.each(function(adunit) {
+                    var adunit_view = new AdUnitView({model: adunit,
+                                                      el: 'div#content'});
+                    adunit_view.renderInline();
+                });
+            }
+
+            return this;
+        },
+    });
+
+    window.NetworkDailyCountsView = NetworkDailyCountsView;
     window.AdUnitView = AdUnitView;
+    window.AdUnitCollectionView = AdUnitCollectionView;
     window.AppView = AppView;
     window.AdGroupsView = AdGroupsView;
+    window.CampaignView = CampaignView;
     window.CollectionGraphView = CollectionGraphView;
+    window.NetworkGraphView = NetworkGraphView;
 
 }(this.jQuery, this.Backbone, this._));
+

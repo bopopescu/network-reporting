@@ -10,6 +10,7 @@
       <td class="stat">Fill Rate</td>
       <td class="stat">Clicks</td>
       <td class="stat">CTR</td>
+      <td class="stat">Conv</td>
     </tr>
   </thead>
   {% for app in inventory %}
@@ -27,17 +28,18 @@
             <a href="{% url publisher_app_show app_key=app.key %}">
               {{ app.name }}
             </a>
-            <span class="muted unbold">({{ app.app_type_text }})</span>
+            <span class="muted unbold">({{ app.type }})</span>
             {# <span class="appData-id muted unbold hidden"> {{ app.key }} </span> #}
           {% endif %}
           <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
         </td>
         {# these stats will be loaded over ajax #}
-        <td class="requests stat">--</td>
-        <td class="impressions stat">--</td>
+        <td class="req stat">--</td>
+        <td class="imp stat">--</td>
         <td class="fill_rate stat">--</td>
-        <td class="clicks stat">--</td>
+        <td class="clk stat">--</td>
         <td class="ctr stat">--</td>
+        <td class="conv stat">--</td>
       </tr>
       {% for adunit in app.adunits %}
         <tr class="sub adunit-row" id="adunit-{{ adunit.key }}">
@@ -51,11 +53,12 @@
             </span>
           </td>
           {# these stats will be loaded over ajax #}
-          <td class="requests stat">--</td>
-          <td class="impressions stat">--</td>
+          <td class="req stat">--</td>
+          <td class="imp stat">--</td>
           <td class="fill_rate stat">--</td>
-          <td class="clicks stat">--</td>
+          <td class="clk stat">--</td>
           <td class="ctr stat">--</td>
+          <td class="conv stat">--</td>
         </tr>
       {% endfor %}
     </tbody>

@@ -250,36 +250,13 @@ class StatsModelQueryManager(CachedQueryManager):
 
         #### BEGIN USE MONGOSTATS API ####
 
-        # we only want to get our data from mongostats API if we are not explicitly trying
-        # to get offline data (from GAE, i.e. 'offline=True') or explicitly don't want
-        # data from mongo
-        # TODO: remove this conditional so that we always use mongo data in all of our UI
-        #       including the admin page
-        if not offline and self.account_obj and self.account_obj.display_mongo and use_mongo:
+        if use_mongo:
             realtime_stats = mongostats.api_fetch(start_date=days[0],
                                               end_date=days[-1],
                                               account_key=account,
                                               publisher_key=publisher,
                                               advertiser_key=advertiser,
                                               )
-
-            # In order to get unique user counts we must also get the offline stats
-            # from the GAE datastore:
-            # Currently the UI only needs 'user_count' for the following types of queries
-            # (Account-*-*) and (Account-<Any Pub>-*)
-            # TODO: remove the if statement so that we always have this data available
-            # TODO: monogstats should be able to provide this data as well so we don't have to
-            #       do two queries (one to API one Datastore lookup)
-            if (account and not publisher and not advertiser) or \
-                (account and publisher and not advertiser):
-
-                # db get
-                offline_stats = StatsModel.get(keys)
-
-                # we patch the user_count data from the offline stats if possible
-                for rt_stat, offline_stat in zip(realtime_stats, offline_stats):
-                    rt_stat.user_count = offline_stat.user_count if offline_stat else 0
-
             return realtime_stats
 
         #### END USE MONGOSTATS API ####

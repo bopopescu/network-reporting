@@ -372,8 +372,26 @@ $(function() {
                 $(tbody).children().not('tr.main').find('.cpm-input input').val(value);
             });
 
+            function update_golbal_active() {
+                if($('.app-active').length == $('.app-active:checked').length) {
+                    $('.global-active').attr("checked", "checked");
+                } else {
+                    $('.global-active').removeAttr("checked");
+                }
+            }
+
+            $('.global-active').change(function() {
+                if($('.global-active').is(':checked')) {
+                    $('.app-active').attr('checked', 'checked');
+                    $('input[name$="active"]').attr('checked', 'checked');
+                } else {
+                    $('.app-active').removeAttr("checked");
+                    $('input[name$="active"]').removeAttr("checked");
+                }
+            });
+
             // set up active checkbox's for app level
-            $('.all-adunits')
+            $('.app-active')
                 .each(function() {
                     var checkboxes = $(this).closest('tbody').find('input[name$="active"]');
                     if (checkboxes.filter('input:checked').length == checkboxes.length) {
@@ -387,17 +405,21 @@ $(function() {
                     } else {
                         checkboxes.removeAttr("checked");
                     }
-                    });
+
+                    update_golbal_active();
+                });
 
             // perculate checked changes up
-            $('input[name$="active"]').click(function () {
+            $('input[name$="active"]').change(function () {
                 var tbody = $(this).closest('tbody'); 
                 var key = $(this).attr('class');
                 if(tbody.find('input[name$="active"]:checked').length == tbody.find('input[name$="active"]').length) {
-                    tbody.find('.all-adunits').attr("checked", "checked");
+                    tbody.find('.app-active').attr("checked", "checked");
                 } else {
-                    tbody.find('.all-adunits').removeAttr("checked");
+                    tbody.find('.app-active').removeAttr("checked");
                 }
+
+                update_golbal_active();
 
                 // If no ad network ID set up, show a tooltip
                 if ($(this).is(':checked')) {
@@ -416,6 +438,8 @@ $(function() {
                     $(this).parents('tr').find('input[name$="'+pub_id+'"]').tooltip('hide');
                 }
             });
+
+            update_golbal_active();
                 
             // set cpms when copy all cpm button is clicked for either 14 day
             // or 7 day

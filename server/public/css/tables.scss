@@ -272,3 +272,16 @@ img.app-icon {
     @include border-radius(6px);
 }
 
+// css for network edit form
+tbody.global-settings {
+    background: #F5F9FC;
+    border-top: 3px solid #EBF2F7;
+    border-bottom: 3px solid #EBF2F7;
+    td {
+        &.title {
+            font-size: 16px;
+        }
+        vertical-align: middle;
+    }
+}
+

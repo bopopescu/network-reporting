@@ -309,6 +309,10 @@ form#campaign_and_adgroup, form#network-login-form {
         width: 290px;
         @include border-radius(3px);
     }
+    input[type="checkbox"] {
+        width: 12px;
+        height: 12px;
+    }
     input[type="text"].date {
         width: 85px;
     }

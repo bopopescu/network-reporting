@@ -1436,6 +1436,9 @@ form#campaign_and_adgroup input[type="text"], form#campaign_and_adgroup input[ty
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   border-radius: 3px; }
+form#campaign_and_adgroup input[type="checkbox"], form#network-login-form input[type="checkbox"] {
+  width: 12px;
+  height: 12px; }
 form#campaign_and_adgroup input[type="text"].date, form#network-login-form input[type="text"].date {
   width: 85px; }
 form#campaign_and_adgroup input[type="text"].time, form#network-login-form input[type="text"].time {
@@ -1839,6 +1842,15 @@ img.app-icon {
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
   border-radius: 6px; }
+
+tbody.global-settings {
+  background: #F5F9FC;
+  border-top: 3px solid #EBF2F7;
+  border-bottom: 3px solid #EBF2F7; }
+  tbody.global-settings td {
+    vertical-align: middle; }
+    tbody.global-settings td.title {
+      font-size: 16px; }
 
 /*
  * ## Colors

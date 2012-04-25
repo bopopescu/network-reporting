@@ -363,7 +363,7 @@
                             </div>
                             <div>7-Day CPM</div>
                         </th>
-                        <th class="stat">
+                        <th class="name">
                             <div>
                                 <a id="copy-14-day" style="cursor:pointer">
                                     <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
@@ -372,8 +372,53 @@
                             <div>14-DayCPM</div>
                         </th>
                         {% endif %}
+                        <td class="name">More Options</td>
                     </tr>
                 </thead>
+                <tbody class="global-settings">
+                    <tr class="main sub">
+                        <td class="icon">
+                        </td>
+                        <td class="title">
+                            Global Settings
+                        </td>
+                        <td class="text">
+                            <input class="global-active" type="checkbox" />
+                        </td>
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                        <td class="text">
+                        </td>
+                        {% endif %}
+                        <td class="text cpm-data" style="width:100px">
+                            <div class="cpm-input {% if not network.bid %}hidden{% endif %}">
+                                <input class="float bid app-level" type="text" value="{{ network.bid }}">
+                            </div>
+                            <div class="cpm-close editable{% if network.bid %} hidden{% endif %}">
+                                <span>
+                                    <b class="caret"></b>                            
+                                    <span class="editable-hidden">Set global CPM</span>
+                                </span>
+                            </div>    
+                        </td>
+                        {% if reporting %}
+                        <td>
+                        </td>
+                        <td>
+                        </td>
+                        {% endif %}
+                        <td class="text">
+                            <div class="advanced-input {% if not network.bid %}hidden{% endif %}">
+                                <input class="float bid app-level" type="text" value="{{ network.bid }}">
+                            </div>
+                            <div class="advanced-close editable{% if network.bid %} hidden{% endif %}">
+                                <span>
+                                    <b class="caret"></b>                            
+                                    <span class="editable-hidden">Set global options</span>
+                                </span>
+                            </div>    
+                        </td>
+                    </tr>
+                </tbody>
                 {% for app in apps %}
                 <tbody class="{% cycle 'alt' '' %}">
                     <tr class="main app-targeting">
@@ -388,7 +433,7 @@
                             {{ app.name }} <span class="muted">({{ app.type }})</span>
                         </td>
                         <td class="text">
-                            <input class="all-adunits" type="checkbox" />
+                            <input class="app-active" type="checkbox" />
                         </td>
                         {% if network.name in NETWORKS_WITH_PUB_IDS %}
                         <td class="text">
@@ -409,19 +454,30 @@
                             </div>    
                         </td>
                         {% if reporting %}
-                        <td>
+                        <td class="stat">
                             <a class="copy-7-day" style="color: orange; cursor:pointer">
                                 <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
                                 {{ app.seven_day_stats.cpm|currency }}
                             </a>
                         </td>
-                        <td>
+                        <td class="stat">
                             <a class="copy-14-day" style="color: orange; cursor:pointer;">
                                 <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
                                 {{ app.fourteen_day_stats.cpm|currency }}
                             </a>
                         </td>
                         {% endif %}
+                        <td class="text">
+                            <div class="advanced-input {% if not network.bid %}hidden{% endif %}">
+                                <input class="float bid app-level" type="text" value="{{ network.bid }}">
+                            </div>
+                            <div class="advanced-close editable{% if network.bid %} hidden{% endif %}">
+                                <span>
+                                    <b class="caret"></b>                            
+                                    <span class="editable-hidden">Set app options</span>
+                                </span>
+                            </div>    
+                        </td>
                     </tr>
                     {% for adunit in app.adunits %}
                     <tr class="sub" style="height:33px">
@@ -463,6 +519,17 @@
                         <td class="stat">
                         </td>
                         {% endif %}
+                        <td class="text">
+                            <div class="advanced-input {% if not network.bid %}hidden{% endif %}">
+                                <input class="float bid app-level" type="text" value="{{ network.bid }}">
+                            </div>
+                            <div class="advanced-close editable{% if network.bid %} hidden{% endif %}">
+                                <span>
+                                    <b class="caret"></b>                            
+                                    <span class="editable-hidden">Set adunit options</span>
+                                </span>
+                            </div>    
+                        </td>
                     </tr>
                     {% endfor %}                
                 </tbody>

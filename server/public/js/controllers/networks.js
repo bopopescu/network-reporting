@@ -359,19 +359,7 @@ $(function() {
                     });
                 }).keyup();
 
-            $('.cpm-data input').keyup(function() {
-                var value = $(this).val();
-                var td = $(this).closest('td');
-                $(td).find('.cpm-value').text(value);
-            }).keyup();
-
-            $('tr.main .cpm-data input').keyup(function() {
-                var value = $(this).val();
-                var tbody = $(this).closest('tbody');
-                $(tbody).find('.cpm-value').text(value);
-                $(tbody).children().not('tr.main').find('.cpm-input input').val(value);
-            });
-
+            // perculate checked change up to global
             function update_golbal_active() {
                 if($('.app-active').length == $('.app-active:checked').length) {
                     $('.global-active').attr("checked", "checked");
@@ -380,6 +368,7 @@ $(function() {
                 }
             }
 
+            // global enabled checkbox
             $('.global-active').change(function() {
                 if($('.global-active').is(':checked')) {
                     $('.app-active').attr('checked', 'checked');
@@ -439,6 +428,7 @@ $(function() {
                 }
             });
 
+            // initialize global enabled checkbox
             update_golbal_active();
                 
             // set cpms when copy all cpm button is clicked for either 14 day
@@ -693,19 +683,10 @@ $(function() {
             $('.cpm-edit').tooltip({
                 title: "Set CPM for each unit"
             });            
-            $('.cpm-close').tooltip({
+            $('.app-cpm-close').tooltip({
                 title: "Set CPM at the app level"
             });                        
-            $('.cpm-edit').click(function (event) {
-                event.preventDefault();
-                var tbody = $(this).closest('tbody');
-                // hide app level bids
-                tbody.find('tr.main .cpm-data .cpm-input').hide();
-                tbody.find('tr.main .cpm-data .editable').show();
-                // show adunit level bids
-                tbody.children().not('.main').find('.cpm-edit').hide();
-                tbody.children().not('.main').find('.cpm-input').show();
-            });
+
             $('.pub-id-close').click(function (event) {
                 event.preventDefault;
                 var input_div = $(this).closest('.pub-id-input');
@@ -719,26 +700,114 @@ $(function() {
                 }
                 $(this).closest('td').find('.pub-id-edit').show();
             });
-            $('.cpm-close').click(function (event) {
-                event.preventDefault;
+
+
+            /* Setting CPM */
+            // adunit level
+            $('.cpm-data input').keyup(function() {
+                var value = $(this).val();
+                var td = $(this).closest('td');
+                $(td).find('.cpm-value').text(value);
+            }).keyup();
+
+            $('.cpm-edit').click(function (event) {
+                if(!$('.global-cpm-input').is(':hidden')) {
+                    $('.global-cpm-input').hide();
+                    $('.global-cpm-close').show();
+
+                    $('.app-cpm-input').show();
+                    $('.app-cpm-close').hide();
+
+                    // show app level cpm
+                    $('.app-cpm-input').show();
+                    // hide app edit text
+                    $('.app-cpm-close').hide();
+                }
+                event.preventDefault();
                 var tbody = $(this).closest('tbody');
+                // hide app level bids
+                tbody.find('.app-cpm-input').hide();
+                tbody.find('.app-cpm-close').show();
+                // show adunit level bids
+                tbody.find('.cpm-edit').hide();
+                tbody.find('.cpm-input').show();
+            });
 
-                // copy value of first adunit input to all cpm inputs
-                var value = tbody.children().not('.main').find('.cpm-input input').val();
-                tbody.find('.cpm-value').text(value);
-                tbody.find('.cpm-input input').val(value);
-                tbody.find('tr.main .cpm-data input').val(value);
+            // app level
+            $('.app-cpm-input input').keyup(function() {
+                var value = $(this).val();
+                var tbody = $(this).closest('tbody');
+                $(tbody).find('.cpm-value').text(value);
+                $(tbody).find('.cpm-input input').val(value);
+            });
 
-                // show app level cpm
-                tbody.find('tr.main .cpm-data .cpm-input').show();
-                // hide app edit text
-                tbody.find('tr.main .cpm-data .editable').hide();
+            $('.app-cpm-close').click(function (event) {
+                event.preventDefault;
+                if($('.global-cpm-input').is(':hidden')) {
+                    elements = $(this);
+                } else {
+                    $('.global-cpm-input').hide();
+                    $('.global-cpm-close').show();
+
+                    $('.app-cpm-input').show();
+                    $('.app-cpm-close').hide();
+
+                    elements = $('.app-cpm-close');
+                }
+
+                elements.each(function() {
+                    var tbody = $(this).closest('tbody');
+                    // copy value of first adunit input to all cpm inputs
+                    var value = tbody.find('.cpm-input input').val();
+                    tbody.find('.cpm-value').text(value);
+                    tbody.find('.cpm-input input').val(value);
+                    tbody.find('.app-cpm-input input').val(value);
+
+                    // show app level cpm
+                    tbody.find('.app-cpm-input').show();
+                    // hide app edit text
+                    tbody.find('.app-cpm-close').hide();
+
+                    // hide adunit cpms for app
+                    tbody.find('.cpm-input').hide();
+                    // show adunit edit text
+                    tbody.find('.cpm-edit').show();
+                });
+            });
+
+            // global level
+            $('.global-cpm-input input').keyup(function() {
+                var value = $(this).val();
+                $('.cpm-value').text(value);
+                $('.cpm-input input').val(value);
+                $('.app-cpm-input input').val(value);
+            });
+
+            $('.global-cpm-close').click(function (event) {
+                event.preventDefault;
+                // copy value of first adunit to all cpm inputs
+                var value = $('.cpm-input input').val();
+                $('.global-cpm-input input').val(value);
+                $('.cpm-value').text(value);
+                $('.cpm-input input').val(value);
+                $('.app-cpm-input input').val(value);
+
+                // show global cpm
+                $('.global-cpm-input').show();
+                // hide global edit text
+                $('.global-cpm-close').hide();
 
                 // hide adunit cpms for app
-                tbody.children().not('.main').find('.cpm-input').hide();
+                $('.cpm-input').hide();
+                // hide app cpms for app
+                $('.app-cpm-input').hide();
                 // show adunit edit text
-                tbody.find('.cpm-edit').show();
+                $('.cpm-edit').show();
+                // show app edit text
+                $('.app-cpm-close').show();
             });
+
+
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';
             var pre = {type: 'country', data: []};

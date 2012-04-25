@@ -390,10 +390,10 @@
                         </td>
                         {% endif %}
                         <td class="text cpm-data" style="width:100px">
-                            <div class="cpm-input {% if not network.bid %}hidden{% endif %}">
-                                <input class="float bid app-level" type="text" value="{{ network.bid }}">
+                            <div class="global-cpm-input {% if not network.bid %}hidden{% endif %}">
+                                <input class="float bid" type="text" value="{{ network.bid }}">
                             </div>
-                            <div class="cpm-close editable{% if network.bid %} hidden{% endif %}">
+                            <div class="global-cpm-close editable{% if network.bid %} hidden{% endif %}">
                                 <span>
                                     <b class="caret"></b>                            
                                     <span class="editable-hidden">Set global CPM</span>
@@ -408,7 +408,7 @@
                         {% endif %}
                         <td class="text">
                             <div class="advanced-input {% if not network.bid %}hidden{% endif %}">
-                                <input class="float bid app-level" type="text" value="{{ network.bid }}">
+                                <input class="float bid" type="text" value="{{ network.bid }}">
                             </div>
                             <div class="advanced-close editable{% if network.bid %} hidden{% endif %}">
                                 <span>
@@ -443,10 +443,10 @@
                         </td>
                         {% endif %}
                         <td class="text cpm-data" style="width:100px">
-                            <div class="cpm-input {% if not app.bid %}hidden{% endif %}">
-                                <input class="float bid app-level" type="text" value="{{ app.bid }}">
+                            <div class="app-cpm-input {% if not app.bid %}hidden{% endif %}">
+                                <input class="float bid" type="text" value="{{ app.bid }}">
                             </div>
-                            <div class="cpm-close editable{% if app.bid %} hidden{% endif %}">
+                            <div class="app-cpm-close editable{% if app.bid %} hidden{% endif %}">
                                 <span>
                                     <b class="caret"></b>                            
                                     <span class="editable-hidden">Set app CPM</span>
@@ -469,7 +469,7 @@
                         {% endif %}
                         <td class="text">
                             <div class="advanced-input {% if not network.bid %}hidden{% endif %}">
-                                <input class="float bid app-level" type="text" value="{{ network.bid }}">
+                                <input class="float bid" type="text" value="{{ network.bid }}">
                             </div>
                             <div class="advanced-close editable{% if network.bid %} hidden{% endif %}">
                                 <span>
@@ -521,7 +521,7 @@
                         {% endif %}
                         <td class="text">
                             <div class="advanced-input {% if not network.bid %}hidden{% endif %}">
-                                <input class="float bid app-level" type="text" value="{{ network.bid }}">
+                                <input class="float bid" type="text" value="{{ network.bid }}">
                             </div>
                             <div class="advanced-close editable{% if network.bid %} hidden{% endif %}">
                                 <span>

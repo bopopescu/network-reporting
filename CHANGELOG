@@ -1,15 +1,24 @@
+# Deployed Wednesday, April 25, 2012 at 02:14AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-80
+### Bugs Fixed: ['1150']
+### Included Commits: 
+ * 62e43eb [#1150 state:fixed]
+ * b5fd5ae fixed old networks page to only show old network campaigns
+ * 7dae379 Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, April 24, 2012 at 11:46PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-79
 ### Bugs Fixed: []
-### Included Commits: 
- * 392ed0b Merge branch 'master' of github.com:mopub/mopub
- * 651a703 self.account
- * 7a5718b Merge branch 'using-auc-hashes'
- * d68c745 Added checking for awkward case
- * d41281f Deployed without finding any bug fixes.
- * f0c1159 Added created at support
- 
+### Included Commits:
+* 392ed0b Merge branch 'master' of github.com:mopub/mopub
+* 651a703 self.account
+* 7a5718b Merge branch 'using-auc-hashes'
+* d68c745 Added checking for awkward case
+* d41281f Deployed without finding any bug fixes.
+* f0c1159 Added created at support
+
 # Deployed Tuesday, April 24, 2012 at 09:24PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-78

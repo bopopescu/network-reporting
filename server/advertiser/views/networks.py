@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from common.utils.timezones import Pacific_tzinfo
 
 from advertiser.query_managers import AdvertiserQueryManager
-from advertiser.models import AdGroup
+from advertiser.models import AdGroup, NetworkStates
 
 
 class NetworkIndexHandler(RequestHandler):
@@ -42,7 +42,8 @@ class NetworkIndexHandler(RequestHandler):
 
         # Filter down to only network campaigns and sort alphabetically.
         network_adgroups = filter(lambda a: a.campaign.campaign_type ==
-                'network', all_adgroups)
+                'network' and a.campaign.network_state ==
+                NetworkStates.STANDARD_CAMPAIGN, all_adgroups)
         network_adgroups.sort(key=lambda a: a.campaign.name.lower())
 
         return render_to_response(self.request,

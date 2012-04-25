@@ -235,7 +235,8 @@ def launch_deploy_process(server=None):
     # The user will need to input a username and password for GAE
     # during the deploy process. We use subprocess.call because it
     # redirects stdout/stdin to/from the user.
-    call(['appcfg.py',
+    call(['python2.5',
+          '/usr/local/bin/appcfg.py',
           '--no_precompilation',
           'backends',
           server_path,

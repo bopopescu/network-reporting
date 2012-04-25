@@ -637,8 +637,6 @@ var mopub = mopub || {};
                             rollups_and_charts_data.query.push(query);
                         });
 
-                        console.log(rollups_and_charts_data);
-
                         $.jsonp({
                             data: {
                                 data: JSON.stringify(rollups_and_charts_data)
@@ -1229,14 +1227,6 @@ var mopub = mopub || {};
 
             $advertiser_columns.click(function () {
                 if(advertiser_columns_shown()) {
-                    $advertiser_columns.addClass('hide');
-                    $advertiser_columns.removeClass('show');
-
-                    $('th, td', $advertiser_table).show();
-
-                    record_metric('Showed advertiser columns');
-                }
-                else {
                     $advertiser_columns.addClass('show');
                     $advertiser_columns.removeClass('hide');
 
@@ -1248,6 +1238,14 @@ var mopub = mopub || {};
 
                     record_metric('Hid advertiser columns');
                 }
+                else {
+                    $advertiser_columns.addClass('hide');
+                    $advertiser_columns.removeClass('show');
+
+                    $('th, td', $advertiser_table).show();
+
+                    record_metric('Showed advertiser columns');
+                }
             });
 
             var $publisher_columns = $('#publisher_columns');
@@ -1258,14 +1256,6 @@ var mopub = mopub || {};
 
             $publisher_columns.click(function () {
                 if(publisher_columns_shown()) {
-                    $publisher_columns.addClass('hide');
-                    $publisher_columns.removeClass('show');
-
-                    $('th, td', $publisher_table).show();
-
-                    record_metric('Showed publisher columns');
-                }
-                else {
                     $publisher_columns.addClass('show');
                     $publisher_columns.removeClass('hide');
 
@@ -1276,6 +1266,14 @@ var mopub = mopub || {};
                     });
 
                     record_metric('Hid publisher columns');
+                }
+                else {
+                    $publisher_columns.addClass('hide');
+                    $publisher_columns.removeClass('show');
+
+                    $('th, td', $publisher_table).show();
+
+                    record_metric('Showed publisher columns');
                 }
             });
 
@@ -1511,20 +1509,20 @@ var mopub = mopub || {};
 
             $advertiser_rows.click(function () {
                 if(advertiser_rows_shown()) {
-                    $advertiser_rows.addClass('hide');
-                    $advertiser_rows.removeClass('show');
-
-                    $('tr', $advertiser_table).show();
-
-                    record_metric('Showed advertiser rows');
-                }
-                else {
                     $advertiser_rows.addClass('show');
                     $advertiser_rows.removeClass('hide');
 
                     $('tr.hide', $advertiser_table).hide();
 
                     record_metric('Hid advertiser rows');
+                }
+                else {
+                    $advertiser_rows.addClass('hide');
+                    $advertiser_rows.removeClass('show');
+
+                    $('tr', $advertiser_table).show();
+
+                    record_metric('Showed advertiser rows');
                 }
             });
 
@@ -1536,20 +1534,20 @@ var mopub = mopub || {};
 
             $publisher_rows.click(function () {
                 if(publisher_rows_shown()) {
-                    $publisher_rows.addClass('hide');
-                    $publisher_rows.removeClass('show');
-
-                    $('tr', $publisher_table).show();
-
-                    record_metric('Showed publisher rows');
-                }
-                else {
                     $publisher_rows.addClass('show');
                     $publisher_rows.removeClass('hide');
 
                     $('tr.hide', $publisher_table).hide();
 
                     record_metric('Hid publisher rows');
+                }
+                else {
+                    $publisher_rows.addClass('hide');
+                    $publisher_rows.removeClass('show');
+
+                    $('tr', $publisher_table).show();
+
+                    record_metric('Showed publisher rows');
                 }
             });
 

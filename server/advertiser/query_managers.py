@@ -11,9 +11,8 @@ from common.constants import CAMPAIGN_LEVELS, \
         NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION
 
-from advertiser.models import Campaign
-from advertiser.models import AdGroup
-from advertiser.models import Creative, TextCreative, \
+from advertiser.models import Campaign, AdGroup, \
+                              Creative, TextCreative, \
                               TextAndTileCreative, \
                               HtmlCreative,\
                               ImageCreative, \
@@ -259,18 +258,19 @@ class CampaignQueryManager(QueryManager):
 
         # Clear cache
         adunits = []
-        affected_accounts = set([])
+        affected_account_keys = set()
+
         for campaign in campaigns:
-            affected_accounts.add(campaign.account)
+            affected_account_keys.add(Campaign.account.get_value_for_datastore(campaign))
             for adgroup in campaign.adgroups:
                 adunits.extend(adgroup.site_keys)
 
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Campaign)
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, Campaign)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, Creative)
 
         return put_response
 
@@ -475,14 +475,16 @@ class AdGroupQueryManager(QueryManager):
 
         # Clear cache
         adunits = []
+        affected_account_keys = set()
         for adgroup in adgroups:
             adunits.extend(adgroup.site_keys)
+            affected_account_keys.add(AdGroup.account.get_value_for_datastore(adgroup))
+
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
-        affected_accounts = set([adgroup.account for adgroup in adgroups])
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, Creative)
 
         return put_response
 
@@ -549,14 +551,15 @@ class CreativeQueryManager(QueryManager):
     def put(cls, creatives):
         put_response = db.put(creatives)
 
+        affected_account_keys = set()
         for creative in creatives:
             # update cache
             adunits = AdUnitQueryManager.get(creative.ad_group.site_keys)
+            affected_account_keys.add(Creative.account.get_value_for_datastore(creative))
             if adunits:
                 AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
-        affected_accounts = set([creative.account for creative in creatives])
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, Creative)
 
         return put_response
 

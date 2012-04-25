@@ -9,6 +9,7 @@ from common.utils.decorators import wraps_first_arg
 from common.utils import simplejson
 
 from account.models import Account
+from advertiser.models import Campaign
 
 NAMESPACE = None
 #MAX_CACHE_TIME = 60*5 # 5 minutes
@@ -157,15 +158,15 @@ class CachedQueryManager(QueryManager):
         return entities
 
     @classmethod
-    def memcache_flush_entities_for_accounts(cls, accounts, entity_class):
+    def memcache_flush_entities_for_account_keys(cls, account_keys, entity_class):
         """
         Given a collection of accounts and an entity class, this method will flush from memcache any
         information about the entities for those accounts. For example, if this method is called
         with accounts=[A, B] and entity_class=AdGroup, the cached dictionaries of AdGroups for
         accounts A and B will be flushed. "accounts" may be a set, list, or a single object.
         """
-        if isinstance(accounts, set): accounts = list(accounts)
-        if isinstance(accounts, Account): accounts = [accounts]
+        if isinstance(account_keys, set): accounts_keys = list(account_keys)
+        if isinstance(account_keys, db.Key): accounts_keys = [account_keys]
         entity_type = entity_class.entity_type()
 
         # For each account, we need to flush not only the dictionary of entities, but also the list
@@ -174,10 +175,10 @@ class CachedQueryManager(QueryManager):
 
         memcache_keys_for_entity_dicts = []
         memcache_keys_for_entity_key_lists = []
-        for account in accounts:
-            account_key = account.key()
-            memcache_keys_for_entity_dicts.append("%s_acct_%s" % (entity_type, account_key))
-            memcache_keys_for_entity_key_lists.append("%s_keys_acct_%s" % (entity_type, account_key))
+        for account_key in account_keys:
+            account_key_string = str(account_key)
+            memcache_keys_for_entity_dicts.append("%s_acct_%s" % (entity_type, account_key_string))
+            memcache_keys_for_entity_key_lists.append("%s_keys_acct_%s" % (entity_type, account_key_string))
         
         # The entity dictionaries are stored as memcache chunks, so we use delete_multi_chunked.
         dict_delete_success = cls.memcache_delete_multi_chunked(memcache_keys_for_entity_dicts)

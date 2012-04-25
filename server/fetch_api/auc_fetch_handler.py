@@ -26,7 +26,8 @@ def adunitcontext_fetch(adunit_key, created_at=None, testing=False):
 
 class AUCFetchHandler(webapp.RequestHandler):
 
-    def get(self, adunit_key, created_at=None):
+    def get(self, adunit_key):
+        created_at = self.request.get('created_at', 0)
         # This is a service to the AWS/Tornado adserver.
         # We are not following the RequestHandler pattern here (simple function instead), because we do not want to require login.
         created_at = int(float(created_at))

@@ -152,6 +152,7 @@
                   <th class="dataTable-data numeric special">Priority</th>
                   <th class="dataTable-data numeric special">Revenue</th>
                   <th class="dataTable-data numeric special">CPM</th>
+                  <th class="dataTable-data numeric special">Attempts</th>
                   <th class="dataTable-data numeric special">Impressions</th>
                   <th class="dataTable-data numeric special">Clicks</th>
                   <th class="dataTable-data numeric special">CONV</th>
@@ -208,6 +209,7 @@
                             {{ adgroup.bid|currency }}
                           {% endif %}
                         </td>
+                        <td class="dataTable-data numeric">-</td>
                         <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                         <td class="dataTable-data numeric">
                             {{adgroup.stats.click_count|withsep}}<br/>
@@ -262,6 +264,7 @@
                           {{ adgroup.bid|currency }}
                         {% endif %}
                       </td>
+                      <td class="dataTable-data numeric">-</td>
                       <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
                           {{adgroup.stats.click_count|withsep}}<br/>
@@ -291,6 +294,7 @@
                           <td class="dataTable-data numeric">Marketplace</td>
                           <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
                           <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
+                          <td class="dataTable-data numeric">{{adgroup.stats.attempt_count|withsep}}</td>
                           <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                           <td class="dataTable-data numeric">-</td>
                           <td class="dataTable-data numeric">-</td>
@@ -302,7 +306,7 @@
                     <tr>
                       <th>
                         {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
+                        <a href="{% if adgroup.campaign.network_type %}{% url network_details campaign_key=adgroup.campaign.key %}{% else %}{% url advertiser_adgroup_show adgroup_key=adgroup.key %}{% endif %}">
                           {{adgroup.name}}
                         </a><br/>
                         <span class="muted">{{adgroup.network_type}}</span>
@@ -313,6 +317,7 @@
                       <td class="dataTable-data numeric {% if adgroup.cpc %}dataTable-campaign-ecpm{% endif %}">
                         {{ adgroup.calculated_ecpm|currency }}
                       </td>
+                      <td class="dataTable-data numeric">{{adgroup.stats.attempt_count|withsep}}</td>
                       <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
                           {{adgroup.stats.click_count|withsep}}<br/>
@@ -364,6 +369,7 @@
                           {{ adgroup.bid|currency }}
                         {% endif %}
                       </td>
+                      <td class="dataTable-data numeric">-</td>
                       <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
                           {{adgroup.stats.click_count|withsep}}<br/>
@@ -435,6 +441,7 @@
           <th class="dataTable-data numeric special">Fillrate</th>
           <th class="dataTable-data numeric special">Clicks</th>
           <th class="dataTable-data numeric special">CTR</th>
+          <th class="dataTable-data numeric special">Conversions</th>
         </tr>
       </thead>
       <tbody id="appData-totals">
@@ -446,6 +453,7 @@
           <td class="dataTable-data numeric"><b>{{adunit.stats.fill_rate|percentage}}</b></td>
           <td class="dataTable-data numeric"><b>{{adunit.stats.click_count|withsep}}</b></td>
           <td class="dataTable-data numeric"><b>{{adunit.stats.ctr|percentage}}</b></td>
+          <td class="dataTable-data numeric"><b>{{adunit.stats.conversion_count|withsep}}</b></td>
         </tr>
       </tbody>
       <tbody id="appData-individual" class="hidden">
@@ -458,6 +466,7 @@
             <td class="dataTable-data numeric">{{s.fill_rate|percentage}}</td>
             <td class="dataTable-data numeric">{{s.click_count|withsep}}</td>
             <td class="dataTable-data numeric">{{s.ctr|percentage}}</td>
+            <td class="dataTable-data numeric">{{s.conversion_count|withsep}}</td>
           </tr>
         {% endfor %}
       </tbody>

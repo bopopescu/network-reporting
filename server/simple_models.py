@@ -327,7 +327,10 @@ class SimpleAdGroup(SimpleModel):
                  target_other=None,
                  cities=None,
                  geo_predicates=None,
-                 allocation_percentage=None
+                 allocation_percentage=None,
+                 optimizable=None,
+                 default_cpm=None,
+                 network_type=None,
                  ):
         self._key = key
         self.campaign = campaign.simplify()
@@ -359,6 +362,9 @@ class SimpleAdGroup(SimpleModel):
         self.cities = cities
         self.geo_predicates = geo_predicates
         self.allocation_percentage = allocation_percentage
+        self.optimizable = optimizable
+        self.default_cpm = default_cpm
+        self.network_type = network_type
 
     def __str__(self):
         return self.__repr__()
@@ -515,7 +521,7 @@ class SimpleApp(SimpleModel):
     def __init__(self, key=None, account=None, global_id=None, adsense_app_name=None, adsense_app_id=None,
                  admob_bgcolor=None, admob_textcolor=None, app_type=None, package=None, url=None,
                  network_config=None, primary_category=None, secondary_category=None, name=None,
-                 experimental_fraction=.001):
+                 experimental_fraction=.001, force_marketplace=True):
         self._key = key
         self.account = account.simplify()
         self.global_id = global_id
@@ -531,6 +537,7 @@ class SimpleApp(SimpleModel):
         self.primary_category = primary_category
         self.secondary_category = secondary_category
         self.experimental_fraction = experimental_fraction
+        self.force_marketplace = force_marketplace
 
     def key(self):
         return self._key

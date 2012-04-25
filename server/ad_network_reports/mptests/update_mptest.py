@@ -8,11 +8,11 @@ import common.utils.test.setup
 from datetime import date, datetime, timedelta
 
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
-        AdNetworkStatsManager, \
-        AD_NETWORK_NAMES
+        AdNetworkStatsManager
 from ad_network_reports.update_ad_networks import update_account_stats, \
         multiprocess_update_all
 from common.utils import date_magic
+from common.constants import REPORTING_NETWORKS
 from pytz import timezone
 from google.appengine.ext import testbed
 
@@ -60,7 +60,7 @@ class TestUpdate(unittest.TestCase):
         yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
         print "YESTERDAY: %s" % yesterday.strftime('%Y %m %d')
         for mapper1 in mappers:
-            mapper2 = AdNetworkMapperManager.get_mapper(mapper_key=mapper1.key())
+            mapper2 = AdNetworkMapperManager.get(mapper1.key())
             stats = AdNetworkScrapeStats.all().filter('ad_network_app_mapper =',
                     mapper1).filter('date =', yesterday).get()
             if mapper2.application:
@@ -83,7 +83,7 @@ class TestUpdate(unittest.TestCase):
         assert len(mappers) > 0
 
         assert AdNetworkManagementStats.all().count() == len(
-                AD_NETWORK_NAMES.keys())
+                REPORTING_NETWORKS.keys())
 
     def multiprocess_multi_day_update_all_mptest(self):
         # Create default models.
@@ -101,6 +101,6 @@ class TestUpdate(unittest.TestCase):
         print 'App Mapper\'s len: %d' % len(mappers)
         assert len(mappers) > 0
 
-        assert AdNetworkManagementStats.all().count() == len(AD_NETWORK_NAMES.
+        assert AdNetworkManagementStats.all().count() == len(REPORTING_NETWORKS.
                 keys()) * ((two_days_ago - four_days_ago).days + 1)
 

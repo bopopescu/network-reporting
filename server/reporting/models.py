@@ -127,7 +127,7 @@ class StatsModel(db.Expando):
             return self.request_count
         return 0
 
-    def __init__(self, parent=None, key_name=None, **kwargs):
+    def __init__(self, parent=None, key_name=None, ad_network_stats=None, **kwargs):
         if not key_name and not kwargs.get('key', None):
 
             # rewrite the publisher, advertiser in case they are strings or unicode to db.Key()
@@ -165,6 +165,19 @@ class StatsModel(db.Expando):
                                          device_os=device_os,
                                          device_os_version=device_os_version,
                                          offline=offline)
+
+        # Translation between AdNetworkStats and StatsModel stats
+        AD_NETWORK_STATS = {'revenue': 'revenue',
+                            'attempts': 'request_count',
+                            'impressions': 'impression_count',
+                            'clicks': 'click_count'}
+        if ad_network_stats:
+            kwargs['date'] = datetime.datetime.combine(ad_network_stats.date,
+                    datetime.time())
+            # This is a hack to get attempt_count from to_dict
+            kwargs['_advertiser'] = True
+            for stat in AD_NETWORK_STATS.keys():
+                kwargs[AD_NETWORK_STATS[stat]] = getattr(ad_network_stats, stat)
 
         return super(StatsModel,self).__init__(parent=parent,key_name=key_name,**kwargs)
 
@@ -204,10 +217,9 @@ class StatsModel(db.Expando):
 
     def __add__(self,s):
         include_geo = s.include_geo and self.include_geo
-        obj = StatsModel(parent=self.parent_key() or s.parent_key(),
+        attributes = dict(parent=self.parent_key() or s.parent_key(),
                           key_name=self.key().name() or self.key.name(),
                           publisher=StatsModel.publisher.get_value_for_datastore(self) or StatsModel.publisher.get_value_for_datastore(s),
-                          advertiser=StatsModel.advertiser.get_value_for_datastore(self) or StatsModel.advertiser.get_value_for_datastore(s),
                           account=StatsModel.account.get_value_for_datastore(self) or StatsModel.account.get_value_for_datastore(s),
                           date=self.date or s.date,
                           date_hour=self.date_hour or s.date_hour,
@@ -227,8 +239,17 @@ class StatsModel(db.Expando):
                           impression_user_count=self.impression_user_count,
                           click_user_count=self.click_user_count,
                           reqs=self.reqs+s.reqs,
-                          offline=self.offline,
-                         )
+                          offline=self.offline)
+        advertiser = StatsModel.advertiser.get_value_for_datastore(self) or \
+                StatsModel.advertiser.get_value_for_datastore(s)
+        # If an advertiser exists for self or s set it
+        if not isinstance(advertiser, bool):
+            attributes['advertiser'] = advertiser
+        else:
+            # This is a hack to get attempt_count from to_dict when
+            # AdNetworkStats are converted to StatsModel stats
+            attributes['_advertiser'] = advertiser
+        obj = StatsModel(**attributes)
         obj.include_geo = include_geo
 
         # add dynamic geo properties
@@ -471,17 +492,34 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
 
     def _dict_properties(self):
         model_props = self.properties().keys()
-        pseudo_props = ['cpa', 'cpc', 'cpm', 'fill_rate', 'pace', 'pace_type',\
-                        'conv_rate', 'ctr', 'on_schedule', 'status']
-        return model_props + pseudo_props
+        pseudo_props = ['attempt_count', 'cpa', 'cpc', 'cpm', 'fill_rate', \
+                'pace', 'pace_type', 'conv_rate', 'ctr', \
+                'on_schedule', 'status', 'min_cpm', 'max_cpm']
+        # Hopefully the only translation dict needed ideally we run a script on
+        # appengine or stop using those entities entirely
+        PROP_TRANSLATION = {'attempt_count': 'att',
+                             'click_count': 'clk',
+                             'conversion_count': 'conv',
+                             'impression_count': 'imp',
+                             'request_count': 'req',
+                             'revenue': 'rev',
+                             'conversion_rate': 'conv_rate',
+                             'user_count': 'usr',
+                             'request_user_count': 'req_usr',
+                             'impression_user_count': 'imp_usr',
+                             'click_user_count': 'clk_user',}
+
+        properties = model_props + pseudo_props
+        return [(prop, PROP_TRANSLATION[prop]) if prop in PROP_TRANSLATION else
+            (prop, prop) for prop in properties]
 
     def to_dict(self):
         properties = self._dict_properties()
         d = {}
-        for prop_name in properties:
-            value = getattr(self, '_%s'%prop_name, None)
+        for prop, abbr_prop in properties:
+            value = getattr(self, '_%s'%prop, None)
             if value is None:
-                value = getattr(self, '%s'%prop_name, None)
+                value = getattr(self, '%s'%prop, None)
             if value is not None:
                 if isinstance(value, db.Model):
                     value = str(value.key())
@@ -489,7 +527,7 @@ offline=%s, %s,%s,%s,%s)" % (self.date or self.date_hour,
                     value = str(value)
                 if isinstance(value, datetime.datetime):
                     value = str(value)
-                d[prop_name] = value
+                d[abbr_prop] = value
         return d
 #
 # Tracks statistics for a site for a particular day - clicks and impressions are aggregated

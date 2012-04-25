@@ -24,7 +24,7 @@ SERVER_EMAIL = 'olp@mopub.com'
 REPLY_TO_EMAIL = 'support@mopub.com'
 
 ADMINS = (
-    ('Front End Team', 'fe@mopub.com'),
+    ('Front End Team', 'fe-bugs@mopub.com'),
 )
 
 MANAGERS = ADMINS
@@ -140,6 +140,7 @@ INSTALLED_APPS = (
      'registration',
      'reports',
      'ad_network_reports',
+     'networks',
 )
 
 #TEST_RUNNER = 'django_nose.NoseTestSuitRunner'
@@ -157,6 +158,7 @@ LOGIN_REDIRECT_URL = '/inventory/'
 LOGIN_REQUIRED_PREFIXES = (
     '/inventory/',
     '/campaigns/',
+    '/networks/',
 )
 
 ACCOUNT_ACTIVATION_DAYS = 14

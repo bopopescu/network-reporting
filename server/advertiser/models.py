@@ -6,7 +6,11 @@ from google.appengine.ext.db import polymodel
 from google.appengine.api import images
 from account.models import Account
 
-from common.constants import MIN_IOS_VERSION, MAX_IOS_VERSION, MIN_ANDROID_VERSION, MAX_ANDROID_VERSION
+from common.constants import MIN_IOS_VERSION, \
+        MAX_IOS_VERSION, \
+        MIN_ANDROID_VERSION, \
+        MAX_ANDROID_VERSION, \
+        NETWORKS
 import datetime
 
 #from ad_server.renderers.creative_renderer import BaseCreativeRenderer
@@ -62,6 +66,16 @@ from simple_models import (SimpleAdGroup,
 # from budget import budget_service
 
 
+class NetworkStates:
+    """
+    Network states
+    """
+    # STANDARD_CAMPAIGN is not a new network campaign
+    STANDARD_CAMPAIGN = 0
+    DEFAULT_NETWORK_CAMPAIGN = 1
+    CUSTOM_NETWORK_CAMPAIGN = 2
+
+
 class Campaign(db.Model):
     """ A campaign.    Campaigns have budgetary and time based restrictions. """
     name = db.StringProperty(required=True)
@@ -99,6 +113,23 @@ class Campaign(db.Model):
     budget_obj = db.ReferenceProperty(Budget, collection_name='campaign')
 
     blind = db.BooleanProperty(default=False)
+
+    # If the campaign is a new network campaign then the network field is
+    # set otherwise it's left blank
+    #
+    # NETWORKS are used to instantiate the network field in campaigns
+    #
+    # Compared to an AdGroup (network_type):
+    #       admob = admob_native
+    #       millenial = millenial_native
+    #       iad = iAd
+    network_type = db.StringProperty(choices=NETWORKS.keys(), default='')
+    network_state = db.IntegerProperty(default=NetworkStates. \
+            STANDARD_CAMPAIGN)
+    # needed so old stats can be mapped to the new campaign on migration
+    # since we can't keep the same campaign key for optimization purposes
+    old_campaign = db.SelfReferenceProperty()
+    transition_date = db.DateProperty()
 
     @property
     def has_daily_budget(self):
@@ -148,6 +179,28 @@ class Campaign(db.Model):
             return True
         else:
             return False
+
+    def get_bid_range(self, adgroups=None):
+        """
+        pass in this campaigns adgroups to avoid a query
+        """
+        if not adgroups:
+            adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
+                    else adgroup.calculated_cpm for adgroup in
+                    self.adgroups if adgroup.active]
+        else:
+            adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
+                    else adgroup.calculated_cpm for adgroup in
+                    adgroups if adgroup.active and adgroup._campaign ==
+                    self.key()]
+
+        min_cpm = None
+        max_cpm = None
+        if adgroup_bids:
+            min_cpm = min(adgroup_bids)
+            max_cpm = max(adgroup_bids)
+
+        return (min_cpm, max_cpm)
 
     def get_owner(self):
         return None
@@ -299,6 +352,9 @@ class AdGroup(db.Model):
 
     target_other = db.BooleanProperty(default=True)  # MobileWeb on blackberry etc.
 
+    optimizable = db.BooleanProperty(default=False)
+    default_cpm = db.FloatProperty()
+
     USER_TYPES = (
         ('any', 'Any'),
         ('active_7', '7 day active user'),
@@ -332,6 +388,20 @@ class AdGroup(db.Model):
     # Each incoming request will be matched against all of these combinations
     geo_predicates = db.StringListProperty(default=["country_name=*"])
 
+    @property
+    def calculated_cpm(self):
+        """
+        Calculate the ecpm for a cpc campaign.
+        """
+        if self.cpc:
+            try:
+                return float(self.stats.click_count) * \
+                       float(self.bid) * \
+                       1000.0 / float(self.stats.impression_count)
+            except Exception, error:
+                logging.error(error)
+        return self.bid
+
     def simplify(self):
         return SimpleAdGroup(key = str(self.key()),
                              campaign = self.campaign,
@@ -363,6 +433,9 @@ class AdGroup(db.Model):
                              cities = self.cities,
                              geo_predicates = self.geo_predicates,
                              allocation_percentage = self.allocation_percentage,
+                             optimizable = self.optimizable,
+                             default_cpm = self.default_cpm,
+                             network_type = self.network_type,
                              )
 
     def default_creative(self, custom_html=None, key_name=None):

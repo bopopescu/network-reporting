@@ -20,19 +20,19 @@
         <tbody>
             <tr>
                 <td>
-                    <%= adgroups.get_formatted_stat('impression_count') %>
+                    <%= adgroups.get_formatted_stat('imp') %>
                 </td>
                 <td>
-                    <%= adgroups.get_formatted_stat('click_count') %>
+                    <%= adgroups.get_formatted_stat('clk') %>
                 </td>
                 <td>
                     <%= adgroups.get_formatted_stat('ctr') %>
                 </td>
                 <td>
                     <% switch(type) {
-                        case 'gtee': print(adgroups.get_formatted_stat('revenue')); break; 
+                        case 'gtee': print(adgroups.get_formatted_stat('rev')); break; 
                         case 'promo':
-                        case 'backfill_promo': print(adgroups.get_formatted_stat('conversion_count')); break;
+                        case 'backfill_promo': print(adgroups.get_formatted_stat('conv')); break;
                     } %>
                 </td>
             </tr>

@@ -30,7 +30,7 @@ APP_NAME = 'BET WAP Site'
 JUMPTAP_PUB_ID = 'pa_zaphrox_zaphrox_drd_app'
 ADMOB_PUB_ID = 'a14cf615dc654dd'
 IAD_PUB_ID = '329218549'
-INMOBI_PUB_ID ='4028cba630724cd90130c2adc9b6024f'
+INMOBI_PUB_ID ='4028cba6328f45a10132ed37d79a060e'
 MOBFOX_PUB_ID = 'fb8b314d6e62912617e81e0f7078b47e'
 
 INVALID_USERNAME = 'invalid_username'
@@ -48,8 +48,8 @@ ADMOB_USERNAME = 'adnetwork@com2usamerica.com'
 ADMOB_PASSWORD = '4w47m82l5jfdqw1x'
 ADMOB_CLIENT_KEY = 'ka820827f7daaf94826ce4cee343837a'
 
-INMOBI_USERNAME = ''
-INMOBI_PASSWORD = ''
+INMOBI_USERNAME = '4028cb972fe21753012ffb7680350267'
+INMOBI_PASSWORD = '0588884947763'
 
 class TestRequestHandlers(AsyncHTTPTestCase):
     def get_app(self):
@@ -133,7 +133,7 @@ class TestRequestHandlers(AsyncHTTPTestCase):
 
         data = {'account_key': str(account.key()),
                 'callback': CALLBACK,
-                'ad_network_name': network}
+                'network': network}
         if username:
             data['%s-username' % network] = username
         if password:

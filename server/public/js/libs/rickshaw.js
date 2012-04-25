@@ -1,4 +1,4 @@
-Rickshaw = {
+window.Rickshaw = {
 
 	namespace: function(namespace, obj) { 
 

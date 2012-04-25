@@ -64,7 +64,7 @@ $(function() {
             var i;
             for (i=0; i < networks_data.length; i++) {
                 var network_data = networks_data[i];
-                if(network_data['models'].length > 0) {
+                if(network_data['models'].length > 0 || bootstrapping_data.only_networks) {
                     var roll_up = new RollUp({
                         id: network_data['network'],
                         type: 'network'
@@ -205,6 +205,16 @@ $(function() {
                 });
             });
 
+            $('#delete-network-button').click(function () {
+                var key = $(this).attr('id');
+                var div = $('.' + key);
+                div.dialog({
+                    buttons: {
+                        "Update": function() { $('form.loginCredentials',div).submit(); },
+                        "Close": function() { $(this).dialog('close');} }
+                });
+            });
+
             $('#dashboard-sort input').click(function() {
                 $('.tab-section').hide();
                 $('.tab-section.'+$(this).val()).show();
@@ -234,7 +244,7 @@ $(function() {
                 // information for the ad network
                 var data = $(this).serialize();
                 var key = $(this).attr('id');
-                data += ("&account_key=" + account_key + "&ad_network_name=" + key.substr("form-".length));
+                data += ("&account_key=" + account_key + "&network=" + key.substr("form-".length));
                 var message = $('.' + key + '-message');
                 $(message).removeClass('hidden');
                 $(message).html("Verifying login credentials...");

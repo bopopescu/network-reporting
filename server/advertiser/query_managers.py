@@ -6,14 +6,17 @@ from google.appengine.ext import db
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
 
-from common.constants import CAMPAIGN_LEVELS
+from common.constants import CAMPAIGN_LEVELS, \
+        NETWORKS, \
+        NETWORK_ADGROUP_TRANSLATION
 
 from advertiser.models import Campaign
 from advertiser.models import AdGroup
 from advertiser.models import Creative, TextCreative, \
                               TextAndTileCreative, \
                               HtmlCreative,\
-                              ImageCreative
+                              ImageCreative, \
+                              NetworkStates
 
 from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
@@ -33,6 +36,24 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
+class AdvertiserQueryManager(CachedQueryManager):
+    @classmethod
+    def get_objects_dict_for_account(cls, account):
+        pass
+
+    @classmethod
+    def get_campaigns_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, Campaign, include_deleted)
+
+    @classmethod
+    def get_adgroups_dict_for_account(cls, account, include_deleted=False, include_archived=False):
+        return cls.get_entities_for_account(account, AdGroup, include_deleted, include_archived)
+
+    @classmethod
+    def get_creatives_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, Creative, include_deleted)
+
+
 class CampaignQueryManager(QueryManager):
     Model = Campaign
 
@@ -44,11 +65,55 @@ class CampaignQueryManager(QueryManager):
         return campaigns
 
     @classmethod
-    def get_network_campaigns(cls, account):
-        networks = cls.Model.all().filter('campaign_type =', 'network')\
-                      .filter('deleted =',False)\
-                      .filter('account =',account)
-        return networks
+    def get_network_campaigns(cls, account, network_type=False, is_new=False):
+        """
+        is_new refers to models with the network_type attribute set,
+        which means it's a new type of campaign (used by the networks django
+        app).
+        """
+        # get campaigns for the account from memcache
+        campaigns = AdvertiserQueryManager.get_campaigns_dict_for_account(
+                account)
+
+        def network_campaign_filter(campaign):
+            if campaign.campaign_type == 'network':
+                if network_type:
+                    return campaign.network_type == network_type
+                elif is_new:
+                    return campaign.network_type
+                else:
+                    return not campaign.network_type
+
+        return filter(network_campaign_filter, campaigns.values())
+
+    @classmethod
+    def get_default_network_campaign(cls, account, network, get_from_db=False):
+        # Force to string
+        account_key = str(account.key())
+
+        cp_key_name = cls._get_network_key_name(account, network)
+
+        if get_from_db:
+            campaign = Campaign.get_by_key_name(cp_key_name)
+            return campaign
+
+        campaign = Campaign(key_name=cp_key_name, name=NETWORKS[network])
+
+        # set the properties
+        campaign.account = account
+        campaign.campaign_type = 'network'
+        campaign.network_type = network
+        campaign.network_state = NetworkStates.DEFAULT_NETWORK_CAMPAIGN
+
+        return campaign
+
+    @classmethod
+    def _get_network_key_name(cls, account_key, network):
+        """
+        Returns the key_name based on the account key and network
+        """
+        return 'ntwk:%s:%s' % (account_key, network)
+
 
     @classmethod
     def get_marketplace(cls, account, from_db=False):
@@ -139,10 +204,10 @@ class CampaignQueryManager(QueryManager):
     def put(cls, campaigns):
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
-        
-        # Put campaigns so if they're new they have a key    
+
+        # Put campaigns so if they're new they have a key
         put_response = db.put(campaigns)
-        
+
         # They need a key because this QM needs the key
         for camp in campaigns:
             budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
@@ -154,12 +219,18 @@ class CampaignQueryManager(QueryManager):
 
         # Clear cache
         adunits = []
+        affected_accounts = set([])
         for campaign in campaigns:
+            affected_accounts.add(campaign.account)
             for adgroup in campaign.adgroups:
                 adunits.extend(adgroup.site_keys)
 
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Campaign)
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
 
         return put_response
 
@@ -257,6 +328,57 @@ class AdGroupQueryManager(QueryManager):
         return adgroups.fetch(limit)
 
     @classmethod
+    def get_network_adgroup(cls, campaign, adunit_key, account_key,
+            get_from_db=False):
+        """
+        Returns the only adgroup that can belong to this adunit
+        and account. The magic of key_names allows us to
+        avoid getting the object from the db because
+        all the information is a function of the adunit itself.
+
+        Note: it is the API consumer's responsiblity to actually
+        save this object with the put method of this class
+        """
+        network_type = campaign.network_type
+
+        # Force to string
+        campaign_key = str(campaign.key())
+        adunit_key = str(adunit_key)
+        account_key = str(account_key)
+
+        # By using a key_name that is one-to-one mapped with the
+        # adunit, we can assure that there is only ever one
+        # adgroup per adunit
+        ag_key_name = cls._get_network_key_name(campaign_key, adunit_key)
+
+        # if db = True, retrieve from the database vs creating a local copy
+        if get_from_db:
+            adgroup = AdGroup.get_by_key_name(ag_key_name)
+            return adgroup
+
+        adgroup = AdGroup(key_name=ag_key_name, name=campaign.name)
+        # set up the rest of the properties
+        adgroup.account = db.Key(account_key)
+        adgroup.campaign = db.Key(campaign_key)
+        if network_type in NETWORK_ADGROUP_TRANSLATION:
+            adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[network_type]
+        else:
+            adgroup.network_type = network_type
+        # only targetted at one adunit
+        adgroup.site_keys = [db.Key(adunit_key)]
+        # all network adgroups have cpm set as the bid strategy
+        adgroup.bid_strategy = 'cpm'
+
+        return adgroup
+
+    @classmethod
+    def _get_network_key_name(cls, campaign_key, adunit_key):
+        """
+        Returns the key_name based on the adunit_key
+        """
+        return 'ntwk:%s:%s' % (campaign_key, adunit_key)
+
+    @classmethod
     def get_marketplace_adgroup(cls, adunit_key, account_key, get_from_db=False):
         """
         Returns the only adgroup that can belong to this adunit
@@ -317,6 +439,10 @@ class AdGroupQueryManager(QueryManager):
             adunits.extend(adgroup.site_keys)
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        affected_accounts = set([adgroup.account for adgroup in adgroups])
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
 
         return put_response
 
@@ -388,6 +514,9 @@ class CreativeQueryManager(QueryManager):
             adunits = AdUnitQueryManager.get(creative.ad_group.site_keys)
             if adunits:
                 AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        affected_accounts = set([creative.account for creative in creatives])
+        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
 
         return put_response
 

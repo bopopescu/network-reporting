@@ -3,9 +3,16 @@ Call this script when you want to deploy frontend code.
 """
 # TODO: Figure out why envoy fucks up commands that have messages
 # like git tag and git commit
-
 import sys
 import os
+
+#sys.path.append(os.environ['PWD'])
+PWD = os.path.dirname(__file__)
+sys.path.append(os.path.join(PWD, '..'))
+import common.utils.test.setup
+
+from common.utils.timezones import Pacific_tzinfo
+
 import datetime
 import re
 import yaml
@@ -14,8 +21,6 @@ import clint
 from clint.textui import puts, indent, colored
 import envoy
 
-PWD = os.path.dirname(__file__)
-sys.path.append(os.path.join(PWD, '..'))
 
 
 def prompt_before_executing(original, override=None):
@@ -107,14 +112,15 @@ def git_tag_current_deploy():
     try:
         deploy_number = int(git_get_most_recent_deploy_tag().replace('deploy-',''))
         new_deploy_number = deploy_number + 1
-    except IndexError, ValueError:
+    except (IndexError, ValueError):
         new_deploy_number = 0
 
     new_deploy_tag = "deploy-" + str(new_deploy_number)
 
     # Make the message for the deploy
-    deploy_datetime = datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M%p PST")
-    message = "Deployed by %s on %s." % (git_get_user(), deploy_datetime)
+    deploy_datetime = datetime.datetime.now(Pacific_tzinfo())
+    deploy_datetime_readable = deploy_datetime.strftime("%A, %B %d, %Y at %I:%M%p PST")
+    message = "Deployed by %s on %s." % (git_get_user(), deploy_datetime_readable)
 
     # Tag the commit
     #command = 'tag -m \'%s\' -a %s' % (message, new_deploy_tag)
@@ -229,7 +235,12 @@ def launch_deploy_process(server=None):
     # The user will need to input a username and password for GAE
     # during the deploy process. We use subprocess.call because it
     # redirects stdout/stdin to/from the user.
-    call(['appcfg.py', 'backends', server_path, 'update', server])
+    call(['appcfg.py',
+          '--no_precompilation',
+          'backends',
+          server_path,
+          'update',
+          server])
 
     # envoy.run('rm ' + server_path + '/app.yaml')
 
@@ -277,9 +288,13 @@ def minify_javascript():
         sys.exit(1)
 
     JS_DIR = os.path.join(PWD, '../public/js/')
-    JS_APP_FILE = os.path.join(JS_DIR, 'app.min.js')
+    #JS_APP_FILE = os.path.join(JS_DIR, 'app.min.js')
+    JS_PLUGIN_FILE = os.path.join(JS_DIR, 'plugins.js')
+    JS_PLUGINS= os.path.join(JS_DIR, '/libs/*.js')
 
-    envoy.run('juicer merge -s -f -o %s models/*.js views/*.js controllers/*.js utilities/*.js' % JS_APP_FILE)
+    #envoy.run('juicer merge -s -f -o %s models/*.js views/*.js controllers/*.js utilities/*.js' % JS_APP_FILE)
+
+    envoy.run('juicer merge -s -f -o %s %s' % (JS_PLUGIN_FILE, JS_PLUGINS))
 
     puts("Minifying Javascript files in " + JS_DIR)
 

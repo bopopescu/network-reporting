@@ -9,7 +9,7 @@
   <li><a href="{% url app_index %}">Dashboard</a></li>
   <li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
   <li class="active"><a href="{% url marketplace_index %}">Marketplace</a></li>
-  <li><a href="{% url network_index %}">Networks</a></li>
+  <li><a href="{% url networks %}">Networks</a></li>
 {% endblock navLinks %}
 
 {% block content %}
@@ -43,9 +43,9 @@
       <tbody>
         <tr style="border:none;">
           {% if totals %}
-            <td> {{ totals.revenue|currency|default_if_none:"$0.00"|withsep }} </td>
-            <td> {{ totals.impressions|withsep|default_if_none:"0" }} </td>
-            <td> {{ totals.ecpm|currency|default_if_none:"$0.00" }} </td>
+            <td> {{ totals.rev|currency|default_if_none:"$0.00"|withsep }} </td>
+            <td> {{ totals.imp|withsep|default_if_none:"0" }} </td>
+            <td> {{ totals.cpm|currency|default_if_none:"$0.00" }} </td>
           {% else %}
             <td> $0.00 </td>
             <td> 0 </td>
@@ -130,13 +130,13 @@
             <td class="dataTable-name" style="width:475px;">
               <span class="inner" style="width:475px;">
                   <a href="{% url publisher_app_show app_key=app.key %}">{{ app.name }}</a>
-                  <span class="muted unbold">({{ app.app_type_text }})</span>
+                  <span class="muted unbold">({{ app.type }})</span>
                   <img id="{{ app.key }}-img" class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
               </span>
             </td>
-            <td class="dataTable-data numeric revenue">--</td>
-            <td class="dataTable-data numeric impressions">--</td>
-            <td class="dataTable-data numeric ecpm">--</td>
+            <td class="dataTable-data numeric rev">--</td>
+            <td class="dataTable-data numeric imp">--</td>
+            <td class="dataTable-data numeric cpm">--</td>
             <td class="dataTable-data numeric price_floor" style="width:100px;"></td>
             <td class="dataTable-data numeric targeting"></td>
           </tr>
@@ -153,9 +153,9 @@
                     <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
                   </span>
                 </td>
-                <td class="dataTable-data numeric revenue" style="border:none;">--</td>
-                <td class="dataTable-data numeric impressions" style="border:none;">--</td>
-                <td class="dataTable-data numeric ecpm" style="border:none;">--</td>
+                <td class="dataTable-data numeric rev" style="border:none;">--</td>
+                <td class="dataTable-data numeric imp" style="border:none;">--</td>
+                <td class="dataTable-data numeric cpm" style="border:none;">--</td>
                 <td class="dataTable-data numeric price_floor" style="border:none;width:100px">
                   <input id="{{ adunit.key }}" type="text" class="input-text input-text-number number" style="width:50px;" value="--">
                 </td>

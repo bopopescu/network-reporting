@@ -7,6 +7,8 @@ from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
 from publisher.models import Site, App
 
+from common.utils import helpers
+
 
 CATEGORY_CHOICES = (
         (u'', '-----------------'),
@@ -85,6 +87,7 @@ class AppForm(mpforms.MPModelForm):
                 # Why don't we resize the app icon to be the proper size?
                 # TODO This would be a good place to do it.
                 obj.icon_blob = self.store_icon(img)
+                obj.image_serve_url = helpers.get_url_for_blob(obj.icon_blob, ssl=False)
 
         # Save the file if they uploaded one
         elif self.cleaned_data['img_file']:
@@ -92,6 +95,7 @@ class AppForm(mpforms.MPModelForm):
             img = self.cleaned_data['img_file'].read()
             icon = images.resize(img, 60, 60)
             obj.icon_blob = self.store_icon(icon)
+            obj.image_serve_url = helpers.get_url_for_blob(obj.icon_blob, ssl=False)
         if commit:
             obj.put()
         return obj
@@ -119,7 +123,7 @@ class AppForm(mpforms.MPModelForm):
         files.finalize(fname)
         return files.blobstore.get_blob_key(fname)
 
-        
+
 ANIMATION_CHOICES = (
         (u'0', 'No Animation'),
         (u'1', 'Random'),

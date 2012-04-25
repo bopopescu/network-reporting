@@ -1,3 +1,7 @@
+/*
+ * @depends rickshaw.js
+ */
+
 Rickshaw.namespace('Rickshaw.Graph.Axis.X');
 
 Rickshaw.Graph.Axis.X = function(args) {

@@ -1,0 +1,499 @@
+{% extends 'advertiser/base.html' %}
+
+{% load fields %}
+{% load filters %}
+
+{% block dateButtons %}
+{% endblock dateButtons %}
+
+{% block pageTitle %}
+<h1>
+    <a href="{% url networks %}">Networks</a> / {{network.pretty_name}}
+</h1>
+{% endblock pageTitle %}
+
+{% block titleBarRight %}
+{% if login_form %}
+<span id="title-bar-button" class="titlebar-right{% if network.show_login %} hidden{% endif %}">
+    <a class="button" id="network-settingsButton" href="#">Edit Revenue Reporting</a>
+</span>
+{% endif %}
+{% endblock titleBarRight %}
+
+{% block content %}
+{% if login_form %}
+<section id="network-settingsForm" class="hidden">
+    <form accept-charset="ascii" id="network-login-form" autocomplete="off">
+        {% if not network.show_login %}
+        <fieldset class="alt login-fields" style="padding-top:20px">
+            <legend>
+                <h2>
+                    Revenue Reporting
+                    {% if network.name == "admob" or network.name == "inmobi" %}
+                    <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
+                    {% endif %}
+                </h2>
+            </legend>
+
+            <div style="clear: both;padding-top:10px">
+                <div class="login-credentials-message">
+                    {% if reporting %}
+                    Revenue reporting for {{ network.pretty_name }} is turned on.
+                    {% else %}
+                    MoPub can report your revenue and other data directly from {{ network.pretty_name }}. {% if network.name != "mobfox" %}MoPub uses your login credentials to retrieve the revenue data from {{ network.pretty_name }}.{% endif %}
+                    {% endif %}    
+                </div>
+
+                {% if network.name != "mobfox" %}
+                <ul class="form_fields">
+                    <li>
+                    {{ login_form.username_str.label_tag }}
+                    {{ login_form.username_str }}
+                    <span id="username"></span>
+                    </li>
+
+                    <li>
+                    {{ login_form.password_str.label_tag }}
+                    {{ login_form.password_str }}
+                    <span id="password"></span>
+                    </li>
+
+                    {% if network.name == "admob" %}
+                    <li>
+                    {{ login_form.client_key.label_tag }}
+                    {{ login_form.client_key }}
+                    <span id="client_key"></span>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+
+                <div class="form-submit login-credentials-submit">
+                    <a class="submit button">
+                        {% if network.name == "mobfox" %} 
+                        Turn on Reporting
+                        {% else %}
+                        Check and Save Credentials
+                        {% endif %}
+                    </a>
+                    <a class="cancel button">No Thanks</a>
+                </div>
+                <div class="form-submit login-credentials-settings hidden">
+                    <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
+                </div>
+            </div>
+        </fieldset>
+        {% endif %}
+    </form>
+</section>
+{% endif %}
+
+<form action="{% if campaign_key %}{% url edit_network campaign_key=campaign_key %}{% else %}{% url edit_network network=network.name %}{% endif %}" id="campaign_and_adgroup" method="post"  autocomplete="off">
+    <fieldset>
+        <div>
+            <img src="/images/{{network.name}}-transparent.png"/>
+        </div>
+        <div>
+            <ul class="form_fields">
+                {% if custom_campaign %}
+                <li>
+                {{ campaign_form.name.label_tag }}
+                <div>
+                    {{ campaign_form.name }}
+                </div>
+                </li>
+                {% endif %}
+
+                {% if network.name == "admob" or network.name == "millennial" %}
+                <li>
+                    <label>Special Instructions:</label>
+                    <div>
+                        Requires Network SDK <a href="http://help.mopub.com/customer/portal/articles/83150-native-sdk-integration" target="_blank">(Learn more)</a>
+                    </div>
+                </li>
+                {% endif %}
+
+                {% if network.name == "jumptap" %}
+                <li>
+                <label for="id_{{ network.name }}_pub_id">{{ network.pretty_name }} Publisher Alias:</label>
+                <div>
+                    <input type="text" name="{{ network.name }}_pub_id" id="id_{{ network.name }}_pub_id" value="{{ network.pub_id|default_if_none:""  }}">
+                </div>
+                </li>
+                {% endif %}
+
+                {% if network.name == "custom_native" %}
+                <li>
+                {{ adgroup_form.custom_method.label_tag }}
+                <div>
+                    {{ adgroup_form.custom_method }}
+                </div>
+                </li>
+                {% endif %}
+
+                {% if network.name == "custom" %}
+                <li>
+                {{ adgroup_form.custom_html.label_tag }}
+                <div>
+                    {{ adgroup_form.custom_html }}
+                    <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
+                    <div id="campaignForm-customHtml-helpContent" class="hidden">
+                        <h3>Custom Network</h3>
+                        MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
+                        <br/>
+                        <br/>
+                        <h4>Example:</h4>
+                        A sample HTML snippet from Glam Media is:
+                        <br/>
+                        <br/>
+                        <code>
+                            &lt;script type="text/javascript"><br/>
+                            window.glam_affiliate_id = 1234567890;<br/>
+                            if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
+                            if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
+                            var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
+                            document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
+                            &lt;/script><br/>
+                        </code>
+                    </div>
+                </div>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div style="margin-top:15px">
+                <a class="button" id="advanced">Show Advanced Settings</a>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="advanced hidden">
+        <legend>
+            <h2>Advanced Settings</h2>
+        </legend>
+
+        <ul class="form_fields">
+            <li>
+            {{ campaign_form.description.label_tag }}
+            <div>
+                {{ campaign_form.description }}
+            </div>
+            </li>
+
+            <li>
+            {{ adgroup_form.allocation_percentage.label_tag }}
+            <div>
+                {{ adgroup_form.allocation_percentage }} % of all requests
+            </div>
+            </li>
+            <li>
+            {{ adgroup_form.daily_frequency_cap.label_tag }}
+            <div>
+                <div>
+                {{ adgroup_form.daily_frequency_cap }} daily impressions per user
+                </div>
+                <div>
+                {{ adgroup_form.hourly_frequency_cap }} hourly impressions per user
+                </div>
+            </div>
+            </li>
+            <li>
+            {{ adgroup_form.device_targeting.label_tag }}
+            <div>
+                {% comment %}
+                This field should be rendered using a Django widget, but
+                there is no good option in 1.2 for a Boolean RadioSelect.
+                {% endcomment %}
+                <span class="radios">
+                    <ul>
+                        <li><label for="id_device_targeting_0"><input type="radio" id="id_device_targeting_0" value="0" name="device_targeting" {% if not adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> All</label></li>
+                        <li><label for="id_device_targeting_1"><input type="radio" id="id_device_targeting_1" value="1" name="device_targeting" {% if adgroup_form.device_targeting|display_value %}checked="checked"{% endif %}> Filter by device and OS</label></li>
+                    </ul>
+                </span>
+                <ul id="device_targeting" class="{% if not adgroup_form.device_targeting|display_value %}hidden{% endif %}">
+                    <li>
+                    <ul class="device_type">
+                        <li><label>{{ adgroup_form.target_iphone }} {{ adgroup_form.target_iphone.label }}</label></li>
+                        <li><label>{{ adgroup_form.target_ipod }} {{ adgroup_form.target_ipod.label }}</label></li>
+                        <li><label>{{ adgroup_form.target_ipad }} {{ adgroup_form.target_ipad.label }}</label></li>
+                    </ul>
+                    {{ adgroup_form.ios_version_min.label_tag }}
+                    {{ adgroup_form.ios_version_min }}
+                    {{ adgroup_form.ios_version_max.label_tag }}
+                    {{ adgroup_form.ios_version_max }}
+                    </li>
+                    <li>
+                    <label class="device_type">{{ adgroup_form.target_android }} {{ adgroup_form.target_android.label }}</label>
+                    {{ adgroup_form.android_version_min.label_tag }}
+                    {{ adgroup_form.android_version_min }}
+                    {{ adgroup_form.android_version_max.label_tag }}
+                    {{ adgroup_form.android_version_max }}
+                    </li>
+                    <li>
+                    <label class="device_type">{{ adgroup_form.target_other }} {{ adgroup_form.target_other.label }}</label>
+                    <span class="muted">(All versions)</span>
+                    </li>
+                </ul>
+            </div>
+            </li>
+            <li>
+            <label>Country Targeting:</label>
+            <div>
+                <div id="geo_pred_ta" name="geo_predicates"></div>
+            </div>
+            </li>
+            <li class="countryNumDependent 0 1" style="display: none;">
+            {{ adgroup_form.region_targeting.label_tag }}
+            <div>
+                <span class="radios">{{ adgroup_form.region_targeting }}</span>
+            </div>
+            </li>
+            <li class="locationDependent city" style="display: none;">
+            <label>City Targeting:</label>
+            <div>
+                <div class="countryNumDependent 0" style="display: none;" id="city_fake">Please input a country</div>
+                <div class="countryNumDependent 1" style="display: none;" id="city_ta"></div>
+            </div>
+            </li>
+            <li>
+            {{ adgroup_form.keywords.label_tag }}
+            <div>
+                {{ adgroup_form.keywords }}
+                <a href="#" id="campaignForm-keyword-helpLink">What's this?</a>
+                <div id="campaignForm-keyword-helpContent" class="hidden">
+                    <h3>Keywords</h3>
+                    <p>
+                    Keywords may be used to target select requests and user data. Enter one group of keywords per line. Within each line the keywords are ANDed by using the seperator "AND". All lines are otherwised ORed together.
+                    <br/><br/>
+                    e.g. In order to target 24-year-old males or any 25-year-old you can use special keywords
+                    <br/><br/>
+                    m_age:24 AND m_gender:M
+                    <br/>
+                    m_age:25
+                    <br/><br/>
+                    Note: Keywords should only be used if your app is sending keywords with the ad request.
+                    </p>
+                </div>
+            </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    {% if login_form and network.show_login %}
+    <fieldset class="alt login-fields" style="padding-top:20px">
+        <legend>
+                <h2>
+                    Revenue Reporting
+                    {% if network.name == "admob" or network.name == "inmobi" %}
+                    <a target="_blank" href="http://help.mopub.com/customer/portal/articles/{% if network.name == "admob" %}274115-admob-revenue-reporting-setup{% else %}274260-inmobi-revenue-reporting-setup{% endif %}">(Learn more)</a>
+                    {% endif %}
+                </h2>
+        </legend>
+
+        <div>
+            <div class="login-credentials-message">
+                {% if reporting %}
+                Revenue reporting for {{ network.pretty_name }} is turned on.
+                {% else %}
+                MoPub can report your revenue and other data directly from {{ network.pretty_name }}. {% if network.name != "mobfox" %}MoPub uses your login credentials to retrieve the revenue data from {{ network.pretty_name }}.{% endif %}
+                {% endif %}    
+            </div>
+
+            {% if network.name != "mobfox" %}
+                <ul class="form_fields">
+                    <li>
+                    {{ login_form.username_str.label_tag }}
+                    {{ login_form.username_str }}
+                    <span id="username"></span>
+                    </li>
+
+                    <li>
+                    {{ login_form.password_str.label_tag }}
+                    {{ login_form.password_str }}
+                    <span id="password"></span>
+                    </li>
+
+                    {% if network.name == "admob" %}
+                    <li>
+                    {{ login_form.client_key.label_tag }}
+                    {{ login_form.client_key }}
+                    <span id="client_key"></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+
+            <div class="form-submit login-credentials-submit">
+                <a class="submit button">
+                    {% if network.name == "mobfox" %} 
+                    Turn on Reporting
+                    {% else %}
+                    Check and Save Credentials
+                    {% endif %}
+                </a>
+                <a class="cancel button">No Thanks</a>
+            </div>
+            <div class="form-submit login-credentials-settings hidden">
+                <a id="edit-login" style="cursor:pointer; margin:10px;">Change Username and Password</a>
+            </div>
+        </div>
+    </fieldset>
+    {% endif %}
+
+        <h2>App Targeting</h2>
+        <div>
+            <table class="inventory_table">
+                <thead>
+                    <tr>
+                        <td class="icon"></td>
+                        <td class="name"></td>
+                        <td class="name">
+                            Enabled
+                        </td>
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                        <td class="name">Ad Network ID</td>
+                        {% endif %}
+                        <td class="name">CPM</td>
+                        {% if reporting %}
+                        <th class="name">
+                            <div>
+                                <a id="copy-7-day" style="cursor:pointer">
+                                    <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
+                                </a>
+                            </div>
+                            <div>7-Day CPM</div>
+                        </th>
+                        <th class="stat">
+                            <div>
+                                <a id="copy-14-day" style="cursor:pointer">
+                                    <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
+                                </a>
+                            </div>
+                            <div>14-DayCPM</div>
+                        </th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                {% for app in apps %}
+                <tbody class="{% cycle 'alt' '' %}">
+                    <tr class="main app-targeting">
+                        <td class="icon">
+                            <div>
+                            <a href="/inventory/app/{{app.key_}}">
+                                <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
+                            </a>
+                            </div>
+                        </td>
+                        <td class="name">
+                            {{ app.name }} <span class="muted">({{ app.type }})</span>
+                        </td>
+                        <td class="text">
+                            <input class="all-adunits" type="checkbox" />
+                        </td>
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                        <td class="text">
+                            <div>
+                                <input name="app_{{ app.key }}-{{ network.name }}_pub_id" placeholder="{{ network.pretty_name }} Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-{{ network.name }}_pub_id" />
+                            </div>
+                        </td>
+                        {% endif %}
+                        <td class="text cpm-data" style="width:100px">
+                            <div class="cpm-input {% if not app.bid %}hidden{% endif %}">
+                                <input class="float bid app-level" type="text" value="{{ app.bid }}">
+                            </div>
+                            <div class="cpm-close editable{% if app.bid %} hidden{% endif %}">
+                                <span>
+                                    <b class="caret"></b>                            
+                                    <span class="editable-hidden">Set app CPM</span>
+                                </span>
+                            </div>    
+                        </td>
+                        {% if reporting %}
+                        <td>
+                            <a class="copy-7-day" style="color: orange; cursor:pointer">
+                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
+                                {{ app.seven_day_stats.cpm|currency }}
+                            </a>
+                        </td>
+                        <td>
+                            <a class="copy-14-day" style="color: orange; cursor:pointer;">
+                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
+                                {{ app.fourteen_day_stats.cpm|currency }}
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% for adunit in app.adunits %}
+                    <tr class="sub" style="height:33px">
+                        <td class="icon"></td>
+                        <td class="name">
+                            {{ adunit.name }}
+                        </td>
+                        <td class="text" style="height:20px">
+                            {{ adunit.adgroup_form.active }}
+                        </td>
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                        <td class="text adunit">
+                            {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                            <div>
+                                <div class="pub-id-input hidden">
+                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="adunit_{{ adunit.key }}-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
+                                    <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
+                                </div>
+                                <div class="pub-id-edit editable">
+                                    <span class="pub-id-value">{{ adunit.pub_id }}</span>
+                                    <b class="caret"></b>
+                                </div>                            
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td class="text cpm-data">
+                            <div class="cpm-edit editable{% if not app.bid %} hidden{% endif %}">
+                                <span class="cpm-value"></span>
+                                <b class="caret"></b>                            
+                            </div>           
+                            <div class="cpm-input{% if app.bid %} hidden{% endif %}">
+                                {{ adunit.adgroup_form.bid }}
+                            </div>
+                        </td>
+                        {% if reporting %}
+                        <td class="stat">
+                        </td>
+                        <td class="stat">
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}                
+                </tbody>
+            {% endfor %}
+            </table>
+        </div>
+    <div class="form-submit">
+        <a class="button" id="submit" href="#">Save</a>
+        <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
+    </div>
+</form>
+{% endblock content %}
+
+{% block extraScripts %}
+{% include_script "libs/bootstrap.min.js" %}
+{% include_script "controllers/networks" %}
+<script type="text/javascript">
+    $(function () {
+            EditNetworkController.initialize({
+                network_type: '{{ network.name }}',
+                pretty_name: '{{ network.pretty_name }}',
+                account_key: '{{ account_key }}',
+                adunits: [{% for app in apps %}
+                    {% for adunit in app.adunits %}['{{ app.key }}', '{{ adunit.key }}'],{% endfor %}
+                {% endfor %}],
+                priors: {{ adgroup_form.geo_predicates|field_value|to_json|safe }},
+                city_priors: {{ adgroup_form.cities|field_value|to_json|safe }},
+                login_state: {{ network.login_state }},
+                LoginStates: {{ LoginStates|safe }},
+            });
+    });
+</script>
+{% endblock extraScripts %}
+

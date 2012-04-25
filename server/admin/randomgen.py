@@ -7,9 +7,15 @@ import uuid
 from common.utils import date_magic
 import simplejson
 from account.query_managers import AccountQueryManager
+from advertiser.query_managers import AdGroupQueryManager
 from reporting.query_managers import StatsModelQueryManager
 
+<<<<<<< HEAD
 
+=======
+#
+## TODO: make imports explicit
+>>>>>>> master
 from registration.models import *
 from advertiser.models import *
 from publisher.models import *
@@ -17,8 +23,29 @@ from account.models import *
 from budget.models import *
 from reporting.models import *
 
+<<<<<<< HEAD
 
 ceiling = lambda x, y: x if x < y else y
+=======
+#
+## Imports to generate networks page data
+from common.constants import REPORTING_NETWORKS, \
+        NETWORKS_WITHOUT_REPORTING, \
+        NETWORKS, \
+        NETWORK_ADGROUP_TRANSLATION
+from advertiser.query_managers import CampaignQueryManager
+
+from ad_network_reports.models import AdNetworkLoginCredentials, \
+     AdNetworkAppMapper, \
+     AdNetworkStats, \
+     AdNetworkScrapeStats, \
+     AdNetworkNetworkStats, \
+     AdNetworkAppStats, \
+     LoginStates
+
+from ad_network_reports.query_managers import AdNetworkMapperManager, \
+        AdNetworkStatsManager
+>>>>>>> master
 
 ####
 #Configuration Parameters for data generation
@@ -27,6 +54,7 @@ ceiling = lambda x, y: x if x < y else y
 USERNAME = "test@mopub.com"
 PASSWORD = "test"
 
+<<<<<<< HEAD
 NUM_ACCOUNTS = 1
 NUM_APPS = 2
 NUM_ADUNITS = 10
@@ -35,9 +63,16 @@ NUM_CAMPAIGNS_PER_APP = 2
 NUM_CREATIVES_PER_ADGROUP = 20
 NUM_ADUNITS_PER_APP = 20
 NUM_ADGROUPS_PER_CAMPAIGN = 2
+=======
+NUM_ACCOUNTS = 1 #ONLY SUPPORT ONE ACCOUNT FOR NOW
+NUM_APPS = 2
+NUM_CAMPAIGNS_PER_APP = 1
+NUM_CREATIVES_PER_ADGROUP = 1
+NUM_ADUNITS_PER_APP = 2
+>>>>>>> master
 
+NETWORKS_TO_USE = ['admob', 'admob', 'millennial']
 APP_STATS_SINCE = datetime.datetime.now() - datetime.timedelta(days=14)
-
 
 ### End configuration parameters
 
@@ -189,6 +224,7 @@ def generate_budget():
     return budget
 
 
+<<<<<<< HEAD
 def generate_adgroup(campaign,
                      site_keys,
                      account,
@@ -225,6 +261,41 @@ def generate_adgroup(campaign,
                 "fillerid")
         a = AccountQueryManager()
         a.update_config_and_put(account,network_config)
+=======
+def generate_adgroup(site_keys,account,campaign=None,network=None):
+    if campaign:
+        if campaign.campaign_type=="network":
+            if network:
+                adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
+                        site_keys[0], account.key())
+                adgroup.put()
+                return adgroup
+            else:
+                network = select_rand(NETWORK_TYPES)
+
+            # Need to update account's network configuration if we add
+            # a network adgroup
+            if network in NETWORK_TYPE_TO_PUB_ID_ATTR.keys():
+                network_config = account.network_config
+                setattr(network_config,NETWORK_TYPE_TO_PUB_ID_ATTR[network],"fillerid")
+                a = AccountQueryManager()
+                a.update_config_and_put(account,network_config)
+
+        adgroup = AdGroup(campaign=campaign,
+                      network_type=network if campaign.campaign_type=="network" else None,
+                      bid_strategy=select_rand(BID_STRATEGIES),
+                      account=account,
+                      site_keys=site_keys,
+                      name=get_adgroup_name())
+
+    else:
+        adgroup = AdGroup(network_type=network,
+                          bid_strategy='cpm',
+                          account=account,
+                          site_keys=site_keys,
+                          name=get_adgroup_name())
+    adgroup.put()
+>>>>>>> master
 
     return adgroup
 
@@ -261,6 +332,11 @@ def generate_account(username=USERNAME,
                      network_config=None,
                      id=None):
 
+<<<<<<< HEAD
+=======
+def generate_account(username=USERNAME,password=PASSWORD,email=USERNAME,
+        marketplace_config=None,network_config=None,display_new_networks=False):
+>>>>>>> master
     if not marketplace_config:
         marketplace_config = MarketPlaceConfig()
         marketplace_config.put()
@@ -282,6 +358,7 @@ def generate_account(username=USERNAME,
     account.active = True
     account.marketplace_config = marketplace_config
     account.network_config = network_config
+    account.display_new_networks = display_new_networks
 
     account.put()
     return account
@@ -313,14 +390,20 @@ def generate_stats_model(publisher,advertiser,account,date):
     # This logic is in place to make the stats more realistic
     request_count = random.randint(0,10000)
     impression_count = int(random.random()*request_count)
+<<<<<<< HEAD
     click_count = int(random.random() *.1* impression_count)
     conversion_count = int(random.random() *.1* click_count)
     revenue = click_count*.5
+=======
+    click_count = int(random.random()*impression_count)
+    conversion_count = int(random.random()*click_count)
+    revenue = click_count*.002
+>>>>>>> master
 
     user_count = int(request_count*.75)
     request_user_count = user_count
-    impression_user_count =int(request_user_count*random.random())
-    click_user_count = int(impression_user_count *random.random())
+    impression_user_count =int(request_user_count * random.random())
+    click_user_count = int(impression_user_count * random.random())
 
     stats_model = StatsModel(publisher = publisher,
                              advertiser = advertiser,
@@ -495,3 +578,4 @@ def get_stats(day):
     
 if __name__=="__main__":
     main()
+

@@ -1,3 +1,7 @@
+/*
+ * @depends rickshaw.js
+ */
+
 Rickshaw.namespace('Rickshaw.Graph.MoPubHoverDetail');
 
 Rickshaw.Graph.MoPubHoverDetail = function(args) {

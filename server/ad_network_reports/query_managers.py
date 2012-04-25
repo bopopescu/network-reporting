@@ -31,21 +31,19 @@ from ad_network_reports.models import AdNetworkLoginCredentials, \
      MANAGEMENT_STAT_NAMES, \
      FAILED_LOGINS
 from common.utils.query_managers import CachedQueryManager
+from common.constants import REPORTING_NETWORKS
 from google.appengine.ext import db
-from publisher.query_managers import AppQueryManager, \
-        ALL_NETWORKS
+from publisher.query_managers import AppQueryManager
 
-AD_NETWORK_NAMES = {'admob': 'AdMob',
-                    'jumptap': 'JumpTap',
-                    'iad': 'iAd',
-                    'inmobi': 'InMobi',
-                    'mobfox': 'MobFox'}
+from reporting.models import StatsModel
 
 ADMOB = 'admob'
 IAD = 'iad'
 INMOBI = 'inmobi'
 MOBFOX = 'mobfox'
 MOBFOX_PRETTY = 'MobFox'
+
+# TODO: Refactor the shit out of this, OMG can't believe I wrote some of this
 
 # TODO: Figure out where to put this. Basically ad_network_reports
 # package helper functions.
@@ -161,7 +159,7 @@ class AdNetworkReportManager(CachedQueryManager):
         """
         creds = AdNetworkLoginCredentials.all().filter('account =', account)
         networks_with_creds = [cred.ad_network_name for cred in creds]
-        potential_networks = list(set(AD_NETWORK_NAMES.keys()) -
+        potential_networks = list(set(REPORTING_NETWORKS.keys()) -
                 set(networks_with_creds))
         for network in potential_networks:
             try:
@@ -172,8 +170,9 @@ class AdNetworkReportManager(CachedQueryManager):
                 yield network
 
 class AdNetworkLoginManager(CachedQueryManager):
+    # TODO: use get_by_key
     @classmethod
-    def get_login(cls,
+    def get_logins(cls,
                   account,
                   network=''):
         """
@@ -186,14 +185,17 @@ class AdNetworkLoginManager(CachedQueryManager):
 
     @classmethod
     def get_all_logins(cls,
+                       network=None,
                        order_by_account=False):
         """
         Return all AdNetworkLoginCredential entities (ordered by account if
         the order by account flag is set).
         """
         query = AdNetworkLoginCredentials.all()
+        if network:
+            query.filter('ad_network_name =', network)
         if order_by_account:
-            return query.order('account')
+            query.order('account')
         return query
 
     @classmethod
@@ -267,7 +269,7 @@ class AdNetworkMapperManager(CachedQueryManager):
         Return a generator of the AdNetworkAppMappers with this account.
         """
         for login in AdNetworkLoginManager. \
-                get_login(account):
+                get_logins(account):
             query = AdNetworkAppMapper.all().filter('ad_network_login =',
                     login)
             if network_name:
@@ -284,20 +286,14 @@ class AdNetworkMapperManager(CachedQueryManager):
 
     @classmethod
     def get_mapper(cls,
-                   mapper_key=None,
-                   publisher_id=None,
-                   ad_network_name=None):
-        """Keyword arguments: either an ad_network_app_mapper_key or a
-        publisher_id and login_credentials.
+                   pub_id,
+                   network):
+        return AdNetworkAppMapper.get_by_publisher_id(pub_id, network)
 
-        Return the corresponding AdNetworkAppMapper.
-        """
-        if mapper_key:
-            return AdNetworkAppMapper.get(mapper_key)
-        elif publisher_id and ad_network_name:
-            return AdNetworkAppMapper.get_by_publisher_id(publisher_id,
-                    ad_network_name)
-        return None
+    @classmethod
+    def get(cls,
+            mapper_key):
+        return AdNetworkAppMapper.get(mapper_key)
 
 class AdNetworkStatsManager(CachedQueryManager):
     @classmethod
@@ -348,11 +344,11 @@ class AdNetworkStatsManager(CachedQueryManager):
         for mapper, stats, sync_date in aggregate_stats_list:
             app = mapper.application
             if networks:
-                attr = AD_NETWORK_NAMES[mapper.ad_network_name]
+                attr = REPORTING_NETWORKS[mapper.ad_network_name]
                 name = app.full_name
             else:
                 attr = app.full_name
-                name = AD_NETWORK_NAMES[mapper.ad_network_name]
+                name = REPORTING_NETWORKS[mapper.ad_network_name]
             sub_data = {
                 'name': name,
                 'revenue': stats.revenue,
@@ -436,7 +432,7 @@ class AdNetworkStatsManager(CachedQueryManager):
 
         aggregate_stats.fill_rate_impressions = 0
         for stats in stats_iterable:
-            cls.combined_stats(aggregate_stats, stats)
+            aggregate_stats += stats
 
             if stats.attempts:
                 aggregate_stats.fill_rate_impressions += stats.impressions
@@ -444,16 +440,15 @@ class AdNetworkStatsManager(CachedQueryManager):
         return aggregate_stats
 
     @classmethod
-    def get_stats_list_for_mapper_and_days(cls,
-                                           ad_network_app_mapper_key,
-                                           days):
+    def get_stats_for_days(cls,
+                           mapper_key,
+                           days):
         """Filter AdNetworkScrapeStats for a given ad_network_app_mapper. Sort
         chronologically by day, newest first (decending order.)
 
         Return a list of stats sorted by date.
         """
-        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(
-                ad_network_app_mapper_key, days)
+        stats_list = AdNetworkScrapeStats.get_by_app_mapper_and_days(mapper_key, days)
         return sorted(stats_list, key=lambda stats: stats.date, reverse=True)
 
     @classmethod
@@ -558,7 +553,7 @@ class AdNetworkAggregateManager(CachedQueryManager):
         Return rolled up stats.
         """
         stats_list = []
-        for network in AD_NETWORK_NAMES.keys():
+        for network in REPORTING_NETWORKS.keys():
             stats = AdNetworkNetworkStats.get_by_network_and_day(
                             account,
                             network,
@@ -568,13 +563,28 @@ class AdNetworkAggregateManager(CachedQueryManager):
         return(AdNetworkStatsManager.roll_up_stats(stats_list))
 
 
+# TODO: refactor model naming: make it less verbose so shit like this won't
+# happen
+class AdNetworkNetworkStatsManager(CachedQueryManager):
+    @classmethod
+    def get_stats_for_days(cls, account, network, days):
+        return AdNetworkNetworkStats.get_by_network_and_days(account, network,
+                days)
+
+class AdNetworkAppStatsManager(CachedQueryManager):
+    @classmethod
+    def get_stats_for_days(cls, account, app, days):
+        return AdNetworkAppStats.get_by_app_and_days(account, app, days)
+
+# TODO: refactor model naming: make it less verbose so shit like this won't
+# happen
 class AdNetworkManagementStatsManager(CachedQueryManager):
     def __init__(self,
                  day,
                  assemble=False):
         self.day = day
         self.stats_dict = {}
-        for network in AD_NETWORK_NAMES.keys():
+        for network in REPORTING_NETWORKS.keys():
             if assemble:
                 self.stats_dict[network] = AdNetworkManagementStats. \
                         get_by_day(network, day)
@@ -622,7 +632,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
 
     def combined(self,
                  stats_manager):
-        for network in AD_NETWORK_NAMES.keys():
+        for network in REPORTING_NETWORKS.keys():
             for stat in (list(MANAGEMENT_STAT_NAMES) + [FAILED_LOGINS]):
                 setattr(self.stats_dict[network], stat, getattr(
                     self.stats_dict[network], stat) + getattr(
@@ -636,7 +646,7 @@ class AdNetworkManagementStatsManager(CachedQueryManager):
     def get_stats(cls,
                   days):
         management_stats = {}
-        for ad_network_name in AD_NETWORK_NAMES.keys():
+        for ad_network_name in REPORTING_NETWORKS.keys():
             management_stats[ad_network_name] = AdNetworkManagementStats. \
                     get_by_days(ad_network_name, days)
         return management_stats
@@ -677,7 +687,7 @@ def create_fake_data(account=None):
         app2.network_config = nc2
         app2.put()
 
-        networks = AD_NETWORK_NAMES.keys()[1:-2]
+        networks = REPORTING_NETWORKS.keys()[1:-2]
 
         for network in networks:
             login = AdNetworkLoginCredentials(account=account,
@@ -705,10 +715,10 @@ def create_fake_data(account=None):
         nc2.put()
 
         AdNetworkLoginCredentials(account=account,
-                ad_network_name=AD_NETWORK_NAMES.keys()[0],
+                ad_network_name=REPORTING_NETWORKS.keys()[0],
                 app_pub_ids=['hfehafa','aihef;iawh']).put()
         login = AdNetworkLoginCredentials(account=account,
-                ad_network_name=AD_NETWORK_NAMES.keys()[-1])
+                ad_network_name=REPORTING_NETWORKS.keys()[-1])
         login.put()
 
         for day in last_90_days:

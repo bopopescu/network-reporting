@@ -127,7 +127,7 @@ class AdUnitContextQueryManager(CachedQueryManager):
             for key in adunit_keys:
                 # For each adunit, spin up a TQ to ping the adserver
                 # admins with new data
-                task_name = 'adunit_context_push:%s' % key
+                task_name = 'adunit_context_push%s' % key
                 task = taskqueue.Task(url='/fetch_api/adunit_update_push',
                                       method='GET',
                                       name = task_name,

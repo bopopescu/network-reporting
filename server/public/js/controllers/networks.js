@@ -437,6 +437,15 @@ $(function() {
                 // copy over cpms for all apps
                 $('#copy-' + days).click(function() {
                     $('.inventory_table tbody').each(function() {
+                        // if global cpm is open close it
+                        if(!$('.global-cpm-input').is(':hidden')) {
+                            $('.global-cpm-input').hide();
+                            $('.global-cpm-close').show();
+
+                            $('.app-cpm-input').show();
+                            $('.app-cpm-close').hide();
+                        }
+
                         var cpm = parseFloat($(this).find('.copy-' + days).text().replace('$', '')).toString();
                         var input = $(this).find('tr.main .cpm-data input');
                         // change app level cpm
@@ -447,6 +456,15 @@ $(function() {
                     });
                 // copy over an individual app level cpm
                 $('.copy-' + days).click(function() {
+                    // if global cpm is open close it
+                    if(!$('.global-cpm-input').is(':hidden')) {
+                        $('.global-cpm-input').hide();
+                        $('.global-cpm-close').show();
+
+                        $('.app-cpm-input').show();
+                        $('.app-cpm-close').hide();
+                    }
+
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
                     var tbody = $(this).closest('tbody')
                     var input = tbody.find('tr.main .cpm-data input');

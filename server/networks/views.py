@@ -69,6 +69,8 @@ ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
 NETWORKS_WITH_PUB_IDS = set(['admob', 'brightroll', 'ejam', 'jumptap', \
         'millennial', 'mobfox', 'inmobi'])
 
+DEFAULT_BID = 0.05
+
 class NetworksHandler(RequestHandler):
     def get(self):
         """
@@ -311,10 +313,10 @@ class EditNetworkHandler(RequestHandler):
 
                 app.adunits.append(adunit)
             # Set app level bid
-            if min_cpm == max_cpm:
-                app.bid = max_cpm
-            elif not app.adunits or not campaign_key:
-                app.bid = 0.05
+            if app.adunits and min_cpm == max_cpm:
+                app.bid = min_cpm
+            elif app.adunits and not campaign_key:
+                app.bid = DEFAULT_BID
             else:
                 app.bid = None
 
@@ -324,6 +326,13 @@ class EditNetworkHandler(RequestHandler):
 
         # Sort apps
         apps = sorted(apps, key=lambda app_data: app_data.identifier)
+
+        logging.info([app.bid for app in apps])
+        if apps and reduce(lambda memo, app: app.bid if memo == app.bid else
+                False, apps, apps[0].bid):
+            network_data['bid'] = apps[0].bid
+        else:
+            network_data['bid'] = None
 
         return render_to_response(self.request,
                                   'networks/edit_network_form.html',

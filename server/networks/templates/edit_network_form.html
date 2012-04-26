@@ -359,7 +359,7 @@
                 </tr>
             </thead>
             <tbody class="global-settings">
-                <tr id="global-row" class="main sub">
+                <tr id="global-row" class="main sub global-row">
                     <td class="icon">
                     </td>
                     <td class="title">
@@ -390,7 +390,7 @@
                     </td>
                     {% endif %}
                     <td class="text">
-                        <div class="options-edit  editable{% if network.bid %} hidden{% endif %}">
+                        <div class="options-edit  editable">
                             None
                         </div>    
                     </td>
@@ -398,7 +398,7 @@
             </tbody>
             {% for app in apps %}
             <tbody class="{% cycle 'alt' '' %}">
-                <tr id="{{ app.key }}-row" class="main app-targeting">
+                <tr id="{{ app.key }}-row" class="main app-targeting app-row">
                     <td class="icon">
                         <div>
                         <a href="/inventory/app/{{app.key_}}">
@@ -424,7 +424,11 @@
                             <input class="float bid" type="text" value="{{ app.bid }}">
                         </div>
                         <div class="app-cpm-close editable{% if app.bid and not network.bid %} hidden{% endif %}">
+                            {% if network.bid %}
+                            {{ network.bid }}
+                            {% else %}
                             Set app CPM
+                            {% endif %}
                         </div>    
                     </td>
                     {% if reporting %}
@@ -442,13 +446,13 @@
                     </td>
                     {% endif %}
                     <td class="text">
-                        <div class="options-edit  editable{% if network.bid %} hidden{% endif %}">
+                        <div class="options-edit  editable">
                             None
                         </div>    
                     </td>
                 </tr>
                 {% for adunit in app.adunits %}
-                <tr id="{{ adunit.key }}-row" class="sub" style="height:33px">
+                <tr id="{{ adunit.key }}-row" class="sub adunit-row" style="height:33px">
                     <td class="icon"></td>
                     <td class="name">
                         {{ adunit.name }}
@@ -488,7 +492,7 @@
                     </td>
                     {% endif %}
                     <td class="text">
-                        <div class="options-edit editable{% if network.bid %} hidden{% endif %}">
+                        <div class="options-edit editable">
                             None
                         </div>    
                     </td>
@@ -508,7 +512,7 @@
     Hidden Options (Advanced Settings) forms that are put into dialogs
     {% endcomment %}
     <div class="hidden">
-        <fieldset id="global-options" class="dialog">
+        <fieldset id="global-options" class="dialog global-options">
             <h2> Options </h2>
             <ul class="form_fields">
                 <li>
@@ -536,57 +540,59 @@
             </ul>
         </fieldset>
         {% for app in apps %}
-        <fieldset id="{{ app.key }}-options" class="dialog">
-            <h2> Options </h2>
-            <ul class="form_fields">
-                <li>
-                <label for="id_{{ app.key }}-allocation_percentage">Allocation:</label>
-                <div>
-                    <input id="id_{{ app.key }}-allocation_percentage" type="text" class="float" value="100.0">
-                    % of all requests
-                </div>
-                </li>
-                <li>
-                <label for="id_{{ app.key }}-daily_frequency_cap">
-                    Frequency Caps:
-                </label>
-                <div>
+        <div>
+            <fieldset id="{{ app.key }}-options" class="dialog app-options">
+                <h2> Options </h2>
+                <ul class="form_fields">
+                    <li>
+                    <label for="id_{{ app.key }}-allocation_percentage">Allocation:</label>
                     <div>
-                        <input id="id_{{ app.key }}-daily_frequency_cap" type="text" class="float" value="">
-                        daily impressions per user
+                        <input id="id_{{ app.key }}-allocation_percentage" type="text" class="float" value="100.0">
+                        % of all requests
                     </div>
+                    </li>
+                    <li>
+                    <label for="id_{{ app.key }}-daily_frequency_cap">
+                        Frequency Caps:
+                    </label>
                     <div>
-                        <input id="id_{{ app.key }}-hourly_frequency_cap" type="text" class="float" value="">
-                        hourly impressions per user
+                        <div>
+                            <input id="id_{{ app.key }}-daily_frequency_cap" type="text" class="float" value="">
+                            daily impressions per user
+                        </div>
+                        <div>
+                            <input id="id_{{ app.key }}-hourly_frequency_cap" type="text" class="float" value="">
+                            hourly impressions per user
+                        </div>
                     </div>
-                </div>
-                </li>
-            </ul>
-        </fieldset>
-        {% for adunit in app.adunits %}
-        <fieldset id="{{ adunit.key }}-options" class="dialog">
-            <h2> Options </h2>
-            <ul class="form_fields">
-                <li>
-                {{ adunit.adgroup_form.allocation_percentage.label_tag }}
-                <div>
-                    {{ adunit.adgroup_form.allocation_percentage }} % of all requests
-                </div>
-                </li>
-                <li>
-                {{ adunit.adgroup_form.daily_frequency_cap.label_tag }}
-                <div>
+                    </li>
+                </ul>
+            </fieldset>
+            {% for adunit in app.adunits %}
+            <fieldset id="{{ adunit.key }}-options" class="dialog adunit-options">
+                <h2> Options </h2>
+                <ul class="form_fields">
+                    <li>
+                    {{ adunit.adgroup_form.allocation_percentage.label_tag }}
                     <div>
-                    {{ adunit.adgroup_form.daily_frequency_cap }} daily impressions per user
+                        {{ adunit.adgroup_form.allocation_percentage }} % of all requests
                     </div>
+                    </li>
+                    <li>
+                    {{ adunit.adgroup_form.daily_frequency_cap.label_tag }}
                     <div>
-                    {{ adunit.adgroup_form.hourly_frequency_cap }} hourly impressions per user
+                        <div>
+                        {{ adunit.adgroup_form.daily_frequency_cap }} daily impressions per user
+                        </div>
+                        <div>
+                        {{ adunit.adgroup_form.hourly_frequency_cap }} hourly impressions per user
+                        </div>
                     </div>
-                </div>
-                </li>
-            </ul>
-        </fieldset>
-        {% endfor %}
+                    </li>
+                </ul>
+            </fieldset>
+            {% endfor %}
+        </div>
         {% endfor %}
     </div>
 </form>

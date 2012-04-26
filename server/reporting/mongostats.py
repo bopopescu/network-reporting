@@ -9,6 +9,7 @@ import urllib2
 from google.appengine.ext import db
 
 from reporting.models import StatsModel
+import logging
 
 BASE_URL = 'http://mongostats.mopub.com/stats'
 DELIM = '||'
@@ -40,6 +41,7 @@ def api_fetch(start_date, end_date,
 
     all_stats = response_dict['all_stats'] # dictionary
 
+    logging.warn(all_stats)
     for key in all_stats:
         #
         # key e.g. agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw||agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYw5TmBAw||agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww pylint: disable=C0301

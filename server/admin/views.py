@@ -47,6 +47,10 @@ NUM_DAYS = 14
 BIDDER_SPENT_URL = "http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf"
 BIDDER_SPENT_MAX = 2000
 
+ADMIN_MONGO_ACCT = 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww'
+ADMIN_MONGO_PUB = 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww'
+ADMIN_MONGO_ADV = 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww'
+
 @staff_login_required
 @cache_page_until_post()
 def admin_switch_user(request,*args,**kwargs):
@@ -91,71 +95,76 @@ def dashboard_prep(request, *args, **kwargs):
     logging.warning('start_date: %s days :%s', start_date, days)
     days.remove(StatsModel.today())
 
-    apps = AppQueryManager.get_all_apps()
+    total_stats = StatsModelQueryManager(None, offline=False).get_stats_for_days(publisher=ADMIN_MONGO_PUB,
+                                                                                 account=ADMIN_MONGO_ACCT, 
+                                                                                 advertiser=ADMIN_MONGO_ADV, 
+                                                                                 days=days, use_mongo=True)
 
-    # get all the daily stats for the undeleted apps
-    # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
+    # apps = AppQueryManager.get_all_apps()
 
-    # accumulate individual site stats into daily totals
-    unique_apps = {}
-    totals = {}
+    # # get all the daily stats for the undeleted apps
+    # # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
 
-    for d in days:
-        dt = datetime.datetime(year=d.year,month=d.month,day=d.day)
-        totals[str(dt)] = StatsModel(date=dt)
-        totals[str(dt)].user_count = 0
+    # # accumulate individual site stats into daily totals
+    # unique_apps = {}
+    # totals = {}
 
-    # init the totals dictionary
-    def _incr_dict(d,k,v):
-        if not k in d:
-            d[k] = v
-        else:
-            d[k] += v
+    # for d in days:
+    #     dt = datetime.datetime(year=d.year,month=d.month,day=d.day)
+    #     totals[str(dt)] = StatsModel(date=dt)
+    #     totals[str(dt)].user_count = 0
 
-    # go and do it
-    for app in apps:
-        app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],days=days)
-        yesterday = app_stats[-1]
+    # # init the totals dictionary
+    # def _incr_dict(d,k,v):
+    #     if not k in d:
+    #         d[k] = v
+    #     else:
+    #         d[k] += v
 
-        for app_stat in app_stats:
-            # add this site stats to the total for the day and increment user count
-            if app_stat.date:
-                user_count = totals[str(app_stat.date)].user_count + 1
-                _incr_dict(totals,str(app_stat.date),app_stat)
-                totals[str(app_stat.date)].user_count = user_count
-            if app_stat._publisher:
-                _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
+    # # go and do it
+    # for app in apps:
+    #     app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=[app],days=days)
+    #     yesterday = app_stats[-1]
 
-        # Calculate a 1 day delta between yesterday and the day before that
-        if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher and app_stats[-3].request_count > 0:
-            unique_apps[str(app_stats[-2]._publisher)].requests_delta1day = \
-                float(app_stats[-2].request_count - app_stats[-3].request_count) / app_stats[-3].request_count
-        # % US for yesterday
-        unique_apps[str(app_stats[-2]._publisher)].percent_us = app_stats[-2].get_geo('US', 'request_count') / float(yesterday.request_count) if yesterday.request_count > 0 else 0
+    #     for app_stat in app_stats:
+    #         # add this site stats to the total for the day and increment user count
+    #         if app_stat.date:
+    #             user_count = totals[str(app_stat.date)].user_count + 1
+    #             _incr_dict(totals,str(app_stat.date),app_stat)
+    #             totals[str(app_stat.date)].user_count = user_count
+    #         if app_stat._publisher:
+    #             _incr_dict(unique_apps,str(app_stat._publisher),app_stat)
 
-        # get mpx revenue/cpm numbers
-        try:
-            stats_fetcher = MarketplaceStatsFetcher(yesterday.publisher.account.key())
-            mpx_stats = stats_fetcher.get_app_stats(str(yesterday._publisher), start_date, days[-1])
-            unique_apps[str(yesterday._publisher)].mpx_revenue = float(mpx_stats.get('revenue', 0.0))
-            unique_apps[str(yesterday._publisher)].mpx_impression_count = int(mpx_stats.get('impressions', 0))
-            request_total = float(sum(x.request_count for x in app_stats))
-            if request_total > 0:
-                unique_apps[str(yesterday._publisher)].mpx_clear_rate = int(mpx_stats.get('impressions', 0)) / request_total
-            else:
-                unique_apps[str(yesterday._publisher)].mpx_clear_rate = 0
-            unique_apps[str(yesterday._publisher)].mpx_cpm = mpx_stats.get('ecpm')
-        except MPStatsAPIException, e:
-            unique_apps[str(yesterday._publisher)].mpx_revenue = 0
-            unique_apps[str(yesterday._publisher)].mpx_impression_count = 0
-            unique_apps[str(yesterday._publisher)].mpx_clear_rate = 0
-            unique_apps[str(yesterday._publisher)].mpx_cpm = '-'
+    #     # Calculate a 1 day delta between yesterday and the day before that
+    #     if app_stats[-2].date and app_stats[-3].date and app_stats[-2]._publisher and app_stats[-3].request_count > 0:
+    #         unique_apps[str(app_stats[-2]._publisher)].requests_delta1day = \
+    #             float(app_stats[-2].request_count - app_stats[-3].request_count) / app_stats[-3].request_count
+    #     # % US for yesterday
+    #     unique_apps[str(app_stats[-2]._publisher)].percent_us = app_stats[-2].get_geo('US', 'request_count') / float(yesterday.request_count) if yesterday.request_count > 0 else 0
 
-    # organize daily stats by date
-    total_stats = totals.values()
-    total_stats.sort(lambda x,y: cmp(x.date,y.date))
-    apps = unique_apps.values()
-    apps.sort(lambda x,y: cmp(y.request_count, x.request_count))
+    #     # get mpx revenue/cpm numbers
+    #     try:
+    #         stats_fetcher = MarketplaceStatsFetcher(yesterday.publisher.account.key())
+    #         mpx_stats = stats_fetcher.get_app_stats(str(yesterday._publisher), start_date, days[-1])
+    #         unique_apps[str(yesterday._publisher)].mpx_revenue = float(mpx_stats.get('revenue', 0.0))
+    #         unique_apps[str(yesterday._publisher)].mpx_impression_count = int(mpx_stats.get('impressions', 0))
+    #         request_total = float(sum(x.request_count for x in app_stats))
+    #         if request_total > 0:
+    #             unique_apps[str(yesterday._publisher)].mpx_clear_rate = int(mpx_stats.get('impressions', 0)) / request_total
+    #         else:
+    #             unique_apps[str(yesterday._publisher)].mpx_clear_rate = 0
+    #         unique_apps[str(yesterday._publisher)].mpx_cpm = mpx_stats.get('ecpm')
+    #     except MPStatsAPIException, e:
+    #         unique_apps[str(yesterday._publisher)].mpx_revenue = 0
+    #         unique_apps[str(yesterday._publisher)].mpx_impression_count = 0
+    #         unique_apps[str(yesterday._publisher)].mpx_clear_rate = 0
+    #         unique_apps[str(yesterday._publisher)].mpx_cpm = '-'
+
+    # # organize daily stats by date
+    # total_stats = totals.values()
+    # total_stats.sort(lambda x,y: cmp(x.date,y.date))
+    # apps = unique_apps.values()
+    # apps.sort(lambda x,y: cmp(y.request_count, x.request_count))
 
     # get folks who want to be on the mailing list
     new_users = Account.gql("where date_added >= :1 order by date_added desc", start_date).fetch(1000)
@@ -177,8 +186,8 @@ def dashboard_prep(request, *args, **kwargs):
             impression_count=sum([x.impression_count for x in total_stats]),
             click_count=sum([x.click_count for x in total_stats]),
             user_count=max([x.user_count for x in total_stats])),
-        "apps": apps,
-        "unique_apps": unique_apps,
+        "apps": None,
+        "unique_apps": None,
         "new_users": new_users,
         "mailing_list": mail}
 

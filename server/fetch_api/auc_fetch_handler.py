@@ -71,7 +71,9 @@ class AUCUserPushFanOutHandler(webapp.RequestHandler):
                                   params={'adunit_key':key})
             try:
                 queue.add(task)
-            except:
+            except taskqueue.BadTaskStateError, e:
+                logging.warning("%s already exists" % task)
+            except taskqueue.DuplicateTaskNameError, e:
                 logging.warning("%s already exists" % task)
 
 

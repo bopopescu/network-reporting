@@ -39,7 +39,17 @@ class AdUnitAdGroupForm(forms.ModelForm):
             raise forms.ValidationError("Bid must be greather than zero")
         return bid
 
+    def clean_allocation_percentage(self):
+        allocation_percentage = self.cleaned_data.get('allocation_percentage', None)
+        if (not isinstance(allocation_percentage, int) and
+            not isinstance(allocation_percentage, float)):
+            allocation_percentage = 100
+        return allocation_percentage
+
     class Meta:
         model = AdGroup
         fields = ('bid',
-                  'active')
+                  'active',
+                  'allocation_percentage',
+                  'daily_frequency_cap',
+                  'hourly_frequency_cap')

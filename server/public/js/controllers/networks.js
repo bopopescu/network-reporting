@@ -835,7 +835,6 @@ $(function() {
                 var key = $(row).attr('id').replace('-row', '');
                 var modal_div = $('#' + key +'-options');
                 var app_div = $(modal_div).parent();
-                console.log(app_div);
                 // open the correct dialog form
                 $(modal_div).show();
                 $(modal_div).modal('show');

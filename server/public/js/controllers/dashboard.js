@@ -122,6 +122,10 @@ var mopub = mopub || {};
         Toast.error(message, "Error fetching app data.");
     };
 
+    /*
+     * Records an event in all of the metrics tracking services we
+     * use.
+     */
     function record_metric (name, args) {
         try {
             _kmq.push(['record', name, args]);
@@ -221,10 +225,12 @@ var mopub = mopub || {};
     }
 
 
-    // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
-    // The object is in the form that we normally expect from the server.
-    // The new keys and values are set on the object in place, so nothing
-    // is returned.
+    /* 
+     * Calculates conversion rate, cpm, ctr, and fill_rate for an object.
+     * The object is in the form that we normally expect from the server.
+     * The new keys and values are set on the object in place, so nothing
+     * is returned.
+     */
     function calculate_stats(obj) {
         obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
         obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
@@ -232,35 +238,61 @@ var mopub = mopub || {};
         obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
     }
 
+    /*
+     * Pads an integer <10 with a 0 on the left. Used for making dates.
+     */
     function pad(integer) {
         return integer < 10 ? '0' + integer : integer;
     }
 
+    /*
+     * Converts a string date to a javascript date object.
+     */
     function string_to_date(date_string) {
         var parts = date_string.split('-');
         return new Date(parts[0], parts[1] - 1, parts[2]);
     }
 
+    /*
+     * Converts a javascript date object to a string in the format we
+     * like, "YYYY-MM-DD"
+     */
     function date_to_string(date) {
         return date.getFullYear() + '-' +
             (date.getMonth() + 1) + '-' +
             date.getDate();
     }
 
+    /*
+     * Converts a pretty date string ("03/08/1987") to a javascript
+     * date object.
+     */
     function pretty_string_to_date(date_string) {
         var parts = date_string.split('/');
         return new Date(parts[2], parts[0] - 1, parts[1]);
     }
 
+    /*
+     * Converts a javascript date object to a pretty date string
+     * e.g.  ("03/08/1987")
+     */
     function date_to_pretty_string(date) {
         return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear();
     }
 
+    /*
+     * Converts a date hour string ("03-08-1987-13") to a javascript
+     * date object.
+     */
     function string_to_date_hour(date_string) {
         var parts = date_string.split('-');
         return new Date(parts[0], parts[1] - 1, parts[2], parts[3]);
     }
 
+    /*
+     * Converts a javascript date object to a date hour string.
+     * e.g. "
+     */
     function date_hour_to_string(date) {
         return date.getFullYear() +
             '-' + (date.getMonth() + 1) +
@@ -268,6 +300,12 @@ var mopub = mopub || {};
             '-' + date.getHours();
     }
 
+    /*
+     * Returns a list of the charts that we're going to display. 
+     * Right now this just returns a hard-coded list, but in the 
+     * future this could come from user defined settings that are
+     * stored in a cookie.
+     */
     function get_charts() {
         return ['rev', 'imp', 'clk', 'ctr'];
     }
@@ -318,6 +356,7 @@ var mopub = mopub || {};
         // renders a new one, so we have to do it manually.
         $(element).html('');
 
+        // If the graph has few points, make the graph rigid. 
         var graph_tension = all_chart_data[0].length > 7 ? 0.8 : 1.0;
 
         // Create the new chart with our series data

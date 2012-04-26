@@ -1,17 +1,18 @@
-/*
- * # MoPub Dashboard
- */
-
+// Load the mopub global.
+// **REFACTOR**: modularization
 var mopub = mopub || {};
 
 (function($, Backbone, _){
 
     /*
-     * Settings
+     * ## Settings
+     * Define global settings that are used throughout the module.
      */
 
+    
+    // the origin for the stats service
+    var URL = 'http://localhost:8888/';
     var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
-    //var URL = 'http://localhost:8888/';
 
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
@@ -47,6 +48,7 @@ var mopub = mopub || {};
         'rev': 'Revenue'
     };
 
+    // Columns to display when the advertiser table has been expanded.
     var ADVERTISER_COLUMNS = [
         'rev',
         'imp',
@@ -58,12 +60,15 @@ var mopub = mopub || {};
         'conv_rate'
     ];
 
+    // Columns to display when the advertiser table is first loaded,
+    // before expansion.
     var ADVERTISER_DEFAULT_COLUMNS = [
         'rev',
         'imp',
         'clk'
     ];
 
+    // Columns to display when the publisher table has been expanded.
     var PUBLISHER_COLUMNS = [
         'rev',
         'imp',
@@ -77,12 +82,15 @@ var mopub = mopub || {};
         'req'
     ];
 
+    // Columns to display when the publisher table is first loaded,
+    // before expansion.
     var PUBLISHER_DEFAULT_COLUMNS = [
         'rev',
         'imp',
         'clk'
     ];
 
+    // Columns that can be sorted on in either table.
     var SORTABLE_COLUMNS = [
         'attempts',
         'clk',
@@ -92,27 +100,26 @@ var mopub = mopub || {};
         'rev'
     ];
 
+    // Max number of rows to display per model on page load, 
+    // before either table has been expanded.
     var MAX_CAMPAIGNS = 6;
     var MAX_APPS = 12;
     var MAX_ADUNITS = 6;
 
+    // Width and height of the charts.
+    // *Note:* these are kept in the CSS as well. They'll also
+    // need to be changed if you want to adjust the chart size.
     var WIDTH = 500;
     var HEIGHT = 125;
 
-    var MARGIN_TOP = 10;
-    var MARGIN_RIGHT = 30;
-    var MARGIN_BOTTOM = 15;
-    var MARGIN_LEFT = 50;
 
     /*
-     * Helper functions
+     * ## Helper functions
      */
 
-    /*
-     * Pops up a growl-style message when something has
-     * gone wrong fetching data. Use this to catch 500/503
-     * errors from the server.
-     */
+     // Pops up a growl-style message when something has
+     // gone wrong fetching data. Use this to catch 500/503
+     // errors from the server.
     var toast_error = function () {
         var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){
@@ -122,10 +129,9 @@ var mopub = mopub || {};
         Toast.error(message, "Error fetching app data.");
     };
 
-    /*
-     * Records an event in all of the metrics tracking services we
-     * use.
-     */
+    
+    // Records an event in all of the metrics tracking services we
+    // use.
     function record_metric (name, args) {
         try {
             _kmq.push(['record', name, args]);
@@ -140,11 +146,10 @@ var mopub = mopub || {};
         }
     }
 
-    /*
-     * Gets a date string (MM/DD) from a datapoint object with a
-     * stringified date or hour field (like the one we'd get
-     * in a response from the stats service).
-     */
+
+    // Gets a date string (MM/DD) from a datapoint object with a
+    // stringified date or hour field (like the one we'd get
+    // in a response from the stats service).
     function get_date_from_datapoint(datapoint) {
         var timeslice = null;
         if (datapoint.hasOwnProperty('hour')) {
@@ -158,11 +163,10 @@ var mopub = mopub || {};
     }
 
 
-    /*
-     * Formats a number for display based on a property name.
-     * Currency will get a $, percentages will get a %. All numbers
-     * will be formatted with commas and KMBT.
-     */
+
+    // Formats a number for display based on a property name.
+    // Currency will get a $, percentages will get a %. All numbers
+    // will be formatted with commas and KMBT.
     function format_stat(stat, value) {
         switch (stat) {
           case 'attempts':
@@ -183,12 +187,10 @@ var mopub = mopub || {};
         }
     }
 
-    /*
-     * Formats a number in KMBT (thousands, millions,
-     * billions, trillions) formatting.
-     *
-     * Example: 1000000 -> 1M, 1230000000 -> 12.3B
-     */
+
+    // Formats a number in KMBT (thousands, millions,
+    // billions, trillions) formatting.
+    // Example: 1000000 -> 1M, 1230000000 -> 12.3B
     function format_kmbt(number, with_decimal) {
 
         if (with_decimal === undefined) {
@@ -201,8 +203,9 @@ var mopub = mopub || {};
             return number;
         }
 
-        //var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
-        var endings = ['', 'K', 'M', 'B', 'T'];
+        // Qd/Qn/Sx are there for when our customers are making
+        // this much money in the future.
+        var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
 
         var with_commas = mopub.Utils.formatNumberWithCommas(number);
         var parts = with_commas.split(',');
@@ -225,12 +228,11 @@ var mopub = mopub || {};
     }
 
 
-    /* 
-     * Calculates conversion rate, cpm, ctr, and fill_rate for an object.
-     * The object is in the form that we normally expect from the server.
-     * The new keys and values are set on the object in place, so nothing
-     * is returned.
-     */
+
+    // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
+    // The object is in the form that we normally expect from the server.
+    // The new keys and values are set on the object in place, so nothing
+    // is returned.
     function calculate_stats(obj) {
         obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
         obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
@@ -238,61 +240,53 @@ var mopub = mopub || {};
         obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
     }
 
-    /*
-     * Pads an integer <10 with a 0 on the left. Used for making dates.
-     */
+
+    // Pads an integer <10 with a 0 on the left. Used for making dates.
     function pad(integer) {
         return integer < 10 ? '0' + integer : integer;
     }
 
-    /*
-     * Converts a string date to a javascript date object.
-     */
+    // Converts a string date to a javascript date object.
     function string_to_date(date_string) {
         var parts = date_string.split('-');
         return new Date(parts[0], parts[1] - 1, parts[2]);
     }
 
-    /*
-     * Converts a javascript date object to a string in the format we
-     * like, "YYYY-MM-DD"
-     */
+
+    // Converts a javascript date object to a string in the format we
+    // like, "YYYY-MM-DD"
     function date_to_string(date) {
         return date.getFullYear() + '-' +
             (date.getMonth() + 1) + '-' +
             date.getDate();
     }
 
-    /*
-     * Converts a pretty date string ("03/08/1987") to a javascript
-     * date object.
-     */
+
+    // Converts a pretty date string ("03/08/1987") to a javascript
+    // date object.
     function pretty_string_to_date(date_string) {
         var parts = date_string.split('/');
         return new Date(parts[2], parts[0] - 1, parts[1]);
     }
 
-    /*
-     * Converts a javascript date object to a pretty date string
-     * e.g.  ("03/08/1987")
-     */
+    
+    // Converts a javascript date object to a pretty date string
+    // e.g.  ("03/08/1987")     
     function date_to_pretty_string(date) {
         return pad(date.getMonth() + 1) + '/' + pad(date.getDate()) + '/' + date.getFullYear();
     }
 
-    /*
-     * Converts a date hour string ("03-08-1987-13") to a javascript
-     * date object.
-     */
+    
+    // Converts a date hour string ("03-08-1987-13") to a javascript
+    // date object.     
     function string_to_date_hour(date_string) {
         var parts = date_string.split('-');
         return new Date(parts[0], parts[1] - 1, parts[2], parts[3]);
     }
 
-    /*
-     * Converts a javascript date object to a date hour string.
-     * e.g. "
-     */
+    
+    // Converts a javascript date object to a date hour string.
+    // e.g. "2012-10-29-22"     
     function date_hour_to_string(date) {
         return date.getFullYear() +
             '-' + (date.getMonth() + 1) +
@@ -300,32 +294,34 @@ var mopub = mopub || {};
             '-' + date.getHours();
     }
 
-    /*
-     * Returns a list of the charts that we're going to display. 
-     * Right now this just returns a hard-coded list, but in the 
-     * future this could come from user defined settings that are
-     * stored in a cookie.
-     */
-    function get_charts() {
-        return ['rev', 'imp', 'clk', 'ctr'];
+    // obvious
+    function get_today() {
+        var now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
     }
 
 
     /*
-     * Create a new chart using Rickshaw/d3.
-     *
-     * `series` is the type of series we're representing (e.g. 'rev',
-     * 'imp', 'clk') and is used for formatting axes and tooltips.
-     *
-     * `element` is the name of the element (e.g. '#chart') to render
-     * the chart in. The chart will be rendered when the function is
-     * called.
-     *
-     * `account_data` is all of the data you get back from a query.
-     *
-     * `options` is not currently used, but will be used in the future
-     * to specify stuff like height, width, and other rendering options.
+     * ## Chart creation
      */
+    
+    // Returns a list of the charts that we're going to display. 
+    // Right now this just returns a hard-coded list, but in the 
+    // future this could come from user defined settings that are
+    // stored in a cookie.     
+    function get_charts() {
+        return ['rev', 'imp', 'clk', 'ctr'];
+    }
+
+    // Create a new chart using Rickshaw/d3.
+    // `series` is the type of series we're representing (e.g. 'rev',
+    // 'imp', 'clk') and is used for formatting axes and tooltips.
+    // `element` is the name of the element (e.g. '#chart') to render
+    // the chart in. The chart will be rendered when the function is
+    // called.
+    // `account_data` is all of the data you get back from a query.
+    // `options` is not currently used, but will be used in the future
+    // to specify stuff like height, width, and other rendering options.
     function createChart(series, element, account_data, options) {
         var all_chart_data = _.map(account_data, function(range, i){
             var stroke;
@@ -438,27 +434,27 @@ var mopub = mopub || {};
         date_to_string: date_to_string,
     };
 
+
+    /*
+     * ## Dashboard controller
+     */
+
     var DashboardController = {
         initializeDashboard: function(bootstrapping_data) {
-            /**
-             * @param {object} bootstrapping_data: {
-             *     account: account key,
-             *     names: {
-                       key: name
-             *     }
-             * }
-             */
 
-            // Set up JSONP. We calculate derivative stats upon every
-            // query response.
+            // Set up JSONP for accessing data from the stats services.
+            // We calculate derivative stats (ctr, fill, conversion
+            // rate, etc) upon every query response for all datapoints.
             $.jsonp.setup({
                 callbackParameter: "callback",
                 dataFilter: function (json) {
+
                     _.each(['sum', 'vs_sum'], function (key) {
                         _.each(json[key], function (obj) {
                             calculate_stats(obj);
                         });
                     });
+
                     _.each(['daily', 'hourly', 'vs_daily', 'vs_hourly', 'top', 'vs_top'], function (key) {
                         _.each(json[key], function (list) {
                             _.each(list, function (obj) {
@@ -466,13 +462,18 @@ var mopub = mopub || {};
                             });
                         });
                     });
+
                     return json;
                 },
                 error: toast_error,
                 url: URL
             });
 
-
+            // Looks at the publisher or advertiser table rows that
+            // have been selected and pulls out the corresponding
+            // object id's. This is often used for getting a list of
+            // id's to query for.  `type` is one of: `'source'`,
+            // `'campaign'`, `'app'`, `'adunit'`
             function get_keys(type) {
                 if(((type == 'source' || type == 'campaign') &&
                     !$('tr.source.selected, tr.campaign.selected')) ||
@@ -489,12 +490,17 @@ var mopub = mopub || {};
                 });
             }
 
+            // When we do comparisons, we need to know whether we're comparing
+            // ad sources or individual campaigns (and in the future, individual
+            // adgroups and creatives). This function figures that out.
             function get_advertiser_type() {
                 // if nothing is checked, return null
                 if($('tr.selected', 'table#advertiser').length === 0) {
                     return null;
                 }
-
+                
+                // if any individual campaigns have been checked, 
+                // they're comparing campaigns.
                 var use_source = true;
                 $('tr.source', 'table#advertiser').each(function (index, source) {
                     if(!$(source).hasClass('selected')) {
@@ -505,6 +511,7 @@ var mopub = mopub || {};
                         });
                     }
                 });
+
                 if(use_source) {
                     return 'source';
                 }
@@ -512,12 +519,15 @@ var mopub = mopub || {};
                 return 'campaign';
             }
 
+            // Same deal as with `get_advertiser_type`, but for apps and adunits
             function get_publisher_type() {
                 // if nothing is checked, return null
                 if($('tr.selected', 'table#publisher').length === 0) {
                     return null;
                 }
 
+                // if any individual adunits have been checked, 
+                // they're comparing adunits.
                 var use_app = true;
                 $('tr.app', 'table#publisher').each(function (index, app) {
                     if(!$(app).hasClass('selected')) {
@@ -535,6 +545,8 @@ var mopub = mopub || {};
                 return 'adunit';
             }
 
+            // Generates a query from what's been selected in the
+            // advertiser table.
             function get_advertiser_query(advertiser) {
                 var query = {};
                 if(advertiser) {
@@ -543,6 +555,8 @@ var mopub = mopub || {};
                 return query;
             }
 
+            // Generates a query from what's been selected in the
+            // publisher table.
             function get_publisher_query(publisher) {
                 var query = {};
                 if(publisher) {
@@ -551,7 +565,10 @@ var mopub = mopub || {};
                 return query;
             }
 
-            /* Templates */
+
+            /*
+             * ## Templating
+             */            
             var filter_body_row = _.template($('#filter_body_row').html());
             var names = bootstrapping_data.names;
 
@@ -754,7 +771,9 @@ var mopub = mopub || {};
                 });
             }
 
-            /* Tables */
+            /*
+             * ## Tables
+             */
             function update_advertiser_table(data, publisher_query, order) {
                 var selected = _.map($('tr.selected', '#advertiser'), function (tr) { return tr.id; });
 
@@ -977,10 +996,7 @@ var mopub = mopub || {};
             /**
              * @return {Date} today's date with time zero
              */
-            function get_today() {
-                var now = new Date();
-                return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            }
+
 
             /**
              * @param {string} start_end 'today', 'yesterday', 'last_7_days',
@@ -1591,11 +1607,9 @@ var mopub = mopub || {};
             });
 
 
-            /**
-             * SETUP
+            /*
+             * ## Page setup
              */
-
-            /* Tables */
             var filter_header_row = _.template($('#filter_header_row').html());
             $('thead', $advertiser_table).html(filter_header_row({
                 title: 'Campaigns and AdGroups',

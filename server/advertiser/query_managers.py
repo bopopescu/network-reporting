@@ -2,7 +2,7 @@ import logging
 import random
 
 from google.appengine.api import memcache
-from google.appengine.ext import db
+from google.appengine.ext import db, deferred
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
@@ -20,7 +20,6 @@ from advertiser.models import Campaign, AdGroup, \
 
 from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-from budget.query_managers import BudgetQueryManager
 
 import copy
 
@@ -241,20 +240,17 @@ class CampaignQueryManager(QueryManager):
     @classmethod
     @wraps_first_arg
     def put(cls, campaigns):
+        from budget.query_managers import BudgetQueryManager
+
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
 
-        # Put campaigns so if they're new they have a key
+        # Save campaigns.
         put_response = db.put(campaigns)
 
-        # They need a key because this QM needs the key
-        for camp in campaigns:
-            budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
-            camp.budget_obj = budg_obj
-
-        # Put them again so they save their budget obj
-        put_response = db.put(campaigns)
-
+        # Update campaign budgets asynchronously using the deferred Task Queue.
+        campaign_keys = [campaign.key() for campaign in campaigns]
+        deferred.defer(BudgetQueryManager.update_or_create_budgets_for_campaign_keys, campaign_keys)
 
         # Clear cache
         adunits = []

@@ -21,7 +21,7 @@ class AdUnitAdGroupForm(forms.ModelForm):
     active = forms.BooleanField(label='Active:', required=False)
 
     # Advanced settings available under more options in edit network form
-    allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
+    allocation_percentage = forms.FloatField(initial='', label='Allocation:',
                                              required=False,
                                              widget=forms.TextInput(
                                                  attrs={'class': 'float'}))

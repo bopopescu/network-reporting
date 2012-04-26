@@ -828,12 +828,29 @@ $(function() {
                 $('.app-cpm-close').show();
             });
 
-            // Options form
-            $('.advanced-options-edit').click(function () {
+            // Options forms
+            $('.options-edit').click(function () {
+                var options_edit = $(this);
                 var key = $(this).closest('tr').attr('id').replace('-row', '');
+                var fieldset = $('#' + key +'-options');
                 // open the correct dialog form
-                $('#' + key +'-options').dialog({
-                    buttons: { "Done": function() { $(this).dialog('close');} },
+                $(fieldset).dialog({
+                    buttons: { "Done": function() { 
+                        var fields = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
+                            ['hourly_frequency_cap', '/h']]);
+                        var text = '';
+                        _.each(fields, function(field) {
+                            var field_name = field[0];
+                            var field_term = field[1];
+                            var value = $(fieldset).find('input[id$=' + field_name + ']').val();
+                            if(value != undefined && value != '') {
+                                text += value + field_term;
+                            }
+                        });
+                        $(options_edit).text(text);
+
+                        $(this).dialog('close');
+                        } },
                     width: 500
                 });
             });

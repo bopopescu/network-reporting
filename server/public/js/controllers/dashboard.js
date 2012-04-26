@@ -9,11 +9,13 @@ var mopub = mopub || {};
      * Define global settings that are used throughout the module.
      */
 
-    
-    // the origin for the stats service
-    var URL = 'http://localhost:8888/';
-    var URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+    var DEBUG = false;
 
+    // the origin for the stats service
+    var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888';
+    var STATS_SERVICE_URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+    var URL = DEBUG ? LOCAL_STATS_SERVICE_URL : STATS_SERVICE_URL;
+    
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [

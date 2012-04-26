@@ -447,7 +447,7 @@ $(function() {
                         }
 
                         var cpm = parseFloat($(this).find('.copy-' + days).text().replace('$', '')).toString();
-                        var input = $(this).find('tr.main .cpm-data input');
+                        var input = $(this).find('.app-cpm-input input');
                         // change app level cpm
                         input.val(cpm);
                         // change adunit level cpm
@@ -467,7 +467,7 @@ $(function() {
 
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
                     var tbody = $(this).closest('tbody')
-                    var input = tbody.find('tr.main .cpm-data input');
+                    var input = tbody.find('.app-cpm-input input');
                     // change app level cpm
                     input.val(cpm);
                     input.keyup();
@@ -722,7 +722,7 @@ $(function() {
 
             /* Setting CPM */
             // adunit level
-            $('.cpm-data input').keyup(function() {
+            $('.cpm-input input').keyup(function() {
                 var value = $(this).val();
                 var td = $(this).closest('td');
                 $(td).find('.cpm-value').text(value);
@@ -833,99 +833,114 @@ $(function() {
                 var options_edit = $(this);
                 var row = $(this).closest('tr');
                 var key = $(row).attr('id').replace('-row', '');
-                var fieldset = $('#' + key +'-options');
-                var app_div = $(fieldset).closest('div');
+                var modal_div = $('#' + key +'-options');
+                var app_div = $(modal_div).parent();
+                console.log(app_div);
                 // open the correct dialog form
-                $(fieldset).dialog({
-                    buttons: { "Save": function() { 
-                        var fields = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
-                            ['hourly_frequency_cap', '/h']]);
-                        var values = [];
-                        var text = '';
-                        _.each(fields, function(field) {
-                            var field_name = field[0];
-                            var field_term = field[1];
-                            var value = $(fieldset).find('input[id$=' + field_name + ']').val();
-                            values.push(value);
-                            if(value != undefined && value != '') {
-                                text += value + field_term;
+                $(modal_div).show();
+                $(modal_div).modal('show');
+                //$(modal_div).modal();
+
+                $(modal_div).find('.save').click(function() { 
+                    var fields = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
+                        ['hourly_frequency_cap', '/h']]);
+                    var values = [];
+                    var text = '';
+                    _.each(fields, function(field) {
+                        var field_name = field[0];
+                        var field_term = field[1];
+                        var value = $(modal_div).find('input[id$=' + field_name + ']').val();
+                        values.push(value);
+                        if(value != undefined && value != '') {
+                            text += value + field_term;
+                        }
+                    });
+                    if(!text) {
+                        text = "None"
+                    }
+
+                    function check_global(global_text, global_values) {
+                        // global_text and global_values are candidates for global values
+                        var all_equal = true;
+                        // check if all apps are the same
+                        $('.app-row .options-edit').each(function() {
+                            if(text != $(this).text()) {
+                                all_equal = false;
                             }
                         });
-                        if(!text) {
-                            text = "None"
+
+                        if(!all_equal) {
+                            global_text = 'Set global options';
+                            global_values = ['','',''];
                         }
+                        
+                        $('.global-row .options-edit').text(global_text);
+                        // Clear global fields
+                        _.each(_.zip(fields, global_values), function(field) {
+                            var field_name = field[0][0];
+                            var value = field[1];
+                            $('div#global-options').find('input[id$=' + field_name + ']').val(value);
+                        });
+                    }
 
-                        function check_global(global_text, global_values) {
-                            $('.global-row .options-edit').text("None");
-                            // Clear global fields
-                            _.each(_.zip(fields, global_values), function(field) {
-                                var field_name = field[0][0];
-                                var value = field[1];
-                                $('fieldset#global-options').find('input[id$=' + field_name + ']').val(value);
-                            });
-                        }
+                    if($(row).hasClass('adunit-row')) {
+                        // adunit level
+                        $(options_edit).text(text);
 
-                        if($(row).hasClass('adunit-row')) {
-                            // adunit level
-                            $(options_edit).text(text);
-
-                            var all_equal = true;
-                            $(row).closest('tbody').find('.adunit-row .options-edit').each(function() {
-                                if(text != $(this).text()) {
-                                    all_equal = false;
-                                }
-                            });
-
-                            // perculate up
-                            if(all_equal) {
-                                $(row).closest('tbody').find('.app-row .options-edit').text(text);
-                                // Clear app fields
-                                _.each(_.zip(fields, values), function(field) {
-                                    var field_name = field[0][0];
-                                    var value = field[1];
-                                    $(app_div).find('.app-options input[id$=' + field_name + ']').val(value);
-                                });
-
-                                // perculate up
-                                check_global(text, values);
-                            } else {
-                                $(row).closest('tbody').find('.app-row .options-edit').text('None');
-                                // Clear app fields
-                                _.each(fields, function(field) {
-                                    var field_name = field[0];
-                                    $(app_div).find('.app-options input[id$=' + field_name + ']').val('');
-                                });
-
-                                // perculate up
-                                check_global('None', ['','','']);
+                        var all_equal = true;
+                        $(row).closest('tbody').find('.adunit-row .options-edit').each(function() {
+                            if(text != $(this).text()) {
+                                all_equal = false;
                             }
+                        });
+
+                        if(all_equal) {
+                            var app_text = text;
+                            var app_values = values;
                         } else {
-                            if($(row).hasClass('global-row')) {
-                                // global level
-                                var selector = $(fieldset).parent().parent();
-                                $('.inventory_table').find('.options-edit').text(text);
-                            } else {
-                                // app level
-                                var selector = $(fieldset).parent();
-                                $(row).closest('tbody').find('.options-edit').text(text);
-
-                                // perculate up
-                                check_global('None', ['','','']);
-                            }
-
-                            // update all fields
-                            _.each(_.zip(fields, values), function(field) {
-                                var field_name = field[0][0];
-                                var value = field[1];
-                                $(selector).find('input[id$=' + field_name + ']').val(value);
-                            });
+                            var app_text = 'Set app options';
+                            var app_values = ['','',''];
                         }
 
-                        $(this).dialog('close');
-                        },
-                        "Cancel": function() { $(this).dialog('close'); } },
-                    width: 500
+                        // perculate to app level
+                        $(row).closest('tbody').find('.app-row .options-edit').text(app_text);
+                        // Clear app fields
+                        _.each(_.zip(fields, app_values), function(field) {
+                            var field_name = field[0][0];
+                            var value = field[1];
+                            $(app_div).find('.app-options input[id$=' + field_name + ']').val(value);
+                        });
+
+                        // perculate to global level
+                        check_global(app_text, app_values);
+                    } else {
+                        if($(row).hasClass('global-row')) {
+                            // global level
+                            var selector = $(modal_div).parent().parent();
+                            $('.inventory_table').find('.options-edit').text(text);
+                        } else {
+                            // app level
+                            var selector = $(modal_div).parent();
+                            $(row).closest('tbody').find('.options-edit').text(text);
+
+                            // perculate to global level
+                            check_global(text, values);
+                        }
+
+                        // update all fields
+                        _.each(_.zip(fields, values), function(field) {
+                            var field_name = field[0][0];
+                            var value = field[1];
+                            $(selector).find('input[id$=' + field_name + ']').val(value);
+                        });
+                    }
+
+                    $(modal_div).modal('hide');
                 });
+
+                $(modal_div).find('.close').click(function() {
+                    $(modal_div).modal('hide');
+                } );
             });
 
             /* GEO TARGETING */

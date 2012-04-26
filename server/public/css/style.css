@@ -1690,12 +1690,12 @@ a.disabled {
   .inventory_table td.stat, .inventory_table th.stat {
     text-align: right;
     width: 65px; }
-    .inventory_table td.stat.cpm-data, .inventory_table th.stat.cpm-data {
-      width: 100px; }
   .inventory_table td.text {
     width: 65px; }
     .inventory_table td.text.pub-id-data {
       width: 170px; }
+    .inventory_table td.text.advanced-options {
+      width: 100px; }
   .inventory_table td.icon, .inventory_table th.icon {
     padding: 0 11px 0 10px;
     width: 45px; }

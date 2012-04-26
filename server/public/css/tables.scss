@@ -62,14 +62,14 @@
     td.stat, th.stat {
         text-align: right;
         width: 65px;
-        &.cpm-data { 
-            width: 100px
-        }
     }
     td.text {
         width: 65px;
         &.pub-id-data { 
             width: 170px
+        }
+        &.advanced-options { 
+            width: 100px
         }
     }
     td.icon, th.icon {

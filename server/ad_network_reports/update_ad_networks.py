@@ -29,9 +29,9 @@ from datetime import date, datetime, timedelta
 from ad_network_reports.ad_networks import AdNetwork
 from ad_network_reports.models import AdNetworkAppMapper, \
         AdNetworkScrapeStats, \
-        AdNetworkManagementStats
+        AdNetworkManagementStats, \
+        LoginStates
 from ad_network_reports.query_managers import \
-        AD_NETWORK_NAMES, \
         IAD, \
         MOBFOX, \
         AdNetworkLoginManager, \
@@ -41,6 +41,7 @@ from ad_network_reports.query_managers import \
         AdNetworkManagementStatsManager
 from ad_network_reports.scrapers.unauthorized_login_exception import \
         UnauthorizedLogin
+from common.constants import REPORTING_NETWORKS
 from common.utils import date_magic
 from common.utils.connect_to_appengine import setup_remote_api
 from publisher.query_managers import AppQueryManager
@@ -70,6 +71,7 @@ def multiprocess_update_all(start_day=None,
                             end_day=None,
                             email=False,
                             processes=1,
+                            network=None,
                             testing=False):
     """
     Break up update script into multiple processes.
@@ -88,7 +90,7 @@ def multiprocess_update_all(start_day=None,
 
     def get_all_accounts_with_logins():
         logins_query = AdNetworkLoginManager.get_all_logins(
-                order_by_account=True)
+                network=network, order_by_account=True)
         last_account = None
         for login in logins_query:
             if login.account.key() != last_account:
@@ -255,6 +257,7 @@ def update_login_stats_for_check(login,
     for day in date_magic.gen_days(start_day, end_day):
         stats_list += update_login_stats(login, day, update_aggregates=True,
                 testing=testing)
+    login.state = LoginStates.WORKING
     login.put()
 
 
@@ -267,7 +270,7 @@ def update_login_stats_for_check(login,
         msg = MIMEText("Your ad network revenue report for %s is now ready. " \
                 "Access it here: https://app.mopub.com/ad_network_reports.\n" \
                 "\nIf you have any questions, please reach out to us at " \
-                "support@mopub.com" % AD_NETWORK_NAMES[login.ad_network_name])
+                "support@mopub.com" % REPORTING_NETWORKS[login.ad_network_name])
         from_ = SUPPORT_EMAIL
         to = [] if TESTING else login.account.emails
 
@@ -350,7 +353,7 @@ def retry_login(login_key,
         valid_stats_list = update_login_stats(login, day,
                 management_stats=temp_stats, update_aggregates=True,
                 logger=logger)
-        result = ([stats for stats, mapper in valid_stats_list], temp_stats)
+        result = ([stats for mapper, stats in valid_stats_list], temp_stats)
         return result
     except Exception as exception:
         exc_traceback = sys.exc_info()[2]
@@ -406,6 +409,8 @@ def update_login_stats(login,
             logger.info("Unauthorized login attempted by account:%s on %s."
                     % (login.account,
                         login.ad_network_name))
+        login.state = LoginStates.ERROR
+        login.put()
         return []
     except Exception as e:
         # This should catch ANY exception because we don't want to stop
@@ -438,6 +443,8 @@ def update_login_stats(login,
             s.sendmail(ADMIN_EMAIL, ADMIN_EMAIL, msg.as_string())
             s.quit()
 
+        login.state = LoginStates.ERROR
+        login.put()
         return []
 
     # Get all mappers for login and put them in a dict for quick access
@@ -500,6 +507,8 @@ def update_login_stats(login,
             AdNetworkAggregateManager.update_stats(login.account, mapper, day,
                     scrape_stats, app=mapper.application)
 
+    login.state = LoginStates.WORKING
+    login.put()
     return valid_stats_list
 
 
@@ -547,15 +556,15 @@ def send_stats_mail(account, day, stats_list):
             mapper, stats in stats_list])
         stats_list = sorted(stats_list, key = lambda stats:
                 '%s-%s-%s' % (stats[0].application.name.lower(),
-                stats[0].application.app_type_text().lower(),
+                stats[0].application.type.lower(),
                 stats[0].ad_network_name))
         email_body = ""
         for mapper, stats in stats_list:
             app_name = '%s (%s)' % (mapper.application.name,
-                    mapper.application.app_type_text())
+                    mapper.application.type)
 
             stats_dict = {'app': app_name,
-                   'network_name': AD_NETWORK_NAMES[mapper.ad_network_name],
+                   'network_name': REPORTING_NETWORKS[mapper.ad_network_name],
                    'revenue': stats.revenue,
                    'attempts': stats.attempts,
                    'impressions': stats.impressions,
@@ -689,6 +698,7 @@ def main(args):
     """
     update_networks.py [start_day=xxxx-xx-xx] [end_day=xxxx-xx-xx]
         [email=[Y y N n]] [processes=xx]
+        [network=admob|iad|jumptap|inmobi|mobfox]
 
     Updates the database from the given start date to the given end date
     sending emails if the flag is set and using the # of processes given.
@@ -719,6 +729,11 @@ def main(args):
 
     Processes can be any non negative integer value. The max value is the
     number of login credentials.
+
+    ================
+    network
+
+    The name of the network to pull stats for.
     """
     HELP = 'help'
 
@@ -726,6 +741,7 @@ def main(args):
     END_DAY = 'end_day'
     EMAIL = 'email'
     PROCESSES = 'processes'
+    NETWORK = 'network'
 
     RETRY = 'retry'
     DAY = 'day'
@@ -733,6 +749,7 @@ def main(args):
     start_day = None
     end_day = None
     email = False
+    network = None
     processes = 1
 
     setup_remote_api()
@@ -764,7 +781,10 @@ def main(args):
                     email = (arg[len(EMAIL) + 1:] in ('y', 'Y'))
                 elif field_name_match(arg, PROCESSES):
                     processes = int(arg[len(PROCESSES) + 1:])
-            multiprocess_update_all(start_day, end_day, email, processes)
+                elif field_name_match(arg, NETWORK):
+                    network = int(arg[len(NETWORK) + 1:])
+            multiprocess_update_all(start_day, end_day, email, processes,
+                    network)
 
 
 if __name__ == "__main__":

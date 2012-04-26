@@ -37,16 +37,21 @@
         &.alt, tr.alt {
             background: #F7F7F7;
         }
-        tr.main td {
-            font-weight: 600;
-            padding: 10px 10px 4px 0;
-            &.name {
-                font-size: 14px;
+        tr.main {
+            &.app-targeting {
+                height: 40px;
+            }
+            td {
+                font-weight: 600;
+                padding: 10px 10px 4px 0;
+                &.name {
+                    font-size: 14px;
+                }
             }
         }
         tr.sub td {
             padding: 4px 10px 4px 0;
-            &.name, &.stat {
+            &.name, &.stat, &.text {
                 border-top: 1px solid #EEE;
             }
         }
@@ -57,6 +62,15 @@
     td.stat, th.stat {
         text-align: right;
         width: 65px;
+        &.cpm-data { 
+            width: 100px
+        }
+    }
+    td.text {
+        width: 65px;
+        &.pub-id-data { 
+            width: 170px
+        }
     }
     td.icon, th.icon {
         padding: 0 11px 0 10px;
@@ -84,7 +98,7 @@
 
     // Padding between sections if there are sub rows
     tbody tr.sub:last-child td {
-        padding-bottom: 24px;
+        padding-bottom: 11px;
     }
 
     // Padding between sections if there arent any sub rows
@@ -257,3 +271,4 @@ tr.adunit-row td:not(.icon){
 img.app-icon {
     @include border-radius(6px);
 }
+

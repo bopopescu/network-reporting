@@ -7,6 +7,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django import forms
 from django.utils.translation import ugettext_lazy as _
+import re
 
 from registration.models import RegistrationProfile
 
@@ -17,7 +18,7 @@ from registration.models import RegistrationProfile
 # lands in trunk, this will no longer be necessary.
 attrs_dict = { 'class': 'required' }
 
-from common.constants import (ISO_COUNTRIES, US_STATES)
+from common.constants import (ISO_COUNTRIES, STATES_AND_PROVINCES)
 from common.utils import forms as mpforms
 from common.utils import fields as mpfields
 from common.utils import widgets as mpwidgets
@@ -36,7 +37,7 @@ class BaseRegistrationForm(mpforms.MPForm):
     address1 = mpfields.MPTextField(required=False)
     address2 = mpfields.MPTextField(required=False)
     city = mpfields.MPTextField(required=False)
-    state = mpfields.MPTextField(required=False)
+    state = mpfields.MPChoiceField(required=False,choices=STATES_AND_PROVINCES,widget=mpwidgets.MPSelectWidget)
     zipcode = mpfields.MPTextField(required=False)
     country = mpfields.MPChoiceField(choices=ISO_COUNTRIES,widget=mpwidgets.MPSelectWidget)
     traffic = forms.TypedChoiceField(choices=[("0","Haven't launched yet"),
@@ -172,6 +173,26 @@ class ChangeSettingsForm(BaseRegistrationForm):
         if (company == ''):
             raise forms.ValidationError('Company is a required field.')
         return company
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        country = cleaned_data['country']
+        state = cleaned_data['state']
+        zipcode = cleaned_data['zipcode']
+
+        valid_us_zip = r'\A[\d]{5}(-[\d]{4})?\Z'
+        valid_ca_zip = r'\A\w\d\w ?\d\w\d\Z'
+
+        # validate state in US and Canada
+        if country in ('US', 'CA') and state == '':
+            self._errors['state'] = self.error_class(['Please enter a valid state.'])
+        
+        # validate zip in US and Canada
+        if (country == 'US' and re.match(valid_us_zip, zipcode) is None or
+            country == 'CA' and re.match(valid_ca_zip, zipcode) is None):
+                self._errors['zipcode'] = self.error_class(['Please enter a valid zip code.'])
+
+        return cleaned_data
 
     def save(self, domain_override=""):
         self.cleaned_data.update(username=self.cleaned_data['email'])

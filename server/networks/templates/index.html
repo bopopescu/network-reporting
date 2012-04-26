@@ -1,0 +1,368 @@
+{% extends "networks_base.html" %}
+{% load filters %}
+{% load elements %}
+
+{% block pageTitle %}
+<h1>
+    Networks
+</h1>
+{% endblock pageTitle %}
+
+{% block titleBarRight %}
+{% if reporting %}
+<span class="titlebar-right">
+    <a class="button" id="network-settingsButton" href="#">Daily report settings</a>
+</span>
+{% endif %}
+{% endblock titleBarRight %}
+
+{% block preContent %}
+<section id="network-settingsForm" class="hidden">
+<div>
+    <form accept-charset="ascii" id="networkForm" class="settingsForm">
+        <fieldset id="networkForm-details" class="alt">
+            <div id="settings-form-message" class="hidden alert-message block-message warning"></div>
+            <div>
+                <dl class="formFields" style="margin:0">
+                    <dt> E-mail: </dt>
+                    <dd> <input name="email" type="checkbox" {% if settings.email %} checked="true" {% endif %}/> &nbsp;Send me a daily ad network revenue report</dd>
+                    <dt> Recipients: </dt>
+                    <dd>
+                    <textarea name="recipients" rows="3" cols="80">{{settings.recipients}}</textarea>
+                    </dd>
+                </dl>
+            </div>
+            <div class="form-submit" style="clear:both;">
+                <span class="hidden" id="networkSettingsForm-loading"><img src="/images/loading2.gif"/></span>
+                <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-cancel">Cancel</a></span>
+                <span class="buttonWrap"><a href="#" class="button" id="networkSettingsForm-submit">Save</a></span>
+            </div>
+        </fieldset>
+    </form>
+</div>
+</section>
+{% endblock preContent %}
+
+{% block innerContent %}
+{% if networks %}
+
+
+{% comment %}
+Make a table for ad networks that are active
+{% endcomment %}
+<section>
+
+<div style="float: left;">
+    <h2>Network Breakdown</h2>
+</div>
+<div style="float: right;">
+    <select id='network-editSelect' class='selectmenu'>
+        <option value="">Add a Network</option>
+        {% for network in additional_networks %}
+        <option value="{% url edit_network network=network.name %}">{{network.pretty_name}}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<div style="clear:both;">
+    <div class="appData-columnHeaders">
+        <table class="dataTable" width=100%>
+            <thead>
+                <th class="networkData-icon" style="width:75px"></th>
+                <th class="dataTable-name"> </th>
+                {% if reporting %}
+                <th class="dataTable-data numeric"> Revenue </th>
+                {% endif %}
+                <th class="dataTable-data numeric"> CPM </th>
+                <th class="dataTable-data numeric"> Attempts </th>
+                <th class="dataTable-data numeric"> Impressions </th>
+                <th class="dataTable-data numeric"> Fill Rate </th>
+                <th class="dataTable-data numeric"> Clicks </th>
+                <th class="dataTable-data numeric"> CTR </th>
+            </thead>
+        </table>
+    </div>
+    {% for network in networks %}
+    <div class="{% cycle 'appData' 'appData appData-alt' %}">
+        <table class="dataTable appData-main">
+            <tbody>
+                <tr id="{{network.key}}-row">
+                    <td class="networkData-icon">
+                        <a href="{% url network_details campaign_key=network.key %}">
+                            <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
+                        </a>
+                    </td>
+                    <td class="dataTable-name">
+                        <div style="float: left;">
+                            {% status_icon network %}
+                        </div>
+                        <div style="margin: 0 5px 0 5px; float: left;">
+                            <a href="{% url network_details campaign_key=network.key %}">
+                                {{network.pretty_name}}
+                            </a>
+                        </div>
+                        <div id="{{ network.key }}-loading" style="float: left;">
+                            {% comment %}
+                            <img class="loading-img" src="/images/icons-custom/spinner-12.gif"></img>
+                            {% endcomment %}
+                        </div>
+                        <div class="edit-link hidden" style="float: left;">
+                            <a href="{% url edit_network campaign_key=network.key %}">
+                                <span class="ui-icon ui-icon-wrench"></span>
+                            </a>
+                        </div>
+                        <div style="clear: both;">
+                            <a class="show-apps button button-small" id="{{network.key}}" style="width:75px;">Show Apps</a>
+                        </div>
+                    </td>
+                    {% if network.reporting %}
+                    <td class="dataTable-data numeric rev" style="color:orange;">
+                        -
+                    </td>
+                    {% endif %}
+                    <td class="dataTable-data numeric cpm">
+                        {% if network.reporting %}
+                        <div class="network-data">-</div>
+                        {% endif %}
+                        <div class="mopub-data">
+                            {% if network.min_cpm == network.max_cpm %}
+                            {{ network.min_cpm|currency }}
+                            {% else %}
+                            {{ network.min_cpm|currency }}-{{ network.max_cpm|currency }}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="dataTable-data numeric att">
+                        {% if network.reporting and network.name != "mobfox" %}
+                        <div class="network-data">-</div>
+                        {% endif %}
+                        <div class="mopub-data">-</div>
+                    </td>
+                    <td class="dataTable-data numeric imp">
+                        {% if network.reporting %}
+                        <div class="network-data">-</div>
+                        {% endif %}
+                        <div class="mopub-data">-</div>
+                    </td>
+                    <td class="dataTable-data numeric fill_rate">
+                        {% if network.reporting %}
+                        <div class="network-data">-</div>
+                        {% endif %}
+                        <div class="mopub-data">-</div>
+                    </td>
+                    <td class="dataTable-data numeric clk">
+                        {% if network.reporting %}
+                        <div class="network-data">-</div>
+                        {% endif %}
+                        <div class="mopub-data">-</div>
+                    </td>
+                    <td class="dataTable-data numeric ctr">
+                        {% if network.reporting %}
+                        <div class="network-data">-</div>
+                        {% endif %}
+                        <div class="mopub-data">-</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="appData-details hidden {{ network.key }}-apps-div" style="margin: 0 0 0 86px">
+            <table class="dataTable">
+                <tbody>
+                    {% for app, app_bids in network.apps %}
+                    <tr class="app-row" id="app-{{ app.key }}">
+                        <td class="dataTable-name">
+                            <a href="{{ app.url }}">{{ app.name }} ({{ app.type }})</a>
+                        </td>
+                        <td class="dataTable-data numeric rev" style="color:orange;">
+                            {% if network.reporting %} - {% endif %}
+                        </td>
+                        <td class="dataTable-data numeric cpm">
+                            {% if network.reporting %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            {% if app_bids.min_cpm == app_bids.max_cpm %}
+                            <div>{{ app_bids.min_cpm|currency }}</div>
+                            {% else %}
+                            <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="dataTable-data numeric att">
+                            {% if network.reporting and network.name != "mobfox" %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
+                        </td>
+                        <td class="dataTable-data numeric imp">
+                            {% if network.reporting %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
+                        </td>
+                        <td class="dataTable-data numeric fill_rate">
+                            {% if network.reporting and network.name != "mobfox" %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
+                        </td>
+                        <td class="dataTable-data numeric clk">
+                            {% if network.reporting %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
+                        </td>
+                        <td class="dataTable-data numeric ctr">
+                            {% if network.reporting %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            <div class="mopub-data">-</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<h2 style="margin: 15px 0 0 0">Daily Counts</h2>
+<div class="appData-details noneg">
+    <table class="dataTable">
+        <thead>
+            <tr>
+                <th class="dataTable-name big">&nbsp;</th>
+                {% if reporting %}
+                <th class="dataTable-data numeric special">Revenue</th>
+                <th class="dataTable-data numeric special">CPM</th>
+                {% endif %}
+                <th class="dataTable-data numeric special">Impressions</th>
+                <th class="dataTable-data numeric special">Clicks</th>
+                <th class="dataTable-data numeric special">CTR</th>
+            </tr>
+        </thead>
+        <tbody id="dailyCounts-totals">
+            <tr>
+                <th class="dataTable-name big">Totals</th>
+                {% if reporting %}
+                <td class="dataTable-data numeric rev" style="color:orange;">
+                    -
+                </td>
+                <td class="dataTable-data numeric cpm" style="color:orange;">
+                    -
+                </td>
+                {% endif %}
+                <td class="dataTable-data numeric imp">
+                    {% if reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    <div class="mopub-data">-</div>
+                </td>
+                <td class="dataTable-data numeric clk">
+                    {% if reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    <div class="mopub-data">-</div>
+                </td>
+                <td class="dataTable-data numeric ctr">
+                    {% if reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    <div class="mopub-data">-</div>
+                </td>
+            </tr>
+        </tbody>
+        <tbody id="dailyCounts-individual" class="hidden">
+            {% for day in days reversed %}
+            <tr class="dailyCounts-stats">
+                <th class="dataTable-name">{{ day }}</th>
+                {% if reporting %}
+                <td class="dataTable-data numeric rev" style="color:orange;">
+                    -
+                </td>
+                <td class="dataTable-data numeric cpm" style="color:orange;">
+                    -
+                </td>
+                {% endif %}
+                <td class="dataTable-data numeric imp">
+                    {% if reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    <div class="mopub-data">-</div>
+                </td>
+                <td class="dataTable-data numeric clk">
+                    {% if reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    <div class="mopub-data">-</div>
+                </td>
+                <td class="dataTable-data numeric ctr">
+                    {% if reporting %}
+                    <div class="network-data">-</div>
+                    {% endif %}
+                    <div class="mopub-data">-</div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a class="dailyCount-toggleButton button" href="#">Show details</a>
+</div>
+
+</section>
+
+{% else %}
+
+{% comment %}
+Make a table for the main ad networks that are not setup
+{% endcomment %}
+<section id="dashboard-apps">
+<h2>Set Up Ad Networks</h2>
+{% for network in networks_to_setup %}
+<div class="appData appData-alt">
+    <table class="dataTable appData-main">
+        <tbody>
+            <tr id="{{network.name}}-row">
+                <td class="networkData-icon">
+                    <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
+                </td>
+                <td>
+                    <a class="show-status button button-small" href="{% url edit_network network=network.name %}">Set up {{network.pretty_name}}</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+</section>
+
+<section>
+<select id='network-editSelect' class='selectmenu'>
+    <option value="">Additional Networks</option>
+    {% for network in additional_networks %}
+    <option value="{% url edit_network network=network.name %}">{{network.pretty_name}}</option>
+    {% endfor %}
+</select>
+</section>
+
+{% endif %}
+{% endblock innerContent %}
+
+{% block extraScripts %}
+{{ block.super }}
+<script>
+    $(function () {
+        var graph_start_date = Date.UTC({{ start_date.year }}, {{ start_date.month|add:"-1" }}, {{ start_date.day }});
+
+        NetworksController.initialize({
+            campaigns_data: [{% for network in networks %}{'id': '{{ network.key }}',
+                                                           'network': '{{ network.name }}',
+                                                           'reporting': {% if network.reporting %}true{% else %}false{% endif %}},{% endfor %}],
+            apps: [{% for app in apps %}{'id': '{{ app.key }}'},{% endfor %}],
+            date_range: {{ date_range }},
+            graph_start_date: graph_start_date,});
+
+    });
+</script>
+{% endblock extraScripts %}
+

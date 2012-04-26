@@ -3,7 +3,6 @@ import logging
 from common.utils.query_managers import CachedQueryManager, QueryManager
 
 from common.utils.decorators import wraps_first_arg
-from advertiser.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.api import users
@@ -20,6 +19,9 @@ class AccountQueryManager(CachedQueryManager):
     @classmethod
     def get_current_account(cls,request=None,user=None,cache=False,create=True):
         user = user or request.user
+        # if a non logged in user return a None account
+        if user.is_anonymous():
+            return None
         # try to fetch the account for this user from memcache
         if cache:
             account = memcache.get(str(cls._user_key(user)), namespace=

@@ -3,9 +3,14 @@ Call this script when you want to deploy frontend code.
 """
 # TODO: Figure out why envoy fucks up commands that have messages
 # like git tag and git commit
-
 import sys
 import os
+
+#sys.path.append(os.environ['PWD'])
+PWD = os.path.dirname(__file__)
+sys.path.append(os.path.join(PWD, '..'))
+import common.utils.test.setup
+
 import datetime
 import re
 import yaml
@@ -14,8 +19,6 @@ import clint
 from clint.textui import puts, indent, colored
 import envoy
 
-PWD = os.path.dirname(__file__)
-sys.path.append(os.path.join(PWD, '..'))
 
 
 def prompt_before_executing(original, override=None):
@@ -229,7 +232,12 @@ def launch_deploy_process(server=None):
     # The user will need to input a username and password for GAE
     # during the deploy process. We use subprocess.call because it
     # redirects stdout/stdin to/from the user.
-    call(['appcfg.py', 'backends', server_path, 'update', server])
+    call(['appcfg.py',
+          '--no_precompilation',
+          'backends',
+          server_path,
+          'update',
+          server])
 
     # envoy.run('rm ' + server_path + '/app.yaml')
 
@@ -343,7 +351,7 @@ def main():
             deploy_server = clint.args.get(0)
             deployer = git_get_user()
 
-            if active_branch_name != "master":
+            if active_branch_name != "master" and deploy_server == 'frontend-0':
                 puts(colored.yellow("Careful! You're deploying a non-master branch."))
                 y_or_n = raw_input('Are you sure you want to deploy ' + active_branch_name + '? (y/n) >> ')
                 if y_or_n == 'n':

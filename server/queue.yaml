@@ -155,6 +155,9 @@ queue:
 - name: push-context-update
   rate: 100/s
   bucket_size: 100
+  retry_parameters:
+    task_retry_limit: 10
+    task_age_limit: 10m
 
 - name: budget-api
   rate: 100/s

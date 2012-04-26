@@ -35,8 +35,7 @@ def get_filetype_extension(filename):
 
 class CampaignForm(forms.ModelForm):
     campaign_type = forms.ChoiceField(choices=(('gtee', 'Guaranteed'),
-                                               ('promo', 'Promotional'),
-                                               ('network', 'Network')),
+                                               ('promo', 'Promotional')),
                                       label='Campaign Type:')
     gtee_priority = forms.ChoiceField(choices=(('high', 'High'),
                                                ('normal', 'Normal'),
@@ -127,7 +126,16 @@ class CampaignForm(forms.ModelForm):
             if instance.end_datetime:
                 initial['end_datetime'] = instance.end_datetime.replace(tzinfo=UTC()).astimezone(Pacific_tzinfo())
 
+        is_staff = kwargs.pop('is_staff', False)
+        account = kwargs.pop('account', False)
+
         super(forms.ModelForm, self).__init__(*args, **kwargs)
+
+        # show deprecated networks if user is staff or hasn't migrated
+        if (is_staff or (account and not account.display_new_networks)) and \
+                ('network', 'Network') not in self.fields['campaign_type']. \
+                choices:
+            self.fields['campaign_type'].choices.append(('network', 'Network'))
 
         # hack to make the forms ordered correctly
         # TODO: fix common.utils.djangoforms.ModelForm to conform to
@@ -310,6 +318,7 @@ class AdGroupForm(forms.ModelForm):
                                               label='Device Targeting:',
                                               required=False,
                                               widget=forms.RadioSelect)
+    active = forms.BooleanField(label='Active:', required=False)
     target_iphone = forms.BooleanField(initial=True, label='iPhone',
                                        required=False)
     target_ipod = forms.BooleanField(initial=True, label='iPod', required=False)
@@ -360,6 +369,8 @@ class AdGroupForm(forms.ModelForm):
             if len(geo_predicates) == 1 and len(instance.cities):
                 initial['region_targeting'] = 'city'
                 initial.update(cities=instance.cities)
+
+            initial['active'] = instance.active
 
             kwargs.update(initial=initial)
 
@@ -431,6 +442,7 @@ class AdGroupForm(forms.ModelForm):
         model = AdGroup
         fields = ('name',
                   'network_type',
+                  #'active',
                   'custom_html',
                   'custom_method',
                   'bid_strategy',

@@ -5,6 +5,7 @@ import re
 from hypercache import hypercache
 import datetime
 import urllib2
+import time
 
 from google.appengine.ext import db
 from google.appengine.api import memcache, taskqueue
@@ -90,7 +91,18 @@ class AdUnitContextQueryManager(CachedQueryManager):
             new_timestamp = memcache_ts
 
         # We got new information for the hypercache, give it a new timestamp
+
+
         if adunit_context:
+            context_created_at = getattr(adunit_context, 'created_at', None)
+            if context_created_at is None:
+                now = int(time.mktime(datetime.datetime.utcnow().timetuple()))
+                adunit_context.created_at = now
+                memcache.set(adunit_context_key,
+                             adunit_context,
+                             time=CACHE_TIME)
+                memcache.set("ts:%s" % adunit_context_key, new_timestamp)
+
             adunit_context._hyper_ts = new_timestamp
             hypercache.set(adunit_context_key, adunit_context)
 
@@ -120,16 +132,32 @@ class AdUnitContextQueryManager(CachedQueryManager):
             clear_uri = clear_uri + '&testing=True&port=%s' % port
             fetcher.fetch(clear_uri)
         else:
-            pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
+            queue = taskqueue.Queue('push-context-update')
+            tasks = []
             for key in adunit_keys:
                 # For each adunit, spin up a TQ to ping the adserver
                 # admins with new data
-                taskqueue.add(url='/fetch_api/adunit_update_push',
-                              method='GET',
-                              queue_name='push-context-update',
-                              params={'adunit_key':key})
+                task_name = 'adunit_context_push%s' % key
+                task = taskqueue.Task(url='/fetch_api/adunit_update_push',
+                                      method='GET',
+                                      name = task_name,
+                                      countdown=60,
+                                      params={'adunit_key':key})
+                tasks.append(task)
+                # Have to delete one at a time, because if we try to batch delete
+                # and any one doesn't exist, an error is immediately
+                # raised and all subsequent tasks are ignored and not
+                # deleted
+                try:
+                    queue.delete_tasks(task)
+                except:
+                    logging.warning("%s does not exist in push-context-update queue" % task)
+            try:
+                queue.add(tasks)
+            except:
+                logging.warning("Error adding %s to push-context-update queue" % tasks)
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)
@@ -139,7 +167,39 @@ class AdUnitContextQueryManager(CachedQueryManager):
         return success
 
 
-class AppQueryManager(QueryManager):
+class PublisherQueryManager(CachedQueryManager):
+    @classmethod
+    def get_objects_dict_for_account(cls, account):
+        """
+        Returns a dictionary mapping App keys to App entities carrying adunit data. Adunits for each
+        app can be retrieved as a list by using app.adunit.
+        """
+        apps_dict = cls.get_apps_dict_for_account(account)
+        adunits = cls.get_adunits_dict_for_account(account).values()
+
+        for app in apps_dict.values():
+            app.adunits = []
+
+        # Associate each ad unit with its app. We could have done this by looping through the apps
+        # and getting each app's ad units, but that has a lot of GET overhead.
+        for adunit in adunits:
+            # Looks weird, but we're just avoiding adunit.app_key.key() since it incurs a fetch.
+            app_key = str(AdUnit.app_key.get_value_for_datastore(adunit))
+            app_for_this_adunit = apps_dict[app_key]
+            app_for_this_adunit.adunits += [adunit]
+
+        return apps_dict
+
+    @classmethod
+    def get_apps_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, App, include_deleted)
+
+    @classmethod
+    def get_adunits_dict_for_account(cls, account, include_deleted=False):
+        return cls.get_entities_for_account(account, AdUnit, include_deleted)
+
+
+class AppQueryManager(CachedQueryManager):
     Model = App
 
     @classmethod
@@ -225,10 +285,16 @@ class AppQueryManager(QueryManager):
     def put(cls, apps):
         put_response = db.put(apps)
 
-        # Clear cache
+        # Invalidate cache entries as necessary.
+        affected_account_keys = set()
         for app in apps:
             adunits = AdUnitQueryManager.get_adunits(app=app)
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+            affected_account_keys.add(App.account.get_value_for_datastore(app))
+
+        # For each account, clear its apps and adunits from memcache.
+        PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, App)
+        PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdUnit)
 
         return put_response
 
@@ -407,6 +473,7 @@ class AdUnitQueryManager(QueryManager):
             return None
         else:
             return self.adunit
+
     @classmethod
     @wraps_first_arg
     def put(cls, adunits):
@@ -415,6 +482,12 @@ class AdUnitQueryManager(QueryManager):
 
         put_response = db.put(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+
+        affected_account_keys = set()
+        for adunit in adunits:
+            affected_account_keys.add(AdUnit.account.get_value_for_datastore(adunit))
+            
+        PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdUnit)
 
         return put_response
 

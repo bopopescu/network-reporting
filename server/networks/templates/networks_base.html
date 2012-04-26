@@ -1,0 +1,176 @@
+﻿{% extends "base.html" %}
+{% load filters %}
+{% load elements %}
+
+{% block navLinks %}
+<li><a href="{% url app_index %}">Dashboard</a></li>
+<li><a href="{% url advertiser_campaign %}">Campaigns</a></li>
+<li><a href="{% url marketplace_index %}">Marketplace</a></li>
+<li class="active"><a href="{% url networks %}">Networks</a></li>
+{% endblock navLinks %}
+
+{% block titleBarRight %}
+{% endblock titleBarRight %}
+
+{% block dateButtons %}
+{% include "partials/datecontrols.html" %}
+{% endblock dateButtons %}
+
+
+{% block content %}
+
+{% block preContent %}
+{% endblock preContent %}
+
+{% block graph %}
+{% if graph %}
+<section class="offset nomargin" id="dashboard-stats">
+<h3 class="stats-chart-title">
+    Realtime Stats for {{start_date|format_date_compact}} to {{end_date|format_date_compact}}
+</h3>
+{# Controls and stats breakdown for the top realtime stats #}
+<div class="stats">
+    {% comment %}
+    {% stats_breakdown stats %}
+    {% endcomment %}
+    <div class="stats">
+        <div class="stats-breakdown">
+            <table>
+                <tbody>
+                    {% if reporting %}
+                    <tr id="stats-breakdown-rev">
+                        <td class="stats-breakdown-value">
+                            <span class="inner network-chart-rev" style="color:orange;"></span>
+                        </td>
+                        <th class="stats-breakdown-name">
+                            <span class="inner">Revenue</span>
+                        </th>
+                    </tr>
+                    {% endif %}
+
+                    <tr class="active" id="stats-breakdown-imp">
+                        <td class="stats-breakdown-value">
+                            {% if reporting %}
+                            <span class="inner network-chart-data"></span>
+                            {% endif %}
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <th class="stats-breakdown-name">
+                            <span class="inner">Impressions</span>
+                        </th>
+                    </tr>
+
+                    <tr id="stats-breakdown-clk">
+                        <td class="stats-breakdown-value">
+                            {% if reporting %}
+                            <span class="inner network-chart-data"></span>
+                            {% endif %}
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <th class="stats-breakdown-name">
+                            <span class="inner">Clicks</span>
+                        </th>
+                    </tr>
+
+                    <tr id="stats-breakdown-ctr">
+                        <td class="stats-breakdown-value">
+                            {% if reporting %}
+                            <span class="inner network-chart-data"></span>
+                            {% endif %}
+                            <span class="inner mopub-chart-data"></span>
+                        </td>
+                        <th class="stats-breakdown-name">
+                            <span class="inner">CTR</span>
+                        </th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="chart stats-chart" id="dashboard-stats-chart">
+        </div>
+    </div>
+</div>
+</section>
+
+<section id="show-network-data">
+{% if reporting %}
+<div style="float:right">
+    <input type="checkbox" checked="yes" name="show-data" id="show-network" /> Show data reported by network in <span style="color:orange;">orange</span>
+</div>
+{% endif %}
+</section>
+
+{% else %}
+<section>
+<div class="alert-message block-message">
+    MoPub can serve ads from ad networks to your apps.  Set up the networks below.<br/>
+</br>
+    <strong>Note: MoPub requires that you have accounts at each ad network you want to use.</strong>
+</div>
+</section>
+{% endif %}
+{% endblock graph %}
+
+{% block innerContent %}
+<section id="dashboard-apps">
+<div class="buttonBank buttonBank-right">
+    <select name='exportSelect' id='ad-network-exportSelect' class='selectmenu export-selectMenu'>
+        <option value="exp">Export</option>
+        <option value="/ad_network_reports/export/xls/{{mapper_key}}">XLS</option>
+        <option value="/ad_network_reports/export/csv/{{mapper_key}}">CSV</option>
+    </select>
+</div>
+<h2>{{app_name}} on {{ad_network_name}}</h2>
+<div class="appData-details noneg" style="clear:both;">
+    <table class="dataTable appData-main">
+        <thead>
+            <th class="dataTable-name big"></th>
+            <th class="dataTable-data numeric special"> Revenue </th>
+            {% if ad_network_name != MOBFOX %}
+            <th class="dataTable-data numeric special"> Attempts </th>
+            {% endif %}
+            <th class="dataTable-data numeric special"> Impressions </th>
+            <th class="dataTable-data numeric special"> CPM </th>
+            {% if ad_network_name != MOBFOX %}
+            <th class="dataTable-data numeric special"> Fill Rate</th>
+            {% endif %}
+            <th class="dataTable-data numeric special"> Clicks </th>
+            <th class="dataTable-data numeric special"> CPC </th>
+            <th class="dataTable-data numeric special"> CTR </th>
+        </thead>
+        <tbody>
+            {% for stats in stats_list %}
+            <tr>
+                <td class="dataTable-name">{{stats.date}}</td>
+                <td class="dataTable-data numeric">{{ stats.revenue|currency }}</td>
+                {% if ad_network_name != MOBFOX %}
+                <td class="dataTable-data numeric">{{ stats.attempts|withsep }}</td>
+                {% endif %}
+                <td class="dataTable-data numeric">{{ stats.impressions|withsep }}</td>
+                <td class="dataTable-data numeric">{{ stats.cpm|currency }}</td>
+                {% if ad_network_name != MOBFOX %}
+                <td class="dataTable-data numeric">{{ stats.fill_rate|percentage }}</td>
+                {% endif %}
+                <td class="dataTable-data numeric">{{ stats.clicks|withsep }}</td>
+                <td class="dataTable-data numeric">{{ stats.cpc|currency }}</td>
+                <td class="dataTable-data numeric">{{ stats.ctr|percentage }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</section>
+{% endblock innerContent %}
+
+{% endblock content %}
+
+
+{% block extraScripts %}
+{% include_script "models/inventory" %}
+{% include_script "views/inventory" %}
+{% include_script "controllers/dashboard_dates" %}
+{% include_script "libs/jquery.cookie" %}
+{% include_script "controllers/networks" %}
+{% endblock extraScripts %}
+

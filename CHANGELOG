@@ -1,33 +1,255 @@
+# Deployed Wednesday, April 25, 2012 at 07:00PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-83
+### Bugs Fixed: []
+### Included Commits: 
+ * 777b824 Deployed without finding any bug fixes.
+ 
+# Deployed Wednesday, April 25, 2012 at 06:55PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-82
+### Bugs Fixed: []
+### Included Commits:
+
+# Deployed Wednesday, April 25, 2012 at 02:14AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-80
+### Bugs Fixed: ['1150']
+### Included Commits:
+* 62e43eb [#1150 state:fixed]
+* b5fd5ae fixed old networks page to only show old network campaigns
+* 7dae379 Deployed without finding any bug fixes.
+
+# Deployed Tuesday, April 24, 2012 at 11:46PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-79
+### Bugs Fixed: []
+### Included Commits:
+* 392ed0b Merge branch 'master' of github.com:mopub/mopub
+* 651a703 self.account
+* 7a5718b Merge branch 'using-auc-hashes'
+* d68c745 Added checking for awkward case
+* d41281f Deployed without finding any bug fixes.
+* f0c1159 Added created at support
+
+# Deployed Tuesday, April 24, 2012 at 09:24PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-78
+### Bugs Fixed: []
+### Included Commits:
+* 29f8465 Merge branch 'master' into networks-page
+* 384ff7c Merge branch 'master' of github.com:mopub/mopub
+* 87c42ab App level bids shown under cpm in new networks pages, adunit status icons added to details page
+* 0774b22 Deployed without finding any bug fixes.
+* 94a2fa6 Removed some get account by key lookups and modified date range for cpm calculation in edit network form
+* 7e057d2 vertical tabbing on edit networks form
+* 0d8ecb6 min and max cpm's on networks page should be formatted as currency
+
+# Deployed Tuesday, April 24, 2012 at 06:33PM PST
+### Deployed by Nafis Jamal
+### Tagged deploy-77
+### Bugs Fixed: []
+### Included Commits:
+* 27c5a53 removed second conditional for network page
+* 5e26c9a Merge branch 'master' of github.com:mopub/mopub
+* 65b7c21 added flag to app object
+* 985b045 Deployed without finding any bug fixes.
+
+# Deployed Tuesday, April 24, 2012 at 04:06AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-76
+### Bugs Fixed: []
+### Included Commits:
+* 107780f Merge branch 'master' of github.com:mopub/mopub
+* f4eac1b Deployed without finding any bug fixes.
+* 90e6658 Merge branch 'master' of github.com:mopub/mopub
+* 636d23a fixed recursive get_stat js bug
+
+# Deployed Tuesday, April 24, 2012 at 04:02AM PST
+### Deployed by John Pena
+### Tagged deploy-75
+### Bugs Fixed: []
+### Included Commits:
+* 3b1d8ee added force_marketplace flag
+* 619324e Ready to push to master
+* 54030e4 calculate cpm in js if it's not passed in
+* fe02573 goal on adgroup index is formatted with commas, marketplace should show revenue impression totals correctly
+* 28a8b4d Formatted metric names in chart only used when needed, app and adunit details fix for getting mpx stats
+* c25a677 Graph naming for tooltips fixed, lots of other changes and fixes for field naming change
+* 88456f1 att req naming problem fix, this is temporary
+* 1845bd4 Cleaned up AdUnitCollection render method
+* 11628b9 Check for undefined for calculated fields in js, updated field naming for chart in old networks page
+* 9281613 Updated js version # for staging, removed fet formatted stat for non stat goal
+* 8b290e6 Fixed MPX after field name refactor
+* 3542af4 Advertiser pages work since after field name refactor
+* 7f68473 Started StatsModel field name refactor
+* 75e5704 Dashboard index renders correctly after field naming change
+* 0712cb7 fetch campaigns first then apps and adunits
+* 9291132 remove unused partials
+* b684890 removed network apps bs
+* 2e08756 adunit stats load on network details page
+* fdcbea5 Added adunit rows to network details page
+* 632e768 app data loading on network details page
+* fea4ca0 Fixed chart on index page after field name refactor
+* 0442add Daily counts on network index page fixed after field name refactor
+* dc4e130 added missing file, consider moving it to networks app
+* 4ee1865 App stats loading after name refactor
+* 7c81c00 Refactored field naming using: att clk conv imp req cpm rev conv_rate ctr fill_rate, campaigns view loading on networks index page
+* 4d37fad MoPub app stats load
+* 88ddcb6 displaying numbers on app rows
+* 3952544 Load app stats individually over ajax for networks pages
+* 93bd5d0 networks controller change, stats api change
+* b4ad3c7 Removed network endpoint from api/services, changed app_type_text method to type_text property, use memcache in networks index view to get apps and campaigns
+* 747e4ce Merge branch 'master' into networks-app-refactor
+* 5fd736a Fixed bug introduced in 1690ebe where mongo_stats are exclusively used, frontend engineers need local test data
+* 35e5b40 added missing partial template
+* 261373f Merge branch 'master' into networks-page
+* ceac627 Made fake reporting stats more realistic
+* 2fcb39a Sort on name instead of network_type, InMobi should have network IDs, Revenue at app level, Add OS type in App rows on the dashboard, Turn off autocomplete on revenue reporting user/pass
+* a330493 Started networks app refactor
+* 125f06b Deployed without finding any bug fixes.
+
+# Deployed Thursday, April 19, 2012 at 07:12PM PST
+### Deployed by Andrew He
+### Tagged deploy-74
+### Bugs Fixed: []
+### Included Commits:
+* 0020f59 Remove graph on inventory page for pubs with >50 apps. Fix marketplace 500 relating to caching layer.
+* a2b0a5e Deployed without finding any bug fixes.
+
+# Deployed Thursday, April 19, 2012 at 02:11AM PST
+### Deployed by James Sun
+### Tagged deploy-73
+### Bugs Fixed: []
+### Included Commits:
+* 7e42de3 add uniq user and modify mongostats unit tests
+* 93021bb Merge branch 'master' into networks-page
+* 580f13a networks page: don't include cpm for untargeted adgroups in range
+* b476ad1 Deployed without finding any bug fixes.
+
+# Deployed Thursday, April 19, 2012 at 01:05AM PST
+### Deployed by James Sun
+### Tagged deploy-72
+### Bugs Fixed: []
+### Included Commits:
+* 1690ebe use mongodb exclusively for realtime stats, inluding uu stats
+* 504bbf9 Merge branch 'networks-page'
+* c73f07d network adgroups needed to be passed a campaign with a key (key_name set or campaign put to db)
+* 947af80 [#1035 state:resolved]
+
+# Deployed Wednesday, April 18, 2012 at 07:35PM PST
+### Deployed by John Pena
+### Tagged deploy-71
+### Bugs Fixed: ['1035']
+### Included Commits:
+* ed2f0ae Merge branch '1035-bad-export'
+* 0576613 the function that was writing xls data was being passed None for some data. now were catching that. [#1035 state:fixed]
+* 8164ba4 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, April 18, 2012 at 07:27PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-70
+### Bugs Fixed: []
+### Included Commits:
+* 70eb9f6 AdGroup filtering in app details view differs if it's a new network campaign or an old one
+* d0227af Fixed edit network js cursor problem on ad network id and cpm fields
+* 4275e39 Merge branch 'master' into networks-page
+* 325e7ca Added spinner for network details, not showing un targeted network campaigns in app details view, sort apps by name then by type in edit network view
+* 8da0717 [#1137 state:resolved]
+* b4f0a77 fixed some odd bugs with the networks form
+
+# Deployed Wednesday, April 18, 2012 at 06:06PM PST
+### Deployed by John Pena
+### Tagged deploy-69
+### Bugs Fixed: ['1137']
+### Included Commits:
+* c9bdbb9 removed active from adgroup form and only put to db via query manager [#1137 state:fixed]
+* fa7aff7 Merge branch 'master' of github.com:mopub/mopub
+* f1c9ded Deployed without finding any bug fixes.
+* da90a91 Merge branch 'master' of github.com:mopub/mopub
+* 45917f4 added network type to simple models
+
+# Deployed Wednesday, April 18, 2012 at 08:55AM PST
+### Deployed by Andrew He
+### Tagged deploy-68
+### Bugs Fixed: []
+### Included Commits:
+* 7091266 Catch KeyError in AdGroupIndexHandler and email admins if the error occurs
+* 55ce362 Removed debug prints
+* 0b31b07 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, April 18, 2012 at 04:39AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-67
+### Bugs Fixed: []
+### Included Commits:
+* 58f5817 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, April 18, 2012 at 04:32AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-66
+### Bugs Fixed: []
+### Included Commits:
+* b25bae5 skip deleted adunits in networks form, input changes to app level cpms to all adunit level cpms
+* e9ebe9c Merge branch 'master' of github.com:mopub/mopub
+* 5a7c860 allow debug for stats get in publisher view
+* 9f26123 Merge branch 'master' of github.com:mopub/mopub
+* 1becd78 sending down network type with simple adgroup
+* ab87aad Fixed network link in app details view
+* 409a434 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, April 18, 2012 at 02:02AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-65
+### Bugs Fixed: []
+### Included Commits:
+
+# Deployed Tuesday, April 17, 2012 at 05:04PM PST
+### Deployed by Nafis Jamal
+### Tagged deploy-63
+### Bugs Fixed: []
+### Included Commits:
+* c9e6f14 added two fields: optimizable, default_cpm to the adgroup model + simple models
+* bd09e16 A bunch of UI fixes for Fixit Day
+* 678baa5 App Detail and AdUnit Detail -> Ad Sources: Add attempts App Detail and AdUnit Detail -> Daily Counts: Add request and conversions Campaigns Page -> Daily Counts -> Guaranteed: Add conversions partials/inventory_table: Add conversions Add/Edit Creative: Mark optional fields with placeholder text
+* dd1c808 Deployed without finding any bug fixes.
+
+# Deployed Tuesday, April 17, 2012 at 12:48PM PST
+### Deployed by Andrew He
+### Tagged deploy-62
+### Bugs Fixed: []
+### Included Commits:
+
 # Deployed Monday, April 09, 2012 at 07:32PM PST
 ### Deployed by John Pena
 ### Tagged deploy-60
 ### Bugs Fixed: []
-### Included Commits: 
- * cf2d294 Fix erroneous font sizes for AdUnit Detail's daily counts [#1098 state:review-requested assigned:johnpena]
- * 63b8409 Merge branch 'master' of github.com:mopub/mopub
- * 59ad43a Don't automatically email customers when update completes without arg email=y
- * e624ab4 Deployed without finding any bug fixes.
- * d5679c3 updated pages and reverse urls to use external ids on all customer facing stuff
- * 01296cc changed auth
- * 9a40eb8 Merge branch 'master' into hrd-migration-stats
- * 6aff286 Deployed without finding any bug fixes.
- * d1e0101 fixed syntax error
- * be737f5 Deployed without finding any bug fixes.
- * 746837e attempt to fix adnetwork scraper stuff
- * 973616c Deployed without finding any bug fixes.
- * 007e6dd Deployed without finding any bug fixes.
- * 31d2802 added hrd support to simple models
- * 5e0d045 blah
- * 6a79b8e Merge branch 'master' into hrd-migration-stats
- * 8bfc80c deleted index
- * e776e69 Merge branch 'master' into hrd-migration-stats
- * b049a11 continued cleaning up tests
- * f1b02a2 started fixing tests
- * c736517 merged
- * 5842e1c fixed helper
- * 46f966e changed version
- * 49e5f8a first commit
- 
+### Included Commits:
+* cf2d294 Fix erroneous font sizes for AdUnit Detail's daily counts [#1098 state:review-requested assigned:johnpena]
+* 63b8409 Merge branch 'master' of github.com:mopub/mopub
+* 59ad43a Don't automatically email customers when update completes without arg email=y
+* e624ab4 Deployed without finding any bug fixes.
+* d5679c3 updated pages and reverse urls to use external ids on all customer facing stuff
+* 01296cc changed auth
+* 9a40eb8 Merge branch 'master' into hrd-migration-stats
+* 6aff286 Deployed without finding any bug fixes.
+* d1e0101 fixed syntax error
+* be737f5 Deployed without finding any bug fixes.
+* 746837e attempt to fix adnetwork scraper stuff
+* 973616c Deployed without finding any bug fixes.
+* 007e6dd Deployed without finding any bug fixes.
+* 31d2802 added hrd support to simple models
+* 5e0d045 blah
+* 6a79b8e Merge branch 'master' into hrd-migration-stats
+* 8bfc80c deleted index
+* e776e69 Merge branch 'master' into hrd-migration-stats
+* b049a11 continued cleaning up tests
+* f1b02a2 started fixing tests
+* c736517 merged
+* 5842e1c fixed helper
+* 46f966e changed version
+* 49e5f8a first commit
+
 # Deployed Wednesday, April 04, 2012 at 12:44PM PST
 ### Deployed by John Pena
 ### Tagged deploy-54

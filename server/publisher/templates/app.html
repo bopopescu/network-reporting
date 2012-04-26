@@ -227,7 +227,7 @@
 
     <h2>Ad sources for {{app.name}}</h2>
     <div>
-      {% if app.adgroups %}
+      {% if app.campaigns %}
 
         <div class="appData appData-alt">
           <div class="appData-details noneg">
@@ -239,6 +239,7 @@
                     <th class="dataTable-data numeric special">Priority</th>
                     <th class="dataTable-data numeric special">Revenue</th>
                     <th class="dataTable-data numeric special">CPM</th>
+                    <th class="dataTable-data numeric special">Attempts</th>
                     <th class="dataTable-data numeric special">Impressions</th>
                     <th class="dataTable-data numeric special">Clicks</th>
                     <th class="dataTable-data numeric special">CONV</th>
@@ -246,95 +247,96 @@
                 </thead>
                 <tbody>
                   {% for level in gtee %}
-                    {% for adgroup in level.adgroups %}
+                    {% for campaign in level.campaigns %}
                       <tr>
                         <th>
 
-                          {% status_icon adgroup %}
+                          {% status_icon campaign %}
 
-                          <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                            {{ adgroup.name }}</a><br />
+                          <a href="{% url advertiser_adgroup_show adgroup_key=campaign.adgroup.key %}">
+                            {{ campaign.name }}</a><br />
                           <span class="muted">
-                            {% if adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                              {{adgroup.campaign.start_datetime|format_date}} -
-                              {{adgroup.campaign.end_datetime|format_date}}.
+                            {% if campaign.start_datetime and campaign.end_datetime %}
+                              {{campaign.start_datetime|format_date}} -
+                              {{campaign.end_datetime|format_date}}.
                             {% endif %}
 
-                            {% if adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                            {% if campaign.start_datetime and not campaign.end_datetime %}
 
-                              Starts {{adgroup.campaign.start_datetime|format_date}}.
+                              Starts {{campaign.start_datetime|format_date}}.
                             {% endif %}
 
-                            {% if not adgroup.campaign.start_datetime and adgroup.campaign.end_datetime %}
-                              Ends {{adgroup.campaign.end_datetime|format_date}}.
+                            {% if not campaign.start_datetime and campaign.end_datetime %}
+                              Ends {{campaign.end_datetime|format_date}}.
                             {% endif %}
 
-                            {% if not adgroup.campaign.start_datetime and not adgroup.campaign.end_datetime %}
+                            {% if not campaign.start_datetime and not campaign.end_datetime %}
                               All dates.
                             {% endif %}
 
-                            {% ifequal adgroup.campaign.budget_type 'daily' %}
-                              {% if adgroup.campaign.budget %}
-                                {{ adgroup.campaign.budget|currency }} daily budget.
+                            {% ifequal campaign.budget_type 'daily' %}
+                              {% if campaign.budget %}
+                                {{ campaign.budget|currency }} daily budget.
                               {% else %}
                                   Unlimited budget.
                               {% endif %}
                             {% endifequal %}
-                            {% ifequal adgroup.campaign.budget_type 'full_campaign' %}
-                              {{adgroup.campaign.full_budget|currency}} campaign budget.
+                            {% ifequal campaign.budget_type 'full_campaign' %}
+                              {{campaign.full_budget|currency}} campaign budget.
                             {% endifequal %}
                           </span>
                         </th>
                         <td class="dataTable-data numeric">
                             Guaranteed<br/><span class="muted">{{level.name}}</span></td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                        <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
-                          {% if adgroup.bid_strategy == 'cpc' %}
-                            {{ adgroup.calculated_ecpm|currency }}
+                        <td class="dataTable-data numeric">{{campaign.stats.revenue|currency}}</td>
+                        <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
+                          {% if campaign.adgroup.bid_strategy == 'cpc' %}
+                            {{ campaign.adgroup.calculated_ecpm|currency }}
                           {% else %}
-                            {{ adgroup.bid|currency }}
+                            {{ campaign.adgroup.bid|currency }}
                           {% endif %}
                         </td>
-                        <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                        <td class="dataTable-data numeric">-</td>
+                        <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
                         <td class="dataTable-data numeric">
-                            {{adgroup.stats.click_count|withsep}}<br/>
-                            <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
+                            {{campaign.stats.clk|withsep}}<br/>
+                            <span class="muted">{{campaign.stats.ctr|percentage}}</span>
                         </td>
                         <td class="dataTable-data numeric">
-                          {{adgroup.stats.conversion_count|withsep}}<br/>
-                          <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                          {{campaign.stats.conv|withsep}}<br/>
+                          <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
                         </td>
                       </tr>
                     {% endfor %}
                   {% endfor %}
-                  {% for adgroup in promo %}
+                  {% for campaign in promo %}
                     <tr>
                       <th>
-                        {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                          {{adgroup.name}}
+                        {% status_icon campaign %}
+                        <a href="{% url advertiser_adgroup_show adgroup_key=campaign.adgroup.key %}">
+                          {{campaign.name}}
                         </a><br/>
                         <span class="muted">
-                          {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            {{adgroup.campaign.start_date|format_date_compact}}
+                          {% if campaign.start_date and campaign.end_date %}
+                            {{campaign.start_date|format_date_compact}}
                             -
-                            {{adgroup.campaign.end_date|format_date_compact}}.
+                            {{campaign.end_date|format_date_compact}}.
                           {% endif %}
 
-                          {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                            Starts {{adgroup.campaign.start_date|format_date_compact}}.
+                          {% if campaign.start_date and not campaign.end_date %}
+                            Starts {{campaign.start_date|format_date_compact}}.
                           {% endif %}
 
-                          {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                          {% if not campaign.start_date and campaign.end_date %}
+                            Ends {{campaign.start_date|format_date_compact}}.
                           {% endif %}
 
-                          {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                          {% if not campaign.start_date and not campaign.end_date %}
                             All dates.
                           {% endif %}
 
-                          {% if adgroup.campaign.budget %}
-                            {{adgroup.campaign.budget|currency}} daily budget.
+                          {% if campaign.budget %}
+                            {{campaign.budget|currency}} daily budget.
                           {% else %}
                             Unlimited budget.
                           {% endif %}
@@ -342,27 +344,28 @@
                       </th>
                       <td class="dataTable-data numeric">Promotional<br/><span class="muted">Normal</span></td>
                       <td class="dataTable-data numeric"> -- </td>
-                      <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
-                          {% if adgroup.bid_strategy == 'cpc' %}
-                            {{ adgroup.calculated_ecpm|currency }}
+                      <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
+                          {% if campaign.adgroup.bid_strategy == 'cpc' %}
+                            {{ campaign.adgroup.calculated_ecpm|currency }}
                           {% else %}
-                            {{ adgroup.bid|currency }}
+                            {{ campaign.adgroup.bid|currency }}
                           {% endif %}
                         </td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                      <td class="dataTable-data numeric">-</td>
+                      <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
                       <td class="dataTable-data numeric">
-                          {{adgroup.stats.click_count|withsep}}<br/>
-                          <span class="muted">{{adgroup.stats.ctr|percentage|withsep}}<span>
+                          {{campaign.stats.clk|withsep}}<br/>
+                          <span class="muted">{{campaign.stats.ctr|percentage|withsep}}<span>
                       </td>
                       <td class="dataTable-data numeric">
-                        {{adgroup.stats.conversion_count|withsep}}<br/>
-                        <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                        {{campaign.stats.conv|withsep}}<br/>
+                        <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
                       </td>
                     </tr>
                   {% endfor %}
 
                   {% if marketplace %}
-                    {% for adgroup in marketplace %}
+                    {% for campaign in marketplace %}
                       {% if forloop.counter0 == 0 %}
                         <tr>
                           <th>
@@ -377,9 +380,10 @@
                             </a>
                           </th>
                           <td class="dataTable-data numeric">Marketplace</td>
-                          <td class="dataTable-data numeric">{{adgroup.stats.revenue|currency}}</td>
-                          <td class="dataTable-data numeric">{{adgroup.stats.cpm|currency}}</td>
-                          <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                          <td class="dataTable-data numeric">{{campaign.stats.rev|currency}}</td>
+                          <td class="dataTable-data numeric">{{campaign.stats.cpm|currency}}</td>
+                          <td class="dataTable-data numeric">{{campaign.stats.att|withsep}}</td>
+                          <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
                           <td class="dataTable-data numeric">-</td>
                           <td class="dataTable-data numeric">-</td>
                         </tr>
@@ -387,16 +391,16 @@
                     {% endfor %}
                   {% endif %}
 
-                  {% for adgroup in network %}
+                  {% for campaign in network %}
                     <tr>
                       <td>
-                        {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                          {{adgroup.name}}
+                        {% status_icon campaign %}
+                        <a href="{% if campaign.network_type %}{% url network_details campaign_key=campaign.key %}{% else %}{% url advertiser_adgroup_show adgroup_key=campaign.adgroup.key %}{% endif %}">
+                          {{campaign.name}}
                         </a>
                         <br/>
                         <span class="muted">
-                          {{adgroup.network_type}}
+                          {{campaign.network_type}}
                         </span>
                       </td>
 
@@ -406,51 +410,56 @@
                       <td class="dataTable-data numeric">
                         -
                       </td>
-                      <td class="dataTable-data numeric {% if adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
-                          {% if adgroup.bid_strategy == 'cpc' %}
-                            {{ adgroup.calculated_ecpm|currency }}
+                      <td class="dataTable-data numeric {% if campaign.adgroup.bid_strategy == 'cpc' %}dataTable-campaign-ecpm{% endif %}">
+                          {% if campaign.network_type %}
+                          -
                           {% else %}
-                            {{ adgroup.bid|currency }}
+                              {% if campaign.adgroup.bid_strategy == 'cpc' %}
+                                {{ campaign.adgroup.calculated_ecpm|currency }}
+                              {% else %}
+                                {{ campaign.adgroup.bid|currency }}
+                              {% endif %}
                           {% endif %}
                         </td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
+                      <td class="dataTable-data numeric">{{campaign.stats.att|withsep}}</td>
+                      <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
                       <td class="dataTable-data numeric">
-                          {{adgroup.stats.click_count|withsep}}
+                          {{campaign.stats.clk|withsep}}
                           <br/>
-                          <span class="muted">{{adgroup.stats.ctr|percentage}}</span>
+                          <span class="muted">{{campaign.stats.ctr|percentage}}</span>
                       </td>
                       <td class="dataTable-data numeric">-</td>
                     </tr>
                   {% endfor %}
 
-                  {% for adgroup in backfill_promo %}
+                  {% for campaign in backfill_promo %}
                     <tr>
                       <th>
-                        {% status_icon adgroup %}
-                        <a href="{% url advertiser_adgroup_show adgroup_key=adgroup.key %}">
-                          {{adgroup.name}}
+                        {% status_icon campaign %}
+                        <a href="{% url advertiser_adgroup_show adgroup_key=campaign.adgroup.key %}">
+                          {{campaign.name}}
                         </a><br/>
 
                         <span class="muted">
 
-                          {% if adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            {{adgroup.campaign.start_date|format_date_compact}}-{{adgroup.campaign.end_date|format_date_compact}}.
+                          {% if campaign.start_date and campaign.end_date %}
+                            {{campaign.start_date|format_date_compact}}-{{campaign.end_date|format_date_compact}}.
                           {% endif %}
 
-                          {% if adgroup.campaign.start_date and not adgroup.campaign.end_date %}
-                            Starts {{adgroup.campaign.start_date|format_date_compact}}.
+                          {% if campaign.start_date and not campaign.end_date %}
+                            Starts {{campaign.start_date|format_date_compact}}.
                           {% endif %}
 
-                          {% if not adgroup.campaign.start_date and adgroup.campaign.end_date %}
-                            Ends {{adgroup.campaign.start_date|format_date_compact}}.
+                          {% if not campaign.start_date and campaign.end_date %}
+                            Ends {{campaign.start_date|format_date_compact}}.
                           {% endif %}
 
-                          {% if not adgroup.campaign.start_date and not adgroup.campaign.end_date %}
+                          {% if not campaign.start_date and not campaign.end_date %}
                             All dates.
                           {% endif %}
 
-                          {% if adgroup.campaign.budget %}
-                            {{adgroup.campaign.budget|currency}} daily budget.
+                          {% if campaign.budget %}
+                            {{campaign.budget|currency}} daily budget.
                           {% else %}
                             Unlimited budget.
                           {% endif %}
@@ -458,47 +467,25 @@
                       </th>
                       <td class="dataTable-data numeric">Promotional<br/><span class="muted">Backfill</span></td>
                       <td class="dataTable-data numeric">-</td>
-                      <td class="dataTable-data numeric">{{adgroup.bid|currency}}</td>
-                      <td class="dataTable-data numeric">{{adgroup.stats.impression_count|withsep}}</td>
                       <td class="dataTable-data numeric">
-                          {{adgroup.stats.click_count|withsep}}<br/>
-                          <span class="muted">{{adgroup.stats.ctr|percentage|withsep}}</span>
+                          {% if campaign.adgroup %}
+                          {{campaign.adgroup.bid|currency}}
+                          {% else %}
+                          -
+                          {% endif %}
+                      </td>
+                      <td class="dataTable-data numeric">-</td>
+                      <td class="dataTable-data numeric">{{campaign.stats.imp|withsep}}</td>
+                      <td class="dataTable-data numeric">
+                          {{campaign.stats.clk|withsep}}<br/>
+                          <span class="muted">{{campaign.stats.ctr|percentage|withsep}}</span>
                       </td>
                       <td class="dataTable-data numeric">
-                        {{adgroup.stats.conversion_count|withsep}}<br/>
-                        <span class="muted">{{adgroup.stats.conv_rate|percentage}}</span>
+                        {{campaign.stats.conv|withsep}}<br/>
+                        <span class="muted">{{campaign.stats.conv_rate|percentage}}</span>
                       </td>
                     </tr>
                   {% endfor %}
-
-                  {% comment %}
-                  <tr>
-                    <td>
-                      <span class="big">Totals</span> <br />
-                      <span class="muted">
-                        Totals include any ad sources previously targeted to this app/ad unit
-                      </span>
-                    </td>
-                    <td></td>
-                    <td class="dataTable-name numeric">
-                      <strong> {{ app.stats.revenue|currency }} </strong>
-                    </td>
-                    <td></td>
-                    <td class="dataTable-name numeric">
-                      <strong> {{ app.stats.impression_count|withsep }} </strong>
-                    </td>
-                    <td class="dataTable-data numeric">
-                        <strong>{{app.stats.click_count|withsep}}</strong>
-                        <br/>
-                        <strong>{{app.stats.ctr|percentage}}</strong>
-                    </td>
-                    <td class="dataTable-data numeric">
-                      <strong>{{app.stats.conversion_count|withsep}}</strong>
-                      <br/>
-                      <strong>{{app.stats.conv_rate|percentage}}</strong>
-                    </td>
-                  </tr>
-                  {% endcomment %}
                 </tbody>
               </table>
             </div>
@@ -558,6 +545,7 @@
             <th class="dataTable-data numeric special">Fillrate</th>
             <th class="dataTable-data numeric special">Clicks</th>
             <th class="dataTable-data numeric special">CTR</th>
+            <th class="dataTable-data numeric special">Conversions</th>
           </tr>
         </thead>
         <tbody id="appData-totals">
@@ -568,6 +556,7 @@
             <td class="dataTable-data numeric"><b>{{app.stats.fill_rate|percentage}}</b></td>
             <td class="dataTable-data numeric"><b>{{app.stats.click_count|withsep}}</b></td>
             <td class="dataTable-data numeric"><b>{{app.stats.ctr|percentage}}</b></td>
+            <td class="dataTable-data numeric"><b>{{app.stats.conversion_count|withsep}}</b></td>
           </tr>
         </tbody>
         <tbody id="appData-individual" class="hidden">
@@ -579,6 +568,7 @@
               <td class="dataTable-data numeric">{{stat.fill_rate|percentage}}</td>
               <td class="dataTable-data numeric">{{stat.click_count|withsep}}</td>
               <td class="dataTable-data numeric">{{stat.ctr|percentage}}</td>
+              <td class="dataTable-data numeric">{{stat.conversion_count|withsep}}</td>
             </tr>
           {% endfor %}
         </tbody>

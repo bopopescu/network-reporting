@@ -1,16 +1,16 @@
-{% if adgroup.deleted %}
+{% if advertiser.deleted %}
   <img src="/images/deleted.gif" height=9 width=9 />
 {% else %}
 
-  {% if adgroup.active %}
-    {% if adgroup.status == "Completed" %}
+  {% if advertiser.active %}
+    {% if advertiser.status == "Completed" %}
   <img src="/images/completed.png" height=9 width=9 />
     {% else %}
   <img src="/images/active.gif" height=9 width=9 />
     {% endif %}
   {% endif %}
 
-  {% if not adgroup.active %}
+  {% if not advertiser.active %}
   <img src="/images/paused.gif" height=9 width=9 />
   {% endif %}
 {% endif %}

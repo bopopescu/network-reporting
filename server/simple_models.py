@@ -4,6 +4,7 @@ to the ones that live on GAE as far as the adserver is concerned, but they don't
 have any of the builtins for db putting and other things that the adserver doesn't
 give a shit about """
 from datetime import datetime
+import time
 import logging
 
 MAX_OBJECTS = 200
@@ -137,11 +138,15 @@ class SimpleModel(object):
         return obj
 
 class SimpleAdUnitContext(SimpleModel):
-    def __init__(self, adunit, campaigns, adgroups, creatives):
+    def __init__(self, adunit, campaigns, adgroups, creatives, created_at=None):
         self.adunit = adunit.simplify()
         self.campaigns = [camp.simplify() for camp in campaigns]
         self.adgroups = [ag.simplify() for ag in adgroups]
         self.creatives = [crtv.simplify() for crtv in creatives]
+        if created_at is None:
+            self.created_at = int(time.mktime(datetime.utcnow().timetuple()))
+        else:
+            self.created_at = int(float(created_at))
 
     def get_creative_by_key(self, creative_key):
         crtv = None
@@ -327,7 +332,10 @@ class SimpleAdGroup(SimpleModel):
                  target_other=None,
                  cities=None,
                  geo_predicates=None,
-                 allocation_percentage=None
+                 allocation_percentage=None,
+                 optimizable=None,
+                 default_cpm=None,
+                 network_type=None,
                  ):
         self._key = key
         self.campaign = campaign.simplify()
@@ -359,6 +367,9 @@ class SimpleAdGroup(SimpleModel):
         self.cities = cities
         self.geo_predicates = geo_predicates
         self.allocation_percentage = allocation_percentage
+        self.optimizable = optimizable
+        self.default_cpm = default_cpm
+        self.network_type = network_type
 
     def __str__(self):
         return self.__repr__()
@@ -515,7 +526,7 @@ class SimpleApp(SimpleModel):
     def __init__(self, key=None, account=None, global_id=None, adsense_app_name=None, adsense_app_id=None,
                  admob_bgcolor=None, admob_textcolor=None, app_type=None, package=None, url=None,
                  network_config=None, primary_category=None, secondary_category=None, name=None,
-                 experimental_fraction=.001):
+                 experimental_fraction=.001, force_marketplace=True):
         self._key = key
         self.account = account.simplify()
         self.global_id = global_id
@@ -531,6 +542,7 @@ class SimpleApp(SimpleModel):
         self.primary_category = primary_category
         self.secondary_category = secondary_category
         self.experimental_fraction = experimental_fraction
+        self.force_marketplace = force_marketplace
 
     def key(self):
         return self._key

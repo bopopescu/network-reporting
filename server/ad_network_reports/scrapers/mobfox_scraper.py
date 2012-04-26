@@ -55,6 +55,7 @@ class MobFoxScraper(object):
 
             response = urllib2.urlopen(req)
             line = response.read()
+            # On a error:publicationnotfound the user entered an invalid pub_id
             if line.find("error") != -1:
                 continue
                 #raise MobFoxError(line)
@@ -94,8 +95,9 @@ class MobFoxError(Exception):
 
 if __name__ == '__main__':
     NC = NetworkConfidential()
-    #publisher_ids = ['ddcc935d2bc034b2823e04b24ff544a9',
-            #'e884e3c21a498d57f7d1cb1400c5ab9b']
-    publisher_ids = ['8c30c9feeb78a3eb85074baa3f91fd4d']
+    publisher_ids = [u'f7501ac31b4dfc96e44d92d5a2b626e3',
+            u'4028cba634ef45cb01357bb629411853']
+    #publisher_ids = ['8c30c9feeb78a3eb85074baa3f91fd4d']
     SCRAPER = MobFoxScraper((NC, publisher_ids))
     print SCRAPER.get_site_stats(date.today() - timedelta(days=1))
+

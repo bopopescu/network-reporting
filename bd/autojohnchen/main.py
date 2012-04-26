@@ -20,6 +20,8 @@ import json
 SENDER="jim@mopub.com"
 RCPT="billing@mopub.com"
 MPX_URL="http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf&.."
+ADS_URL="http://read.mongostats.mopub.com/stats?pub=agltb3B1Yi1pbmNyDQsSBFNpdGUY497jEww&adv=agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYnsnlEww&acct=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww&hybrid=False&offline=False&start_date=%s&end_date=%s"
+ADS_KEY="agltb3B1Yi1pbmNyDQsSBFNpdGUY497jEww||agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYnsnlEww||agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww"
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
@@ -180,9 +182,14 @@ class CheckHandler(webapp.RequestHandler):
 
 class MpxReportHandler(webapp.RequestHandler):
     def get(self):
-        mpx = json.loads(urlfetch.fetch(MPX_URL).content)
+        now = datetime.datetime.now() + datetime.timedelta(hours=-8)
+        
+        # total inventory
+        ads = json.loads(urlfetch.fetch(ADS_URL % (now.strftime("%y%m%d"), now.strftime("%y%m%d"))).content)
+        request_count = int(ads["all_stats"][ADS_KEY]["daily_stats"][-1]["request_count"])
 
         # total spend
+        mpx = json.loads(urlfetch.fetch(MPX_URL).content)
         total = sum([x["spent"] for x in mpx.values()])
 
         # spend by DSP
@@ -190,17 +197,17 @@ class MpxReportHandler(webapp.RequestHandler):
         a.sort(lambda x,y: cmp(y[1],x[1]))
         
         # compute body
-        body = "Total Spend: $%.2f\n\n" % total
+        body = "Total Spend: $%.2f\nTotal Inventory: %.1fMM\n\n" % (total, request_count / 1000000.0)
         body += "Top Bidders\n===========\n"
         for x in a:
           body += "%s: $%.2f\n" % (x[0], x[1])
 
-        body += "\nData retrieved at %s GMT. Thank you - Automated John Chen" % time.strftime('%b %d %Y %H:%M:%S')
+        body += "\nData retrieved at %s UTC. Thank you - Automated John Chen" % time.strftime('%b %d %Y %H:%M:%S')
         
         # send mail
         logging.info(body)
         mail.send_mail(sender=SENDER, to="revforce+reports@mopub.com", 
-            subject="MPX Daily Spend Report for %s" % time.strftime('%b %d %Y'),
+            subject="MPX Daily Spend Report for %s" % now.strftime('%b %d %Y'),
             body=body)
 
 

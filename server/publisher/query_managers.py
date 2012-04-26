@@ -98,6 +98,11 @@ class AdUnitContextQueryManager(CachedQueryManager):
             if context_created_at is None:
                 now = int(time.mktime(datetime.datetime.utcnow().timetuple()))
                 adunit_context.created_at = now
+                memcache.set(adunit_context_key,
+                             adunit_context,
+                             time=CACHE_TIME)
+                memcache.set("ts:%s" % adunit_context_key, new_timestamp)
+
             adunit_context._hyper_ts = new_timestamp
             hypercache.set(adunit_context_key, adunit_context)
 

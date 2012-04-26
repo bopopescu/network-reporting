@@ -58,22 +58,27 @@ class AUCUserPushHandler(webapp.RequestHandler):
 class AUCUserPushFanOutHandler(webapp.RequestHandler):
 
     def get(self):
-        ts = int(time.time()) / 60
+        inttime = int(time.time())
+        ts = inttime / 60
         eta = (ts + 1)* 60
+        eta += 5
+        countdown = eta - inttime
         queue = taskqueue.Queue('push-context-update')
-        adunit_keys = self.request.get('adunit_keys')
+        adunit_keys = self.request.get_all('adunit_keys')
         for key in adunit_keys:
             task_name = 'adunit-%s-ts-%s' % (key, ts)
             task = taskqueue.Task(url='/fetch_api/adunit_update_push',
                                   name=task_name,
                                   method='GET',
-                                  eta_posix = eta,
+                                  countdown=countdown,
                                   params={'adunit_key':key})
             try:
                 queue.add(task)
             except taskqueue.BadTaskStateError, e:
                 logging.warning("%s already exists" % task)
             except taskqueue.DuplicateTaskNameError, e:
+                logging.warning("%s already exists" % task)
+            except taskqueue.TaskAlreadyExistsError, e:
                 logging.warning("%s already exists" % task)
 
 

@@ -181,23 +181,6 @@
             </li>
 
             <li>
-            {{ adgroup_form.allocation_percentage.label_tag }}
-            <div>
-                {{ adgroup_form.allocation_percentage }} % of all requests
-            </div>
-            </li>
-            <li>
-            {{ adgroup_form.daily_frequency_cap.label_tag }}
-            <div>
-                <div>
-                {{ adgroup_form.daily_frequency_cap }} daily impressions per user
-                </div>
-                <div>
-                {{ adgroup_form.hourly_frequency_cap }} hourly impressions per user
-                </div>
-            </div>
-            </li>
-            <li>
             {{ adgroup_form.device_targeting.label_tag }}
             <div>
                 {% comment %}
@@ -340,193 +323,190 @@
     </fieldset>
     {% endif %}
 
-        <h2>App Targeting</h2>
-        <div>
-            <table class="inventory_table">
-                <thead>
-                    <tr>
-                        <td class="icon"></td>
-                        <td class="name"></td>
-                        <td class="name">
-                            Enabled
-                        </td>
-                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
-                        <td class="name">Ad Network ID</td>
-                        {% endif %}
-                        <td class="name">CPM</td>
-                        {% if reporting %}
-                        <th class="name">
-                            <div>
-                                <a id="copy-7-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
-                                </a>
-                            </div>
-                            <div>7-Day CPM</div>
-                        </th>
-                        <th class="name">
-                            <div>
-                                <a id="copy-14-day" style="cursor:pointer">
-                                    <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
-                                </a>
-                            </div>
-                            <div>14-DayCPM</div>
-                        </th>
-                        {% endif %}
-                        <td class="name">More Options</td>
-                    </tr>
-                </thead>
-                <tbody class="global-settings">
-                    <tr class="main sub">
-                        <td class="icon">
-                        </td>
-                        <td class="title">
-                            Global Settings
-                        </td>
-                        <td class="text">
-                            <input class="global-active" type="checkbox" />
-                        </td>
-                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
-                        <td class="text">
-                        </td>
-                        {% endif %}
-                        <td class="text cpm-data" style="width:100px">
-                            <div class="global-cpm-input {% if not network.bid %}hidden{% endif %}">
-                                <input class="float bid" type="text" value="{{ network.bid }}">
-                            </div>
-                            <div class="global-cpm-close editable{% if network.bid %} hidden{% endif %}">
-                                <span>
-                                    <b class="caret"></b>                            
-                                    <span>Set global CPM</span>
-                                </span>
-                            </div>    
-                        </td>
-                        {% if reporting %}
-                        <td>
-                        </td>
-                        <td>
-                        </td>
-                        {% endif %}
-                        <td class="text">
-                            <div class="advanced-options-edit  editable{% if network.bid %} hidden{% endif %}">
-                                <span>
-                                    <b class="caret"></b>                            
-                                    <span>None</span>
-                                </span>
-                            </div>    
-                        </td>
-                    </tr>
-                </tbody>
-                {% for app in apps %}
-                <tbody class="{% cycle 'alt' '' %}">
-                    <tr class="main app-targeting">
-                        <td class="icon">
-                            <div>
-                            <a href="/inventory/app/{{app.key_}}">
-                                <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
+    <h2>App Targeting</h2>
+    <div>
+        <table class="inventory_table">
+            <thead>
+                <tr>
+                    <td class="icon"></td>
+                    <td class="name"></td>
+                    <td class="name">
+                        Enabled
+                    </td>
+                    {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                    <td class="name">Ad Network ID</td>
+                    {% endif %}
+                    <td class="name">CPM</td>
+                    {% if reporting %}
+                    <th class="name">
+                        <div>
+                            <a id="copy-7-day" style="cursor:pointer">
+                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
                             </a>
-                            </div>
-                        </td>
-                        <td class="name">
-                            {{ app.name }} <span class="muted">({{ app.type }})</span>
-                        </td>
-                        <td class="text">
-                            <input class="app-active" type="checkbox" />
-                        </td>
-                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
-                        <td class="text">
-                            <div>
-                                <input name="app_{{ app.key }}-{{ network.name }}_pub_id" placeholder="{{ network.pretty_name }} Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-{{ network.name }}_pub_id" />
-                            </div>
-                        </td>
-                        {% endif %}
-                        <td class="text cpm-data" style="width:100px">
-                            <div class="app-cpm-input {% if not app.bid or network.bid %}hidden{% endif %}">
-                                <input class="float bid" type="text" value="{{ app.bid }}">
-                            </div>
-                            <div class="app-cpm-close editable{% if app.bid and not network.bid %} hidden{% endif %}">
-                                <span>
-                                    <b class="caret"></b>                            
-                                    <span>Set app CPM</span>
-                                </span>
-                            </div>    
-                        </td>
-                        {% if reporting %}
-                        <td class="stat">
-                            <a class="copy-7-day" style="color: orange; cursor:pointer">
-                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
-                                {{ app.seven_day_stats.cpm|currency }}
+                        </div>
+                        <div>7-Day CPM</div>
+                    </th>
+                    <th class="name">
+                        <div>
+                            <a id="copy-14-day" style="cursor:pointer">
+                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span> Copy All
                             </a>
-                        </td>
-                        <td class="stat">
-                            <a class="copy-14-day" style="color: orange; cursor:pointer;">
-                                <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
-                                {{ app.fourteen_day_stats.cpm|currency }}
-                            </a>
-                        </td>
-                        {% endif %}
-                        <td class="text">
-                            <div class="advanced-options-edit  editable{% if network.bid %} hidden{% endif %}">
-                                <span>
-                                    <b class="caret"></b>                            
-                                    <span>None</span>
-                                </span>
-                            </div>    
-                        </td>
-                    </tr>
-                    {% for adunit in app.adunits %}
-                    <tr class="sub" style="height:33px">
-                        <td class="icon"></td>
-                        <td class="name">
-                            {{ adunit.name }}
-                        </td>
-                        <td class="text" style="height:20px">
-                            {{ adunit.adgroup_form.active }}
-                        </td>
-                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
-                        <td class="text adunit">
-                            {% if network.name in NETWORKS_WITH_PUB_IDS %}
-                            <div>
-                                <div class="pub-id-input hidden">
-                                    <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="adunit_{{ adunit.key }}-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
-                                    <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
-                                </div>
-                                <div class="pub-id-edit editable">
-                                    <span class="pub-id-value">{{ adunit.pub_id }}</span>
-                                    <b class="caret"></b>
-                                </div>                            
-                            </div>
-                            {% endif %}
-                        </td>
-                        {% endif %}
-                        <td class="text cpm-data">
-                            <div class="cpm-edit editable{% if not app.bid %} hidden{% endif %}">
-                                <span class="cpm-value"></span>
+                        </div>
+                        <div>14-DayCPM</div>
+                    </th>
+                    {% endif %}
+                    <td class="name">More Options</td>
+                </tr>
+            </thead>
+            <tbody class="global-settings">
+                <tr id="global-row" class="main sub">
+                    <td class="icon">
+                    </td>
+                    <td class="title">
+                        Global Settings
+                    </td>
+                    <td class="text">
+                        <input class="global-active" type="checkbox" />
+                    </td>
+                    {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                    <td class="text">
+                    </td>
+                    {% endif %}
+                    <td class="text cpm-data" style="width:100px">
+                        <div class="global-cpm-input {% if not network.bid %}hidden{% endif %}">
+                            <input class="float bid" type="text" value="{{ network.bid }}">
+                        </div>
+                        <div class="global-cpm-close editable{% if network.bid %} hidden{% endif %}">
+                            <span>
                                 <b class="caret"></b>                            
-                            </div>           
-                            <div class="cpm-input{% if app.bid %} hidden{% endif %}">
-                                {{ adunit.adgroup_form.bid }}
+                                <span>Set global CPM</span>
+                            </span>
+                        </div>    
+                    </td>
+                    {% if reporting %}
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    {% endif %}
+                    <td class="text">
+                        <div class="advanced-options-edit  editable{% if network.bid %} hidden{% endif %}">
+                            <span>
+                                <b class="caret"></b>                            
+                                <span>None</span>
+                            </span>
+                        </div>    
+                    </td>
+                </tr>
+            </tbody>
+            {% for app in apps %}
+            <tbody class="{% cycle 'alt' '' %}">
+                <tr id="{{ app.key }}-row" class="main app-targeting">
+                    <td class="icon">
+                        <div>
+                        <a href="/inventory/app/{{app.key_}}">
+                            <img src="{% if app.icon_url %}{{app.icon_url}}{% else %}/placeholders/image.gif{% endif %}" alt="Icon" width="45" height="45" />
+                        </a>
+                        </div>
+                    </td>
+                    <td class="name">
+                        {{ app.name }} <span class="muted">({{ app.type }})</span>
+                    </td>
+                    <td class="text">
+                        <input class="app-active" type="checkbox" />
+                    </td>
+                    {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                    <td class="text">
+                        <div>
+                            <input name="app_{{ app.key }}-{{ network.name }}_pub_id" placeholder="{{ network.pretty_name }} Publisher ID" value="{{ app.pub_id }}" class="app-pub-id" type="text" id="id_app_{{ app.key }}-{{ network.name }}_pub_id" />
+                        </div>
+                    </td>
+                    {% endif %}
+                    <td class="text cpm-data" style="width:100px">
+                        <div class="app-cpm-input {% if not app.bid or network.bid %}hidden{% endif %}">
+                            <input class="float bid" type="text" value="{{ app.bid }}">
+                        </div>
+                        <div class="app-cpm-close editable{% if app.bid and not network.bid %} hidden{% endif %}">
+                            Set app CPM
+                        </div>    
+                    </td>
+                    {% if reporting %}
+                    <td class="stat">
+                        <a class="copy-7-day" style="color: orange; cursor:pointer">
+                            <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
+                            {{ app.seven_day_stats.cpm|currency }}
+                        </a>
+                    </td>
+                    <td class="stat">
+                        <a class="copy-14-day" style="color: orange; cursor:pointer;">
+                            <span class="ui-icon ui-icon-triangle-1-w" style="float:left;"></span>
+                            {{ app.fourteen_day_stats.cpm|currency }}
+                        </a>
+                    </td>
+                    {% endif %}
+                    <td class="text">
+                        <div class="advanced-options-edit  editable{% if network.bid %} hidden{% endif %}">
+                            <span>
+                                <b class="caret"></b>                            
+                                <span>None</span>
+                            </span>
+                        </div>    
+                    </td>
+                </tr>
+                {% for adunit in app.adunits %}
+                <tr id="{{ adunit.key }}-row" class="sub" style="height:33px">
+                    <td class="icon"></td>
+                    <td class="name">
+                        {{ adunit.name }}
+                    </td>
+                    <td class="text" style="height:20px">
+                        {{ adunit.adgroup_form.active }}
+                    </td>
+                    {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                    <td class="text adunit">
+                        {% if network.name in NETWORKS_WITH_PUB_IDS %}
+                        <div>
+                            <div class="pub-id-input hidden">
+                                <input id="id_adunit_{{ adunit.key }}-admob_pub_id" type="text" placeholder="{{ network.pretty_name }} Publisher ID" class="adunit-pub-id{% if adunit.pub_id %} initialized{% endif %}" name="adunit_{{ adunit.key }}-{{ network.name }}_pub_id" {% if adunit.pub_id %}value="{{ adunit.pub_id }}"{% endif %} />
+                                <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
                             </div>
-                        </td>
-                        {% if reporting %}
-                        <td class="stat">
-                        </td>
-                        <td class="stat">
-                        </td>
+                            <div class="pub-id-edit editable">
+                                <span class="pub-id-value">{{ adunit.pub_id }}</span>
+                                <b class="caret"></b>
+                            </div>                            
+                        </div>
                         {% endif %}
-                        <td class="text">
-                            <div class="advanced-options-edit editable{% if network.bid %} hidden{% endif %}">
-                                <span>
-                                    <b class="caret"></b>                            
-                                    <span>None</span>
-                                </span>
-                            </div>    
-                        </td>
-                    </tr>
-                    {% endfor %}                
-                </tbody>
-            {% endfor %}
-            </table>
-        </div>
+                    </td>
+                    {% endif %}
+                    <td class="text cpm-data">
+                        <div class="cpm-edit editable{% if not app.bid %} hidden{% endif %}">
+                            <span class="cpm-value"></span>
+                            <b class="caret"></b>                            
+                        </div>           
+                        <div class="cpm-input{% if app.bid %} hidden{% endif %}">
+                            {{ adunit.adgroup_form.bid }}
+                        </div>
+                    </td>
+                    {% if reporting %}
+                    <td class="stat">
+                    </td>
+                    <td class="stat">
+                    </td>
+                    {% endif %}
+                    <td class="text">
+                        <div class="advanced-options-edit editable{% if network.bid %} hidden{% endif %}">
+                            <span>
+                                <b class="caret"></b>                            
+                                <span>None</span>
+                            </span>
+                        </div>    
+                    </td>
+                </tr>
+                {% endfor %}                
+            </tbody>
+        {% endfor %}
+        </table>
+    </div>
     <div class="form-submit">
         <a class="button" id="submit" href="#">Save</a>
         <a class="button" id="cancel" href="{% if campaign_key %}{% url network_details campaign_key=campaign_key %}{% else %}{% url networks %}{% endif %}">Cancel</a>
@@ -537,10 +517,87 @@
     Hidden Options (Advanced Settings) forms that are put into dialogs
     {% endcomment %}
     <div class="hidden">
-        <fieldset class="options-form">
+        <fieldset id="global-options" class="dialog">
             <h2> Options </h2>
+            <ul class="form_fields">
+                <li>
+                <label for="id_global-allocation_percentage">Allocation:</label>
+                <div>
+                    <input id="id_global-allocation_percentage" type="text" class="float" value="100.0">
+                    % of all requests
+                </div>
+                </li>
+                <li>
+                <label for="id_global-daily_frequency_cap">
+                    Frequency Caps:
+                </label>
+                <div>
+                    <div>
+                        <input id="id_global-daily_frequency_cap" type="text" class="float" value="">
+                        daily impressions per user
+                    </div>
+                    <div>
+                        <input id="id_global-hourly_frequency_cap" type="text" class="float" value="">
+                        hourly impressions per user
+                    </div>
+                </div>
+                </li>
+            </ul>
         </fieldset>
-    <div>
+        {% for app in apps %}
+        <fieldset id="{{ app.key }}-options" class="dialog">
+            <h2> Options </h2>
+            <ul class="form_fields">
+                <li>
+                <label for="id_{{ app.key }}-allocation_percentage">Allocation:</label>
+                <div>
+                    <input id="id_{{ app.key }}-allocation_percentage" type="text" class="float" value="100.0">
+                    % of all requests
+                </div>
+                </li>
+                <li>
+                <label for="id_{{ app.key }}-daily_frequency_cap">
+                    Frequency Caps:
+                </label>
+                <div>
+                    <div>
+                        <input id="id_{{ app.key }}-daily_frequency_cap" type="text" class="float" value="">
+                        daily impressions per user
+                    </div>
+                    <div>
+                        <input id="id_{{ app.key }}-hourly_frequency_cap" type="text" class="float" value="">
+                        hourly impressions per user
+                    </div>
+                </div>
+                </li>
+            </ul>
+        </fieldset>
+        {% for adunit in app.adunits %}
+        <fieldset id="{{ adunit.key }}-options" class="dialog">
+            <h2> Options </h2>
+            <ul class="form_fields">
+                <li>
+                {{ adunit.adgroup_form.allocation_percentage.label_tag }}
+                <div>
+                    {{ adunit.adgroup_form.allocation_percentage }} % of all requests
+                </div>
+                </li>
+                <li>
+                {{ adunit.adgroup_form.daily_frequency_cap.label_tag }}
+                <div>
+                    <div>
+                    {{ adunit.adgroup_form.daily_frequency_cap }} daily impressions per user
+                    </div>
+                    <div>
+                    {{ adunit.adgroup_form.hourly_frequency_cap }} hourly impressions per user
+                    </div>
+                </div>
+                </li>
+            </ul>
+        </fieldset>
+        {% endfor %}
+        {% endfor %}
+    </div>
 </form>
 {% endblock content %}
 

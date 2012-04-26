@@ -746,6 +746,7 @@ $(function() {
                 // hide app level bids
                 tbody.find('.app-cpm-input').hide();
                 tbody.find('.app-cpm-close').show();
+                tbody.find('.app-cpm-close').text("Set app CPM");
                 // show adunit level bids
                 tbody.find('.cpm-edit').hide();
                 tbody.find('.cpm-input').show();
@@ -799,6 +800,7 @@ $(function() {
                 $('.cpm-value').text(value);
                 $('.cpm-input input').val(value);
                 $('.app-cpm-input input').val(value);
+                $('.app-cpm-close').text(value);
             });
 
             $('.global-cpm-close').click(function (event) {
@@ -809,6 +811,7 @@ $(function() {
                 $('.cpm-value').text(value);
                 $('.cpm-input input').val(value);
                 $('.app-cpm-input input').val(value);
+                $('.app-cpm-close').text(value);
 
                 // show global cpm
                 $('.global-cpm-input').show();
@@ -827,8 +830,10 @@ $(function() {
 
             // Options form
             $('.advanced-options-edit').click(function () {
-                $('.options-form').dialog({
-                    buttons: { "Close": function() { $(this).dialog('close');} },
+                var key = $(this).closest('tr').attr('id').replace('-row', '');
+                // open the correct dialog form
+                $('#' + key +'-options').dialog({
+                    buttons: { "Done": function() { $(this).dialog('close');} },
                     width: 500
                 });
             });

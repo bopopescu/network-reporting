@@ -20,6 +20,19 @@ class AdUnitAdGroupForm(forms.ModelForm):
                            widget=forms.TextInput(attrs={'class': 'float'}))
     active = forms.BooleanField(label='Active:', required=False)
 
+    # Advanced settings available under more options in edit network form
+    allocation_percentage = forms.FloatField(initial=100.0, label='Allocation:',
+                                             required=False,
+                                             widget=forms.TextInput(
+                                                 attrs={'class': 'float'}))
+    daily_frequency_cap = forms.IntegerField(initial='', label='Frequency Caps:',
+                                             required=False,
+                                             widget=forms.TextInput(
+                                                 attrs={'class': 'float'}))
+    hourly_frequency_cap = forms.IntegerField(initial='', required=False,
+                                              widget=forms.TextInput(
+                                                  attrs={'class': 'float'}))
+
     def clean_bid(self):
         bid = self.cleaned_data.get('bid', None)
         if bid != None and bid <= 0.0:

@@ -59,6 +59,7 @@ class AUCUserPushFanOutHandler(webapp.RequestHandler):
 
     def get(self):
         ts = int(time.time()) / 60
+        eta = (ts + 1)* 60
         queue = taskqueue.Queue('push-context-update')
         adunit_keys = self.request.get('adunit_keys')
         for key in adunit_keys:
@@ -66,7 +67,7 @@ class AUCUserPushFanOutHandler(webapp.RequestHandler):
             task = taskqueue.Task(url='/fetch_api/adunit_update_push',
                                   name=task_name,
                                   method='GET',
-                                  countdown=60,
+                                  eta_posix = eta,
                                   params={'adunit_key':key})
             try:
                 queue.add(task)

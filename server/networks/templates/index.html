@@ -86,7 +86,7 @@ Make a table for ad networks that are active
     <div class="{% cycle 'appData' 'appData appData-alt' %}">
         <table class="dataTable appData-main">
             <tbody>
-                <tr id="{{network.key}}-row">
+                <tr id="{{ network.key }}-row">
                     <td class="networkData-icon">
                         <a href="{% url network_details campaign_key=network.key %}">
                             <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />

@@ -136,20 +136,32 @@ $(function() {
             initializeDateButtons();
 
             var all_campaigns = [];
-            var network_apps = [];
+            var apps_by_campaign = {};
             _.each(campaigns_data, function(campaign_data) {
                 var result = initialize_campaign_data(campaign_data, apps, false);
                 all_campaigns = all_campaigns.concat(result[0]);
-                network_apps = network_apps.concat(result[1]);
+                network_apps = apps_by_campaign[result[0][0].id] = result[1];
             });
 
-            _.each(network_apps, function(network_app) {
-                network_app.fetch({
-                    error: function() {
-                        network_app.fetch({
-                            error: toast_error
-                        });
-                    },
+            $('.show-apps').click(function() {
+                var key = $(this).attr('id');
+                var div = $('.' + key + '-apps-div');
+                if (div.is(':hidden')) {
+                    div.show();
+                    $(this).children('span').text("Hide Apps");
+                } else {
+                    div.hide()
+                    $(this).children('span').text("Show Apps");
+                }
+                // load the apps via ajax
+                _.each(apps_by_campaign[key], function(network_app) {
+                    network_app.fetch({
+                        error: function() {
+                            network_app.fetch({
+                                error: toast_error
+                            });
+                        },
+                    });
                 });
             });
 
@@ -176,18 +188,6 @@ $(function() {
                     $(this).find('.edit-link').hide()
                 }
             );
-
-            $('.show-apps').click(function() {
-                var key = $(this).attr('id');
-                var div = $('.' + key + '-apps-div');
-                if (div.is(':hidden')) {
-                    div.show();
-                    $(this).children('span').text("Hide Apps");
-                } else {
-                    div.hide()
-                    $(this).children('span').text("Show Apps");
-                }
-            });
 
             $('#network-editSelect').change(function() {
                 if ($(this).val()) {

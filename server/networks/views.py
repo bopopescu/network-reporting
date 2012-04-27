@@ -435,7 +435,8 @@ class EditNetworkHandler(RequestHandler):
                     tmp_adgroup = adgroup_form.save(commit=False)
                     # copy fields from the form for this adgroup
                     for field in AdUnitAdGroupForm.base_fields.iterkeys():
-                        setattr(adgroup, field, getattr(tmp_adgroup, field))
+                        if field not in ('custom_html', 'custom_method'):
+                            setattr(adgroup, field, getattr(tmp_adgroup, field))
 
                     if network in NETWORK_ADGROUP_TRANSLATION:
                         adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[
@@ -445,9 +446,11 @@ class EditNetworkHandler(RequestHandler):
 
                     html_data = None
                     if adgroup.network_type == 'custom':
-                        html_data = self.request.POST.get('custom_html', '')
+                        html_data = self.request.POST.get(str(adunit_key) + \
+                                '-custom_html', '')
                     elif adgroup.network_type == 'custom_native':
-                        html_data = self.request.POST.get('custom_method', '')
+                        html_data = self.request.POST.get(str(adunit_key) + \
+                                '-custom_method', '')
                     # build default creative with custom_html data if custom or
                     # none if anything else
                     creative = adgroup.default_creative(html_data)

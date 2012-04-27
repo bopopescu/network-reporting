@@ -153,6 +153,20 @@ class AdUnitAdGroupForm(forms.ModelForm):
     custom_method = forms.CharField(label='Custom Method:', required=False,
                                     widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
 
+    def __init__(self, *args, **kwargs):
+        initial = kwargs.get('initial', {})
+        adgroup = kwargs.get('instance', None)
+
+        if adgroup:
+            if adgroup.network_type == 'custom':
+                initial['custom_html'] = adgroup.net_creative.html_data
+            elif adgroup.network_type == 'custom_native':
+                initial['custom_method'] = adgroup.net_creative.html_data
+
+        kwargs.update(initial=initial)
+
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+
     def clean_bid(self):
         bid = self.cleaned_data.get('bid', None)
         if bid != None and bid <= 0.0:
@@ -172,7 +186,5 @@ class AdUnitAdGroupForm(forms.ModelForm):
                   'active',
                   'allocation_percentage',
                   'daily_frequency_cap',
-                  'hourly_frequency_cap',
-                  'custom_html',
-                  'custom_method')
+                  'hourly_frequency_cap',)
 

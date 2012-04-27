@@ -11,7 +11,7 @@ var mopub = mopub || {};
     var DEBUG = true;
 
     // the origin for the stats service
-    var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888';
+    var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888/';
     var STATS_SERVICE_URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
     var URL = DEBUG ? LOCAL_STATS_SERVICE_URL : STATS_SERVICE_URL;
     
@@ -327,6 +327,7 @@ var mopub = mopub || {};
     // `options` is not currently used, but will be used in the future
     // to specify stuff like height, width, and other rendering options.
     function createChart(series, element, account_data, options) {
+        options = options || {};
         var all_chart_data = _.map(account_data, function(range, i){
             var stroke;
             var color;
@@ -373,6 +374,7 @@ var mopub = mopub || {};
 
         // When the graph is hovered over, we display the date and the
         // current value in a tooltip at the top.
+
         var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail( {
             graph: chart,
             xFormatter: function(x) {
@@ -390,7 +392,7 @@ var mopub = mopub || {};
             //     return format_stat(series, y);
             // }
         });
-
+        
         // On the X-axis, display the date in MM/DD form.
         var xAxis = new Rickshaw.Graph.Axis.X({
 	        graph: chart,
@@ -399,7 +401,7 @@ var mopub = mopub || {};
             }),
 	        ticksTreatment: 'glow'
         });
-
+        
         xAxis.render();
 
         // On the Y-axis, display the amount in KMBT form.
@@ -415,6 +417,11 @@ var mopub = mopub || {};
         // Render and return the chart
         chart.renderer.unstack = true;
         chart.render();
+
+        chart.hoverDetail = hoverDetail;
+        chart.xAxis = xAxis;
+        chart.yAxis = yAxis;
+        
         return chart;
     }
 
@@ -424,10 +431,25 @@ var mopub = mopub || {};
      * dashboard page.
      */
     function initializeDashboardCharts(account_data) {
-        var rev_chart = createChart('rev', '#rev_chart', account_data);
-        var imp_chart = createChart('imp', '#imp_chart', account_data);
-        var clk_chart = createChart('clk', '#clk_chart', account_data);
-        var ctr_chart = createChart('ctr', '#ctr_chart', account_data);
+        var charts_for_display = get_charts();
+
+        var charts = [];
+        _.each(charts_for_display, function(chart_type) {
+            var chart = createChart(chart_type, '#' + chart_type + '_chart', account_data);
+            charts.push(chart);
+        });
+
+        _.each(charts, function(chart_i){
+            chart_i.element.addEventListener('mousemove', function(event) {
+                _.each(charts, function(chart_j) {
+                    chart_j.hoverDetail.visible=true;
+                    chart_j.hoverDetail.update(event);
+                });
+                //console.log(chart);
+            });            
+        });
+
+        return charts;
     }
 
 
@@ -474,7 +496,7 @@ var mopub = mopub || {};
                     return json;
                 },
                 error: toast_error,
-                url: URL
+                url: URL + 'stats/'
             });
 
             // Looks at the publisher or advertiser table rows that

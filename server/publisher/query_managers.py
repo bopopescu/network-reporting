@@ -5,6 +5,7 @@ import re
 from hypercache import hypercache
 import datetime
 import urllib2
+import time
 
 from google.appengine.ext import db
 from google.appengine.api import memcache, taskqueue
@@ -90,7 +91,18 @@ class AdUnitContextQueryManager(CachedQueryManager):
             new_timestamp = memcache_ts
 
         # We got new information for the hypercache, give it a new timestamp
+
+
         if adunit_context:
+            context_created_at = getattr(adunit_context, 'created_at', None)
+            if context_created_at is None:
+                now = int(time.mktime(datetime.datetime.utcnow().timetuple()))
+                adunit_context.created_at = now
+                memcache.set(adunit_context_key,
+                             adunit_context,
+                             time=CACHE_TIME)
+                memcache.set("ts:%s" % adunit_context_key, new_timestamp)
+
             adunit_context._hyper_ts = new_timestamp
             hypercache.set(adunit_context_key, adunit_context)
 
@@ -120,16 +132,13 @@ class AdUnitContextQueryManager(CachedQueryManager):
             clear_uri = clear_uri + '&testing=True&port=%s' % port
             fetcher.fetch(clear_uri)
         else:
-            pass
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
-            for key in adunit_keys:
-                # For each adunit, spin up a TQ to ping the adserver
-                # admins with new data
-                taskqueue.add(url='/fetch_api/adunit_update_push',
-                              method='GET',
-                              queue_name='push-context-update',
-                              params={'adunit_key':key})
+            queue = taskqueue.Queue()
+            task = taskqueue.Task(url='/fetch_api/adunit_update_fanout',
+                                  method='POST',
+                                  params={'adunit_keys': adunit_keys})
+            queue.add(task)
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)
@@ -258,14 +267,15 @@ class AppQueryManager(CachedQueryManager):
         put_response = db.put(apps)
 
         # Invalidate cache entries as necessary.
+        affected_account_keys = set()
         for app in apps:
             adunits = AdUnitQueryManager.get_adunits(app=app)
             AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
+            affected_account_keys.add(App.account.get_value_for_datastore(app))
 
         # For each account, clear its apps and adunits from memcache.
-        affected_accounts = set([app.account for app in apps])
-        PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, App)
-        PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdUnit)
+        PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, App)
+        PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdUnit)
 
         return put_response
 
@@ -454,8 +464,11 @@ class AdUnitQueryManager(QueryManager):
         put_response = db.put(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
-        affected_accounts = set([adunit.account for adunit in adunits])
-        PublisherQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdUnit)
+        affected_account_keys = set()
+        for adunit in adunits:
+            affected_account_keys.add(AdUnit.account.get_value_for_datastore(adunit))
+            
+        PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdUnit)
 
         return put_response
 

@@ -55,7 +55,7 @@ class AdUnitContext(object):
         self.creative_ctrs = {}
         for c in creatives:
             self.creative_ctrs[c.key()] = CreativeCTR(c, adunit)
-        self.created_at = int(time.mktime(datetime.utcnow().timetuple()))
+        self.created_at = int(time.mktime(datetime.datetime.utcnow().timetuple()))
 
     def _get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
         '''Given a creative, calculates the CTR.

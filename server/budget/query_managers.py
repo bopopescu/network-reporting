@@ -2,6 +2,8 @@ import logging
 import urllib
 import urllib2
 
+from google.appengine.ext import db
+
 from datetime import datetime, timedelta
 
 from budget.models import BudgetChangeLog, Budget, BudgetSliceLog, BudgetSlicer
@@ -16,6 +18,7 @@ from budget.helpers import (build_budget_update_string,
                             )
 
 from adserver_constants import BUDGET_UPDATE_URL, ADSERVER_ADMIN_HOSTNAME
+from advertiser.query_managers import CampaignQueryManager
 
 ZERO_BUDGET = 0.0
 ONE_DAY = timedelta(days=1)
@@ -28,6 +31,21 @@ TEST_ADSERVER = 'localhost:8000'
 class BudgetQueryManager(QueryManager):
 
     Model = Budget
+
+    @classmethod
+    def update_or_create_budgets_for_campaign_keys(cls, campaign_keys, total_spent=0.0, 
+                                                   testing=False, fetcher=None, migrate_total=False):
+        campaigns = CampaignQueryManager.get(campaign_keys)
+        for campaign in campaigns:
+            budget_obj = cls.update_or_create_budget_for_campaign(campaign, total_spent=total_spent, 
+                                                                  testing=False, fetcher=None, 
+                                                                  migrate_total=False)
+            campaign.budget_obj = budget_obj
+
+        # Use db.put() instead of CampaignQueryManager.put(). The latter calls this method, which
+        # would cause an infinite loop!
+        db.put(campaigns)
+
     @classmethod
     def update_or_create_budget_for_campaign(cls, camp, total_spent=0.0, testing=False, fetcher=None, migrate_total=False):
         # Update budget

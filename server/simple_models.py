@@ -493,7 +493,10 @@ class SimpleTextAndTileCreative(SimpleCreative):
 class SimpleHtmlCreative(SimpleCreative):
     def __init__(self, html_data=None, ormma_html=False, **kwargs):
         if html_data is not None:
-            html_data = str(html_data)
+            try:
+                html_data = str(html_data)
+            except UnicodeEncodeError, e:
+                html_data = unicode(html_data)
         self.html_data = html_data
         self.ormma_html = ormma_html
         super(SimpleHtmlCreative, self).__init__(**kwargs)

@@ -229,13 +229,14 @@ var mopub = mopub || {};
     }
 
     function format_kmbt(number) {
+        if(number <= 0) {
+            return number.toPrecision(3);
+        }
         var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
         var place = Math.floor(Math.floor(Math.log(number)/Math.log(10))/3);
         var result = (number / Math.pow(1000, place)).toPrecision(3) + endings[place];
         return result;
-
     }
-
 
 
     // Calculates conversion rate, cpm, ctr, and fill_rate for an object.

@@ -12,10 +12,10 @@ var mopub = mopub || {};
     var DEBUG = false;
 
     // the origin for the stats service
-    var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888';
+    var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888/';
     var STATS_SERVICE_URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
     var URL = DEBUG ? LOCAL_STATS_SERVICE_URL : STATS_SERVICE_URL;
-    
+
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
@@ -600,7 +600,8 @@ var mopub = mopub || {};
                                     var charts_data = json[granularity].slice(1);
                                     initializeDashboardCharts(charts_data);
                                 });
-                            }
+                            },
+                            url: URL + 'stats/'
                         });
                     } else if(publisher_comparison_shown()) {
                         $('tr.selected', $publisher_table).each(function (index, tr) {
@@ -625,7 +626,8 @@ var mopub = mopub || {};
                                     var charts_data = json[granularity].slice(1);
                                     initializeDashboardCharts(charts_data);
                                 });
-                            }
+                            },
+                            url: URL + 'stats/'
                         });
                     } else {
                         $.jsonp({
@@ -648,7 +650,8 @@ var mopub = mopub || {};
                                     }
                                     initializeDashboardCharts(charts_data);
                                 });
-                            }
+                            },
+                            url: URL + 'stats/'
                         });
                     }
                 }
@@ -743,7 +746,8 @@ var mopub = mopub || {};
                             });
                             update_campaigns(data, publisher_query, selected, order);
                         });
-                    }
+                    },
+                    url: URL + 'stats/'
                 });
             }
 

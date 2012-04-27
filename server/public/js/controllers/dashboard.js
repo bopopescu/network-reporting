@@ -14,7 +14,7 @@ var mopub = mopub || {};
     var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888/';
     var STATS_SERVICE_URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
     var URL = DEBUG ? LOCAL_STATS_SERVICE_URL : STATS_SERVICE_URL;
-    
+
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
@@ -37,16 +37,16 @@ var mopub = mopub || {};
 
     // Map of property name to it's title
     var STATS = {
-        'attempts': 'Attempts',
-        'clk': 'Clicks',
-        'conv': 'Conversions',
-        'conv_rate': 'Conversion Rate',
+        'attempts': 'Att.',
+        'clk': 'Clk.',
+        'conv': 'Cnv.',
+        'conv_rate': 'Cnv Rate',
         'cpm': 'CPM',
         'ctr': 'CTR',
         'fill_rate': 'Fill Rate',
-        'imp': 'Impressions',
-        'req': 'Requests',
-        'rev': 'Revenue'
+        'imp': 'Imp.',
+        'req': 'Req.',
+        'rev': 'Rev.'
     };
 
     // Columns to display when the advertiser table has been expanded.
@@ -76,7 +76,6 @@ var mopub = mopub || {};
         'clk',
         'ctr',
         'cpm',
-        'attempts',
         'conv',
         'conv_rate',
         'fill_rate',
@@ -110,7 +109,7 @@ var mopub = mopub || {};
     // Width and height of the charts.
     // *Note:* these are kept in the CSS as well. They'll also
     // need to be changed if you want to adjust the chart size.
-    var WIDTH = 500;
+    var WIDTH = 400;
     var HEIGHT = 125;
 
 
@@ -231,6 +230,15 @@ var mopub = mopub || {};
         }
     }
 
+    function format_kmbt(number) {
+        if(number <= 0) {
+            return number.toPrecision(3);
+        }
+        var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
+        var place = Math.floor(Math.floor(Math.log(number)/Math.log(10))/3);
+        var result = (number / Math.pow(1000, place)).toPrecision(3) + endings[place];
+        return result;
+    }
 
 
     // Calculates conversion rate, cpm, ctr, and fill_rate for an object.
@@ -395,11 +403,11 @@ var mopub = mopub || {};
         
         // On the X-axis, display the date in MM/DD form.
         var xAxis = new Rickshaw.Graph.Axis.X({
-	        graph: chart,
+            graph: chart,
             labels: _.map(account_data[0], function(datapoint){
                 return get_date_from_datapoint(datapoint);
             }),
-	        ticksTreatment: 'glow'
+            ticksTreatment: 'glow'
         });
         
         xAxis.render();
@@ -468,6 +476,8 @@ var mopub = mopub || {};
 
     var DashboardController = {
         initializeDashboard: function(bootstrapping_data) {
+            var handshake_data = $.cookie('handshake_data');
+            var handshake_iv = $.cookie('handshake_iv');
 
             var $advertiser_table = $('#advertiser');
             var $publisher_table = $('#publisher');
@@ -574,6 +584,8 @@ var mopub = mopub || {};
             function get_data() {
                 var data = {
                     account: bootstrapping_data['account'],
+                    handshake_data: handshake_data,
+                    handshake_iv: handshake_iv,
                     start: $('#start').val(),
                     end: $('#end').val()
                 };
@@ -625,7 +637,8 @@ var mopub = mopub || {};
                                     var charts_data = json[granularity].slice(1);
                                     initializeDashboardCharts(charts_data);
                                 });
-                            }
+                            },
+                            url: URL + 'stats/'
                         });
                     } else if(publisher_comparison_shown()) {
                         $('tr.selected', $publisher_table).each(function (index, tr) {
@@ -650,7 +663,8 @@ var mopub = mopub || {};
                                     var charts_data = json[granularity].slice(1);
                                     initializeDashboardCharts(charts_data);
                                 });
-                            }
+                            },
+                            url: URL + 'stats/'
                         });
                     } else {
                         $.jsonp({
@@ -673,7 +687,8 @@ var mopub = mopub || {};
                                     }
                                     initializeDashboardCharts(charts_data);
                                 });
-                            }
+                            },
+                            url: URL + 'stats/'
                         });
                     }
                 }
@@ -768,7 +783,8 @@ var mopub = mopub || {};
                             });
                             update_campaigns(data, publisher_query, selected, order);
                         });
-                    }
+                    },
+                    url: URL + 'stats/'
                 });
             }
 
@@ -792,10 +808,11 @@ var mopub = mopub || {};
                                 var $last = $('#' + source);
                                 _.each(json.top[0], function(top, index) {
                                     var id = top.campaign;
+                                    var hidden = index >= MAX_CAMPAIGNS;
                                     var context = {
                                         type: 'campaign',
                                         selected: _.include(selected, id) || (!advertiser_comparison_shown() && _.include(selected, source)),
-                                        hidden: index >= MAX_CAMPAIGNS,
+                                        hidden: hidden,
                                         id: id,
                                         columns: ADVERTISER_COLUMNS,
                                         default_columns: ADVERTISER_DEFAULT_COLUMNS,
@@ -1047,7 +1064,7 @@ var mopub = mopub || {};
             $('#custom_end').datepicker(valid_date_range);
 
             // default start/end
-            update_start_end('last_7_days');
+            update_start_end('last_14_days');
 
 
             /* Comparison Date Range */
@@ -1247,6 +1264,8 @@ var mopub = mopub || {};
             }
 
             function show_advertiser_columns() {
+                $('#publisher_filters').hide();
+                $('#advertiser_filters').addClass('expand');
                 $('th, td', $advertiser_table).show();
             }
 
@@ -1257,6 +1276,8 @@ var mopub = mopub || {};
                         $('th.' + column + ', td.' + column, $advertiser_table).hide();
                     }
                 });
+                $('#advertiser_filters').removeClass('expand');
+                $('#publisher_filters').show();
             }
 
             $advertiser_columns.click(function () {
@@ -1285,6 +1306,8 @@ var mopub = mopub || {};
             }
 
             function show_publisher_columns() {
+                $('#advertiser_filters').hide();
+                $('#publisher_filters').addClass('expand');
                 $('th, td', $publisher_table).show();
             }
 
@@ -1295,6 +1318,8 @@ var mopub = mopub || {};
                         $('th.' + column + ', td.' + column, $publisher_table).hide();
                     }
                 });
+                $('#publisher_filters').removeClass('expand');
+                $('#advertiser_filters').show();
             }
 
             $publisher_columns.click(function () {
@@ -1326,7 +1351,7 @@ var mopub = mopub || {};
 
             var filter_header_row = _.template($('#filter_header_row').html());
             $('thead', $advertiser_table).html(filter_header_row({
-                title: 'Campaigns and AdGroups',
+                title: 'Ads',
                 columns: ADVERTISER_COLUMNS,
                 default_columns: ADVERTISER_DEFAULT_COLUMNS,
                 sortable_columns: SORTABLE_COLUMNS,
@@ -1359,7 +1384,7 @@ var mopub = mopub || {};
             }
 
             $('thead', $publisher_table).html(filter_header_row({
-                title: 'Apps and AdUnits',
+                title: 'Apps',
                 columns: PUBLISHER_COLUMNS,
                 default_columns: PUBLISHER_DEFAULT_COLUMNS,
                 sortable_columns: SORTABLE_COLUMNS,

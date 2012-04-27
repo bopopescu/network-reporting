@@ -84,7 +84,7 @@ class DashboardHandler(RequestHandler):
 @login_required
 def dashboard(request, *args, **kwargs):
     handler = DashboardHandler(template="publisher/dashboard.html")
-    return handler(request, use_cache=False, *args, **kwargs)
+    return handler(request, use_cache=False, use_handshake=True, *args, **kwargs)
 
 
 

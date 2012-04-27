@@ -914,7 +914,9 @@ $(function() {
                     var field_term = field[1];
                     var value = $(modal_div).find('input[id$=' + field_name + ']').val();
                     values.push(value);
-                    if(value != undefined && value != '') {
+                    if(value != undefined && value != '' &&
+                            (field_name.indexOf("_frequency_cap") == -1 || value != '0') &&
+                            (field_name.indexOf("_percentage") == -1 || value != '100.0')) {
                         text += value + field_term;
                     }
                 });

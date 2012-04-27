@@ -254,7 +254,8 @@ class EditNetworkHandler(RequestHandler):
             network_data['pub_id'] = getattr(self.account.network_config,
                     network + '_pub_id', '')
 
-        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        apps = PublisherQueryManager.get_objects_dict_for_account(account=
+                self.account).values()
         adgroup = None
         for app in apps:
             if network in NETWORKS_WITH_PUB_IDS:
@@ -282,13 +283,10 @@ class EditNetworkHandler(RequestHandler):
             app.fourteen_day_stats = fourteen_day_stats
 
             # Create different adgroup form for each adunit
-            app.adunits = []
-            for adunit in app.all_adunits:
-                if adunit.deleted:
-                    continue
-
+            for adunit in app.adunits:
                 adgroup = None
                 if campaign_key:
+                    # Get adgroup by key name
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(),
                             self.account.key(), True)
@@ -306,7 +304,8 @@ class EditNetworkHandler(RequestHandler):
                         # differs from the app level one
                         adunit.pub_id = adunit_pub_id
 
-                app.adunits.append(adunit)
+            # Sort adunits
+            app.adunits = sorted(app.adunits, key=lambda adunit: adunit.name)
 
         # Create the default adgroup form
         adgroup_form = NetworkAdGroupForm(instance=adgroup)
@@ -339,8 +338,10 @@ class EditNetworkHandler(RequestHandler):
         if not self.request.is_ajax():
             raise Http404
 
-        apps = AppQueryManager.get_apps(account=self.account)
-        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        apps = PublisherQueryManager.get_apps_dict_for_account(account=
+                self.account).values()
+        adunits = PublisherQueryManager.get_adunits_dict_for_account(account=
+                self.account).values()
 
         query_dict = self.request.POST.copy()
         query_dict['campaign_type'] = 'network'
@@ -559,18 +560,13 @@ class EditNetworkHandler(RequestHandler):
             else:
                 errors = {}
                 for key, value in adgroup_form.errors.items():
-                    if adgroup_form.prefix and key in set(AdUnitAdGroupForm.base_fields.keys()):
+                    if adgroup_form.prefix and key in set(AdUnitAdGroupForm.
+                            base_fields.keys()):
                         key = adgroup_form.prefix + '-' + key
                     errors[key] = ' '.join([error for error in value])
         else:
             errors = {}
             for key, value in campaign_form.errors.items():
-                # TODO: find a less hacky way to get jQuery validator's
-                # showErrors function to work with the SplitDateTimeWidget
-                if key == 'start_datetime':
-                    key = 'start_datetime_1'
-                elif key == 'end_datetime':
-                    key = 'end_datetime_1'
                 errors[key] = ' '.join([error for error in value])
 
         return JSONResponse({

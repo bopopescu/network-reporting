@@ -1032,14 +1032,14 @@ var mopub = mopub || {};
                 $('#date_modal').hide();
             });
 
+            // default start/end
+            update_start_end('last_14_days');
+
             var valid_date_range = {
                 endDate: "0d"
             };
             $('#custom_start').datepicker(valid_date_range);
             $('#custom_end').datepicker(valid_date_range);
-
-            // default start/end
-            update_start_end('last_14_days');
 
 
             /* Comparison Date Range */

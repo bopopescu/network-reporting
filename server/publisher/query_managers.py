@@ -153,7 +153,7 @@ class PublisherQueryManager(CachedQueryManager):
     def get_objects_dict_for_account(cls, account):
         """
         Returns a dictionary mapping App keys to App entities carrying adunit data. Adunits for each
-        app can be retrieved as a list by using app.adunit.
+        app can be retrieved as a list by using app.adunits.
         """
         apps_dict = cls.get_apps_dict_for_account(account)
         adunits = cls.get_adunits_dict_for_account(account).values()
@@ -467,7 +467,7 @@ class AdUnitQueryManager(QueryManager):
         affected_account_keys = set()
         for adunit in adunits:
             affected_account_keys.add(AdUnit.account.get_value_for_datastore(adunit))
-            
+
         PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdUnit)
 
         return put_response

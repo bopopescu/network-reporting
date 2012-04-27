@@ -19,20 +19,20 @@ var mopub = mopub || {};
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
-            'rgba(200,225,251,0.4)',
-            'rgba(163,193,218,0.4)',
-            'rgba(236,183,150,0.4)',
-            'rgba(178,164,112,0.4)',
-            'rgba(210,237,130,0.4)',
-            'rgba(221,203,83,0.4)'
+            'hsla(180, 50%, 50%, 0.1)',
+            'hsla(120, 50%, 50%, 0.1)',
+            'hsla(60, 50%, 50%, 0.1)',
+            'hsla(0, 50%, 50%, 0.1)',
+            'hsla(300, 50%, 50%, 0.1)',
+            'hsla(240, 50%, 50%, 0.1)'
         ],
         secondary: [
-            'rgba(200,225,251,1)',
-            'rgba(158,177,193,1)',
-            'rgba(220,143,112,1)',
-            'rgba(146,135,90,1)',
-            'rgba(187,228,104,1)',
-            'rgba(197,163,47,1)'
+            'hsla(180, 50%, 50%, 1)',
+            'hsla(120, 50%, 50%, 1)',
+            'hsla(60, 50%, 50%, 1)',
+            'hsla(0, 50%, 50%, 1)',
+            'hsla(300, 50%, 50%, 1)',
+            'hsla(240, 50%, 50%, 1)'
         ]
     };
 
@@ -337,8 +337,8 @@ var mopub = mopub || {};
             var stroke;
             var color;
             if(range.id === 'vs') {
-                stroke = 'rgba(223, 223, 223, 1.0)';
-                color = 'rgba(223, 223, 223, 0.4)';
+                stroke = 'hsla(0, 0%, 75%, 1)';
+                color = 'hsla(0, 0%, 75%, 0.1)';
             }
             else {
                 stroke = COLOR_THEME.secondary[i];

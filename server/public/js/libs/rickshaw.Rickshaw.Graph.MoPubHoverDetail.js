@@ -71,14 +71,14 @@ Rickshaw.Graph.MoPubHoverDetail = function(args) {
 		}
 	};
 
-	// this.graph.element.addEventListener( 
-	// 	'mousemove', 
-	// 	function(e) {
-	// 		self.visible = true; 
-	// 		self.update(e);
-	// 	}, 
-	// 	false 
-	// );
+	this.graph.element.addEventListener( 
+		'mousemove', 
+		function(e) {
+			self.visible = true; 
+			self.update(e);
+		}, 
+		false 
+	);
 
 	this.graph.onUpdate( function() { self.update() } );
 

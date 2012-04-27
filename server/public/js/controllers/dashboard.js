@@ -439,6 +439,8 @@ var mopub = mopub || {};
      * dashboard page.
      */
     function initializeDashboardCharts(account_data) {
+
+        // Get the list of metrics we want to make charts for.
         var charts_for_display = get_charts();
 
         var charts = [];
@@ -448,13 +450,26 @@ var mopub = mopub || {};
         });
 
         _.each(charts, function(chart_i){
-            chart_i.element.addEventListener('mousemove', function(event) {
+
+            chart_i.element.addEventListener('mousemove', function(e) {
                 _.each(charts, function(chart_j) {
                     chart_j.hoverDetail.visible=true;
-                    chart_j.hoverDetail.update(event);
+                    chart_j.hoverDetail.update(e);
+                });                
+            });
+            
+            chart_i.onUpdate(function(){
+                _.each(charts, function(chart_j) {
+                    chart_j.hoverDetail.update();
+                });                
+            });
+
+            chart_i.element.addEventListener('mouseout', function(e) {
+                _.each(charts, function(chart_j) {
+				    chart_j.hoverDetail.hide();
                 });
-                //console.log(chart);
-            });            
+		    });
+            
         });
 
         return charts;

@@ -298,7 +298,7 @@ $(function() {
             var rows = $('table.inventory_table').children().not('thead').find('tr');
             rows.each(function(row_iter, row) {
                 $(row).find('td').each(function(data_iter, data) {
-                    $(data).find('input').attr('tabIndex', rows.length * data_iter + row_iter);
+                    $(data).find('input, textarea').attr('tabIndex', rows.length * data_iter + row_iter);
                 });
             });
 
@@ -713,112 +713,187 @@ $(function() {
             });
 
 
-            /* Setting CPM */
-            // adunit level
-            $('.cpm-input input').keyup(function() {
-                var value = $(this).val();
-                var td = $(this).closest('td');
-                $(td).find('.cpm-value').text(value);
-            }).keyup();
+            /* Setting cpm, custom_html and custom_native */
+            var fields = [['cpm', 'input']]
+            if(network_type == 'custom') {
+                fields.push(['custom_html', 'textarea']);
+            } else if(network_type == 'custom_native') {
+                fields.push(['custom_method', 'input']);
+            }
 
-            $('.cpm-edit').click(function (event) {
-                if(!$('.global-cpm-input').is(':hidden')) {
-                    $('.global-cpm-input').hide();
-                    $('.global-cpm-close').show();
+            _.each(fields, function(field_props) {
+                var field = field_props[0];
+                var type = field_props[1];
 
-                    $('.app-cpm-input').show();
-                    $('.app-cpm-close').hide();
+                // adunit level
+                $('.' + field + '-input ' + type).keyup(function() {
+                    var value = $(this).val();
+                    var td = $(this).closest('td');
+                    $(td).find('.' + field + '-value').text(value);
+                }).keyup();
 
-                    // show app level cpm
-                    $('.app-cpm-input').show();
-                    // hide app edit text
-                    $('.app-cpm-close').hide();
-                }
-                event.preventDefault();
-                var tbody = $(this).closest('tbody');
-                // hide app level bids
-                tbody.find('.app-cpm-input').hide();
-                tbody.find('.app-cpm-close').show();
-                tbody.find('.app-cpm-close').text("Set app CPM");
-                // show adunit level bids
-                tbody.find('.cpm-edit').hide();
-                tbody.find('.cpm-input').show();
-            });
+                $('.' + field + '-edit').click(function (event) {
+                    if(!$('.global-' + field + '-input').is(':hidden')) {
+                        $('.global-' + field + '-input').hide();
+                        $('.global-' + field + '-close').show();
 
-            // app level
-            $('.app-cpm-input input').keyup(function() {
-                var value = $(this).val();
-                var tbody = $(this).closest('tbody');
-                $(tbody).find('.cpm-value').text(value);
-                $(tbody).find('.cpm-input input').val(value);
-            });
+                        $('.app-' + field + '-input').show();
+                        $('.app-' + field + '-close').hide();
 
-            $('.app-cpm-close').click(function (event) {
-                event.preventDefault;
-                if($('.global-cpm-input').is(':hidden')) {
-                    elements = $(this);
-                } else {
-                    $('.global-cpm-input').hide();
-                    $('.global-cpm-close').show();
-
-                    $('.app-cpm-input').show();
-                    $('.app-cpm-close').hide();
-
-                    elements = $('.app-cpm-close');
-                }
-
-                elements.each(function() {
+                        // show app level fields
+                        $('.app-' + field + '-input').show();
+                        // hide app edit text
+                        $('.app-' + field + '-close').hide();
+                    }
+                    event.preventDefault();
                     var tbody = $(this).closest('tbody');
-                    // copy value of first adunit input to all cpm inputs
-                    var value = tbody.find('.cpm-input input').val();
-                    tbody.find('.cpm-value').text(value);
-                    tbody.find('.cpm-input input').val(value);
-                    tbody.find('.app-cpm-input input').val(value);
+                    // hide app level fields
+                    tbody.find('.app-' + field + '-input').hide();
+                    tbody.find('.app-' + field + '-close').show();
+                    tbody.find('.app-' + field + '-close').text("Set app " + field.replace('_', ' '));
+                    // show adunit level fields
+                    tbody.find('.' + field + '-edit').hide();
+                    tbody.find('.' + field + '-input').show();
+                });
 
-                    // show app level cpm
-                    tbody.find('.app-cpm-input').show();
-                    // hide app edit text
-                    tbody.find('.app-cpm-close').hide();
+                // app level
+                $('.app-' + field + '-input ' + type).keyup(function() {
+                    var value = $(this).val();
+                    var tbody = $(this).closest('tbody');
+                    $(tbody).find('.' + field + '-input ' + type).val(value);
+                    if(!value) {
+                        value = "Set adunit " + field.replace('_', ' ');
+                    }
+                    $(tbody).find('.' + field + '-value').text(value);
+                });
 
-                    // hide adunit cpms for app
-                    tbody.find('.cpm-input').hide();
+                $('.app-' + field + '-close').click(function (event) {
+                    event.preventDefault;
+                    if($('.global-' + field + '-input').is(':hidden')) {
+                        elements = $(this);
+                    } else {
+                        $('.global-' + field + '-input').hide();
+                        $('.global-' + field + '-close').show();
+
+                        $('.app-' + field + '-input').show();
+                        $('.app-' + field + '-close').hide();
+
+                        elements = $('.app-' + field + '-close');
+                    }
+
+                    elements.each(function() {
+                        var tbody = $(this).closest('tbody');
+                        // copy value of first adunit input to all fields inputs
+                        var value = tbody.find('.' + field + '-input ' + type).val();
+                        tbody.find('.' + field + '-input ' + type).val(value);
+                        tbody.find('.app-' + field + '-input ' + type).val(value);
+
+                        if(!value) {
+                            value = "Set adunit " + field.replace('_', ' ');
+                        }
+                        tbody.find('.' + field + '-value').text(value);
+
+                        // show app level fields
+                        tbody.find('.app-' + field + '-input').show();
+                        // hide app edit text
+                        tbody.find('.app-' + field + '-close').hide();
+
+                        // hide adunit fields for app
+                        tbody.find('.' + field + '-input').hide();
+                        // show adunit edit text
+                        tbody.find('.' + field + '-edit').show();
+                    });
+                });
+
+                // global level
+                $('.global-' + field + '-input ' + type).keyup(function() {
+                    var value = $(this).val();
+                    $('.' + field + '-value').text(value);
+                    $('.' + field + '-input ' + type).val(value);
+                    $('.app-' + field + '-input ' + type).val(value);
+
+                    if(!value) {
+                        $('.' + field + '-value').text("Set adunit " + field.replace('_', ' '));
+                        value = "Set app " + field.replace('_', ' ');
+                    }
+                    $('.app-' + field + '-close').text(value);
+                });
+
+                $('.global-' + field + '-close').click(function (event) {
+                    event.preventDefault;
+                    // copy value of first adunit to all field inputs
+                    var value = $('.' + field + '-input ' + type).val();
+                    $('.global-' + field + '-input ' + type).val(value);
+                    $('.' + field + '-value').text(value);
+                    $('.' + field + '-input ' + type).val(value);
+                    $('.app-' + field + '-input ' + type).val(value);
+
+                    if(!value) {
+                        $('.' + field + '-value').text("Set adunit " + field.replace('_', ' '));
+                        value = "Set app " + field.replace('_', ' ');
+                    }
+                    $('.app-' + field + '-close').text(value);
+
+                    // show global field
+                    $('.global-' + field + '-input').show();
+                    // hide global edit text
+                    $('.global-' + field + '-close').hide();
+
+                    // hide adunit fields for app
+                    $('.' + field + '-input').hide();
+                    // hide app fields for app
+                    $('.app-' + field + '-input').hide();
                     // show adunit edit text
-                    tbody.find('.cpm-edit').show();
+                    $('.' + field + '-edit').show();
+                    // show app edit text
+                    $('.app-' + field + '-close').show();
                 });
             });
 
-            // global level
-            $('.global-cpm-input input').keyup(function() {
-                var value = $(this).val();
-                $('.cpm-value').text(value);
-                $('.cpm-input input').val(value);
-                $('.app-cpm-input input').val(value);
-                $('.app-cpm-close').text(value);
-            });
+            /* Initialize cpm, custom_html and custom_native */
+            _.each(fields, function(field_props) {
+                var field = field_props[0];
+                var type = field_props[1];
 
-            $('.global-cpm-close').click(function (event) {
-                event.preventDefault;
-                // copy value of first adunit to all cpm inputs
-                var value = $('.cpm-input input').val();
-                $('.global-cpm-input input').val(value);
-                $('.cpm-value').text(value);
-                $('.cpm-input input').val(value);
-                $('.app-cpm-input input').val(value);
-                $('.app-cpm-close').text(value);
+                var all_apps_equal = true;
+                $('.app-tbody').each(function() {
+                    var all_adunits_equal = true;
+                    var value = $(this).find('.adunit-row .' + field + '-input ' + type).val();
+                    // check if all adunits have the same value for the field
+                    $(this).find('.adunit-row .' + field + '-input ' + type).each(function() {
+                        if(value != $(this).val()) {
+                            all_adunits_equal = false;
+                        }
+                    });
 
-                // show global cpm
-                $('.global-cpm-input').show();
-                // hide global edit text
-                $('.global-cpm-close').hide();
+                    if(all_adunits_equal) {
+                        $(this).find('.adunit-row .' + field + '-input').hide();
+                        $(this).find('.adunit-row .' + field + '-edit').show();
 
-                // hide adunit cpms for app
-                $('.cpm-input').hide();
-                // hide app cpms for app
-                $('.app-cpm-input').hide();
-                // show adunit edit text
-                $('.cpm-edit').show();
-                // show app edit text
-                $('.app-cpm-close').show();
+                        $(this).find('.app-' + field + '-input ' + type).val(value);
+                        $(this).find('.app-' + field + '-input').show();
+                        $(this).find('.app-' + field + '-close').hide();
+                    } else {
+                        all_apps_equal = false;
+                    }
+                });
+
+                if(all_apps_equal) {
+                    var value = $('.app-' + field + '-input ' + type).val();
+
+                    $('.app-' + field + '-input').hide();
+                    $('.app-' + field + '-close').show();
+
+                    $('.global-' + field + '-close').hide();
+                    $('.global-' + field + '-input ' + type).val(value);
+                    $('.global-' + field + '-input').show();
+
+                    if(!value) {
+                        $('.' + field + '-value').text("Set adunit " + field.replace('_', ' '));
+                        value = "Set app " + field.replace('_', ' ');
+                    }
+                    $('.app-' + field + '-close').text(value);
+                }
             });
 
             /* Advanced Options Modal */
@@ -938,7 +1013,7 @@ $(function() {
                 } );
             });
 
-            /* Initialize fields */
+            /* Initialize advanced options and active fields */
             // mimic an entry for each adunit to prepopulate settings
             // at app and global levels
             $('tr.adunit-row').each(function() {
@@ -950,42 +1025,6 @@ $(function() {
                 var modal_div = $('#' + key +'-options');
                 modal_ok($(this), modal_div);
             });
-
-            // prepopulate cpm
-            var all_apps_equal = true;
-            $('.app-tbody').each(function() {
-                var all_adunits_equal = true;
-                var value = $(this).find('.adunit-row .cpm-input input').val();
-                // check if all adunits have the same cpm
-                $(this).find('.adunit-row .cpm-input input').each(function() {
-                    if(value != $(this).val()) {
-                        all_adunits_equal = false;
-                    }
-                });
-
-                if(all_adunits_equal) {
-                    $(this).find('.adunit-row .cpm-input').hide();
-                    $(this).find('.adunit-row .cpm-edit').show();
-
-                    $(this).find('.app-cpm-input input').val(value);
-                    $(this).find('.app-cpm-input').show();
-                    $(this).find('.app-cpm-close').hide();
-                } else {
-                    all_apps_equal = false;
-                }
-            });
-
-            if(all_apps_equal) {
-                var value = $('.app-cpm-input input').val();
-
-                $('.app-cpm-input').hide();
-                $('.app-cpm-close').text(value);
-                $('.app-cpm-close').show();
-
-                $('.global-cpm-close').hide();
-                $('.global-cpm-input input').val(value);
-                $('.global-cpm-input').show();
-            }
 
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';

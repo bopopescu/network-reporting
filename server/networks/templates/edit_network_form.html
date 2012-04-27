@@ -121,44 +121,6 @@
                 </div>
                 </li>
                 {% endif %}
-
-                {% if network.name == "custom_native" %}
-                <li>
-                {{ adgroup_form.custom_method.label_tag }}
-                <div>
-                    {{ adgroup_form.custom_method }}
-                </div>
-                </li>
-                {% endif %}
-
-                {% if network.name == "custom" %}
-                <li>
-                {{ adgroup_form.custom_html.label_tag }}
-                <div>
-                    {{ adgroup_form.custom_html }}
-                    <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
-                    <div id="campaignForm-customHtml-helpContent" class="hidden">
-                        <h3>Custom Network</h3>
-                        MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
-                        <br/>
-                        <br/>
-                        <h4>Example:</h4>
-                        A sample HTML snippet from Glam Media is:
-                        <br/>
-                        <br/>
-                        <code>
-                            &lt;script type="text/javascript"><br/>
-                            window.glam_affiliate_id = 1234567890;<br/>
-                            if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
-                            if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
-                            var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
-                            document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
-                            &lt;/script><br/>
-                        </code>
-                    </div>
-                </div>
-                </li>
-                {% endif %}
             </ul>
 
             <div style="margin-top:15px">
@@ -333,6 +295,36 @@
                     <td class="name">
                         Enabled
                     </td>
+                    {% if network.name == "custom_native" %}
+                    <td>
+                        Custom Method
+                    </td>
+                    {% endif %}
+                    {% if network.name == "custom" %}
+                    <td class="name">
+                        Custom HTML
+                        <a href="#" id="campaignForm-customHtml-helpLink">What's this?</a>
+                        <div id="campaignForm-customHtml-helpContent" class="hidden">
+                            <h3>Custom Network</h3>
+                            MoPub supports custom ad networks if the network provides an HTML snippet for displaying ads.  Select Custom Network then paste the HTML snippet in the box below.
+                            <br/>
+                            <br/>
+                            <h4>Example:</h4>
+                            A sample HTML snippet from Glam Media is:
+                            <br/>
+                            <br/>
+                            <code>
+                                &lt;script type="text/javascript"><br/>
+                                window.glam_affiliate_id = 1234567890;<br/>
+                                if ( !window.glam_ord ){window.glam_ord = Math.random()*1E16;}<br/>
+                                if ( !window.glam_tile ){window.glam_tile = 0;}<br/>
+                                var adCallUrl = 'http://www35.glam.com/gad/glamadapt_mobile.act?;banner=yes;sz=320x50;tt=m' +';afid=' + window.glam_affiliate_id +';ord=' + window.glam_ord +';tile=' + (++window.glam_tile) +';_glto=' + (new Date()).getTimezoneOffset() +';_g_cv=3;';<br/>
+                                document.write('<scr' + 'ipt type="text/javascript" src="' + adCallUrl + '"><' + '/sc' + 'ript>');<br/>
+                                &lt;/script><br/>
+                            </code>
+                        </div>
+                    </td>
+                    {% endif %}
                     {% if network.name in NETWORKS_WITH_PUB_IDS %}
                     <td class="name">Ad Network ID</td>
                     {% endif %}
@@ -368,6 +360,26 @@
                     <td class="text">
                         <input class="global-active" type="checkbox" />
                     </td>
+                    {% if network.name == "custom_native" %}
+                    <td>
+                        <div class="global-custom_method-input hidden">
+                            <input type="text" placeholder="loadNativeSDK:" class="global-custom_method">
+                        </div>
+                        <div class="global-custom_method-close editable">
+                            Set global custom method
+                        </div>    
+                    </td>
+                    {% endif %}
+                    {% if network.name == "custom" %}
+                    <td>
+                        <div class="global-custom_html-input hidden">
+                            <textarea class="global-custom_html" rows="3" placeholder="HTML Custom Content" cols="40" ></textarea>
+                        </div>
+                        <div class="global-custom_html-close editable">
+                            Set global custom html
+                        </div>    
+                    </td>
+                    {% endif %}
                     {% if network.name in NETWORKS_WITH_PUB_IDS %}
                     <td class="text">
                     </td>
@@ -409,6 +421,26 @@
                     <td class="text">
                         <input class="app-active" type="checkbox" />
                     </td>
+                    {% if network.name == "custom_native" %}
+                    <td>
+                        <div class="app-custom_method-input hidden">
+                            <input type="text" placeholder="loadNativeSDK:" class="app-custom_method">
+                        </div>
+                        <div class="app-custom_method-close editable">
+                            Set app custom method
+                        </div>    
+                    </td>
+                    {% endif %}
+                    {% if network.name == "custom" %}
+                    <td>
+                        <div class="app-custom_html-input hidden">
+                            <textarea class="app-custom_html" rows="3" placeholder="HTML Custom Content" cols="40" ></textarea>
+                        </div>
+                        <div class="app-custom_html-close editable">
+                            Set app custom html
+                        </div>    
+                    </td>
+                    {% endif %}
                     {% if network.name in NETWORKS_WITH_PUB_IDS %}
                     <td class="text">
                         <div>
@@ -453,6 +485,26 @@
                     <td class="text" style="height:20px">
                         {{ adunit.adgroup_form.active }}
                     </td>
+                    {% if network.name == "custom_native" %}
+                    <td>
+                        <div class="custom_method-input">
+                            {{ adunit.adgroup_form.custom_method }}
+                        </div>
+                        <div class="custom_method-edit editable hidden">
+                            <span class="custom_method-value"></span>
+                        </div>
+                    </td>
+                    {% endif %}
+                    {% if network.name == "custom" %}
+                    <td>
+                        <div class="custom_html-input">
+                            {{ adunit.adgroup_form.custom_html }}
+                        </div>
+                        <div class="custom_html-edit editable hidden">
+                            <span class="custom_html-value"></span>
+                        </div>           
+                    </td>
+                    {% endif %}
                     {% if network.name in NETWORKS_WITH_PUB_IDS %}
                     <td class="text adunit">
                         {% if network.name in NETWORKS_WITH_PUB_IDS %}

@@ -20,12 +20,6 @@ class NetworkCampaignForm(forms.ModelForm):
                   'description')
 
 class NetworkAdGroupForm(forms.ModelForm):
-    custom_html = forms.CharField(label='Custom HTML:', required=False,
-                                  widget=forms.Textarea(attrs={'placeholder': 'HTML Custom Content',
-                                                               'rows': 3}))
-    custom_method = forms.CharField(label='Custom Method:', required=False,
-                                    widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
-
     device_targeting = forms.TypedChoiceField(choices=(('0', 'All'),
                                                        ('1', 'Filter by device and OS')),
                                               coerce=lambda x: bool(int(x)),
@@ -151,6 +145,14 @@ class AdUnitAdGroupForm(forms.ModelForm):
                                               widget=forms.TextInput(
                                                   attrs={'class': 'float'}))
 
+    # used for custom networks
+    custom_html = forms.CharField(label='Custom HTML:', required=False,
+                                  widget=forms.Textarea(attrs={'placeholder': 'HTML Custom Content',
+                                                               'rows': 3}))
+    # used for custom_native networks
+    custom_method = forms.CharField(label='Custom Method:', required=False,
+                                    widget=forms.TextInput(attrs={'placeholder': 'loadNativeSDK:'}))
+
     def clean_bid(self):
         bid = self.cleaned_data.get('bid', None)
         if bid != None and bid <= 0.0:
@@ -170,5 +172,7 @@ class AdUnitAdGroupForm(forms.ModelForm):
                   'active',
                   'allocation_percentage',
                   'daily_frequency_cap',
-                  'hourly_frequency_cap')
+                  'hourly_frequency_cap',
+                  'custom_html',
+                  'custom_method')
 

@@ -373,10 +373,10 @@
                     </td>
                     {% endif %}
                     <td class="text" style="width:100px">
-                        <div class="global-cpm-input {% if not network.bid %}hidden{% endif %}">
-                            <input class="float bid" type="text" value="{{ network.bid }}">
+                        <div class="global-cpm-input hidden">
+                            <input class="float bid" type="text">
                         </div>
-                        <div class="global-cpm-close editable{% if network.bid %} hidden{% endif %}">
+                        <div class="global-cpm-close editable">
                             Set global CPM
                         </div>    
                     </td>
@@ -394,7 +394,7 @@
                 </tr>
             </tbody>
             {% for app in apps %}
-            <tbody class="{% cycle 'alt' '' %}">
+            <tbody class="{% cycle 'alt' '' %} app-tbody">
                 <tr id="{{ app.key }}-row" class="main app-targeting app-row">
                     <td class="icon">
                         <div>
@@ -417,15 +417,11 @@
                     </td>
                     {% endif %}
                     <td class="text" style="width:100px">
-                        <div class="app-cpm-input {% if not app.bid or network.bid %}hidden{% endif %}">
-                            <input class="float bid" type="text" value="{{ app.bid }}">
+                        <div class="app-cpm-input hidden">
+                            <input class="float bid" type="text">
                         </div>
-                        <div class="app-cpm-close editable{% if app.bid and not network.bid %} hidden{% endif %}">
-                            {% if network.bid %}
-                            {{ network.bid }}
-                            {% else %}
+                        <div class="app-cpm-close editable">
                             Set app CPM
-                            {% endif %}
                         </div>    
                     </td>
                     {% if reporting %}
@@ -474,12 +470,12 @@
                     </td>
                     {% endif %}
                     <td class="text">
-                        <div class="cpm-edit editable{% if not app.bid %} hidden{% endif %}">
-                            <span class="cpm-value"></span>
-                        </div>           
-                        <div class="cpm-input{% if app.bid %} hidden{% endif %}">
+                        <div class="cpm-input">
                             {{ adunit.adgroup_form.bid }}
                         </div>
+                        <div class="cpm-edit editable hidden">
+                            <span class="cpm-value"></span>
+                        </div>           
                     </td>
                     {% if reporting %}
                     <td class="stat">

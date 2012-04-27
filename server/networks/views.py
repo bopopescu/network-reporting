@@ -283,8 +283,6 @@ class EditNetworkHandler(RequestHandler):
 
             # Create different adgroup form for each adunit
             app.adunits = []
-            min_cpm = 9999.9
-            max_cpm = 0.0
             for adunit in app.all_adunits:
                 if adunit.deleted:
                     continue
@@ -294,9 +292,6 @@ class EditNetworkHandler(RequestHandler):
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(),
                             self.account.key(), True)
-                    if adgroup:
-                        min_cpm = min(adgroup.bid, min_cpm)
-                        max_cpm = max(adgroup.bid, max_cpm)
 
                 adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
                         prefix=str(adunit.key()))
@@ -312,13 +307,6 @@ class EditNetworkHandler(RequestHandler):
                         adunit.pub_id = adunit_pub_id
 
                 app.adunits.append(adunit)
-            # Set app level bid
-            if app.adunits and min_cpm == max_cpm:
-                app.bid = min_cpm
-            elif app.adunits and not campaign_key:
-                app.bid = DEFAULT_BID
-            else:
-                app.bid = None
 
         # Create the default adgroup form
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
@@ -326,13 +314,6 @@ class EditNetworkHandler(RequestHandler):
 
         # Sort apps
         apps = sorted(apps, key=lambda app_data: app_data.identifier)
-
-        logging.info([app.bid for app in apps])
-        if apps and reduce(lambda memo, app: app.bid if memo == app.bid else
-                False, apps, apps[0].bid):
-            network_data['bid'] = apps[0].bid
-        else:
-            network_data['bid'] = None
 
         return render_to_response(self.request,
                                   'networks/edit_network_form.html',

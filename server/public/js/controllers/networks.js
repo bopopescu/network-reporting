@@ -360,7 +360,7 @@ $(function() {
                 }).keyup();
 
             // perculate checked change up to global
-            function update_golbal_active() {
+            function update_global_active() {
                 if($('.app-active').length == $('.app-active:checked').length) {
                     $('.global-active').attr("checked", "checked");
                 } else {
@@ -369,24 +369,19 @@ $(function() {
             }
 
             // global enabled checkbox
-            $('.global-active').change(function() {
-                if($('.global-active').is(':checked')) {
-                    $('.app-active').attr('checked', 'checked');
-                    $('input[name$="active"]').attr('checked', 'checked');
-                } else {
-                    $('.app-active').removeAttr("checked");
-                    $('input[name$="active"]').removeAttr("checked");
-                }
-            });
+            $('.global-active')
+                .change(function() {
+                    if($('.global-active').is(':checked')) {
+                        $('.app-active').attr('checked', 'checked');
+                        $('input[name$="active"]').attr('checked', 'checked');
+                    } else {
+                        $('.app-active').removeAttr("checked");
+                        $('input[name$="active"]').removeAttr("checked");
+                    }
+                });
 
             // set up active checkbox's for app level
             $('.app-active')
-                .each(function() {
-                    var checkboxes = $(this).closest('tbody').find('input[name$="active"]');
-                    if (checkboxes.filter('input:checked').length == checkboxes.length) {
-                        $(this).attr('checked', 'checked');
-                    }
-                })
                 .change(function() {
                     var checkboxes = $(this).closest('tbody').find('input[name$="active"]');
                     if ($(this).is(':checked')) {
@@ -395,42 +390,40 @@ $(function() {
                         checkboxes.removeAttr("checked");
                     }
 
-                    update_golbal_active();
+                    update_global_active();
                 });
 
             // perculate checked changes up
-            $('input[name$="active"]').change(function () {
-                var tbody = $(this).closest('tbody'); 
-                var key = $(this).attr('class');
-                if(tbody.find('input[name$="active"]:checked').length == tbody.find('input[name$="active"]').length) {
-                    tbody.find('.app-active').attr("checked", "checked");
-                } else {
-                    tbody.find('.app-active').removeAttr("checked");
-                }
-
-                update_golbal_active();
-
-                // If no ad network ID set up, show a tooltip
-                if ($(this).is(':checked')) {
-                    var network_input = $(this).parents('tr').find('input[name$="'+pub_id+'"]');
-                    var value = network_input.val();
-                    if (!value) {
-                        network_input.tooltip({
-                            title: 'Enter the network ID to enable (<a href="#">help!</a>)',
-                            trigger: 'manual',
-                            placement:'top'
-                        });
-                        network_input.tooltip('show');
+            $('input[name$="active"]')
+                .change(function () {
+                    var tbody = $(this).closest('tbody'); 
+                    var key = $(this).attr('class');
+                    if(tbody.find('input[name$="active"]:checked').length == tbody.find('input[name$="active"]').length) {
+                        tbody.find('.app-active').attr("checked", "checked");
+                    } else {
+                        tbody.find('.app-active').removeAttr("checked");
                     }
-                }
-                else {
-                    $(this).parents('tr').find('input[name$="'+pub_id+'"]').tooltip('hide');
-                }
-            });
 
-            // initialize global enabled checkbox
-            update_golbal_active();
-                
+                    update_global_active();
+
+                    // If no ad network ID set up, show a tooltip
+                    if ($(this).is(':checked')) {
+                        var network_input = $(this).parents('tr').find('input[name$="'+pub_id+'"]');
+                        var value = network_input.val();
+                        if (!value) {
+                            network_input.tooltip({
+                                title: 'Enter the network ID to enable (<a href="#">help!</a>)',
+                                trigger: 'manual',
+                                placement:'top'
+                            });
+                            network_input.tooltip('show');
+                        }
+                    }
+                    else {
+                        $(this).parents('tr').find('input[name$="'+pub_id+'"]').tooltip('hide');
+                    }
+                });
+
             // set cpms when copy all cpm button is clicked for either 14 day
             // or 7 day
             _.each(['7-day', '14-day'], function(days) {
@@ -828,6 +821,7 @@ $(function() {
                 $('.app-cpm-close').show();
             });
 
+            /* Advanced Options Modal */
             function modal_ok(row, modal_div) {
                 var app_div = $(modal_div).parent();
 
@@ -925,7 +919,7 @@ $(function() {
                 }
             }
 
-            // Options forms
+            // open advanced options modal for global app or adunit
             $('.options-edit').click(function () {
                 var row = $(this).closest('tr');
                 var key = $(row).attr('id').replace('-row', '');
@@ -943,6 +937,55 @@ $(function() {
                     $(modal_div).modal('hide');
                 } );
             });
+
+            /* Initialize fields */
+            // mimic an entry for each adunit to prepopulate settings
+            // at app and global levels
+            $('tr.adunit-row').each(function() {
+                // prepopulate active
+                $('input[name$="active"]').change();
+
+                // prepopulate advanced options modals
+                var key = $(this).attr('id').replace('-row', '');
+                var modal_div = $('#' + key +'-options');
+                modal_ok($(this), modal_div);
+            });
+
+            // prepopulate cpm
+            var all_apps_equal = true;
+            $('.app-tbody').each(function() {
+                var all_adunits_equal = true;
+                var value = $(this).find('.adunit-row .cpm-input input').val();
+                // check if all adunits have the same cpm
+                $(this).find('.adunit-row .cpm-input input').each(function() {
+                    if(value != $(this).val()) {
+                        all_adunits_equal = false;
+                    }
+                });
+
+                if(all_adunits_equal) {
+                    $(this).find('.adunit-row .cpm-input').hide();
+                    $(this).find('.adunit-row .cpm-edit').show();
+
+                    $(this).find('.app-cpm-input input').val(value);
+                    $(this).find('.app-cpm-input').show();
+                    $(this).find('.app-cpm-close').hide();
+                } else {
+                    all_apps_equal = false;
+                }
+            });
+
+            if(all_apps_equal) {
+                var value = $('.app-cpm-input input').val();
+
+                $('.app-cpm-input').hide();
+                $('.app-cpm-close').text(value);
+                $('.app-cpm-close').show();
+
+                $('.global-cpm-close').hide();
+                $('.global-cpm-input input').val(value);
+                $('.global-cpm-input').show();
+            }
 
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';

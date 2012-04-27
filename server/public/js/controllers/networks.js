@@ -136,20 +136,32 @@ $(function() {
             initializeDateButtons();
 
             var all_campaigns = [];
-            var network_apps = [];
+            var apps_by_campaign = {};
             _.each(campaigns_data, function(campaign_data) {
                 var result = initialize_campaign_data(campaign_data, apps, false);
                 all_campaigns = all_campaigns.concat(result[0]);
-                network_apps = network_apps.concat(result[1]);
+                network_apps = apps_by_campaign[result[0][0].id] = result[1];
             });
 
-            _.each(network_apps, function(network_app) {
-                network_app.fetch({
-                    error: function() {
-                        network_app.fetch({
-                            error: toast_error
-                        });
-                    },
+            $('.show-apps').click(function() {
+                var key = $(this).attr('id');
+                var div = $('.' + key + '-apps-div');
+                if (div.is(':hidden')) {
+                    div.show();
+                    $(this).children('span').text("Hide Apps");
+                } else {
+                    div.hide()
+                    $(this).children('span').text("Show Apps");
+                }
+                // load the apps via ajax
+                _.each(apps_by_campaign[key], function(network_app) {
+                    network_app.fetch({
+                        error: function() {
+                            network_app.fetch({
+                                error: toast_error
+                            });
+                        },
+                    });
                 });
             });
 
@@ -176,18 +188,6 @@ $(function() {
                     $(this).find('.edit-link').hide()
                 }
             );
-
-            $('.show-apps').click(function() {
-                var key = $(this).attr('id');
-                var div = $('.' + key + '-apps-div');
-                if (div.is(':hidden')) {
-                    div.show();
-                    $(this).children('span').text("Hide Apps");
-                } else {
-                    div.hide()
-                    $(this).children('span').text("Show Apps");
-                }
-            });
 
             $('#network-editSelect').change(function() {
                 if ($(this).val()) {
@@ -294,6 +294,14 @@ $(function() {
             
             var saved_new_login = false;
 
+            // set up tabIndex attributes for vertical tabbing
+            var rows = $('table.inventory_table').children().not('thead').find('tr');
+            rows.each(function(row_iter, row) {
+                $(row).find('td').each(function(data_iter, data) {
+                    $(data).find('input, textarea').attr('tabIndex', rows.length * data_iter + row_iter);
+                });
+            });
+
             // make necessary changes based on network type
             var pub_ids = {
                 'admob': 'admob_pub_id',
@@ -346,32 +354,34 @@ $(function() {
                             if (!value) {
                                 pub_id_value = "Change Network ID";
                             }
-                            $(this).closest('td').find('.pub-id-value').text(pub_id_value);
+                            $(this).closest('td').find('.pub-id-edit').text(pub_id_value);
                         }
                     });
                 }).keyup();
 
-            $('.cpm-data input').keyup(function() {
-                var value = $(this).val();
-                var td = $(this).closest('td');
-                $(td).find('.cpm-value').text(value);
-            }).keyup();
+            // perculate checked change up to global
+            function update_global_active() {
+                if($('.app-active').length == $('.app-active:checked').length) {
+                    $('.global-active').attr("checked", "checked");
+                } else {
+                    $('.global-active').removeAttr("checked");
+                }
+            }
 
-            $('tr.main .cpm-data input').keyup(function() {
-                var value = $(this).val();
-                var tbody = $(this).closest('tbody');
-                $(tbody).find('.cpm-value').text(value);
-                $(tbody).children().not('tr.main').find('.cpm-input input').val(value);
-            });
+            // global enabled checkbox
+            $('.global-active')
+                .change(function() {
+                    if($('.global-active').is(':checked')) {
+                        $('.app-active').attr('checked', 'checked');
+                        $('input[name$="active"]').attr('checked', 'checked');
+                    } else {
+                        $('.app-active').removeAttr("checked");
+                        $('input[name$="active"]').removeAttr("checked");
+                    }
+                });
 
             // set up active checkbox's for app level
-            $('.all-adunits')
-                .each(function() {
-                    var checkboxes = $(this).closest('tbody').find('input[name$="active"]');
-                    if (checkboxes.filter('input:checked').length == checkboxes.length) {
-                        $(this).attr('checked', 'checked');
-                    }
-                })
+            $('.app-active')
                 .change(function() {
                     var checkboxes = $(this).closest('tbody').find('input[name$="active"]');
                     if ($(this).is(':checked')) {
@@ -379,44 +389,58 @@ $(function() {
                     } else {
                         checkboxes.removeAttr("checked");
                     }
-                    });
+
+                    update_global_active();
+                });
 
             // perculate checked changes up
-            $('input[name$="active"]').click(function () {
-                var tbody = $(this).closest('tbody'); 
-                var key = $(this).attr('class');
-                if(tbody.find('input[name$="active"]:checked').length == tbody.find('input[name$="active"]').length) {
-                    tbody.find('.all-adunits').attr("checked", "checked");
-                } else {
-                    tbody.find('.all-adunits').removeAttr("checked");
-                }
-
-                // If no ad network ID set up, show a tooltip
-                if ($(this).is(':checked')) {
-                    var network_input = $(this).parents('tr').find('input[name$="'+pub_id+'"]');
-                    var value = network_input.val();
-                    if (!value) {
-                        network_input.tooltip({
-                            title: 'Enter the network ID to enable (<a href="#">help!</a>)',
-                            trigger: 'manual',
-                            placement:'top'
-                        });
-                        network_input.tooltip('show');
+            $('input[name$="active"]')
+                .change(function () {
+                    var tbody = $(this).closest('tbody'); 
+                    var key = $(this).attr('class');
+                    if(tbody.find('input[name$="active"]:checked').length == tbody.find('input[name$="active"]').length) {
+                        tbody.find('.app-active').attr("checked", "checked");
+                    } else {
+                        tbody.find('.app-active').removeAttr("checked");
                     }
-                }
-                else {
-                    $(this).parents('tr').find('input[name$="'+pub_id+'"]').tooltip('hide');
-                }
-            });
-                
+
+                    update_global_active();
+
+                    // If no ad network ID set up, show a tooltip
+                    if ($(this).is(':checked')) {
+                        var network_input = $(this).parents('tr').find('input[name$="'+pub_id+'"]');
+                        var value = network_input.val();
+                        if (!value) {
+                            network_input.tooltip({
+                                title: 'Enter the network ID to enable (<a href="#">help!</a>)',
+                                trigger: 'manual',
+                                placement:'top'
+                            });
+                            network_input.tooltip('show');
+                        }
+                    }
+                    else {
+                        $(this).parents('tr').find('input[name$="'+pub_id+'"]').tooltip('hide');
+                    }
+                });
+
             // set cpms when copy all cpm button is clicked for either 14 day
             // or 7 day
             _.each(['7-day', '14-day'], function(days) {
                 // copy over cpms for all apps
                 $('#copy-' + days).click(function() {
                     $('.inventory_table tbody').each(function() {
+                        // if global cpm is open close it
+                        if(!$('.global-cpm-input').is(':hidden')) {
+                            $('.global-cpm-input').hide();
+                            $('.global-cpm-close').show();
+
+                            $('.app-cpm-input').show();
+                            $('.app-cpm-close').hide();
+                        }
+
                         var cpm = parseFloat($(this).find('.copy-' + days).text().replace('$', '')).toString();
-                        var input = $(this).find('tr.main .cpm-data input');
+                        var input = $(this).find('.app-cpm-input input');
                         // change app level cpm
                         input.val(cpm);
                         // change adunit level cpm
@@ -425,9 +449,18 @@ $(function() {
                     });
                 // copy over an individual app level cpm
                 $('.copy-' + days).click(function() {
+                    // if global cpm is open close it
+                    if(!$('.global-cpm-input').is(':hidden')) {
+                        $('.global-cpm-input').hide();
+                        $('.global-cpm-close').show();
+
+                        $('.app-cpm-input').show();
+                        $('.app-cpm-close').hide();
+                    }
+
                     var cpm = parseFloat($(this).parent().text().replace('$', '')).toString();
                     var tbody = $(this).closest('tbody')
-                    var input = tbody.find('tr.main .cpm-data input');
+                    var input = tbody.find('.app-cpm-input input');
                     // change app level cpm
                     input.val(cpm);
                     input.keyup();
@@ -661,19 +694,10 @@ $(function() {
             $('.cpm-edit').tooltip({
                 title: "Set CPM for each unit"
             });            
-            $('.cpm-close').tooltip({
+            $('.app-cpm-close').tooltip({
                 title: "Set CPM at the app level"
             });                        
-            $('.cpm-edit').click(function (event) {
-                event.preventDefault();
-                var tbody = $(this).closest('tbody');
-                // hide app level bids
-                tbody.find('tr.main .cpm-data .cpm-input').hide();
-                tbody.find('tr.main .cpm-data .editable').show();
-                // show adunit level bids
-                tbody.children().not('.main').find('.cpm-edit').hide();
-                tbody.children().not('.main').find('.cpm-input').show();
-            });
+
             $('.pub-id-close').click(function (event) {
                 event.preventDefault;
                 var input_div = $(this).closest('.pub-id-input');
@@ -681,32 +705,334 @@ $(function() {
 
                 var value = input_div.children('input').val()
                 if (value) {
-                    $(this).closest('td').find('.pub-id-value').text(value);
+                    $(this).closest('td').find('.pub-id-edit').text(value);
                 } else {
-                    $(this).closest('td').find('.pub-id-value').text("Change Network ID");
+                    $(this).closest('td').find('.pub-id-edit').text("Change Network ID");
                 }
                 $(this).closest('td').find('.pub-id-edit').show();
             });
-            $('.cpm-close').click(function (event) {
-                event.preventDefault;
-                var tbody = $(this).closest('tbody');
 
-                // copy value of first adunit input to all cpm inputs
-                var value = tbody.children().not('.main').find('.cpm-input input').val();
-                tbody.find('.cpm-value').text(value);
-                tbody.find('.cpm-input input').val(value);
-                tbody.find('tr.main .cpm-data input').val(value);
 
-                // show app level cpm
-                tbody.find('tr.main .cpm-data .cpm-input').show();
-                // hide app edit text
-                tbody.find('tr.main .cpm-data .editable').hide();
+            /* Setting cpm, custom_html and custom_native */
+            var fields = [['cpm', 'input']]
+            if(network_type == 'custom') {
+                fields.push(['custom_html', 'textarea']);
+            } else if(network_type == 'custom_native') {
+                fields.push(['custom_method', 'input']);
+            }
 
-                // hide adunit cpms for app
-                tbody.children().not('.main').find('.cpm-input').hide();
-                // show adunit edit text
-                tbody.find('.cpm-edit').show();
+            _.each(fields, function(field_props) {
+                var field = field_props[0];
+                var type = field_props[1];
+
+                // adunit level
+                $('.' + field + '-input ' + type).keyup(function() {
+                    var value = $(this).val();
+                    var td = $(this).closest('td');
+                    $(td).find('.' + field + '-value').text(value);
+                }).keyup();
+
+                $('.' + field + '-edit').click(function (event) {
+                    if(!$('.global-' + field + '-input').is(':hidden')) {
+                        $('.global-' + field + '-input').hide();
+                        $('.global-' + field + '-close').show();
+
+                        $('.app-' + field + '-input').show();
+                        $('.app-' + field + '-close').hide();
+
+                        // show app level fields
+                        $('.app-' + field + '-input').show();
+                        // hide app edit text
+                        $('.app-' + field + '-close').hide();
+                    }
+                    event.preventDefault();
+                    var tbody = $(this).closest('tbody');
+                    // hide app level fields
+                    tbody.find('.app-' + field + '-input').hide();
+                    tbody.find('.app-' + field + '-close').show();
+                    tbody.find('.app-' + field + '-close').text("Set app " + field.replace('_', ' '));
+                    // show adunit level fields
+                    tbody.find('.' + field + '-edit').hide();
+                    tbody.find('.' + field + '-input').show();
+                });
+
+                // app level
+                $('.app-' + field + '-input ' + type).keyup(function() {
+                    var value = $(this).val();
+                    var tbody = $(this).closest('tbody');
+                    $(tbody).find('.' + field + '-input ' + type).val(value);
+                    if(!value) {
+                        value = "Set adunit " + field.replace('_', ' ');
+                    }
+                    $(tbody).find('.' + field + '-value').text(value);
+                });
+
+                $('.app-' + field + '-close').click(function (event) {
+                    event.preventDefault;
+                    if($('.global-' + field + '-input').is(':hidden')) {
+                        elements = $(this);
+                    } else {
+                        $('.global-' + field + '-input').hide();
+                        $('.global-' + field + '-close').show();
+
+                        $('.app-' + field + '-input').show();
+                        $('.app-' + field + '-close').hide();
+
+                        elements = $('.app-' + field + '-close');
+                    }
+
+                    elements.each(function() {
+                        var tbody = $(this).closest('tbody');
+                        // copy value of first adunit input to all fields inputs
+                        var value = tbody.find('.' + field + '-input ' + type).val();
+                        tbody.find('.' + field + '-input ' + type).val(value);
+                        tbody.find('.app-' + field + '-input ' + type).val(value);
+
+                        if(!value) {
+                            value = "Set adunit " + field.replace('_', ' ');
+                        }
+                        tbody.find('.' + field + '-value').text(value);
+
+                        // show app level fields
+                        tbody.find('.app-' + field + '-input').show();
+                        // hide app edit text
+                        tbody.find('.app-' + field + '-close').hide();
+
+                        // hide adunit fields for app
+                        tbody.find('.' + field + '-input').hide();
+                        // show adunit edit text
+                        tbody.find('.' + field + '-edit').show();
+                    });
+                });
+
+                // global level
+                $('.global-' + field + '-input ' + type).keyup(function() {
+                    var value = $(this).val();
+                    $('.' + field + '-value').text(value);
+                    $('.' + field + '-input ' + type).val(value);
+                    $('.app-' + field + '-input ' + type).val(value);
+
+                    if(!value) {
+                        $('.' + field + '-value').text("Set adunit " + field.replace('_', ' '));
+                        value = "Set app " + field.replace('_', ' ');
+                    }
+                    $('.app-' + field + '-close').text(value);
+                });
+
+                $('.global-' + field + '-close').click(function (event) {
+                    event.preventDefault;
+                    // copy value of first adunit to all field inputs
+                    var value = $('.' + field + '-input ' + type).val();
+                    $('.global-' + field + '-input ' + type).val(value);
+                    $('.' + field + '-value').text(value);
+                    $('.' + field + '-input ' + type).val(value);
+                    $('.app-' + field + '-input ' + type).val(value);
+
+                    if(!value) {
+                        $('.' + field + '-value').text("Set adunit " + field.replace('_', ' '));
+                        value = "Set app " + field.replace('_', ' ');
+                    }
+                    $('.app-' + field + '-close').text(value);
+
+                    // show global field
+                    $('.global-' + field + '-input').show();
+                    // hide global edit text
+                    $('.global-' + field + '-close').hide();
+
+                    // hide adunit fields for app
+                    $('.' + field + '-input').hide();
+                    // hide app fields for app
+                    $('.app-' + field + '-input').hide();
+                    // show adunit edit text
+                    $('.' + field + '-edit').show();
+                    // show app edit text
+                    $('.app-' + field + '-close').show();
+                });
             });
+
+            /* Initialize cpm, custom_html and custom_native */
+            _.each(fields, function(field_props) {
+                var field = field_props[0];
+                var type = field_props[1];
+
+                var all_apps_equal = true;
+                var global_value = $('.adunit-row .' + field + '-input ' + type).val();
+                $('.app-tbody').each(function() {
+                    var all_adunits_equal = true;
+                    var value = $(this).find('.adunit-row .' + field + '-input ' + type).val();
+                    // check if all adunits have the same value for the field
+                    $(this).find('.adunit-row .' + field + '-input ' + type).each(function() {
+                        if(value != $(this).val()) {
+                            all_adunits_equal = false;
+                        }
+                    });
+
+                    if(all_adunits_equal) {
+                        if(global_value != value) {
+                            all_apps_equal = false;
+                        }
+
+                        $(this).find('.adunit-row .' + field + '-input').hide();
+                        $(this).find('.adunit-row .' + field + '-edit').show();
+
+                        $(this).find('.app-' + field + '-input ' + type).val(value);
+                        $(this).find('.app-' + field + '-input').show();
+                        $(this).find('.app-' + field + '-close').hide();
+                    } else {
+                        all_apps_equal = false;
+                    }
+                });
+
+                if(all_apps_equal) {
+                    var value = $('.app-' + field + '-input ' + type).val();
+
+                    $('.app-' + field + '-input').hide();
+                    $('.app-' + field + '-close').show();
+
+                    $('.global-' + field + '-close').hide();
+                    $('.global-' + field + '-input ' + type).val(value);
+                    $('.global-' + field + '-input').show();
+
+                    if(!value) {
+                        $('.' + field + '-value').text("Set adunit " + field.replace('_', ' '));
+                        value = "Set app " + field.replace('_', ' ');
+                    }
+                    $('.app-' + field + '-close').text(value);
+                }
+            });
+
+            /* Advanced Options Modal */
+            function modal_ok(row, modal_div) {
+                var app_div = $(modal_div).parent();
+
+                var fields = ([['allocation_percentage', '%, '], ['daily_frequency_cap', '/d '],
+                    ['hourly_frequency_cap', '/h']]);
+                var values = [];
+                var text = '';
+                _.each(fields, function(field) {
+                    var field_name = field[0];
+                    var field_term = field[1];
+                    var value = $(modal_div).find('input[id$=' + field_name + ']').val();
+                    values.push(value);
+                    if(value != undefined && value != '' &&
+                            (field_name.indexOf("_frequency_cap") == -1 || value != '0') &&
+                            (field_name.indexOf("_percentage") == -1 || value != '100.0')) {
+                        text += value + field_term;
+                    }
+                });
+                if(!text) {
+                    text = "None"
+                }
+
+                function check_global(global_text, global_values) {
+                    // global_text and global_values are candidates for global values
+                    var all_equal = true;
+                    // check if all apps are the same
+                    $('.app-row .options-edit').each(function() {
+                        if(text != $(this).text()) {
+                            all_equal = false;
+                        }
+                    });
+
+                    if(!all_equal) {
+                        global_text = 'Set global options';
+                        global_values = ['','',''];
+                    }
+                    
+                    $('.global-row .options-edit').text(global_text);
+                    // Clear global fields
+                    _.each(_.zip(fields, global_values), function(field) {
+                        var field_name = field[0][0];
+                        var value = field[1];
+                        $('div#global-options').find('input[id$=' + field_name + ']').val(value);
+                    });
+                }
+
+                if($(row).hasClass('adunit-row')) {
+                    // adunit level
+                    $(row).find('.options-edit').text(text);
+
+                    var all_equal = true;
+                    $(row).closest('tbody').find('.adunit-row .options-edit').each(function() {
+                        if(text != $(this).text()) {
+                            all_equal = false;
+                        }
+                    });
+
+                    if(all_equal) {
+                        var app_text = text;
+                        var app_values = values;
+                    } else {
+                        var app_text = 'Set app options';
+                        var app_values = ['','',''];
+                    }
+
+                    // perculate to app level
+                    $(row).closest('tbody').find('.app-row .options-edit').text(app_text);
+                    // Clear app fields
+                    _.each(_.zip(fields, app_values), function(field) {
+                        var field_name = field[0][0];
+                        var value = field[1];
+                        $(app_div).find('.app-options input[id$=' + field_name + ']').val(value);
+                    });
+
+                    // perculate to global level
+                    check_global(app_text, app_values);
+                } else {
+                    if($(row).hasClass('global-row')) {
+                        // global level
+                        var selector = $(modal_div).parent().parent();
+                        $('.inventory_table').find('.options-edit').text(text);
+                    } else {
+                        // app level
+                        var selector = $(modal_div).parent();
+                        $(row).closest('tbody').find('.options-edit').text(text);
+
+                        // perculate to global level
+                        check_global(text, values);
+                    }
+
+                    // update all fields
+                    _.each(_.zip(fields, values), function(field) {
+                        var field_name = field[0][0];
+                        var value = field[1];
+                        $(selector).find('input[id$=' + field_name + ']').val(value);
+                    });
+                }
+            }
+
+            // open advanced options modal for global app or adunit
+            $('.options-edit').click(function () {
+                var row = $(this).closest('tr');
+                var key = $(row).attr('id').replace('-row', '');
+                var modal_div = $('#' + key +'-options');
+                // open the correct modal
+                $(modal_div).show();
+                $(modal_div).modal('show');
+
+                $(modal_div).find('.save').click(function() { 
+                    modal_ok(row, modal_div);
+                    $(modal_div).modal('hide');
+                });
+
+                $(modal_div).find('.close').click(function() {
+                    $(modal_div).modal('hide');
+                } );
+            });
+
+            /* Initialize advanced options and active fields */
+            // mimic an entry for each adunit to prepopulate settings
+            // at app and global levels
+            $('tr.adunit-row').each(function() {
+                // prepopulate active
+                $('input[name$="active"]').change();
+
+                // prepopulate advanced options modals
+                var key = $(this).attr('id').replace('-row', '');
+                var modal_div = $('#' + key +'-options');
+                modal_ok($(this), modal_div);
+            });
+
             /* GEO TARGETING */
             var geo_s = 'http://api.geonames.org/searchJSON?username=MoPub&';
             var pre = {type: 'country', data: []};

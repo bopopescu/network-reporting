@@ -3,7 +3,6 @@ import logging
 from common.utils.query_managers import CachedQueryManager, QueryManager
 
 from common.utils.decorators import wraps_first_arg
-from advertiser.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.api import users

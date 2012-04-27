@@ -1,13 +1,95 @@
+# Deployed Friday, April 27, 2012 at 07:06PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-86
+### Bugs Fixed: []
+### Included Commits: 
+ * ee8861c Deployed without finding any bug fixes.
+ 
+# Deployed Friday, April 27, 2012 at 06:54PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-85
+### Bugs Fixed: []
+### Included Commits:
+* 6725187 Campaigns now specify whether they are delivering Total Impressions or Impressions/Day
+* c7965bc Modify memcache_flush_entities_for_account_keys to accept both keys and string
+* c262c73 Deployed without finding any bug fixes.
+
+# Deployed Thursday, April 26, 2012 at 11:14PM PST
+### Deployed by Andrew He
+### Tagged deploy-84
+### Bugs Fixed: []
+### Included Commits:
+* 0ece3cb Use deferred library to asynchronously update budgets in CampaignQueryManager.put()
+* b638b84 Fixed things for Task class since it's dumb, fixed Queue
+* 1df5baf Catch errors properly
+* a0c1dd7 fixed the eta
+* e3a5305 Added fanout tq
+* 1529adc If the created_at isn't set, set it and save it in memc
+* ed2d6f8 Merge branch 'master' of github.com:mopub/mopub
+* 75095c8 Only pass things back if they don't have the exact same created_at time
+* be9c772 Batch GETs for account keys across Advertiser and Publisher QueryManagers
+* 267d77f Added more created_at support
+* ee04807 More created_at support fixes
+* 63aaa91 Sorry about that...forgot to decorate
+* a39fdc1 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, April 25, 2012 at 07:00PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-83
+### Bugs Fixed: []
+### Included Commits:
+* 777b824 Deployed without finding any bug fixes.
+
+# Deployed Wednesday, April 25, 2012 at 06:55PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-82
+### Bugs Fixed: []
+### Included Commits:
+
+# Deployed Wednesday, April 25, 2012 at 02:14AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-80
+### Bugs Fixed: ['1150']
+### Included Commits:
+* 62e43eb [#1150 state:fixed]
+* b5fd5ae fixed old networks page to only show old network campaigns
+* 7dae379 Deployed without finding any bug fixes.
+
+# Deployed Tuesday, April 24, 2012 at 11:46PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-79
+### Bugs Fixed: []
+### Included Commits:
+* 392ed0b Merge branch 'master' of github.com:mopub/mopub
+* 651a703 self.account
+* 7a5718b Merge branch 'using-auc-hashes'
+* d68c745 Added checking for awkward case
+* d41281f Deployed without finding any bug fixes.
+* f0c1159 Added created at support
+
+# Deployed Tuesday, April 24, 2012 at 09:24PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-78
+### Bugs Fixed: []
+### Included Commits:
+* 29f8465 Merge branch 'master' into networks-page
+* 384ff7c Merge branch 'master' of github.com:mopub/mopub
+* 87c42ab App level bids shown under cpm in new networks pages, adunit status icons added to details page
+* 0774b22 Deployed without finding any bug fixes.
+* 94a2fa6 Removed some get account by key lookups and modified date range for cpm calculation in edit network form
+* 7e057d2 vertical tabbing on edit networks form
+* 0d8ecb6 min and max cpm's on networks page should be formatted as currency
+
 # Deployed Tuesday, April 24, 2012 at 06:33PM PST
 ### Deployed by Nafis Jamal
 ### Tagged deploy-77
 ### Bugs Fixed: []
-### Included Commits: 
- * 27c5a53 removed second conditional for network page
- * 5e26c9a Merge branch 'master' of github.com:mopub/mopub
- * 65b7c21 added flag to app object
- * 985b045 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 27c5a53 removed second conditional for network page
+* 5e26c9a Merge branch 'master' of github.com:mopub/mopub
+* 65b7c21 added flag to app object
+* 985b045 Deployed without finding any bug fixes.
+
 # Deployed Tuesday, April 24, 2012 at 04:06AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-76

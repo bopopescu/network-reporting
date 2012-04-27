@@ -86,7 +86,7 @@ Make a table for ad networks that are active
     <div class="{% cycle 'appData' 'appData appData-alt' %}">
         <table class="dataTable appData-main">
             <tbody>
-                <tr id="{{network.key}}-row">
+                <tr id="{{ network.key }}-row">
                     <td class="networkData-icon">
                         <a href="{% url network_details campaign_key=network.key %}">
                             <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
@@ -126,9 +126,9 @@ Make a table for ad networks that are active
                         {% endif %}
                         <div class="mopub-data">
                             {% if network.min_cpm == network.max_cpm %}
-                            {{ network.min_cpm }}
+                            {{ network.min_cpm|currency }}
                             {% else %}
-                            {{ network.min_cpm }}-{{ network.max_cpm }}
+                            {{ network.min_cpm|currency }}-{{ network.max_cpm|currency }}
                             {% endif %}
                         </div>
                     </td>
@@ -168,7 +168,7 @@ Make a table for ad networks that are active
         <div class="appData-details hidden {{ network.key }}-apps-div" style="margin: 0 0 0 86px">
             <table class="dataTable">
                 <tbody>
-                    {% for app in apps %}
+                    {% for app, app_bids in network.apps %}
                     <tr class="app-row" id="app-{{ app.key }}">
                         <td class="dataTable-name">
                             <a href="{{ app.url }}">{{ app.name }} ({{ app.type }})</a>
@@ -176,8 +176,15 @@ Make a table for ad networks that are active
                         <td class="dataTable-data numeric rev" style="color:orange;">
                             {% if network.reporting %} - {% endif %}
                         </td>
-                        <td class="dataTable-data numeric cpm" style="color:orange;">
-                            {% if network.reporting %} - {% endif %}
+                        <td class="dataTable-data numeric cpm">
+                            {% if network.reporting %}
+                            <div class="network-data">-</div>
+                            {% endif %}
+                            {% if app_bids.min_cpm == app_bids.max_cpm %}
+                            <div>{{ app_bids.min_cpm|currency }}</div>
+                            {% else %}
+                            <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
+                            {% endif %}
                         </td>
                         <td class="dataTable-data numeric att">
                             {% if network.reporting and network.name != "mobfox" %}

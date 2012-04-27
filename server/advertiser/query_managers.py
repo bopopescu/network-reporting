@@ -1,7 +1,8 @@
+import logging
 import random
 
 from google.appengine.api import memcache
-from google.appengine.ext import db
+from google.appengine.ext import db, deferred
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
@@ -10,9 +11,8 @@ from common.constants import CAMPAIGN_LEVELS, \
         NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION
 
-from advertiser.models import Campaign
-from advertiser.models import AdGroup
-from advertiser.models import Creative, TextCreative, \
+from advertiser.models import Campaign, AdGroup, \
+                              Creative, TextCreative, \
                               TextAndTileCreative, \
                               HtmlCreative,\
                               ImageCreative, \
@@ -20,7 +20,6 @@ from advertiser.models import Creative, TextCreative, \
 
 from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-from budget.query_managers import BudgetQueryManager
 
 import copy
 
@@ -39,7 +38,46 @@ def chunks(l, n):
 class AdvertiserQueryManager(CachedQueryManager):
     @classmethod
     def get_objects_dict_for_account(cls, account):
-        pass
+        """
+        Returns a dictionary mapping Campaign keys to Campaign entities carrying Adgroup data.
+        Adgroups for each campaign can be retrieved as a list by using campaign.adgroups. Similarly,
+        each Adgroup contains a list of its creatives, accessible as adgroup.creatives.
+        """
+        campaigns_dict = cls.get_campaigns_dict_for_account(account)
+        adgroups_dict = cls.get_adgroups_dict_for_account(account, include_deleted=False, include_archived=True)
+        creatives_dict = cls.get_creatives_dict_for_account(account)
+
+        # Initialize the _creatives property for all of our adgroups.
+        for adgroup in adgroups_dict.values():
+            adgroup._creatives = []
+
+        # Associate each creative with its adgroup.
+        for creative in creatives_dict.values():
+            # Looks weird, but we're just avoiding creative.app_group.key() since it incurs a fetch.
+            adgroup_key = str(Creative.ad_group.get_value_for_datastore(creative))
+            try:
+                adgroup_for_this_creative = adgroups_dict[adgroup_key]
+                adgroup_for_this_creative._creatives.append(creative)
+            except KeyError:
+                # If we get here, it means that the creative belongs to an adgroup that is not
+                # owned by this account. This is clearly a sign of data corruption, and these objects
+                # need to be fixed manually.
+                logging.error("KeyError: Creative %s belongs to AdGroup %s which is not owned by %s" % (str(creative.key()), str(adgroup_key), account.mpuser.email))
+
+        # Initialize the _adgroups property for all of our campaigns.
+        for campaign in campaigns_dict.values():
+            campaign._adgroups = []
+
+        # Now we have a dictionary (adgroups_dict) mapping adgroup keys to adgroup objects, where
+        # each adgroup object has a list of its creatives. We can take this one step further to
+        # work campaigns into this dict.
+        for adgroup in adgroups_dict.values():
+            # Again, getting around the fetch.
+            campaign_key = str(AdGroup.campaign.get_value_for_datastore(adgroup))
+            campaign_for_this_adgroup = campaigns_dict[campaign_key]
+            campaign_for_this_adgroup._adgroups.append(adgroup)
+
+        return campaigns_dict
 
     @classmethod
     def get_campaigns_dict_for_account(cls, account, include_deleted=False):
@@ -202,35 +240,33 @@ class CampaignQueryManager(QueryManager):
     @classmethod
     @wraps_first_arg
     def put(cls, campaigns):
+        from budget.query_managers import BudgetQueryManager
+
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
 
-        # Put campaigns so if they're new they have a key
+        # Save campaigns.
         put_response = db.put(campaigns)
 
-        # They need a key because this QM needs the key
-        for camp in campaigns:
-            budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
-            camp.budget_obj = budg_obj
-
-        # Put them again so they save their budget obj
-        put_response = db.put(campaigns)
-
+        # Update campaign budgets asynchronously using the deferred Task Queue.
+        campaign_keys = [campaign.key() for campaign in campaigns]
+        deferred.defer(BudgetQueryManager.update_or_create_budgets_for_campaign_keys, campaign_keys)
 
         # Clear cache
         adunits = []
-        affected_accounts = set([])
+        affected_account_keys = set()
+
         for campaign in campaigns:
-            affected_accounts.add(campaign.account)
+            affected_account_keys.add(Campaign.account.get_value_for_datastore(campaign))
             for adgroup in campaign.adgroups:
                 adunits.extend(adgroup.site_keys)
 
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Campaign)
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, Campaign)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, Creative)
 
         return put_response
 
@@ -435,14 +471,16 @@ class AdGroupQueryManager(QueryManager):
 
         # Clear cache
         adunits = []
+        affected_account_keys = set()
         for adgroup in adgroups:
             adunits.extend(adgroup.site_keys)
+            affected_account_keys.add(AdGroup.account.get_value_for_datastore(adgroup))
+
         adunits = AdUnitQueryManager.get(adunits)
         AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
-        affected_accounts = set([adgroup.account for adgroup in adgroups])
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, AdGroup)
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdGroup)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, Creative)
 
         return put_response
 
@@ -509,14 +547,15 @@ class CreativeQueryManager(QueryManager):
     def put(cls, creatives):
         put_response = db.put(creatives)
 
+        affected_account_keys = set()
         for creative in creatives:
             # update cache
             adunits = AdUnitQueryManager.get(creative.ad_group.site_keys)
+            affected_account_keys.add(Creative.account.get_value_for_datastore(creative))
             if adunits:
                 AdUnitContextQueryManager.cache_delete_from_adunits(adunits)
 
-        affected_accounts = set([creative.account for creative in creatives])
-        AdvertiserQueryManager.memcache_flush_entities_for_accounts(affected_accounts, Creative)
+        AdvertiserQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, Creative)
 
         return put_response
 

@@ -180,28 +180,6 @@ class Campaign(db.Model):
         else:
             return False
 
-    def get_bid_range(self, adgroups=None):
-        """
-        pass in this campaigns adgroups to avoid a query
-        """
-        if not adgroups:
-            adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
-                    else adgroup.calculated_cpm for adgroup in
-                    self.adgroups if adgroup.active]
-        else:
-            adgroup_bids = [adgroup.bid if adgroup.bid_strategy == 'cpm'
-                    else adgroup.calculated_cpm for adgroup in
-                    adgroups if adgroup.active and adgroup._campaign ==
-                    self.key()]
-
-        min_cpm = None
-        max_cpm = None
-        if adgroup_bids:
-            min_cpm = min(adgroup_bids)
-            max_cpm = max(adgroup_bids)
-
-        return (min_cpm, max_cpm)
-
     def get_owner(self):
         return None
 
@@ -968,6 +946,8 @@ class EjamCreative(Creative):
     #Renderer = ChartBoostRenderer
 
     #ServerSide = EjamServerSide
+    def multi_format(self):
+        return ('320x50', 'full',)
 
 
 class InMobiCreative(Creative):

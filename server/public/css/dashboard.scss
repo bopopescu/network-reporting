@@ -101,12 +101,12 @@ div#advertiser_filters, div#publisher_filters {
                     font-weight: 600;
                     text-transform: none;
                 }
-                &.sortable {
+                &.orderable {
                     cursor: pointer;
                     .icon-chevron-down {
                         display: none;
                     }
-                    &.sorted .icon-chevron-down {
+                    &.ordered .icon-chevron-down {
                         display: inline-block;
                     }
                 }

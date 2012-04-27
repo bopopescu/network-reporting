@@ -1,10 +1,14 @@
-<tr class="<%= type %> <% if(selected) { %> selected <% } %> <% if(hide) { %> hide <% if(hidden) { %> hidden <% } } %>" id="<%= id %>">
+<tr class="<%= type %> <% if(selected) { %> selected <% } %> <% if(hidden) { %> hidden <% } %>" id="<%= id %>">
     <td></td>
     <td class="name"><%= name %></td>
-    <% _.each(columns, function (stat) { %>
-        <td class="stat <%= stat %> <% if(hidden && !_.include(default_columns, stat) && stat !== sorted) { %> hidden <% } %>" <% if(typeof(stats_delta) === 'undefined' || stat !== sorted) { %> colspan="2" <% } %>><span><%= stats[stat] %></span></td>
-        <% if(typeof(stats_delta) !== 'undefined' && stat === sorted) { %>
-            <td class="<%= stat %> delta <%= stats_delta_class[stat] %> <% if(hidden && !_.include(default_columns, stat) && stat !== sorted) { %> hidden <% } %>"><span><%= stats_delta[stat] %></span></td>
-        <% } %>
+    <% _.each(columns, function (column) { %>
+        <td class="stat <%= column %> <% if(!_.include(default_columns, column) && column !== order) { %> hidden <% } %>">
+            <span><%= stats[column] %></span>
+        </td>
+        <td class="delta <%= column %>
+                   <% if(!_.include(default_columns, column) && column !== order) { %> hidden <% } %>
+                   <% if(typeof(deltas) !== 'undefined') { print(' ' + deltas[column].class); } %>">
+            <span><% if(typeof(deltas) !== 'undefined' && column === order) { print(deltas[column].value); } %></span>
+        </td>
     <% }); %>
 </tr>

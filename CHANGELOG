@@ -1,12 +1,19 @@
+# Deployed Friday, April 27, 2012 at 07:06PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-86
+### Bugs Fixed: []
+### Included Commits: 
+ * ee8861c Deployed without finding any bug fixes.
+ 
 # Deployed Friday, April 27, 2012 at 06:54PM PST
 ### Deployed by Nick Grabenstein
 ### Tagged deploy-85
 ### Bugs Fixed: []
-### Included Commits: 
- * 6725187 Campaigns now specify whether they are delivering Total Impressions or Impressions/Day
- * c7965bc Modify memcache_flush_entities_for_account_keys to accept both keys and string
- * c262c73 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 6725187 Campaigns now specify whether they are delivering Total Impressions or Impressions/Day
+* c7965bc Modify memcache_flush_entities_for_account_keys to accept both keys and string
+* c262c73 Deployed without finding any bug fixes.
+
 # Deployed Thursday, April 26, 2012 at 11:14PM PST
 ### Deployed by Andrew He
 ### Tagged deploy-84

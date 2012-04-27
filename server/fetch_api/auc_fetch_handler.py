@@ -57,7 +57,7 @@ class AUCUserPushHandler(webapp.RequestHandler):
 
 class AUCUserPushFanOutHandler(webapp.RequestHandler):
 
-    def get(self):
+    def post(self):
         inttime = int(time.time())
         ts = inttime / 60
         eta = (ts + 1)* 60

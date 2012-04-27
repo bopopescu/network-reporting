@@ -134,10 +134,9 @@ class AdUnitContextQueryManager(CachedQueryManager):
         else:
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
-            queue = taskqueue.Queue('push-context-update')
+            queue = taskqueue.Queue()
             task = taskqueue.Task(url='/fetch_api/adunit_update_fanout',
-                                  method='GET',
-                                  target='38',
+                                  method='POST',
                                   params={'adunit_keys': adunit_keys})
             queue.add(task)
 

@@ -38,8 +38,9 @@ from advertiser.query_managers import AdvertiserQueryManager
 from publisher.query_managers import AppQueryManager, \
         AdUnitContextQueryManager, \
         PublisherQueryManager
-from networks.forms import NetworkCampaignForm, AdUnitAdGroupForm
-
+from networks.forms import NetworkCampaignForm, \
+        NetworkAdGroupForm, \
+        AdUnitAdGroupForm
 from datetime import date, time
 from django.contrib.auth.decorators import login_required
 from django.forms import ModelForm
@@ -58,7 +59,6 @@ from advertiser.models import NetworkStates
 from reporting.models import StatsModel
 
 # Form imports
-from advertiser.forms import AdGroupForm
 from publisher.query_managers import AdUnitQueryManager
 
 DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
@@ -309,8 +309,7 @@ class EditNetworkHandler(RequestHandler):
                 app.adunits.append(adunit)
 
         # Create the default adgroup form
-        adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
-                instance=adgroup)
+        adgroup_form = NetworkAdGroupForm(instance=adgroup)
 
         # Sort apps
         apps = sorted(apps, key=lambda app_data: app_data.identifier)
@@ -383,13 +382,10 @@ class EditNetworkHandler(RequestHandler):
             campaign.network_type = network
             campaign.campaign_type = 'network'
 
-            # Hack to get old validation working
-            query_dict['bid'] = 0.5
-            query_dict['bid_strategy'] = 'cpm'
-
-            adgroup_form = AdGroupForm(query_dict)
+            adgroup_form = NetworkAdGroupForm(query_dict)
 
             if adgroup_form.is_valid():
+                logging.info("default adgroup form is valid")
                 default_adgroup = adgroup_form.save(commit=False)
 
                 adgroup_forms_are_valid = True
@@ -560,7 +556,7 @@ class EditNetworkHandler(RequestHandler):
             else:
                 errors = {}
                 for key, value in adgroup_form.errors.items():
-                    if adgroup_form.prefix and key in set(['bid', 'active']):
+                    if adgroup_form.prefix and key in set(AdUnitAdGroupForm.base_fields.keys()):
                         key = adgroup_form.prefix + '-' + key
                     errors[key] = ' '.join([error for error in value])
         else:

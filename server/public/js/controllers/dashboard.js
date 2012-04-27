@@ -8,8 +8,7 @@ var mopub = mopub || {};
      * ## Settings
      * Define global settings that are used throughout the module.
      */
-
-    var DEBUG = false;
+    var DEBUG = true;
 
     // the origin for the stats service
     var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888';
@@ -122,7 +121,10 @@ var mopub = mopub || {};
      // Pops up a growl-style message when something has
      // gone wrong fetching data. Use this to catch 500/503
      // errors from the server.
-    var toast_error = function () {
+    var toast_error = function (error) {
+        if (debug) {
+            console.log(error);
+        }
         var message = $("Please <a href='#'>refresh the page</a> and try again.")
             .click(function(e){
                 e.preventDefault();
@@ -404,6 +406,7 @@ var mopub = mopub || {};
         var yAxis = new Rickshaw.Graph.Axis.Y({
 	        graph: chart,
 	        ticksTreatment: 'glow',
+            ticks: 5,
             tickFormat: Rickshaw.Fixtures.Number.formatKMBT
         } );
 

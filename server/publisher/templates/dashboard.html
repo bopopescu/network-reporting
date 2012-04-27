@@ -170,42 +170,46 @@ $(function () {
 </div>
 
 <div id="advertiser_filters">
-    <button class="btn btn-mini show" id="advertiser_comparison">
+    <button class="btn btn-mini show" id="advertiser_rows">
+        <span class="show">Show Rows <i class="icon-arrow-down"></i></span>
+        <span class="hide">Hide Rows <i class="icon-arrow-up"></i></span>
+    </button>
+    <button class="btn btn-mini show right" id="advertiser_comparison">
         <span class="show">Show Comparison</span>
         <span class="hide">Hide Comparison</span>
     </button>
+    {% comment %}
     <button class="btn btn-mini right show" id="advertiser_columns">
         <span class="show">Show Columns <i class="icon-arrow-right"></i></span>
         <span class="hide"><i class="icon-arrow-left"></i> Hide Columns</span>
     </button>
+    {% endcomment %}
     <input id="advertiser_order" type="hidden" value="rev" />
     <table id="advertiser">
         <thead></thead>
         <tbody></tbody>
     </table>
-    <button class="btn btn-mini show" id="advertiser_rows">
-        <span class="show">Show Rows <i class="icon-arrow-down"></i></span>
-        <span class="hide">Hide Rows <i class="icon-arrow-up"></i></span>
-    </button>
 </div>
 
 <div id="publisher_filters">
-    <button class="btn btn-mini show" id="publisher_comparison">
+    <button class="btn btn-mini show" id="publisher_rows">
+        <span class="show">Show Rows <i class="icon-arrow-down"></i></span>
+        <span class="hide">Hide Rows <i class="icon-arrow-up"></i></span>
+    </button>
+    <button class="btn btn-mini show right" id="publisher_comparison">
         <span class="show">Show Comparison</span>
         <span class="hide">Hide Comparison</span>
     </button>
+    {% comment %}
     <button class="btn btn-mini right show" id="publisher_columns">
         <span class="show">Show Columns <i class="icon-arrow-right"></i></span>
         <span class="hide"><i class="icon-arrow-left"></i> Hide Columns</span>
     </button>
+    {% endcomment %}
     <input id="publisher_order" type="hidden" value="rev" />
     <table id="publisher">
         <thead></thead>
         <tbody></tbody>
     </table>
-    <button class="btn btn-mini show" id="publisher_rows">
-        <span class="show">Show Rows <i class="icon-arrow-down"></i></span>
-        <span class="hide">Hide Rows <i class="icon-arrow-up"></i></span>
-    </button>
 </div>
 {% endblock content %}

@@ -38,16 +38,16 @@ var mopub = mopub || {};
 
     // Map of property name to it's title
     var STATS = {
-        'attempts': 'Attempts',
-        'clk': 'Clicks',
-        'conv': 'Conversions',
-        'conv_rate': 'Conversion Rate',
+        'attempts': 'Att.',
+        'clk': 'Clk.',
+        'conv': 'Cnv.',
+        'conv_rate': 'Cnv Rate',
         'cpm': 'CPM',
         'ctr': 'CTR',
         'fill_rate': 'Fill Rate',
-        'imp': 'Impressions',
-        'req': 'Requests',
-        'rev': 'Revenue'
+        'imp': 'Imp.',
+        'req': 'Req.',
+        'rev': 'Rev.'
     };
 
     // Columns to display when the advertiser table has been expanded.
@@ -66,8 +66,7 @@ var mopub = mopub || {};
     // before expansion.
     var ADVERTISER_DEFAULT_COLUMNS = [
         'rev',
-        'imp',
-        'clk'
+        'imp'
     ];
 
     // Columns to display when the publisher table has been expanded.
@@ -75,12 +74,11 @@ var mopub = mopub || {};
         'rev',
         'imp',
         'clk',
-        'ctr',
+        //'ctr',
         'cpm',
-        'attempts',
         'conv',
-        'conv_rate',
-        'fill_rate',
+        //'conv_rate',
+        //'fill_rate',
         'req'
     ];
 
@@ -88,8 +86,7 @@ var mopub = mopub || {};
     // before expansion.
     var PUBLISHER_DEFAULT_COLUMNS = [
         'rev',
-        'imp',
-        'clk'
+        'imp'
     ];
 
     // Columns that can be sorted on in either table.
@@ -111,7 +108,7 @@ var mopub = mopub || {};
     // Width and height of the charts.
     // *Note:* these are kept in the CSS as well. They'll also
     // need to be changed if you want to adjust the chart size.
-    var WIDTH = 500;
+    var WIDTH = 400;
     var HEIGHT = 125;
 
 
@@ -227,6 +224,14 @@ var mopub = mopub || {};
                 return n;
             }
         }
+    }
+
+    function format_kmbt(number) {
+        var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
+        var place = Math.floor(Math.floor(Math.log(number)/Math.log(10))/3);
+        var result = (number / Math.pow(1000, place)).toPrecision(3) + endings[place];
+        return result;
+
     }
 
 
@@ -391,19 +396,19 @@ var mopub = mopub || {};
 
         // On the X-axis, display the date in MM/DD form.
         var xAxis = new Rickshaw.Graph.Axis.X({
-	        graph: chart,
+            graph: chart,
             labels: _.map(account_data[0], function(datapoint){
                 return get_date_from_datapoint(datapoint);
             }),
-	        ticksTreatment: 'glow'
+            ticksTreatment: 'glow'
         });
 
         xAxis.render();
 
         // On the Y-axis, display the amount in KMBT form.
         var yAxis = new Rickshaw.Graph.Axis.Y({
-	        graph: chart,
-	        ticksTreatment: 'glow',
+            graph: chart,
+            ticksTreatment: 'glow',
             tickFormat: Rickshaw.Fixtures.Number.formatKMBT
         } );
 
@@ -443,6 +448,8 @@ var mopub = mopub || {};
 
     var DashboardController = {
         initializeDashboard: function(bootstrapping_data) {
+            var handshake_data = $.cookie('handshake_data');
+            var handshake_iv = $.cookie('handshake_iv');
 
             var $advertiser_table = $('#advertiser');
             var $publisher_table = $('#publisher');
@@ -471,7 +478,7 @@ var mopub = mopub || {};
                     return json;
                 },
                 error: toast_error,
-                url: URL
+                url: URL + 'stats/'
             });
 
             // Looks at the publisher or advertiser table rows that
@@ -549,6 +556,8 @@ var mopub = mopub || {};
             function get_data() {
                 var data = {
                     account: bootstrapping_data['account'],
+                    handshake_data: handshake_data,
+                    handshake_iv: handshake_iv,
                     start: $('#start').val(),
                     end: $('#end').val()
                 };
@@ -771,10 +780,11 @@ var mopub = mopub || {};
                                 var $last = $('#' + source);
                                 _.each(json.top[0], function(top, index) {
                                     var id = top.campaign;
+                                    var hidden = index >= MAX_CAMPAIGNS;
                                     var context = {
                                         type: 'campaign',
                                         selected: _.include(selected, id) || (!advertiser_comparison_shown() && _.include(selected, source)),
-                                        hidden: index >= MAX_CAMPAIGNS,
+                                        hidden: hidden,
                                         id: id,
                                         columns: ADVERTISER_COLUMNS,
                                         default_columns: ADVERTISER_DEFAULT_COLUMNS,
@@ -1026,7 +1036,7 @@ var mopub = mopub || {};
             $('#custom_end').datepicker(valid_date_range);
 
             // default start/end
-            update_start_end('last_7_days');
+            update_start_end('last_14_days');
 
 
             /* Comparison Date Range */
@@ -1222,7 +1232,8 @@ var mopub = mopub || {};
             var $advertiser_columns = $('#advertiser_columns');
 
             function advertiser_columns_shown() {
-                return $advertiser_columns.hasClass('hide');
+                //return $advertiser_columns.hasClass('hide');
+                return true;
             }
 
             function show_advertiser_columns() {
@@ -1260,7 +1271,8 @@ var mopub = mopub || {};
             var $publisher_columns = $('#publisher_columns');
 
             function publisher_columns_shown() {
-                return $publisher_columns.hasClass('hide');
+                //return $publisher_columns.hasClass('hide');
+                return true;
             }
 
             function show_publisher_columns() {
@@ -1305,7 +1317,7 @@ var mopub = mopub || {};
 
             var filter_header_row = _.template($('#filter_header_row').html());
             $('thead', $advertiser_table).html(filter_header_row({
-                title: 'Campaigns and AdGroups',
+                title: 'Ads',
                 columns: ADVERTISER_COLUMNS,
                 default_columns: ADVERTISER_DEFAULT_COLUMNS,
                 sortable_columns: SORTABLE_COLUMNS,
@@ -1338,7 +1350,7 @@ var mopub = mopub || {};
             }
 
             $('thead', $publisher_table).html(filter_header_row({
-                title: 'Apps and AdUnits',
+                title: 'Apps',
                 columns: PUBLISHER_COLUMNS,
                 default_columns: PUBLISHER_DEFAULT_COLUMNS,
                 sortable_columns: SORTABLE_COLUMNS,
@@ -1669,6 +1681,9 @@ var mopub = mopub || {};
                     record_metric('Showed publisher rows');
                 }
             });
+
+            $('#advertiser_columns').click();
+            $('#publisher_columns').click();
 
             update_dashboard(true, true, true);
         }

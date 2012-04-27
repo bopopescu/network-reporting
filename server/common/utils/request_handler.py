@@ -177,10 +177,13 @@ class RequestHandler(object):
                 'account_list': [str(self.account.key())] if self.account else [],
                }
         data_string = simplejson.dumps(data)
-        encypted_data = EncodeAES(get_cipher(iv), data_string)
-        cookie_data = {'data': encypted_data,
-                       'IV': iv}
-        response.set_cookie("handshake", simplejson.dumps(cookie_data))
+        encrypted_data = EncodeAES(get_cipher(iv), data_string)
+
+        logging.error(encrypted_data)
+        logging.error(iv)
+
+        response.set_cookie("handshake_data", encrypted_data)
+        response.set_cookie("handshake_iv", iv)
 
     def _set_account(self):
         self.account = None

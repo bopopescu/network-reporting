@@ -26,17 +26,16 @@ div#controls {
 
 div#charts, div#advertiser_filters, div#publisher_filters {
     float: left;
-    margin-bottom: 10px;
 }
 
 div#charts {
     border: 2px solid #bbb;
-    width: 600px;
+    width: 500px;
 
     .chart_container {
         border-bottom: 1px solid #ddd;
         padding: 5px;
-        width: 590px;
+        width: 490px;
         height: 125px;
 
         .summed_stats {
@@ -65,7 +64,7 @@ div#charts {
 
         .chart {
             float: left;
-            width: 500px;
+            width: 400px;
             height: 125px;
         }
 
@@ -77,32 +76,44 @@ div#charts {
 }
 
 div#advertiser_filters, div#publisher_filters {
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 10px;
     margin-left: 10px;
+    width: 600px;
 
     button.show span.hide, button.hide span.show {
         display: none;
     }
 
     table#advertiser, table#publisher {
-        border: 2px solid #bbb;
+        /*border: 2px solid #bbb;*/
         clear: both;
         font-size: 12px;
-        margin: 5px 0;
+        margin-top: 5px;
 
         thead {
+            display: block;
             th {
-                color: #555;
+                /*color: #555;
                 font-weight: 300;
                 padding: 5px 5px 5px 2px;
                 text-transform: uppercase;
-                vertical-align: bottom;
+                vertical-align: bottom;*/
+                padding: 2px;
                 &.title {
-                    font-size: 14px;
-                    font-weight: 600;
-                    text-transform: none;
+                    width: 120px;
+                }
+                &.stat {
+                    width: 45px;
+                    &.ordered {
+                        width: 85px;
+                    }
                 }
                 &.orderable {
                     cursor: pointer;
+                    &:hover {
+                        background-color: #ccf;
+                    }
                     .icon-chevron-down {
                         display: none;
                     }
@@ -114,8 +125,14 @@ div#advertiser_filters, div#publisher_filters {
         }
 
         tbody {
+            display: block;
+            height: 250px;
+            overflow: auto;
             tr {
                 cursor: pointer;
+                &:hover {
+                    background-color: #ccf;
+                }
                 &.selected {
                     background-color: rgba(200,225,251,1);
                 }
@@ -128,23 +145,31 @@ div#advertiser_filters, div#publisher_filters {
                 }
                 td {
                     padding: 2px;
-                    &.expand_control {
-                        padding: 1px 2px;
-                        button {
-                            padding: 0 0 1px 1px;
-                            &.expand i.icon-minus {
-                                display: none;
-                            }
-                            &.collapse i.icon-plus {
-                                display: none;
-                            }
+                    &.name {
+                        span {
+                            width: 120px;
+                            display: inline-block;
+                            overflow: hidden;
+                            white-space: nowrap;
+                            text-overflow: ellipsis
                         }
                     }
-                    &.positive {
-                        color: green;
+                    &.stat {
+                        text-align: right;
+                        width: 45px;
+                        &.ordered[colspan="2"] {
+                            width: 85px;
+                        }
                     }
-                    &.negative {
-                        color: red;
+                    &.delta {
+                        text-align: right;
+                        width: 36px;
+                        &.positive {
+                            color: green;
+                        }
+                        &.negative {
+                            color: red;
+                        }
                     }
                 }
             }

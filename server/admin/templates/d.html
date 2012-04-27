@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% load filters %}
 {% block pageTitle %}<h1>MoPub Metrics Dashboard</h1>{% endblock pageTitle %}
-{% block pageTitleTag %}{{page.yesterday_requests|withsep}} served{% endblock pageTitleTag %}
+{% block pageTitleTag %}{{page.today_requests|withsep}} served{% endblock pageTitleTag %}
 {% block titleBarRight %}
 <span class="titlebar-link">
     {% if loading %}

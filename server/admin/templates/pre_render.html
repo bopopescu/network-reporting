@@ -5,21 +5,25 @@
         <table>
           <tbody>
             <tr class="active" id="stats-breakdown-requests">
+              <td class="stats-breakdown-value today"><span class="inner">{{today.request_count|withsep}}</span></td>
               <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.request_count|withsep}}</span></td>
               <td class="stats-breakdown-value all"><span class="inner">{{all.request_count|withsep}}</span></td>
               <th class="stats-breakdown-name"><span class="inner">Requests</span></th>
             </tr>
             <tr id="stats-breakdown-impressions">
+              <td class="stats-breakdown-value today"><span class="inner">{{today.impression_count|withsep}}</span></td>
               <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.impression_count|withsep}}</span></td>
               <td class="stats-breakdown-value all"><span class="inner">{{all.impression_count|withsep}}</span></td>
               <th class="stats-breakdown-name"><span class="inner">Impressions</span></th>
             </tr>
-            <tr id="stats-breakdown-clicks">
+            <tr id="stats-breakdown-clicks">             
+              <td class="stats-breakdown-value today"><span class="inner">{{today.click_count|withsep}}</span></td>
               <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.click_count|withsep}}</span></td>
               <td class="stats-breakdown-value all"><span class="inner">{{all.click_count|withsep}}</span></td>
               <th class="stats-breakdown-name"><span class="inner">Clicks</span></th>
             </tr>
-            <tr id="stats-breakdown-users">
+            <tr id="stats-breakdown-users">            
+              <td class="stats-breakdown-value today"><span class="inner">{{today.user_count|withsep}}</span></td>
               <td class="stats-breakdown-value yesterday"><span class="inner">{{yesterday.user_count|withsep}}</span></td>
               <td class="stats-breakdown-value all"><span class="inner">{{all.user_count|withsep}}</span></td>
               <th class="stats-breakdown-name"><span class="inner">Pubs</span></th>
@@ -29,7 +33,9 @@
         </div>
         <div class="stats-breakdown-buttons">
         <span class="buttonset button-small" id="stats-breakdown-dateOptions">
-          <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1" checked="checked"/>
+          <input type="radio" name="stats-breakdown-dateOptions-option" value="today" id="stats-breakdown-dateOptions-option-0" checked="checked"/>
+          <label for="stats-breakdown-dateOptions-option-0">Today</label>
+          <input type="radio" name="stats-breakdown-dateOptions-option" value="yesterday" id="stats-breakdown-dateOptions-option-1"/>
           <label for="stats-breakdown-dateOptions-option-1">Yesterday</label>
           <input type="radio" name="stats-breakdown-dateOptions-option" value="all" id="stats-breakdown-dateOptions-option-2"/>
           <label for="stats-breakdown-dateOptions-option-2">All</label>
@@ -40,8 +46,6 @@
       <div class="chart-error-text">Could not load chart</div> 
       <script type="text/javascript"> 
           $(function() {
-          $('.stats-breakdown-value.yesterday').show();
-
           mopub.dashboardStatsChartData = {
             pointStart: Date.UTC({{start_date.year}},{{start_date.month|add:"-1"}},{{start_date.day}}),
             pointInterval: 86400000,
@@ -73,7 +77,7 @@
 		  <th></th>
 			<th style="text-align: left; width: 100px;">App</th>
 			<th style="text-align: left; width: 100px;">Account</th>
-			<th style="text-align: left;">Type</th>
+<!-- 			<th style="text-align: left;">Type</th>
 			<th style="text-align: left;">Category</th>
 			<th width="">Reqs</th>
 			<th width="">Impr</th>
@@ -85,14 +89,14 @@
 			<th width="">MPX$</th>
 			<th width="">MPX%</th>
 			<th width="">MPX CPM</th>			
-		</thead>
+ -->		</thead>
 		{% for a in apps %}
 		<tr class="alternating-color">
 			<td>{{forloop.counter}}&nbsp;</td>
-			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.publisher.key %}">{{a.publisher.name|truncate:30}}</a></td>
-			<td><a href="mailto:{{a.publisher.account.mpuser.email}}" class="account_email">{{a.publisher.account.mpuser.email|truncate:30}}</a></td>
-            <td>{{a.publisher.app_type}}</td>
-			<td>{{a.publisher.primary_category}}</td>
+			<td><a href="{% url admin_switch_user %}?user_email={{a.account.mpuser.email}}&amp;next={% url publisher_app_show app_key=a.key %}">{{a.name|truncate:30}}</a></td>
+			<td><a href="mailto:{{a.account.mpuser.email}}" class="account_email">{{a.account.mpuser.email|truncate:30}}</a></td>
+<!-- <td>{{a.publisher.app_type}}</td> -->
+<!-- 			<td>{{a.publisher.primary_category}}</td>
 			<td class="numeric">{{a.request_count|withsep}}</td>
 			<td class="numeric">{{a.impression_count|withsep}}</td>
 			<td class="numeric">{{a.requests_delta1day|percentage}}</td>
@@ -103,7 +107,7 @@
 			<td class="numeric">{{a.mpx_revenue|currency}}</td>
 			<td class="numeric">{{a.mpx_clear_rate|percentage_rounded}}</td>
 			<td class="numeric">{{a.mpx_cpm|currency}}</td>
-		</tr>
+ -->		</tr>
 		{% endfor %}
 	</table>
 </section>

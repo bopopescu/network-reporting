@@ -117,7 +117,11 @@
                         if(adgroup.get('goal')) {
                             if(adgroup.get('bid_strategy') == 'cpm') { %>
                                 <%= adgroup.get_formatted_stat('goal') %>
-                                <div class="muted">Impressions</div>
+                                <% if(adgroup.get('budget_type') == 'daily') { %>
+                                    <div class="muted">Imps / Day</div>
+                                <% } else { %>
+                                    <div class="muted">Total Imps</div>
+                                <% } %>
                             <% }
                             else if(adgroup.get('bid_strategy') == 'cpc') { %>
                                 $<%= adgroup.get_formatted_stat('goal') %>

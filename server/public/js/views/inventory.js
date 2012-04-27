@@ -387,9 +387,8 @@ var mopub = window.mopub || {};
             /*jslint maxlen: 200 */
             if (!this_view.options.endpoint_specific || this_view.model.get('stats_endpoint') == 'networks') {
                 $('.rev', app_row).text(this_view.model.get_formatted_stat('rev'));
-                $('.cpm', app_row).text(this_view.model.get_formatted_stat('cpm'));
             }
-            var metrics = ['imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
+            var metrics = ['cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
             _.each(metrics, function (metric) {
                 $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
             });

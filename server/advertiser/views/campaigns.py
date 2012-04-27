@@ -37,7 +37,7 @@ from advertiser.query_managers import (AdvertiserQueryManager,
                                        ImageCreativeQueryManager,
                                        TextAndTileCreativeQueryManager,
                                        HtmlCreativeQueryManager)
-from advertiser.models import AdGroup, Campaign
+from advertiser.models import Campaign, AdGroup, Creative
 from ad_server.optimizer.optimizer import DEFAULT_CTR
 from budget import budget_service
 from common.ragendja.template import (JSONResponse, render_to_response,
@@ -163,13 +163,18 @@ def _sort_adgroups(adgroups, account):
     """
     # Populate the "campaign" property for all adgroups.
     campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(account)
+    filtered_adgroups = []
     for adgroup in adgroups:
         campaign_key = str(AdGroup.campaign.get_value_for_datastore(adgroup))
-        adgroup.campaign = campaigns_dict[campaign_key]
+        if campaign_key in campaigns_dict:
+            adgroup.campaign = campaigns_dict[campaign_key]
+            filtered_adgroups.append(adgroup)
 
-    promo_adgroups = _sorted_adgroups_for_types(adgroups, ['promo'])
-    gtee_adgroups = _sorted_adgroups_for_types(adgroups, ['gtee_high', 'gtee_low', 'gtee'])
-    backfill_adgroups = _sorted_adgroups_for_types(adgroups, ['backfill_promo'])
+    promo_adgroups = _sorted_adgroups_for_types(filtered_adgroups, ['promo'])
+    gtee_adgroups = _sorted_adgroups_for_types(filtered_adgroups, ['gtee_high',
+        'gtee_low', 'gtee'])
+    backfill_adgroups = _sorted_adgroups_for_types(filtered_adgroups,
+            ['backfill_promo'])
 
     return [
         promo_adgroups,
@@ -243,8 +248,7 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
 
     def get(self):
         campaign_form = CampaignForm(is_staff=self.request.user.is_staff,
-                account=AccountQueryManager.get_account_by_key(
-                    self.account.key()))
+                account=self.account)
         adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
@@ -275,8 +279,7 @@ class CreateCampaignAndAdGroupHandler(RequestHandler):
 
         campaign_form = CampaignForm(self.request.POST,
                 is_staff=self.request.user.is_staff,
-                account=AccountQueryManager.get_account_by_key(
-                    self.account.key()))
+                account=self.account)
         if campaign_form.is_valid():
             campaign = campaign_form.save()
             campaign.account = self.account
@@ -424,8 +427,7 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
                 initial={'bid': adgroup.bid,
                          'bid_strategy': adgroup.bid_strategy},
                 is_staff=self.request.user.is_staff,
-                account=AccountQueryManager.get_account_by_key(
-                    self.account.key()))
+                account=self.account)
         adgroup_form = AdGroupForm(instance=adgroup, is_staff=self.request.user.is_staff)
         account_network_config_form = AccountNetworkConfigForm(instance=self.account.network_config)
 
@@ -463,8 +465,7 @@ class EditCampaignAndAdGroupHandler(RequestHandler):
                 initial={'bid': adgroup.bid,
                          'bid_strategy': adgroup.bid_strategy},
                 is_staff=self.request.user.is_staff,
-                account=AccountQueryManager.get_account_by_key(
-                    self.account.key()))
+                account=self.account)
 
         if campaign_form.is_valid():
             campaign = campaign_form.save()
@@ -628,8 +629,6 @@ class AdGroupDetailHandler(RequestHandler):
         ///-(    \'   \\
     """
     def get(self, adgroup_key):
-        account = AccountQueryManager.get_account_by_key(self.account.key())
-
         stats_q = StatsModelQueryManager(self.account, self.offline)
 
         # Load the ad group
@@ -756,7 +755,7 @@ class AdGroupDetailHandler(RequestHandler):
                 app.stats = reduce(lambda x, y: x + y, app.all_stats, StatsModel())
                 apps[au.app_key.key()] = app
             else:
-                app.adunits += [au]
+                app.adunits.append(au)
 
             # 1 GET
             stats_manager = StatsModelQueryManager(self.account, offline=self.offline)
@@ -867,7 +866,7 @@ class AdGroupDetailHandler(RequestHandler):
         return render_to_response(self.request,
                                   'advertiser/adgroup.html',
                                   {
-                                      'account': account,
+                                      'account': self.account,
                                       'campaign': adgroup.campaign,
                                       'apps': apps.values(),
                                       'adgroup': adgroup,
@@ -937,89 +936,57 @@ def advertiser_adgroup_show(request, *args, **kwargs):
 
 
 class PauseAdGroupHandler(RequestHandler):
-    """
-    Holy christ, refactor
-
-                     %%%%%%
-                   %%%% = =
-                   %%C    >
-                    _)' _( .' ,
-                 __/ |_/\   " *. o
-                /` \_\ \/     %`= '_  .
-               /  )   \/|      .^',*. ,
-              /' /-   o/       - " % '_
-             /\_/     <       = , ^ ~ .
-             )_o|----'|          .`  '
-         ___// (_  - (\
-        ///-(    \'   \\
+    """ Update the status of a collection of AdGroups, given a list of affected AdGroup keys (passed as 'id')
+        and a desired status (passed as 'action'). Action can have the following values: 'resume', 'activate',
+        'archive', or 'delete'. The relevant AdGroups' Campaigns and Creatives are also appropriately updated.
     """
     def post(self):
         action = self.request.POST.get("action", "pause")
-        update_objs = []
-        adgroups = []
-        update_creatives = []
-        ids = self.request.POST.getlist('id') or []
-        if ids:
-            adgroups = AdGroupQueryManager.get(ids)
-        for a in adgroups:
-            if a != None and a.campaign.account == self.account:
-                if action == "pause":
-                    a.active = False
-                    a.campaign.active = False
-                    a.deleted = False
-                    a.campaign.deleted = False
-                    a.archived = False
-                    update_objs.append(a)
-                elif action == "resume":
-                    a.active = True
-                    a.campaign.active = True
-                    a.deleted = False
-                    a.campaign.deleted = False
-                    a.archived = False
-                    update_objs.append(a)
-                elif action == "activate":
-                    a.active = True
-                    a.campaign.active = True
-                    a.deleted = False
-                    a.campaign.deleted = False
-                    a.archived = False
-                    update_objs.append(a)
-                    self.request.flash["message"] = "A campaign has been activated. View it within <a href='%s'>active campaigns</a>." % reverse('advertiser_campaign')
-                elif action == "archive":
-                    a.active = False
-                    a.campaign.active = False
-                    a.deleted = False
-                    a.campaign.deleted = False
-                    a.archived = True
-                    update_objs.append(a)
-                    self.request.flash["message"] = "A campaign has been archived. View it within <a href='%s'>archived campaigns</a>." % reverse('advertiser_archive')
-                elif action == "delete":
-                    a.active = False
-                    a.campaign.active = False
-                    a.deleted = True
-                    a.campaign.deleted = True
-                    a.archived = False
-                    update_objs.append(a)
-                    self.request.flash["message"] = "Your campaign has been successfully deleted"
-                    for creative in a.creatives:
-                        creative.deleted = True
-                        update_creatives.append(creative)
+        adgroups_keys = self.request.POST.getlist('id') or []
 
-        if update_objs:
-            AdGroupQueryManager.put(update_objs)
-            camp_objs = []
-            for adgroup in update_objs:
-                camp_objs.append(adgroup.campaign)
+        if not adgroups_keys:
+            return HttpResponseRedirect(self.request.environ.get('HTTP_REFERER'))
 
-            CampaignQueryManager.put(camp_objs)
+        account_key = self.account.key()
 
-        if update_creatives:
-            CreativeQueryManager.put(update_creatives)
+        adgroups = AdGroupQueryManager.get(adgroups_keys)
+        # Filter out adgroups that don't belong to this account.
+        adgroups_for_this_account = filter(lambda a: AdGroup.account.get_value_for_datastore(a) == account_key, adgroups)
 
-        #TODO: we need a cross-platform default redirect in case
+        campaigns_keys = [str(AdGroup.campaign.get_value_for_datastore(adgroup)) for adgroup in adgroups_for_this_account]
+        campaigns = CampaignQueryManager.get(campaigns_keys)
+
+        for campaign in campaigns:
+            campaign.active = action in ["resume", "activate"]
+            campaign.deleted = action in ["delete"]
+        CampaignQueryManager.put(campaigns)
+
+        for adgroup in adgroups_for_this_account:
+            adgroup.active = action in ["resume", "activate"]
+            adgroup.archived = action in ["archive"]
+            adgroup.deleted = action in ["delete"]
+        AdGroupQueryManager.put(adgroups_for_this_account)
+
+        # If deleting adgroups, grab the corresponding creatives to delete as well. If there are changes
+        # at this level, make sure to update the datastore accordingly.
+        if action in ["delete"]:
+            creatives = Creative.all().filter('account =', self.account).filter('ad_group IN', adgroups_for_this_account).fetch(1000)
+            for creative in creatives:
+                creative.deleted = True
+            CreativeQueryManager.put(creatives)
+
+        # Flash a message to the user for activate/archive/delete.
+        if action in ["activate"]:
+            self.request.flash["message"] = "A campaign has been activated. View it within <a href='%s'>active campaigns</a>." % reverse('advertiser_campaign')
+        elif action in ["archive"]:
+            self.request.flash["message"] = "A campaign has been archived. View it within <a href='%s'>archived campaigns</a>." % reverse('advertiser_archive')
+        elif action in ["delete"]:
+            self.request.flash["message"] = "Your campaign has been successfully deleted."
+
+
+        # TODO: we need a cross-platform default redirect in case
         # HTTP_REFERER doesn't exist
         return HttpResponseRedirect(self.request.environ.get('HTTP_REFERER'))
-
 
 @login_required
 def bid_pause(request, *args, **kwargs):

@@ -4,6 +4,7 @@ from google.appengine.api.images import InvalidBlobKeyError
 from publisher.models import Site as AdUnit
 from advertiser.models import AdGroup, Creative
 import datetime
+import time
 from reporting.query_managers import StatsModelQueryManager
 from google.appengine.api import memcache
 from common.utils.db_deep_get import deep_get_from_db, CONFIG
@@ -21,7 +22,7 @@ class AdUnitContext(object):
     to run the auction. """
 
     def simplify(self):
-        return SimpleAdUnitContext(self.adunit, self.campaigns, self.adgroups, self.creatives)
+        return SimpleAdUnitContext(self.adunit, self.campaigns, self.adgroups, self.creatives, self.created_at)
 
     @classmethod
     def wrap(cls, adunit):
@@ -54,6 +55,7 @@ class AdUnitContext(object):
         self.creative_ctrs = {}
         for c in creatives:
             self.creative_ctrs[c.key()] = CreativeCTR(c, adunit)
+        self.created_at = int(time.mktime(datetime.datetime.utcnow().timetuple()))
 
     def _get_ctr(self, creative, date=datetime.date.today(), date_hour=None, min_sample_size=1000):
         '''Given a creative, calculates the CTR.

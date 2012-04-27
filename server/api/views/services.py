@@ -64,6 +64,7 @@ class AppService(RequestHandler):
 
         if campaign_key:
             campaign = CampaignQueryManager.get(campaign_key)
+            # TODO: handle old network campaigns
             if campaign.account.key() != self.account.key():
                 raise Http404
 

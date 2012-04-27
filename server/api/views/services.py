@@ -64,7 +64,6 @@ class AppService(RequestHandler):
 
         if campaign_key:
             campaign = CampaignQueryManager.get(campaign_key)
-            # TODO: handle old network campaigns
             if campaign.account.key() != self.account.key():
                 raise Http404
 
@@ -419,18 +418,6 @@ class CampaignService(RequestHandler):
         stats_fetcher = get_stats_fetcher(self.account.key(), stats_endpoint)
         campaign_stats = stats_fetcher.get_campaign_stats(campaign_key,
                 self.start_date, self.end_date)
-
-        # TODO
-        # Add old campaign stats to new ones if the query is for a legacy
-        # date, shouldn't be common so doesn't have to be super fast
-#            if stats_endpoint == 'all' and campaign.transition_date and \
-#                    campaign._old_campaign and campaign.transition_date >= \
-#                    self.start_date and campaign.transition_date <= self.end_date:
-#                old_campaign_stats = stats.get_campaign_stats(campaign. \
-#                        _old_campaign, self.start_date, self.end_date)
-#                campaign_stats = [sum(stats_for_day, StatsModel()) for \
-#                        stats_for_day in zip(campaign_stats,
-#                            old_campaign_stats)]
 
         return JSONResponse(campaign_stats)
     #except Exception, exception:

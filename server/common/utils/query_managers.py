@@ -165,8 +165,11 @@ class CachedQueryManager(QueryManager):
         with accounts=[A, B] and entity_class=AdGroup, the cached dictionaries of AdGroups for
         accounts A and B will be flushed. "accounts" may be a set, list, or a single object.
         """
-        if isinstance(account_keys, set): accounts_keys = list(account_keys)
-        if isinstance(account_keys, db.Key): accounts_keys = [account_keys]
+        if isinstance(account_keys, set):
+            account_keys = list(account_keys)
+        if isinstance(account_keys, (basestring, db.Key)):
+            account_keys = [account_keys]
+        account_keys = [str(account_key) for account_key in account_keys]
         entity_type = entity_class.entity_type()
 
         # For each account, we need to flush not only the dictionary of entities, but also the list
@@ -176,9 +179,8 @@ class CachedQueryManager(QueryManager):
         memcache_keys_for_entity_dicts = []
         memcache_keys_for_entity_key_lists = []
         for account_key in account_keys:
-            account_key_string = str(account_key)
-            memcache_keys_for_entity_dicts.append("%s_acct_%s" % (entity_type, account_key_string))
-            memcache_keys_for_entity_key_lists.append("%s_keys_acct_%s" % (entity_type, account_key_string))
+            memcache_keys_for_entity_dicts.append("%s_acct_%s" % (entity_type, account_key))
+            memcache_keys_for_entity_key_lists.append("%s_keys_acct_%s" % (entity_type, account_key))
         
         # The entity dictionaries are stored as memcache chunks, so we use delete_multi_chunked.
         dict_delete_success = cls.memcache_delete_multi_chunked(memcache_keys_for_entity_dicts)

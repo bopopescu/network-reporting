@@ -66,7 +66,8 @@ var mopub = mopub || {};
     // before expansion.
     var ADVERTISER_DEFAULT_COLUMNS = [
         'rev',
-        'imp'
+        'imp',
+        'clk'
     ];
 
     // Columns to display when the publisher table has been expanded.
@@ -74,11 +75,11 @@ var mopub = mopub || {};
         'rev',
         'imp',
         'clk',
-        //'ctr',
+        'ctr',
         'cpm',
         'conv',
-        //'conv_rate',
-        //'fill_rate',
+        'conv_rate',
+        'fill_rate',
         'req'
     ];
 
@@ -86,7 +87,8 @@ var mopub = mopub || {};
     // before expansion.
     var PUBLISHER_DEFAULT_COLUMNS = [
         'rev',
-        'imp'
+        'imp',
+        'clk'
     ];
 
     // Columns that can be sorted on in either table.
@@ -1237,6 +1239,7 @@ var mopub = mopub || {};
 
             function show_advertiser_columns() {
                 $('#publisher_filters').hide();
+                $('#advertiser_filters').addClass('expand');
                 $('th, td', $advertiser_table).show();
             }
 
@@ -1247,6 +1250,7 @@ var mopub = mopub || {};
                         $('th.' + column + ', td.' + column, $advertiser_table).hide();
                     }
                 });
+                $('#advertiser_filters').removeClass('expand');
                 $('#publisher_filters').show();
             }
 
@@ -1277,6 +1281,7 @@ var mopub = mopub || {};
 
             function show_publisher_columns() {
                 $('#advertiser_filters').hide();
+                $('#publisher_filters').addClass('expand');
                 $('th, td', $publisher_table).show();
             }
 
@@ -1287,6 +1292,7 @@ var mopub = mopub || {};
                         $('th.' + column + ', td.' + column, $publisher_table).hide();
                     }
                 });
+                $('#publisher_filters').removeClass('expand');
                 $('#advertiser_filters').show();
             }
 

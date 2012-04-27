@@ -77,7 +77,11 @@ div#charts {
 
 div#advertiser_filters, div#publisher_filters {
     margin-left: 10px;
-    width: 300px;
+    width: 338px;
+
+    &.expand {
+        width: 686px;
+    }
 
     button.show span.hide, button.hide span.show {
         display: none;
@@ -86,29 +90,27 @@ div#advertiser_filters, div#publisher_filters {
     table#advertiser, table#publisher {
         font-size: 12px;
         margin: 5px 0;
+        width: 100%;
 
         thead {
-            th {
-                padding: 2px;
-                &.title {
-                    width: 120px;
-                }
-                &.stat {
-                    width: 45px;
-                    &.ordered {
-                        width: 85px;
+            tr {
+                th {
+                    padding: 2px;
+                    &.title {
                     }
-                }
-                &.orderable {
-                    cursor: pointer;
-                    &:hover {
-                        background-color: #ccf;
-                    }
-                    .icon-chevron-down {
-                        display: none;
-                    }
-                    &.ordered .icon-chevron-down {
-                        display: inline-block;
+                    &.stat {
+                        &.orderable {
+                            cursor: pointer;
+                            &:hover {
+                                background-color: #ccf;
+                            }
+                            .icon-chevron-down {
+                                display: none;
+                            }
+                            &.ordered .icon-chevron-down {
+                                display: inline-block;
+                            }
+                        }
                     }
                 }
             }
@@ -134,23 +136,18 @@ div#advertiser_filters, div#publisher_filters {
                     padding: 2px;
                     &.name {
                         span {
-                            width: 120px;
                             display: inline-block;
                             overflow: hidden;
+                            text-overflow: ellipsis;
                             white-space: nowrap;
-                            text-overflow: ellipsis
+                            width: 100%;
                         }
                     }
                     &.stat {
                         text-align: right;
-                        width: 45px;
-                        &.ordered[colspan="2"] {
-                            width: 85px;
-                        }
                     }
                     &.delta {
                         text-align: right;
-                        width: 36px;
                         &.positive {
                             color: green;
                         }

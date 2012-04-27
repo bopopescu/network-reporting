@@ -1,10 +1,45 @@
+# Deployed Friday, April 27, 2012 at 07:06PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-86
+### Bugs Fixed: []
+### Included Commits: 
+ * ee8861c Deployed without finding any bug fixes.
+ 
+# Deployed Friday, April 27, 2012 at 06:54PM PST
+### Deployed by Nick Grabenstein
+### Tagged deploy-85
+### Bugs Fixed: []
+### Included Commits:
+* 6725187 Campaigns now specify whether they are delivering Total Impressions or Impressions/Day
+* c7965bc Modify memcache_flush_entities_for_account_keys to accept both keys and string
+* c262c73 Deployed without finding any bug fixes.
+
+# Deployed Thursday, April 26, 2012 at 11:14PM PST
+### Deployed by Andrew He
+### Tagged deploy-84
+### Bugs Fixed: []
+### Included Commits:
+* 0ece3cb Use deferred library to asynchronously update budgets in CampaignQueryManager.put()
+* b638b84 Fixed things for Task class since it's dumb, fixed Queue
+* 1df5baf Catch errors properly
+* a0c1dd7 fixed the eta
+* e3a5305 Added fanout tq
+* 1529adc If the created_at isn't set, set it and save it in memc
+* ed2d6f8 Merge branch 'master' of github.com:mopub/mopub
+* 75095c8 Only pass things back if they don't have the exact same created_at time
+* be9c772 Batch GETs for account keys across Advertiser and Publisher QueryManagers
+* 267d77f Added more created_at support
+* ee04807 More created_at support fixes
+* 63aaa91 Sorry about that...forgot to decorate
+* a39fdc1 Deployed without finding any bug fixes.
+
 # Deployed Wednesday, April 25, 2012 at 07:00PM PST
 ### Deployed by Nick Grabenstein
 ### Tagged deploy-83
 ### Bugs Fixed: []
-### Included Commits: 
- * 777b824 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 777b824 Deployed without finding any bug fixes.
+
 # Deployed Wednesday, April 25, 2012 at 06:55PM PST
 ### Deployed by Nick Grabenstein
 ### Tagged deploy-82

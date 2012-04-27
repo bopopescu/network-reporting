@@ -5,7 +5,7 @@ from datetime import datetime
 import time
 
 from google.appengine.ext import webapp
-from google.appengine.api import urlfetch
+from google.appengine.api import urlfetch, taskqueue
 
 from publisher.models import Site as AdUnit
 from publisher.query_managers import AdUnitContextQueryManager
@@ -53,3 +53,32 @@ class AUCUserPushHandler(webapp.RequestHandler):
         full_url = 'http://' + ADSERVER_ADMIN_HOSTNAME + USER_PUSH_URL
         # Make async call to the adserver_admin, don't really care about wtf it sends back
         urlfetch.make_fetch_call(rpc, url=full_url, payload=body, method=urlfetch.POST)
+
+
+class AUCUserPushFanOutHandler(webapp.RequestHandler):
+
+    def post(self):
+        inttime = int(time.time())
+        ts = inttime / 60
+        eta = (ts + 1)* 60
+        eta += 5
+        countdown = eta - inttime
+        queue = taskqueue.Queue('push-context-update')
+        adunit_keys = self.request.get_all('adunit_keys')
+        for key in adunit_keys:
+            task_name = 'adunit-%s-ts-%s' % (key, ts)
+            task = taskqueue.Task(url='/fetch_api/adunit_update_push',
+                                  name=task_name,
+                                  method='GET',
+                                  countdown=countdown,
+                                  params={'adunit_key':key})
+            try:
+                queue.add(task)
+            except taskqueue.BadTaskStateError, e:
+                logging.warning("%s already exists" % task)
+            except taskqueue.DuplicateTaskNameError, e:
+                logging.warning("%s already exists" % task)
+            except taskqueue.TaskAlreadyExistsError, e:
+                logging.warning("%s already exists" % task)
+
+

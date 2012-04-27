@@ -1535,8 +1535,6 @@ form#campaign_and_adgroup ul#apps, form#network-login-form ul#apps, fieldset.dia
         white-space: nowrap; }
       form#campaign_and_adgroup ul#apps > li > div ul, form#network-login-form ul#apps > li > div ul, fieldset.dialog ul#apps > li > div ul {
         list-style-type: none;
-        overflow: auto;
-        max-height: 200px;
         margin: 0;
         padding: 0px 20px; }
         form#campaign_and_adgroup ul#apps > li > div ul li, form#network-login-form ul#apps > li > div ul li, fieldset.dialog ul#apps > li > div ul li {

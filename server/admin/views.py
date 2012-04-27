@@ -48,8 +48,8 @@ BIDDER_SPENT_URL = "http://mpx.mopub.com/spent?api_key=asf803kljsdflkjasdf"
 BIDDER_SPENT_MAX = 2000
 
 ADMIN_MONGO_ACCT = 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww'
-ADMIN_MONGO_PUB = 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww'
-ADMIN_MONGO_ADV = 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww'
+ADMIN_MONGO_PUB = 'agltb3B1Yi1pbmNyDQsSBFNpdGUY497jEww'
+ADMIN_MONGO_ADV = 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYnsnlEww'
 
 @staff_login_required
 @cache_page_until_post()
@@ -76,9 +76,7 @@ def admin_switch_user(request,*args,**kwargs):
 
 
 def dashboard_prep(request, *args, **kwargs):
-    offline = request.GET.get('offline',False)
-    offline = True if offline == "1" else False
-
+    offline = False
 
     # mark the page as loading
     def _txn():
@@ -91,16 +89,15 @@ def dashboard_prep(request, *args, **kwargs):
 
     days = StatsModel.lastdays(NUM_DAYS)
     # gets all undeleted applications
-    start_date = StatsModel.today() - datetime.timedelta(days=(NUM_DAYS-1)) # NOTE: change
-    logging.warning('start_date: %s days :%s', start_date, days)
-    days.remove(StatsModel.today())
-
+    start_date = StatsModel.today() - datetime.timedelta(days=(NUM_DAYS - 1))
+    
     total_stats = StatsModelQueryManager(None, offline=False).get_stats_for_days(publisher=ADMIN_MONGO_PUB,
                                                                                  account=ADMIN_MONGO_ACCT, 
                                                                                  advertiser=ADMIN_MONGO_ADV, 
-                                                                                 days=days, use_mongo=True)
+                                                                                 days=days, use_mongo=True, 
+                                                                                 mongo_hybrid=False)
 
-    # apps = AppQueryManager.get_all_apps()
+    apps = AppQueryManager.get_all_apps()
 
     # # get all the daily stats for the undeleted apps
     # # app_stats = StatsModelQueryManager(None,offline=offline).get_stats_for_apps(apps=apps,num_days=30)
@@ -163,7 +160,6 @@ def dashboard_prep(request, *args, **kwargs):
     # # organize daily stats by date
     # total_stats = totals.values()
     # total_stats.sort(lambda x,y: cmp(x.date,y.date))
-    # apps = unique_apps.values()
     # apps.sort(lambda x,y: cmp(y.request_count, x.request_count))
 
     # get folks who want to be on the mailing list
@@ -181,12 +177,13 @@ def dashboard_prep(request, *args, **kwargs):
     # params
     render_params = {"stats": total_stats,
         "start_date": start_date,
-        "yesterday": total_stats[-1],
+        "today": total_stats[-1],
+        "yesterday": total_stats[-2],
         "all": StatsModel(request_count=sum([x.request_count for x in total_stats]),
             impression_count=sum([x.impression_count for x in total_stats]),
             click_count=sum([x.click_count for x in total_stats]),
             user_count=max([x.user_count for x in total_stats])),
-        "apps": None,
+        "apps": apps,
         "unique_apps": None,
         "new_users": new_users,
         "mailing_list": mail}
@@ -208,7 +205,8 @@ def dashboard_prep(request, *args, **kwargs):
 
     page = AdminPage(offline=offline,
                      blob_key=files.blobstore.get_blob_key(internal_file_name),
-                     yesterday_requests=total_stats[-1].request_count)
+                     today_requests=total_stats[-1].request_count,
+                     yesterday_requests=total_stats[-2].request_count)
 
     page.put()
 
@@ -226,8 +224,7 @@ def reports_dashboard(request, *args, **kwargs):
 
 @staff_login_required
 def dashboard(request, *args, **kwargs):
-    offline = request.GET.get('offline',False)
-    offline = False if offline == "0" else True # defaults use offline
+    offline = False
     refresh = request.GET.get('refresh',False)
     refresh = True if refresh == "1" else False
     loading = request.GET.get('loading',False)

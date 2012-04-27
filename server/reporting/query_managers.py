@@ -178,7 +178,8 @@ class StatsModelQueryManager(CachedQueryManager):
                            country=None,
                            offline=False,
                            date_fmt='date',
-                           use_mongo=False if settings.DEBUG else True):
+                           use_mongo=False if settings.DEBUG else True,
+                           mongo_hybrid=True):
         """
         Gets the stats for a specific pairing. Definitions:
         advertiser_group: Either Campaign, AdGroup or Creative
@@ -252,11 +253,11 @@ class StatsModelQueryManager(CachedQueryManager):
 
         if use_mongo:
             realtime_stats = mongostats.api_fetch(start_date=days[0],
-                                              end_date=days[-1],
-                                              account_key=account,
-                                              publisher_key=publisher,
-                                              advertiser_key=advertiser,
-                                              )
+                                                  end_date=days[-1],
+                                                  account_key=account,
+                                                  publisher_key=publisher,
+                                                  advertiser_key=advertiser,
+                                                  hybrid=mongo_hybrid)
             return realtime_stats
 
         #### END USE MONGOSTATS API ####

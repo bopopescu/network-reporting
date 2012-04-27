@@ -784,7 +784,8 @@ def get_adgroups_by_adunit(adgroups):
     """
     adgroups_by_adunit = {}
     for adgroup in adgroups:
-        adgroups_by_adunit[str(adgroup.site_keys[0])] = adgroup
+        if adgroup.site_keys:
+            adgroups_by_adunit[str(adgroup.site_keys[0])] = adgroup
 
     return adgroups_by_adunit
 

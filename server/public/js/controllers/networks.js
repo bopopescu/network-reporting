@@ -354,7 +354,7 @@ $(function() {
                             if (!value) {
                                 pub_id_value = "Change Network ID";
                             }
-                            $(this).closest('td').find('.pub-id-value').text(pub_id_value);
+                            $(this).closest('td').find('.pub-id-edit').text(pub_id_value);
                         }
                     });
                 }).keyup();
@@ -705,9 +705,9 @@ $(function() {
 
                 var value = input_div.children('input').val()
                 if (value) {
-                    $(this).closest('td').find('.pub-id-value').text(value);
+                    $(this).closest('td').find('.pub-id-edit').text(value);
                 } else {
-                    $(this).closest('td').find('.pub-id-value').text("Change Network ID");
+                    $(this).closest('td').find('.pub-id-edit').text("Change Network ID");
                 }
                 $(this).closest('td').find('.pub-id-edit').show();
             });
@@ -856,6 +856,7 @@ $(function() {
                 var type = field_props[1];
 
                 var all_apps_equal = true;
+                var global_value = $('.adunit-row .' + field + '-input ' + type).val();
                 $('.app-tbody').each(function() {
                     var all_adunits_equal = true;
                     var value = $(this).find('.adunit-row .' + field + '-input ' + type).val();
@@ -867,6 +868,10 @@ $(function() {
                     });
 
                     if(all_adunits_equal) {
+                        if(global_value != value) {
+                            all_apps_equal = false;
+                        }
+
                         $(this).find('.adunit-row .' + field + '-input').hide();
                         $(this).find('.adunit-row .' + field + '-edit').show();
 

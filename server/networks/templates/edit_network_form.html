@@ -373,7 +373,7 @@
                     {% if network.name == "custom" %}
                     <td>
                         <div class="global-custom_html-input hidden">
-                            <textarea class="global-custom_html" rows="3" placeholder="HTML Custom Content" cols="40" ></textarea>
+                            <textarea class="global-custom_html" rows="3" placeholder="HTML Custom Content" cols="40"></textarea>
                         </div>
                         <div class="global-custom_html-close editable">
                             Set global custom html
@@ -491,7 +491,9 @@
                             {{ adunit.adgroup_form.custom_method }}
                         </div>
                         <div class="custom_method-edit editable hidden">
-                            <span class="custom_method-value"></span>
+                            <span class="custom_method-value">
+                                Set adunit custom method
+                            </span>
                         </div>
                     </td>
                     {% endif %}
@@ -501,7 +503,9 @@
                             {{ adunit.adgroup_form.custom_html }}
                         </div>
                         <div class="custom_html-edit editable hidden">
-                            <span class="custom_html-value"></span>
+                            <span class="custom_html-value">
+                                Set adunit custom html
+                            </span>
                         </div>           
                     </td>
                     {% endif %}
@@ -514,8 +518,7 @@
                                 <span class="pub-id-close ui-icon ui-icon-close" style="display:inline-block"></span>
                             </div>
                             <div class="pub-id-edit editable">
-                                <span class="pub-id-value">{{ adunit.pub_id }}</span>
-                                <b class="caret"></b>
+                                {{ adunit.pub_id }}
                             </div>                            
                         </div>
                         {% endif %}
@@ -526,7 +529,9 @@
                             {{ adunit.adgroup_form.bid }}
                         </div>
                         <div class="cpm-edit editable hidden">
-                            <span class="cpm-value"></span>
+                            <span class="cpm-value">
+                                Set adunit custom cpm
+                            </span>
                         </div>           
                     </td>
                     {% if reporting %}

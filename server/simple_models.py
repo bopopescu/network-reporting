@@ -68,7 +68,8 @@ def to_basic_type(obj, already_translated = None):
     #if id(obj) in already_translated:
     #    return already_translated[id(obj)]
     #logging.info("Converting to basic-types: %s %s" % (type(obj), repr(obj)))
-    assert obj is None or isinstance(obj, (int, long, float, str, unicode, datetime, dict, list, tuple, SimpleModel, bool))
+
+    assert obj is None or isinstance(obj, (int, long, float, str, unicode, datetime, dict, list, tuple, SimpleModel, bool)), "Object type is %s" % type(obj)
     if isinstance(obj, (list, tuple)):
         # Apply this function recursively on the subobjects.
         to_return = [to_basic_type(x, already_translated) for x in obj]

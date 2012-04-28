@@ -169,7 +169,6 @@ var mopub = mopub || {};
     }
 
 
-
     // Formats a number for display based on a property name.
     // Currency will get a $, percentages will get a %. All numbers
     // will be formatted with commas and KMBT.
@@ -197,7 +196,6 @@ var mopub = mopub || {};
     // Formats a number in KMBT (thousands, millions, billions,
     // trillions) formatting with three significant digits.
     // Example: 1000000 -> 1M, 1230000000 -> 12.3B
-
     function format_kmbt(number) {
         if(number <= 0 || number >= 1000000000000000000000000) {
             return number;
@@ -374,7 +372,7 @@ var mopub = mopub || {};
             //     return format_stat(series, y);
             // }
         });
-        
+
         // On the X-axis, display the date in MM/DD form.
         var xAxis = new Rickshaw.Graph.Axis.X({
             graph: chart,
@@ -383,7 +381,7 @@ var mopub = mopub || {};
             }),
             ticksTreatment: 'glow'
         });
-        
+
         xAxis.render();
 
         // On the Y-axis, display the amount in KMBT form.
@@ -403,7 +401,7 @@ var mopub = mopub || {};
         chart.hoverDetail = hoverDetail;
         chart.xAxis = xAxis;
         chart.yAxis = yAxis;
-        
+
         return chart;
     }
 
@@ -429,13 +427,13 @@ var mopub = mopub || {};
                 _.each(charts, function(chart_j) {
                     chart_j.hoverDetail.visible=true;
                     chart_j.hoverDetail.update(e);
-                });                
+                });
             });
-            
+
             chart_i.onUpdate(function(){
                 _.each(charts, function(chart_j) {
                     chart_j.hoverDetail.update();
-                });                
+                });
             });
 
             chart_i.element.addEventListener('mouseout', function(e) {
@@ -443,7 +441,7 @@ var mopub = mopub || {};
 				    chart_j.hoverDetail.hide();
                 });
 		    });
-            
+
         });
 
         return charts;

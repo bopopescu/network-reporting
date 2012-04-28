@@ -12,7 +12,7 @@ from advertiser.query_managers import CampaignQueryManager, \
         CreativeQueryManager, \
         AdvertiserQueryManager
 
-from publisher.query_managers import AdUnitQueryManager
+from publisher.query_managers import PublisherQueryManager
 
 from common.constants import NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION
@@ -23,18 +23,12 @@ ADGROUP_FIELD_EXCLUSION_LIST = ['account', 'campaign', 'net_creative',
         'site_keys', 'active']
 CREATIVE_FIELD_EXCLUSION_LIST = ['ad_group', 'account']
 
-# Jim's account
-#'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExMTYwMzg4NTI0MzgzNzUzNDQxMAw'
-#'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYscSjDww'
-accounts = [Account.get('ag1kZXZ-bW9wdWItaW5jcg0LEgdBY2NvdW50GAMM')]
-
-def bulk_get(query, last_object):
-    return query.filter('__key__ >', last_object).fetch(MAX)
-
 def create_creative(new_adgroup, adgroup, put_data):
     old_creative = []
     if adgroup.creatives:
         old_creative = adgroup.creatives[0]
+        print "AdGroup Creatives"
+        print [str(creative.key()) for creative in adgroup.creatives]
 
     html_data = None
     if new_adgroup.network_type in ('custom', 'custom_native'):
@@ -57,15 +51,16 @@ def create_creative(new_adgroup, adgroup, put_data):
 
     # the creative should always have the same account as the new adgroup
     new_creative.account = new_adgroup.account
-    #put the creative so we can reference it
     if put_data:
+        #put the creative so we can reference it
         CreativeQueryManager.put(new_creative)
-    # set new adgroup to reference the correct creative
-    new_adgroup.net_creative = new_creative.key()
+        # set new adgroup to reference the correct creative
+        new_adgroup.net_creative = new_creative.key()
 
-def migrate(put_data=False):
+def migrate(accounts, put_data=False):
     for account in accounts:
-        adunits = AdUnitQueryManager.get_adunits(account=account)
+        adunits = PublisherQueryManager.get_adunits_dict_for_account(
+                account).values()
         networks = set()
         print
         print "Migrating account: " + account.emails[0]
@@ -73,6 +68,7 @@ def migrate(put_data=False):
                 AdvertiserQueryManager.get_objects_dict_for_account(account).
                 values() if campaign.campaign_type == 'network' and
                 campaign.network_state == NetworkStates.STANDARD_CAMPAIGN]
+        print "Got all account advertiser models from memcache"
         for campaign in old_network_campaigns:
             adgroup = campaign.adgroups[0]
             if adgroup:
@@ -119,18 +115,18 @@ def migrate(put_data=False):
                         new_adgroup.active = adunit.key() in adgroup.site_keys
                         # create creative for the new adgroup
                         create_creative(new_adgroup, adgroup, put_data)
-                        new_adgroup.append(adgroup)
+                        new_adgroups.append(adgroup)
 
                     if put_data:
                         AdGroupQueryManager.put(new_adgroup)
                         CampaignQueryManager.put(new_campaign)
 
-                        # mark old campaign and adgroup as deleted
-                        campaign.deleted = True
-                        for adgroup in campaign.adgroups:
-                            adgroup.deleted = True
-                            AdGroupQueryManager.put(adgroup)
+                        # mark old campaign and adgroup as paused
+                        campaign.active = False
                         CampaignQueryManager.put(campaign)
+                        for old_adgroup in campaign.adgroups:
+                            old_adgroup.active = False
+                        AdGroupQueryManager.put(campaign.adgroups)
 
                     networks.add(network)
         if put_data:

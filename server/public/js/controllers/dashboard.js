@@ -1188,11 +1188,7 @@ var mopub = mopub || {};
                     show_advertiser_comparison();
                 }
 
-                update_advertiser_colors();
-
-                update_advertiser_stats_display();
-
-                update_dashboard(true, false, true);
+                update_dashboard(true, true, true);
             });
 
             var $publisher_comparison = $('#publisher_comparison');
@@ -1230,11 +1226,7 @@ var mopub = mopub || {};
                     show_publisher_comparison();
                 }
 
-                update_publisher_colors();
-
-                update_publisher_stats_display();
-
-                update_dashboard(true, true, false);
+                update_dashboard(true, true, true);
             });
 
             /* Columns */

@@ -231,7 +231,7 @@ var mopub = mopub || {};
     }
 
     function format_kmbt(number) {
-        if(number <= 0) {
+        if(number < 1) {
             return number.toPrecision(3);
         }
         var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];

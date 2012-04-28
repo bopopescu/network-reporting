@@ -25,10 +25,10 @@ CREATIVE_FIELD_EXCLUSION_LIST = ['ad_group', 'account']
 
 def create_creative(new_adgroup, adgroup, put_data):
     old_creative = []
-    if adgroup.creatives:
-        old_creative = adgroup.creatives[0]
+    if adgroup._creatives:
+        old_creative = adgroup._creatives[0]
         print "AdGroup Creatives"
-        print [str(creative.key()) for creative in adgroup.creatives]
+        print [str(creative.key()) for creative in adgroup._creatives]
 
     html_data = None
     if new_adgroup.network_type in ('custom', 'custom_native'):
@@ -70,8 +70,9 @@ def migrate(accounts, put_data=False):
                 campaign.network_state == NetworkStates.STANDARD_CAMPAIGN]
         print "Got all account advertiser models from memcache"
         for campaign in old_network_campaigns:
-            adgroup = campaign.adgroups[0]
-            if adgroup:
+            if campaign._adgroups:
+                adgroup = campaign._adgroups[0]
+
                 network = adgroup.network_type.replace('_native',
                         '').lower()
                 print "migrating old campaign for " + network
@@ -124,9 +125,9 @@ def migrate(accounts, put_data=False):
                         # mark old campaign and adgroup as paused
                         campaign.active = False
                         CampaignQueryManager.put(campaign)
-                        for old_adgroup in campaign.adgroups:
+                        for old_adgroup in campaign._adgroups:
                             old_adgroup.active = False
-                        AdGroupQueryManager.put(campaign.adgroups)
+                        AdGroupQueryManager.put(campaign._adgroups)
 
                     networks.add(network)
         if put_data:
@@ -137,7 +138,7 @@ def undo():
     for account in accounts:
         for campaign in CampaignQueryManager.get_network_campaigns(account,
                 is_new=True):
-            for adgroup in campaign.adgroups:
+            for adgroup in campaign._adgroups:
                 db.delete(adgroup.net_creative)
                 db.delete(adgroup)
             db.delete(campaign)

@@ -219,7 +219,7 @@ var mopub = mopub || {};
     // is returned.
     function calculate_stats(obj) {
         obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
-        obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
+        obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.rev / obj.imp;
         obj.ctr = obj.imp === 0 ? 0 : obj.clk / obj.imp;
         obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
     }
@@ -294,7 +294,7 @@ var mopub = mopub || {};
     // future this could come from user defined settings that are
     // stored in a cookie.
     function get_charts() {
-        return ['rev', 'imp', 'clk', 'ctr'];
+        return ['rev', 'imp', 'clk', 'cpm'];
     }
 
     // Create a new chart using Rickshaw/d3.
@@ -553,6 +553,12 @@ var mopub = mopub || {};
                                 context.deltas[column] = {
                                     'class': 'negative',
                                     'value': delta + '%'
+                                };
+                            }
+                            else if(delta > 999) {
+                                context.deltas[column] = {
+                                    'class': 'positive',
+                                    'value': '>999%'
                                 };
                             }
                             else {

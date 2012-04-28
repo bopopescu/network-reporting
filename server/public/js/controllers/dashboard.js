@@ -8,7 +8,8 @@ var mopub = mopub || {};
      * ## Settings
      * Define global settings that are used throughout the module.
      */
-    var DEBUG = true;
+
+    var DEBUG = ('' + window.location).indexOf('localhost') !== -1;
 
     // the origin for the stats service
     var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888/';
@@ -18,22 +19,24 @@ var mopub = mopub || {};
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
-            'rgba(200,225,251,0.4)',
-            'rgba(163,193,218,0.4)',
-            'rgba(236,183,150,0.4)',
-            'rgba(178,164,112,0.4)',
-            'rgba(210,237,130,0.4)',
-            'rgba(221,203,83,0.4)'
+            'hsla(180, 50%, 50%, 0.1)',
+            'hsla(120, 50%, 50%, 0.1)',
+            'hsla(60, 50%, 50%, 0.1)',
+            'hsla(0, 50%, 50%, 0.1)',
+            'hsla(300, 50%, 50%, 0.1)',
+            'hsla(240, 50%, 50%, 0.1)'
         ],
         secondary: [
-            'rgba(200,225,251,1)',
-            'rgba(158,177,193,1)',
-            'rgba(220,143,112,1)',
-            'rgba(146,135,90,1)',
-            'rgba(187,228,104,1)',
-            'rgba(197,163,47,1)'
+            'hsla(180, 50%, 50%, 1)',
+            'hsla(120, 50%, 50%, 1)',
+            'hsla(60, 50%, 50%, 1)',
+            'hsla(0, 50%, 50%, 1)',
+            'hsla(300, 50%, 50%, 1)',
+            'hsla(240, 50%, 50%, 1)'
         ]
     };
+
+    var MAX_COMPARISONS = COLOR_THEME.primary.length;
 
     // Map of property name to it's title
     var STATS = {
@@ -340,8 +343,8 @@ var mopub = mopub || {};
             var stroke;
             var color;
             if(range.id === 'vs') {
-                stroke = 'rgba(223, 223, 223, 1.0)';
-                color = 'rgba(223, 223, 223, 0.4)';
+                stroke = 'hsla(0, 0%, 75%, 1)';
+                color = 'hsla(0, 0%, 75%, 0.1)';
             }
             else {
                 stroke = COLOR_THEME.secondary[i];
@@ -985,12 +988,6 @@ var mopub = mopub || {};
 
             /* Date Range */
 
-            // TODO: move?
-            /**
-             * @return {Date} today's date with time zero
-             */
-
-
             /**
              * @param {string} start_end 'today', 'yesterday', 'last_7_days',
              *     'last_14_days', or 'custom'
@@ -1072,14 +1069,14 @@ var mopub = mopub || {};
                 $('#date_modal').hide();
             });
 
+            // default start/end
+            update_start_end('last_14_days');
+
             var valid_date_range = {
                 endDate: "0d"
             };
             $('#custom_start').datepicker(valid_date_range);
             $('#custom_end').datepicker(valid_date_range);
-
-            // default start/end
-            update_start_end('last_14_days');
 
 
             /* Comparison Date Range */
@@ -1240,7 +1237,7 @@ var mopub = mopub || {};
                 $publisher_comparison.removeClass('show');
 
                 // default comparison selection: all apps
-                $('tr.app', $publisher_table).addClass('selected');
+                $('tr.app', $publisher_table).slice(0, MAX_CAMPAIGNS).addClass('selected');
                 $('tr.adunit', $publisher_table).removeClass('selected');
             }
 
@@ -1479,6 +1476,7 @@ var mopub = mopub || {};
                 $source.toggleClass('selected');
 
                 if(advertiser_comparison_shown()) {
+                    // TODO: make sure not more than MAX_COMPARISONS
                     update_advertiser_colors();
                 }
                 else {
@@ -1505,6 +1503,7 @@ var mopub = mopub || {};
                 $campaign.toggleClass('selected');
 
                 if(advertiser_comparison_shown()) {
+                    // TODO: make sure not more than MAX_COMPARISONS
                     update_advertiser_colors();
                 }
                 else {
@@ -1587,6 +1586,7 @@ var mopub = mopub || {};
                 $(this).toggleClass('selected');
 
                 if(publisher_comparison_shown()) {
+                    // TODO: make sure not more than MAX_COMPARISONS
                     update_publisher_colors();
                 }
                 else {
@@ -1617,6 +1617,7 @@ var mopub = mopub || {};
                 $(this).toggleClass('selected');
 
                 if(publisher_comparison_shown()) {
+                    // TODO: make sure not more than MAX_COMPARISONS
                     update_publisher_colors();
                 }
                 else {

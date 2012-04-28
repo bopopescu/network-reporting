@@ -79,10 +79,6 @@ div#advertiser_filters, div#publisher_filters {
     margin-left: 10px;
     width: 338px;
 
-    &.expand {
-        width: 686px;
-    }
-
     button.show span.hide, button.hide span.show {
         display: none;
     }
@@ -90,7 +86,8 @@ div#advertiser_filters, div#publisher_filters {
     table#advertiser, table#publisher {
         font-size: 12px;
         margin: 5px 0;
-        width: 100%;
+        max-width: 338px;
+        width: 100% !important;;
 
         thead {
             tr {
@@ -157,6 +154,13 @@ div#advertiser_filters, div#publisher_filters {
                     }
                 }
             }
+        }
+    }
+
+    &.expand {
+        width: 686px;
+        table#advertiser, table#publisher {
+            max-width: 686px;
         }
     }
 }

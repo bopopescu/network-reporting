@@ -13,7 +13,7 @@ var mopub = mopub || {};
 
     // the origin for the stats service
     var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888/';
-    var STATS_SERVICE_URL = 'http://ec2-23-22-32-218.compute-1.amazonaws.com/';
+    var STATS_SERVICE_URL = 'http://stats-service.mopub.com/';
     var URL = DEBUG ? LOCAL_STATS_SERVICE_URL : STATS_SERVICE_URL;
 
     // Color theme for the charts and table rows.
@@ -194,48 +194,19 @@ var mopub = mopub || {};
     }
 
 
-    // Formats a number in KMBT (thousands, millions,
-    // billions, trillions) formatting.
+    // Formats a number in KMBT (thousands, millions, billions,
+    // trillions) formatting with three significant digits.
     // Example: 1000000 -> 1M, 1230000000 -> 12.3B
-    function format_kmbt(number, with_decimal) {
-
-        if (with_decimal === undefined) {
-            with_decimal = false;
-        }
-
-        // Numbers greater than this are ridiculous and
-        // so we aren't supporting their existance.
-        if (number > 999999999999999.999) {
-            return number;
-        }
-
-        // Qd/Qn/Sx are there for when our customers are making
-        // this much money in the future.
-        var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
-
-        var with_commas = mopub.Utils.formatNumberWithCommas(number);
-        var parts = with_commas.split(',');
-
-        if (parts.length > 1 && with_decimal) {
-            var decimal = "." + parts[1].substring(0,2);
-            return "" + parts[0] + decimal + endings[parts.length-1];
-        } else if (parts.length > 1) {
-            return "" + parts[0] + endings[parts.length-1];
-        } else {
-            var n = "" + number;
-            if (n.indexOf('.') >= 0) {
-                return n.substring(0, n.indexOf('.') + 3);
-            } else if (with_decimal) {
-                return n + ".00";
-            } else {
-                return n;
-            }
-        }
-    }
 
     function format_kmbt(number) {
-        if(number <= 0) {
-            return number.toPrecision(3);
+        if(number <= 0 || number >= 1000000000000000000000000) {
+            return number;
+        }
+        if(number < 0.01) {
+            return '~0';
+        }
+        if(number < 1) {
+            return number.toFixed(2);
         }
         var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
         var place = Math.floor(Math.floor(Math.log(number)/Math.log(10))/3);

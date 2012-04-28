@@ -1,19 +1,26 @@
+# Deployed Saturday, April 28, 2012 at 02:08AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-89
+### Bugs Fixed: []
+### Included Commits: 
+ * a8722e0 [#1132 state:resolved]
+ 
 # Deployed Saturday, April 28, 2012 at 02:07AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-88
 ### Bugs Fixed: ['1132']
-### Included Commits: 
- * 6f93095 networks page: Sped up and fixed deletion, fixed usage of AdvertiserQueryManager
- * 336b397 Network migration script pauses instead of deletes old adgroups and campaigns
- * 66de6a5 In networks migration script make put data passed into migrate rather than a global var
- * 087018f Merge branch 'networks-page'
- * ba6be70 Removed some commented out code
- * cfbc049 Merge branch '1132-weird_checkboxes' of github.com:mopub/mopub
- * 4eb8175 [#1132 state:fixed]
- * 4bb66fb Merge branch 'master' of github.com:mopub/mopub
- * 08dc6f3 fixed admin/prep mongo call
- * 86aeb74 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* 6f93095 networks page: Sped up and fixed deletion, fixed usage of AdvertiserQueryManager
+* 336b397 Network migration script pauses instead of deletes old adgroups and campaigns
+* 66de6a5 In networks migration script make put data passed into migrate rather than a global var
+* 087018f Merge branch 'networks-page'
+* ba6be70 Removed some commented out code
+* cfbc049 Merge branch '1132-weird_checkboxes' of github.com:mopub/mopub
+* 4eb8175 [#1132 state:fixed]
+* 4bb66fb Merge branch 'master' of github.com:mopub/mopub
+* 08dc6f3 fixed admin/prep mongo call
+* 86aeb74 Deployed without finding any bug fixes.
+
 # Deployed Friday, April 27, 2012 at 10:40PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-87

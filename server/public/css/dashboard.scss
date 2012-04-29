@@ -78,6 +78,7 @@ div#charts {
 div#advertiser_filters, div#publisher_filters {
     margin-left: 10px;
     width: 338px !important;
+    max-width: 338px !important;
 
     button.show span.hide, button.hide span.show {
         display: none;
@@ -87,9 +88,14 @@ div#advertiser_filters, div#publisher_filters {
         font-size: 12px;
         margin: 5px 0;
         width: 338px !important;
+        max-width: 338px !important;
 
         thead {
+            width: 338px !important;
+            max-width: 338px !important;
             tr {
+                width: 338px !important;
+                max-width: 338px !important;
                 th {
                     padding: 2px;
                     &.title {
@@ -113,7 +119,11 @@ div#advertiser_filters, div#publisher_filters {
         }
 
         tbody {
+            width: 338px !important;
+            max-width: 338px !important;
             tr {
+                width: 338px !important;
+                max-width: 338px !important;
                 cursor: pointer;
                 &:hover {
                     background-color: #ccf;
@@ -156,8 +166,26 @@ div#advertiser_filters, div#publisher_filters {
 
     &.expand {
         width: 686px !important;
+        max-width: 686px !important;
         table#advertiser, table#publisher {
             width: 686px !important;
+            max-width: 686px !important;
+            tbody {
+                width: 686px !important;
+                max-width: 686px !important;
+                tr {
+                    width: 686px !important;
+                    max-width: 686px !important;
+                }
+            }
+            thead {
+                width: 686px !important;
+                max-width: 686px !important;
+                tr {
+                    width: 686px !important;
+                    max-width: 686px !important;
+                }
+            }
         }
     }
 }

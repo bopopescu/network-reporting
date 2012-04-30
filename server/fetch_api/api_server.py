@@ -19,12 +19,12 @@ from fetch_api.budget_handlers import BudgetUpdateOrCreateHandler
 def main():
     app = webapp.WSGIApplication([
             ('/fetch_api/adunit/(?P<adunit_key>[-\w\.]+)/fetch_context', AUCFetchHandler),
-            ('/fetch_api/adunit_update_push', AUCUserPushHandler),
-            ('/fetch_api/adunit_update_fanout', AUCUserPushFanOutHandler),
+            (r'/fetch_api/adunit_update_push', AUCUserPushHandler),
+            (r'/fetch_api/adunit_update_fanout', AUCUserPushFanOutHandler),
             (r'/fetch_api/budget/sync', BudgetSyncHandler),
             (r'/fetch_api/budget/sync/cron', BudgetSyncCronHandler),
             (r'/fetch_api/budget/sync/worker', BudgetSyncWorker),
-            ('/fetch_api/budget/update_or_create', BudgetUpdateOrCreateHandler),
+            (r'/fetch_api/budget/update_or_create', BudgetUpdateOrCreateHandler),
             ])
     run_wsgi_app(app)
 

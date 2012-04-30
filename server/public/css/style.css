@@ -2539,7 +2539,7 @@ a.disabled {
   float: left;
   padding: 5px; }
 
-span.pub_id.muted {
+div.pub-id-edit, span.pub_id.muted {
   float: left;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -13,6 +13,7 @@ from fetch_api.budget_sync_handler import (BudgetSyncHandler,
                                            BudgetSyncCronHandler,
                                            BudgetSyncWorker,
                                            )
+from fetch_api.budget_handlers import BudgetUpdateOrCreateHandler
 
 
 def main():
@@ -23,6 +24,7 @@ def main():
             (r'/fetch_api/budget/sync', BudgetSyncHandler),
             (r'/fetch_api/budget/sync/cron', BudgetSyncCronHandler),
             (r'/fetch_api/budget/sync/worker', BudgetSyncWorker),
+            ('/fetch_api/budget/update_or_create', BudgetUpdateOrCreateHandler),
             ])
     run_wsgi_app(app)
 

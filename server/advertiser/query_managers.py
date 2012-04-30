@@ -1,7 +1,7 @@
 import logging
 import random
 
-from google.appengine.api import memcache
+from google.appengine.api import memcache, taskqueue
 from google.appengine.ext import db, deferred
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
@@ -251,7 +251,13 @@ class CampaignQueryManager(QueryManager):
 
         # Update campaign budgets asynchronously using the deferred Task Queue.
         campaign_keys = [campaign.key() for campaign in campaigns]
-        deferred.defer(BudgetQueryManager.update_or_create_budgets_for_campaign_keys, campaign_keys)
+        queue = taskqueue.Queue()
+        task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
+                              method='POST',
+                              url='/fetch_api/budget/update_or_create/'
+                              )
+        queue.add(task)
+        #deferred.defer(BudgetQueryManager.update_or_create_budgets_for_campaign_keys, campaign_keys)
 
         # Clear cache
         adunits = []

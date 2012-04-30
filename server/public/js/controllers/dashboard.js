@@ -315,25 +315,25 @@ var mopub = mopub || {};
 
         options = options || {};
 
-        // HACK here. 
+        // HACK here.
         // Rickshaw area charts aren't set up well to deal with charts
-        // with only one datapoint (charts will just appear blank). To 
+        // with only one datapoint (charts will just appear blank). To
         // deal with this, we duplicate the datapoint in the list if there's
         // just one. However, if the datapoint value is non-zero, the chart
         // max will be set to that line, which is also annoying, so we have
-        // to set a max value for the chart as well. 
+        // to set a max value for the chart as well.
         var max = 0;
         account_data = _.map(account_data, function (range) {
-            
+
             if (range.length === 1) {
                 // Make the single chart value appear in the middle of the graph
                 // by setting the max to 2x the value.
                 var new_max = (range[0][series] * 2);
                 max = new_max > max ? new_max : max;
-                
+
                 return range.concat(range);
             }
-            
+
             return range;
         });
 
@@ -407,13 +407,13 @@ var mopub = mopub || {};
                 return labels.join('<br />');
             }
         });
-        
+
         // On the X-axis, display the date in MM/DD form.
         var xAxis = new Rickshaw.Graph.Axis.X({
             graph: chart,
             labels: _.map(account_data[0], function(datapoint){
                 return get_date_from_datapoint(datapoint);
-            });,
+            }),
             ticksTreatment: 'glow'
         });
 
@@ -421,8 +421,8 @@ var mopub = mopub || {};
 
         // On the Y-axis, display the amount in KMBT form.
         var yAxis = new Rickshaw.Graph.Axis.Y({
-	        graph: chart,
-	        ticksTreatment: 'glow',
+            graph: chart,
+            ticksTreatment: 'glow',
             ticks: 5,
             tickFormat: Rickshaw.Fixtures.Number.formatKMBT
         } );
@@ -451,7 +451,7 @@ var mopub = mopub || {};
         var charts_for_display = get_charts();
 
         // Create all of the charts and hold on to references so that
-        // we can manipulate all of the charts as a group. 
+        // we can manipulate all of the charts as a group.
         var charts = [];
         _.each(charts_for_display, function(chart_type) {
             var selector = '#' + chart_type + '_chart';
@@ -478,9 +478,9 @@ var mopub = mopub || {};
 
             chart_i.element.addEventListener('mouseout', function(e) {
                 _.each(charts, function(chart_j) {
-				    chart_j.hoverDetail.hide();
+                    chart_j.hoverDetail.hide();
                 });
-		    });
+            });
 
         });
 
@@ -963,6 +963,7 @@ var mopub = mopub || {};
 
             function update_adunits(data, advertiser_query, selected, order) {
                 $('tr.app', $publisher_table).each(function () {
+                    var $app = $(this);
                     var app = this.id;
 
                     var adunit_data = _.clone(data);
@@ -986,7 +987,7 @@ var mopub = mopub || {};
                                     var context = {
                                         type: 'adunit',
                                         selected: _.include(selected, id) || (!publisher_comparison_shown() && _.include(selected, app)),
-                                        hidden: index >= MAX_ADUNITS,
+                                        hidden: $app.hasClass('hidden') || index >= MAX_ADUNITS,
                                         id: id,
                                         columns: PUBLISHER_COLUMNS,
                                         default_columns: PUBLISHER_DEFAULT_COLUMNS,
@@ -1680,9 +1681,9 @@ var mopub = mopub || {};
             }
 
             function hide_advertiser_rows() {
-                $('tbody tr', $advertiser_table).each(function () {
-                    $tr = $(this);
-                    $tr.toggle(!$tr.hasClass('hidden') || $tr.hasClass('selected'));
+                $('tbody tr.campaign', $advertiser_table).each(function () {
+                    var $campaign = $(this);
+                    $campaign.toggle(!$campaign.hasClass('hidden') || $campaign.hasClass('selected'));
                 });
             }
 
@@ -1716,9 +1717,17 @@ var mopub = mopub || {};
             }
 
             function hide_publisher_rows() {
-                $('tbody tr', $publisher_table).each(function () {
-                    $tr = $(this);
-                    $tr.toggle(!$tr.hasClass('hidden') || $tr.hasClass('selected'));
+                $('tbody tr.app', $publisher_table).each(function () {
+                    var $app = $(this);
+                    var adunits_selected = false;
+                    $app.nextUntil('tr.app').each(function () {
+                        var $adunit = $(this);
+                        if($adunit.hasClass('selected')) {
+                            adunits_selected = true;
+                        }
+                        $adunit.toggle(!$adunit.hasClass('hidden') || $adunit.hasClass('selected'));
+                    });
+                    $app.toggle(!$app.hasClass('hidden') || $app.hasClass('selected') || adunits_selected);
                 });
             }
 

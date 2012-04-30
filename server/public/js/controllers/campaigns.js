@@ -822,8 +822,6 @@
                 + '&s=' + dateToString(start_date);
         };
 
-        console.log(adgroup_inventory.url());
-
         // Once the adgroup's adunit inventory has been fetched from
         // the server, render each of the adunits in the appropriate
         // table row. Additionally, fetch the adunit's app from the

@@ -49,7 +49,7 @@ BIDDER_SPENT_MAX = 2000
 
 ADMIN_MONGO_ACCT = 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eDlEww'
 ADMIN_MONGO_PUB = 'agltb3B1Yi1pbmNyDQsSBFNpdGUY497jEww'
-ADMIN_MONGO_ADV = 'agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYnsnlEww'
+ADMIN_MONGO_ADV = None
 
 @staff_login_required
 @cache_page_until_post()

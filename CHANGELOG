@@ -1,11 +1,18 @@
+# Deployed Monday, April 30, 2012 at 08:43PM PST
+### Deployed by Andrew He
+### Tagged deploy-94
+### Bugs Fixed: []
+### Included Commits: 
+ * 447359b Just kidding about that last one. This, the real last one, makes everything 38-fetch
+ 
 # Deployed Monday, April 30, 2012 at 08:37PM PST
 ### Deployed by Andrew He
 ### Tagged deploy-92
 ### Bugs Fixed: []
-### Included Commits: 
- * c408761 Add deferred builtin AGAIN
- * 488b389 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* c408761 Add deferred builtin AGAIN
+* 488b389 Deployed without finding any bug fixes.
+
 # Deployed Monday, April 30, 2012 at 08:23PM PST
 ### Deployed by Andrew He
 ### Tagged deploy-91

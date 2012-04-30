@@ -9,6 +9,7 @@ var mopub = mopub || {};
      * Define global settings that are used throughout the module.
      */
 
+    // If the url contains 'localhost', we're debugging.
     var DEBUG = ('' + window.location).indexOf('localhost') !== -1;
 
     // the origin for the stats service
@@ -36,6 +37,10 @@ var mopub = mopub || {};
         ]
     };
 
+    // The number different things we can compare in the chart is
+    // dependent on how many different colors we have in our color
+    // theme. Add more colors to the color theme if you want more
+    // comparisons.
     var MAX_COMPARISONS = COLOR_THEME.primary.length;
 
     // Map of property name to it's title
@@ -309,30 +314,62 @@ var mopub = mopub || {};
     // `options` is not currently used, but will be used in the future
     // to specify stuff like height, width, and other rendering options.
     function createChart(series, element, account_data, options) {
+
         options = options || {};
+
+        // HACK here. 
+        // Rickshaw area charts aren't set up well to deal with charts
+        // with only one datapoint (charts will just appear blank). To 
+        // deal with this, we duplicate the datapoint in the list if there's
+        // just one. However, if the datapoint value is non-zero, the chart
+        // max will be set to that line, which is also annoying, so we have
+        // to set a max value for the chart as well. 
+        var max = 0;
+        account_data = _.map(account_data, function (range) {
+            
+            if (range.length === 1) {
+                // Make the single chart value appear in the middle of the graph
+                // by setting the max to 2x the value.
+                var new_max = (range[0][series] * 2);
+                max = new_max > max ? new_max : max;
+                
+                return range.concat(range);
+            }
+            
+            return range;
+        });
+
         var all_chart_data = _.map(account_data, function(range, i){
+
+            // Determine the stroke and fill color for the chart
             var stroke;
             var color;
-            if(range.id === 'vs') {
+            if (range.id === 'vs') {
                 stroke = 'hsla(0, 0%, 75%, 1)';
                 color = 'hsla(0, 0%, 75%, 0.1)';
-            }
-            else {
+            } else {
                 stroke = COLOR_THEME.secondary[i];
                 color = COLOR_THEME.primary[i];
             }
+
+            var chart_data = _.map(range, function(datapoint, j){
+                return {
+                    x: j,
+                    y: datapoint[series]
+                };
+            });
+
+            // Format the data for rickshaw
             var individual_series_data = {
-                data: _.map(range, function(datapoint, j){
-                    return {
-                        x: j,
-                        y: datapoint[series]
-                    };
-                }),
+                data: chart_data,
                 stroke: stroke,
                 color: color
             };
+
             return individual_series_data;
         });
+
+
 
         // Hack to clear any current charts from the element. Rickshaw
         // doesn't remove the old chart from the element before it
@@ -350,13 +387,13 @@ var mopub = mopub || {};
             renderer: 'area',
             stroke: true,
             tension: 1.0,
-            series: all_chart_data
-
+            series: all_chart_data,
+            // Second part of the single value hack here --
+            max: max > 0 ? max : undefined
         });
 
         // When the graph is hovered over, we display the date and the
         // current value in a tooltip at the top.
-
         var hoverDetail = new Rickshaw.Graph.MoPubHoverDetail( {
             graph: chart,
             xFormatter: function(x) {
@@ -368,19 +405,19 @@ var mopub = mopub || {};
                     return date + ": " + formatted_stat;
                 });
 
+
                 return labels.join('<br />');
             }
-            // yFormatter: function(y) {
-            //     return format_stat(series, y);
-            // }
         });
         
-        // On the X-axis, display the date in MM/DD form.
+        // On the X-axis, display the date in MM/DD form
+        var labels = _.map(account_data[0], function(datapoint){
+            return get_date_from_datapoint(datapoint);
+        });
+
         var xAxis = new Rickshaw.Graph.Axis.X({
             graph: chart,
-            labels: _.map(account_data[0], function(datapoint){
-                return get_date_from_datapoint(datapoint);
-            }),
+            labels: labels,
             ticksTreatment: 'glow'
         });
         
@@ -417,12 +454,17 @@ var mopub = mopub || {};
         // Get the list of metrics we want to make charts for.
         var charts_for_display = get_charts();
 
+        // Create all of the charts and hold on to references so that
+        // we can manipulate all of the charts as a group. 
         var charts = [];
         _.each(charts_for_display, function(chart_type) {
-            var chart = createChart(chart_type, '#' + chart_type + '_chart', account_data);
+            var selector = '#' + chart_type + '_chart';
+            var chart = createChart(chart_type, selector, account_data);
             charts.push(chart);
         });
 
+        // When any individual chart is hovered over, pop up the bar/tooltip
+        // in every other chart.
         _.each(charts, function(chart_i){
 
             chart_i.element.addEventListener('mousemove', function(e) {

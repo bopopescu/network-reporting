@@ -1423,9 +1423,9 @@ input.price_floor_change {
  *
  * TODO: consolidate all the form styles
  */
-form#campaign_and_adgroup fieldset, form#network-login-form fieldset {
+form#campaign_and_adgroup fieldset, form#network-login-form fieldset, fieldset.dialog fieldset {
   padding: 0 25px 25px 25px; }
-form#campaign_and_adgroup input[type="text"], form#campaign_and_adgroup input[type="password"], form#campaign_and_adgroup textarea, form#network-login-form input[type="text"], form#network-login-form input[type="password"], form#network-login-form textarea {
+form#campaign_and_adgroup input[type="text"], form#campaign_and_adgroup input[type="password"], form#campaign_and_adgroup textarea, form#network-login-form input[type="text"], form#network-login-form input[type="password"], form#network-login-form textarea, fieldset.dialog input[type="text"], fieldset.dialog input[type="password"], fieldset.dialog textarea {
   padding: 1px 2px 2px 3px;
   border: 1px solid #eaeaea;
   border-top-color: #b9b9b9;
@@ -1436,44 +1436,47 @@ form#campaign_and_adgroup input[type="text"], form#campaign_and_adgroup input[ty
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   border-radius: 3px; }
-form#campaign_and_adgroup input[type="text"].date, form#network-login-form input[type="text"].date {
+form#campaign_and_adgroup input[type="checkbox"], form#network-login-form input[type="checkbox"], fieldset.dialog input[type="checkbox"] {
+  width: 12px;
+  height: 12px; }
+form#campaign_and_adgroup input[type="text"].date, form#network-login-form input[type="text"].date, fieldset.dialog input[type="text"].date {
   width: 85px; }
-form#campaign_and_adgroup input[type="text"].time, form#network-login-form input[type="text"].time {
+form#campaign_and_adgroup input[type="text"].time, form#network-login-form input[type="text"].time, fieldset.dialog input[type="text"].time {
   width: 60px; }
-form#campaign_and_adgroup input[type="text"].number, form#campaign_and_adgroup input[type="text"].float, form#network-login-form input[type="text"].number, form#network-login-form input[type="text"].float {
+form#campaign_and_adgroup input[type="text"].number, form#campaign_and_adgroup input[type="text"].float, form#network-login-form input[type="text"].number, form#network-login-form input[type="text"].float, fieldset.dialog input[type="text"].number, fieldset.dialog input[type="text"].float {
   width: 70px; }
-form#campaign_and_adgroup input[type="text"].app-pub-id, form#network-login-form input[type="text"].app-pub-id {
+form#campaign_and_adgroup input[type="text"].app-pub-id, form#network-login-form input[type="text"].app-pub-id, fieldset.dialog input[type="text"].app-pub-id {
   width: 160px; }
-form#campaign_and_adgroup input[type="text"].adunit-pub-id, form#network-login-form input[type="text"].adunit-pub-id {
+form#campaign_and_adgroup input[type="text"].adunit-pub-id, form#network-login-form input[type="text"].adunit-pub-id, fieldset.dialog input[type="text"].adunit-pub-id {
   width: 135px; }
-form#campaign_and_adgroup input[type="text"].bid, form#network-login-form input[type="text"].bid {
+form#campaign_and_adgroup input[type="text"].bid, form#network-login-form input[type="text"].bid, fieldset.dialog input[type="text"].bid {
   width: 40px; }
-form#campaign_and_adgroup input.error, form#campaign_and_adgroup textarea.error, form#network-login-form input.error, form#network-login-form textarea.error {
+form#campaign_and_adgroup input.error, form#campaign_and_adgroup textarea.error, form#network-login-form input.error, form#network-login-form textarea.error, fieldset.dialog input.error, fieldset.dialog textarea.error {
   background: #fff2f2;
   border-color: #e6a1a1;
   border-top-color: #d98d8d;
   color: #222; }
-form#campaign_and_adgroup span.radios ul, form#network-login-form span.radios ul {
+form#campaign_and_adgroup span.radios ul, form#network-login-form span.radios ul, fieldset.dialog span.radios ul {
   display: inline-block;
   list-style-type: none;
   margin: 0;
   padding: 0; }
-  form#campaign_and_adgroup span.radios ul > li, form#network-login-form span.radios ul > li {
+  form#campaign_and_adgroup span.radios ul > li, form#network-login-form span.radios ul > li, fieldset.dialog span.radios ul > li {
     display: inline-block;
     margin: 0;
     padding: 0; }
-    form#campaign_and_adgroup span.radios ul > li > label, form#network-login-form span.radios ul > li > label {
+    form#campaign_and_adgroup span.radios ul > li > label, form#network-login-form span.radios ul > li > label, fieldset.dialog span.radios ul > li > label {
       margin: 0 15px 0 0; }
-form#campaign_and_adgroup ul.form_fields, form#network-login-form ul.form_fields {
+form#campaign_and_adgroup ul.form_fields, form#network-login-form ul.form_fields, fieldset.dialog ul.form_fields {
   list-style-type: none;
   margin: 0;
   padding: 0; }
-  form#campaign_and_adgroup ul.form_fields li.network-type label, form#campaign_and_adgroup ul.form_fields li.network-type div, form#network-login-form ul.form_fields li.network-type label, form#network-login-form ul.form_fields li.network-type div {
+  form#campaign_and_adgroup ul.form_fields li.network-type label, form#campaign_and_adgroup ul.form_fields li.network-type div, form#network-login-form ul.form_fields li.network-type label, form#network-login-form ul.form_fields li.network-type div, fieldset.dialog ul.form_fields li.network-type label, fieldset.dialog ul.form_fields li.network-type div {
     vertical-align: middle; }
-  form#campaign_and_adgroup ul.form_fields > li, form#network-login-form ul.form_fields > li {
+  form#campaign_and_adgroup ul.form_fields > li, form#network-login-form ul.form_fields > li, fieldset.dialog ul.form_fields > li {
     margin: 12px 0 0 0;
     padding: 0; }
-    form#campaign_and_adgroup ul.form_fields > li > label, form#network-login-form ul.form_fields > li > label {
+    form#campaign_and_adgroup ul.form_fields > li > label, form#network-login-form ul.form_fields > li > label, fieldset.dialog ul.form_fields > li > label {
       display: inline-block;
       margin: 0 12px 0 0;
       padding: 0;
@@ -1483,26 +1486,26 @@ form#campaign_and_adgroup ul.form_fields, form#network-login-form ul.form_fields
       font-size: 14px;
       font-weight: 300;
       line-height: 16px; }
-    form#campaign_and_adgroup ul.form_fields > li > div, form#network-login-form ul.form_fields > li > div {
+    form#campaign_and_adgroup ul.form_fields > li > div, form#network-login-form ul.form_fields > li > div, fieldset.dialog ul.form_fields > li > div {
       display: inline-block;
       vertical-align: top; }
-form#campaign_and_adgroup span#apps_label, form#network-login-form span#apps_label {
+form#campaign_and_adgroup span#apps_label, form#network-login-form span#apps_label, fieldset.dialog span#apps_label {
   display: inline-block;
   margin: 0 12px 0 0;
   padding: 0;
   text-align: right;
   vertical-align: top;
   width: 175px; }
-form#campaign_and_adgroup ul#apps, form#network-login-form ul#apps {
+form#campaign_and_adgroup ul#apps, form#network-login-form ul#apps, fieldset.dialog ul#apps {
   display: inline-block;
   vertical-align: top;
   list-style-type: none;
   margin: 0;
   padding: 0; }
-  form#campaign_and_adgroup ul#apps > li, form#network-login-form ul#apps > li {
+  form#campaign_and_adgroup ul#apps > li, form#network-login-form ul#apps > li, fieldset.dialog ul#apps > li {
     margin: 0 0 10px 0;
     padding: 0; }
-    form#campaign_and_adgroup ul#apps > li > img, form#network-login-form ul#apps > li > img {
+    form#campaign_and_adgroup ul#apps > li > img, form#network-login-form ul#apps > li > img, fieldset.dialog ul#apps > li > img {
       height: 45px;
       width: 45px;
       margin-right: 11px;
@@ -1510,62 +1513,60 @@ form#campaign_and_adgroup ul#apps, form#network-login-form ul#apps {
       -moz-border-radius: 6px;
       -webkit-border-radius: 6px;
       border-radius: 6px; }
-    form#campaign_and_adgroup ul#apps > li > div, form#network-login-form ul#apps > li > div {
+    form#campaign_and_adgroup ul#apps > li > div, form#network-login-form ul#apps > li > div, fieldset.dialog ul#apps > li > div {
       display: inline-block;
       vertical-align: top;
       width: 600px; }
-      form#campaign_and_adgroup ul#apps > li > div label, form#network-login-form ul#apps > li > div label {
+      form#campaign_and_adgroup ul#apps > li > div label, form#network-login-form ul#apps > li > div label, fieldset.dialog ul#apps > li > div label {
         font-size: 14px;
         display: inline-block;
         height: 28px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis; }
-      form#campaign_and_adgroup ul#apps > li > div > label, form#network-login-form ul#apps > li > div > label {
+      form#campaign_and_adgroup ul#apps > li > div > label, form#network-login-form ul#apps > li > div > label, fieldset.dialog ul#apps > li > div > label {
         font-weight: 600;
         vertical-align: top;
         width: 350px; }
-      form#campaign_and_adgroup ul#apps > li > div input[type="text"], form#network-login-form ul#apps > li > div input[type="text"] {
+      form#campaign_and_adgroup ul#apps > li > div input[type="text"], form#network-login-form ul#apps > li > div input[type="text"], fieldset.dialog ul#apps > li > div input[type="text"] {
         width: 200px; }
-      form#campaign_and_adgroup ul#apps > li > div span, form#network-login-form ul#apps > li > div span {
+      form#campaign_and_adgroup ul#apps > li > div span, form#network-login-form ul#apps > li > div span, fieldset.dialog ul#apps > li > div span {
         vertical-align: top;
         white-space: nowrap; }
-      form#campaign_and_adgroup ul#apps > li > div ul, form#network-login-form ul#apps > li > div ul {
+      form#campaign_and_adgroup ul#apps > li > div ul, form#network-login-form ul#apps > li > div ul, fieldset.dialog ul#apps > li > div ul {
         list-style-type: none;
-        overflow: auto;
-        max-height: 200px;
         margin: 0;
         padding: 0px 20px; }
-        form#campaign_and_adgroup ul#apps > li > div ul li, form#network-login-form ul#apps > li > div ul li {
+        form#campaign_and_adgroup ul#apps > li > div ul li, form#network-login-form ul#apps > li > div ul li, fieldset.dialog ul#apps > li > div ul li {
           height: 30px;
           width: 560px;
           margin: 0; }
-          form#campaign_and_adgroup ul#apps > li > div ul li label, form#network-login-form ul#apps > li > div ul li label {
+          form#campaign_and_adgroup ul#apps > li > div ul li label, form#network-login-form ul#apps > li > div ul li label, fieldset.dialog ul#apps > li > div ul li label {
             width: 330px; }
-form#campaign_and_adgroup ul#device_targeting, form#network-login-form ul#device_targeting {
+form#campaign_and_adgroup ul#device_targeting, form#network-login-form ul#device_targeting, fieldset.dialog ul#device_targeting {
   list-style-type: none;
   margin: 5px 0 0 50px;
   padding: 0; }
-  form#campaign_and_adgroup ul#device_targeting li, form#network-login-form ul#device_targeting li {
+  form#campaign_and_adgroup ul#device_targeting li, form#network-login-form ul#device_targeting li, fieldset.dialog ul#device_targeting li {
     margin: 0;
     padding: 0; }
-form#campaign_and_adgroup .device_type, form#network-login-form .device_type {
+form#campaign_and_adgroup .device_type, form#network-login-form .device_type, fieldset.dialog .device_type {
   display: inline-block;
   width: 150px; }
-form#campaign_and_adgroup ul.device_type, form#network-login-form ul.device_type {
+form#campaign_and_adgroup ul.device_type, form#network-login-form ul.device_type, fieldset.dialog ul.device_type {
   list-style-type: none;
   margin: 0;
   padding: 0; }
-  form#campaign_and_adgroup ul.device_type li, form#network-login-form ul.device_type li {
+  form#campaign_and_adgroup ul.device_type li, form#network-login-form ul.device_type li, fieldset.dialog ul.device_type li {
     display: inline-block;
     margin: 0;
     padding: 0; }
-form#campaign_and_adgroup #toggle_advanced, form#network-login-form #toggle_advanced {
+form#campaign_and_adgroup #toggle_advanced, form#network-login-form #toggle_advanced, fieldset.dialog #toggle_advanced {
   margin: 25px; }
-form#campaign_and_adgroup input.token-input-field, form#network-login-form input.token-input-field {
+form#campaign_and_adgroup input.token-input-field, form#network-login-form input.token-input-field, fieldset.dialog input.token-input-field {
   border: 0;
   width: 100px; }
-form#campaign_and_adgroup input.token-input-field.focused, form#network-login-form input.token-input-field.focused {
+form#campaign_and_adgroup input.token-input-field.focused, form#network-login-form input.token-input-field.focused, fieldset.dialog input.token-input-field.focused {
   background-color: white; }
 
 /*
@@ -1687,12 +1688,12 @@ a.disabled {
   .inventory_table td.stat, .inventory_table th.stat {
     text-align: right;
     width: 65px; }
-    .inventory_table td.stat.cpm-data, .inventory_table th.stat.cpm-data {
-      width: 100px; }
   .inventory_table td.text {
     width: 65px; }
     .inventory_table td.text.pub-id-data {
       width: 170px; }
+    .inventory_table td.text.advanced-options {
+      width: 100px; }
   .inventory_table td.icon, .inventory_table th.icon {
     padding: 0 11px 0 10px;
     width: 45px; }
@@ -1839,6 +1840,15 @@ img.app-icon {
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
   border-radius: 6px; }
+
+tbody.global-settings {
+  background: #F5F9FC;
+  border-top: 3px solid #EBF2F7;
+  border-bottom: 3px solid #EBF2F7; }
+  tbody.global-settings td {
+    vertical-align: middle; }
+    tbody.global-settings td.title {
+      font-size: 16px; }
 
 /*
  * ## Colors
@@ -2546,6 +2556,9 @@ div.editable {
 .editable {
   color: #CCC;
   font-weight: 300; }
+
+.inventory_table tr:hover .editable {
+  color: #0090D9; }
 
 .editable:hover {
   color: #0090D9; }

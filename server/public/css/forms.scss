@@ -295,7 +295,7 @@ input.price_floor_change {
     vertical-align: top;
 }
 
-form#campaign_and_adgroup, form#network-login-form {
+form#campaign_and_adgroup, form#network-login-form, fieldset.dialog {
     fieldset {
         padding: 0 25px 25px 25px;
     }
@@ -308,6 +308,10 @@ form#campaign_and_adgroup, form#network-login-form {
         line-height: 16px;
         width: 290px;
         @include border-radius(3px);
+    }
+    input[type="checkbox"] {
+        width: 12px;
+        height: 12px;
     }
     input[type="text"].date {
         width: 85px;
@@ -418,8 +422,6 @@ form#campaign_and_adgroup, form#network-login-form {
                 }
                 ul {
                     list-style-type: none;
-                    overflow: auto;
-                    max-height: 200px;
                     margin: 0;
                     padding: 0px 20px;
                     li {

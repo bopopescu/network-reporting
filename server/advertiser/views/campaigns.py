@@ -163,13 +163,18 @@ def _sort_adgroups(adgroups, account):
     """
     # Populate the "campaign" property for all adgroups.
     campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(account)
+    filtered_adgroups = []
     for adgroup in adgroups:
         campaign_key = str(AdGroup.campaign.get_value_for_datastore(adgroup))
-        adgroup.campaign = campaigns_dict[campaign_key]
+        if campaign_key in campaigns_dict:
+            adgroup.campaign = campaigns_dict[campaign_key]
+            filtered_adgroups.append(adgroup)
 
-    promo_adgroups = _sorted_adgroups_for_types(adgroups, ['promo'])
-    gtee_adgroups = _sorted_adgroups_for_types(adgroups, ['gtee_high', 'gtee_low', 'gtee'])
-    backfill_adgroups = _sorted_adgroups_for_types(adgroups, ['backfill_promo'])
+    promo_adgroups = _sorted_adgroups_for_types(filtered_adgroups, ['promo'])
+    gtee_adgroups = _sorted_adgroups_for_types(filtered_adgroups, ['gtee_high',
+        'gtee_low', 'gtee'])
+    backfill_adgroups = _sorted_adgroups_for_types(filtered_adgroups,
+            ['backfill_promo'])
 
     return [
         promo_adgroups,
@@ -960,7 +965,7 @@ class PauseAdGroupHandler(RequestHandler):
             adgroup.active = action in ["resume", "activate"]
             adgroup.archived = action in ["archive"]
             adgroup.deleted = action in ["delete"]
-        AdGroupQueryManager.put(adgroups_for_this_account)       
+        AdGroupQueryManager.put(adgroups_for_this_account)
 
         # If deleting adgroups, grab the corresponding creatives to delete as well. If there are changes
         # at this level, make sure to update the datastore accordingly.
@@ -979,7 +984,7 @@ class PauseAdGroupHandler(RequestHandler):
             self.request.flash["message"] = "Your campaign has been successfully deleted."
 
 
-        # TODO: we need a cross-platform default redirect in case    
+        # TODO: we need a cross-platform default redirect in case
         # HTTP_REFERER doesn't exist
         return HttpResponseRedirect(self.request.environ.get('HTTP_REFERER'))
 

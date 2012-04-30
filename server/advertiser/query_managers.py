@@ -40,8 +40,8 @@ class AdvertiserQueryManager(CachedQueryManager):
     def get_objects_dict_for_account(cls, account):
         """
         Returns a dictionary mapping Campaign keys to Campaign entities carrying Adgroup data.
-        Adgroups for each campaign can be retrieved as a list by using campaign.adgroups. Similarly,
-        each Adgroup contains a list of its creatives, accessible as adgroup.creatives.
+        Adgroups for each campaign can be retrieved as a list by using campaign._adgroups. Similarly,
+        each Adgroup contains a list of its creatives, accessible as adgroup._creatives.
         """
         campaigns_dict = cls.get_campaigns_dict_for_account(account)
         adgroups_dict = cls.get_adgroups_dict_for_account(account, include_deleted=False, include_archived=True)
@@ -74,8 +74,9 @@ class AdvertiserQueryManager(CachedQueryManager):
         for adgroup in adgroups_dict.values():
             # Again, getting around the fetch.
             campaign_key = str(AdGroup.campaign.get_value_for_datastore(adgroup))
-            campaign_for_this_adgroup = campaigns_dict[campaign_key]
-            campaign_for_this_adgroup._adgroups.append(adgroup)
+            if campaign_key in campaigns_dict:
+                campaign_for_this_adgroup = campaigns_dict[campaign_key]
+                campaign_for_this_adgroup._adgroups.append(adgroup)
 
         return campaigns_dict
 

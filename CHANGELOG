@@ -1,10 +1,83 @@
+# Deployed Monday, April 30, 2012 at 08:23PM PST
+### Deployed by Andrew He
+### Tagged deploy-91
+### Bugs Fixed: []
+### Included Commits: 
+ * afff974 Deployed without finding any bug fixes.
+ 
+# Deployed Monday, April 30, 2012 at 08:17PM PST
+### Deployed by Andrew He
+### Tagged deploy-90
+### Bugs Fixed: []
+### Included Commits:
+* 73223d9 Re-enable deferred builtin in app.yaml
+* 05723d9 Deployed without finding any bug fixes.
+
+# Deployed Saturday, April 28, 2012 at 02:08AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-89
+### Bugs Fixed: []
+### Included Commits:
+* a8722e0 [#1132 state:resolved]
+
+# Deployed Saturday, April 28, 2012 at 02:07AM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-88
+### Bugs Fixed: ['1132']
+### Included Commits:
+* 6f93095 networks page: Sped up and fixed deletion, fixed usage of AdvertiserQueryManager
+* 336b397 Network migration script pauses instead of deletes old adgroups and campaigns
+* 66de6a5 In networks migration script make put data passed into migrate rather than a global var
+* 087018f Merge branch 'networks-page'
+* ba6be70 Removed some commented out code
+* cfbc049 Merge branch '1132-weird_checkboxes' of github.com:mopub/mopub
+* 4eb8175 [#1132 state:fixed]
+* 4bb66fb Merge branch 'master' of github.com:mopub/mopub
+* 08dc6f3 fixed admin/prep mongo call
+* 86aeb74 Deployed without finding any bug fixes.
+
+# Deployed Friday, April 27, 2012 at 10:40PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-87
+### Bugs Fixed: []
+### Included Commits:
+* 06c6445 Merge branch 'master' of github.com:mopub/mopub
+* f747f0a If there is no campaign for an adgroup don't crash the adgroup index page
+* a1239d7 Modified networks migrate script to use memcache
+* 1051bf2 Sped up form submission, options text displays None when values are default
+* 401352a Merge branch 'master' of github.com:mopub/mopub into admin-d
+* 753ad8c Merge
+* 4c86fee Unicode encode things that can't be encoded w/ str because they're unicode
+* 50f5d22 Fixed bug with cpm, custom html and custom method prepopulation
+* bd1158b Merge branch 'master' of github.com:mopub/mopub into admin-d
+* 0aebbac changed admin/d to receive mongostats (realtime only)
+* da3c2bd Merge remote-tracking branch 'origin/master'
+* a7a041a Deployed without finding any bug fixes.
+* 9fedd21 added interstitial for ejam
+* 1c779d3 Apps load via ajax when show apps is clicked custom_html and custom_method submission working
+* 775e7d0 custom method and custom html added (behaves like cpm)
+* 327d4b9 Created separate default adgroup form for new network campaigns, validation of advanced options working
+* 5c207eb prepopulate active and cpm in js instead of view
+* bfee09e Modal ok function for prepopulation perculation
+* 6ac6f75 Edit netowrk form: submission works with advanced options
+* dfb1b09 edit network: dialog changed to modal, perculation works
+* 5e4c9f3 Merge branch 'master' of github.com:mopub/mopub into admin-d
+* 4dca18d Working on advanced options perculation
+* 21927ef took out apps, implemented mongo for topline
+* 6df2f38 Advanced options on form fills in text on main page when done
+* 9b464aa app cpm text gets changed to global cpm when global cpm is entered, fixed advanced options dialog, created forms for global and app level advanced options
+* d3a21cc Clicking on more options opens dialog
+* f6b24c7 CPM global entry makes sense with copying over 7-day and 14-day reporting cpms
+* 571681f CPM entry at global level with overrides working
+* 398f0fd network edit form: created global settings row
+
 # Deployed Friday, April 27, 2012 at 07:06PM PST
 ### Deployed by Nick Grabenstein
 ### Tagged deploy-86
 ### Bugs Fixed: []
-### Included Commits: 
- * ee8861c Deployed without finding any bug fixes.
- 
+### Included Commits:
+* ee8861c Deployed without finding any bug fixes.
+
 # Deployed Friday, April 27, 2012 at 06:54PM PST
 ### Deployed by Nick Grabenstein
 ### Tagged deploy-85

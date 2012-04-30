@@ -76,7 +76,8 @@ def migrate(accounts, put_data=False):
                 network = adgroup.network_type.replace('_native',
                         '').lower()
                 print "migrating old campaign for " + network
-                if network in NETWORKS:
+                if adgroup.network_type not in ('millennial', \
+                        'admob') and network in NETWORKS:
                     if network in networks:
                         print "creating a custom network campaign"
                         # create custom campaign
@@ -122,24 +123,37 @@ def migrate(accounts, put_data=False):
                         AdGroupQueryManager.put(new_adgroup)
                         CampaignQueryManager.put(new_campaign)
 
-                        # mark old campaign and adgroup as paused
-                        campaign.active = False
-                        CampaignQueryManager.put(campaign)
-                        for old_adgroup in campaign._adgroups:
-                            old_adgroup.active = False
-                        AdGroupQueryManager.put(campaign._adgroups)
-
                     networks.add(network)
+
+                if put_data:
+                    # mark old campaign and adgroup as paused
+                    campaign.active = False
+                    CampaignQueryManager.put(campaign)
+                    for old_adgroup in campaign._adgroups:
+                        old_adgroup.active = False
+                    AdGroupQueryManager.put(campaign._adgroups)
         if put_data:
             account.display_new_networks = True
             AccountQueryManager.put_accounts(account)
 
-def undo():
+def undo(accounts, put_data=False):
     for account in accounts:
-        for campaign in CampaignQueryManager.get_network_campaigns(account,
-                is_new=True):
+        campaigns = [campaign for campaign in
+                AdvertiserQueryManager.get_objects_dict_for_account(account).
+                values() if campaign.campaign_type == 'network' and
+            campaign.network_state != NetworkStates.STANDARD_CAMPAIGN]
+
+        creatives = []
+        adgroups = []
+        for campaign in campaigns:
             for adgroup in campaign._adgroups:
-                db.delete(adgroup.net_creative)
-                db.delete(adgroup)
-            db.delete(campaign)
+                adgroup.deleted = True
+                adgroups.append(adgroup)
+                for creative in adgroup._creatives:
+                    creative.deleted = True
+                    creatives.append(creative)
+        if put_data:
+            CreativeQueryManager.delete(creatives)
+            AdGroupQueryManager.delete(adgroups)
+            CampaignQueryManager.delete(campaigns)
 

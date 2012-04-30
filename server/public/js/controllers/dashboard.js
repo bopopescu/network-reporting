@@ -837,6 +837,8 @@ var mopub = mopub || {};
             }
 
             function update_campaigns(data, publisher_query, selected, order) {
+                // TODO: make this a single request instead of two, like is done
+                // for publisher table
                 _.each(['direct', 'network'], function (source) {
                     var campaign_data = _.clone(data);
                     campaign_data.granularity = 'top';
@@ -962,17 +964,28 @@ var mopub = mopub || {};
             }
 
             function update_adunits(data, advertiser_query, selected, order) {
-                $('tr.app', $publisher_table).each(function () {
-                    var $app = $(this);
-                    var app = this.id;
+                var $apps = $('tr.app', $publisher_table);
+                var $app_groups = [];
 
+                for(var i = 0; i < $apps.length; i += MAX_APPS) {
+                    $app_groups.push($apps.slice(i, i + MAX_APPS));
+                }
+
+                _.each($app_groups, function(app_group) {
                     var adunit_data = _.clone(data);
                     adunit_data.granularity = 'top';
-                    adunit_data.query = [_.extend(_.clone(advertiser_query), {
-                        app: [app],
-                        order: order,
-                        top: 'adunit'
-                    })];
+                    adunit_data.query = [];
+
+                    app_group.each(function () {
+                        var app = this.id;
+
+                        var query = _.extend(_.clone(advertiser_query), {
+                            app: [app],
+                            order: order,
+                            top: 'adunit'
+                        });
+                        adunit_data.query.push(query);
+                    });
 
                     $.jsonp({
                         data: {
@@ -981,29 +994,32 @@ var mopub = mopub || {};
                         success: function (json) {
                             // defer so exceptions show up in the console
                             _.defer(function() {
-                                var $last = $('#' + app);
-                                _.each(json.top[0], function(top, index) {
-                                    var id = top.adunit;
-                                    var context = {
-                                        type: 'adunit',
-                                        selected: _.include(selected, id) || (!publisher_comparison_shown() && _.include(selected, app)),
-                                        hidden: $app.hasClass('hidden') || index >= MAX_ADUNITS,
-                                        id: id,
-                                        columns: PUBLISHER_COLUMNS,
-                                        default_columns: PUBLISHER_DEFAULT_COLUMNS,
-                                        order: order
-                                    };
-                                    var stats = json.top[0][index];
-                                    var vs_stats;
-                                    if(json.vs_top.length && json.vs_top[0].length) {
-                                        vs_stats = json.vs_top[0][index];
-                                    }
-                                    var $adunit = $(render_filter_body_row(context, stats, vs_stats));
-                                    if(publisher_comparison_shown()) {
-                                        $adunit.css('background-color', COLOR_THEME.primary[selected.indexOf(id)]);
-                                    }
-                                    $last.after($adunit);
-                                    $last = $adunit;
+                                _.each(adunit_data.query, function (query, query_index) {
+                                    var app = query.app[0];
+                                    var $last = $('#' + app);
+                                    _.each(json.top[query_index], function(top, index) {
+                                        var id = top.adunit;
+                                        var context = {
+                                            type: 'adunit',
+                                            selected: _.include(selected, id) || (!publisher_comparison_shown() && _.include(selected, app)),
+                                            hidden: $('#' + app).hasClass('hidden') || index >= MAX_ADUNITS,
+                                            id: id,
+                                            columns: PUBLISHER_COLUMNS,
+                                            default_columns: PUBLISHER_DEFAULT_COLUMNS,
+                                            order: order
+                                        };
+                                        var stats = json.top[query_index][index];
+                                        var vs_stats;
+                                        if(json.vs_top.length && json.vs_top[query_index].length) {
+                                            vs_stats = json.vs_top[query_index][index];
+                                        }
+                                        var $adunit = $(render_filter_body_row(context, stats, vs_stats));
+                                        if(publisher_comparison_shown()) {
+                                            $adunit.css('background-color', COLOR_THEME.primary[selected.indexOf(id)]);
+                                        }
+                                        $last.after($adunit);
+                                        $last = $adunit;
+                                    });
                                 });
 
                                 update_publisher_stats_display();

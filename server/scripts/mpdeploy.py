@@ -386,14 +386,6 @@ def main():
                 puts("Updating origin with the new tag")
                 git_push_tag(deploy_tag_name)
 
-                # Minify all javascript
-                puts("Minifying Javascript")
-                minify_javascript()
-
-                # Updating version numbers
-                puts("Updating Version Numbers")
-                update_static_version_numbers()
-
                 # Write to the changelog
                 puts("Writing changelog")
                 write_changelog(deploy_tag_name, fixed_tickets, new_commits)
@@ -413,9 +405,17 @@ def main():
                 puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
                 deploy_server = 'frontend-staging'
 
+            # Minify all javascript
+            puts("Minifying Javascript")
+            minify_javascript()
+
+            # Updating version numbers
+            puts("Updating Version Numbers")
+            update_static_version_numbers()
+                
             puts("Deploying " + colored.green(active_branch_name) + " to " + colored.green(deploy_server))
             launch_deploy_process(server=deploy_server)
-
+            
             # notify people of a successful deploy on hipichat
             puts("Notifying hipchat")
             message = "Branch %s just deployed to %s by %s" % (active_branch_name,

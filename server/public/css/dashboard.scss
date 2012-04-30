@@ -77,8 +77,7 @@ div#charts {
 
 div#advertiser_filters, div#publisher_filters {
     margin-left: 10px;
-    width: 338px !important;
-    max-width: 338px !important;
+    width: 338px;
 
     button.show span.hide, button.hide span.show {
         display: none;
@@ -87,49 +86,39 @@ div#advertiser_filters, div#publisher_filters {
     table#advertiser, table#publisher {
         font-size: 12px;
         margin: 5px 0;
-        width: 338px !important;
-        max-width: 338px !important;
+        table-layout: fixed;
+        width: 338px;
 
         thead {
-            width: 338px !important;
-            max-width: 338px !important;
             tr {
-                width: 338px !important;
-                max-width: 338px !important;
                 th {
                     padding: 2px;
                     &.title {
                     }
                     &.stat {
+                        width: 45px;
                         &.orderable {
                             cursor: pointer;
                             &:hover {
                                 background-color: #ccf;
                             }
-                            .icon-chevron-down {
-                                display: none;
-                            }
-                            &.ordered .icon-chevron-down {
-                                display: inline-block;
-                            }
                         }
+                    }
+                    &.stat[colspan="2"] {
+                        width: 94px;
                     }
                 }
             }
         }
 
         tbody {
-            width: 338px !important;
-            max-width: 338px !important;
             tr {
-                width: 338px !important;
-                max-width: 338px !important;
                 cursor: pointer;
                 &:hover {
-                    background-color: #ccf;
+                    background-color: hsla(180, 50%, 50%, 0.1);
                 }
                 &.selected {
-                    background-color: rgba(200,225,251,1);
+                    background-color: hsla(180, 50%, 50%, 0.1);
                 }
                 &.source, &.app {
                     border-top: 2px solid #bbb;
@@ -142,9 +131,12 @@ div#advertiser_filters, div#publisher_filters {
                     padding: 2px;
                     &.name {
                         span {
+                            display: inline-block;
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
+                            width: 100%;
+                            word-wrap: break-word;
                         }
                     }
                     &.stat {
@@ -165,27 +157,9 @@ div#advertiser_filters, div#publisher_filters {
     }
 
     &.expand {
-        width: 686px !important;
-        max-width: 686px !important;
+        width: 686px;
         table#advertiser, table#publisher {
-            width: 686px !important;
-            max-width: 686px !important;
-            tbody {
-                width: 686px !important;
-                max-width: 686px !important;
-                tr {
-                    width: 686px !important;
-                    max-width: 686px !important;
-                }
-            }
-            thead {
-                width: 686px !important;
-                max-width: 686px !important;
-                tr {
-                    width: 686px !important;
-                    max-width: 686px !important;
-                }
-            }
+            width: 686px;
         }
     }
 }

@@ -522,6 +522,8 @@ var mopub = mopub || {};
              * ## Templating
              */
             var filter_body_row = _.template($('#filter_body_row').html());
+            var filter_header_row = _.template($('#filter_header_row').html());
+
             var names = bootstrapping_data.names;
 
             function render_filter_body_row(context, stats, vs_stats) {
@@ -573,6 +575,7 @@ var mopub = mopub || {};
 
                 return filter_body_row(context);
             }
+
 
             function get_data() {
                 var data = {
@@ -746,7 +749,19 @@ var mopub = mopub || {};
                     success: function (json) {
                         // defer so exceptions show up in the console
                         _.defer(function() {
+                            // render header row
+                            $('thead', $advertiser_table).html(filter_header_row({
+                                title: 'Ads',
+                                columns: ADVERTISER_COLUMNS,
+                                default_columns: ADVERTISER_DEFAULT_COLUMNS,
+                                orderable_columns: SORTABLE_COLUMNS,
+                                order: get_advertiser_order(),
+                                deltas: json.vs_sum.length,
+                                stats: STATS
+                            }));
+
                             $('tr.campaign', $advertiser_table).remove();
+
                             _.each(source_data.query, function(query, index) {
                                 var id = query.source[0];
                                 var context = {
@@ -847,7 +862,7 @@ var mopub = mopub || {};
             }
 
             function update_publisher_table(data, advertiser_query) {
-                selected = _.map($('tr.selected', $publisher_table), function (tr) { return tr.id; });
+                var selected = _.map($('tr.selected', $publisher_table), function (tr) { return tr.id; });
                 var order = get_publisher_order();
 
                 var app_data = _.clone(data);
@@ -864,7 +879,19 @@ var mopub = mopub || {};
                     success: function(json) {
                         // defer so exceptions show up in the console
                         _.defer(function() {
+                            // render header row
+                            $('thead', $publisher_table).html(filter_header_row({
+                                title: 'Apps',
+                                columns: PUBLISHER_COLUMNS,
+                                default_columns: PUBLISHER_DEFAULT_COLUMNS,
+                                orderable_columns: SORTABLE_COLUMNS,
+                                order: get_publisher_order(),
+                                deltas: json.vs_top.length,
+                                stats: STATS
+                            }));
+
                             $('tr.app, tr.adunit', $publisher_table).remove();
+
                             _.each(json.top[0], function (top, index) {
                                 var id = top.app;
                                 var context = {
@@ -1328,17 +1355,7 @@ var mopub = mopub || {};
                 return $advertiser_order.val();
             }
 
-            var filter_header_row = _.template($('#filter_header_row').html());
-            $('thead', $advertiser_table).html(filter_header_row({
-                title: 'Ads',
-                columns: ADVERTISER_COLUMNS,
-                default_columns: ADVERTISER_DEFAULT_COLUMNS,
-                sortable_columns: SORTABLE_COLUMNS,
-                sorted: get_advertiser_order(),
-                stats: STATS
-            }));
-
-            $('th.orderable', $advertiser_table).click(function () {
+            $('th.orderable', $advertiser_table).live('click', function () {
                 var $th = $(this);
                 var order;
                 _.each(STATS, function (title, stat) {
@@ -1347,9 +1364,6 @@ var mopub = mopub || {};
                         $advertiser_order.val(stat);
                     }
                 });
-
-                $('th.orderable', $advertiser_table).removeClass('ordered');
-                $('th.' + order, $advertiser_table).addClass('ordered');
 
                 record_metric('Ordered advertiser table', {dimension: order});
 
@@ -1362,16 +1376,7 @@ var mopub = mopub || {};
                 return $publisher_order.val();
             }
 
-            $('thead', $publisher_table).html(filter_header_row({
-                title: 'Apps',
-                columns: PUBLISHER_COLUMNS,
-                default_columns: PUBLISHER_DEFAULT_COLUMNS,
-                sortable_columns: SORTABLE_COLUMNS,
-                sorted: get_publisher_order(),
-                stats: STATS
-            }));
-
-            $('th.orderable', $publisher_table).click(function () {
+            $('th.orderable', $publisher_table).live('click', function () {
                 var $th = $(this);
                 var order;
                 _.each(STATS, function (title, stat) {
@@ -1380,9 +1385,6 @@ var mopub = mopub || {};
                         $publisher_order.val(stat);
                     }
                 });
-
-                $('th.orderable', $publisher_table).removeClass('ordered');
-                $('th.' + order, $publisher_table).addClass('ordered');
 
                 record_metric('Ordered publisher table', {dimension: order});
 

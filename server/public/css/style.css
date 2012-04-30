@@ -4463,79 +4463,56 @@ div#charts {
 
 div#advertiser_filters, div#publisher_filters {
   margin-left: 10px;
-  width: 338px !important;
-  max-width: 338px !important; }
+  width: 338px; }
   div#advertiser_filters button.show span.hide, div#advertiser_filters button.hide span.show, div#publisher_filters button.show span.hide, div#publisher_filters button.hide span.show {
     display: none; }
   div#advertiser_filters table#advertiser, div#advertiser_filters table#publisher, div#publisher_filters table#advertiser, div#publisher_filters table#publisher {
     font-size: 12px;
     margin: 5px 0;
-    width: 338px !important;
-    max-width: 338px !important; }
-    div#advertiser_filters table#advertiser thead, div#advertiser_filters table#publisher thead, div#publisher_filters table#advertiser thead, div#publisher_filters table#publisher thead {
-      width: 338px !important;
-      max-width: 338px !important; }
-      div#advertiser_filters table#advertiser thead tr, div#advertiser_filters table#publisher thead tr, div#publisher_filters table#advertiser thead tr, div#publisher_filters table#publisher thead tr {
-        width: 338px !important;
-        max-width: 338px !important; }
-        div#advertiser_filters table#advertiser thead tr th, div#advertiser_filters table#publisher thead tr th, div#publisher_filters table#advertiser thead tr th, div#publisher_filters table#publisher thead tr th {
-          padding: 2px; }
-          div#advertiser_filters table#advertiser thead tr th.stat.orderable, div#advertiser_filters table#publisher thead tr th.stat.orderable, div#publisher_filters table#advertiser thead tr th.stat.orderable, div#publisher_filters table#publisher thead tr th.stat.orderable {
-            cursor: pointer; }
-            div#advertiser_filters table#advertiser thead tr th.stat.orderable:hover, div#advertiser_filters table#publisher thead tr th.stat.orderable:hover, div#publisher_filters table#advertiser thead tr th.stat.orderable:hover, div#publisher_filters table#publisher thead tr th.stat.orderable:hover {
-              background-color: #ccf; }
-            div#advertiser_filters table#advertiser thead tr th.stat.orderable .icon-chevron-down, div#advertiser_filters table#publisher thead tr th.stat.orderable .icon-chevron-down, div#publisher_filters table#advertiser thead tr th.stat.orderable .icon-chevron-down, div#publisher_filters table#publisher thead tr th.stat.orderable .icon-chevron-down {
-              display: none; }
-            div#advertiser_filters table#advertiser thead tr th.stat.orderable.ordered .icon-chevron-down, div#advertiser_filters table#publisher thead tr th.stat.orderable.ordered .icon-chevron-down, div#publisher_filters table#advertiser thead tr th.stat.orderable.ordered .icon-chevron-down, div#publisher_filters table#publisher thead tr th.stat.orderable.ordered .icon-chevron-down {
-              display: inline-block; }
-    div#advertiser_filters table#advertiser tbody, div#advertiser_filters table#publisher tbody, div#publisher_filters table#advertiser tbody, div#publisher_filters table#publisher tbody {
-      width: 338px !important;
-      max-width: 338px !important; }
-      div#advertiser_filters table#advertiser tbody tr, div#advertiser_filters table#publisher tbody tr, div#publisher_filters table#advertiser tbody tr, div#publisher_filters table#publisher tbody tr {
-        width: 338px !important;
-        max-width: 338px !important;
-        cursor: pointer; }
-        div#advertiser_filters table#advertiser tbody tr:hover, div#advertiser_filters table#publisher tbody tr:hover, div#publisher_filters table#advertiser tbody tr:hover, div#publisher_filters table#publisher tbody tr:hover {
-          background-color: #ccf; }
-        div#advertiser_filters table#advertiser tbody tr.selected, div#advertiser_filters table#publisher tbody tr.selected, div#publisher_filters table#advertiser tbody tr.selected, div#publisher_filters table#publisher tbody tr.selected {
-          background-color: #c8e1fb; }
-        div#advertiser_filters table#advertiser tbody tr.source, div#advertiser_filters table#advertiser tbody tr.app, div#advertiser_filters table#publisher tbody tr.source, div#advertiser_filters table#publisher tbody tr.app, div#publisher_filters table#advertiser tbody tr.source, div#publisher_filters table#advertiser tbody tr.app, div#publisher_filters table#publisher tbody tr.source, div#publisher_filters table#publisher tbody tr.app {
-          border-top: 2px solid #bbb;
-          font-weight: bold; }
-        div#advertiser_filters table#advertiser tbody tr.campaign, div#advertiser_filters table#advertiser tbody tr.adunit, div#advertiser_filters table#publisher tbody tr.campaign, div#advertiser_filters table#publisher tbody tr.adunit, div#publisher_filters table#advertiser tbody tr.campaign, div#publisher_filters table#advertiser tbody tr.adunit, div#publisher_filters table#publisher tbody tr.campaign, div#publisher_filters table#publisher tbody tr.adunit {
-          border-top: 1px solid #ddd; }
-        div#advertiser_filters table#advertiser tbody tr td, div#advertiser_filters table#publisher tbody tr td, div#publisher_filters table#advertiser tbody tr td, div#publisher_filters table#publisher tbody tr td {
-          padding: 2px; }
-          div#advertiser_filters table#advertiser tbody tr td.name span, div#advertiser_filters table#publisher tbody tr td.name span, div#publisher_filters table#advertiser tbody tr td.name span, div#publisher_filters table#publisher tbody tr td.name span {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap; }
-          div#advertiser_filters table#advertiser tbody tr td.stat, div#advertiser_filters table#publisher tbody tr td.stat, div#publisher_filters table#advertiser tbody tr td.stat, div#publisher_filters table#publisher tbody tr td.stat {
-            text-align: right; }
-          div#advertiser_filters table#advertiser tbody tr td.delta, div#advertiser_filters table#publisher tbody tr td.delta, div#publisher_filters table#advertiser tbody tr td.delta, div#publisher_filters table#publisher tbody tr td.delta {
-            text-align: right; }
-            div#advertiser_filters table#advertiser tbody tr td.delta.positive, div#advertiser_filters table#publisher tbody tr td.delta.positive, div#publisher_filters table#advertiser tbody tr td.delta.positive, div#publisher_filters table#publisher tbody tr td.delta.positive {
-              color: green; }
-            div#advertiser_filters table#advertiser tbody tr td.delta.negative, div#advertiser_filters table#publisher tbody tr td.delta.negative, div#publisher_filters table#advertiser tbody tr td.delta.negative, div#publisher_filters table#publisher tbody tr td.delta.negative {
-              color: red; }
+    table-layout: fixed;
+    width: 338px; }
+    div#advertiser_filters table#advertiser thead tr th, div#advertiser_filters table#publisher thead tr th, div#publisher_filters table#advertiser thead tr th, div#publisher_filters table#publisher thead tr th {
+      padding: 2px; }
+      div#advertiser_filters table#advertiser thead tr th.stat, div#advertiser_filters table#publisher thead tr th.stat, div#publisher_filters table#advertiser thead tr th.stat, div#publisher_filters table#publisher thead tr th.stat {
+        width: 45px; }
+        div#advertiser_filters table#advertiser thead tr th.stat.orderable, div#advertiser_filters table#publisher thead tr th.stat.orderable, div#publisher_filters table#advertiser thead tr th.stat.orderable, div#publisher_filters table#publisher thead tr th.stat.orderable {
+          cursor: pointer; }
+          div#advertiser_filters table#advertiser thead tr th.stat.orderable:hover, div#advertiser_filters table#publisher thead tr th.stat.orderable:hover, div#publisher_filters table#advertiser thead tr th.stat.orderable:hover, div#publisher_filters table#publisher thead tr th.stat.orderable:hover {
+            background-color: #ccf; }
+      div#advertiser_filters table#advertiser thead tr th.stat[colspan="2"], div#advertiser_filters table#publisher thead tr th.stat[colspan="2"], div#publisher_filters table#advertiser thead tr th.stat[colspan="2"], div#publisher_filters table#publisher thead tr th.stat[colspan="2"] {
+        width: 94px; }
+    div#advertiser_filters table#advertiser tbody tr, div#advertiser_filters table#publisher tbody tr, div#publisher_filters table#advertiser tbody tr, div#publisher_filters table#publisher tbody tr {
+      cursor: pointer; }
+      div#advertiser_filters table#advertiser tbody tr:hover, div#advertiser_filters table#publisher tbody tr:hover, div#publisher_filters table#advertiser tbody tr:hover, div#publisher_filters table#publisher tbody tr:hover {
+        background-color: rgba(64, 191, 191, 0.1); }
+      div#advertiser_filters table#advertiser tbody tr.selected, div#advertiser_filters table#publisher tbody tr.selected, div#publisher_filters table#advertiser tbody tr.selected, div#publisher_filters table#publisher tbody tr.selected {
+        background-color: rgba(64, 191, 191, 0.1); }
+      div#advertiser_filters table#advertiser tbody tr.source, div#advertiser_filters table#advertiser tbody tr.app, div#advertiser_filters table#publisher tbody tr.source, div#advertiser_filters table#publisher tbody tr.app, div#publisher_filters table#advertiser tbody tr.source, div#publisher_filters table#advertiser tbody tr.app, div#publisher_filters table#publisher tbody tr.source, div#publisher_filters table#publisher tbody tr.app {
+        border-top: 2px solid #bbb;
+        font-weight: bold; }
+      div#advertiser_filters table#advertiser tbody tr.campaign, div#advertiser_filters table#advertiser tbody tr.adunit, div#advertiser_filters table#publisher tbody tr.campaign, div#advertiser_filters table#publisher tbody tr.adunit, div#publisher_filters table#advertiser tbody tr.campaign, div#publisher_filters table#advertiser tbody tr.adunit, div#publisher_filters table#publisher tbody tr.campaign, div#publisher_filters table#publisher tbody tr.adunit {
+        border-top: 1px solid #ddd; }
+      div#advertiser_filters table#advertiser tbody tr td, div#advertiser_filters table#publisher tbody tr td, div#publisher_filters table#advertiser tbody tr td, div#publisher_filters table#publisher tbody tr td {
+        padding: 2px; }
+        div#advertiser_filters table#advertiser tbody tr td.name span, div#advertiser_filters table#publisher tbody tr td.name span, div#publisher_filters table#advertiser tbody tr td.name span, div#publisher_filters table#publisher tbody tr td.name span {
+          display: inline-block;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          width: 100%;
+          word-wrap: break-word; }
+        div#advertiser_filters table#advertiser tbody tr td.stat, div#advertiser_filters table#publisher tbody tr td.stat, div#publisher_filters table#advertiser tbody tr td.stat, div#publisher_filters table#publisher tbody tr td.stat {
+          text-align: right; }
+        div#advertiser_filters table#advertiser tbody tr td.delta, div#advertiser_filters table#publisher tbody tr td.delta, div#publisher_filters table#advertiser tbody tr td.delta, div#publisher_filters table#publisher tbody tr td.delta {
+          text-align: right; }
+          div#advertiser_filters table#advertiser tbody tr td.delta.positive, div#advertiser_filters table#publisher tbody tr td.delta.positive, div#publisher_filters table#advertiser tbody tr td.delta.positive, div#publisher_filters table#publisher tbody tr td.delta.positive {
+            color: green; }
+          div#advertiser_filters table#advertiser tbody tr td.delta.negative, div#advertiser_filters table#publisher tbody tr td.delta.negative, div#publisher_filters table#advertiser tbody tr td.delta.negative, div#publisher_filters table#publisher tbody tr td.delta.negative {
+            color: red; }
   div#advertiser_filters.expand, div#publisher_filters.expand {
-    width: 686px !important;
-    max-width: 686px !important; }
+    width: 686px; }
     div#advertiser_filters.expand table#advertiser, div#advertiser_filters.expand table#publisher, div#publisher_filters.expand table#advertiser, div#publisher_filters.expand table#publisher {
-      width: 686px !important;
-      max-width: 686px !important; }
-      div#advertiser_filters.expand table#advertiser tbody, div#advertiser_filters.expand table#publisher tbody, div#publisher_filters.expand table#advertiser tbody, div#publisher_filters.expand table#publisher tbody {
-        width: 686px !important;
-        max-width: 686px !important; }
-        div#advertiser_filters.expand table#advertiser tbody tr, div#advertiser_filters.expand table#publisher tbody tr, div#publisher_filters.expand table#advertiser tbody tr, div#publisher_filters.expand table#publisher tbody tr {
-          width: 686px !important;
-          max-width: 686px !important; }
-      div#advertiser_filters.expand table#advertiser thead, div#advertiser_filters.expand table#publisher thead, div#publisher_filters.expand table#advertiser thead, div#publisher_filters.expand table#publisher thead {
-        width: 686px !important;
-        max-width: 686px !important; }
-        div#advertiser_filters.expand table#advertiser thead tr, div#advertiser_filters.expand table#publisher thead tr, div#publisher_filters.expand table#advertiser thead tr, div#publisher_filters.expand table#publisher thead tr {
-          width: 686px !important;
-          max-width: 686px !important; }
+      width: 686px; }
 
 /* Dashboard */
 #dashboard-stats {

@@ -1,10 +1,18 @@
+# Deployed Monday, April 30, 2012 at 08:17PM PST
+### Deployed by Andrew He
+### Tagged deploy-90
+### Bugs Fixed: []
+### Included Commits: 
+ * 73223d9 Re-enable deferred builtin in app.yaml
+ * 05723d9 Deployed without finding any bug fixes.
+ 
 # Deployed Saturday, April 28, 2012 at 02:08AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-89
 ### Bugs Fixed: []
-### Included Commits: 
- * a8722e0 [#1132 state:resolved]
- 
+### Included Commits:
+* a8722e0 [#1132 state:resolved]
+
 # Deployed Saturday, April 28, 2012 at 02:07AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-88

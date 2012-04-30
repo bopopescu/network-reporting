@@ -174,7 +174,6 @@ var mopub = mopub || {};
     }
 
 
-
     // Formats a number for display based on a property name.
     // Currency will get a $, percentages will get a %. All numbers
     // will be formatted with commas and KMBT.
@@ -202,7 +201,6 @@ var mopub = mopub || {};
     // Formats a number in KMBT (thousands, millions, billions,
     // trillions) formatting with three significant digits.
     // Example: 1000000 -> 1M, 1230000000 -> 12.3B
-
     function format_kmbt(number) {
         if(number <= 0 || number >= 1000000000000000000000000) {
             return number;
@@ -226,7 +224,7 @@ var mopub = mopub || {};
     // is returned.
     function calculate_stats(obj) {
         obj.conv_rate = obj.imp === 0 ? 0 : obj.conv / obj.imp;
-        obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.clk / obj.imp;
+        obj.cpm = obj.imp === 0 ? 0 : 1000 * obj.rev / obj.imp;
         obj.ctr = obj.imp === 0 ? 0 : obj.clk / obj.imp;
         obj.fill_rate = obj.req === 0 ? 0 : obj.imp / obj.req;
     }
@@ -301,7 +299,7 @@ var mopub = mopub || {};
     // future this could come from user defined settings that are
     // stored in a cookie.
     function get_charts() {
-        return ['rev', 'imp', 'clk', 'ctr'];
+        return ['rev', 'imp', 'clk', 'cpm'];
     }
 
     // Create a new chart using Rickshaw/d3.
@@ -410,17 +408,15 @@ var mopub = mopub || {};
             }
         });
         
-        // On the X-axis, display the date in MM/DD form
-        var labels = _.map(account_data[0], function(datapoint){
-            return get_date_from_datapoint(datapoint);
-        });
-
+        // On the X-axis, display the date in MM/DD form.
         var xAxis = new Rickshaw.Graph.Axis.X({
             graph: chart,
-            labels: labels,
+            labels: _.map(account_data[0], function(datapoint){
+                return get_date_from_datapoint(datapoint);
+            });,
             ticksTreatment: 'glow'
         });
-        
+
         xAxis.render();
 
         // On the Y-axis, display the amount in KMBT form.
@@ -440,7 +436,7 @@ var mopub = mopub || {};
         chart.hoverDetail = hoverDetail;
         chart.xAxis = xAxis;
         chart.yAxis = yAxis;
-        
+
         return chart;
     }
 
@@ -471,13 +467,13 @@ var mopub = mopub || {};
                 _.each(charts, function(chart_j) {
                     chart_j.hoverDetail.visible=true;
                     chart_j.hoverDetail.update(e);
-                });                
+                });
             });
-            
+
             chart_i.onUpdate(function(){
                 _.each(charts, function(chart_j) {
                     chart_j.hoverDetail.update();
-                });                
+                });
             });
 
             chart_i.element.addEventListener('mouseout', function(e) {
@@ -485,7 +481,7 @@ var mopub = mopub || {};
 				    chart_j.hoverDetail.hide();
                 });
 		    });
-            
+
         });
 
         return charts;
@@ -597,6 +593,12 @@ var mopub = mopub || {};
                                 context.deltas[column] = {
                                     'class': 'negative',
                                     'value': delta + '%'
+                                };
+                            }
+                            else if(delta > 999) {
+                                context.deltas[column] = {
+                                    'class': 'positive',
+                                    'value': '>999%'
                                 };
                             }
                             else {
@@ -1232,11 +1234,7 @@ var mopub = mopub || {};
                     show_advertiser_comparison();
                 }
 
-                update_advertiser_colors();
-
-                update_advertiser_stats_display();
-
-                update_dashboard(true, false, true);
+                update_dashboard(true, true, true);
             });
 
             var $publisher_comparison = $('#publisher_comparison');
@@ -1274,11 +1272,7 @@ var mopub = mopub || {};
                     show_publisher_comparison();
                 }
 
-                update_publisher_colors();
-
-                update_publisher_stats_display();
-
-                update_dashboard(true, true, false);
+                update_dashboard(true, true, true);
             });
 
             /* Columns */

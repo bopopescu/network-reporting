@@ -97,9 +97,8 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         # mongo
         query_manager = StatsModelQueryManager(AccountQueryManager.get(
             self.account_key))
-        # If its a new network campaign that has been migrated add the old
-        # campaign stats to the new ones if the transition date is within the
-        # range
+        # If its a new network campaign that has been migrated and the
+        # transition date is after the start date
         if campaign.campaign_type == 'network' and campaign.network_state == \
                 NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
                 campaign.old_campaign and start <= campaign.transition_date:

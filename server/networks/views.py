@@ -214,7 +214,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(1) or 'custom' in network
+                    self.account, network) or 'custom' in network
             # Set the default campaign name to the network name
             campaign_name = NETWORKS[network]
             if custom_campaign and 'custom' not in network:
@@ -332,9 +332,7 @@ class EditNetworkHandler(RequestHandler):
                                               NETWORKS_WITH_PUB_IDS,
                                   })
 
-    def post(self,
-            network='',
-            campaign_key=''):
+    def post(self, network='', campaign_key=''):
         if not self.request.is_ajax():
             raise Http404
 
@@ -362,7 +360,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(1) or 'custom' in network
+                    self.account, network) or 'custom' in network
             if not custom_campaign:
                 query_dict['name'] = NETWORKS[network]
                 campaign = CampaignQueryManager. \

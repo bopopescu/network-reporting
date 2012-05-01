@@ -14,6 +14,7 @@ from advertiser.query_managers import CampaignQueryManager, \
 
 from publisher.query_managers import PublisherQueryManager
 
+from common.utils.helpers import get_all, put_all
 from common.constants import NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION
 
@@ -22,6 +23,8 @@ CAMPAIGN_FIELD_EXCLUSION_LIST = ['account', 'network_type', 'network_state', \
 ADGROUP_FIELD_EXCLUSION_LIST = ['account', 'campaign', 'net_creative',
         'site_keys', 'active']
 CREATIVE_FIELD_EXCLUSION_LIST = ['ad_group', 'account']
+
+SKIP_THESE_ACCOUNTS = []
 
 def create_creative(new_adgroup, adgroup, put_data):
     old_creative = []
@@ -57,8 +60,15 @@ def create_creative(new_adgroup, adgroup, put_data):
         # set new adgroup to reference the correct creative
         new_adgroup.net_creative = new_creative.key()
 
-def migrate(accounts, put_data=False):
+def migrate(accounts=None, put_data=False):
+    if not accounts:
+        accounts = get_all(Account)
+
     for account in accounts:
+        if account.display_new_networks or str(account.key()) in \
+                SKIP_THESE_ACCOUNTS:
+            continue
+
         adunits = PublisherQueryManager.get_adunits_dict_for_account(
                 account).values()
         networks = set()
@@ -125,14 +135,16 @@ def migrate(accounts, put_data=False):
 
                     networks.add(network)
 
-                if put_data:
-                    # mark old campaign and adgroup as paused
-                    campaign.active = False
-                    CampaignQueryManager.put(campaign)
-                    for old_adgroup in campaign._adgroups:
-                        old_adgroup.active = False
-                    AdGroupQueryManager.put(campaign._adgroups)
+            # mark old campaign and adgroup as deleted
+            campaign.deleted = True
+            for old_adgroup in campaign._adgroups:
+                old_adgroup.deleted = True
+
         if put_data:
+            CampaignQueryManager.put(old_network_campaigns)
+            AdGroupQueryManager.put([adgroup for campaign in
+                old_network_campaigns for adgroup in campaign._adgroups])
+
             account.display_new_networks = True
             account.display_networks_message = True
             AccountQueryManager.put_accounts(account)

@@ -946,6 +946,8 @@ class EjamCreative(Creative):
     #Renderer = ChartBoostRenderer
 
     #ServerSide = EjamServerSide
+    def multi_format(self):
+        return ('320x50', 'full',)
 
 
 class InMobiCreative(Creative):

@@ -65,7 +65,6 @@ def migrate():
         print
         print "Migrating account: " + account.emails[0]
         for campaign in CampaignQueryManager.get_network_campaigns(account):
-            # TODO: hash on shared settings (advanced settings)
             adgroup = campaign.adgroups.get()
             if adgroup:
                 network = adgroup.network_type.replace('_native',

@@ -44,8 +44,8 @@ from ad_network_reports.scrapers.unauthorized_login_exception import \
 from common.constants import REPORTING_NETWORKS
 from common.utils import date_magic
 from common.utils.connect_to_appengine import setup_remote_api
+from common.utils.timezones import Pacific_tzinfo
 from publisher.query_managers import AppQueryManager
-from pytz import timezone
 
 # Email imports
 import smtplib
@@ -81,8 +81,7 @@ def multiprocess_update_all(start_day=None,
     time.
     """
     # Standardize the date
-    pacific = timezone('US/Pacific')
-    yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
+    yesterday = (datetime.now(Pacific_tzinfo()) - timedelta(days=1)).date()
 
     # Set start and end dates
     start_day = start_day or yesterday
@@ -235,9 +234,11 @@ def update_account_stats(account,
         raise
 
 
+# TODO: REFACTOR method name
 def update_login_stats_for_check(login,
                                  start_day=None,
                                  end_day=None,
+                                 email=True,
                                  testing=False):
     """
     Collect data for a given login from the start date to yesterday.
@@ -245,8 +246,7 @@ def update_login_stats_for_check(login,
     Send email to account when complete if stats have been collected.
     """
     # Standardize the date
-    pacific = timezone('US/Pacific')
-    yesterday = (datetime.now(pacific) - timedelta(days=1)).date()
+    yesterday = (datetime.now(Pacific_tzinfo()) - timedelta(days=1)).date()
 
     # Set start and end dates
     start_day = start_day or yesterday
@@ -260,29 +260,29 @@ def update_login_stats_for_check(login,
     login.state = LoginStates.WORKING
     login.put()
 
-
     if stats_list and not testing:
         # Flush stats to db
         db.put([stats for mapper, stats in stats_list])
 
-        # Send email informing user that they can now see statistics for the ad
-        # network they just signed up for on the ad network index page.
-        msg = MIMEText("Your ad network revenue report for %s is now ready. " \
-                "Access it here: https://app.mopub.com/ad_network_reports.\n" \
-                "\nIf you have any questions, please reach out to us at " \
-                "support@mopub.com" % REPORTING_NETWORKS[login.ad_network_name])
-        from_ = SUPPORT_EMAIL
-        to = [] if TESTING else login.account.emails
+        if email:
+            # Send email informing user that they can now see statistics for the ad
+            # network they just signed up for on the ad network index page.
+            msg = MIMEText("Your ad network revenue report for %s is now ready. " \
+                    "Access it here: https://app.mopub.com/ad_network_reports.\n" \
+                    "\nIf you have any questions, please reach out to us at " \
+                    "support@mopub.com" % REPORTING_NETWORKS[login.ad_network_name])
+            from_ = SUPPORT_EMAIL
+            to = [] if TESTING else login.account.emails
 
-        msg['Subject'] = "Finished Collecting Stats"
-        msg['From'] = from_
-        msg['To'] = ', '.join(to)
+            msg['Subject'] = "Finished Collecting Stats"
+            msg['From'] = from_
+            msg['To'] = ', '.join(to)
 
-        # Send the message via our own SMTP server, but don't include the
-        # envelope header.
-        s = smtplib.SMTP(SMTP_SERVER)
-        s.sendmail(from_, to + [ADMIN_EMAIL], msg.as_string())
-        s.quit()
+            # Send the message via our own SMTP server, but don't include the
+            # envelope header.
+            s = smtplib.SMTP(SMTP_SERVER)
+            s.sendmail(from_, to + [ADMIN_EMAIL], msg.as_string())
+            s.quit()
 
 
 def retry_logins(day,

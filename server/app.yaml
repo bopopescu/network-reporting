@@ -68,6 +68,10 @@ handlers:
   script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
   login: admin
 
+- url: /_ah/queue/deferred
+  script: $PYTHON_LIB/google/appengine/ext/deferred/handler.py
+  login: admin
+
 ### END APP ENGINE BUILT-INS ###
 
 - url: /admin/prep

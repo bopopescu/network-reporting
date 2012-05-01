@@ -119,9 +119,11 @@ class CampaignQueryManager(QueryManager):
                 if network_type:
                     return campaign.network_type == network_type
                 elif is_new:
-                    return campaign.network_type
+                    return campaign.network_state != NetworkStates. \
+                            STANDARD_CAMPAIGN
                 else:
-                    return not campaign.network_type
+                    return campaign.network_state == NetworkStates. \
+                            STANDARD_CAMPAIGN
 
         return filter(network_campaign_filter, campaigns.values())
 

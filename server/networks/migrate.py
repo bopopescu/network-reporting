@@ -134,6 +134,7 @@ def migrate(accounts, put_data=False):
                     AdGroupQueryManager.put(campaign._adgroups)
         if put_data:
             account.display_new_networks = True
+            account.display_networks_message = True
             AccountQueryManager.put_accounts(account)
 
 def undo(accounts, put_data=False):

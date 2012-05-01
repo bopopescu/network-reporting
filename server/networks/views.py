@@ -174,6 +174,11 @@ class NetworksHandler(RequestHandler):
 
         apps = sorted(apps, key=lambda app: app.identifier)
 
+        display_message = self.account.display_networks_message
+        if display_message:
+            self.account.display_networks_message = False
+            AccountQueryManager.put(self.account)
+
         return render_to_response(self.request,
               'networks/index.html',
               {
@@ -181,6 +186,7 @@ class NetworksHandler(RequestHandler):
                   'end_date': self.days[-1],
                   'date_range': self.date_range,
                   'days': self.days,
+                  'display_message': display_message,
                   'graph': True if networks else False,
                   'networks': networks,
                   'networks_to_setup': networks_to_setup,

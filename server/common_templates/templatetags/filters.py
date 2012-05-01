@@ -305,6 +305,7 @@ def adgroup_to_json(adgroup):
             'name': adgroup.name,
             'details_url': reverse('advertiser_adgroup_show', kwargs={'adgroup_key': str(adgroup.key())}),
             'bid_strategy': adgroup.bid_strategy,
+            'status': adgroup.status,
         })
         if adgroup.campaign.gtee() or adgroup.campaign.promo():
             start_datetime = adgroup.campaign.start_datetime.replace(tzinfo=utc).astimezone(Pacific) if adgroup.campaign.start_datetime else None

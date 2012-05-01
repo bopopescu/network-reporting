@@ -312,7 +312,6 @@ var mopub = mopub || {};
     // `options` is not currently used, but will be used in the future
     // to specify stuff like height, width, and other rendering options.
     function createChart(series, element, account_data, options) {
-
         options = options || {};
 
         // HACK here.
@@ -326,12 +325,17 @@ var mopub = mopub || {};
         account_data = _.map(account_data, function (range) {
 
             if (range.length === 1) {
+                var id = range.id;
+
                 // Make the single chart value appear in the middle of the graph
                 // by setting the max to 2x the value.
                 var new_max = (range[0][series] * 2);
                 max = new_max > max ? new_max : max;
 
-                return range.concat(range);
+                range = range.concat(range);
+                range.id = id;
+
+                return range;
             }
 
             return range;

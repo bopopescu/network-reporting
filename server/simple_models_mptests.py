@@ -16,12 +16,43 @@ from simple_models import (SimpleAccount,
                            SimpleCreative,
                            SimpleAdUnitContext,
                            from_basic_type)
+from google.appengine.ext import testbed
+
+from account.models import *
+from advertiser.models import *
+from publisher.models import *
+
 
 
 
 class TestBudgetEndToEnd(unittest.TestCase):
 
+
+    def setUp(self):
+        self.testbed = testbed.Testbed()
+        self.testbed.activate()
+        self.testbed.init_datastore_v3_stub()
+        self.testbed.init_memcache_stub()
+
+        self.net_cfg = NetworkConfig(admob_pub_id='1234',
+                                     adsense_pub_id='derp_derp_derp')
+
+        self.acct = Account(company='BestCompany',
+                            domain='boobs',
+                            network_config=self.net_cfg,
+                            adsense_company_name='google.BestCompany',
+                            adsense_test_mode=True)
+        self.acct.put()
+
+    def mptest_basic_wrapping(self):
+        pass
+
+    def mptest_adding_random_params(self):
+        pass
+
+
     def mptest_basic_type_conversion(self):
+        """ this test effectively doesn't test shit """
         simple_account = SimpleAccount(key = "test account key")
         simple_adunit = SimpleAdUnit(     key = "test adunit key",    name = "test adunit",    account = simple_account, format = {1:2, 3:4}, app_key = simple_account) # Putting a random dict in format to test plain dict functionality.
         simple_campaign = SimpleCampaign( key = "test campaign key",  name = "test campaign",  account = simple_account)

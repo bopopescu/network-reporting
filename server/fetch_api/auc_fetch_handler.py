@@ -12,6 +12,10 @@ from publisher.query_managers import AdUnitContextQueryManager
 
 from adserver_constants import ADSERVER_ADMIN_HOSTNAME, USER_PUSH_URL
 
+EMPTY = 'EMPTY'
+TO_ERR = 'TIMEOUT_ERROR'
+BAD_KEY_ERR = 'BAD_KEY_ERROR'
+
 def adunitcontext_fetch(adunit_key, created_at=None, testing=False):
     # This is a service to the AWS/Tornado adserver.
     # We are not following the RequestHandler pattern here (simple function instead), because we do not want to require login.
@@ -19,7 +23,11 @@ def adunitcontext_fetch(adunit_key, created_at=None, testing=False):
     now = int(time.mktime(datetime.utcnow().timetuple()))
     context_created_at = getattr(complex_context, 'created_at', now)
     if created_at == context_created_at and created_at != 0:
-        return None
+        return EMPTY
+    if isinstance(complex_context, str):
+        # If the complex context is indicating an error of some kind
+        # then don't try to simplify it
+        return complex_context
     simple_context = complex_context.simplify()
     basic_context = simple_context.to_basic_dict()
     pickled_context = pickle.dumps(basic_context)
@@ -33,10 +41,20 @@ class AUCFetchHandler(webapp.RequestHandler):
         # We are not following the RequestHandler pattern here (simple function instead), because we do not want to require login.
         created_at = int(float(created_at))
         data_package = adunitcontext_fetch(adunit_key, created_at=created_at)
-        if data_package:
+
+        elif data_package == EMPTY:
+            # This is an empty response, don't do anything, keep old AUC
+            return self.response.out.write(EMPTY)
+        elif data_package == BAD_KEY_ERR:
+            # This is an bad key error, if it happens once, don't try
+            # again because it will never work
+            return self.response.out.write(BAD_KEY_ERR)
+        elif data_package == TO_ERR:
+            # This is a timeout or other error (invalid setup possibly?)
+            # this could be resolved eventually, try again
+            return self.response.out.write(TO_ERR)
+        elif data_package:
             return self.response.out.write(data_package)
-        else:
-            return self.response.out.write("EMPTY")
 
 
 class AUCUserPushHandler(webapp.RequestHandler):

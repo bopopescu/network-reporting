@@ -19,7 +19,7 @@ from common.ragendja.template import render_to_response, \
      JSONResponse
 
 ## Models
-from advertiser.models import Campaign, AdGroup, HtmlCreative, NETWORKS
+from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
@@ -29,12 +29,13 @@ from account.models import NetworkConfig
 from account.query_managers import AccountQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkLoginManager
-from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
-                                      CreativeQueryManager
-from publisher.query_managers import AppQueryManager, \
-     AdUnitQueryManager, \
-     AdUnitContextQueryManager, \
-     PublisherQueryManager
+from advertiser.query_managers import (AdvertiserQueryManager,
+                                       CampaignQueryManager,
+                                       AdGroupQueryManager,
+                                       CreativeQueryManager)
+from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
+                                      AdUnitQueryManager,
+                                      AdUnitContextQueryManager)
 from reporting.query_managers import StatsModelQueryManager
 
 # Util
@@ -50,33 +51,26 @@ from budget import budget_service
 
 from google.appengine.api import memcache
 
+
 class DashboardHandler(RequestHandler):
     def get(self):
-
-        marketplace_campaign = CampaignQueryManager.get_marketplace(account=self.account)
-        network_campaigns = CampaignQueryManager.get_network_campaigns(account=self.account)
-
-        apps = AppQueryManager.get_apps(account=self.account)
-
         names = {
             'direct': 'Direct Sold',
             'mpx': 'Marketplace',
             'network': 'Ad Networks',
         }
-        for campaign in CampaignQueryManager.get_campaigns(account=self.account):
-            names[str(campaign.key())] = campaign.name
-            for adgroup in campaign.adgroups:
-                names[str(adgroup.key())] = adgroup.name
-        for app in apps:
-            names[str(app.key())] = app.name
-            for adunit in app.all_adunits:
-                names[str(adunit.key())] = adunit.name
+
+        for key, campaign in AdvertiserQueryManager.get_campaigns_dict_for_account(account=self.account).items():
+            names[key] = campaign.name
+
+        for key, app in PublisherQueryManager.get_apps_dict_for_account(account=self.account).items():
+            names[key] = app.name
+
+        for key, adunit in PublisherQueryManager.get_adunits_dict_for_account(account=self.account).items():
+            names[key] = adunit.name
 
         return {
             'page_width': 'wide',
-            'marketplace_campaign': marketplace_campaign,
-            'network_campaigns': network_campaigns,
-            'apps': apps,
             'names': names,
         }
 

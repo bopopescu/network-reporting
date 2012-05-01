@@ -35,15 +35,18 @@ class NetworkIndexHandler(RequestHandler):
         # campaigns and then manually populating the "campaign" property for each adgroup.
         campaigns_dict = AdvertiserQueryManager.get_campaigns_dict_for_account(self.account,
                                                                                include_deleted=True)
+        adgroups = []
         for adgroup in all_adgroups:
             campaign_key = str(AdGroup.campaign.get_value_for_datastore(
                 adgroup))
-            adgroup.campaign = campaigns_dict[campaign_key]
+            if campaign_key in campaigns_dict:
+                adgroup.campaign = campaigns_dict[campaign_key]
+                adgroups.append(adgroup)
 
         # Filter down to only network campaigns and sort alphabetically.
         network_adgroups = filter(lambda a: a.campaign.campaign_type ==
                 'network' and a.campaign.network_state ==
-                NetworkStates.STANDARD_CAMPAIGN, all_adgroups)
+                NetworkStates.STANDARD_CAMPAIGN, adgroups)
         network_adgroups.sort(key=lambda a: a.campaign.name.lower())
 
         return render_to_response(self.request,

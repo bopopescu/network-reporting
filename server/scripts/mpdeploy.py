@@ -235,8 +235,7 @@ def launch_deploy_process(server=None):
     # The user will need to input a username and password for GAE
     # during the deploy process. We use subprocess.call because it
     # redirects stdout/stdin to/from the user.
-    call(['python2.5',
-          '/usr/local/bin/appcfg.py',
+    call(['appcfg.py',
           '--no_precompilation',
           'backends',
           server_path,
@@ -289,13 +288,9 @@ def minify_javascript():
         sys.exit(1)
 
     JS_DIR = os.path.join(PWD, '../public/js/')
-    #JS_APP_FILE = os.path.join(JS_DIR, 'app.min.js')
-    JS_PLUGIN_FILE = os.path.join(JS_DIR, 'plugins.js')
-    JS_PLUGINS= os.path.join(JS_DIR, '/libs/*.js')
+    JS_APP_FILE = os.path.join(JS_DIR, 'app.min.js')
 
-    #envoy.run('juicer merge -s -f -o %s models/*.js views/*.js controllers/*.js utilities/*.js' % JS_APP_FILE)
-
-    envoy.run('juicer merge -s -f -o %s %s' % (JS_PLUGIN_FILE, JS_PLUGINS))
+    envoy.run('juicer merge -s -f -o %s models/*.js views/*.js controllers/*.js utilities/*.js' % JS_APP_FILE)
 
     puts("Minifying Javascript files in " + JS_DIR)
 
@@ -358,14 +353,9 @@ def main():
             active_branch_name = git_branch_name()
             deploy_server = clint.args.get(0)
             deployer = git_get_user()
-            
-            # If no branch is specified, default to frontend-staging
-            if deploy_server == None:
-                puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
-                deploy_server = 'frontend-staging'
 
             if active_branch_name != "master" and deploy_server == 'frontend-0':
-                puts(colored.yellow("Careful! You're deploying a non-master branch to production."))
+                puts(colored.yellow("Careful! You're deploying a non-master branch."))
                 y_or_n = raw_input('Are you sure you want to deploy ' + active_branch_name + '? (y/n) >> ')
                 if y_or_n == 'n':
                     sys.exit(1)
@@ -396,10 +386,6 @@ def main():
                 puts("Updating origin with the new tag")
                 git_push_tag(deploy_tag_name)
 
-                # Minify all javascript
-                puts("Minifying Javascript")
-                minify_javascript()
-
                 # Write to the changelog
                 puts("Writing changelog")
                 write_changelog(deploy_tag_name, fixed_tickets, new_commits)
@@ -414,13 +400,22 @@ def main():
             else:
                 puts("Skipping ticket update process because you're not deploying to production")
 
+            # Deploy the branch to the server
+            if deploy_server == None:
+                puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
+                deploy_server = 'frontend-staging'
+
+            # Minify all javascript
+            puts("Minifying Javascript")
+            minify_javascript()
+
             # Updating version numbers
             puts("Updating Version Numbers")
             update_static_version_numbers()
                 
             puts("Deploying " + colored.green(active_branch_name) + " to " + colored.green(deploy_server))
             launch_deploy_process(server=deploy_server)
-
+            
             # notify people of a successful deploy on hipichat
             puts("Notifying hipchat")
             message = "Branch %s just deployed to %s by %s" % (active_branch_name,

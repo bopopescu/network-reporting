@@ -1,8 +1,8 @@
 import logging
 import random
 
-from google.appengine.api import memcache
-from google.appengine.ext import db, deferred
+from google.appengine.api import memcache, taskqueue
+from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
 from common.utils.decorators import wraps_first_arg
@@ -40,8 +40,8 @@ class AdvertiserQueryManager(CachedQueryManager):
     def get_objects_dict_for_account(cls, account):
         """
         Returns a dictionary mapping Campaign keys to Campaign entities carrying Adgroup data.
-        Adgroups for each campaign can be retrieved as a list by using campaign.adgroups. Similarly,
-        each Adgroup contains a list of its creatives, accessible as adgroup.creatives.
+        Adgroups for each campaign can be retrieved as a list by using campaign._adgroups. Similarly,
+        each Adgroup contains a list of its creatives, accessible as adgroup._creatives.
         """
         campaigns_dict = cls.get_campaigns_dict_for_account(account)
         adgroups_dict = cls.get_adgroups_dict_for_account(account, include_deleted=False, include_archived=True)
@@ -74,8 +74,9 @@ class AdvertiserQueryManager(CachedQueryManager):
         for adgroup in adgroups_dict.values():
             # Again, getting around the fetch.
             campaign_key = str(AdGroup.campaign.get_value_for_datastore(adgroup))
-            campaign_for_this_adgroup = campaigns_dict[campaign_key]
-            campaign_for_this_adgroup._adgroups.append(adgroup)
+            if campaign_key in campaigns_dict:
+                campaign_for_this_adgroup = campaigns_dict[campaign_key]
+                campaign_for_this_adgroup._adgroups.append(adgroup)
 
         return campaigns_dict
 
@@ -118,9 +119,11 @@ class CampaignQueryManager(QueryManager):
                 if network_type:
                     return campaign.network_type == network_type
                 elif is_new:
-                    return campaign.network_type
+                    return campaign.network_state != NetworkStates. \
+                            STANDARD_CAMPAIGN
                 else:
-                    return not campaign.network_type
+                    return campaign.network_state == NetworkStates. \
+                            STANDARD_CAMPAIGN
 
         return filter(network_campaign_filter, campaigns.values())
 
@@ -248,9 +251,14 @@ class CampaignQueryManager(QueryManager):
         # Save campaigns.
         put_response = db.put(campaigns)
 
-        # Update campaign budgets asynchronously using the deferred Task Queue.
+        # Update campaign budgets asynchronously using a Task Queue.
         campaign_keys = [campaign.key() for campaign in campaigns]
-        deferred.defer(BudgetQueryManager.update_or_create_budgets_for_campaign_keys, campaign_keys)
+        queue = taskqueue.Queue()
+        task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
+                              method='POST',
+                              url='/fetch_api/budget/update_or_create/'
+                              )
+        queue.add(task)
 
         # Clear cache
         adunits = []

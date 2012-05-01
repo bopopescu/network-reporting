@@ -1,7 +1,7 @@
 from google.appengine.ext import db, blobstore
 
 class AdminPage(db.Model):
-    yesterday_requests = db.IntegerProperty()
+    today_requests = db.IntegerProperty()
     loading = db.BooleanProperty(default=False)
     generated = db.DateTimeProperty(auto_now_add=True)
     blob_key = blobstore.BlobReferenceProperty()

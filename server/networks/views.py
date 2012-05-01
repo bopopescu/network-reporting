@@ -174,6 +174,11 @@ class NetworksHandler(RequestHandler):
 
         apps = sorted(apps, key=lambda app: app.identifier)
 
+        display_message = self.account.display_networks_message
+        if display_message:
+            self.account.display_networks_message = False
+            AccountQueryManager.put(self.account)
+
         return render_to_response(self.request,
               'networks/index.html',
               {
@@ -181,6 +186,7 @@ class NetworksHandler(RequestHandler):
                   'end_date': self.days[-1],
                   'date_range': self.date_range,
                   'days': self.days,
+                  'display_message': display_message,
                   'graph': True if networks else False,
                   'networks': networks,
                   'networks_to_setup': networks_to_setup,
@@ -214,7 +220,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(1) or 'custom' in network
+                    self.account, network) or 'custom' in network
             # Set the default campaign name to the network name
             campaign_name = NETWORKS[network]
             if custom_campaign and 'custom' not in network:
@@ -332,9 +338,7 @@ class EditNetworkHandler(RequestHandler):
                                               NETWORKS_WITH_PUB_IDS,
                                   })
 
-    def post(self,
-            network='',
-            campaign_key=''):
+    def post(self, network='', campaign_key=''):
         if not self.request.is_ajax():
             raise Http404
 
@@ -362,7 +366,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(1) or 'custom' in network
+                    self.account, network) or 'custom' in network
             if not custom_campaign:
                 query_dict['name'] = NETWORKS[network]
                 campaign = CampaignQueryManager. \
@@ -718,7 +722,13 @@ class DeleteNetworkHandler(RequestHandler):
 
         campaign_key = self.request.POST.get('campaign_key')
 
-        campaign = CampaignQueryManager.get(campaign_key)
+        campaigns = AdvertiserQueryManager.get_objects_dict_for_account(
+                self.account)
+
+        if campaign_key not in campaigns:
+            raise Http404
+
+        campaign = campaigns[campaign_key]
 
         if not campaign or campaign.account.key() != self.account.key():
             raise Http404
@@ -729,10 +739,11 @@ class DeleteNetworkHandler(RequestHandler):
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
             # If other campaigns exist, a new default campaign must be chosen
-            default_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network_type=campaign.network_type).get()
+            default_campaigns = CampaignQueryManager.get_network_campaigns(
+                    self.account, network_type=campaign.network_type)
 
-            if default_campaign:
+            if default_campaigns:
+                default_campaign = default_campaigns[0]
                 default_campaign.network_state = NetworkStates. \
                         DEFAULT_NETWORK_CAMPAIGN
                 default_campaign.name = NETWORKS[default_campaign.network_type]
@@ -744,14 +755,10 @@ class DeleteNetworkHandler(RequestHandler):
                     login.deleted = True
                     login.put()
 
-        adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # Mark all adgroups as deleted
-        for adunit in adunits:
-            adgroup = AdGroupQueryManager.get_network_adgroup(
-                    campaign, adunit.key(),
-                    self.account.key(), True)
+        for adgroup in campaign._adgroups:
             adgroup.deleted = True
-            AdGroupQueryManager.put(adgroup)
+        AdGroupQueryManager.put(campaign._adgroups)
 
         return TextResponse()
 

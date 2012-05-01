@@ -675,7 +675,7 @@ var mopub = mopub || {};
                 maxDate: '0d',
                 onSelect: function(selectedDate) {
                     var other = $('#dashboard-dateOptions-custom-to');
-                    var instance = $(this).data("xdatepicker");
+                    var instance = $(this).data("datepicker");
                     var date = $.xdatepicker
                         .parseDate(instance.settings.dateFormat ||
                                    $.xdatepicker._defaults.dateFormat,
@@ -689,7 +689,7 @@ var mopub = mopub || {};
                 maxDate: '0d',
                 onSelect: function(selectedDate) {
                     var other = $('#dashboard-dateOptions-custom-from');
-                    var instance = $(this).data("xdatepicker");
+                    var instance = $(this).data("datepicker");
                     var date = $.xdatepicker
                         .parseDate(instance.settings.dateFormat ||
                                    $.xdatepicker._defaults.dateFormat,

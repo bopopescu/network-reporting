@@ -60,13 +60,13 @@ class DashboardHandler(RequestHandler):
             'network': 'Ad Networks',
         }
 
-        for key, campaign in AdvertiserQueryManager.get_campaigns_dict_for_account(account=self.account).items():
+        for key, campaign in AdvertiserQueryManager.get_campaigns_dict_for_account(account=self.account, include_deleted=True).items():
             names[key] = campaign.name
 
-        for key, app in PublisherQueryManager.get_apps_dict_for_account(account=self.account).items():
+        for key, app in PublisherQueryManager.get_apps_dict_for_account(account=self.account, include_deleted=True).items():
             names[key] = app.name
 
-        for key, adunit in PublisherQueryManager.get_adunits_dict_for_account(account=self.account).items():
+        for key, adunit in PublisherQueryManager.get_adunits_dict_for_account(account=self.account, include_deleted=True).items():
             names[key] = adunit.name
 
         return {

@@ -72,7 +72,8 @@ def multiprocess_update_all(start_day=None,
                             email=False,
                             processes=1,
                             network=None,
-                            testing=False):
+                            testing=False,
+                            delayed=False):
     """
     Break up update script into multiple processes.
 
@@ -86,6 +87,10 @@ def multiprocess_update_all(start_day=None,
     # Set start and end dates
     start_day = start_day or yesterday
     end_day = end_day or yesterday
+
+    if delayed:
+        start_day -= timedelata(days=3)
+        end_day -= timedelata(days=3)
 
     def get_all_accounts_with_logins():
         logins_query = AdNetworkLoginManager.get_all_logins(
@@ -739,6 +744,7 @@ def main(args):
 
     START_DAY = 'start_day'
     END_DAY = 'end_day'
+    DELAYED = 'delayed'
     EMAIL = 'email'
     PROCESSES = 'processes'
     NETWORK = 'network'
@@ -748,6 +754,7 @@ def main(args):
 
     start_day = None
     end_day = None
+    delayed = False
     email = False
     network = None
     processes = 1
@@ -777,6 +784,8 @@ def main(args):
                     start_day = parse_day(arg, START_DAY)
                 elif field_name_match(arg, END_DAY):
                     end_day = parse_day(arg, END_DAY)
+                elif field_name_match(arg, DELAYED):
+                    delayed = arg[len(DELAYED) + 1:] in ('y', 'Y')
                 elif field_name_match(arg, EMAIL):
                     email = arg[len(EMAIL) + 1:] in ('y', 'Y')
                 elif field_name_match(arg, PROCESSES):
@@ -784,7 +793,7 @@ def main(args):
                 elif field_name_match(arg, NETWORK):
                     network = arg[len(NETWORK) + 1:]
             multiprocess_update_all(start_day, end_day, email, processes,
-                    network)
+                    network, delayed=delayed)
 
 
 if __name__ == "__main__":

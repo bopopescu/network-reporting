@@ -41,8 +41,8 @@ class AUCFetchHandler(webapp.RequestHandler):
         # We are not following the RequestHandler pattern here (simple function instead), because we do not want to require login.
         created_at = int(float(created_at))
         data_package = adunitcontext_fetch(adunit_key, created_at=created_at)
-
-        elif data_package == EMPTY:
+        
+        if data_package == EMPTY:
             # This is an empty response, don't do anything, keep old AUC
             return self.response.out.write(EMPTY)
         elif data_package == BAD_KEY_ERR:

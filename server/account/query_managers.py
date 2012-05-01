@@ -36,7 +36,9 @@ class AccountQueryManager(CachedQueryManager):
             # if no account for this user exists then we need to
             # create the user
             if not account and create:
-                account = Account(mpuser=user, all_mpusers=[cls._user_key(user)], status="new")
+                account = Account(mpuser=user,
+                        all_mpusers=[cls._user_key(user)], status="new",
+                        display_new_networks=True)
                 account.put()
             if cache:
                 memcache.set(str(cls._user_key(user)), account, namespace="account")

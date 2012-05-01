@@ -1,27 +1,45 @@
+# Deployed Tuesday, May 01, 2012 at 09:33PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-96
+### Bugs Fixed: []
+### Included Commits: 
+ * fab440e Merge branch 'networks-page'
+ * b2d012c Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+ * cf4ce8f update network stats scipt takes optional new delayed setting
+ * d426daa Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+ * bfa30b9 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+ * ec31ee2 update_login_stats_for_check does option emailing, fixed a datetime issue so we can run the update methods from the interpreter
+ * 92a5e44 get all accounts for networks migration, batch puts
+ * 665a60e Display new networks page for new accounts, display message on new networks page for migrated accounts
+ * 8d484a6 Deployed without finding any bug fixes.
+ * 9b6836a Merge branch 'master' into networks-page
+ * 2eb11f6 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+ * 956e0a8 fixed type casting bug
+ 
 # Deployed Tuesday, May 01, 2012 at 03:06AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-95
 ### Bugs Fixed: []
-### Included Commits: 
- * 7d73b6d Fixed bug with call to campaign query manager where it assumes that it returns a campaign query instead of a list from memcache
- * fa49d0b Legacy campaign stats included in new networks pages
- * 7ae1656 Merge branch 'master' of github.com:mopub/mopub
- * 487582a fixed the deploy script to minify js and update versions for all deploys
- * aa7a9fc Merge
- * daa2c31 Fixed key error on old networks page, fixed long pub id formatting issues on old and new edit network forms
- * 4e524cb Removed some things
- * f078c1c Fixed r for consistency
- * ec388f5 Should do what I want it to do
- * bbb0fbe Merge branch 'master' of github.com:mopub/mopub
- * 4de923d Sped up undo for networks migration script
- * 1e76424 Try adding explicit deferred queue handler to .yaml files
- * 07ddb57 Deployed without finding any bug fixes.
- * 899f4db Merge branch 'master' of github.com:mopub/mopub
- * d36a5ac DAMMIT NAFIS
- * a43f2f8 Merge branch 'master' of github.com:mopub/mopub
- * 16c896e Merge branch 'master' of github.com:mopub/mopub
- * 0479b66 fixed a datetime issue and improper exception handling in the deploy script
- 
+### Included Commits:
+* 7d73b6d Fixed bug with call to campaign query manager where it assumes that it returns a campaign query instead of a list from memcache
+* fa49d0b Legacy campaign stats included in new networks pages
+* 7ae1656 Merge branch 'master' of github.com:mopub/mopub
+* 487582a fixed the deploy script to minify js and update versions for all deploys
+* aa7a9fc Merge
+* daa2c31 Fixed key error on old networks page, fixed long pub id formatting issues on old and new edit network forms
+* 4e524cb Removed some things
+* f078c1c Fixed r for consistency
+* ec388f5 Should do what I want it to do
+* bbb0fbe Merge branch 'master' of github.com:mopub/mopub
+* 4de923d Sped up undo for networks migration script
+* 1e76424 Try adding explicit deferred queue handler to .yaml files
+* 07ddb57 Deployed without finding any bug fixes.
+* 899f4db Merge branch 'master' of github.com:mopub/mopub
+* d36a5ac DAMMIT NAFIS
+* a43f2f8 Merge branch 'master' of github.com:mopub/mopub
+* 16c896e Merge branch 'master' of github.com:mopub/mopub
+* 0479b66 fixed a datetime issue and improper exception handling in the deploy script
+
 # Deployed Monday, April 30, 2012 at 08:43PM PST
 ### Deployed by Andrew He
 ### Tagged deploy-94

@@ -1,15 +1,40 @@
+# Deployed Wednesday, May 02, 2012 at 06:09PM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-101
+### Bugs Fixed: ['1176']
+### Included Commits: 
+ * 708dbd5 [#1176 state:fixed]
+ * 89e9163 Deployed without finding any bug fixes.
+ 
+# Deployed Wednesday, May 02, 2012 at 07:27AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-100
+### Bugs Fixed: []
+### Included Commits:
+* 88ea34c fixed export URL bug
+* e0a0f5c Merge branch 'master' of github.com:mopub/mopub
+* 6534695 https
+* ed83c28 Merge branch 'master' of github.com:mopub/mopub
+* 88d5770 using https for live stats service requests
+* f0d0616 merged
+* 8d8ca18 Merge branch 'master' of github.com:mopub/mopub
+* 65dc211 These might need to be like this as well
+* 9a68e0a Deployed without finding any bug fixes.
+* 25d319a fixed bug where campaign status wasn't displayed
+* 54863c6 merged in newdashboard
+
 # Deployed Wednesday, May 02, 2012 at 01:10AM PST
 ### Deployed by John Pena
 ### Tagged deploy-99
 ### Bugs Fixed: []
-### Included Commits: 
- * 1cd8b59 Merge branch 'master' of github.com:mopub/mopub
- * 7800c5e WTF...this is dumb
- * da26032 Merge branch 'master' of github.com:mopub/mopub
- * f54c20c changed default version
- * c291ff3 Deployed without finding any bug fixes.
- * eda2954 added property
- 
+### Included Commits:
+* 1cd8b59 Merge branch 'master' of github.com:mopub/mopub
+* 7800c5e WTF...this is dumb
+* da26032 Merge branch 'master' of github.com:mopub/mopub
+* f54c20c changed default version
+* c291ff3 Deployed without finding any bug fixes.
+* eda2954 added property
+
 # Deployed Wednesday, May 02, 2012 at 12:53AM PST
 ### Deployed by John Pena
 ### Tagged deploy-98

@@ -128,11 +128,11 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                 # One to one mapping between old network campaigns and adgroups
                 old_adgroup = old_campaign._adgroups[0]
 
+                network = old_adgroup.network_type.replace('_native',
+                        '').lower()
                 # make sure it's not a deprecated campaign
                 if old_adgroup.network_type not in ('millennial', \
                         'admob') and network in NETWORKS:
-                    network = old_adgroup.network_type.replace('_native',
-                            '').lower()
                     print "migrating old campaign for " + network
                     if network in networks or 'custom' in network:
                         print "creating a custom network campaign"

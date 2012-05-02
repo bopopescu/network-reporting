@@ -20,14 +20,14 @@ def adunitcontext_fetch(adunit_key, created_at=None, testing=False):
     # This is a service to the AWS/Tornado adserver.
     # We are not following the RequestHandler pattern here (simple function instead), because we do not want to require login.
     complex_context = AdUnitContextQueryManager.cache_get_or_insert(adunit_key)
-    now = int(time.mktime(datetime.utcnow().timetuple()))
-    context_created_at = getattr(complex_context, 'created_at', now)
-    if created_at == context_created_at and created_at != 0:
-        return EMPTY
     if isinstance(complex_context, str):
         # If the complex context is indicating an error of some kind
         # then don't try to simplify it
         return complex_context
+    now = int(time.mktime(datetime.utcnow().timetuple()))
+    context_created_at = getattr(complex_context, 'created_at', now)
+    if created_at == context_created_at and created_at != 0:
+        return EMPTY
     simple_context = complex_context.simplify()
     basic_context = simple_context.to_basic_dict()
     pickled_context = pickle.dumps(basic_context)

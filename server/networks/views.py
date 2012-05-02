@@ -251,10 +251,11 @@ class EditNetworkHandler(RequestHandler):
                 # Can't initialize username or password because it's encrypted
                 # and can only be decrypted on EC2
                 login_form = LoginCredentialsForm(instance=login,
-                        network=network)
+                        network=network, prefix=network)
                 network_data['login_state'] = login.state
             else:
-                login_form = LoginCredentialsForm(network=network)
+                login_form = LoginCredentialsForm(network=network,
+                        prefix=network)
 
         if network == 'jumptap':
             network_data['pub_id'] = getattr(self.account.network_config,

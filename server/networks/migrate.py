@@ -21,11 +21,12 @@ from common.utils.helpers import get_all, put_all
 from common.constants import NETWORKS, \
         NETWORK_ADGROUP_TRANSLATION
 
-CAMPAIGN_FIELD_EXCLUSION_LIST = ['account', 'network_type', 'network_state', \
-        'show_login', 'name']
-ADGROUP_FIELD_EXCLUSION_LIST = ['account', 'campaign', 'net_creative',
-        'site_keys', 'active']
-CREATIVE_FIELD_EXCLUSION_LIST = ['ad_group', 'account']
+CAMPAIGN_FIELD_EXCLUSION_LIST = set(['account', 'network_type', \
+        'network_state', 'show_login', 'name', 'transition_date', \
+        'old_campaign'])
+ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
+        'site_keys', 'active'])
+CREATIVE_FIELD_EXCLUSION_LIST = set(['ad_group', 'account'])
 
 # NOTE: vrubba and withbuddies must be manually migrated
 SKIP_THESE_ACCOUNTS = set(['agltb3B1Yi1pbmNyEAsSB0FjY291bnQYvaXlBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYu_LVEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYnsixEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYkfaLAQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYrpTsEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY_pG0Egw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYhLGNEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYr86zEAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYj7WVCQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYoKWrEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYsM68EQw', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwODY0MDIzODQyNDcyMzQ5NzE1MQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY69isEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYxdaQAgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYirCdAgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYoa_DCgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8LrPDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYwKvhAQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYt_XHEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eKYDAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYjc6tEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYgNu-EQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYornTEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYn6KDEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYx8XfEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY76O-Agw', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwMTEyNzQwOTg4Njk0NTM4Njc4NAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYy7CVEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4f3tCAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYoauPEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY9dvjEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8IbxEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYya6pEAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYr4TkBww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4_rnEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4qrqCAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY_aGNEgw', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExMzgyNjUxOTkxNzc5MjcwNTc5NAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8IPYEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY-ICiEww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8_mQEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYlNGhDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYlvriEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYiZKkEww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYgt3DEAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY49yLBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYoP_EAQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYzKOtEAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYm4SPEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYwbjaCQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY_uW-EQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYz_PxDgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4d60DQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYsY69Egw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY0KzNEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1Z6cEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYje6JCww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYua6oBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYyonACAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYhs2wEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYn7XSEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY57KfAgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY-afzEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYo8qPEgw', 'agltb3B1Yi1pbmNyDwsSB0FjY291bnQY8NdTDA', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY7cCnEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYlK6YEww', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExNDcwNTU3MjUxMzE0ODc3NzM2OAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY9ZjDDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8YHEBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY0_iuDAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4bDjBww', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwODI5NTY1MzM0NzIzMjM1NjgyOQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYs7znEgw', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExMjcxMTI4Nzk2OTE1NTEwODQ2Ngw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYncfIBww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYzKSTEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYh6iMCww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYzsrQEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY79yPDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYpomQCgw', 'agltb3B1Yi1pbmNyDwsSB0FjY291bnQYmbBzDA', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY-aOuEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY_ubpBAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYzdeVEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY7-i2Agw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYq_imDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYmrnOEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY18uyCww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYqdXOBww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1dqREww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY5auRDgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY-67GBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYvNujEww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY9q6TEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYubGGDww'])
@@ -104,7 +105,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
     print
     print "LOOPING THROUGH ACCOUNTS TO SETUP CAMPAIGNS"
     print
-    for account in accounts[:10]:#len(accounts)/4]:
+    for account in accounts[:100]:#len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             print "Skipping account: %s" % account.emails[0]
@@ -134,6 +135,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                 if old_adgroup.network_type not in ('millennial', \
                         'admob') and network in NETWORKS:
                     print "migrating old campaign for " + network
+                    new_campaign = None
                     if network in networks or 'custom' in network:
                         print "creating a custom network campaign"
                         # create custom campaign
@@ -143,10 +145,11 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                                         CUSTOM_NETWORK_CAMPAIGN,
                                 name=campaign.name)
                     else:
-                        print "creating a default network campaign"
                         # create defualt network campaign
                         new_campaign = CampaignQueryManager. \
                                 get_default_network_campaign(account, network)
+                        print "creating a default network campaign: %s" % \
+                                new_campaign.key()
                     for field in campaign.properties().iterkeys():
                         if field not in CAMPAIGN_FIELD_EXCLUSION_LIST:
                             setattr(new_campaign, field, getattr(campaign,
@@ -155,7 +158,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                     new_campaign.old_campaign = campaign
 
                     new_campaigns.append(new_campaign)
-                    migrated_adgroups(old_adgroup)
+                    migrated_adgroups.append(old_adgroup)
 
                     networks.add(network)
                 else:
@@ -182,7 +185,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
     new_adgroups = []
     new_creatives = []
     affected_accounts = []
-    for account in accounts[:10]:#len(accounts)/4]:
+    for account in accounts[:100]:#len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             continue
@@ -194,15 +197,23 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                     account).values()
 
         for new_campaign, old_adgroup in zip(new_campaigns, migrated_adgroups):
-            if not put_data and new_campaign.network_type == \
-                    NetworkStates.CUSTOM_NETWORK_CAMPAIGN:
+            if not new_campaign or (not put_data and new_campaign. \
+                    network_type == NetworkStates.CUSTOM_NETWORK_CAMPAIGN):
                 continue
 
             for adunit in adunits:
                 # copy old campaign adgroup properties to new
                 # campaign adgroup properties
-                new_adgroup = AdGroupQueryManager.get_network_adgroup(
-                        new_campaign, adunit.key(), account.key())
+                try:
+                    new_adgroup = AdGroupQueryManager.get_network_adgroup(
+                            new_campaign, adunit.key(), account.key())
+                except db.NotSavedError:
+                    print "WTF!!!!!"
+                    print "campaign.name: %s" % new_campaign.name
+                    print "campaign.network_state: %s" % new_campaign. \
+                            network_state
+                    print new.campaign.account.emails
+
                 for field in old_adgroup.properties().iterkeys():
                     if field not in ADGROUP_FIELD_EXCLUSION_LIST:
                         setattr(new_adgroup, field, getattr(
@@ -230,7 +241,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
         put_all(new_creatives)
 
         print "Saving accounts"
-        put_all(accounts[:10])
+        put_all(accounts[:100])
 
         print "Flushing the cache"
         affected_account_keys = [account.key() for account in affected_accounts]

@@ -547,7 +547,7 @@ $(function() {
             function setupLoginForm() {
                 $('form#network-login-form .submit, form#campaign_and_adgroup .submit').click(function() {
                         if ($(this).closest('form').attr('id') == 'network-login-form') {
-                            var data = $(this).closest('.login-fields').serialize();
+                            var data = $(this).closest('form').serialize();
                         } else {
                             // Hack to serialize sub-section of forms data.
                             // Add a new form and hide it.
@@ -575,13 +575,13 @@ $(function() {
                                 if (valid) {
                                     $(message).html("MoPub is currently pulling data from "
                                                     + pretty_name + " using the following credentials.");
-                                    var username = $('#id_username_str').val();
-                                    var password = $('#id_password_str').val();
-                                    var client_key = $('#id_client_key').val();
+                                    var username = $('#id_' + network_type + '-username_str').val();
+                                    var password = $('#id_' + network_type + '-password_str').val();
+                                    var client_key = $('#id_' + network_type + '-client_key').val();
 
-                                    $('#id_username_str').hide();
-                                    $('#id_password_str').hide();
-                                    $('#id_client_key').hide();
+                                    $('#id_' + network_type + '-username_str').hide();
+                                    $('#id_' + network_type + '-password_str').hide();
+                                    $('#id_' + network_type + '-client_key').hide();
 
                                     $('#username').text(username);
                                     var hidden_password = "";
@@ -630,9 +630,9 @@ $(function() {
 
 
             $("#edit-login").click(function() {
-                $('#id_username_str').show();
-                $('#id_password_str').show();
-                $('#id_client_key').show();
+                $('#id_' + network_type + '-username_str').show();
+                $('#id_' + network_type + '-password_str').show();
+                $('#id_' + network_type + '-client_key').show();
 
                 $('#username').text('');
                 $('#password').text('');

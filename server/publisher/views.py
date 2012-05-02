@@ -19,7 +19,10 @@ from common.ragendja.template import render_to_response, \
      JSONResponse
 
 ## Models
-from advertiser.models import Campaign, AdGroup, HtmlCreative
+from advertiser.models import Campaign, \
+        AdGroup, \
+        HtmlCreative, \
+        NetworkStates
 from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
@@ -45,7 +48,9 @@ from common.utils.helpers import app_stats
 from common.utils.request_handler import RequestHandler
 #REFACTOR: only import what we need here
 from common.constants import *
-from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIException
+from common.utils.stats_helpers import MarketplaceStatsFetcher, \
+        MPStatsAPIException, \
+        SummedStatsFetcher
 
 from budget import budget_service
 
@@ -514,12 +519,9 @@ class AppDetailHandler(RequestHandler):
                 campaign.adgroup = campaign.adgroups[0]
 
             # 1 GET
-            campaign.all_stats = stats_q.get_stats_for_days(publisher=app,
-                                                            advertiser=
-                                                            campaign,
-                                                            days=self.days)
-            campaign.stats = reduce(lambda x, y: x+y, campaign.all_stats,
-                    StatsModel())
+            summed_fetcher = SummedStatsFetcher(self.account.key())
+            campaign.stats =  summed_fetcher.get_campaign_specific_app_stats(
+                    app.key(), campaign, self.start_date, self.end_date)
             #budget_object = campaign.budget_obj
             #campaign.percent_delivered = budget_service.percent_delivered(
                     #budget_object)
@@ -536,15 +538,12 @@ class AppDetailHandler(RequestHandler):
                     logging.warn(str(e))
                     mpx_stats = {}
 
-                campaign.stats.rev = float(mpx_stats.get('rev', 0.0))
-                campaign.stats.imp = int(mpx_stats.get('imp', 0))
+                campaign.stats['rev'] = float(mpx_stats.get('rev', 0.0))
+                campaign.stats['imp'] = int(mpx_stats.get('imp', 0))
 
             if campaign.campaign_type in ['network', 'gtee_high', 'gtee',
                     'gtee_low', 'promo'] and getattr(campaign, 'cpc', False):
                 campaign.calculated_ecpm = calculate_ecpm(campaign)
-
-            # Use new naming conventions
-            campaign.stats = campaign.stats.to_dict()
 
 
         # Sort out all of the campaigns that are targeting this app
@@ -736,16 +735,50 @@ class AdUnitShowHandler(RequestHandler):
         adunit.adgroups = AdGroupQueryManager.get_adgroups(adunit=adunit)
         adunit.adgroups = sorted(adunit.adgroups, lambda x,y: cmp(y.bid, x.bid))
         for ag in adunit.adgroups:
-            ag.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
-                                                            advertiser=ag,
-                                                            days=self.days)
+            campaign = ag.campaign
+            # If its a new network campaign that has been migrated and the
+            # transition date is after the start date
+            if campaign.campaign_type == 'network' and campaign.network_state == \
+                    NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
+                    campaign.old_campaign and self.start_date <= \
+                    campaign.transition_date:
+                new_stats = None
+                if self.end_date >= campaign.transition_date:
+                    # get new campaign stats (specific for the single adgroup)
+                    days = date_magic.gen_days(campaign.transition_date,
+                            self.end_date)
+                    new_stats = stats_manager.get_stats_for_days(
+                            publisher=adunit, advertiser=ag,
+                            days=days)
+                    days = date_magic.gen_days(self.start_date,
+                            campaign.transition_date)
+                else:
+                    # getting only legacy campaign stats (back when campaign
+                    # and adgroup were one to one)
+                    days = self.days
+                # get old campaign stats
+                old_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                        advertiser=campaign.old_campaign, days=days)
+                if new_stats:
+                    transition_stats = old_stats[-1] + new_stats[0]
+                    ag.all_stats = old_stats[:-1] + [transition_stats] + \
+                            new_stats[1:]
+                else:
+                    ag.all_stats = old_stats
+            else:
+                # getting only adgroup stats (back when campaign
+                # and adgroup were one to one)
+                days = self.days
+                ag.all_stats = stats_manager.get_stats_for_days(publisher=adunit,
+                        advertiser=ag, days=days)
+
             ag.stats = reduce(lambda x, y: x+y, ag.all_stats, StatsModel())
-            budget_object = ag.campaign.budget_obj
+            budget_object = campaign.budget_obj
             ag.percent_delivered = budget_service.percent_delivered(budget_object)
 
             # Overwrite the revenue from MPX if its marketplace
             # TODO: overwrite clicks as well
-            if ag.campaign.campaign_type in ['marketplace']:
+            if campaign.campaign_type in ['marketplace']:
                 try:
                     mpx_stats = stats_fetcher.get_adunit_stats(str(adunit.key()),
                                                                self.start_date,
@@ -755,7 +788,7 @@ class AdUnitShowHandler(RequestHandler):
                 ag.stats.revenue = float(mpx_stats.get('rev'))
                 ag.stats.impression_count = int(mpx_stats.get('imp', 0))
 
-            if ag.campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
+            if campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:
                 ag.calculated_ecpm = calculate_ecpm(ag)
 
 

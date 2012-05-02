@@ -545,7 +545,7 @@ class AdGroup(db.Model):
             return "Paused"
 
         # At this point, all campaigns are within active date range and not paused
-        if campaign.budget:
+        if campaign.budget and hasattr(self, 'percent_delivered'):
             if self.percent_delivered and self.percent_delivered < 100.0:
                 return "Running"
             elif self.percent_delivered and self.percent_delivered >= 100.0:

@@ -107,6 +107,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
     for account in accounts[:10]:#len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
+            print "Skipping account: %s" % account.emails[0]
             continue
 
         if not get_all_from_db:

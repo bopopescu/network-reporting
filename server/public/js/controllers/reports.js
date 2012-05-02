@@ -14,14 +14,14 @@
      }
      addPlaceholder();
 
-    $('input[name="start"]').datepicker().change(function (e) {
+    $('input[name="start"]').xdatepicker().change(function (e) {
         var dte = new Date($(this).val());
-        $('input[name="end"]').datepicker('option', 'minDate', dte);
+        $('input[name="end"]').xdatepicker('option', 'minDate', dte);
     });
 
-    $('input[name="end"]').datepicker({maxDate: new Date()}).change(function (e) {
+    $('input[name="end"]').xdatepicker({maxDate: new Date()}).change(function (e) {
         var dte = new Date($(this).val());
-        $('input[name="start"]').datepicker('option', 'maxDate', dte);
+        $('input[name="start"]').xdatepicker('option', 'maxDate', dte);
     });
 
     function rep_validate(form) {
@@ -92,8 +92,8 @@
              $('#reportName-input').val('Copy of '+ $('#reportName-input').val());
              $('.dim-selectmenu').selectmenu('disable');
              $('#interval').selectmenu('disable');
-             $('#start-input').datepicker('disable');
-             $('#end-input').datepicker('disable');
+             $('#start-input').xdatepicker('disable');
+             $('#end-input').xdatepicker('disable');
              $('#reportCreateForm-submit').button({label: 'Save As'});
              $('#sched_interval').selectmenu('index', 0).change();
              $('#reportForm-container').dialog({width:750});
@@ -133,8 +133,8 @@
              e.preventDefault();
              $('.dim-selectmenu').selectmenu('enable');
              $('#interval').selectmenu('enable');
-             $('#start-input').datepicker('enable');
-             $('#end-input').datepicker('enable');
+             $('#start-input').xdatepicker('enable');
+             $('#end-input').xdatepicker('enable');
              revert_state(form_state);
              $(this).parents('#reportForm-container')
                  .dialog('close');
@@ -152,11 +152,11 @@
          .button()
          .click(function(e) {
              e.preventDefault();
-            if($('#start-input').datepicker('isDisabled')) {
-                $('#start-input').datepicker('enable');
+            if($('#start-input').xdatepicker('isDisabled')) {
+                $('#start-input').xdatepicker('enable');
             }
-            if($('#end-input').datepicker('isDisabled')) {
-                $('#end-input').datepicker('enable');
+            if($('#end-input').xdatepicker('isDisabled')) {
+                $('#end-input').xdatepicker('enable');
             }
             $(this).parents('form').submit();
          });

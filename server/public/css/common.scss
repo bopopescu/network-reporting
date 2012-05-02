@@ -7,6 +7,7 @@ $darker_gray: #111;
 $dark_gray: #444;
 $gray: #999;
 $light_gray: #ddd;
+$grayDark: #333;
 $lighter_gray: #eee;
 $off_white: #f7f7f7;
 $white: #fff;
@@ -33,6 +34,23 @@ $green_tinge: #fbfff2; ;
 $red_tinge: white;
 $yellow_tinge: white;
 $blue_tinge: white;
+
+
+/* font heights and other typography/spacing */
+$baseFontSize: 13px;
+$baseLineHeight: 16px;
+$primaryButtonBackground: #08c;
+
+// Z-index master list
+// Used for a birds eye view of components dependent on the z-axis
+// Try to avoid customizing these :)
+$zindexDropdown:        1000;
+$zindexPopover:         1010;
+$zindexTooltip:         1020;
+$zindexFixedNavbar:     1030;
+$zindexModalBackdrop:   1040;
+$zindexModal:           1050;
+
 
 
 /*

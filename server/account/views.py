@@ -188,6 +188,7 @@ class CreateAccountHandler(RequestHandler):
 
             # Go ahead and activate the account
             account.active = True
+            account.display_new_networks = True
             AccountQueryManager().put_accounts(account)
 
             # Step 2

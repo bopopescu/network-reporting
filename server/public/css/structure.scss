@@ -30,6 +30,9 @@ html, body {
     position: relative;
     margin: 0 auto;
     width: 950px;
+    &.wide {
+        width: 1200px;
+    }
 }
 
 /* Hide page until TypeKit is loaded */

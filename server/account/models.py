@@ -245,6 +245,7 @@ class Account(db.Model):
 
     # account sees new networks page
     display_new_networks = db.BooleanProperty(default=False)
+    display_networks_message = db.BooleanProperty(default=False)
 
     # use only mongo to display realtime stats in UI
     display_mongo = db.BooleanProperty(default=False if settings.DEBUG else True)

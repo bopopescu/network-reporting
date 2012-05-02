@@ -1,21 +1,29 @@
+# Deployed Tuesday, May 01, 2012 at 11:37PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-97
+### Bugs Fixed: []
+### Included Commits: 
+ * 34ccf94 net_creative adgroup property no longer used for new network campaigns
+ * d7d6221 Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, May 01, 2012 at 09:33PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-96
 ### Bugs Fixed: []
-### Included Commits: 
- * fab440e Merge branch 'networks-page'
- * b2d012c Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
- * cf4ce8f update network stats scipt takes optional new delayed setting
- * d426daa Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
- * bfa30b9 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
- * ec31ee2 update_login_stats_for_check does option emailing, fixed a datetime issue so we can run the update methods from the interpreter
- * 92a5e44 get all accounts for networks migration, batch puts
- * 665a60e Display new networks page for new accounts, display message on new networks page for migrated accounts
- * 8d484a6 Deployed without finding any bug fixes.
- * 9b6836a Merge branch 'master' into networks-page
- * 2eb11f6 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
- * 956e0a8 fixed type casting bug
- 
+### Included Commits:
+* fab440e Merge branch 'networks-page'
+* b2d012c Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* cf4ce8f update network stats scipt takes optional new delayed setting
+* d426daa Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* bfa30b9 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* ec31ee2 update_login_stats_for_check does option emailing, fixed a datetime issue so we can run the update methods from the interpreter
+* 92a5e44 get all accounts for networks migration, batch puts
+* 665a60e Display new networks page for new accounts, display message on new networks page for migrated accounts
+* 8d484a6 Deployed without finding any bug fixes.
+* 9b6836a Merge branch 'master' into networks-page
+* 2eb11f6 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* 956e0a8 fixed type casting bug
+
 # Deployed Tuesday, May 01, 2012 at 03:06AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-95

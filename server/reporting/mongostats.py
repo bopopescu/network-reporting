@@ -26,7 +26,6 @@ def api_fetch(start_date, end_date,
         url = _generate_api_url(start_date, end_date,
                                 account_key, publisher_key,
                                 advertiser_key, hybrid)
-        logging.warn(url)
         response = urllib2.urlopen(url).read()
 
     try:
@@ -49,7 +48,6 @@ def api_fetch(start_date, end_date,
         pub_str, adv_str, acct_str = key.split(DELIM)
         daily_stats = all_stats[key]['daily_stats'] # list of dictionaries
         for stats_dict in daily_stats:
-            logging.warn(stats_dict)
             # stats_dict - e.g.
             # {'attempt_count': 1283043,
             # 'click_count': 32907,

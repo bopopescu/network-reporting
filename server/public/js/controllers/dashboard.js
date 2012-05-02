@@ -14,7 +14,7 @@ var mopub = mopub || {};
 
     // the origin for the stats service
     var LOCAL_STATS_SERVICE_URL = 'http://localhost:8888/';
-    var STATS_SERVICE_URL = 'http://stats-service.mopub.com/';
+    var STATS_SERVICE_URL = 'https://stats-service.mopub.com/';
     var URL = DEBUG ? LOCAL_STATS_SERVICE_URL : STATS_SERVICE_URL;
 
     // Color theme for the charts and table rows.

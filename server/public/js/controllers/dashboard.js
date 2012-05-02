@@ -1219,22 +1219,11 @@ var mopub = mopub || {};
                 var publisher_breakdown = $('select[name="publisher_breakdown"]').val();
                 query[publisher_breakdown] = get_keys(publisher_breakdown);
 
-                // REFACTOR: this can be removed once we have real data in the tables
-                // Map id's to names so that we can include them in the table
-                var names = {};
-                _.each(query[advertiser_breakdown], function(id) {
-                    names[id] = $.trim($('#' + id + ' td.name').html());
-                });
-                _.each(query[publisher_breakdown], function(id) {
-                    names[id] = $.trim($('#' + id + ' td.name').html());
-                });
-
                 _.extend(data, {
                     granularity: get_granularity(),
                     advertiser_breakdown: advertiser_breakdown,
                     publisher_breakdown: publisher_breakdown,
-                    query: query,
-                    names: names
+                    query: query
                 });
 
                 record_metric('Dashboard Export', {
@@ -1242,7 +1231,7 @@ var mopub = mopub || {};
                     publisher_breakdown: data.publisher_breakdown
                 });
 
-                window.location = URL + 'csv/?data=' + JSON.stringify(data);
+                window.location = URL + 'csv/?data=' + encodeURIComponent(JSON.stringify(data));
             });
 
 

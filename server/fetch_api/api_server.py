@@ -24,6 +24,7 @@ def main():
             (r'/fetch_api/budget/sync', BudgetSyncHandler),
             (r'/fetch_api/budget/sync/cron', BudgetSyncCronHandler),
             (r'/fetch_api/budget/sync/worker', BudgetSyncWorker),
+            (r'/fetch_api/budget/update_or_create/', BudgetUpdateOrCreateHandler),
             (r'/fetch_api/budget/update_or_create', BudgetUpdateOrCreateHandler),
             ])
     run_wsgi_app(app)

@@ -338,7 +338,7 @@ class SimpleAdGroup(SimpleModel):
                  default_cpm=None,
                  network_type=None,
                  *args,
-                 **kwargs,
+                 **kwargs
                  ):
         self._key = key
         self.campaign = campaign.simplify()

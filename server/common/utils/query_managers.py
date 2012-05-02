@@ -8,8 +8,6 @@ from google.appengine.datastore import entity_pb
 from common.utils.decorators import wraps_first_arg
 from common.utils import simplejson
 
-from account.models import Account
-from advertiser.models import Campaign
 
 NAMESPACE = None
 #MAX_CACHE_TIME = 60*5 # 5 minutes

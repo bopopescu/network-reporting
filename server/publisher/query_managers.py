@@ -15,7 +15,6 @@ import os
 
 from ad_server.adunit_context.adunit_context import AdUnitContext
 
-from advertiser.models import Campaign, AdGroup, Creative
 from common.constants import MAX_OBJECTS
 from common.utils.decorators import wraps_first_arg
 

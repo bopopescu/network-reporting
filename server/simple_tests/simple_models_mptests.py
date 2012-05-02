@@ -10,6 +10,42 @@ import common.utils.test.setup
 import unittest
 from nose.tools import eq_
 
+
+from google.appengine.ext import testbed
+for a in sys.modules:
+    if 'advertiser' in a.lower():
+        logging.warning("Modules: %s, value: %s" % (a, sys.modules[a]))
+logging.warning("trying to import campaign")
+from advertiser.models import (Campaign,
+                               AdGroup,
+                               Creative,
+                               HtmlCreative,
+                               TextCreative,
+                               TextAndTileCreative,
+                               ImageCreative,
+                               MarketplaceCreative,
+                               CustomCreative,
+                               CustomNativeCreative,
+                               iAdCreative,
+                               AdSenseCreative,
+                               AdMobCreative,
+                               AdMobNativeCreative,
+                               MillennialCreative,
+                               MillennialNativeCreative,
+                               ChartBoostCreative,
+                               EjamCreative,
+                               InMobiCreative,
+                               AppNexusCreative,
+                               BrightRollCreative,
+                               JumptapCreative,
+                               GreyStripeCreative,
+                               MobFoxCreative,
+                               )
+from publisher.models import App, AdUnit
+from account.models import Account, NetworkConfig
+from ad_server.adunit_context.adunit_context import AdUnitContext
+
+
 from simple_models import (SimpleAccount,
                            SimpleAdUnit,
                            SimpleCampaign,
@@ -17,14 +53,6 @@ from simple_models import (SimpleAccount,
                            SimpleCreative,
                            SimpleAdUnitContext,
                            from_basic_type)
-from google.appengine.ext import testbed
-
-from account.models import *
-from advertiser.models import *
-from publisher.models import *
-
-
-
 
 class TestBudgetEndToEnd(unittest.TestCase):
 
@@ -114,7 +142,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
                           weekly_frequency_cap=15,
                           monthly_frequency_cap=20,
                           lifetime_frequency_cap=1,
-                          keywords='a AND b',
+                          keywords=['a','b'],
                           site_keys=[self.au.key()],
                           mktplace_price_floor=10.0,
                           device_targeting=True,
@@ -125,7 +153,7 @@ class TestBudgetEndToEnd(unittest.TestCase):
                           ios_version_min='3.2',
                           target_android=True,
                           android_version_max='1.5',
-                          android_version_min='1.0'
+                          android_version_min='1.0',
                           target_other=True,
                           cities=['freeland','mexicaliwest'],
                           allocation_percentage=88.8,
@@ -147,19 +175,96 @@ class TestBudgetEndToEnd(unittest.TestCase):
                                  display_url='www.www.google',
                                  conv_appid='mcderp',
                                  format='728x90',
-                                 launchpage='www.wwwwwwwwwwwww')
+                                 launchpage='www.wwwwwwwwwwwww',
+                                 )
 
-        self.crtv1 = Creative(active=True,
+        self.crtv1 = Creative(**default_crtv_args)
+        self.crtv1.put()
 
+        text_args = copy.copy(default_crtv_args)
+        text_args['headline'] = 'HEARYEHEARYE'
+        text_args['line1'] = 'NICKWINS5MILLIONDOLLARLOTTERY'
+        text_args['line2'] = 'SPENDSITALLONUGLYHOOKERS'
+
+        self.crtv2 = TextCreative(**text_args)
+        self.crtv2.put()
+        textandtile_args = copy.copy(default_crtv_args)
+        dict2 = dict(line1='TURNSOUTUGLYHOOKERSAREACTUALLYPETERSMOM',
+                     line2='STILL,GROSSLYOVERPAID',
+                     image_url='www.ugly.jpg',
+                     action_icon='download_arrow4',
+                     color='00000',
+                     font_color='4f3fff',
+                     gradient=True,
+                     )
+        textandtile_args.update(dict2)
+        self.crtv3 = TextAndTileCreative(**textandtile_args)
+        self.crtv3.put()
+
+        self.crtv4=HtmlCreative(html_data='<html>LOOKITERNETS</html>',
+                                ormma_html=False,
+                                **default_crtv_args)
+        self.crtv4.put()
+        self.crtv5=ImageCreative(image_url='derpyderpy',
+                                 **default_crtv_args
+                                 )
+        self.crtv5.put()
+        self.crtv6 = MarketplaceCreative(**default_crtv_args)
+        self.crtv6.put()
+        self.crtv7 = CustomCreative(**default_crtv_args)
+        self.crtv7.put()
+        self.crtv8 = CustomNativeCreative(**default_crtv_args)
+        self.crtv8.put()
+        self.c9 = iAdCreative(**default_crtv_args)
+        self.c9.put()
+        self.c10 = AdSenseCreative(**default_crtv_args)
+        self.c10.put()
+        self.c11 = AdMobCreative(**default_crtv_args)
+        self.c11.put()
+        self.c12 = AdMobNativeCreative(**default_crtv_args)
+        self.c12.put()
+        self.c13 = MillennialCreative(**default_crtv_args)
+        self.c13.put()
+        self.c14 = MillennialNativeCreative(**default_crtv_args)
+        self.c14.put()
+        self.c15 = ChartBoostCreative(**default_crtv_args)
+        self.c15.put()
+        self.c16 = EjamCreative(**default_crtv_args)
+        self.c16.put()
+        self.c17 = InMobiCreative(**default_crtv_args)
+        self.c17.put()
+        self.c18 = AppNexusCreative(**default_crtv_args)
+        self.c18.put()
+        self.c19 = BrightRollCreative(**default_crtv_args)
+        self.c19.put()
+        self.c20 = JumptapCreative(**default_crtv_args)
+        self.c20.put()
+        self.c21 = GreyStripeCreative(**default_crtv_args)
+        self.c21.put()
+        self.c22 = MobFoxCreative(**default_crtv_args)
+        self.c22.put()
+
+        self.auc = AdUnitContext.wrap(self.au)
 
 
 
     def mptest_basic_wrapping(self):
-        pass
+        simple = self.auc.simplify()
+        basic = simple.to_basic_dict()
+        assert from_basic_type(basic) == simple
 
     def mptest_adding_random_params(self):
-        pass
-
+        for c in self.auc.creatives:
+            c.random_property = 'derpaderp'
+            c.magic = 'WOOOOOO'
+        simple = self.auc.simplify()
+        assert simple is not None
+        for c in simple.creatives:
+            assert getattr(c, 'random_property', None) is None
+            assert getattr(c, 'magic', None) is None
+        for c in self.auc.creatives:
+            assert getattr(c, 'random_property', None) is not None
+            assert getattr(c, 'magic', None) is not None
 
     def mptest_basic_type_conversion(self):
         """ this test effectively doesn't test shit """

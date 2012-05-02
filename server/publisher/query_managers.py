@@ -39,6 +39,9 @@ APPLE_DEVICES = ('iphone', 'ipad')
 IAD_URL = 'http://itunes.apple.com.*'
 ALL_NETWORKS = 'default'
 
+TO_ERR = 'TIMEOUT_ERROR'
+BAD_KEY_ERR = 'BAD_KEY_ERROR'
+
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
     Deleted from memcache whenever its components are updated."""
@@ -47,6 +50,8 @@ class AdUnitContextQueryManager(CachedQueryManager):
     @classmethod
     def get_context(cls, adunit_key):
         adunit = AdUnit.get(adunit_key)
+        if adunit is None:
+            raise db.BadKeyError("Invalid adunit key %s" % adunit_key)
         adunit_context = AdUnitContext.wrap(adunit)
         return adunit_context
 
@@ -85,8 +90,17 @@ class AdUnitContextQueryManager(CachedQueryManager):
                              time=CACHE_TIME)
                 new_timestamp = datetime.datetime.now()
                 memcache.set("ts:%s" % adunit_context_key, new_timestamp)
-            except: # Datastore timeouts usually
-                pass
+            except db.Timeout, e: # Datastore timeouts usually
+                logging.warning("Datastore timeout for wrapping context for: %s" % adunit_key)
+                return TO_ERR
+            except db.BadKeyError, e:
+                logging.warning("%s is an invalid adunit key" % adunit_key)
+                return BAD_KEY_ERR
+            except db.KindError, e:
+                logging.warning("%s is not an AdUnit key" % adunit_key)
+                obj = db.get(adunit_key)
+                logging.warning("Account %s has an improperly configured client" % obj.account.mpuser.email)
+                return BAD_KEY_ERR
         else:
             new_timestamp = memcache_ts
 

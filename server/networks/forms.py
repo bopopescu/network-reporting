@@ -64,10 +64,11 @@ class NetworkAdGroupForm(forms.ModelForm):
             if not initial:
                 initial = {}
 
-            if instance.network_type == 'custom' and instance.net_creative:
-                initial.update(custom_html=instance.net_creative.html_data)
-            elif instance.network_type == 'custom_native' and instance.net_creative:
-                initial.update(custom_method=instance.net_creative.html_data)
+            if instance.network_type == 'custom' and instance.creatives.get():
+                initial.update(custom_html=instance.creatives.get().html_data)
+            elif instance.network_type == 'custom_native' and \
+                    instance.creatives.get():
+                initial.update(custom_method=instance.creatives.get().html_data)
 
             geo_predicates = []
             for geo_predicate in instance.geo_predicates:
@@ -158,10 +159,11 @@ class AdUnitAdGroupForm(forms.ModelForm):
         adgroup = kwargs.get('instance', None)
 
         if adgroup:
-            if adgroup.network_type == 'custom':
-                initial['custom_html'] = adgroup.net_creative.html_data
-            elif adgroup.network_type == 'custom_native':
-                initial['custom_method'] = adgroup.net_creative.html_data
+            if adgroup.network_type == 'custom' and adgroup.creatives.get():
+                initial['custom_html'] = adgroup.creatives.get().html_data
+            elif adgroup.network_type == 'custom_native' and \
+                    adgroup.creatives.get():
+                initial['custom_method'] = adgroup.creatives.get().html_data
 
         kwargs.update(initial=initial)
 

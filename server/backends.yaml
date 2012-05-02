@@ -34,3 +34,8 @@ backends:
   instances: 2
   options: public
   class: B2
+
+- name: frontend-beta
+  instances: 2
+  options: public
+  class: B2

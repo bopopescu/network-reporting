@@ -19,7 +19,7 @@ from common.ragendja.template import render_to_response, \
      JSONResponse
 
 ## Models
-from advertiser.models import Campaign, AdGroup, HtmlCreative, NETWORKS
+from advertiser.models import Campaign, AdGroup, HtmlCreative
 from publisher.models import Site
 from publisher.forms import AppForm, AdUnitForm
 from reporting.models import StatsModel, GEO_COUNTS
@@ -29,12 +29,13 @@ from account.models import NetworkConfig
 from account.query_managers import AccountQueryManager
 from ad_network_reports.query_managers import AdNetworkMapperManager, \
         AdNetworkLoginManager
-from advertiser.query_managers import CampaignQueryManager, AdGroupQueryManager, \
-                                      CreativeQueryManager
-from publisher.query_managers import AppQueryManager, \
-     AdUnitQueryManager, \
-     AdUnitContextQueryManager, \
-     PublisherQueryManager
+from advertiser.query_managers import (AdvertiserQueryManager,
+                                       CampaignQueryManager,
+                                       AdGroupQueryManager,
+                                       CreativeQueryManager)
+from publisher.query_managers import (PublisherQueryManager, AppQueryManager,
+                                      AdUnitQueryManager,
+                                      AdUnitContextQueryManager)
 from reporting.query_managers import StatsModelQueryManager
 
 # Util
@@ -49,6 +50,39 @@ from common.utils.stats_helpers import MarketplaceStatsFetcher, MPStatsAPIExcept
 from budget import budget_service
 
 from google.appengine.api import memcache
+
+
+class DashboardHandler(RequestHandler):
+    def get(self):
+        names = {
+            'direct': 'Direct Sold',
+            'mpx': 'Marketplace',
+            'network': 'Ad Networks',
+        }
+
+        for key, campaign in AdvertiserQueryManager.get_campaigns_dict_for_account(account=self.account, include_deleted=True).items():
+            names[key] = campaign.name
+
+        for key, app in PublisherQueryManager.get_apps_dict_for_account(account=self.account, include_deleted=True).items():
+            names[key] = app.name
+
+        for key, adunit in PublisherQueryManager.get_adunits_dict_for_account(account=self.account, include_deleted=True).items():
+            names[key] = adunit.name
+
+        return {
+            'page_width': 'wide',
+            'names': names,
+        }
+
+
+@login_required
+def dashboard(request, *args, **kwargs):
+    handler = DashboardHandler(template="publisher/dashboard.html")
+    return handler(request, use_cache=False, use_handshake=True, *args, **kwargs)
+
+
+
+
 
 class AppIndexHandler(RequestHandler):
     """
@@ -1358,4 +1392,3 @@ def set_column_widths(ws, headers, body):
         ws.col(i).width = column_widths[i] * char_width
 
     return ws
-

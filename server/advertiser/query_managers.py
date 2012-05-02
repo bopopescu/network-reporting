@@ -256,7 +256,7 @@ class CampaignQueryManager(QueryManager):
         queue = taskqueue.Queue()
         task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
                               method='POST',
-                              url='/fetch_api/budget/update_or_create/'
+                              url='/fetch_api/budget/update_or_create'
                               )
         queue.add(task)
 

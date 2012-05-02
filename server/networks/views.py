@@ -459,13 +459,13 @@ class EditNetworkHandler(RequestHandler):
                     # build default creative with custom_html data if custom or
                     # none if anything else
                     creative = adgroup.default_creative(html_data)
-                    if adgroup.net_creative and creative.__class__ == \
-                            adgroup.net_creative.__class__:
+                    old_creative = adgroup.creatives.get()
+                    if old_creative and creative.__class__ == old_creative.__class__:
                         # if the adgroup has a creative AND the new creative and
                         # old creative are the same class,
                         # ignore the new creative and set the variable to point
                         # to the old one
-                        creative = adgroup.net_creative
+                        creative = old_creative
                         if adgroup.network_type == 'custom':
                             # if the network is a custom one, the creative
                             # might be the same, but the data might be new, set
@@ -473,18 +473,16 @@ class EditNetworkHandler(RequestHandler):
                             creative.html_data = html_data
                         elif adgroup.network_type == 'custom_native':
                             creative.html_data = html_data
-                    elif adgroup.net_creative:
-                        #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.
+                    elif old_creative:
+                        #in this case old_creative has evaluated to true BUT the class comparison did NOT.
                         #at this point we know that there was an old creative AND it's different from the new creative so
                         #and delete the old creative just marks as deleted!
-                        CreativeQueryManager.delete(adgroup.net_creative)
+                        CreativeQueryManager.delete(old_creative)
 
                     # the creative should always have the same account as the adgroup
                     creative.account = adgroup.account
                     #put the creative so we can reference it
                     CreativeQueryManager.put(creative)
-                    # set adgroup to reference the correct creative
-                    adgroup.net_creative = creative.key()
 
                     AdGroupQueryManager.put(adgroup)
                     adgroups.append(adgroup)

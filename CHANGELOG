@@ -1,20 +1,35 @@
+# Deployed Wednesday, May 02, 2012 at 10:28PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-103
+### Bugs Fixed: []
+### Included Commits: 
+ * 1bd7030 Fixed a couple bugs in the network migration script removed some debugging print statements
+ * b768c66 Merge branch 'master' into networks-page
+ * af627af Fixed check login credentials for new networks form, added some debugging prints for the migration script
+ * 25e5998 Merge branch 'master' of github.com:mopub/mopub
+ * bc697f8 Merge branch 'notify-bad-keys'
+ * 272aa63 Fixed ordering
+ * 9c35e04 Deployed without finding any bug fixes.
+ * 61b85fb Whoops
+ * d797d05 Notify EC2 when it's sending bad keys so we dont' spam GAE trying to get data that will never, ever, ever work
+ 
 # Deployed Wednesday, May 02, 2012 at 07:54PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-102
 ### Bugs Fixed: []
-### Included Commits: 
- * 5b9e1a9 quick fix
- * 91f14d1 Merge
- * 7f1d333 Added print statement to migrate networks script
- * 18ede32 Networks migration script batches all puts, publisher app details and adunit show include legacy stats for new network campaigns
- * 7b4c51d Merge branch '1176-adgroup-no-percent-delivered'
- * b976e86 Merge branch 'master' of github.com:mopub/mopub
- * c56f860 versions upped
- * 3d2742f checking to see if a campaign has the attribute before trying to access it.
- * 7e7625b [#1176 state:resolved]
- * 3036d9b Merge
- * 7705862 Making networks migration script faster...
- 
+### Included Commits:
+* 5b9e1a9 quick fix
+* 91f14d1 Merge
+* 7f1d333 Added print statement to migrate networks script
+* 18ede32 Networks migration script batches all puts, publisher app details and adunit show include legacy stats for new network campaigns
+* 7b4c51d Merge branch '1176-adgroup-no-percent-delivered'
+* b976e86 Merge branch 'master' of github.com:mopub/mopub
+* c56f860 versions upped
+* 3d2742f checking to see if a campaign has the attribute before trying to access it.
+* 7e7625b [#1176 state:resolved]
+* 3036d9b Merge
+* 7705862 Making networks migration script faster...
+
 # Deployed Wednesday, May 02, 2012 at 06:09PM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-101

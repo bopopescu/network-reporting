@@ -100,7 +100,6 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
 
     new_campaigns = []
     old_campaigns = []
-    migrated_adgroups = []
     old_adgroups = []
     print
     print "LOOPING THROUGH ACCOUNTS TO SETUP CAMPAIGNS"
@@ -110,6 +109,9 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                 SKIP_THESE_ACCOUNTS:
             print "Skipping account: %s" % account.emails[0]
             continue
+
+        account._old_adgroups = []
+        account._new_campaigns = []
 
         if not get_all_from_db:
             print "Getting all account advertiser models from memcache"
@@ -158,7 +160,8 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                     new_campaign.old_campaign = campaign
 
                     new_campaigns.append(new_campaign)
-                    migrated_adgroups.append(old_adgroup)
+                    account._new_campaigns.append(new_campaign)
+                    account._old_adgroups.append(old_adgroup)
 
                     networks.add(network)
                 else:
@@ -196,23 +199,17 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
             adunits = PublisherQueryManager.get_adunits_dict_for_account(
                     account).values()
 
-        for new_campaign, old_adgroup in zip(new_campaigns, migrated_adgroups):
-            if not new_campaign or (not put_data and new_campaign. \
-                    network_type == NetworkStates.CUSTOM_NETWORK_CAMPAIGN):
+        for new_campaign, old_adgroup in zip(account._new_campaigns,
+                account._old_adgroups):
+            if not put_data and new_campaign.network_state == \
+                    NetworkStates.CUSTOM_NETWORK_CAMPAIGN:
                 continue
 
             for adunit in adunits:
                 # copy old campaign adgroup properties to new
                 # campaign adgroup properties
-                try:
-                    new_adgroup = AdGroupQueryManager.get_network_adgroup(
-                            new_campaign, adunit.key(), account.key())
-                except db.NotSavedError:
-                    print "WTF!!!!!"
-                    print "campaign.name: %s" % new_campaign.name
-                    print "campaign.network_state: %s" % new_campaign. \
-                            network_state
-                    print new.campaign.account.emails
+                new_adgroup = AdGroupQueryManager.get_network_adgroup(
+                        new_campaign, adunit.key(), account.key())
 
                 for field in old_adgroup.properties().iterkeys():
                     if field not in ADGROUP_FIELD_EXCLUSION_LIST:
@@ -225,11 +222,10 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                     old_adgroup))
                 new_adgroups.append(new_adgroup)
 
-        if not account.display_new_networks:
-            affected_accounts.append(account)
-
         account.display_new_networks = True
         account.display_networks_message = True
+
+        affected_accounts.append(account)
 
     print "Saving all account data"
     if put_data:
@@ -240,8 +236,8 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
         print "Saving new creatives"
         put_all(new_creatives)
 
-        print "Saving accounts"
-        put_all(accounts[:100])
+        print "Saving all affected accounts"
+        put_all(affected_accounts)
 
         print "Flushing the cache"
         affected_account_keys = [account.key() for account in affected_accounts]

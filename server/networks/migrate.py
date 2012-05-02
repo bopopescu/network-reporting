@@ -6,12 +6,15 @@ from account.models import Account
 from account.query_managers import AccountQueryManager
 
 from advertiser.models import NetworkStates, \
-        Campaign
+        Campaign, \
+        AdGroup, \
+        Creative
 from advertiser.query_managers import CampaignQueryManager, \
         AdGroupQueryManager, \
         CreativeQueryManager, \
         AdvertiserQueryManager
 
+from publisher.models import AdUnit
 from publisher.query_managers import PublisherQueryManager
 
 from common.utils.helpers import get_all, put_all
@@ -28,7 +31,7 @@ SKIP_THESE_ACCOUNTS = []
 
 def create_creative(new_adgroup, adgroup, put_data):
     old_creative = []
-    if adgroup._creatives:
+    if adgroup.creatives:
         old_creative = adgroup._creatives[0]
         print "AdGroup Creatives"
         print [str(creative.key()) for creative in adgroup._creatives]
@@ -60,24 +63,60 @@ def create_creative(new_adgroup, adgroup, put_data):
         # set new adgroup to reference the correct creative
         new_adgroup.net_creative = new_creative.key()
 
-def migrate(accounts=None, put_data=False):
+def migrate(accounts=None, put_data=False, get_all_from_db=True):
     if not accounts:
         accounts = get_all(Account)
 
+    accounts_dict = {}
     for account in accounts:
+        account._adunits = []
+        account._campaigns = []
+        accounts_dict[account.key()] = account
+
+    if get_all_from_db:
+        for adunit in get_all(AdUnit):
+            if adunit._account in accounts_dict:
+                accounts_dict[adunit._account]._adunits.append(adunit)
+
+        campaigns_dict = {}
+        for campaign in get_all(Campaign):
+            campaign._adgroups = []
+            campaigns_dict[campaign.key()] = campaign
+            if campaign._account in accounts_dict:
+                accounts_dict[campaign._account]._campaigns.append(campaign)
+
+        adgroups_dict = {}
+        for adgroup in get_all(AdGroup):
+            adgroup._creatives = []
+            adgroups_dict[adgroup.key()] = adgroup
+            if adgroup._campaign in campaigns_dict:
+                campaigns_dict[adgroup._campaign]._adgroups.append(adgroup)
+
+        for creative in get_all(Creative):
+            if creative._ad_group in adgroups_dict:
+                adgroups_dict[creative._ad_group]._creatives.append(creative)
+
+
+    for account in accounts[:10]:#len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             continue
 
-        adunits = PublisherQueryManager.get_adunits_dict_for_account(
-                account).values()
+        if get_all_from_db:
+            adunits = account._adunits
+        else:
+            adunits = PublisherQueryManager.get_adunits_dict_for_account(
+                    account).values()
+            account._campaigns = AdvertiserQueryManager. \
+                    get_objects_dict_for_account(account).values()
+
+        old_network_campaigns = [campaign for campaign in account._campaigns
+                if campaign.campaign_type == 'network' and
+                campaign.network_state == NetworkStates.STANDARD_CAMPAIGN]
+
         networks = set()
         print
         print "Migrating account: " + account.emails[0]
-        old_network_campaigns = [campaign for campaign in
-                AdvertiserQueryManager.get_objects_dict_for_account(account).
-                values() if campaign.campaign_type == 'network' and
-                campaign.network_state == NetworkStates.STANDARD_CAMPAIGN]
         print "Got all account advertiser models from memcache"
         for campaign in old_network_campaigns:
             if campaign._adgroups:
@@ -86,9 +125,10 @@ def migrate(accounts=None, put_data=False):
                 network = adgroup.network_type.replace('_native',
                         '').lower()
                 print "migrating old campaign for " + network
+                # make sure it's not a deprecated campaign
                 if adgroup.network_type not in ('millennial', \
                         'admob') and network in NETWORKS:
-                    if network in networks:
+                    if network in networks or 'custom' in network:
                         print "creating a custom network campaign"
                         # create custom campaign
                         new_campaign = Campaign(account=account,

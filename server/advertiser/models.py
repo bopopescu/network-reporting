@@ -223,6 +223,8 @@ class Campaign(db.Model):
 
 class AdGroup(db.Model):
     campaign = db.ReferenceProperty(Campaign, collection_name="adgroups")
+    # net_creative is not set for new network campaigns due to circular
+    # reference redundancy, use the creatives collection instead
     net_creative = db.ReferenceProperty(collection_name='creative_adgroups')
     name = db.StringProperty()
 

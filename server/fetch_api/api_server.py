@@ -20,10 +20,13 @@ def main():
     app = webapp.WSGIApplication([
             ('/fetch_api/adunit/(?P<adunit_key>[-\w\.]+)/fetch_context', AUCFetchHandler),
             (r'/fetch_api/adunit_update_push', AUCUserPushHandler),
+            (r'/fetch_api/adunit_update_push/', AUCUserPushHandler),
             (r'/fetch_api/adunit_update_fanout', AUCUserPushFanOutHandler),
+            (r'/fetch_api/adunit_update_fanout/', AUCUserPushFanOutHandler),
             (r'/fetch_api/budget/sync', BudgetSyncHandler),
             (r'/fetch_api/budget/sync/cron', BudgetSyncCronHandler),
             (r'/fetch_api/budget/sync/worker', BudgetSyncWorker),
+            (r'/fetch_api/budget/update_or_create/', BudgetUpdateOrCreateHandler),
             (r'/fetch_api/budget/update_or_create', BudgetUpdateOrCreateHandler),
             ])
     run_wsgi_app(app)

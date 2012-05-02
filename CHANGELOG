@@ -1,27 +1,180 @@
+# Deployed Wednesday, May 02, 2012 at 01:10AM PST
+### Deployed by John Pena
+### Tagged deploy-99
+### Bugs Fixed: []
+### Included Commits: 
+ * 1cd8b59 Merge branch 'master' of github.com:mopub/mopub
+ * 7800c5e WTF...this is dumb
+ * da26032 Merge branch 'master' of github.com:mopub/mopub
+ * f54c20c changed default version
+ * c291ff3 Deployed without finding any bug fixes.
+ * eda2954 added property
+ 
+# Deployed Wednesday, May 02, 2012 at 12:53AM PST
+### Deployed by John Pena
+### Tagged deploy-98
+### Bugs Fixed: []
+### Included Commits:
+* 92c49a0 Merge branch 'master' of github.com:mopub/mopub
+* 4c4c6aa upped versions
+* 05c9f74 removed another extraneous log
+* 092af30 upped versions
+* 56b6d67 took out logs
+* 7244e0e Merge branch 'newdashboard'
+* e4d4a4a fixed more conflicting datepicker aliases
+* 8c69dd9 ugh versions.yaml merge again
+* 3504fd3 Deployed without finding any bug fixes.
+* a97e29f fixed bug where status wasn't shown
+* cdaa2fd cache busting
+* 46c8fd8 fixed some bugs we caused when we merged master
+* 271f451 Merge branch 'newdashboard' of github.com:mopub/mopub into newdashboard
+* 7eeb55d fixed a bug where some model properties werent being filled in correctly in their views
+* de3fd05 added names for deleted items
+* 8a9f181 updated view for faster loading
+* 6f69e57 fixed comparison color
+* c7a4d9c split up adunit requests to prevent URL too long for HAProxy
+* 8c3fda4 fixed issues where adunits of hidden apps are shown
+* b389473 Merge branch 'newdashboard' of github.com:mopub/mopub into newdashboard
+* 2ff5c30 fixed table width issues
+* 0a6c1aa resolved merge conflict
+* ca16dbd updated the charts to work for single values
+* 0f86d42 table width fix
+* a070b69 style fixes, cmp instead of ctr graph
+* ac02caa fixed comparison issue
+* 95e6e7c fixed spacing
+* 81d7f75 Merge branch 'newdashboard' of github.com:mopub/mopub into newdashboard
+* 56b77d9 fixed overflow issue
+* 8cbd634 fixed number formatting bug
+* cb851a4 another merge conflict
+* 0996125 hovering over any chart will pop up lines on all charts
+* 75a9a0e resolved a merge conflict
+* 2635ffb minor fixes
+* e5354be fixed datepicker bug
+* 35e6c19 updated chart palette
+* d0830c4 fixed a merge conflict
+* f9b626d all charts will show their hover detail when any individual chart is hovered over.
+* ead4170 fixed number formatting issue
+* f1c198a shored up layout
+* 51a354f switched to two column table layout
+* bb1488a added handshake shit, changed layout
+* 7e47c65 fixed stats urls
+* 882b2cc added cyrpt
+* a85762a added handshake to GET only
+* d56b905 enforcing y-axis ticks
+* a42c98c resolved a merge conflict
+* 4405c7f merged
+* 5a9069e cleaned up settings in the dashboard.js file
+* c97321e fixed a bunch of crap
+* 33b3aa1 adding comments to dashboard.js for documentation
+* 4fced07 fixed a merge conflict
+* 6cd4075 added a bunch of docstrings to the dashboard js
+* e965529 bugfix
+* 2f7f5eb fixed yet another versions merge conflict. we need to fix this.
+* b19353f updated versions from a deploy
+* fb27fbe merged
+* 5305adf publisher table bug fixes
+* 83c3e22 aliased the jqueryui datepicker to xdatepicker and changed all references to it
+* 75daa82 separated row and column expanding, reorganized js
+* 063793e fixed a fucking stupid merge conflict
+* 7b8c828 cleaned up the styles and the dashboard a bit
+* 186e1ef fixed granularity bug
+* 91dd8b2 removed adgroup breakdown from export
+* 4fe37cc changed the widths of the charts so that they fit next to the tables on smaller screens
+* 914d6a2 fixed color scheme
+* d7e2bad first stab at colors for comparison
+* 795f0d2 took out typekit
+* fc47d9e fixed a merge conflict
+* 042acf0 mixpanel and kissmetrics integration
+* fcf9bb2 mixpanel tracking
+* b2e8262 merged
+* f41223b fixed number formatting bug
+* 16a3d8a forgot to remove the localhost endpoint from the settings
+* 197a067 refactored javascript a little, added more tests, changing around the way mixpanel is integrated
+* 48640b5 Merge branch 'newdashboard' of github.com:mopub/mopub into newdashboard
+* ad6f258 added a ton of unit tests for the dashboard javascript
+* 3dc5bd0 merged, updated date controls and export
+* 875f4db started working on controls, still broken
+* 8592676 fixed a bug in kmbt
+* e21788b added rickshaw dependencies and added some unit tests
+* 47cfef9 fixed a merge conflict
+* aabb70f cleaned up the server directory, broke out dashboard js into controllers/dashboard.js, updated tests
+* 7af2e08 fixed filter selection bugs
+* adc899f cleaned up some of the javascript a tad
+* 3d425af merged
+* baffbab hide columns and rows
+* e08208b fixed a merge conflict
+* f318702 added moment.js (js date library), cleaned up the charts and added some plugins for better axes/labels/mouseovers, made awesome mouseovers
+* 7255cf3 Merge branch 'newdashboard' of github.com:mopub/mopub into newdashboard
+* ab6b9f0 sorting, hiding deltas for unsorted columns
+* 505806d fixed a merge conflict and made the cursor a pointer when you hover over table rows
+* 6de0814 cleaned up the dashboard code in publisher.js just a tad
+* 2d31d1b fixed filters
+* 48429a2 merged
+* 4f78ca9 updated filter tables
+* 16d3408 fancied up the charts using rickshaw
+* 44ed013 fixed merge conflict, made the fixture generation script better
+* 8ffba0b using external keys for the models
+* d2a2667 updating randomgen to work with real models from one of our customers (vrubba@gmail.com) so that we can use real stats for testing
+* 62fcc45 merged
+* 8c05e14 Merge branch 'newdashboard' of github.com:mopub/mopub into newdashboard
+* 0f05cde reorganized code, filter tables now dynamic
+* fa3ab85 porting over randomgen.py from the dashboard branch
+* 47a7fdf commented out the bootstrap button and datepicker javascript. they conflict with jqueryui.
+* 9f84ccb fixed ctr, added error handling
+* 7f9f346 added in bootstrap js and styles, may have messed up styles on other pages
+* cf31496 comparisons
+* eda0b5d manually merged dashboard branch into master
+
+# Deployed Tuesday, May 01, 2012 at 11:37PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-97
+### Bugs Fixed: []
+### Included Commits:
+* 34ccf94 net_creative adgroup property no longer used for new network campaigns
+* d7d6221 Deployed without finding any bug fixes.
+
+# Deployed Tuesday, May 01, 2012 at 09:33PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-96
+### Bugs Fixed: []
+### Included Commits:
+* fab440e Merge branch 'networks-page'
+* b2d012c Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* cf4ce8f update network stats scipt takes optional new delayed setting
+* d426daa Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* bfa30b9 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* ec31ee2 update_login_stats_for_check does option emailing, fixed a datetime issue so we can run the update methods from the interpreter
+* 92a5e44 get all accounts for networks migration, batch puts
+* 665a60e Display new networks page for new accounts, display message on new networks page for migrated accounts
+* 8d484a6 Deployed without finding any bug fixes.
+* 9b6836a Merge branch 'master' into networks-page
+* 2eb11f6 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* 956e0a8 fixed type casting bug
+
 # Deployed Tuesday, May 01, 2012 at 03:06AM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-95
 ### Bugs Fixed: []
-### Included Commits: 
- * 7d73b6d Fixed bug with call to campaign query manager where it assumes that it returns a campaign query instead of a list from memcache
- * fa49d0b Legacy campaign stats included in new networks pages
- * 7ae1656 Merge branch 'master' of github.com:mopub/mopub
- * 487582a fixed the deploy script to minify js and update versions for all deploys
- * aa7a9fc Merge
- * daa2c31 Fixed key error on old networks page, fixed long pub id formatting issues on old and new edit network forms
- * 4e524cb Removed some things
- * f078c1c Fixed r for consistency
- * ec388f5 Should do what I want it to do
- * bbb0fbe Merge branch 'master' of github.com:mopub/mopub
- * 4de923d Sped up undo for networks migration script
- * 1e76424 Try adding explicit deferred queue handler to .yaml files
- * 07ddb57 Deployed without finding any bug fixes.
- * 899f4db Merge branch 'master' of github.com:mopub/mopub
- * d36a5ac DAMMIT NAFIS
- * a43f2f8 Merge branch 'master' of github.com:mopub/mopub
- * 16c896e Merge branch 'master' of github.com:mopub/mopub
- * 0479b66 fixed a datetime issue and improper exception handling in the deploy script
- 
+### Included Commits:
+* 7d73b6d Fixed bug with call to campaign query manager where it assumes that it returns a campaign query instead of a list from memcache
+* fa49d0b Legacy campaign stats included in new networks pages
+* 7ae1656 Merge branch 'master' of github.com:mopub/mopub
+* 487582a fixed the deploy script to minify js and update versions for all deploys
+* aa7a9fc Merge
+* daa2c31 Fixed key error on old networks page, fixed long pub id formatting issues on old and new edit network forms
+* 4e524cb Removed some things
+* f078c1c Fixed r for consistency
+* ec388f5 Should do what I want it to do
+* bbb0fbe Merge branch 'master' of github.com:mopub/mopub
+* 4de923d Sped up undo for networks migration script
+* 1e76424 Try adding explicit deferred queue handler to .yaml files
+* 07ddb57 Deployed without finding any bug fixes.
+* 899f4db Merge branch 'master' of github.com:mopub/mopub
+* d36a5ac DAMMIT NAFIS
+* a43f2f8 Merge branch 'master' of github.com:mopub/mopub
+* 16c896e Merge branch 'master' of github.com:mopub/mopub
+* 0479b66 fixed a datetime issue and improper exception handling in the deploy script
+
 # Deployed Monday, April 30, 2012 at 08:43PM PST
 ### Deployed by Andrew He
 ### Tagged deploy-94

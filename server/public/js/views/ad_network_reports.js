@@ -85,7 +85,8 @@
         },
 
         render: function () {
-            context_dict = {
+            console.log('i was called');
+            var context_dict = {
                 name: this.model.get('app_name') + '  ',
                 network: this.model.get('network_name'),
                 key: this.model.get('mapper_key'),
@@ -97,16 +98,16 @@
                 fill_rate: mopub.Utils.formatNumberAsPercentage(this.model.get('fill_rate')),
                 clicks: mopub.Utils.formatNumberWithCommas(this.model.get('clicks')),
                 cpc: mopub.Utils.formatCurrency(this.model.get('cpc')),
-                ctr: mopub.Utils.formatNumberAsPercentage(this.model.get('ctr')),
-            }
-            network_html = _.template($('#app-on-network-row-template').html(), context_dict);
+                ctr: mopub.Utils.formatNumberAsPercentage(this.model.get('ctr'))
+            };
+            var network_html = _.template($('#app-on-network-row-template').html(), context_dict);
 
             $('#app-on-' + this.model.get('network')).append(network_html);
 
             // It will always insert in alphabetical order since we pull stats
             // from the networks in alphabetical order
-            context_dict['name'] = this.model.get('network_name') + '  '
-            app_html = _.template($('#app-on-network-row-template').html(), context_dict);
+            context_dict['name'] = this.model.get('network_name') + '  ';
+            var app_html = _.template($('#app-on-network-row-template').html(), context_dict);
             $('#' + this.model.get('app_key') + '-on-networks').append(app_html);
 
             $('.details-row').mouseover(function () {
@@ -120,7 +121,7 @@
             });
 
             return this;
-        },
+        }
     });
 
     window.AccountRollUpView = AccountRollUpView;

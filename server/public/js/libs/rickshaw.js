@@ -1959,7 +1959,7 @@ Rickshaw.Graph.Renderer.Area = Rickshaw.Class.create( Rickshaw.Graph.Renderer, {
 		var i = 0;
 		graph.series.forEach( function(series) {
 			if (series.disabled) return;
-			series.path = nodes[0][i++];a
+			series.path = nodes[0][i++];
 			this._styleSeries(series);
 		}, this );
 	},

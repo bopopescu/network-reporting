@@ -466,6 +466,7 @@ var mopub = mopub || {};
             price_floor: 0,
             requests: 0,
             rev: 0,
+            status: 'Running',
             stats_endpoint: 'all'
         },
         url: function () {

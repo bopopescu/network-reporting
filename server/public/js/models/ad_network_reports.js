@@ -16,7 +16,7 @@
             ctr: 0,
         },
         url: function () {
-            return '/api/ad_network/account_roll_up/'
+            return '/api/ad_network/account_roll_up/';
         },
     });
 
@@ -30,11 +30,11 @@
         get_daily_stats: function (stat) {
             return _.map(this.models, function(model){
                 return model.get(stat);
-                });
+            });
         },
 
         url: function () {
-            return '/api/ad_network/daily_stats/'
+            return '/api/ad_network/daily_stats/';
         },
     });
 
@@ -58,7 +58,7 @@
             return '/api/ad_network/roll_up/'
                 + this.get('type')
                 + '/id/'
-                + this.id
+                + this.id;
         },
     });
 

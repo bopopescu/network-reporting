@@ -1,0 +1,165 @@
+div#controls {
+    margin-bottom: 10px;
+    position: relative;
+    div#date_modal {
+        position: absolute;
+        top: 26px;
+        left: 0;
+        @include well;
+        padding: 10px;
+        z-index: 2;
+        border: 1px solid darken($light_gray, 5%);
+        background: $white;
+        @include box-shadow;
+    }
+    > span {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0 5px;
+        vertical-align: 5px;
+    }
+    #export {
+        margin-left: 20px;
+        vertical-align: top;
+    }
+}
+
+div#charts, div#advertiser_filters, div#publisher_filters {
+    float: left;
+}
+
+div#charts {
+    border: 2px solid #bbb;
+    width: 500px;
+
+    .chart_container {
+        border-bottom: 1px solid #ddd;
+        padding: 5px;
+        width: 490px;
+        height: 125px;
+
+        .summed_stats {
+            float: left;
+            padding: 10px 5px;
+            width: 80px;
+            height: 110px;
+            div.title {
+                font-size: 14px;
+                color: #666;
+            }
+            div.value {
+                font-size: 18px;
+                font-weight: bold;
+            }
+            div.delta {
+                font-size: 14px;
+            }
+            div.delta.positive {
+                color: green;
+            }
+            div.delta.negative {
+                color: red;
+            }
+        }
+
+        .chart {
+            float: left;
+            width: 400px;
+            height: 125px;
+        }
+
+        &:last-child {
+            border-bottom: 0;
+        }
+    }
+
+}
+
+div#advertiser_filters, div#publisher_filters {
+    margin-left: 10px;
+    width: 338px;
+
+    button.show span.hide, button.hide span.show {
+        display: none;
+    }
+
+    table#advertiser, table#publisher {
+        font-size: 12px;
+        margin: 5px 0;
+        table-layout: fixed;
+        width: 338px;
+
+        thead {
+            tr {
+                th {
+                    padding: 2px;
+                    &.title {
+                    }
+                    &.stat {
+                        width: 45px;
+                        &.orderable {
+                            cursor: pointer;
+                            &:hover {
+                                background-color: #ccf;
+                            }
+                        }
+                    }
+                    &.stat[colspan="2"] {
+                        width: 94px;
+                    }
+                }
+            }
+        }
+
+        tbody {
+            tr {
+                cursor: pointer;
+                &:hover {
+                    background-color: hsla(180, 50%, 50%, 0.1);
+                }
+                &.selected {
+                    background-color: hsla(180, 50%, 50%, 0.1);
+                }
+                &.source, &.app {
+                    border-top: 2px solid #bbb;
+                    font-weight: bold;
+                }
+                &.campaign, &.adunit {
+                    border-top: 1px solid #ddd;
+                }
+                td {
+                    padding: 2px;
+                    &.name {
+                        span {
+                            display: inline-block;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            width: 100%;
+                            word-wrap: break-word;
+                        }
+                    }
+                    &.stat {
+                        text-align: right;
+                    }
+                    &.delta {
+                        text-align: right;
+                        &.positive {
+                            color: green;
+                        }
+                        &.negative {
+                            color: red;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    &.expand {
+        width: 686px;
+        table#advertiser, table#publisher {
+            width: 686px;
+        }
+    }
+}

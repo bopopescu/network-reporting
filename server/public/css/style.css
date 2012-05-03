@@ -3870,6 +3870,83 @@ button.btn, input[type="submit"].btn {
 .icon-resize-horizontal {
   background-position: -456px -118px; }
 
+/*
+ * ## Colors
+ */
+/* tinges -- off white colors */
+/* font heights and other typography/spacing */
+/*
+ * ## Utility functions
+ */
+/*
+ * Visibility controls
+ */
+.left {
+  float: left; }
+
+.right {
+  float: right; }
+
+.ir {
+  display: block;
+  text-indent: -999em;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  text-align: left;
+  direction: ltr; }
+
+.hidden {
+  display: none; }
+
+.visuallyhidden {
+  position: absolute !important;
+  clip: rect(1px 1px 1px 1px);
+  /* IE6, IE7 */
+  clip: rect(1px, 1px, 1px, 1px); }
+
+.invisible {
+  visibility: hidden; }
+
+a.disabled {
+  color: black;
+  text-decoration: none;
+  cursor: default; }
+
+/*
+ * Push floating elements into their containing box
+ */
+.clearfix {
+  zoom: 1; }
+  .clearfix:before, .clearfix:after {
+    content: "\0020";
+    display: block;
+    height: 0;
+    visibility: hidden; }
+  .clearfix:after {
+    clear: both; }
+
+.no-highlight {
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none; }
+
+/*
+ * Alternating colors, often used for tables
+ */
+.alternating-color:nth-child(odd) {
+  background: #f7f7f7; }
+
+.alternating-color:nth-child(even) {
+  background: #ffffff; }
+
+.export-selectMenu {
+  width: 100px; }
+
+/*
+ * Corner rounding
+ */
 /* Rickshaw detail */
 .rickshaw_graph .detail {
   pointer-events: none;
@@ -3892,14 +3969,21 @@ button.btn, input[type="submit"].btn {
 
 .rickshaw_graph .detail .x_label {
   font-family: Arial, sans-serif;
-  border-radius: 3px;
+  border-bottom-left-radius: 3px;
+  -moz-border-radius-bottomleft: 3px;
+  -webkit-border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+  -moz-border-radius-bottomright: 3px;
+  -webkit-border-bottom-right-radius: 3px;
   padding: 6px;
-  opacity: 0.5;
   border: 1px solid #e0e0e0;
   font-size: 12px;
   position: absolute;
+  left: 30px;
+  top: -5px;
   background: white;
-  white-space: nowrap; }
+  white-space: nowrap;
+  color: #333; }
 
 .rickshaw_graph .detail .item {
   position: absolute;

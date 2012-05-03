@@ -809,7 +809,7 @@ var mopub = mopub || {};
                                 stats: STATS
                             }));
 
-                            $('tr.campaign', $advertiser_table).remove();
+                            $('tr.campaign, tr.more', $advertiser_table).remove();
 
                             _.each(source_data.query, function(query, index) {
                                 var id = query.source[0];

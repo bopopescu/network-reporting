@@ -1208,9 +1208,6 @@ var mopub = mopub || {};
                 update_dashboard(true, true, true);
             });
 
-            // default comparison
-            update_vs_start_end('week');
-
 
             /* Granularity */
             function get_granularity() {
@@ -1781,6 +1778,9 @@ var mopub = mopub || {};
                     record_metric('Showed publisher rows');
                 }
             });
+
+            // default comparison
+            update_vs_start_end('week');
 
             update_dashboard(true, true, true);
         }

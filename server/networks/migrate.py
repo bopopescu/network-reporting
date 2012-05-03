@@ -23,9 +23,9 @@ from common.constants import NETWORKS, \
 
 CAMPAIGN_FIELD_EXCLUSION_LIST = set(['account', 'network_type', \
         'network_state', 'show_login', 'name', 'transition_date', \
-        'old_campaign'])
+        'old_campaign', 'deleted'])
 ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
-        'site_keys', 'active'])
+        'site_keys', 'active', 'deleted'])
 CREATIVE_FIELD_EXCLUSION_LIST = set(['ad_group', 'account'])
 
 # NOTE: vrubba and withbuddies must be manually migrated
@@ -60,7 +60,7 @@ def create_creative(new_adgroup, old_adgroup):
     # return the new_creative
     return new_creative
 
-def migrate(accounts=None, put_data=False, get_all_from_db=True):
+def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     if not accounts:
         print "Getting all accounts"
         accounts = get_all(Account)
@@ -105,11 +105,14 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
     print
     print "LOOPING THROUGH ACCOUNTS TO SETUP CAMPAIGNS"
     print
-    for account in accounts[:25]:#len(accounts)/4]:
+    for account in accounts[:30]:#len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             print "Skipping account: %s" % account.emails[0]
             continue
+
+        print
+        print "Migrating account: " + account.emails[0]
 
         account._old_adgroups = []
         account._new_campaigns = []
@@ -117,18 +120,25 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
         if not get_all_from_db:
             print "Getting all account advertiser models from memcache"
             account._campaigns = AdvertiserQueryManager. \
-                    get_objects_dict_for_account(account).values()
+                    get_objects_dict_for_account(account,
+                            include_deleted=False).values()
 
-        old_campaigns_for_account = [campaign for campaign in account._campaigns
-                if campaign.campaign_type == 'network' and
-                campaign.network_state == NetworkStates.STANDARD_CAMPAIGN and
-                campaign.deleted == False]
+        old_campaigns_for_account = []
+        if redo:
+            old_campaigns_for_account = [campaign for campaign in
+                    account._campaigns if campaign.campaign_type == 'network']
+        else:
+            old_campaigns_for_account = [campaign for campaign in
+                    account._campaigns if campaign.campaign_type == 'network'
+                    and campaign.network_state ==
+                    NetworkStates.STANDARD_CAMPAIGN]
 
         networks = set()
-        print
-        print "Migrating account: " + account.emails[0]
         for old_campaign in old_campaigns_for_account:
-            if old_campaign._adgroups:
+            # some old campaign / adgroup pairs are fucked up (they have active
+            # adgroups and associeated with a deleted campaign) we fix this
+            # by marking the adgroups as deleted too
+            if old_campaign.deleted == False and old_campaign._adgroups:
                 # One to one mapping between old network campaigns and adgroups
                 old_adgroup = old_campaign._adgroups[0]
 
@@ -157,6 +167,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                         if field not in CAMPAIGN_FIELD_EXCLUSION_LIST:
                             setattr(new_campaign, field, getattr(old_campaign,
                                 field))
+                    new_campaign.deleted = False
                     new_campaign.transition_date = date.today()
                     new_campaign.old_campaign = old_campaign
 
@@ -183,7 +194,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
             campaign in new_campaigns]
     if put_data:
         put_all(new_campaigns)
-        print "New campaigns: %s" % [campaign.key() for campaign in
+        print "New campaigns: %s" % [str(campaign.key()) for campaign in
                 new_campaigns]
 
 
@@ -193,7 +204,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
     new_adgroups = []
     new_creatives = []
     affected_accounts = []
-    for account in accounts[:25]:#len(accounts)/4]:
+    for account in accounts[:30]:#len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             continue
@@ -220,6 +231,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True):
                     if field not in ADGROUP_FIELD_EXCLUSION_LIST:
                         setattr(new_adgroup, field, getattr(
                             old_adgroup, field))
+                new_adgroup.deleted = False
                 # set wether adunit is active for this network campaign
                 new_adgroup.active = adunit.key() in old_adgroup.site_keys
                 # create creative for the new adgroup

@@ -348,7 +348,7 @@ var mopub = mopub || {};
             var color;
             if (range.id === 'vs') {
                 stroke = 'hsla(0, 0%, 75%, 1)';
-                color = 'hsla(0, 0%, 75%, 0.1)';
+                color = 'hsla(0, 0%, 75%, 0.0)';
             } else {
                 stroke = COLOR_THEME.secondary[i];
                 color = COLOR_THEME.primary[i];

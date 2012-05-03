@@ -26,20 +26,23 @@ CAMPAIGN_FIELD_EXCLUSION_LIST = set(['account', 'network_type', \
         'old_campaign', 'deleted'])
 ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
         'site_keys', 'active', 'deleted'])
-CREATIVE_FIELD_EXCLUSION_LIST = set(['ad_group', 'account'])
+CREATIVE_FIELD_EXCLUSION_LIST = set(['ad_group', 'account', 'deleted'])
 
 # NOTE: vrubba and withbuddies must be manually migrated
 SKIP_THESE_ACCOUNTS = set(['agltb3B1Yi1pbmNyEAsSB0FjY291bnQYvaXlBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYu_LVEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYnsixEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYkfaLAQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYrpTsEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY_pG0Egw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYhLGNEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYr86zEAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYj7WVCQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYoKWrEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYsM68EQw', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwODY0MDIzODQyNDcyMzQ5NzE1MQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY69isEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYxdaQAgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYirCdAgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYoa_DCgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8LrPDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYwKvhAQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYt_XHEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1eKYDAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYjc6tEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYgNu-EQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYornTEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYn6KDEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYx8XfEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY76O-Agw', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwMTEyNzQwOTg4Njk0NTM4Njc4NAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYy7CVEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4f3tCAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYoauPEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY9dvjEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8IbxEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYya6pEAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYr4TkBww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4_rnEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4qrqCAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY_aGNEgw', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExMzgyNjUxOTkxNzc5MjcwNTc5NAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8IPYEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY-ICiEww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8_mQEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYlNGhDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYlvriEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYiZKkEww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYgt3DEAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY49yLBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYoP_EAQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYzKOtEAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYm4SPEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYwbjaCQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY_uW-EQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYz_PxDgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY09GeAQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4d60DQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYsY69Egw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY0KzNEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1Z6cEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYje6JCww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYua6oBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYyonACAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYhs2wEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYn7XSEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY57KfAgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY-afzEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYo8qPEgw', 'agltb3B1Yi1pbmNyDwsSB0FjY291bnQY8NdTDA', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY7cCnEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYlK6YEww', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExNDcwNTU3MjUxMzE0ODc3NzM2OAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY9ZjDDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8YHEBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY0_iuDAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY4bDjBww', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTEwODI5NTY1MzM0NzIzMjM1NjgyOQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYs7znEgw', 'agltb3B1Yi1pbmNyIgsSB0FjY291bnQiFTExMjcxMTI4Nzk2OTE1NTEwODQ2Ngw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYncfIBww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYzKSTEQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYh6iMCww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYzsrQEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY79yPDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYpomQCgw', 'agltb3B1Yi1pbmNyDwsSB0FjY291bnQYmbBzDA', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY-aOuEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY_ubpBAw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYzdeVEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY7-i2Agw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYq_imDww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYmrnOEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY18uyCww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYqdXOBww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY1dqREww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY5auRDgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY-67GBQw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYvNujEww', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQY9q6TEgw', 'agltb3B1Yi1pbmNyEAsSB0FjY291bnQYubGGDww'])
 
-def create_creative(new_adgroup, old_adgroup):
+def create_creative(account, new_adgroup, old_adgroup):
     old_creative = None
     html_data = None
-    if old_adgroup.creatives:
-        old_creative = old_adgroup._creatives[0]
+    old_creatives = [creative for creative in old_adgroup._creatives if not
+                creative.deleted]
+    if old_creatives:
+        old_creative = old_creatives[0]
         print "AdGroup Creatives"
-        print [str(creative.key()) for creative in old_adgroup._creatives]
+        print [str(creative.key()) for creative in old_creatives]
 
-        if new_adgroup.network_type in ('custom', 'custom_native'):
+        if new_adgroup.network_type in ('custom', 'custom_native') and \
+                hasattr(old_creative, 'html_data'):
             html_data = old_creative.html_data
 
     # build default creative with custom_html data if custom or
@@ -53,12 +56,14 @@ def create_creative(new_adgroup, old_adgroup):
                     setattr(new_creative, field, getattr(old_creative, field))
                 except db.DerivedPropertyError:
                     pass
+        old_creative.deleted = True
 
+    new_creative.deleted = False
     # the creative should always have the same account as the new adgroup
-    new_creative.account = new_adgroup.account
+    new_creative.account = account
 
     # return the new_creative
-    return new_creative
+    return (new_creative, old_creative)
 
 def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     if not accounts:
@@ -105,14 +110,14 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     print
     print "LOOPING THROUGH ACCOUNTS TO SETUP CAMPAIGNS"
     print
-    for account in accounts[:40]:#len(accounts)/4]:
+    for account in accounts[:len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
-            print "Skipping account: %s" % account.emails[0]
+            print "Skipping account: %s" % account.key()
             continue
 
         print
-        print "Migrating account: " + account.emails[0]
+        print "Migrating account: %s" % account.key()
 
         account._old_adgroups = []
         account._new_campaigns = []
@@ -203,8 +208,9 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     print
     new_adgroups = []
     new_creatives = []
+    old_creatives = []
     affected_accounts = []
-    for account in accounts[:40]:#len(accounts)/4]:
+    for account in accounts[:len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             continue
@@ -235,8 +241,9 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
                 # set wether adunit is active for this network campaign
                 new_adgroup.active = adunit.key() in old_adgroup.site_keys
                 # create creative for the new adgroup
-                new_creatives.append(create_creative(new_adgroup,
-                    old_adgroup))
+                creatives = create_creative(account, new_adgroup, old_adgroup)
+                new_creatives.append(creatives[0])
+                old_creatives.append(creatives[1])
                 new_adgroups.append(new_adgroup)
 
         account.display_new_networks = True
@@ -250,8 +257,8 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
         put_all(old_campaigns)
         print "Saving old and new adgroups"
         put_all(old_adgroups + new_adgroups)
-        print "Saving new creatives"
-        put_all(new_creatives)
+        print "Saving new and old creatives"
+        put_all(old_creatives + new_creatives)
 
         print "Saving all affected accounts"
         put_all(affected_accounts)

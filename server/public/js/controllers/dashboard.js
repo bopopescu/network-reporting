@@ -20,6 +20,7 @@ var mopub = mopub || {};
     // Color theme for the charts and table rows.
     var COLOR_THEME = {
         primary: [
+            'hsla(205,79%,61%,0.1)',
             'hsla(180, 50%, 50%, 0.1)',
             'hsla(120, 50%, 50%, 0.1)',
             'hsla(60, 50%, 50%, 0.1)',
@@ -28,6 +29,7 @@ var mopub = mopub || {};
             'hsla(240, 50%, 50%, 0.1)'
         ],
         secondary: [
+            'hsla(200,77%,55%,1)',
             'hsla(180, 50%, 50%, 1)',
             'hsla(120, 50%, 50%, 1)',
             'hsla(60, 50%, 50%, 1)',

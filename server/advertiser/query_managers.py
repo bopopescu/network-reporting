@@ -37,15 +37,18 @@ def chunks(l, n):
 
 class AdvertiserQueryManager(CachedQueryManager):
     @classmethod
-    def get_objects_dict_for_account(cls, account):
+    def get_objects_dict_for_account(cls, account, include_deleted=False):
         """
         Returns a dictionary mapping Campaign keys to Campaign entities carrying Adgroup data.
         Adgroups for each campaign can be retrieved as a list by using campaign._adgroups. Similarly,
         each Adgroup contains a list of its creatives, accessible as adgroup._creatives.
         """
-        campaigns_dict = cls.get_campaigns_dict_for_account(account)
-        adgroups_dict = cls.get_adgroups_dict_for_account(account, include_deleted=False, include_archived=True)
-        creatives_dict = cls.get_creatives_dict_for_account(account)
+        campaigns_dict = cls.get_campaigns_dict_for_account(account,
+                include_deleted=include_deleted)
+        adgroups_dict = cls.get_adgroups_dict_for_account(account,
+                include_deleted=include_deleted, include_archived=True)
+        creatives_dict = cls.get_creatives_dict_for_account(account,
+                include_deleted=include_deleted)
 
         # Initialize the _creatives property for all of our adgroups.
         for adgroup in adgroups_dict.values():
@@ -132,7 +135,7 @@ class CampaignQueryManager(QueryManager):
         # Force to string
         account_key = str(account.key())
 
-        cp_key_name = cls._get_network_key_name(account, network)
+        cp_key_name = cls._get_network_key_name(account_key, network)
 
         if get_from_db:
             campaign = Campaign.get_by_key_name(cp_key_name)

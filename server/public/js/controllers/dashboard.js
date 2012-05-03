@@ -384,7 +384,7 @@ var mopub = mopub || {};
         $(element).html('');
 
         // If the graph has few points, make the graph rigid.
-        var graph_tension = all_chart_data[0].length > 7 ? 0.8 : 1.0;
+        var graph_tension = 1.0;
 
         // Create the new chart with our series data
         var chart = new Rickshaw.Graph({

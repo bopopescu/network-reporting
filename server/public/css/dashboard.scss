@@ -124,8 +124,11 @@ div#advertiser_filters, div#publisher_filters {
                     border-top: 2px solid #bbb;
                     font-weight: bold;
                 }
-                &.campaign, &.adunit {
+                &.campaign, &.adunit, &.more {
                     border-top: 1px solid #ddd;
+                }
+                &.more {
+                    color: rgba(52, 141, 229, 1);
                 }
                 td {
                     padding: 2px;

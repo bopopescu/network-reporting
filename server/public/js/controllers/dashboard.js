@@ -187,7 +187,7 @@ var mopub = mopub || {};
             return format_kmbt(value, true);
           case 'cpm':
           case 'rev':
-            return '$' + format_kmbt(value, true);
+            return '$' + format_kmbt(value, false);
           case 'conv_rate':
           case 'ctr':
           case 'fill_rate':
@@ -201,7 +201,7 @@ var mopub = mopub || {};
     // Formats a number in KMBT (thousands, millions, billions,
     // trillions) formatting with three significant digits.
     // Example: 1000000 -> 1M, 1230000000 -> 12.3B
-    function format_kmbt(number) {
+    function format_kmbt(number, integer) {
         if(number <= 0 || number >= 1000000000000000000000000) {
             return number;
         }
@@ -210,6 +210,9 @@ var mopub = mopub || {};
         }
         if(number < 1) {
             return number.toFixed(2);
+        }
+        if(number < 1000 && integer) {
+            return number;
         }
         var endings = ['', 'K', 'M', 'B', 'T', 'Qd', 'Qn', 'Sx'];
         var place = Math.floor(Math.floor(Math.log(number)/Math.log(10))/3);
@@ -860,12 +863,17 @@ var mopub = mopub || {};
                             // defer so exceptions show up in the console
                             _.defer(function() {
                                 var $last = $('#' + source);
+                                var campaigns_hidden = false;
                                 _.each(json.top[0], function(top, index) {
                                     var id = top.campaign;
                                     var hidden = index >= MAX_CAMPAIGNS;
+                                    var selected = _.include(selected, id) || (!advertiser_comparison_shown() && _.include(selected, source));
+                                    if(hidden && !selected) {
+                                        campaigns_hidden = true;
+                                    }
                                     var context = {
                                         type: 'campaign',
-                                        selected: _.include(selected, id) || (!advertiser_comparison_shown() && _.include(selected, source)),
+                                        selected: selected,
                                         hidden: hidden,
                                         id: id,
                                         columns: ADVERTISER_COLUMNS,
@@ -884,6 +892,10 @@ var mopub = mopub || {};
                                     $last.after($campaign);
                                     $last = $campaign;
                                 });
+
+                                if(campaigns_hidden) {
+                                    $last.after('<tr class="more"><td>More...</td></tr>');
+                                }
 
                                 update_advertiser_stats_display();
 
@@ -1131,9 +1143,6 @@ var mopub = mopub || {};
             $('#date_modal_cancel').click(function () {
                 $('#date_modal').hide();
             });
-
-            // default start/end
-            update_start_end('last_14_days');
 
             var valid_date_range = {
                 endDate: "0d"
@@ -1686,17 +1695,19 @@ var mopub = mopub || {};
             }
 
             function show_advertiser_rows() {
-                $('tr', $advertiser_table).show();
+                $('tr', $advertiser_table).not('.more').show();
+                $('tr.more', $advertiser_table).hide();
             }
 
             function hide_advertiser_rows() {
-                $('tbody tr.campaign', $advertiser_table).each(function () {
+                $('tr.campaign', $advertiser_table).each(function () {
                     var $campaign = $(this);
                     $campaign.toggle(!$campaign.hasClass('hidden') || $campaign.hasClass('selected'));
                 });
+                $('tr.more', $advertiser_table).show();
             }
 
-            $advertiser_rows.click(function () {
+            function toggle_advertiser_rows() {
                 if(advertiser_rows_shown()) {
                     $advertiser_rows.addClass('show');
                     $advertiser_rows.removeClass('hide');
@@ -1713,7 +1724,11 @@ var mopub = mopub || {};
 
                     record_metric('Showed advertiser rows');
                 }
-            });
+            }
+
+            $advertiser_rows.click(toggle_advertiser_rows);
+
+            $('tr.more', $advertiser_table).live('click', toggle_advertiser_rows);
 
             var $publisher_rows = $('#publisher_rows');
 
@@ -1758,6 +1773,13 @@ var mopub = mopub || {};
                     record_metric('Showed publisher rows');
                 }
             });
+
+
+            // default start/end
+            update_start_end('last_7_days');
+
+            // default comparison
+            update_vs_start_end('week');
 
             update_dashboard(true, true, true);
         }

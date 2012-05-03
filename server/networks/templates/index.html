@@ -130,15 +130,19 @@ Make a table for ad networks that are active
                         <div class="network-data">-</div>
                         {% endif %}
                         <div class="mopub-data">
+                            {# django needs elif #}
                             {% if network.min_cpm == network.max_cpm %}
+                            {% if network.min_cpm %}
                             {{ network.min_cpm|currency }}
+                            {% else %}
+                            {% endif %}
                             {% else %}
                             {{ network.min_cpm|currency }}-{{ network.max_cpm|currency }}
                             {% endif %}
                         </div>
                     </td>
                     <td class="dataTable-data numeric att">
-                        {% if network.reporting and network.name != "mobfox" %}
+                        {% if network.reporting %}
                         <div class="network-data">-</div>
                         {% endif %}
                         <div class="mopub-data">-</div>
@@ -185,14 +189,18 @@ Make a table for ad networks that are active
                             {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}
+                            {# django needs elif #}
                             {% if app_bids.min_cpm == app_bids.max_cpm %}
+                            {% if app_bids.min_cpm %}
                             <div>{{ app_bids.min_cpm|currency }}</div>
+                            {% else %}
+                            {% endif %}
                             {% else %}
                             <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
                             {% endif %}
                         </td>
                         <td class="dataTable-data numeric att">
-                            {% if network.reporting and network.name != "mobfox" %}
+                            {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}
                             <div class="mopub-data">-</div>
@@ -204,7 +212,7 @@ Make a table for ad networks that are active
                             <div class="mopub-data">-</div>
                         </td>
                         <td class="dataTable-data numeric fill_rate">
-                            {% if network.reporting and network.name != "mobfox" %}
+                            {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}
                             <div class="mopub-data">-</div>

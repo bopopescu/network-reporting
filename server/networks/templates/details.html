@@ -81,15 +81,19 @@
                         <div class="network-data">-</div>
                         {% endif %}
                         <div class="mopub-data">
+                            {# django needs elif #}
                             {% if network.min_cpm == network.max_cpm %}
+                            {% if network.min_cpm %}
                             {{ network.min_cpm|currency }}
+                            {% else %}
+                            {% endif %}
                             {% else %}
                             {{ network.min_cpm|currency }}-{{ network.max_cpm|currency }}
                             {% endif %}
                         </div>
                     </td>
                     <td class="dataTable-data numeric att">
-                        {% if reporting and network.name != "mobfox" %}
+                        {% if reporting %}
                         <div class="network-data">-</div>
                         {% endif %}
                         <div class="mopub-data">-</div>
@@ -129,9 +133,7 @@
     <h2>App Targeting</h2>
 </div>
 <div id="{{ network.key }}-loading" style="float: left; margin: 0 0 0 10px;">
-    {% comment %}
     <img class="loading-img" src="/images/loading2.gif"></img>
-    {% endcomment %}
 </div>
 <div class="appData-columnHeaders">
     <table class="dataTable" width=100%>
@@ -175,41 +177,45 @@
                     {% if network.reporting %}
                     <div class="network-data">-</div>
                     {% endif %}
+                    {# django needs elif #}
                     {% if app_bids.min_cpm == app_bids.max_cpm %}
+                    {% if app_bids.min_cpm %}
                     <div>{{ app_bids.min_cpm|currency }}</div>
+                    {% else %}
+                    {% endif %}
                     {% else %}
                     <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
                     {% endif %}
                 </td>
                 <td class="dataTable-data numeric att">
-                    {% if reporting and network.name != "mobfox" %}
-                    <div class="network-data"></div>
+                    {% if reporting %}
+                    <div class="network-data">-</div>
                     {% endif %}
-                    <div class="mopub-data"></div>
+                    <div class="mopub-data">-</div>
                 </td>
                 <td class="dataTable-data numeric imp">
                     {% if reporting %}
-                    <div class="network-data"></div>
+                    <div class="network-data">-</div>
                     {% endif %}
-                    <div class="mopub-data"></div>
+                    <div class="mopub-data">-</div>
                 </td>
                 <td class="dataTable-data numeric fill_rate">
-                    {% if reporting and network.name != "mobfox" %}
-                    <div class="network-data"></div>
+                    {% if reporting %}
+                    <div class="network-data">-</div>
                     {% endif %}
-                    <div class="mopub-data"></div>
+                    <div class="mopub-data">-</div>
                 </td>
                 <td class="dataTable-data numeric clk">
                     {% if reporting %}
-                    <div class="network-data"></div>
+                    <div class="network-data">-</div>
                     {% endif %}
-                    <div class="mopub-data"></div>
+                    <div class="mopub-data">-</div>
                 </td>
                 <td class="dataTable-data numeric ctr">
                     {% if reporting %}
-                    <div class="network-data"></div>
+                    <div class="network-data">-</div>
                     {% endif %}
-                    <div class="mopub-data"></div>
+                    <div class="mopub-data">-</div>
                 </td>
             </tr>
         </tbody>
@@ -227,14 +233,19 @@
                         {{ adunit.adgroup.bid|currency }}
                     </td>
                     <td class="dataTable-data numeric att">
+                        -
                     </td>
                     <td class="dataTable-data numeric imp">
+                        -
                     </td>
                     <td class="dataTable-data numeric fill_rate">
+                        -
                     </td>
                     <td class="dataTable-data numeric clk">
+                        -
                     </td>
                     <td class="dataTable-data numeric ctr">
+                        -
                     </td>
                 </tr>
                 {% endfor %}

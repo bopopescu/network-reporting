@@ -41,7 +41,9 @@ var mopub = window.mopub || {};
 
             _.each(metrics, function (metric) {
                 var stat = this_view.model.get_stat(metric);
-                if (stat || stat == 0) {
+                if ((stat || stat == 0) && (this_view.model.get('stats_endpoint') != 'networks'
+                        || this_view.model.get('network') != 'mobfox' || (metric != 'att' 
+                        && metric != 'fill_rate'))) {
                     $('.' + metric + selector, row).text(this_view.model.get_formatted_stat(metric));
                 }
             });
@@ -390,7 +392,11 @@ var mopub = window.mopub || {};
             }
             var metrics = ['cpm', 'imp', 'clk', 'ctr', 'fill_rate', 'req', 'att', 'conv', 'conv_rate'];
             _.each(metrics, function (metric) {
-                $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
+                if (this_view.model.get('stats_endpoint') != 'networks'
+                        || this_view.options.network != 'mobfox' || (metric != 'att'
+                        && metric != 'fill_rate')) {
+                    $('.' + metric + selector, app_row).text(this_view.model.get_formatted_stat(metric));
+                }
             });
             /*jslint maxlen: 110 */
 
@@ -573,6 +579,9 @@ var mopub = window.mopub || {};
                     adunit_view.renderInline();
                 });
             }
+
+            // hide spinner
+            $('#' + this.options.campaign.id + '-loading').hide();
 
             return this;
         },

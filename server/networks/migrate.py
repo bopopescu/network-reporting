@@ -105,7 +105,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     print
     print "LOOPING THROUGH ACCOUNTS TO SETUP CAMPAIGNS"
     print
-    for account in accounts[:30]:#len(accounts)/4]:
+    for account in accounts[:40]:#len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             print "Skipping account: %s" % account.emails[0]
@@ -204,7 +204,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     new_adgroups = []
     new_creatives = []
     affected_accounts = []
-    for account in accounts[:30]:#len(accounts)/4]:
+    for account in accounts[:40]:#len(accounts)/4]:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             continue

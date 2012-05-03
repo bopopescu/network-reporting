@@ -1,18 +1,33 @@
+# Deployed Thursday, May 03, 2012 at 07:49PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-104
+### Bugs Fixed: []
+### Included Commits: 
+ * 4045de9 Merge branch 'master' into networks-page
+ * 3b111c9 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+ * 77b08bc Network views use key_names instead of memcache, added some formatting fixes to networks pages, modified migration script
+ * 2a8da02 Fixed a terrible bug in new network campaign key naming, migration script deletes mal formatted old network campaigns and adgroups
+ * bcf4b6d Modification to network views
+ * 4999da8 default back to 38
+ * c61c26b Deployed without finding any bug fixes.
+ * 6e04cad Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+ * d6ddffd Modifications to check login tornado server for compatibility with new networks form
+ 
 # Deployed Wednesday, May 02, 2012 at 10:28PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-103
 ### Bugs Fixed: []
-### Included Commits: 
- * 1bd7030 Fixed a couple bugs in the network migration script removed some debugging print statements
- * b768c66 Merge branch 'master' into networks-page
- * af627af Fixed check login credentials for new networks form, added some debugging prints for the migration script
- * 25e5998 Merge branch 'master' of github.com:mopub/mopub
- * bc697f8 Merge branch 'notify-bad-keys'
- * 272aa63 Fixed ordering
- * 9c35e04 Deployed without finding any bug fixes.
- * 61b85fb Whoops
- * d797d05 Notify EC2 when it's sending bad keys so we dont' spam GAE trying to get data that will never, ever, ever work
- 
+### Included Commits:
+* 1bd7030 Fixed a couple bugs in the network migration script removed some debugging print statements
+* b768c66 Merge branch 'master' into networks-page
+* af627af Fixed check login credentials for new networks form, added some debugging prints for the migration script
+* 25e5998 Merge branch 'master' of github.com:mopub/mopub
+* bc697f8 Merge branch 'notify-bad-keys'
+* 272aa63 Fixed ordering
+* 9c35e04 Deployed without finding any bug fixes.
+* 61b85fb Whoops
+* d797d05 Notify EC2 when it's sending bad keys so we dont' spam GAE trying to get data that will never, ever, ever work
+
 # Deployed Wednesday, May 02, 2012 at 07:54PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-102

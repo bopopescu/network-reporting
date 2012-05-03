@@ -113,19 +113,24 @@ div#advertiser_filters, div#publisher_filters {
 
         tbody {
             tr {
+                $mopub_blue: hsla(205,79%,61%,0.1);
+                $sea_green: hsla(180, 50%, 50%, 0.1);
                 cursor: pointer;
                 &:hover {
-                    background-color: hsla(180, 50%, 50%, 0.1);
+                    background-color: $mopub_blue;
                 }
                 &.selected {
-                    background-color: hsla(180, 50%, 50%, 0.1);
+                    background-color: $mopub_blue;
                 }
                 &.source, &.app {
                     border-top: 2px solid #bbb;
                     font-weight: bold;
                 }
-                &.campaign, &.adunit {
+                &.campaign, &.adunit, &.more {
                     border-top: 1px solid #ddd;
+                }
+                &.more {
+                    color: rgba(52, 141, 229, 1);
                 }
                 td {
                     padding: 2px;

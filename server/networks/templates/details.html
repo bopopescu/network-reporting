@@ -220,11 +220,11 @@
                 {% for adunit in app.adunits %}
                 <tr class="adunit-row" id="adunit-{{ adunit.key }}">
                     <td class="dataTable-name">
-                        {% status_icon adunit %}
+                        {% status_icon adunit.adgroup %}
                         <a href="{% url publisher_adunit_show adunit_key=adunit.key %}">{{ adunit.name }}</a>
                     </td>
                     <td class="dataTable-data numeric">
-                        {{ adunit.cpm|currency }}
+                        {{ adunit.adgroup.bid|currency }}
                     </td>
                     <td class="dataTable-data numeric att">
                     </td>

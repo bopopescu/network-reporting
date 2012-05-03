@@ -91,8 +91,10 @@ class NetworksHandler(RequestHandler):
         apps = PublisherQueryManager.get_objects_dict_for_account(
                 self.account).values()
 
-        for campaign in CampaignQueryManager.get_network_campaigns(
-                self.account, is_new=True):
+        campaigns = CampaignQueryManager.get_network_campaigns(self.account,
+                is_new=True)
+
+        for campaign in campaigns:
             network = str(campaign.network_type)
 
             # MoPub reported campaign cpm comes from meta data not stats so
@@ -610,18 +612,11 @@ class NetworkDetailsHandler(RequestHandler):
                         'min_cpm': bid_range[0],
                         'max_cpm': bid_range[1],}
 
-        # Get the campaign targeting information.  We need an adunit
-        # and an adgroup to determine targeting.  Any adunit will do
-        # because every adunit is targeted by a network adgroup.
-        adunit = AdUnitQueryManager.get_adunits(account=self.account,
-                limit=1)[0]
-        adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
-                adunit.key(), self.account.key(), get_from_db=True)
-        if adgroup.device_targeting:
-            for device, pretty_name in adgroup.DEVICE_CHOICES:
-                if getattr(adgroup, 'target_' + device, False):
+        if campaign_adgroups and campaign_adgroups[0].device_targeting:
+            for device, pretty_name in campaign_adgroups[0].DEVICE_CHOICES:
+                if getattr(campaign_adgroups[0], 'target_' + device, False):
                     network_data['targeting'].append(pretty_name)
-            if adgroup.target_other:
+            if campaign_adgroups[0].target_other:
                 network_data['targeting'].append('Other')
 
         if network_data['targeting']:
@@ -632,7 +627,6 @@ class NetworkDetailsHandler(RequestHandler):
         # This campaign is a default network campaign if its the
         # only one of this type. If this is the default, and if we have
         # login info, then we have reporting stats.
-        #REFACTOR: handle the case when this isnt true.
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
             login = AdNetworkLoginManager.get_logins(self.account, network). \
@@ -662,9 +656,10 @@ class NetworkDetailsHandler(RequestHandler):
         for app in apps:
             for adunit in app.adunits:
                 if str(adunit.key()) in adgroups_by_adunit:
-                    adgroup = adgroups_by_adunit[str(adunit.key())]
-                    adunit.cpm = adgroup.bid
-                    adunit.active = adgroup.active
+                    adunit.adgroup = adgroups_by_adunit[str(adunit.key())]
+                else:
+                    logging.warn("ADUNIT KEY: %s NOT IN %s" % \
+                            (str(adunit.key()), adgroups_by_adunit))
 
         apps = sorted(apps, key=lambda app: app.identifier)
 

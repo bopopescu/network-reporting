@@ -1663,7 +1663,12 @@ form#campaign_and_adgroup input.token-input-field.focused, form#network-login-fo
   *margin-left: 0;
   -webkit-border-radius: 0 3px 3px 0;
   -moz-border-radius: 0 3px 3px 0;
-  border-radius: 0 3px 3px 0; }
+  border-radius: 0 3px 3px 0;
+  height: 18px;
+  border: 1px solid #ccc;
+  padding: 4px 5px;
+  line-height: 18px;
+  margin-left: -3px; }
 
 .input-prepend input:focus,
 .input-append input:focus,

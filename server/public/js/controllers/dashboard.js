@@ -383,9 +383,6 @@ var mopub = mopub || {};
         // renders a new one, so we have to do it manually.
         $(element).html('');
 
-        // If the graph has few points, make the graph rigid.
-        var graph_tension = 1.0;
-
         // Create the new chart with our series data
         var chart = new Rickshaw.Graph({
             element: document.querySelector(element),
@@ -393,7 +390,7 @@ var mopub = mopub || {};
             height: HEIGHT,
             renderer: 'area',
             stroke: true,
-            tension: 1.0,
+            interpolation: 'linear',
             series: all_chart_data,
             // Second part of the single value hack here --
             max: max > 0 ? max : undefined

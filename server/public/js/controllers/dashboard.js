@@ -1146,6 +1146,9 @@ var mopub = mopub || {};
                 $('#date_modal').hide();
             });
 
+            // default start/end
+            update_start_end('last_7_days');
+
             var valid_date_range = {
                 endDate: "0d"
             };
@@ -1204,6 +1207,9 @@ var mopub = mopub || {};
                 });
                 update_dashboard(true, true, true);
             });
+
+            // default comparison
+            update_vs_start_end('week');
 
 
             /* Granularity */
@@ -1775,13 +1781,6 @@ var mopub = mopub || {};
                     record_metric('Showed publisher rows');
                 }
             });
-
-
-            // default start/end
-            update_start_end('last_7_days');
-
-            // default comparison
-            update_vs_start_end('week');
 
             update_dashboard(true, true, true);
         }

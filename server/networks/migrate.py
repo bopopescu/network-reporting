@@ -258,7 +258,8 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
         print "Saving old and new adgroups"
         put_all(old_adgroups + new_adgroups)
         print "Saving new and old creatives"
-        put_all(old_creatives + new_creatives)
+        put_all([creative for creative in old_creatives if creative != None]
+                + [creative for creative in new_creatives if creative != None])
 
         print "Saving all affected accounts"
         put_all(affected_accounts)

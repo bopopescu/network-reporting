@@ -189,7 +189,7 @@ class CachedQueryManager(QueryManager):
             memcache_keys.append("%s_acct_%s" % (entity_type, account_key))
 
         # The entity dictionaries are stored as memcache chunks, so we use delete_multi_chunked.
-        return cls.memcache_delete_multi_chunked(memcache_keys_for_entity_dicts)
+        return cls.memcache_delete_multi_chunked(memcache_keys)
 
     @classmethod
     def memcache_set_chunked(cls, key_prefix, value, chunksize=CHUNK_SIZE, 

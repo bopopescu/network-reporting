@@ -3,7 +3,7 @@
 {% load filters %}
 
 {% block pageTitleTag %}
-  - Dashboard β
+  - Explorer (Beta)
 {% endblock %}
 
 {% block extraScripts %}
@@ -29,7 +29,7 @@ $(function () {
 {% endblock extraScripts %}
 
 {% block pageTitle %}
-  <h1>Dashboard (β)</h1>
+  <h1>Explorer (Beta)</h1>
 {% endblock pageTitle %}
 
 {% block dateButtons %}{% endblock dateButtons %}
@@ -97,15 +97,15 @@ $(function () {
         <div class="modal-body">
           Breakdown by
           <select name="advertiser_breakdown">
-            <option value=""></option>
-            <option value="source">Source</option>
             <option value="campaign">Campaign</option>
+            <option value="source">Ad Type</option>
+            <option value="">All</option>
           </select>
           and
           <select name="publisher_breakdown">
-            <option value=""></option>
-            <option value="app">App</option>
             <option value="adunit">Ad Unit</option>
+            <option value="app">App</option>
+            <option value="">All</option>
           </select>
         </div>
         <div class="modal-footer">
@@ -171,10 +171,12 @@ $(function () {
 </div>
 
 <div id="advertiser_filters">
+    {% comment %}
     <button class="btn btn-mini show" id="advertiser_comparison">
         <span class="show">Show Comparison</span>
         <span class="hide">Hide Comparison</span>
     </button>
+    {% endcomment %}
     <button class="btn btn-mini right show" id="advertiser_columns">
         <span class="show">Show Columns <i class="icon-arrow-right"></i></span>
         <span class="hide"><i class="icon-arrow-left"></i> Hide Columns</span>
@@ -191,10 +193,12 @@ $(function () {
 </div>
 
 <div id="publisher_filters">
+    {% comment %}
     <button class="btn btn-mini show" id="publisher_comparison">
         <span class="show">Show Comparison</span>
         <span class="hide">Hide Comparison</span>
     </button>
+    {% endcomment %}
     <button class="btn btn-mini right show" id="publisher_columns">
         <span class="show">Show Columns <i class="icon-arrow-right"></i></span>
         <span class="hide"><i class="icon-arrow-left"></i> Hide Columns</span>

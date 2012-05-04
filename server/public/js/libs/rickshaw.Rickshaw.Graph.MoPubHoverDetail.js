@@ -110,6 +110,23 @@ Rickshaw.Graph.MoPubHoverDetail = function(args) {
 		var xLabel = document.createElement('div');
 		xLabel.className = 'x_label';
 		xLabel.innerHTML = xFormatter(domainX);
+        
+        // HACK here
+        // The tooltip usually floats along with the vertical line that's
+        // placed where the mouse is hovering. It was decided that this 
+        // was unacceptable, and that the tooltip needed to have an absolute
+        // position in the top left corner. Ideally we would place the tooltip
+        // div outside of the vertical line div, but other parts of the code
+        // expect the vertical line to be it's parent. Rather than change all that,
+        // we manually calculate the tooltip style on the fly to force it to the left.
+        if (graph.x(domainX) > 0) {
+            xLabel.style.left = '-' + (graph.x(domainX) - 20) + 'px';
+        } else {
+            xLabel.style.left = '20px';   
+        }
+        xLabel.style.top = '-6px';
+        // end HACK
+
 		this.element.appendChild(xLabel);
 
 		var activeItem = null;

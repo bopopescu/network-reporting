@@ -75,7 +75,24 @@ var mopub = mopub || {};
             throw 'Unsupported stat "' + stat + '".';
         }
     }
+    
+    // Records an event in all of the metrics tracking services we
+    // use.
+    function record_metric (name, args) {
+        try {
+            _kmq.push(['record', name, args]);
+        } catch (x) {
+            console.log(x);
+        }
 
+        try {
+            mixpanel.track(name, args);
+        } catch (x) {
+            console.log(x);
+        }
+    }
+
+    
     var ModelHelpers = {
         calculate_ctr: calculate_ctr,
         calculate_fill_rate: calculate_fill_rate,
@@ -371,10 +388,18 @@ var mopub = mopub || {};
             stats_endpoint: 'all'
         },
         validate: function(attributes) {
+            var current_price_floor = this.get('price_floor');
             if (typeof(attributes.price_floor) !== 'undefined') {
                 var valid_number = Number(attributes.price_floor);
                 if (isNaN(valid_number)) {
                     return "Please enter a valid number for the price floor";
+                } else {
+                    if (current_price_floor !== valid_number) {
+                        record_metric('MPX Price Floor Changed', {
+                            'from': current_price_floor,
+                            'to': valid_number
+                        });
+                    }
                 }
             }
         },

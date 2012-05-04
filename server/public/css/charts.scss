@@ -1,3 +1,5 @@
+@import "common.scss";
+
 /* Rickshaw detail */
 .rickshaw_graph .detail {
 	    pointer-events: none;
@@ -23,14 +25,17 @@
 
 .rickshaw_graph .detail .x_label {
 	font-family: Arial, sans-serif;
-	border-radius: 3px;
+	@include bottom-border-radius(3px);
 	padding: 6px;
-	opacity: 0.5;
+	//opacity: 0.5;
 	border: 1px solid #e0e0e0;
 	font-size: 12px;
 	position: absolute;
+    left: 30px;
+    top: -5px;
 	background: white;
 	white-space: nowrap;
+    color: #333;
 }
 
 .rickshaw_graph .detail .item {

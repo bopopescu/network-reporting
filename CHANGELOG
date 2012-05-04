@@ -1,18 +1,44 @@
+# Deployed Thursday, May 03, 2012 at 09:20PM PST
+### Deployed by John Pena
+### Tagged deploy-105
+### Bugs Fixed: []
+### Included Commits: 
+ * 795597a versions conflict
+ * 2ba6486 versions conflict
+ * 8bcafbb Deployed without finding any bug fixes.
+ * 6442b3d marketplace price floor change is now being recorded
+ * 39286a8 versions
+ * 5e68451 higher graph rigidity
+ * 97798ed Merge branch 'explorer' of github.com:mopub/mopub into explorer
+ * b9b6226 fixed the datepicker custom input field styles to be consistent
+ * 4195ae5 refixed datepicker issue
+ * 27db279 fixed datepicker issue
+ * 038df4c versions merge conflict
+ * 0165219 changed the rigidity to always be 1.0
+ * 316239a fixed more link issue
+ * 9b9b144 Merge branch 'explorer' of github.com:mopub/mopub into explorer
+ * 55f2df3 regenerated plugins
+ * b504b20 Merge branch 'explorer-peter' into explorer
+ * e6ec443 multiple fixes
+ * f900e31 using mopub blue more in the charts and tables
+ * 75f5b48 renamed the dashboard as explorer, made a link from the inventory page, and removed the fill from the vs series
+ * b9f6d87 tooltips in the upper left corner
+ 
 # Deployed Thursday, May 03, 2012 at 07:49PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-104
 ### Bugs Fixed: []
-### Included Commits: 
- * 4045de9 Merge branch 'master' into networks-page
- * 3b111c9 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
- * 77b08bc Network views use key_names instead of memcache, added some formatting fixes to networks pages, modified migration script
- * 2a8da02 Fixed a terrible bug in new network campaign key naming, migration script deletes mal formatted old network campaigns and adgroups
- * bcf4b6d Modification to network views
- * 4999da8 default back to 38
- * c61c26b Deployed without finding any bug fixes.
- * 6e04cad Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
- * d6ddffd Modifications to check login tornado server for compatibility with new networks form
- 
+### Included Commits:
+* 4045de9 Merge branch 'master' into networks-page
+* 3b111c9 Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* 77b08bc Network views use key_names instead of memcache, added some formatting fixes to networks pages, modified migration script
+* 2a8da02 Fixed a terrible bug in new network campaign key naming, migration script deletes mal formatted old network campaigns and adgroups
+* bcf4b6d Modification to network views
+* 4999da8 default back to 38
+* c61c26b Deployed without finding any bug fixes.
+* 6e04cad Merge branch 'networks-page' of github.com:mopub/mopub into networks-page
+* d6ddffd Modifications to check login tornado server for compatibility with new networks form
+
 # Deployed Wednesday, May 02, 2012 at 10:28PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-103

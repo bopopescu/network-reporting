@@ -3,7 +3,8 @@
 from account.models import Account, NetworkConfig
 
 for account in Account.all():
-    conf = NetworkConfig(admob_pub_id=account.admob_pub_id,
+    conf = NetworkConfig(account=account,
+                         admob_pub_id=account.admob_pub_id,
                          adsense_pub_id=account.adsense_pub_id,
                          brightroll_pub_id=account.brightroll_pub_id,
                          greystripe_pub_id=account.greystripe_pub_id,

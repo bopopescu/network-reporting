@@ -7,11 +7,27 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.api import users
 
-from account.models import Account, User, PaymentRecord
+from account.models import Account, User, PaymentRecord, NetworkConfig
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 from common.constants import MAX_OBJECTS
 
 MEMCACHE_KEY_FORMAT = "k:%(user_id)s"
+
+class NetworkConfigQueryManager(CachedQueryManager):
+    """Provides an API for getting and putting network config objects."""
+    Model = NetworkConfig
+
+    @classmethod
+    def get_network_configs_dict_for_account(cls, account):
+        return cls.get_entities_for_account(account, NetworkConfig)
+
+    @classmethod
+    @wraps_first_arg
+    def put(cls, configs):
+        db.put(configs)
+        affected_account_keys = set([NetworkConfig.account.get_value_for_datastore(config) 
+                                     for config in configs])
+        cls.memcache_flush_entities_for_account_keys(affected_account_keys, NetworkConfig)
 
 class AccountQueryManager(CachedQueryManager):
     Model = Account
@@ -52,7 +68,7 @@ class AccountQueryManager(CachedQueryManager):
     @classmethod
     def update_config_and_put(cls, account, network_config):
         """ Updates the network config and the associated account"""
-        db.put(network_config)
+        NetworkConfigQueryManager.put(network_config)
         account.network_config = network_config
         cls.put_accounts(account)
 
@@ -69,6 +85,7 @@ class AccountQueryManager(CachedQueryManager):
             # Delete cached Accounts for users
             for user_key in account.all_mpusers:
                 memcache.delete(str(user_key), namespace="account")
+
         return db.put(accounts)
 
     @classmethod
@@ -120,6 +137,7 @@ class AccountQueryManager(CachedQueryManager):
     @classmethod
     def get_account_by_key(cls, key):
         return Account.get(key)
+        
 
 class UserQueryManager(QueryManager):
     @classmethod

@@ -16,6 +16,10 @@ from advertiser.models import ( Campaign,
                                 AdGroup,
                                 Creative,
                                 )
+
+from account.query_managers import AccountQueryManager
+from publisher.query_managers import AppQueryManager, AdUnitQueryManager
+
 from google.appengine.ext.webapp import ( Request,
                                           Response,
                                           )
@@ -26,7 +30,6 @@ from ad_server.main import  ( AdClickHandler,
                                      )
 from ad_server.handlers.adhandler import AdHandler
 from ad_server.networks.server_side import ServerSideException
-
 
 ############# Integration Tests #############
 import unittest
@@ -83,29 +86,12 @@ class TestNetworkConfig(unittest.TestCase):
         # Set up useful datetime
         self.dt = datetime.datetime(2000,1,10,6,7,8) # save some test time
 
-        # Set up network config
-        self.account_network_config = NetworkConfig(
-                                admob_pub_id="account-admob",
-                                brightroll_pub_id="account-brightroll",
-                                millennial_pub_id="account-millennial",
-                                jumptap_pub_id="pa_com2us_usa_inc_")
-        self.account_network_config.put()
-
-        self.app_network_config = NetworkConfig(
-            jumptap_pub_id="pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app",
-            millennial_pub_id="app-millennial")
-
-        self.app_network_config.put()
-
-        # Set up default models
-        self.account = Account(company="awesomecorp",
-                               network_config=self.account_network_config)
+         # Set up default models
+        self.account = Account(company="awesomecorp")
         self.account.put()
 
-        self.app = App(account=self.account, name="Test App",
-                               network_config=self.app_network_config)
+        self.app = App(account=self.account, name="Test App")
         self.app.put()
-
 
         self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit")
         self.adunit.put()
@@ -117,6 +103,18 @@ class TestNetworkConfig(unittest.TestCase):
                                             now=datetime.datetime.now(),
                                             user_agent="Mozilla/5.0 (iPad; U; CPU OS 3.2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10")
 
+        # Set up network config
+        self.account_network_config = NetworkConfig(account=self.account,
+                                                    admob_pub_id="account-admob",
+                                                    brightroll_pub_id="account-brightroll",
+                                                    millennial_pub_id="account-millennial",
+                                                    jumptap_pub_id="pa_com2us_usa_inc_")
+        AccountQueryManager.update_config_and_put(self.account, self.account_network_config)
+
+        self.app_network_config = NetworkConfig(account=self.account,
+                                                jumptap_pub_id="pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app",
+                                                millennial_pub_id="app-millennial")
+        AppQueryManager.update_config_and_put(self.app, self.app_network_config)
 
     def tearDown(self):
         self.testbed.deactivate()
@@ -177,50 +175,38 @@ class NetworkUnitTests(unittest.TestCase):
         self.testbed.init_memcache_stub()
 
         # Set up default models
+        self.account = Account()
+        self.account.put()
+        
+        self.app = App(account=self.account, name="Test App")
+        self.app.put()
 
+        self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit", format="full")
+        self.adunit.put()
 
         self.account_network_config = NetworkConfig(
+                                account=self.account,
                                 admob_pub_id="account-admob",
                                 brightroll_pub_id="account-brightroll",
                                 millennial_pub_id="account-millennial",
                                 jumptap_pub_id="pa_com2us_usa_inc_")
-        self.account_network_config.put()
+        AccountQueryManager.update_config_and_put(self.account, self.account_network_config)
 
         self.app_network_config = NetworkConfig(
+            account=self.account
             jumptap_pub_id="pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app",
             millennial_pub_id="app-millennial")
-
-        self.app_network_config.put()
-
-
-
-        self.account = Account(network_config=self.account_network_config)
-        self.account.put()
-
-
-
-        self.app = App(account=self.account, name="Test App", network_config=self.app_network_config)
-        self.app.put()
-
-
-
+        AppQueryManager.update_config_and_put(self.app, self.app_network_config)
 
         self.network_config = NetworkConfig(
+            account=self.account,
             ejam_pub_id = '23710',
             inmobi_pub_id='4028cba630724cd90130c2adc9b6024f',
 #            jumptap_pub_id='pa_com2us_usa_inc__op_3d_lab_i_tes_iph_app',
             millennial_pub_id='53344',
             mobfox_pub_id='147e13e17341db4f25afe08ac0144193',
-            )
-        self.network_config.put()
-
-
-
-
-
-
-        self.adunit = AdUnit(account=self.account, app_key=self.app, name="Test AdUnit", network_config=self.network_config, format="full")
-        self.adunit.put()
+            ) 
+        AdUnitQueryManager.update_config_and_put(self.adunit, self.network_config)
 
     def tearDown(self):
         self.testbed.deactivate()

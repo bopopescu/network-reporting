@@ -296,9 +296,36 @@ class AppQueryManager(CachedQueryManager):
     @classmethod
     def update_config_and_put(cls, app, network_config):
         """ Updates the network config and the associated app"""
-        db.put(network_config)
+        from account.query_managers import NetworkConfigQueryManager
+        
+        NetworkConfigQueryManager.put(network_config)
         app.network_config = network_config
         cls.put(app)
+
+    @classmethod
+    def update_config_and_put_multi(cls, apps, configs):
+        """
+        Performs a batch assignment of NetworkConfigs to apps.
+
+        Arguments:
+        apps    -- a list of apps to update
+        configs -- a list of configs, each one corresponding to an app in the apps list
+
+        Note: an exception is thrown if the two lists are not of equal length.
+        """
+        from account.query_managers import NetworkConfigQueryManager
+
+        if len(apps) != len(configs):
+            raise Exception('Length of apps list must be equal to length of configs list')
+
+        # Save the config objects first; otherwise, they won't have complete keys and we won't be
+        # able to assign them to other objects.
+        NetworkConfigQueryManager.put(configs)
+        
+        for app, config in zip(apps, configs):
+            app.network_config = config
+            
+        cls.put(apps)
 
     @classmethod
     def get_apps_with_network_configs(cls, account):
@@ -488,8 +515,35 @@ class AdUnitQueryManager(QueryManager):
 
     @classmethod
     def update_config_and_put(cls, adunit, network_config):
-        """ Updates the network config and the associated app"""
-        db.put(network_config)
+        """ Updates the network config and the associated adunit"""
+        from account.query_managers import NetworkConfigQueryManager
+
+        NetworkConfigQueryManager.put(network_config)
         adunit.network_config = network_config
         cls.put(adunit)
+
+    @classmethod
+    def update_config_and_put_multi(cls, adunits, configs):
+        """
+        Performs a batch assignment of NetworkConfigs to adunits.
+
+        Arguments:
+        adunits -- a list of apps to update
+        configs -- a list of configs, each one corresponding to an adunit in the adunits list
+
+        Note: an exception is thrown if the two lists are not of equal length.
+        """
+        from account.query_managers import NetworkConfigQueryManager
+
+        if len(adunits) != len(configs):
+            raise Exception('Length of ad units list must be equal to length of configs list')
+
+        # Save the config objects first; otherwise, they won't have complete keys and we won't be
+        # able to assign them to other objects.
+        NetworkConfigQueryManager.put(configs)
+        
+        for adunit, config in zip(adunits, configs):
+            adunit.network_config = config
+
+        cls.put(adunits)
 

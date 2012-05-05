@@ -1,7 +1,9 @@
 import unittest
-
 import sys
-sys.path.append('.')
+import os
+PWD = os.path.dirname(__file__)
+sys.path.append(os.path.join(PWD, '..'))
+
 
 from interaction_tests.account import AccountInteractionTestCase
 from interaction_tests.networks import NetworkInteractionTestCase

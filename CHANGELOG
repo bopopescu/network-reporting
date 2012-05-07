@@ -1,29 +1,49 @@
+# Deployed Monday, May 07, 2012 at 08:17PM PST
+### Deployed by Tiago Bandeira
+### Tagged deploy-106
+### Bugs Fixed: ['1184']
+### Included Commits: 
+ * d4c52ba [#1184 state:fixed]
+ * 5eab7cc still resolving path issues with selenium tests for hudson
+ * ef4beb4 resolving path issues with selenium tests for hudson
+ * 7ba5051 Merge branch 'master' of github.com:mopub/mopub
+ * 2056cc2 resolving path issues with selenium tests for hudson
+ * 51d7877 Refactored and sped up campaign creation page. Modified NetworkConfig model to have an account reference. Changed all NetworkConfig constructor calls to take an account argument. Started caching NetworkConfigs on a per-account basis.
+ * 1d0c5a6 Fix bug in CachedQueryManager.memcache_flush_entities_for_account_keys
+ * 7542fcf fixed randomgen merge conflicts
+ * ae6306a Merge branch 'master' of github.com:mopub/mopub
+ * e381b47 Fixed nonetype error
+ * 1378b02 added '/api/.*' to the adserver.yaml
+ * 3cdc414 Speed ups to network migration script, addtional checks for creative migration
+ * 34288f0 Fix CachedQueryManager to support entity fetches of unlimited size (rather than just 1000)
+ * de1f4d4 Deployed without finding any bug fixes.
+ 
 # Deployed Thursday, May 03, 2012 at 09:20PM PST
 ### Deployed by John Pena
 ### Tagged deploy-105
 ### Bugs Fixed: []
-### Included Commits: 
- * 795597a versions conflict
- * 2ba6486 versions conflict
- * 8bcafbb Deployed without finding any bug fixes.
- * 6442b3d marketplace price floor change is now being recorded
- * 39286a8 versions
- * 5e68451 higher graph rigidity
- * 97798ed Merge branch 'explorer' of github.com:mopub/mopub into explorer
- * b9b6226 fixed the datepicker custom input field styles to be consistent
- * 4195ae5 refixed datepicker issue
- * 27db279 fixed datepicker issue
- * 038df4c versions merge conflict
- * 0165219 changed the rigidity to always be 1.0
- * 316239a fixed more link issue
- * 9b9b144 Merge branch 'explorer' of github.com:mopub/mopub into explorer
- * 55f2df3 regenerated plugins
- * b504b20 Merge branch 'explorer-peter' into explorer
- * e6ec443 multiple fixes
- * f900e31 using mopub blue more in the charts and tables
- * 75f5b48 renamed the dashboard as explorer, made a link from the inventory page, and removed the fill from the vs series
- * b9f6d87 tooltips in the upper left corner
- 
+### Included Commits:
+* 795597a versions conflict
+* 2ba6486 versions conflict
+* 8bcafbb Deployed without finding any bug fixes.
+* 6442b3d marketplace price floor change is now being recorded
+* 39286a8 versions
+* 5e68451 higher graph rigidity
+* 97798ed Merge branch 'explorer' of github.com:mopub/mopub into explorer
+* b9b6226 fixed the datepicker custom input field styles to be consistent
+* 4195ae5 refixed datepicker issue
+* 27db279 fixed datepicker issue
+* 038df4c versions merge conflict
+* 0165219 changed the rigidity to always be 1.0
+* 316239a fixed more link issue
+* 9b9b144 Merge branch 'explorer' of github.com:mopub/mopub into explorer
+* 55f2df3 regenerated plugins
+* b504b20 Merge branch 'explorer-peter' into explorer
+* e6ec443 multiple fixes
+* f900e31 using mopub blue more in the charts and tables
+* 75f5b48 renamed the dashboard as explorer, made a link from the inventory page, and removed the fill from the vs series
+* b9f6d87 tooltips in the upper left corner
+
 # Deployed Thursday, May 03, 2012 at 07:49PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-104

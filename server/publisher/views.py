@@ -785,7 +785,7 @@ class AdUnitShowHandler(RequestHandler):
                                                                self.end_date)
                 except MPStatsAPIException, e:
                     mpx_stats = {}
-                ag.stats.revenue = float(mpx_stats.get('rev'))
+                ag.stats.revenue = float(mpx_stats.get('rev'), 0.0)
                 ag.stats.impression_count = int(mpx_stats.get('imp', 0))
 
             if campaign.campaign_type in ['network', 'gtee_high', 'gtee', 'gtee_low', 'promo']:

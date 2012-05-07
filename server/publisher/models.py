@@ -169,6 +169,10 @@ class App(db.Model):
         d.update(icon_url=self.icon_url)
         return d
 
+    def external_key(self):
+        return db.Key.from_path(self.key().kind(), self.key().id_or_name(), _app='mopub-inc')
+
+        
 class Site(db.Model):
     DEVICE_FORMAT_CHOICES = (
            u'phone',
@@ -344,6 +348,8 @@ class Site(db.Model):
         if account_level_id:
             return account_level_id
 
+    def external_key(self):
+        return db.Key.from_path(self.key().kind(), self.key().id_or_name(), _app='mopub-inc')            
 
 ###############
 # rename Site #

@@ -92,27 +92,65 @@ class SummedStatsFetcher(AbstractStatsFetcher):
         else:
             return self.format_stats(stats)
 
+    def _get_campaign_stats(self, start, end, campaign, publisher=None,
+            daily=False, *args, **kwargs):
+        # mongo
+        query_manager = StatsModelQueryManager(AccountQueryManager.get(
+            self.account_key))
+        # If its a new network campaign that has been migrated and the
+        # transition date is after the start date
+        if campaign.campaign_type == 'network' and campaign.network_state == \
+                NetworkStates.DEFAULT_NETWORK_CAMPAIGN and \
+                campaign.old_campaign and start <= campaign.transition_date:
+            new_stats = None
+            if end >= campaign.transition_date:
+                # get new campaign stats
+                days = date_magic.gen_days(campaign.transition_date, end)
+                new_stats = query_manager.get_stats_for_days(
+                        publisher=publisher, advertiser=campaign,
+                        days=days)
+                days = date_magic.gen_days(start, campaign.transition_date)
+            else:
+                # getting only legacy campaign stats
+                days = date_magic.gen_days(start, end)
+            # get old campaign stats
+            old_stats = query_manager.get_stats_for_days(publisher=publisher,
+                    advertiser=campaign.old_campaign, days=days)
+            if new_stats:
+                transition_stats = old_stats[-1] + new_stats[0]
+                all_stats = old_stats[:-1] + [transition_stats] + new_stats[1:]
+            else:
+                all_stats = old_stats
+        else:
+            days = date_magic.gen_days(start, end)
+            all_stats = query_manager.get_stats_for_days(publisher=publisher,
+                    advertiser=campaign, days=days)
+        if daily:
+            return self.format_daily_stats(all_stats)
+        else:
+            return self.format_stats(all_stats)
+
     def get_campaign_stats(self, campaign_key, start, end, *args, **kwargs):
         # mongo
         campaign = CampaignQueryManager.get(campaign_key)
-        campaign_stats = self._get_publisher_stats(start, end,
-                advertiser=campaign, daily=True)
+        campaign_stats = self._get_campaign_stats(start, end, campaign,
+                daily=True)
         return campaign_stats
 
-    def get_campaign_specific_adunit_stats(self, adunit_key, campaign, start, end,
-            *args, **kwargs):
+    def get_campaign_specific_adunit_stats(self, adunit_key, campaign, start,
+            end, *args, **kwargs):
         # mongo
         adunit = AdUnitQueryManager.get(adunit_key);
-        adunit_stats = self._get_publisher_stats(start, end, publisher=adunit,
-                                              advertiser=campaign)
+        adunit_stats = self._get_campaign_stats(start, end, campaign,
+                publisher=adunit)
         return adunit_stats
 
     def get_campaign_specific_app_stats(self, app_key, campaign,
                                         start, end, *args, **kwargs):
         # mongo
         app = AppQueryManager.get(app_key)
-        app_stats = self._get_publisher_stats(start, end, publisher=app,
-                                              advertiser=campaign)
+        app_stats = self._get_campaign_stats(start, end, campaign,
+                publisher=app)
         return app_stats
 
     def get_app_stats(self, app_key, start, end, *args, **kwargs):

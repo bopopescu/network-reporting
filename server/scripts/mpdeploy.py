@@ -11,6 +11,8 @@ PWD = os.path.dirname(__file__)
 sys.path.append(os.path.join(PWD, '..'))
 import common.utils.test.setup
 
+from common.utils.timezones import Pacific_tzinfo
+
 import datetime
 import re
 import yaml
@@ -110,14 +112,15 @@ def git_tag_current_deploy():
     try:
         deploy_number = int(git_get_most_recent_deploy_tag().replace('deploy-',''))
         new_deploy_number = deploy_number + 1
-    except IndexError, ValueError:
+    except (IndexError, ValueError):
         new_deploy_number = 0
 
     new_deploy_tag = "deploy-" + str(new_deploy_number)
 
     # Make the message for the deploy
-    deploy_datetime = datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M%p PST")
-    message = "Deployed by %s on %s." % (git_get_user(), deploy_datetime)
+    deploy_datetime = datetime.datetime.now(Pacific_tzinfo())
+    deploy_datetime_readable = deploy_datetime.strftime("%A, %B %d, %Y at %I:%M%p PST")
+    message = "Deployed by %s on %s." % (git_get_user(), deploy_datetime_readable)
 
     # Tag the commit
     #command = 'tag -m \'%s\' -a %s' % (message, new_deploy_tag)
@@ -383,14 +386,6 @@ def main():
                 puts("Updating origin with the new tag")
                 git_push_tag(deploy_tag_name)
 
-                # Minify all javascript
-                puts("Minifying Javascript")
-                minify_javascript()
-
-                # Updating version numbers
-                puts("Updating Version Numbers")
-                update_static_version_numbers()
-
                 # Write to the changelog
                 puts("Writing changelog")
                 write_changelog(deploy_tag_name, fixed_tickets, new_commits)
@@ -410,9 +405,17 @@ def main():
                 puts(colored.yellow('No deploy server specified, deploying to frontend-staging'))
                 deploy_server = 'frontend-staging'
 
+            # Minify all javascript
+            puts("Minifying Javascript")
+            minify_javascript()
+
+            # Updating version numbers
+            puts("Updating Version Numbers")
+            update_static_version_numbers()
+                
             puts("Deploying " + colored.green(active_branch_name) + " to " + colored.green(deploy_server))
             launch_deploy_process(server=deploy_server)
-
+            
             # notify people of a successful deploy on hipichat
             puts("Notifying hipchat")
             message = "Branch %s just deployed to %s by %s" % (active_branch_name,

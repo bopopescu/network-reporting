@@ -38,8 +38,9 @@ from advertiser.query_managers import AdvertiserQueryManager
 from publisher.query_managers import AppQueryManager, \
         AdUnitContextQueryManager, \
         PublisherQueryManager
-from networks.forms import NetworkCampaignForm, AdUnitAdGroupForm
-
+from networks.forms import NetworkCampaignForm, \
+        NetworkAdGroupForm, \
+        AdUnitAdGroupForm
 from datetime import date, time
 from django.contrib.auth.decorators import login_required
 from django.forms import ModelForm
@@ -58,7 +59,6 @@ from advertiser.models import NetworkStates
 from reporting.models import StatsModel
 
 # Form imports
-from advertiser.forms import AdGroupForm
 from publisher.query_managers import AdUnitQueryManager
 
 DEFAULT_NETWORKS = set(['admob', 'iad', 'inmobi', 'jumptap', 'millennial'])
@@ -68,6 +68,8 @@ ADGROUP_FIELD_EXCLUSION_LIST = set(['account', 'campaign', 'net_creative',
 
 NETWORKS_WITH_PUB_IDS = set(['admob', 'brightroll', 'ejam', 'jumptap', \
         'millennial', 'mobfox', 'inmobi'])
+
+DEFAULT_BID = 0.05
 
 class NetworksHandler(RequestHandler):
     def get(self):
@@ -83,19 +85,27 @@ class NetworksHandler(RequestHandler):
         networks = []
         reporting = False
 
-        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
-                self.account).values()
+        # Once memcache is fixed consider which approach is faster
+#        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+#                self.account).values()
 
         apps = PublisherQueryManager.get_objects_dict_for_account(
                 self.account).values()
 
-        for campaign in CampaignQueryManager.get_network_campaigns(
-                self.account, is_new=True):
+        campaigns = CampaignQueryManager.get_network_campaigns(self.account,
+                is_new=True)
+
+        for campaign in campaigns:
             network = str(campaign.network_type)
 
             # MoPub reported campaign cpm comes from meta data not stats so
             # we calculate it here instead of over ajax
-            campaign_adgroups = filter_adgroups_for_campaign(campaign, adgroups)
+            #campaign_adgroups = filter_adgroups_for_campaign(campaign, adgroups)
+            # Get adgroup by key name
+            campaign_adgroups = AdGroupQueryManager.get([AdGroupQueryManager.
+                get_network_adgroup(campaign, adunit.key(),
+                    self.account.key()).key() for app in apps for
+                    adunit in app.adunits])
             bid_range = get_bid_range(campaign_adgroups)
             network_data = {'name': network,
                             'pretty_name': campaign.name,
@@ -119,17 +129,26 @@ class NetworksHandler(RequestHandler):
                     reporting = True
                     network_data['reporting'] = True
 
-            adgroups_by_adunit = get_adgroups_by_adunit(campaign_adgroups)
+            # TODO: determine which is faster? get by key or memcache
+            #adgroups_by_adunit = get_adgroups_by_adunit(campaign_adgroups)
 
             app_bids = []
+            index = 0
             for app in apps:
-                app_adgroups = filter_adgroups_for_app(app, adgroups_by_adunit)
+                app_adgroups = []
+                for adunit in app.adunits:
+                    # TODO: put bids in app?
+                    adunit.adgroup = campaign_adgroups[index]
+                    app_adgroups.append(adunit.adgroup)
+                    index += 1
                 bid_range = get_bid_range(app_adgroups)
                 app_bids.append({'min_cpm': bid_range[0],
                                  'max_cpm': bid_range[1]})
+
             network_data['apps'] = zip(apps, app_bids)
             network_data['apps'] = sorted(network_data['apps'], key=lambda
                     app_and_bid: app_and_bid[0].identifier)
+
 
             # Add this network to the list that goes in the page
             networks.append(network_data)
@@ -172,6 +191,11 @@ class NetworksHandler(RequestHandler):
 
         apps = sorted(apps, key=lambda app: app.identifier)
 
+        display_message = self.account.display_networks_message
+        if display_message:
+            self.account.display_networks_message = False
+            AccountQueryManager.put(self.account)
+
         return render_to_response(self.request,
               'networks/index.html',
               {
@@ -179,6 +203,7 @@ class NetworksHandler(RequestHandler):
                   'end_date': self.days[-1],
                   'date_range': self.date_range,
                   'days': self.days,
+                  'display_message': display_message,
                   'graph': True if networks else False,
                   'networks': networks,
                   'networks_to_setup': networks_to_setup,
@@ -212,7 +237,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(1) or 'custom' in network
+                    self.account, network) or 'custom' in network
             # Set the default campaign name to the network name
             campaign_name = NETWORKS[network]
             if custom_campaign and 'custom' not in network:
@@ -243,16 +268,18 @@ class EditNetworkHandler(RequestHandler):
                 # Can't initialize username or password because it's encrypted
                 # and can only be decrypted on EC2
                 login_form = LoginCredentialsForm(instance=login,
-                        network=network)
+                        network=network, prefix=network)
                 network_data['login_state'] = login.state
             else:
-                login_form = LoginCredentialsForm(network=network)
+                login_form = LoginCredentialsForm(network=network,
+                        prefix=network)
 
         if network == 'jumptap':
             network_data['pub_id'] = getattr(self.account.network_config,
                     network + '_pub_id', '')
 
-        apps = AppQueryManager.get_apps(account=self.account, alphabetize=True)
+        apps = PublisherQueryManager.get_objects_dict_for_account(account=
+                self.account).values()
         adgroup = None
         for app in apps:
             if network in NETWORKS_WITH_PUB_IDS:
@@ -280,21 +307,13 @@ class EditNetworkHandler(RequestHandler):
             app.fourteen_day_stats = fourteen_day_stats
 
             # Create different adgroup form for each adunit
-            app.adunits = []
-            min_cpm = 9999.9
-            max_cpm = 0.0
-            for adunit in app.all_adunits:
-                if adunit.deleted:
-                    continue
-
+            for adunit in app.adunits:
                 adgroup = None
                 if campaign_key:
+                    # Get adgroup by key name
                     adgroup = AdGroupQueryManager.get_network_adgroup(
                             campaign, adunit.key(),
                             self.account.key(), True)
-                    if adgroup:
-                        min_cpm = min(adgroup.bid, min_cpm)
-                        max_cpm = max(adgroup.bid, max_cpm)
 
                 adunit.adgroup_form = AdUnitAdGroupForm(instance=adgroup,
                         prefix=str(adunit.key()))
@@ -309,18 +328,11 @@ class EditNetworkHandler(RequestHandler):
                         # differs from the app level one
                         adunit.pub_id = adunit_pub_id
 
-                app.adunits.append(adunit)
-            # Set app level bid
-            if min_cpm == max_cpm:
-                app.bid = max_cpm
-            elif not app.adunits or not campaign_key:
-                app.bid = 0.05
-            else:
-                app.bid = None
+            # Sort adunits
+            app.adunits = sorted(app.adunits, key=lambda adunit: adunit.name)
 
         # Create the default adgroup form
-        adgroup_form = AdGroupForm(is_staff=self.request.user.is_staff,
-                instance=adgroup)
+        adgroup_form = NetworkAdGroupForm(instance=adgroup)
 
         # Sort apps
         apps = sorted(apps, key=lambda app_data: app_data.identifier)
@@ -344,14 +356,14 @@ class EditNetworkHandler(RequestHandler):
                                               NETWORKS_WITH_PUB_IDS,
                                   })
 
-    def post(self,
-            network='',
-            campaign_key=''):
+    def post(self, network='', campaign_key=''):
         if not self.request.is_ajax():
             raise Http404
 
-        apps = AppQueryManager.get_apps(account=self.account)
-        adunits = AdUnitQueryManager.get_adunits(account=self.account)
+        apps = PublisherQueryManager.get_apps_dict_for_account(account=
+                self.account).values()
+        adunits = PublisherQueryManager.get_adunits_dict_for_account(account=
+                self.account).values()
 
         query_dict = self.request.POST.copy()
         query_dict['campaign_type'] = 'network'
@@ -372,7 +384,7 @@ class EditNetworkHandler(RequestHandler):
         else:
             # Do no other network campaigns exist or is this custom?
             custom_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network).count(1) or 'custom' in network
+                    self.account, network) or 'custom' in network
             if not custom_campaign:
                 query_dict['name'] = NETWORKS[network]
                 campaign = CampaignQueryManager. \
@@ -393,13 +405,10 @@ class EditNetworkHandler(RequestHandler):
             campaign.network_type = network
             campaign.campaign_type = 'network'
 
-            # Hack to get old validation working
-            query_dict['bid'] = 0.5
-            query_dict['bid_strategy'] = 'cpm'
-
-            adgroup_form = AdGroupForm(query_dict)
+            adgroup_form = NetworkAdGroupForm(query_dict)
 
             if adgroup_form.is_valid():
+                logging.info("default adgroup form is valid")
                 default_adgroup = adgroup_form.save(commit=False)
 
                 adgroup_forms_are_valid = True
@@ -449,7 +458,8 @@ class EditNetworkHandler(RequestHandler):
                     tmp_adgroup = adgroup_form.save(commit=False)
                     # copy fields from the form for this adgroup
                     for field in AdUnitAdGroupForm.base_fields.iterkeys():
-                        setattr(adgroup, field, getattr(tmp_adgroup, field))
+                        if field not in ('custom_html', 'custom_method'):
+                            setattr(adgroup, field, getattr(tmp_adgroup, field))
 
                     if network in NETWORK_ADGROUP_TRANSLATION:
                         adgroup.network_type = NETWORK_ADGROUP_TRANSLATION[
@@ -459,19 +469,21 @@ class EditNetworkHandler(RequestHandler):
 
                     html_data = None
                     if adgroup.network_type == 'custom':
-                        html_data = self.request.POST.get('custom_html', '')
+                        html_data = self.request.POST.get(str(adunit_key) + \
+                                '-custom_html', '')
                     elif adgroup.network_type == 'custom_native':
-                        html_data = self.request.POST.get('custom_method', '')
+                        html_data = self.request.POST.get(str(adunit_key) + \
+                                '-custom_method', '')
                     # build default creative with custom_html data if custom or
                     # none if anything else
                     creative = adgroup.default_creative(html_data)
-                    if adgroup.net_creative and creative.__class__ == \
-                            adgroup.net_creative.__class__:
+                    old_creative = adgroup.creatives.get()
+                    if old_creative and creative.__class__ == old_creative.__class__:
                         # if the adgroup has a creative AND the new creative and
                         # old creative are the same class,
                         # ignore the new creative and set the variable to point
                         # to the old one
-                        creative = adgroup.net_creative
+                        creative = old_creative
                         if adgroup.network_type == 'custom':
                             # if the network is a custom one, the creative
                             # might be the same, but the data might be new, set
@@ -479,18 +491,16 @@ class EditNetworkHandler(RequestHandler):
                             creative.html_data = html_data
                         elif adgroup.network_type == 'custom_native':
                             creative.html_data = html_data
-                    elif adgroup.net_creative:
-                        #in this case adgroup.net_creative has evaluated to true BUT the class comparison did NOT.
+                    elif old_creative:
+                        #in this case old_creative has evaluated to true BUT the class comparison did NOT.
                         #at this point we know that there was an old creative AND it's different from the new creative so
                         #and delete the old creative just marks as deleted!
-                        CreativeQueryManager.delete(adgroup.net_creative)
+                        CreativeQueryManager.delete(old_creative)
 
                     # the creative should always have the same account as the adgroup
                     creative.account = adgroup.account
                     #put the creative so we can reference it
                     CreativeQueryManager.put(creative)
-                    # set adgroup to reference the correct creative
-                    adgroup.net_creative = creative.key()
 
                     AdGroupQueryManager.put(adgroup)
                     adgroups.append(adgroup)
@@ -570,18 +580,13 @@ class EditNetworkHandler(RequestHandler):
             else:
                 errors = {}
                 for key, value in adgroup_form.errors.items():
-                    if adgroup_form.prefix and key in set(['bid', 'active']):
+                    if adgroup_form.prefix and key in set(AdUnitAdGroupForm.
+                            base_fields.keys()):
                         key = adgroup_form.prefix + '-' + key
                     errors[key] = ' '.join([error for error in value])
         else:
             errors = {}
             for key, value in campaign_form.errors.items():
-                # TODO: find a less hacky way to get jQuery validator's
-                # showErrors function to work with the SplitDateTimeWidget
-                if key == 'start_datetime':
-                    key = 'start_datetime_1'
-                elif key == 'end_datetime':
-                    key = 'end_datetime_1'
                 errors[key] = ' '.join([error for error in value])
 
         return JSONResponse({
@@ -603,12 +608,21 @@ class NetworkDetailsHandler(RequestHandler):
         if not campaign or campaign.account.key() != self.account.key():
             raise Http404
 
-        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+        # Once memcache is fixed consider which approach is faster
+#        adgroups = AdvertiserQueryManager.get_adgroups_dict_for_account(
+#                self.account).values()
+        #campaign_adgroups = filter_adgroups_for_campaign(campaign, adgroups)
+
+        apps = PublisherQueryManager.get_objects_dict_for_account(
                 self.account).values()
+        # Get adgroup by key name
+        campaign_adgroups = AdGroupQueryManager.get([AdGroupQueryManager.
+            get_network_adgroup(campaign, adunit.key(),
+                self.account.key()).key() for app in apps for
+                adunit in app.adunits])
 
         # MoPub reported campaign cpm comes from meta data not stats so
         # we calculate it here instead of over ajax
-        campaign_adgroups = filter_adgroups_for_campaign(campaign, adgroups)
         bid_range = get_bid_range(campaign_adgroups)
 
         network = campaign.network_type
@@ -622,18 +636,11 @@ class NetworkDetailsHandler(RequestHandler):
                         'min_cpm': bid_range[0],
                         'max_cpm': bid_range[1],}
 
-        # Get the campaign targeting information.  We need an adunit
-        # and an adgroup to determine targeting.  Any adunit will do
-        # because every adunit is targeted by a network adgroup.
-        adunit = AdUnitQueryManager.get_adunits(account=self.account,
-                limit=1)[0]
-        adgroup = AdGroupQueryManager.get_network_adgroup(campaign,
-                adunit.key(), self.account.key(), get_from_db=True)
-        if adgroup.device_targeting:
-            for device, pretty_name in adgroup.DEVICE_CHOICES:
-                if getattr(adgroup, 'target_' + device, False):
+        if campaign_adgroups and campaign_adgroups[0].device_targeting:
+            for device, pretty_name in campaign_adgroups[0].DEVICE_CHOICES:
+                if getattr(campaign_adgroups[0], 'target_' + device, False):
                     network_data['targeting'].append(pretty_name)
-            if adgroup.target_other:
+            if campaign_adgroups[0].target_other:
                 network_data['targeting'].append('Other')
 
         if network_data['targeting']:
@@ -644,7 +651,6 @@ class NetworkDetailsHandler(RequestHandler):
         # This campaign is a default network campaign if its the
         # only one of this type. If this is the default, and if we have
         # login info, then we have reporting stats.
-        #REFACTOR: handle the case when this isnt true.
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
             login = AdNetworkLoginManager.get_logins(self.account, network). \
@@ -653,15 +659,16 @@ class NetworkDetailsHandler(RequestHandler):
                 network_data['login_state'] = login.state
                 network_data['reporting'] = True
 
-        apps = PublisherQueryManager.get_objects_dict_for_account(
-                self.account).values()
-
-
-        adgroups_by_adunit = get_adgroups_by_adunit(campaign_adgroups)
-
+        # set adunit cpms to corresponding adgroup bids
         app_bids = []
+        index = 0
         for app in apps:
-            app_adgroups = filter_adgroups_for_app(app, adgroups_by_adunit)
+            app_adgroups = []
+            for adunit in app.adunits:
+                # TODO: put bids in app?
+                adunit.adgroup = campaign_adgroups[index]
+                app_adgroups.append(adunit.adgroup)
+                index += 1
             bid_range = get_bid_range(app_adgroups)
             app_bids.append({'min_cpm': bid_range[0],
                              'max_cpm': bid_range[1]})
@@ -670,13 +677,6 @@ class NetworkDetailsHandler(RequestHandler):
         network_data['apps'] = sorted(network_data['apps'], key=lambda
                 app_and_bid: app_and_bid[0].identifier)
 
-        # set adunit cpms to corresponding adgroup bids
-        for app in apps:
-            for adunit in app.adunits:
-                if str(adunit.key()) in adgroups_by_adunit:
-                    adgroup = adgroups_by_adunit[str(adunit.key())]
-                    adunit.cpm = adgroup.bid
-                    adunit.active = adgroup.active
 
         apps = sorted(apps, key=lambda app: app.identifier)
 
@@ -733,7 +733,13 @@ class DeleteNetworkHandler(RequestHandler):
 
         campaign_key = self.request.POST.get('campaign_key')
 
-        campaign = CampaignQueryManager.get(campaign_key)
+        campaigns = AdvertiserQueryManager.get_objects_dict_for_account(
+                self.account)
+
+        if campaign_key not in campaigns:
+            raise Http404
+
+        campaign = campaigns[campaign_key]
 
         if not campaign or campaign.account.key() != self.account.key():
             raise Http404
@@ -744,10 +750,11 @@ class DeleteNetworkHandler(RequestHandler):
         if campaign.network_state == NetworkStates. \
                 DEFAULT_NETWORK_CAMPAIGN:
             # If other campaigns exist, a new default campaign must be chosen
-            default_campaign = CampaignQueryManager.get_network_campaigns(
-                    self.account, network_type=campaign.network_type).get()
+            default_campaigns = CampaignQueryManager.get_network_campaigns(
+                    self.account, network_type=campaign.network_type)
 
-            if default_campaign:
+            if default_campaigns:
+                default_campaign = default_campaigns[0]
                 default_campaign.network_state = NetworkStates. \
                         DEFAULT_NETWORK_CAMPAIGN
                 default_campaign.name = NETWORKS[default_campaign.network_type]
@@ -759,14 +766,10 @@ class DeleteNetworkHandler(RequestHandler):
                     login.deleted = True
                     login.put()
 
-        adunits = AdUnitQueryManager.get_adunits(account=self.account)
         # Mark all adgroups as deleted
-        for adunit in adunits:
-            adgroup = AdGroupQueryManager.get_network_adgroup(
-                    campaign, adunit.key(),
-                    self.account.key(), True)
+        for adgroup in campaign._adgroups:
             adgroup.deleted = True
-            AdGroupQueryManager.put(adgroup)
+        AdGroupQueryManager.put(campaign._adgroups)
 
         return TextResponse()
 
@@ -795,7 +798,8 @@ def get_adgroups_by_adunit(adgroups):
     """
     adgroups_by_adunit = {}
     for adgroup in adgroups:
-        adgroups_by_adunit[str(adgroup.site_keys[0])] = adgroup
+        if adgroup.site_keys:
+            adgroups_by_adunit[str(adgroup.site_keys[0])] = adgroup
 
     return adgroups_by_adunit
 

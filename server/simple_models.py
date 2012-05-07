@@ -68,7 +68,8 @@ def to_basic_type(obj, already_translated = None):
     #if id(obj) in already_translated:
     #    return already_translated[id(obj)]
     #logging.info("Converting to basic-types: %s %s" % (type(obj), repr(obj)))
-    assert obj is None or isinstance(obj, (int, long, float, str, unicode, datetime, dict, list, tuple, SimpleModel, bool))
+
+    assert obj is None or isinstance(obj, (int, long, float, str, unicode, datetime, dict, list, tuple, SimpleModel, bool)), "Object type is %s" % type(obj)
     if isinstance(obj, (list, tuple)):
         # Apply this function recursively on the subobjects.
         to_return = [to_basic_type(x, already_translated) for x in obj]
@@ -493,7 +494,10 @@ class SimpleTextAndTileCreative(SimpleCreative):
 class SimpleHtmlCreative(SimpleCreative):
     def __init__(self, html_data=None, ormma_html=False, **kwargs):
         if html_data is not None:
-            html_data = str(html_data)
+            try:
+                html_data = str(html_data)
+            except UnicodeEncodeError, e:
+                html_data = unicode(html_data)
         self.html_data = html_data
         self.ormma_html = ormma_html
         super(SimpleHtmlCreative, self).__init__(**kwargs)

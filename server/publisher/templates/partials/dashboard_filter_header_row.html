@@ -1,0 +1,14 @@
+<tr>
+    <th class="title"><%= title %></th>
+    <% _.each(columns, function (column) { %>
+        <th class="<%= column %> stat
+                   <% if(!_.include(default_columns, column) && column !== order) { %> hidden <% } %>
+                   <% if(_.include(orderable_columns, column)) { %> orderable <% } %>"
+                <% if(column === order && deltas) { %> colspan="2" <% } %> >
+            <%= stats[column] %>
+            <% if(column === order) { %>
+                <i class="icon-chevron-down"></i>
+            <% } %>
+        </th>
+    <%  }); %>
+</tr>

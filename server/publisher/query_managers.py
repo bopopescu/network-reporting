@@ -39,6 +39,9 @@ APPLE_DEVICES = ('iphone', 'ipad')
 IAD_URL = 'http://itunes.apple.com.*'
 ALL_NETWORKS = 'default'
 
+TO_ERR = 'TIMEOUT_ERROR'
+BAD_KEY_ERR = 'BAD_KEY_ERROR'
+
 class AdUnitContextQueryManager(CachedQueryManager):
     """ Keeps an up-to-date version of the AdUnit Context in memcache.
     Deleted from memcache whenever its components are updated."""
@@ -47,6 +50,8 @@ class AdUnitContextQueryManager(CachedQueryManager):
     @classmethod
     def get_context(cls, adunit_key):
         adunit = AdUnit.get(adunit_key)
+        if adunit is None:
+            raise db.BadKeyError("Invalid adunit key %s" % adunit_key)
         adunit_context = AdUnitContext.wrap(adunit)
         return adunit_context
 
@@ -85,8 +90,17 @@ class AdUnitContextQueryManager(CachedQueryManager):
                              time=CACHE_TIME)
                 new_timestamp = datetime.datetime.now()
                 memcache.set("ts:%s" % adunit_context_key, new_timestamp)
-            except: # Datastore timeouts usually
-                pass
+            except db.Timeout, e: # Datastore timeouts usually
+                logging.warning("Datastore timeout for wrapping context for: %s" % adunit_key)
+                return TO_ERR
+            except db.BadKeyError, e:
+                logging.warning("%s is an invalid adunit key" % adunit_key)
+                return BAD_KEY_ERR
+            except db.KindError, e:
+                logging.warning("%s is not an AdUnit key" % adunit_key)
+                obj = db.get(adunit_key)
+                logging.warning("Account %s has an improperly configured client" % obj.account.mpuser.email)
+                return BAD_KEY_ERR
         else:
             new_timestamp = memcache_ts
 
@@ -134,30 +148,11 @@ class AdUnitContextQueryManager(CachedQueryManager):
         else:
             #TODO(tornado): THIS IS COMMENTED OUT, NEED TO IMPLEMENT
             # WHEN SHIT IS LIVE FOR REAL
-            queue = taskqueue.Queue('push-context-update')
-            tasks = []
-            for key in adunit_keys:
-                # For each adunit, spin up a TQ to ping the adserver
-                # admins with new data
-                task_name = 'adunit_context_push%s' % key
-                task = taskqueue.Task(url='/fetch_api/adunit_update_push',
-                                      method='GET',
-                                      name = task_name,
-                                      countdown=60,
-                                      params={'adunit_key':key})
-                tasks.append(task)
-                # Have to delete one at a time, because if we try to batch delete
-                # and any one doesn't exist, an error is immediately
-                # raised and all subsequent tasks are ignored and not
-                # deleted
-                try:
-                    queue.delete_tasks(task)
-                except:
-                    logging.warning("%s does not exist in push-context-update queue" % task)
-            try:
-                queue.add(tasks)
-            except:
-                logging.warning("Error adding %s to push-context-update queue" % tasks)
+            queue = taskqueue.Queue()
+            task = taskqueue.Task(url='/fetch_api/adunit_update_fanout',
+                                  method='POST',
+                                  params={'adunit_keys': adunit_keys})
+            queue.add(task)
 
         logging.info("Deleting from memcache: %s" % keys)
         success = memcache.delete_multi(keys)
@@ -172,7 +167,7 @@ class PublisherQueryManager(CachedQueryManager):
     def get_objects_dict_for_account(cls, account):
         """
         Returns a dictionary mapping App keys to App entities carrying adunit data. Adunits for each
-        app can be retrieved as a list by using app.adunit.
+        app can be retrieved as a list by using app.adunits.
         """
         apps_dict = cls.get_apps_dict_for_account(account)
         adunits = cls.get_adunits_dict_for_account(account).values()
@@ -301,9 +296,36 @@ class AppQueryManager(CachedQueryManager):
     @classmethod
     def update_config_and_put(cls, app, network_config):
         """ Updates the network config and the associated app"""
-        db.put(network_config)
+        from account.query_managers import NetworkConfigQueryManager
+        
+        NetworkConfigQueryManager.put(network_config)
         app.network_config = network_config
         cls.put(app)
+
+    @classmethod
+    def update_config_and_put_multi(cls, apps, configs):
+        """
+        Performs a batch assignment of NetworkConfigs to apps.
+
+        Arguments:
+        apps    -- a list of apps to update
+        configs -- a list of configs, each one corresponding to an app in the apps list
+
+        Note: an exception is thrown if the two lists are not of equal length.
+        """
+        from account.query_managers import NetworkConfigQueryManager
+
+        if len(apps) != len(configs):
+            raise Exception('Length of apps list must be equal to length of configs list')
+
+        # Save the config objects first; otherwise, they won't have complete keys and we won't be
+        # able to assign them to other objects.
+        NetworkConfigQueryManager.put(configs)
+        
+        for app, config in zip(apps, configs):
+            app.network_config = config
+            
+        cls.put(apps)
 
     @classmethod
     def get_apps_with_network_configs(cls, account):
@@ -486,15 +508,42 @@ class AdUnitQueryManager(QueryManager):
         affected_account_keys = set()
         for adunit in adunits:
             affected_account_keys.add(AdUnit.account.get_value_for_datastore(adunit))
-            
+
         PublisherQueryManager.memcache_flush_entities_for_account_keys(affected_account_keys, AdUnit)
 
         return put_response
 
     @classmethod
     def update_config_and_put(cls, adunit, network_config):
-        """ Updates the network config and the associated app"""
-        db.put(network_config)
+        """ Updates the network config and the associated adunit"""
+        from account.query_managers import NetworkConfigQueryManager
+
+        NetworkConfigQueryManager.put(network_config)
         adunit.network_config = network_config
         cls.put(adunit)
+
+    @classmethod
+    def update_config_and_put_multi(cls, adunits, configs):
+        """
+        Performs a batch assignment of NetworkConfigs to adunits.
+
+        Arguments:
+        adunits -- a list of apps to update
+        configs -- a list of configs, each one corresponding to an adunit in the adunits list
+
+        Note: an exception is thrown if the two lists are not of equal length.
+        """
+        from account.query_managers import NetworkConfigQueryManager
+
+        if len(adunits) != len(configs):
+            raise Exception('Length of ad units list must be equal to length of configs list')
+
+        # Save the config objects first; otherwise, they won't have complete keys and we won't be
+        # able to assign them to other objects.
+        NetworkConfigQueryManager.put(configs)
+        
+        for adunit, config in zip(adunits, configs):
+            adunit.network_config = config
+
+        cls.put(adunits)
 

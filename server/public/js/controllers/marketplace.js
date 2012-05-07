@@ -301,22 +301,11 @@ var mopub = mopub || {};
                             aaData: creative_data
                         };
 
-                        try {
-                            mpq.push(['track', 'Creative Review Load Success']);
-                        } catch (x) {
-                            // noop
-                        }
-
                         fnCallback(response, textStatus, jqXHR);
                     },
                     dataType: "jsonp",
                     cache: false,
                     error: function(data, textStatus, jqXHR) {
-                        try {
-                            mpq.push(['track', 'Creative Review Load Fail']);
-                        } catch (x) {
-                            // noop
-                        }
                     }
                 } );
             },
@@ -643,8 +632,8 @@ var mopub = mopub || {};
                                 text: 'Set dates',
                                 css: { fontWeight: '600' },
                                 click: function() {
-                                    var from_date=$('#dashboard-dateOptions-custom-from').datepicker("getDate");
-                                    var to_date=$('#dashboard-dateOptions-custom-to').datepicker("getDate");
+                                    var from_date=$('#dashboard-dateOptions-custom-from').xdatepicker("getDate");
+                                    var to_date=$('#dashboard-dateOptions-custom-to').xdatepicker("getDate");
                                     var num_days=Math.ceil((to_date.getTime()-from_date.getTime())/(86400000)) + 1;
 
                                     var from_day=from_date.getDate();
@@ -681,32 +670,32 @@ var mopub = mopub || {};
             });
 
             // set up custom dateOptions modal dialog
-            $('#dashboard-dateOptions-custom-from').datepicker({
+            $('#dashboard-dateOptions-custom-from').xdatepicker({
                 defaultDate: '-15d',
                 maxDate: '0d',
                 onSelect: function(selectedDate) {
                     var other = $('#dashboard-dateOptions-custom-to');
                     var instance = $(this).data("datepicker");
-                    var date = $.datepicker
+                    var date = $.xdatepicker
                         .parseDate(instance.settings.dateFormat ||
-                                   $.datepicker._defaults.dateFormat,
+                                   $.xdatepicker._defaults.dateFormat,
                                    selectedDate,
                                    instance.settings);
-                    other.datepicker('option', 'minDate', date);
+                    other.xdatepicker('option', 'minDate', date);
                 }
             });
-            $('#dashboard-dateOptions-custom-to').datepicker({
+            $('#dashboard-dateOptions-custom-to').xdatepicker({
                 defaultDate: '-1d',
                 maxDate: '0d',
                 onSelect: function(selectedDate) {
                     var other = $('#dashboard-dateOptions-custom-from');
                     var instance = $(this).data("datepicker");
-                    var date = $.datepicker
+                    var date = $.xdatepicker
                         .parseDate(instance.settings.dateFormat ||
-                                   $.datepicker._defaults.dateFormat,
+                                   $.xdatepicker._defaults.dateFormat,
                                    selectedDate,
                                    instance.settings);
-                    other.datepicker('option', 'maxDate', date);
+                    other.xdatepicker('option', 'maxDate', date);
                 }
             });
 

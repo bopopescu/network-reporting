@@ -210,7 +210,7 @@ class ContentFilterHandler(RequestHandler):
 
         # If the account doesn't have a network config, make one
         if not network_config:
-            network_config = NetworkConfig()
+            network_config = NetworkConfig(account=self.account)
             network_config.put()
             self.account.network_config = network_config
             self.account.put()
@@ -274,7 +274,7 @@ class MarketplaceBlindnessChangeHandler(RequestHandler):
 
             # Some accounts won't have a network config yet
             if network_config == None:
-                n = NetworkConfig().put()
+                n = NetworkConfig(account=self.account).put()
                 self.account.network_config = n
                 self.account.put()
                 network_config = n

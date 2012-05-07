@@ -9,13 +9,14 @@ import urllib2
 from google.appengine.ext import db
 
 from reporting.models import StatsModel
+import logging
 
 BASE_URL = 'http://mongostats.mopub.com/stats'
 DELIM = '||'
 
 def api_fetch(start_date, end_date,
               account_key=None, publisher_key=None,
-              advertiser_key=None, response=None):
+              advertiser_key=None, response=None, hybrid=True):
     """
     Hits the mongostats API and converts the response into StatsModels
 
@@ -24,7 +25,7 @@ def api_fetch(start_date, end_date,
     if not response: # used for testing only
         url = _generate_api_url(start_date, end_date,
                                 account_key, publisher_key,
-                                advertiser_key)
+                                advertiser_key, hybrid)
         response = urllib2.urlopen(url).read()
 
     try:
@@ -45,7 +46,6 @@ def api_fetch(start_date, end_date,
         # key e.g. agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw||agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYw5TmBAw||agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww pylint: disable=C0301
         pub_str, adv_str, acct_str = key.split(DELIM)
         daily_stats = all_stats[key]['daily_stats'] # list of dictionaries
-
         for stats_dict in daily_stats:
             # stats_dict - e.g.
             # {'attempt_count': 1283043,
@@ -82,7 +82,7 @@ def api_fetch(start_date, end_date,
 
 def _generate_api_url(start_date, end_date,
                       account_key=None, publisher_key=None,
-                      advertiser_key=None):
+                      advertiser_key=None, hybrid=True):
     """
     generates a url of the form:
     http://mongostats.mopub.com/stats?start_date=111220&end_date=111222&acct=agltb3B1Yi1pbmNyEAsSB0FjY291bnQY8d77Aww&pub=agltb3B1Yi1pbmNyDQsSBFNpdGUY9IiEBAw&adv=agltb3B1Yi1pbmNyEAsSB0FkR3JvdXAYw5TmBAw
@@ -93,6 +93,7 @@ def _generate_api_url(start_date, end_date,
         "acct": _str_or_empty(account_key),
         "pub": _str_or_empty(publisher_key),
         "adv": _str_or_empty(advertiser_key),
+        "hybrid": hybrid,
     }
 
     query_string = urllib.urlencode(params)

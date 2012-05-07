@@ -59,7 +59,7 @@ def update():
                             app_config = app.network_config
                             if not app_config:
                                 print "creating app_config"
-                                app_config = NetworkConfig()
+                                app_config = NetworkConfig(account=account)
                             app_config_dict[str(app.key())] = app_config
 
 
@@ -104,7 +104,7 @@ def update_account(account):
                 app_config = app.network_config
                 if not app_config:
                     print "creating app_config"
-                    app_config = NetworkConfig()
+                    app_config = NetworkConfig(account=account)
 
                 setattr(app_config, ad_network + '_pub_id',
                         getattr(n_config, ad_network + '_pub_id', None))

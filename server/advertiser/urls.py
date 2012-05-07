@@ -2,8 +2,8 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('advertiser.views',
-    url(r'^create/$', 'create_campaign_and_adgroup', name='advertiser_campaign_create'),
-    url(r'^edit/(?P<adgroup_key>[-\w\.]+)/$', 'edit_campaign_and_adgroup', name='advertiser_campaign_edit'),
+    url(r'^create/$', 'create_or_edit_campaign_and_adgroup', name='advertiser_campaign_create'),
+    url(r'^edit/(?P<adgroup_key>[-\w\.]+)/$', 'create_or_edit_campaign_and_adgroup', name='advertiser_campaign_edit'),
     #url(r'^create/ajax/$','campaign_adgroup_create_ajax',name='advertiser_campaign_create_ajax'),
     url(r'^creative/create/$', 'creative_create', name='advertiser_creative_create'),
     url(r'^creative/manage/$', 'creative_manage', name='advertiser_creative_manage'),

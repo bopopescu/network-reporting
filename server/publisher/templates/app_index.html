@@ -6,17 +6,12 @@
   <h1>Dashboard</h1>
 {% endblock pageTitle %}
 
-{% block content %}
 
-  <div id="ajaxFailure" style="display:none">
-    <a href="#" id="ajaxDismiss">
-      <img src="../images/icons/199_16x16.png"></img>
-    </a>
-    There was a problem retrieving data for some of your apps / sites.
-    <a href="#" id="ajaxRetry">
-      <img src="../images/icons/92_16x16.png"></img> <strong>Retry</strong>
-    </a>
-  </div>
+{% block titleBarRight %}
+  <a href="{% url dashboard %}"> MoPub Explorer (Beta) </a>
+{% endblock titleBarRight %}
+  
+{% block content %}
 
   {% ifequal account.status "step4" %}
     <div class="alert-message block-message">

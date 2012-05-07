@@ -24,6 +24,7 @@ from ad_server.main import  ( AdClickHandler,
 from ad_server.handlers import adhandler
 from ad_server.handlers.adhandler import AdHandler   
 
+from account.query_managers import AccountQueryManager
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
 ############# Integration Tests #############
 import unittest
@@ -74,12 +75,9 @@ class TestAdAuction(unittest.TestCase):
         # Next, declare which service stubs you want to use.
         self.testbed.init_datastore_v3_stub()
         self.testbed.init_memcache_stub()
-                                               
-
-        self.network_config = NetworkConfig()
-        self.network_config.put()
+        
         # Set up default models
-        self.account = Account(network_config=self.network_config)
+        self.account = Account()
         self.account.put()
 
         self.app = App(account=self.account, name="Test App")
@@ -90,6 +88,10 @@ class TestAdAuction(unittest.TestCase):
                                      name="Test AdUnit",
                                      format=u'320x50')
         self.adunit.put()
+
+        # Set up app network config.
+        self.network_config = NetworkConfig(account=self.account)
+        AccountQueryManager.update_config_and_put(self.account, self.network_config)
 
         # Make Expensive Campaign
         self.expensive_c = Campaign(name="expensive",

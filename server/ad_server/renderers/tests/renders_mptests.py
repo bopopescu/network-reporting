@@ -98,7 +98,7 @@ class RenderingTestBase(object):
         self.app.put()
 
 
-        self.network_config = NetworkConfig(admob_pub_id='myadmobsiteid')
+        self.network_config = NetworkConfig(account=self.account, admob_pub_id='myadmobsiteid')
         self.network_config.put()
 
         self.adunit = AdUnit(account=self.account,

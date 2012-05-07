@@ -17,6 +17,11 @@
 {% endblock titleBarRight %}
 
 {% block preContent %}
+{% if display_message %}
+<div class="alert-message block-message warning">
+    Welcome to the new Networks tab!  In an effort to make ad network management easier, we have consolidated most network campaigns to a single campaign for each network.  You can now set ad network IDs, CPM, allocation settings and frequency caps at the global, app or ad unit level.  We've also combined revenue reporting into the dashboard so that you can see your ad network revenues from most sources right in MoPub.  If you have any questions or comments, reach out to us at <a href="support@mopub.com">support@mopub.com</a>.
+</div>
+{% endif %}
 <section id="network-settingsForm" class="hidden">
 <div>
     <form accept-charset="ascii" id="networkForm" class="settingsForm">
@@ -86,7 +91,7 @@ Make a table for ad networks that are active
     <div class="{% cycle 'appData' 'appData appData-alt' %}">
         <table class="dataTable appData-main">
             <tbody>
-                <tr id="{{network.key}}-row">
+                <tr id="{{ network.key }}-row">
                     <td class="networkData-icon">
                         <a href="{% url network_details campaign_key=network.key %}">
                             <img src="/images/{{network.name}}-transparent.png" alt="{{network.pretty_name}}" width="75" height="25" />
@@ -125,15 +130,19 @@ Make a table for ad networks that are active
                         <div class="network-data">-</div>
                         {% endif %}
                         <div class="mopub-data">
+                            {# django needs elif #}
                             {% if network.min_cpm == network.max_cpm %}
+                            {% if network.min_cpm %}
                             {{ network.min_cpm|currency }}
+                            {% else %}
+                            {% endif %}
                             {% else %}
                             {{ network.min_cpm|currency }}-{{ network.max_cpm|currency }}
                             {% endif %}
                         </div>
                     </td>
                     <td class="dataTable-data numeric att">
-                        {% if network.reporting and network.name != "mobfox" %}
+                        {% if network.reporting %}
                         <div class="network-data">-</div>
                         {% endif %}
                         <div class="mopub-data">-</div>
@@ -180,14 +189,18 @@ Make a table for ad networks that are active
                             {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}
+                            {# django needs elif #}
                             {% if app_bids.min_cpm == app_bids.max_cpm %}
+                            {% if app_bids.min_cpm %}
                             <div>{{ app_bids.min_cpm|currency }}</div>
+                            {% else %}
+                            {% endif %}
                             {% else %}
                             <div>{{ app_bids.min_cpm|currency }} - {{ app_bids.max_cpm|currency }}</div>
                             {% endif %}
                         </td>
                         <td class="dataTable-data numeric att">
-                            {% if network.reporting and network.name != "mobfox" %}
+                            {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}
                             <div class="mopub-data">-</div>
@@ -199,7 +212,7 @@ Make a table for ad networks that are active
                             <div class="mopub-data">-</div>
                         </td>
                         <td class="dataTable-data numeric fill_rate">
-                            {% if network.reporting and network.name != "mobfox" %}
+                            {% if network.reporting %}
                             <div class="network-data">-</div>
                             {% endif %}
                             <div class="mopub-data">-</div>

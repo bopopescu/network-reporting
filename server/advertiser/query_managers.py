@@ -1,7 +1,7 @@
 import logging
 import random
 
-from google.appengine.api import memcache
+from google.appengine.api import memcache, taskqueue
 from google.appengine.ext import db
 
 from common.utils.query_managers import QueryManager, CachedQueryManager
@@ -20,7 +20,6 @@ from advertiser.models import Campaign, AdGroup, \
 
 from publisher.models import App, AdUnit
 from publisher.query_managers import AdUnitQueryManager, AdUnitContextQueryManager
-from budget.query_managers import BudgetQueryManager
 
 import copy
 
@@ -38,15 +37,18 @@ def chunks(l, n):
 
 class AdvertiserQueryManager(CachedQueryManager):
     @classmethod
-    def get_objects_dict_for_account(cls, account):
+    def get_objects_dict_for_account(cls, account, include_deleted=False):
         """
         Returns a dictionary mapping Campaign keys to Campaign entities carrying Adgroup data.
-        Adgroups for each campaign can be retrieved as a list by using campaign.adgroups. Similarly,
-        each Adgroup contains a list of its creatives, accessible as adgroup.creatives.
+        Adgroups for each campaign can be retrieved as a list by using campaign._adgroups. Similarly,
+        each Adgroup contains a list of its creatives, accessible as adgroup._creatives.
         """
-        campaigns_dict = cls.get_campaigns_dict_for_account(account)
-        adgroups_dict = cls.get_adgroups_dict_for_account(account, include_deleted=False, include_archived=True)
-        creatives_dict = cls.get_creatives_dict_for_account(account)
+        campaigns_dict = cls.get_campaigns_dict_for_account(account,
+                include_deleted=include_deleted)
+        adgroups_dict = cls.get_adgroups_dict_for_account(account,
+                include_deleted=include_deleted, include_archived=True)
+        creatives_dict = cls.get_creatives_dict_for_account(account,
+                include_deleted=include_deleted)
 
         # Initialize the _creatives property for all of our adgroups.
         for adgroup in adgroups_dict.values():
@@ -75,8 +77,9 @@ class AdvertiserQueryManager(CachedQueryManager):
         for adgroup in adgroups_dict.values():
             # Again, getting around the fetch.
             campaign_key = str(AdGroup.campaign.get_value_for_datastore(adgroup))
-            campaign_for_this_adgroup = campaigns_dict[campaign_key]
-            campaign_for_this_adgroup._adgroups.append(adgroup)
+            if campaign_key in campaigns_dict:
+                campaign_for_this_adgroup = campaigns_dict[campaign_key]
+                campaign_for_this_adgroup._adgroups.append(adgroup)
 
         return campaigns_dict
 
@@ -119,9 +122,11 @@ class CampaignQueryManager(QueryManager):
                 if network_type:
                     return campaign.network_type == network_type
                 elif is_new:
-                    return campaign.network_type
+                    return campaign.network_state != NetworkStates. \
+                            STANDARD_CAMPAIGN
                 else:
-                    return not campaign.network_type
+                    return campaign.network_state == NetworkStates. \
+                            STANDARD_CAMPAIGN
 
         return filter(network_campaign_filter, campaigns.values())
 
@@ -130,7 +135,7 @@ class CampaignQueryManager(QueryManager):
         # Force to string
         account_key = str(account.key())
 
-        cp_key_name = cls._get_network_key_name(account, network)
+        cp_key_name = cls._get_network_key_name(account_key, network)
 
         if get_from_db:
             campaign = Campaign.get_by_key_name(cp_key_name)
@@ -241,20 +246,22 @@ class CampaignQueryManager(QueryManager):
     @classmethod
     @wraps_first_arg
     def put(cls, campaigns):
+        from budget.query_managers import BudgetQueryManager
+
         if not isinstance(campaigns, list):
             campaigns = [campaigns]
 
-        # Put campaigns so if they're new they have a key
+        # Save campaigns.
         put_response = db.put(campaigns)
 
-        # They need a key because this QM needs the key
-        for camp in campaigns:
-            budg_obj = BudgetQueryManager.update_or_create_budget_for_campaign(camp)
-            camp.budget_obj = budg_obj
-
-        # Put them again so they save their budget obj
-        put_response = db.put(campaigns)
-
+        # Update campaign budgets asynchronously using a Task Queue.
+        campaign_keys = [campaign.key() for campaign in campaigns]
+        queue = taskqueue.Queue()
+        task = taskqueue.Task(params=dict(campaign_keys=campaign_keys),
+                              method='POST',
+                              url='/fetch_api/budget/update_or_create'
+                              )
+        queue.add(task)
 
         # Clear cache
         adunits = []

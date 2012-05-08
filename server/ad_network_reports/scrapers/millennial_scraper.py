@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import logging
+import re
 
 # Paths only needed for testing
 if os.path.exists('/home/ubuntu/'):
@@ -32,7 +33,7 @@ class MillennialScraper(Scraper):
     DASHBOARD_TITLE = 'Dashboard | Millennial Media'
     # We have to collect the ctr in order to calculate the number of clicks
     APP_STATS = ('requests', 'views', 'clicks', 'earnings')
-    MONEY_STATS = ('revenue')
+    MONEY_STATS = ('earnings')
 
     def __init__(self, credentials):
         super(MillennialScraper, self).__init__(credentials)
@@ -139,24 +140,33 @@ class MillennialScraper(Scraper):
                 except:
                     logging.error("Failed getting source")
             soup = BeautifulSoup(page)
-            app_rows = soup.findAll('tr', {'class':'x-grid-row'})
-            print app_rows
+            app_rows = soup.findAll('tr', {'class':
+                re.compile(".*x-grid-row.*")})
 
             for row in app_rows:
                 app_name =  HTMLParser.unescape.__func__(HTMLParser,
-                        row.findAll('td', {"class": "app-table-name"})[0].text)
+                        row.findAll('td', {"class":
+                            re.compile(".*app-table-name.*")})[0].text)
                 app_dict = {}
                 # Find desired stats
                 for stat in self.APP_STATS:
                     class_name = 'app-table-' + stat
-                    data = str(row.findAll('td', {"class":class_name})[0].text)
+                    data = str(row.findAll('td', {"class": re.compile(".*" +
+                        class_name + ".*")})[0].text)
+                    value = filter(lambda x: x.isdigit() or x == '.', data)
+                    if not value:
+                        value = 0
                     if stat in self.MONEY_STATS:
                         # Skip the dollar sign
-                        data = float(filter(lambda x: x.isdigit() or x == '.',
-                            data))
+                        if value:
+                            data = float(value)
+                        else:
+                            data = 0.0
                     else:
-                        data = int(filter(lambda x: x.isdigit() or x == '.',
-                            data))
+                        if value:
+                            data = int(value)
+                        else:
+                            data = 0
 
                     app_dict[stat] = data
 

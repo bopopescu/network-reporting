@@ -89,3 +89,10 @@ def creative_activater(creative):
     if getattr(creative, 'image_blob', None):
         creative.active = creative.was_active
         yield op.db.Put(creative)
+
+
+def network_configer(obj):
+    network_config = getattr(obj, 'network_config', None)
+    if network_config:
+        network_config.account = obj.account
+        yield op.db.Put(network_config)

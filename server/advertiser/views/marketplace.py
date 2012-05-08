@@ -64,7 +64,8 @@ class MarketplaceIndexHandler(RequestHandler):
         try:
             mpx_stats = stats_fetcher.get_account_stats(start_date,
                     end_date, daily=True)
-        except MPStatsAPIException, e:
+        except MPStatsAPIException, error:
+            logging.warning("MPStatsAPIException: %s" % error)
             mpx_stats = {}
 
         # Set up the blocklist

@@ -110,7 +110,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     print
     print "LOOPING THROUGH ACCOUNTS TO SETUP CAMPAIGNS"
     print
-    for account in accounts[:len(accounts)/4]:
+    for account in accounts:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             print "Skipping account: %s" % account.key()
@@ -143,9 +143,12 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
             # some old campaign / adgroup pairs are fucked up (they have active
             # adgroups and associeated with a deleted campaign) we fix this
             # by marking the adgroups as deleted too
-            if old_campaign.deleted == False and old_campaign._adgroups:
+            if old_campaign.deleted == False and [ag for ag in \
+                    old_campaign._adgroups if not ag.deleted and \
+                        ag.network_type]:
                 # One to one mapping between old network campaigns and adgroups
-                old_adgroup = old_campaign._adgroups[0]
+                old_adgroup = [ag for ag in old_campaign._adgroups if not \
+                        ag.deleted and ag.network_type][0]
 
                 network = old_adgroup.network_type.replace('_native',
                         '').lower()
@@ -210,7 +213,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     new_creatives = []
     old_creatives = []
     affected_accounts = []
-    for account in accounts[:len(accounts)/4]:
+    for account in accounts:
         if account.display_new_networks or str(account.key()) in \
                 SKIP_THESE_ACCOUNTS:
             continue

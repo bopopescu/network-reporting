@@ -1,13 +1,27 @@
+# Deployed Tuesday, May 08, 2012 at 06:04PM PST
+### Deployed by John Pena
+### Tagged deploy-108
+### Bugs Fixed: ['1193']
+### Included Commits: 
+ * e5eb9e9 Merge branch 'master' of github.com:mopub/mopub
+ * 1f4b3de Merge branch 'master' of github.com:mopub/mopub
+ * 6ad633a added script to account object to all network config objects
+ * e0ed681 added script to account object to all network config objects
+ * 055e56a Merge branch 'master' of github.com:mopub/mopub
+ * 49d00c2 added script to account object to all network config objects
+ * 60d131a fixed an issue where network config forms were being blanked out [#1193 state:fixed]
+ * 1457d32 Deployed without finding any bug fixes.
+ 
 # Deployed Tuesday, May 08, 2012 at 12:15AM PST
 ### Deployed by Peter Linnartz
 ### Tagged deploy-107
 ### Bugs Fixed: []
-### Included Commits: 
- * 75764c6 Fix wrong method signature preventing creation/editing of old-style network campaigns in advertiser/views/campaigns.py
- * c7e8336 fixed bug with mpx stats on adunit page
- * 003fe76 fixed bug with fetching mpx stats on adunit page
- * c723e04 [#1184 state:resolved]
- 
+### Included Commits:
+* 75764c6 Fix wrong method signature preventing creation/editing of old-style network campaigns in advertiser/views/campaigns.py
+* c7e8336 fixed bug with mpx stats on adunit page
+* 003fe76 fixed bug with fetching mpx stats on adunit page
+* c723e04 [#1184 state:resolved]
+
 # Deployed Monday, May 07, 2012 at 08:17PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-106

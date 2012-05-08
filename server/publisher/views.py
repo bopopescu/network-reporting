@@ -1381,13 +1381,9 @@ def calculate_ecpm(adgroup):
     Calculate the ecpm for a cpc campaign.
     REFACTOR: move this to the app/adunit models
     """
-    if adgroup.cpc:
-        try:
-            return float(adgroup.stats.click_count) * \
-                   float(adgroup.bid) * \
-                   1000.0 / float(adgroup.stats.impression_count)
-        except Exception, error:
-            logging.error(error)
+    if adgroup.cpc and adgroup.stats.impression_count:
+        return (float(adgroup.stats.click_count) * float(adgroup.bid) * 1000.0 /
+                float(adgroup.stats.impression_count))
     return adgroup.bid
 
 

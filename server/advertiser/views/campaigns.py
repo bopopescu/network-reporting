@@ -1,7 +1,6 @@
 import logging
 import datetime
 
-
 from google.appengine.api import urlfetch
 
 from urllib import urlencode
@@ -328,13 +327,13 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             app_network_config_key = str(App.network_config.get_value_for_datastore(app))
             app_network_config = network_configs_dict.get(app_network_config_key)
             app_key = str(app.key())
-            app.network_config_form = AppNetworkConfigForm(instance=app_network_config,
+            app.network_config_form = AppNetworkConfigForm(instance=app.network_config,
                                                            prefix="app_%s" % app_key)
             for adunit in app.adunits:
                 adunit_network_config_key = str(Site.network_config.get_value_for_datastore(adunit))
                 adunit_network_config = network_configs_dict.get(adunit_network_config_key)
                 adunit_key = str(adunit.key())
-                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit_network_config,
+                adunit.network_config_form = AdUnitNetworkConfigForm(instance=adunit.network_config,
                                                                      prefix="adunit_%s" % adunit_key)
         
         return apps

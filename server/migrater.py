@@ -94,5 +94,5 @@ def creative_activater(creative):
 def network_configer(obj):
     network_config = getattr(obj, 'network_config', None)
     if network_config:
-        network_config.account = obj.account
+        network_config.account = obj._account
         yield op.db.Put(network_config)

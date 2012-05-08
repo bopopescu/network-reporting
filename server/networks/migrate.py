@@ -1,6 +1,7 @@
 from datetime import date
 
 from google.appengine.ext import db
+from google.appengine.api import memcache 
 
 from account.models import Account
 from account.query_managers import AccountQueryManager
@@ -111,8 +112,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     print "LOOPING THROUGH ACCOUNTS TO SETUP CAMPAIGNS"
     print
     for account in accounts:
-        if account.display_new_networks or str(account.key()) in \
-                SKIP_THESE_ACCOUNTS:
+        if account.display_new_networks:
             print "Skipping account: %s" % account.key()
             continue
 
@@ -214,8 +214,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
     old_creatives = []
     affected_accounts = []
     for account in accounts:
-        if account.display_new_networks or str(account.key()) in \
-                SKIP_THESE_ACCOUNTS:
+        if account.display_new_networks:
             continue
 
         if get_all_from_db:
@@ -269,12 +268,18 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
 
         print "Flushing the cache"
         affected_account_keys = [account.key() for account in affected_accounts]
+        
         AdvertiserQueryManager.memcache_flush_entities_for_account_keys(
                 affected_account_keys, Campaign)
         AdvertiserQueryManager.memcache_flush_entities_for_account_keys(
                 affected_account_keys, AdGroup)
         AdvertiserQueryManager.memcache_flush_entities_for_account_keys(
                 affected_account_keys, Creative)
+
+        print "Flushing the memcache for accounts"
+        memcache.delete_multi([account._mpuser for account in affected_accounts], namespace='account')
+
+    print "Done"
 
 def undo(accounts, put_data=False):
     for account in accounts:

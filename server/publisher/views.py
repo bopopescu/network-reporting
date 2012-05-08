@@ -86,112 +86,136 @@ def dashboard(request, *args, **kwargs):
     return handler(request, use_cache=False, use_handshake=True, *args, **kwargs)
 
 
-
-
-
 class AppIndexHandler(RequestHandler):
     """
     A list of apps and their real-time stats.
     """
     def get(self):
-        # Get all of the business objects (apps and their adunits).
-        apps = PublisherQueryManager.get_objects_dict_for_account(self.account)
-        app_keys = simplejson.dumps([str(k) for k in apps.keys()])
-        app_values = sorted(apps.values(), lambda x, y: cmp(x.name, y.name))
+        # Get all of the account's apps.
+        apps_dict = PublisherQueryManager.get_objects_dict_for_account(self.account)
+        app_keys = simplejson.dumps([str(key) for key in apps_dict.keys()])
+        sorted_apps = sorted(apps_dict.values(), lambda x, y: cmp(x.name, y.name))
 
-        # If they don't have any apps so they should be forwarded
-        # to the form to create some.
-        if len(apps) == 0:
+        # If there are no apps, redirect to the app creation form.
+        if len(apps_dict) == 0:
             return HttpResponseRedirect(reverse('publisher_create_app'))
 
-        # XXX: When there are a lot of apps, the mongostats call below will fail with
-        # DeadlineExceededError. Until we can figure out how to make that call more performant,
-        # we don't really have a choice but to avoid it for certain publishers. In order to make
-        # this hack look decent, the template doesn't include the graph HTML when stats is empty.
-        # Likewise, the JS doesn't initialize the graph, since it doesn't exist. Blergh.
-        if len(apps) > 50:
-            response_dict = {}
-            stats = {}
-        else:
-            # Get stats totals for the stats breakdown pane
-            account_stats_mgr = StatsModelQueryManager(self.account, offline=self.offline)
-            totals_list = account_stats_mgr.get_stats_for_days(days=self.days)
-            today = totals_list[-1]
-            try:
-                yesterday = totals_list[-2]
-            except IndexError:
-                # If yesterday isn't within the date range or there
-                # are no stats for it, give it a blank stats model with
-                # normal defaults
-                yesterday = StatsModel()
-            totals = reduce(lambda x, y: x+y, totals_list, StatsModel())
+        # account_stats property is a string because it is a json dump.
+        response_dict = {
+            'apps': sorted_apps,
+            'app_keys': app_keys,
+            'account_stats': "{}",
+            'stats': {},
+        }
 
-            # this is the max active users over the date range
-            # NOT total unique users
-            totals.user_count = max([t.user_count for t in totals_list])
+        # If there are a lot of apps, don't fetch stats here because it could
+        # result in a DeadlineExceededError.
+        if len(apps_dict) > 50:
+            return response_dict
 
-            # REFACTOR: this can be removed if we remove the chart
-            # prepare account_stats object
-            key = "||"
-            stats_dict = {}
-            stats_dict[key] = {}
-            stats_dict[key]['name'] = "||"
+        # Get stats totals for the stats breakdown pane
+        account_stats_manager = StatsModelQueryManager(
+                self.account, offline=self.offline)
+        stats_model_list = account_stats_manager.get_stats_for_days(
+                days=self.days)
+
+        stats_dict = self._build_stats_dict_from_stats_model_list(
+                stats_model_list)
+        today_and_yesterday_stats = self._build_today_and_yesterday_stats_from_stats_model_list(stats_model_list)
+
+        account_stats = {status: 200, all_stats: stats_dict}
+
+        response_dict['account_stats'] = simplejson.dumps(account_stats)
+        response_dict['stats'] = today_and_yesterday_stats
+
+        return response_dict
+
+        def _build_stats_dict_from_stats_model_list(self, stats_model_list):
+            """
+            Given stats_model_list, generate the appropriate data structure for
+            graphing the data using Highcharts.
+            """
+
             # REFACTOR: StatsModel field naming
-            stats_dict[key]['daily_stats'] = [{'req': s.request_count,
-                                               'imp': s.impression_count,
-                                               'clk': s.click_count,
-                                               'usr': s.user_count} for s in totals_list]
-            summed_stats = sum(totals_list, StatsModel())
-            stats_dict[key]['sum'] = summed_stats.to_dict()
+            stats_dict_list = []
+            for stats_model in stats_model_list:
+                stats_dict_list.append({
+                    'req': s.request_count,
+                    'imp': s.impression_count,
+                    'clk': s.click_count,
+                    'usr': s.user_count,
+                })
 
-            response_dict = {}
-            response_dict['status'] = 200
-            response_dict['all_stats'] = stats_dict
+            summed_stats_model = sum(stats_model_list, StatsModel())
 
-            stats = {
+            # The key '||' references the aggregate total across the entire
+            # account (i.e. all apps and adunits)
+            stats_dict = {
+                '||': {
+                    'name': '||',
+                    'daily_stats': stats_dict_list,
+                    'sum': summed_stats_model.to_dict(),
+                }
+            }
+
+            return stats_dict
+
+        def _build_today_and_yesterday_stats_from_stats_model_list(self, stats_model_list):
+            """
+            Given stats_model_list, generate the appropriate data structure for
+            displaying the stats breakdown.  Note: for a custom date range, this
+            actually returns data for the final two days.
+            """
+
+            summed_stats_model = sum(stats_model_list, StatsModel())
+
+            # This is the max active users over the date range, not total
+            # unique users.
+            summed_stats_model.user_count = max([stats_model.user_count for stats_model in stats_model_list])
+
+            today = stats_model_list[-1]
+            try:
+                yesterday = stats_model_list[-2]
+            except IndexError:
+                # If there is only one date given, set yesterday to a blank
+                # StatsModel with default values.
+                yesterday = StatsModel()
+
+            today_and_yesterday_stats = {
                 'req': {
                     'today': today.request_count,
                     'yesterday': yesterday.request_count,
-                    'total': totals.request_count,
+                    'total': summed_stats_model.request_count,
                 },
                 'imp': {
                     'today': today.impression_count,
                     'yesterday': yesterday.impression_count,
-                    'total': totals.impression_count,
+                    'total': summed_stats_model.impression_count,
                 },
                 'users': {
                     'today': today.user_count,
                     'yesterday': yesterday.user_count,
-                    'total': totals.user_count
+                    'total': summed_stats_model.user_count
                 },
                 'ctr': {
                     'today': today.ctr,
                     'yesterday': yesterday.ctr,
-                    'total': totals.ctr
+                    'total': summed_stats_model.ctr
                 },
                 'clk': {
                     'today': today.click_count,
                     'yesterday': yesterday.click_count,
-                    'total': totals.click_count
+                    'total': summed_stats_model.click_count
                 },
             }
 
-        return render_to_response(self.request,
-                                  'publisher/app_index.html',
-                                  {
-                                      'apps': app_values,
-                                      'app_keys': app_keys,
-                                      'account_stats': simplejson.dumps(response_dict),
-                                      'start_date': self.days[0],
-                                      'end_date': self.days[-1],
-                                      'date_range': self.date_range,
-                                      'stats': stats,
-                                      'account': self.account
-                                  })
+            return today_and_yesterday_stats
+
 
 @login_required
-def app_index(request,*args,**kwargs):
-    return AppIndexHandler()(request, use_cache=False, *args, **kwargs)
+def app_index(request, *args, **kwargs):
+    handler = AppDetailHandler(id="app_key", template='publisher/app_index.html')
+    return handler(request, use_cache=False, *args, **kwargs)
 
 
 class GeoPerformanceHandler(RequestHandler):

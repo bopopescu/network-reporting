@@ -23,7 +23,7 @@ mapreduce:
       default: 100
 
 - name: BlobMigrater
-  mapper: 
+  mapper:
     input_reader: mapreduce.input_readers.DatastoreInputReader
     handler: migrater.blober
     params:
@@ -32,10 +32,10 @@ mapreduce:
     - name: processing_rate
       default: 100
     - name: shard_count
-      default: 100      
+      default: 100
 
 - name: BlobUrlerMigrater
-  mapper: 
+  mapper:
     input_reader: mapreduce.input_readers.DatastoreInputReader
     handler: migrater.blob_urler
     params:
@@ -47,7 +47,7 @@ mapreduce:
       default: 100
 
 - name: CreativePauseMigrater
-  mapper: 
+  mapper:
     input_reader: mapreduce.input_readers.DatastoreInputReader
     handler: migrater.creative_pauser
     params:
@@ -60,12 +60,24 @@ mapreduce:
 
 
 - name: CreativePauseActivater
-  mapper: 
+  mapper:
     input_reader: mapreduce.input_readers.DatastoreInputReader
     handler: migrater.creative_activater
     params:
     - name: entity_kind
       default: advertiser.models.Creative
+    - name: processing_rate
+      default: 20
+    - name: shard_count
+      default: 20
+
+- name: NetworkConfiger
+  mapper:
+    input_reader: mapreduce.input_readers.DatastoreInputReader
+    handler: migrater.network_configer
+    params:
+    - name: entity_kind
+      default: advertiser.models.App
     - name: processing_rate
       default: 20
     - name: shard_count

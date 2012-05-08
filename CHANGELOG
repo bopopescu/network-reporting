@@ -1,23 +1,33 @@
+# Deployed Tuesday, May 08, 2012 at 12:15AM PST
+### Deployed by Peter Linnartz
+### Tagged deploy-107
+### Bugs Fixed: []
+### Included Commits: 
+ * 75764c6 Fix wrong method signature preventing creation/editing of old-style network campaigns in advertiser/views/campaigns.py
+ * c7e8336 fixed bug with mpx stats on adunit page
+ * 003fe76 fixed bug with fetching mpx stats on adunit page
+ * c723e04 [#1184 state:resolved]
+ 
 # Deployed Monday, May 07, 2012 at 08:17PM PST
 ### Deployed by Tiago Bandeira
 ### Tagged deploy-106
 ### Bugs Fixed: ['1184']
-### Included Commits: 
- * d4c52ba [#1184 state:fixed]
- * 5eab7cc still resolving path issues with selenium tests for hudson
- * ef4beb4 resolving path issues with selenium tests for hudson
- * 7ba5051 Merge branch 'master' of github.com:mopub/mopub
- * 2056cc2 resolving path issues with selenium tests for hudson
- * 51d7877 Refactored and sped up campaign creation page. Modified NetworkConfig model to have an account reference. Changed all NetworkConfig constructor calls to take an account argument. Started caching NetworkConfigs on a per-account basis.
- * 1d0c5a6 Fix bug in CachedQueryManager.memcache_flush_entities_for_account_keys
- * 7542fcf fixed randomgen merge conflicts
- * ae6306a Merge branch 'master' of github.com:mopub/mopub
- * e381b47 Fixed nonetype error
- * 1378b02 added '/api/.*' to the adserver.yaml
- * 3cdc414 Speed ups to network migration script, addtional checks for creative migration
- * 34288f0 Fix CachedQueryManager to support entity fetches of unlimited size (rather than just 1000)
- * de1f4d4 Deployed without finding any bug fixes.
- 
+### Included Commits:
+* d4c52ba [#1184 state:fixed]
+* 5eab7cc still resolving path issues with selenium tests for hudson
+* ef4beb4 resolving path issues with selenium tests for hudson
+* 7ba5051 Merge branch 'master' of github.com:mopub/mopub
+* 2056cc2 resolving path issues with selenium tests for hudson
+* 51d7877 Refactored and sped up campaign creation page. Modified NetworkConfig model to have an account reference. Changed all NetworkConfig constructor calls to take an account argument. Started caching NetworkConfigs on a per-account basis.
+* 1d0c5a6 Fix bug in CachedQueryManager.memcache_flush_entities_for_account_keys
+* 7542fcf fixed randomgen merge conflicts
+* ae6306a Merge branch 'master' of github.com:mopub/mopub
+* e381b47 Fixed nonetype error
+* 1378b02 added '/api/.*' to the adserver.yaml
+* 3cdc414 Speed ups to network migration script, addtional checks for creative migration
+* 34288f0 Fix CachedQueryManager to support entity fetches of unlimited size (rather than just 1000)
+* de1f4d4 Deployed without finding any bug fixes.
+
 # Deployed Thursday, May 03, 2012 at 09:20PM PST
 ### Deployed by John Pena
 ### Tagged deploy-105

@@ -1,7 +1,7 @@
 from datetime import date
 
 from google.appengine.ext import db
-from google.appengine.api import memcache 
+from google.appengine.api import memcache
 
 from account.models import Account
 from account.query_managers import AccountQueryManager
@@ -268,7 +268,7 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
 
         print "Flushing the cache"
         affected_account_keys = [account.key() for account in affected_accounts]
-        
+
         AdvertiserQueryManager.memcache_flush_entities_for_account_keys(
                 affected_account_keys, Campaign)
         AdvertiserQueryManager.memcache_flush_entities_for_account_keys(
@@ -277,7 +277,8 @@ def migrate(accounts=None, put_data=False, get_all_from_db=True, redo=False):
                 affected_account_keys, Creative)
 
         print "Flushing the memcache for accounts"
-        memcache.delete_multi([account._mpuser for account in affected_accounts], namespace='account')
+        memcache.delete_multi([str(account._mpuser) for account in
+            affected_accounts], namespace='account')
 
     print "Done"
 

@@ -123,7 +123,8 @@ class MillennialScraper(Scraper):
             Return True when page has finished loading stats otherwise return
             False.
             """
-            return not self.browser.find_element_by_css_selector("#ext-gen1677")
+            return not self.browser.find_element_by_css_selector(
+                    'div.x-mask-msg.x-mask-loading')
 
         # Handle pagination
         page_number = 1
@@ -143,7 +144,7 @@ class MillennialScraper(Scraper):
             app_rows = soup.findAll('tr', {'class':
                 re.compile(".*x-grid-row.*")})
 
-            for row in app_rows:
+            for row in app_rows[1:]:
                 app_name =  HTMLParser.unescape.__func__(HTMLParser,
                         row.findAll('td', {"class":
                             re.compile(".*app-table-name.*")})[0].text)
@@ -178,15 +179,14 @@ class MillennialScraper(Scraper):
                 records.append(nsr)
             # Goto the next page if it exists
             try:
-                page_input = self.browser.find_element_by_css_selector(
-                        '#ext-gen1239')
+                page_input = self.browser.find_elements_by_css_selector(
+                        'input')[-1]
             except selenium.common.exceptions.NoSuchElementException as \
                     exception:
                 next_page = False
             else:
-                # Click the icon if we aren't already on the last page
-                if page_number not in self.browser. \
-                        find_element_by_css_selector('#tbtext-1058').text:
+                # Enter the next page number if we aren't on the last page
+                if page_number < int(page_input.text):
                     page_number += 1
                     page_input.clear()
                     page_input.send_keys(page_number)

@@ -379,7 +379,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
             self._assign_creative_to_adgroup_and_save(creative, adgroup)
 
             configs_dict = NetworkConfigQueryManager.get_network_configs_dict_for_account(self.account)
-            self._update_network_configs_using_adgroup(configs_dict, apps, adunits, self.account, adgroup)
+            self._update_network_configs_using_adgroup(adgroup, configs_dict, apps, adunits, self.account)
         
         # Miscellaneous tasks.
         self._flush_adunit_contexts_affected_by_adgroup(adgroup)
@@ -514,7 +514,7 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
 
         Generally, if the given adgroup's net_creative property already exists, that creative will
         be deleted. However, if that (old) creative is of the same type as the new creative, it
-        can be re-used, after copying over the new creative's data.
+        can be re-used.
 
         Arguments:
         creative -- the creative to be assigned
@@ -525,7 +525,9 @@ class CreateOrEditCampaignAndAdGroupHandler(RequestHandler):
 
         # Re-use the old creative if it's of the same type as the new creative.
         if old_creative and old_creative.__class__ == new_creative.__class__:
-            old_creative.html_data = new_creative.html_data
+            # Use html_data from the new creative.
+            if adgroup.network_type in ('custom', 'custom_native'):
+                old_creative.html_data = new_creative.html_data
             new_creative = old_creative
 
         # Otherwise, mark the old creative as deleted, since we'll be using the new creative.

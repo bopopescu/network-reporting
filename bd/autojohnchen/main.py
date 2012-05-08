@@ -206,7 +206,7 @@ class MpxReportHandler(webapp.RequestHandler):
         
         # send mail
         logging.info(body)
-        mail.send_mail(sender=SENDER, to="revforce+reports@mopub.com", 
+        mail.send_mail(sender=SENDER, to="ft+reports@mopub.com", 
             subject="MPX Daily Spend Report for %s" % now.strftime('%b %d %Y'),
             body=body)
 

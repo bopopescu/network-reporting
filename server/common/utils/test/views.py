@@ -3,8 +3,7 @@ import unittest
 from django.test import Client
 from google.appengine.ext import testbed
 
-from admin.randomgen import (generate_account, generate_app, generate_adunit,
-                             USERNAME, PASSWORD)
+from admin.randomgen import generate_account, USERNAME, PASSWORD
 
 
 class BaseViewTestCase(unittest.TestCase):
@@ -20,10 +19,6 @@ class BaseViewTestCase(unittest.TestCase):
 
         # generate data
         self.account = generate_account()
-        self.app1 = generate_app(self.account)
-        self.app2 = generate_app(self.account)
-        self.app3 = generate_app(self.account)
-        self.adunit1 = generate_adunit(self.app1, self.account)
 
         # log in
         self.client.post('/account/login/', {'username': USERNAME,

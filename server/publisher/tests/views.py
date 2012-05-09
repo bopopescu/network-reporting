@@ -7,21 +7,29 @@ import common.utils.test.setup
 
 from django.core.urlresolvers import reverse
 
+from admin.randomgen import generate_app, generate_adunit
 from common.utils.test.views import BaseViewTestCase
 from publisher.query_managers import PublisherQueryManager
 
 
-class AppIndexViewTestCase(BaseViewTestCase):
-    """
-    /inventory/
-    """
+class BasePublisherViewTestCase(BaseViewTestCase):
+    def setUp(self):
+        super(BasePublisherViewTestCase, self).setUp()
+
+        self.app1 = generate_app(self.account)
+        self.app2 = generate_app(self.account)
+        self.app3 = generate_app(self.account)
+        self.adunit1 = generate_adunit(self.app1, self.account)
+
+
+class AppIndexViewTestCase(BasePublisherViewTestCase):
     def test_http_response_code(self):
         url = reverse('app_index')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
 
-class CreateAppViewTestCase(BaseViewTestCase):
+class CreateAppViewTestCase(BasePublisherViewTestCase):
     def test_create_app(self):
         apps_dict = PublisherQueryManager.get_apps_dict_for_account(account=self.account)
         self.assertEqual(len(apps_dict), 3)

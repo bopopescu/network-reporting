@@ -5,7 +5,7 @@ InstallAppengineHelperForDjango()
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-from fetch_api.auc_fetch_handler import (AUCFetchHandler, 
+from fetch_api.auc_fetch_handler import (AUCFetchHandler,
                                          AUCUserPushHandler,
                                          AUCUserPushFanOutHandler,
                                          )
@@ -28,6 +28,7 @@ def main():
             (r'/fetch_api/budget/sync/worker', BudgetSyncWorker),
             (r'/fetch_api/budget/update_or_create/', BudgetUpdateOrCreateHandler),
             (r'/fetch_api/budget/update_or_create', BudgetUpdateOrCreateHandler),
+            ('/_ah/warmup', AUCFetchHandler),
             ])
     run_wsgi_app(app)
 

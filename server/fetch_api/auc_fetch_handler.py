@@ -35,7 +35,9 @@ def adunitcontext_fetch(adunit_key, created_at=None, testing=False):
 
 class AUCFetchHandler(webapp.RequestHandler):
 
-    def get(self, adunit_key):
+    def get(self, adunit_key=None):
+        adunit_key = adunit_key or 'agltb3B1Yi1pbmNyDQsSBFNpdGUY1O76Cgw'  # default ID for warmup
+
         created_at = self.request.get('created_at', 0)
         # This is a service to the AWS/Tornado adserver.
         # We are not following the RequestHandler pattern here (simple function instead), because we do not want to require login.

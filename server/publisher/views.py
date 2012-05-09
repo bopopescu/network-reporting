@@ -123,98 +123,98 @@ class AppIndexHandler(RequestHandler):
                 stats_model_list)
         today_and_yesterday_stats = self._build_today_and_yesterday_stats_from_stats_model_list(stats_model_list)
 
-        account_stats = {status: 200, all_stats: stats_dict}
+        account_stats = {'status': 200, 'all_stats': stats_dict}
 
         response_dict['account_stats'] = simplejson.dumps(account_stats)
         response_dict['stats'] = today_and_yesterday_stats
 
         return response_dict
 
-        def _build_stats_dict_from_stats_model_list(self, stats_model_list):
-            """
-            Given stats_model_list, generate the appropriate data structure for
-            graphing the data using Highcharts.
-            """
+    def _build_stats_dict_from_stats_model_list(self, stats_model_list):
+        """
+        Given stats_model_list, generate the appropriate data structure for
+        graphing the data using Highcharts.
+        """
 
-            # REFACTOR: StatsModel field naming
-            stats_dict_list = []
-            for stats_model in stats_model_list:
-                stats_dict_list.append({
-                    'req': s.request_count,
-                    'imp': s.impression_count,
-                    'clk': s.click_count,
-                    'usr': s.user_count,
-                })
+        # REFACTOR: StatsModel field naming
+        stats_dict_list = []
+        for stats_model in stats_model_list:
+            stats_dict_list.append({
+                'req': stats_model.request_count,
+                'imp': stats_model.impression_count,
+                'clk': stats_model.click_count,
+                'usr': stats_model.user_count,
+            })
 
-            summed_stats_model = sum(stats_model_list, StatsModel())
+        summed_stats_model = sum(stats_model_list, StatsModel())
 
-            # The key '||' references the aggregate total across the entire
-            # account (i.e. all apps and adunits)
-            stats_dict = {
-                '||': {
-                    'name': '||',
-                    'daily_stats': stats_dict_list,
-                    'sum': summed_stats_model.to_dict(),
-                }
+        # The key '||' references the aggregate total across the entire
+        # account (i.e. all apps and adunits)
+        stats_dict = {
+            '||': {
+                'name': '||',
+                'daily_stats': stats_dict_list,
+                'sum': summed_stats_model.to_dict(),
             }
+        }
 
-            return stats_dict
+        return stats_dict
 
-        def _build_today_and_yesterday_stats_from_stats_model_list(self, stats_model_list):
-            """
-            Given stats_model_list, generate the appropriate data structure for
-            displaying the stats breakdown.  Note: for a custom date range, this
-            actually returns data for the final two days.
-            """
+    def _build_today_and_yesterday_stats_from_stats_model_list(self, stats_model_list):
+        """
+        Given stats_model_list, generate the appropriate data structure for
+        displaying the stats breakdown.  Note: for a custom date range, this
+        actually returns data for the final two days.
+        """
 
-            summed_stats_model = sum(stats_model_list, StatsModel())
+        summed_stats_model = sum(stats_model_list, StatsModel())
 
-            # This is the max active users over the date range, not total
-            # unique users.
-            summed_stats_model.user_count = max([stats_model.user_count for stats_model in stats_model_list])
+        # This is the max active users over the date range, not total
+        # unique users.
+        summed_stats_model.user_count = max([stats_model.user_count for stats_model in stats_model_list])
 
-            today = stats_model_list[-1]
-            try:
-                yesterday = stats_model_list[-2]
-            except IndexError:
-                # If there is only one date given, set yesterday to a blank
-                # StatsModel with default values.
-                yesterday = StatsModel()
+        today = stats_model_list[-1]
+        try:
+            yesterday = stats_model_list[-2]
+        except IndexError:
+            # If there is only one date given, set yesterday to a blank
+            # StatsModel with default values.
+            yesterday = StatsModel()
 
-            today_and_yesterday_stats = {
-                'req': {
-                    'today': today.request_count,
-                    'yesterday': yesterday.request_count,
-                    'total': summed_stats_model.request_count,
-                },
-                'imp': {
-                    'today': today.impression_count,
-                    'yesterday': yesterday.impression_count,
-                    'total': summed_stats_model.impression_count,
-                },
-                'users': {
-                    'today': today.user_count,
-                    'yesterday': yesterday.user_count,
-                    'total': summed_stats_model.user_count
-                },
-                'ctr': {
-                    'today': today.ctr,
-                    'yesterday': yesterday.ctr,
-                    'total': summed_stats_model.ctr
-                },
-                'clk': {
-                    'today': today.click_count,
-                    'yesterday': yesterday.click_count,
-                    'total': summed_stats_model.click_count
-                },
-            }
+        today_and_yesterday_stats = {
+            'req': {
+                'today': today.request_count,
+                'yesterday': yesterday.request_count,
+                'total': summed_stats_model.request_count,
+            },
+            'imp': {
+                'today': today.impression_count,
+                'yesterday': yesterday.impression_count,
+                'total': summed_stats_model.impression_count,
+            },
+            'users': {
+                'today': today.user_count,
+                'yesterday': yesterday.user_count,
+                'total': summed_stats_model.user_count
+            },
+            'ctr': {
+                'today': today.ctr,
+                'yesterday': yesterday.ctr,
+                'total': summed_stats_model.ctr
+            },
+            'clk': {
+                'today': today.click_count,
+                'yesterday': yesterday.click_count,
+                'total': summed_stats_model.click_count
+            },
+        }
 
-            return today_and_yesterday_stats
+        return today_and_yesterday_stats
 
 
 @login_required
 def app_index(request, *args, **kwargs):
-    handler = AppDetailHandler(id="app_key", template='publisher/app_index.html')
+    handler = AppIndexHandler(template='publisher/app_index.html')
     return handler(request, use_cache=False, *args, **kwargs)
 
 
@@ -274,6 +274,7 @@ class GeoPerformanceHandler(RequestHandler):
                                       'date_range': self.date_range,
                                       'account': self.account
                                   })
+
 
 @login_required
 def geo_performance(request,*args,**kwargs):
@@ -384,9 +385,10 @@ class CreateAppHandler(RequestHandler):
 
         return self.get(app_form, adunit_form)
 
+
 @login_required
-def create_app(request,*args,**kwargs):
-    return CreateAppHandler()(request,*args,**kwargs)
+def create_app(request, *args, **kwargs):
+    return CreateAppHandler()(request, *args, **kwargs)
 
 
 class CreateAdUnitHandler(RequestHandler):
